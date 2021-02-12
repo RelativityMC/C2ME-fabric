@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "barium",
+  "version": "${version}",
+  "name": "Barium",
+  "description": "A Fabric mod designed to improve the world generation performance of Minecraft",
+  "authors": [
+    "ishland"
+  ],
+  "contact": {
+    "website": "https://yatopiamc.org/",
+    "repo": "https://github.com/YatopiaMC/barium-fabric"
+  },
+  "license": "MIT",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "org.yatopiamc.barium.BariumMod"
+    ]
+  },
+  "mixins": [
+    "barium.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.11.1",
+    "minecraft": ">=1.16.4"
+  }
+}
