@@ -1,6 +1,7 @@
 plugins {
     id 'fabric-loom' version '0.6-SNAPSHOT'
     id 'maven-publish'
+    id 'com.github.johnrengelman.shadow' version '5.2.0'
 }
 
 sourceCompatibility = JavaVersion.VERSION_11
@@ -46,17 +47,26 @@ tasks.withType(JavaCompile) {
     options.encoding = "UTF-8"
 }
 
-// Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
-// if it is present.
-// If you remove this task, sources will not be generated.
-task sourcesJar(type: Jar, dependsOn: classes) {
-    classifier = "sources"
-    from sourceSets.main.allSource
-}
-
 jar {
     from "LICENSE"
 }
+
+shadowJar {
+    archiveClassifier = "all-dev"
+    dependencies {
+        include(dependency("com.ibm.async:asyncutil:0.1.0"))
+    }
+}
+
+//noinspection UnnecessaryQualifiedReference
+task("remapShadowJar", type: net.fabricmc.loom.task.RemapJarTask, dependsOn: shadowJar) {
+    input = shadowJar.archiveFile
+    archiveFileName = shadowJar.archiveFileName.get().replaceAll("-dev\\.jar\$", ".jar")
+    addNestedDependencies = true
+    remapAccessWidener = true
+}
+
+assemble.dependsOn(remapShadowJar)
 
 // configure the maven publication
 publishing {
@@ -65,9 +75,6 @@ publishing {
             // add all the jars that should be included when publishing to maven
             artifact(remapJar) {
                 builtBy remapJar
-            }
-            artifact(sourcesJar) {
-                builtBy remapSourcesJar
             }
         }
     }

@@ -6,7 +6,6 @@ public class ThreadingUtils {
 
     public static ThreadingType getThreadingType(final ChunkStatus status) {
         switch (status.getId()) {
-            case "structure_starts":
             case "structure_references":
             case "biomes":
             case "noise":
@@ -16,6 +15,7 @@ public class ThreadingUtils {
             case "spawn":
             case "heightmaps":
                 return ThreadingType.PARALLELIZED;
+            case "structure_starts":
             case "features":
                 return ThreadingType.SINGLE_THREADED;
             default:

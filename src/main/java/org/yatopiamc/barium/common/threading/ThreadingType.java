@@ -3,7 +3,6 @@ package org.yatopiamc.barium.common.threading;
 import com.google.common.base.Preconditions;
 import com.ibm.asyncutil.locks.AsyncLock;
 import com.mojang.datafixers.util.Either;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.world.chunk.Chunk;
 
@@ -29,7 +28,7 @@ public enum ThreadingType {
                 } finally {
                     lockToken.releaseLock();
                 }
-            });
+            }, ThreadingExecutorUtils::execute);
         }
     },
     AS_IS() {

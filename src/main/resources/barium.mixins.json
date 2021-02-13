@@ -5,7 +5,8 @@
   "compatibilityLevel": "JAVA_11",
   "mixins": [
     "threading.MixinChunkStatus",
-    "threading.MixinServerWorld"
+    "threading.MixinServerWorld",
+    "threading.MixinThreadedAnvilChunkStorage"
   ],
   "client": [
   ],
