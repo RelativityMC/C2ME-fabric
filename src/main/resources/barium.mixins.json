@@ -2,8 +2,10 @@
   "required": true,
   "minVersion": "0.8",
   "package": "org.yatopiamc.barium.mixin",
-  "compatibilityLevel": "JAVA_8",
+  "compatibilityLevel": "JAVA_11",
   "mixins": [
+    "threading.MixinChunkStatus",
+    "threading.MixinServerWorld"
   ],
   "client": [
   ],

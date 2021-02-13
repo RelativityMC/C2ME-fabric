@@ -18,6 +18,7 @@
       "org.yatopiamc.barium.BariumMod"
     ]
   },
+  "accessWidener" : "barium.accesswidener",
   "mixins": [
     "barium.mixins.json"
   ],

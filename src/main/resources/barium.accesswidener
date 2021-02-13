@@ -1,0 +1,5 @@
+accessWidener v1 named
+
+accessible    class    net/minecraft/world/chunk/ChunkStatus$SimpleGenerationTask
+accessible    class    net/minecraft/world/chunk/ChunkStatus$LoadTask
+accessible    class    net/minecraft/world/chunk/ChunkStatus$GenerationTask
