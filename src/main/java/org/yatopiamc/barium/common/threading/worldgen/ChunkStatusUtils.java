@@ -1,10 +1,10 @@
-package org.yatopiamc.barium.common.threading;
+package org.yatopiamc.barium.common.threading.worldgen;
 
 import net.minecraft.world.chunk.ChunkStatus;
 
-public class ThreadingUtils {
+public class ChunkStatusUtils {
 
-    public static ThreadingType getThreadingType(final ChunkStatus status) {
+    public static ChunkStatusThreadingType getThreadingType(final ChunkStatus status) {
         switch (status.getId()) {
             case "structure_references":
             case "biomes":
@@ -14,12 +14,12 @@ public class ThreadingUtils {
             case "liquid_carvers":
             case "spawn":
             case "heightmaps":
-                return ThreadingType.PARALLELIZED;
+                return ChunkStatusThreadingType.PARALLELIZED;
             case "structure_starts":
             case "features":
-                return ThreadingType.SINGLE_THREADED;
+                return ChunkStatusThreadingType.SINGLE_THREADED;
             default:
-                return ThreadingType.AS_IS;
+                return ChunkStatusThreadingType.AS_IS;
         }
     }
 

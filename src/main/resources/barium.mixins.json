@@ -4,9 +4,10 @@
   "package": "org.yatopiamc.barium.mixin",
   "compatibilityLevel": "JAVA_11",
   "mixins": [
-    "threading.MixinChunkStatus",
-    "threading.MixinServerWorld",
-    "threading.MixinThreadedAnvilChunkStorage"
+    "threading.lighting.MixinThreadedAnvilChunkStorage",
+    "threading.worldgen.MixinChunkStatus",
+    "threading.worldgen.MixinServerWorld",
+    "threading.worldgen.MixinThreadedAnvilChunkStorage"
   ],
   "client": [
   ],

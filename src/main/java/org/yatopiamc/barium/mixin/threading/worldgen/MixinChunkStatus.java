@@ -1,4 +1,4 @@
-package org.yatopiamc.barium.mixin.threading;
+package org.yatopiamc.barium.mixin.threading.worldgen;
 
 import com.mojang.datafixers.util.Either;
 import net.minecraft.server.world.ChunkHolder;
@@ -12,8 +12,8 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
-import org.yatopiamc.barium.common.mixininterface.IServerWorld;
-import org.yatopiamc.barium.common.threading.ThreadingUtils;
+import org.yatopiamc.barium.common.threading.worldgen.ChunkStatusUtils;
+import org.yatopiamc.barium.common.threading.worldgen.IWorldGenLockable;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -32,7 +32,7 @@ public class MixinChunkStatus {
      */
     @Overwrite
     public CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> runGenerationTask(ServerWorld world, ChunkGenerator chunkGenerator, StructureManager structureManager, ServerLightingProvider lightingProvider, Function<Chunk, CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>>> function, List<Chunk> chunks) {
-        return ThreadingUtils.getThreadingType((ChunkStatus) (Object) this).runTask(((IServerWorld) world).getWorldGenSingleThreadedLock(), () -> this.generationTask.doWork((ChunkStatus) (Object) this, world, chunkGenerator, structureManager, lightingProvider, function, chunks, chunks.get(chunks.size() / 2)));
+        return ChunkStatusUtils.getThreadingType((ChunkStatus) (Object) this).runTask(((IWorldGenLockable) world).getWorldGenSingleThreadedLock(), () -> this.generationTask.doWork((ChunkStatus) (Object) this, world, chunkGenerator, structureManager, lightingProvider, function, chunks, chunks.get(chunks.size() / 2)));
     }
 
 }

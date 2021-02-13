@@ -1,4 +1,4 @@
-package org.yatopiamc.barium.common.threading;
+package org.yatopiamc.barium.common.threading.worldgen;
 
 import com.google.common.base.Preconditions;
 import com.ibm.asyncutil.locks.AsyncLock;
@@ -10,12 +10,12 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-public enum ThreadingType {
+public enum ChunkStatusThreadingType {
 
     PARALLELIZED() {
         @Override
         public CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> runTask(AsyncLock lock, Supplier<CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>>> completableFuture) {
-            return CompletableFuture.supplyAsync(completableFuture, ThreadingExecutorUtils::execute).thenCompose(Function.identity());
+            return CompletableFuture.supplyAsync(completableFuture, WorldGenThreadingExecutorUtils::execute).thenCompose(Function.identity());
         }
     },
     SINGLE_THREADED() {
@@ -28,7 +28,7 @@ public enum ThreadingType {
                 } finally {
                     lockToken.releaseLock();
                 }
-            }, ThreadingExecutorUtils::execute);
+            }, WorldGenThreadingExecutorUtils::execute);
         }
     },
     AS_IS() {

@@ -1,8 +1,8 @@
-package org.yatopiamc.barium.common.mixininterface;
+package org.yatopiamc.barium.common.threading.worldgen;
 
 import com.ibm.asyncutil.locks.AsyncLock;
 
-public interface IServerWorld {
+public interface IWorldGenLockable {
 
     AsyncLock getWorldGenSingleThreadedLock();
 
