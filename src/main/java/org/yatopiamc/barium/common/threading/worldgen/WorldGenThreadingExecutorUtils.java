@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit;
 public class WorldGenThreadingExecutorUtils {
 
     private static final ThreadPoolExecutor mainExecutor = new ThreadPoolExecutor(
-            Math.min(4, Runtime.getRuntime().availableProcessors()),
+            Math.min(8, Runtime.getRuntime().availableProcessors()),
             Runtime.getRuntime().availableProcessors(),
             60, TimeUnit.SECONDS,
             new LinkedBlockingQueue<>(),

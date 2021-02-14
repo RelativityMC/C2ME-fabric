@@ -4,6 +4,9 @@
   "package": "org.yatopiamc.barium.mixin",
   "compatibilityLevel": "JAVA_11",
   "mixins": [
+    "threading.chunkio.MixinChunkSerializer",
+    "threading.chunkio.MixinStorageIoWorker",
+    "threading.chunkio.MixinThreadedAnvilChunkStorage",
     "threading.lighting.MixinThreadedAnvilChunkStorage",
     "threading.worldgen.MixinChunkStatus",
     "threading.worldgen.MixinServerWorld",

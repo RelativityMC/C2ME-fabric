@@ -3,3 +3,8 @@ accessWidener v1 named
 accessible    class    net/minecraft/world/chunk/ChunkStatus$SimpleGenerationTask
 accessible    class    net/minecraft/world/chunk/ChunkStatus$LoadTask
 accessible    class    net/minecraft/world/chunk/ChunkStatus$GenerationTask
+accessible    class    net/minecraft/world/storage/StorageIoWorker$Result
+
+accessible    field    net/minecraft/world/storage/StorageIoWorker$Result    nbt    Lnet/minecraft/nbt/CompoundTag;
+accessible    field    net/minecraft/world/storage/StorageIoWorker$Result    future    Ljava/util/concurrent/CompletableFuture;
+accessible    field    net/minecraft/world/storage/VersionedChunkStorage    worker    Lnet/minecraft/world/storage/StorageIoWorker;
