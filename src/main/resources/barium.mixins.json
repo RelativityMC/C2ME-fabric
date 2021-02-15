@@ -11,6 +11,7 @@
     "threading.lighting.MixinThreadedAnvilChunkStorage",
     "threading.worldgen.MixinChunkStatus",
     "threading.worldgen.MixinServerWorld",
+    "threading.worldgen.MixinStructureManager",
     "threading.worldgen.MixinThreadedAnvilChunkStorage"
   ],
   "client": [
