@@ -25,6 +25,7 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.yatopiamc.barium.common.threading.chunkio.ChunkIoMainThreadTaskUtils;
 import org.yatopiamc.barium.common.threading.chunkio.ChunkIoThreadingExecutorUtils;
+import org.yatopiamc.barium.common.threading.chunkio.ISerializingRegionBasedStorage;
 import org.yatopiamc.barium.common.threading.chunkio.ThreadedStorageIo;
 
 import java.io.File;
@@ -80,6 +81,8 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
     @Overwrite
     private CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> loadChunk(ChunkPos pos) {
 
+        final CompletableFuture<CompoundTag> poiData = ((ThreadedStorageIo) this.pointOfInterestStorage.worker).getNbtAtAsync(pos);
+
         return getUpdatedChunkTagAtAsync(pos).thenApplyAsync(compoundTag -> {
             if (compoundTag != null) {
                 try {
@@ -87,13 +90,14 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
                         return ChunkSerializer.deserialize(this.world, this.structureManager, this.pointOfInterestStorage, pos, compoundTag);
                     }
 
-                    LOGGER.error("Chunk file at {} is missing level data, skipping", pos);
+                    LOGGER.warn("Chunk file at {} is missing level data, skipping", pos);
                 } catch (Throwable t) {
                     LOGGER.error("Couldn't load chunk {}, chunk data will be lost!", pos, t);
                 }
             }
             return null;
-        }, ChunkIoThreadingExecutorUtils::executeSerializing).thenApplyAsync(protoChunk -> {
+        }, ChunkIoThreadingExecutorUtils::executeSerializing).thenCombine(poiData, (protoChunk, tag) -> protoChunk).thenApplyAsync(protoChunk -> {
+            ((ISerializingRegionBasedStorage) this.pointOfInterestStorage).update(pos, poiData.join());
             ChunkIoMainThreadTaskUtils.drainQueue();
             if (protoChunk != null) {
                 protoChunk.setLastSaveTime(this.world.getTime());
