@@ -96,7 +96,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
                 }
             }
             return null;
-        }, ChunkIoThreadingExecutorUtils::executeSerializing).thenCombine(poiData, (protoChunk, tag) -> protoChunk).thenApplyAsync(protoChunk -> {
+        }, ChunkIoThreadingExecutorUtils.serializerExecutor).thenCombine(poiData, (protoChunk, tag) -> protoChunk).thenApplyAsync(protoChunk -> {
             ((ISerializingRegionBasedStorage) this.pointOfInterestStorage).update(pos, poiData.join());
             ChunkIoMainThreadTaskUtils.drainQueue();
             if (protoChunk != null) {

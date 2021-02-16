@@ -15,7 +15,7 @@ public enum ChunkStatusThreadingType {
     PARALLELIZED() {
         @Override
         public CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> runTask(AsyncLock lock, Supplier<CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>>> completableFuture) {
-            return CompletableFuture.supplyAsync(completableFuture, WorldGenThreadingExecutorUtils::execute).thenCompose(Function.identity());
+            return CompletableFuture.supplyAsync(completableFuture, WorldGenThreadingExecutorUtils.mainExecutor).thenCompose(Function.identity());
         }
     },
     SINGLE_THREADED() {
@@ -28,7 +28,7 @@ public enum ChunkStatusThreadingType {
                 } finally {
                     lockToken.releaseLock();
                 }
-            }, WorldGenThreadingExecutorUtils::execute);
+            }, WorldGenThreadingExecutorUtils.mainExecutor);
         }
     },
     AS_IS() {

@@ -18,7 +18,7 @@ public class MixinThreadedAnvilChunkStorage {
     @Dynamic
     @Overwrite
     private void method_17259(ChunkHolder chunkHolder, Runnable runnable) { // synthetic method for worldGenExecutor scheduling
-        WorldGenThreadingExecutorUtils.schedule(runnable);
+        WorldGenThreadingExecutorUtils.scheduler.execute(runnable);
     }
 
 }

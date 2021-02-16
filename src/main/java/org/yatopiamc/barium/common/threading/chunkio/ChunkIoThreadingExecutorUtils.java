@@ -1,23 +1,16 @@
 package org.yatopiamc.barium.common.threading.chunkio;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import org.yatopiamc.barium.common.util.BariumForkJoinWorkerThreadFactory;
 
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ForkJoinPool;
 
 public class ChunkIoThreadingExecutorUtils {
 
-    private static final ThreadPoolExecutor serializerExecutor = new ThreadPoolExecutor(
+    public static final ForkJoinPool serializerExecutor = new ForkJoinPool(
             Math.min(6, Runtime.getRuntime().availableProcessors()),
-            Runtime.getRuntime().availableProcessors(),
-            60, TimeUnit.SECONDS,
-            new LinkedBlockingQueue<>(),
-            new ThreadFactoryBuilder().setNameFormat("barium chunkio serializer worker #%d").setDaemon(true).setPriority(Thread.NORM_PRIORITY - 1).build()
+            new BariumForkJoinWorkerThreadFactory("barium chunkio serializer worker #%d"),
+            null,
+            true
     );
-
-    public static void executeSerializing(Runnable command) {
-        serializerExecutor.execute(command);
-    }
 
 }
