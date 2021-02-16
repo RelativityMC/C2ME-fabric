@@ -7,16 +7,18 @@ import java.util.concurrent.atomic.AtomicLong;
 public class BariumForkJoinWorkerThreadFactory implements ForkJoinPool.ForkJoinWorkerThreadFactory {
     private final AtomicLong serial = new AtomicLong(0);
     private final String namePattern;
+    private final int priority;
 
-    public BariumForkJoinWorkerThreadFactory(String namePattern) {
+    public BariumForkJoinWorkerThreadFactory(String namePattern, int priority) {
         this.namePattern = namePattern;
+        this.priority = priority;
     }
 
     @Override
     public ForkJoinWorkerThread newThread(ForkJoinPool pool) {
         final BariumForkJoinWorkerThread bariumForkJoinWorkerThread = new BariumForkJoinWorkerThread(pool);
         bariumForkJoinWorkerThread.setName(String.format(namePattern, serial.incrementAndGet()));
-        bariumForkJoinWorkerThread.setPriority(Thread.NORM_PRIORITY - 1);
+        bariumForkJoinWorkerThread.setPriority(priority);
         bariumForkJoinWorkerThread.setDaemon(true);
         return bariumForkJoinWorkerThread;
     }

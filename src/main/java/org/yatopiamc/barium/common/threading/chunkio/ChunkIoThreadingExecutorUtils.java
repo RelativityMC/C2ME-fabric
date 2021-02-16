@@ -8,7 +8,7 @@ public class ChunkIoThreadingExecutorUtils {
 
     public static final ForkJoinPool serializerExecutor = new ForkJoinPool(
             Math.min(6, Runtime.getRuntime().availableProcessors()),
-            new BariumForkJoinWorkerThreadFactory("barium chunkio serializer worker #%d"),
+            new BariumForkJoinWorkerThreadFactory("barium chunkio serializer worker #%d", Thread.NORM_PRIORITY - 1),
             null,
             true
     );

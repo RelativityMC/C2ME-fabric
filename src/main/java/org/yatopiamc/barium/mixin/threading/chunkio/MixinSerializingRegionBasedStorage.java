@@ -5,10 +5,18 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.storage.SerializingRegionBasedStorage;
+import net.minecraft.world.storage.StorageIoWorker;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
+import org.spongepowered.asm.mixin.injection.Redirect;
+import org.yatopiamc.barium.common.threading.chunkio.BariumCachedRegionStorage;
 import org.yatopiamc.barium.common.threading.chunkio.ISerializingRegionBasedStorage;
+
+import java.io.File;
 
 @Mixin(SerializingRegionBasedStorage.class)
 public abstract class MixinSerializingRegionBasedStorage implements ISerializingRegionBasedStorage {
@@ -19,5 +27,10 @@ public abstract class MixinSerializingRegionBasedStorage implements ISerializing
     @Override
     public void update(ChunkPos pos, CompoundTag tag) {
         this.update(pos, NbtOps.INSTANCE, tag);
+    }
+
+    @Redirect(method = "<init>", at = @At(value = "NEW", target = "net/minecraft/world/storage/StorageIoWorker"))
+    private StorageIoWorker onStorageIoInit(File file, boolean bl, String string) {
+        return new BariumCachedRegionStorage(file, bl, string);
     }
 }

@@ -5,6 +5,10 @@ accessible    class    net/minecraft/world/chunk/ChunkStatus$LoadTask
 accessible    class    net/minecraft/world/chunk/ChunkStatus$GenerationTask
 accessible    class    net/minecraft/world/storage/StorageIoWorker$Result
 
+accessible    method    net/minecraft/world/storage/RegionBasedStorage    <init>    (Ljava/io/File;Z)V
+accessible    method    net/minecraft/world/storage/RegionBasedStorage    getRegionFile    (Lnet/minecraft/util/math/ChunkPos;)Lnet/minecraft/world/storage/RegionFile;
+accessible    method    net/minecraft/world/storage/RegionBasedStorage    write    (Lnet/minecraft/util/math/ChunkPos;Lnet/minecraft/nbt/CompoundTag;)V
+
 accessible    field    net/minecraft/world/storage/StorageIoWorker$Result    nbt    Lnet/minecraft/nbt/CompoundTag;
 accessible    field    net/minecraft/world/storage/StorageIoWorker$Result    future    Ljava/util/concurrent/CompletableFuture;
 accessible    field    net/minecraft/world/storage/VersionedChunkStorage    worker    Lnet/minecraft/world/storage/StorageIoWorker;

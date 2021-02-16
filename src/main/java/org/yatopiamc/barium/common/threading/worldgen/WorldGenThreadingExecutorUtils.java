@@ -12,7 +12,7 @@ public class WorldGenThreadingExecutorUtils {
 
     public static final ForkJoinPool mainExecutor = new ForkJoinPool(
             Math.min(8, Runtime.getRuntime().availableProcessors()),
-            new BariumForkJoinWorkerThreadFactory("barium worldgen worker #%d"),
+            new BariumForkJoinWorkerThreadFactory("barium worldgen worker #%d", Thread.NORM_PRIORITY - 1),
             null,
             true
     );
@@ -21,7 +21,7 @@ public class WorldGenThreadingExecutorUtils {
             1,
             0, TimeUnit.SECONDS,
             new LinkedBlockingQueue<>(),
-            new ThreadFactoryBuilder().setNameFormat("barium worldgen scheduler").setDaemon(true).setPriority(Thread.NORM_PRIORITY - 1).build()
+            new ThreadFactoryBuilder().setNameFormat("barium worldgen scheduler").setDaemon(true).setPriority(Thread.NORM_PRIORITY).build()
     );
 
 }

@@ -13,7 +13,7 @@ public class MixinMinecraftDedicatedServer {
     @Inject(method = "exit", at = @At("RETURN"))
     private void onPostShutdown(CallbackInfo ci) {
         LogManager.shutdown();
-        System.exit(0);
+        new Thread(() -> System.exit(0)).start();
     }
 
 }

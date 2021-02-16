@@ -28,10 +28,10 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.yatopiamc.barium.common.threading.chunkio.BariumCachedRegionStorage;
 import org.yatopiamc.barium.common.threading.chunkio.ChunkIoMainThreadTaskUtils;
 import org.yatopiamc.barium.common.threading.chunkio.ChunkIoThreadingExecutorUtils;
 import org.yatopiamc.barium.common.threading.chunkio.ISerializingRegionBasedStorage;
-import org.yatopiamc.barium.common.threading.chunkio.ThreadedStorageIo;
 import org.yatopiamc.barium.common.util.SneakyThrow;
 
 import java.io.File;
@@ -98,7 +98,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
     @Overwrite
     private CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> loadChunk(ChunkPos pos) {
 
-        final CompletableFuture<CompoundTag> poiData = ((ThreadedStorageIo) this.pointOfInterestStorage.worker).getNbtAtAsync(pos);
+        final CompletableFuture<CompoundTag> poiData = ((BariumCachedRegionStorage) this.pointOfInterestStorage.worker).getNbtAtAsync(pos);
 
         return getUpdatedChunkTagAtAsync(pos).thenApplyAsync(compoundTag -> {
             if (compoundTag != null) {
@@ -161,7 +161,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
     }
 
     private CompletableFuture<CompoundTag> getUpdatedChunkTagAtAsync(ChunkPos pos) {
-        return chunkLock.acquireLock(pos).toCompletableFuture().thenCompose(lockToken -> ((ThreadedStorageIo) this.worker).getNbtAtAsync(pos).thenApply(compoundTag -> {
+        return chunkLock.acquireLock(pos).toCompletableFuture().thenCompose(lockToken -> ((BariumCachedRegionStorage) this.worker).getNbtAtAsync(pos).thenApply(compoundTag -> {
             if (compoundTag != null)
                 return this.updateChunkTag(this.world.getRegistryKey(), this.persistentStateManagerFactory, compoundTag);
             else return null;
