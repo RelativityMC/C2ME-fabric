@@ -1,5 +1,6 @@
 package org.yatopiamc.barium.mixin.threading.chunkio;
 
+import com.ibm.asyncutil.locks.AsyncNamedLock;
 import com.mojang.datafixers.DataFixer;
 import com.mojang.datafixers.util.Either;
 import net.minecraft.nbt.CompoundTag;
@@ -7,6 +8,7 @@ import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;
 import net.minecraft.structure.StructureManager;
+import net.minecraft.structure.StructureStart;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.thread.ThreadExecutor;
 import net.minecraft.world.ChunkSerializer;
@@ -23,14 +25,19 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.yatopiamc.barium.common.threading.chunkio.ChunkIoMainThreadTaskUtils;
 import org.yatopiamc.barium.common.threading.chunkio.ChunkIoThreadingExecutorUtils;
 import org.yatopiamc.barium.common.threading.chunkio.ISerializingRegionBasedStorage;
 import org.yatopiamc.barium.common.threading.chunkio.ThreadedStorageIo;
+import org.yatopiamc.barium.common.util.SneakyThrow;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Supplier;
 
 @Mixin(ThreadedAnvilChunkStorage.class)
@@ -73,6 +80,16 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
     @Shadow
     @Final
     private ThreadExecutor<Runnable> mainThreadExecutor;
+
+    @Shadow
+    protected abstract boolean method_27055(ChunkPos chunkPos);
+
+    private AsyncNamedLock<ChunkPos> chunkLock = AsyncNamedLock.createFair();
+
+    @Inject(method = "<init>", at = @At("RETURN"))
+    private void onInit(CallbackInfo info) {
+        chunkLock = AsyncNamedLock.createFair();
+    }
 
     /**
      * @author ishland
@@ -144,11 +161,79 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
     }
 
     private CompletableFuture<CompoundTag> getUpdatedChunkTagAtAsync(ChunkPos pos) {
-        return ((ThreadedStorageIo) this.worker).getNbtAtAsync(pos).thenApply(compoundTag -> {
+        return chunkLock.acquireLock(pos).toCompletableFuture().thenCompose(lockToken -> ((ThreadedStorageIo) this.worker).getNbtAtAsync(pos).thenApply(compoundTag -> {
             if (compoundTag != null)
                 return this.updateChunkTag(this.world.getRegistryKey(), this.persistentStateManagerFactory, compoundTag);
             else return null;
-        });
+        }).handle((tag, throwable) -> {
+            lockToken.releaseLock();
+            if (throwable != null)
+                SneakyThrow.sneaky(throwable);
+            return tag;
+        }));
     }
 
+    private ConcurrentLinkedQueue<CompletableFuture<Void>> saveFutures = new ConcurrentLinkedQueue<>();
+
+    /**
+     * @author ishland
+     * @reason async serialization
+     */
+    @Overwrite
+    private boolean save(Chunk chunk) {
+        // [VanillaCopy]
+        this.pointOfInterestStorage.method_20436(chunk.getPos());
+        if (!chunk.needsSaving()) {
+            return false;
+        } else {
+            chunk.setLastSaveTime(this.world.getTime());
+            chunk.setShouldSave(false);
+            ChunkPos chunkPos = chunk.getPos();
+
+            try {
+                ChunkStatus chunkStatus = chunk.getStatus();
+                if (chunkStatus.getChunkType() != ChunkStatus.ChunkType.field_12807) {
+                    if (this.method_27055(chunkPos)) {
+                        return false;
+                    }
+
+                    if (chunkStatus == ChunkStatus.EMPTY && chunk.getStructureStarts().values().stream().noneMatch(StructureStart::hasChildren)) {
+                        return false;
+                    }
+                }
+
+                this.world.getProfiler().visit("chunkSave");
+                // barium start - async serialization
+                if (saveFutures == null) saveFutures = new ConcurrentLinkedQueue<>();
+
+                saveFutures.add(chunkLock.acquireLock(chunk.getPos()).toCompletableFuture().thenCompose(lockToken ->
+                        CompletableFuture.supplyAsync(() -> ChunkSerializer.serialize(this.world, chunk), ChunkIoThreadingExecutorUtils.serializerExecutor).thenAcceptAsync(compoundTag -> {
+                            this.setTagAt(chunkPos, compoundTag);
+                        }, this.mainThreadExecutor).handle((unused, throwable) -> {
+                            lockToken.releaseLock();
+                            if (throwable != null)
+                                LOGGER.error("Failed to save chunk {},{}", chunkPos.x, chunkPos.z, throwable);
+                            return unused;
+                        })));
+                this.method_27053(chunkPos, chunkStatus.getChunkType());
+                // barium end
+                return true;
+            } catch (Exception var5) {
+                LOGGER.error("Failed to save chunk {},{}", chunkPos.x, chunkPos.z, var5);
+                return false;
+            }
+        }
+    }
+
+    @Inject(method = "tick", at = @At("HEAD"))
+    private void onTick(CallbackInfo info) {
+        ChunkIoThreadingExecutorUtils.serializerExecutor.execute(() -> saveFutures.removeIf(CompletableFuture::isDone));
+    }
+
+    @Override
+    public void completeAll() {
+        final CompletableFuture<Void> future = CompletableFuture.allOf(saveFutures.toArray(new CompletableFuture[0]));
+        this.mainThreadExecutor.runTasks(future::isDone); // wait for serialization to complete
+        super.completeAll();
+    }
 }
