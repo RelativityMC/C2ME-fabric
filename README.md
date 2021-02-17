@@ -22,4 +22,4 @@ Run the following commands in the root directory:
 
 ## License
 
-License information can be found [here](../LICENSE).
+License information can be found [here](/LICENSE).
