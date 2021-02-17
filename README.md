@@ -11,6 +11,11 @@
 ## So what is Barium?
 Barium is a Fabric mod designed to improve the performance of chunk generation, I/O, and loading. This is done by taking advantage of multiple CPU cores in parallel. For the best performance it is recommended to use Barium with [Lithium](https://github.com/CaffeineMC/lithium-fabric) and [Starlight](https://github.com/Spottedleaf/Starlight).
 
+##So what is Barium not?
+Barium is not affiliated with the CaffieneMC.
+Barium is not production ready and still pretty experimental. 
+YOU HAVE BEEN WARNED!!!!
+ 
 ## Building and setting up
 
 Run the following commands in the root directory:
