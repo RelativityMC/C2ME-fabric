@@ -59,8 +59,8 @@ public class BariumCachedRegionStorage extends StorageIoWorker {
         this.storage = new RegionBasedStorage(file, bl);
         this.chunkCache = CacheBuilder.newBuilder()
                 .concurrencyLevel(Runtime.getRuntime().availableProcessors() * 2)
-                .expireAfterAccess(16, TimeUnit.SECONDS)
-                .maximumSize(16384)
+                .expireAfterAccess(3, TimeUnit.SECONDS)
+                .maximumSize(8192)
                 .removalListener((RemovalNotification<ChunkPos, CompoundTag> notification) -> {
                     if (notification.getValue() != EMPTY_VALUE)
                         scheduleWrite(notification.getKey(), notification.getValue());
