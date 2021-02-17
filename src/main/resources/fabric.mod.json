@@ -5,6 +5,7 @@
   "name": "Barium",
   "description": "A Fabric mod designed to improve the world generation performance of Minecraft",
   "authors": [
+    "YatopiaMC",
     "ishland"
   ],
   "contact": {
@@ -12,6 +13,7 @@
     "repo": "https://github.com/YatopiaMC/barium-fabric"
   },
   "license": "MIT",
+  "icon": "assets/barium/icon.png",
   "environment": "*",
   "entrypoints": {
     "main": [
