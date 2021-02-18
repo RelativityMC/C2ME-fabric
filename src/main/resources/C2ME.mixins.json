@@ -1,7 +1,7 @@
 {
   "required": true,
   "minVersion": "0.8",
-  "package": "org.yatopiamc.barium.mixin",
+  "package": "org.yatopiamc.C2ME.mixin",
   "compatibilityLevel": "JAVA_11",
   "mixins": [
     "threading.chunkio.MixinChunkSerializer",
