@@ -1,4 +1,4 @@
-package org.yatopiamc.barium.common.threading.chunkio;
+package org.yatopiamc.C2ME.common.threading.chunkio;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.math.ChunkPos;

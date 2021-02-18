@@ -1,4 +1,4 @@
-package org.yatopiamc.barium.common.util;
+package org.yatopiamc.C2ME.common.util;
 
 public class SneakyThrow {
 

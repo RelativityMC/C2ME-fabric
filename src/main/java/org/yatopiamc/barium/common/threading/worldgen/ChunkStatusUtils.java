@@ -1,4 +1,4 @@
-package org.yatopiamc.barium.common.threading.worldgen;
+package org.yatopiamc.C2ME.common.threading.worldgen;
 
 import com.ibm.asyncutil.locks.AsyncLock;
 import com.ibm.asyncutil.locks.AsyncNamedLock;

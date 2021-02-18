@@ -1,4 +1,4 @@
-package org.yatopiamc.barium.mixin.threading.chunkio;
+package org.yatopiamc.C2ME.mixin.threading.chunkio;
 
 import com.ibm.asyncutil.locks.AsyncNamedLock;
 import com.mojang.datafixers.DataFixer;
@@ -28,11 +28,11 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.yatopiamc.barium.common.threading.chunkio.BariumCachedRegionStorage;
-import org.yatopiamc.barium.common.threading.chunkio.ChunkIoMainThreadTaskUtils;
-import org.yatopiamc.barium.common.threading.chunkio.ChunkIoThreadingExecutorUtils;
-import org.yatopiamc.barium.common.threading.chunkio.ISerializingRegionBasedStorage;
-import org.yatopiamc.barium.common.util.SneakyThrow;
+import org.yatopiamc.C2ME.common.threading.chunkio.C2MECachedRegionStorage;
+import org.yatopiamc.C2ME.common.threading.chunkio.ChunkIoMainThreadTaskUtils;
+import org.yatopiamc.C2ME.common.threading.chunkio.ChunkIoThreadingExecutorUtils;
+import org.yatopiamc.C2ME.common.threading.chunkio.ISerializingRegionBasedStorage;
+import org.yatopiamc.C2ME.common.util.SneakyThrow;
 
 import java.io.File;
 import java.io.IOException;
@@ -98,7 +98,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
     @Overwrite
     private CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> loadChunk(ChunkPos pos) {
 
-        final CompletableFuture<CompoundTag> poiData = ((BariumCachedRegionStorage) this.pointOfInterestStorage.worker).getNbtAtAsync(pos);
+        final CompletableFuture<CompoundTag> poiData = ((C2MECachedRegionStorage) this.pointOfInterestStorage.worker).getNbtAtAsync(pos);
 
         return getUpdatedChunkTagAtAsync(pos).thenApplyAsync(compoundTag -> {
             if (compoundTag != null) {
@@ -161,7 +161,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
     }
 
     private CompletableFuture<CompoundTag> getUpdatedChunkTagAtAsync(ChunkPos pos) {
-        return chunkLock.acquireLock(pos).toCompletableFuture().thenCompose(lockToken -> ((BariumCachedRegionStorage) this.worker).getNbtAtAsync(pos).thenApply(compoundTag -> {
+        return chunkLock.acquireLock(pos).toCompletableFuture().thenCompose(lockToken -> ((C2MECachedRegionStorage) this.worker).getNbtAtAsync(pos).thenApply(compoundTag -> {
             if (compoundTag != null)
                 return this.updateChunkTag(this.world.getRegistryKey(), this.persistentStateManagerFactory, compoundTag);
             else return null;
@@ -203,7 +203,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
                 }
 
                 this.world.getProfiler().visit("chunkSave");
-                // barium start - async serialization
+                // C2ME start - async serialization
                 if (saveFutures == null) saveFutures = new ConcurrentLinkedQueue<>();
 
                 saveFutures.add(chunkLock.acquireLock(chunk.getPos()).toCompletableFuture().thenCompose(lockToken ->
@@ -216,7 +216,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
                             return unused;
                         })));
                 this.method_27053(chunkPos, chunkStatus.getChunkType());
-                // barium end
+                // C2ME end
                 return true;
             } catch (Exception var5) {
                 LOGGER.error("Failed to save chunk {},{}", chunkPos.x, chunkPos.z, var5);

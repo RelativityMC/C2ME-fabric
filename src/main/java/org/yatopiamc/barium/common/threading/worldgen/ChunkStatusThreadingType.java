@@ -1,4 +1,4 @@
-package org.yatopiamc.barium.common.threading.worldgen;
+package org.yatopiamc.C2ME.common.threading.worldgen;
 
 import com.google.common.base.Preconditions;
 import com.ibm.asyncutil.locks.AsyncLock;

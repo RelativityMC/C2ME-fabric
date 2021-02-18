@@ -1,4 +1,4 @@
-package org.yatopiamc.barium.mixin.threading.worldgen;
+package org.yatopiamc.C2ME.mixin.threading.worldgen;
 
 import net.minecraft.structure.Structure;
 import net.minecraft.structure.StructureManager;
