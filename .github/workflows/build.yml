@@ -33,5 +33,5 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: Barrium
-        path: ./build/libs/barium-fabric-0.1-SNAPSHOT-all.jar
+        path: ./build/libs/C2ME-fabric-0.1-SNAPSHOT-all.jar
       

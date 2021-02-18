@@ -1,4 +1,4 @@
-package org.yatopiamc.barium.common.threading.chunkio;
+package org.yatopiamc.C2ME.common.threading.chunkio;
 
 import com.google.common.base.Preconditions;
 import com.google.common.cache.Cache;
@@ -16,8 +16,8 @@ import net.minecraft.world.storage.StorageIoWorker;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
-import org.yatopiamc.barium.common.util.BariumForkJoinWorkerThreadFactory;
-import org.yatopiamc.barium.common.util.SneakyThrow;
+import org.yatopiamc.C2ME.common.util.C2MEForkJoinWorkerThreadFactory;
+import org.yatopiamc.C2ME.common.util.SneakyThrow;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -31,18 +31,18 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class BariumCachedRegionStorage extends StorageIoWorker {
+public class C2MECachedRegionStorage extends StorageIoWorker {
 
     private static final CompoundTag EMPTY_VALUE = new CompoundTag();
     private static final Logger LOGGER = LogManager.getLogger();
     private static final ForkJoinPool IOExecutor = new ForkJoinPool(
             Math.min(8, Runtime.getRuntime().availableProcessors()),
-            new BariumForkJoinWorkerThreadFactory("barium chunkio io worker #%d", Thread.NORM_PRIORITY - 3),
+            new C2MEForkJoinWorkerThreadFactory("C2ME chunkio io worker #%d", Thread.NORM_PRIORITY - 3),
             null, true
     );
     private static final ScheduledThreadPoolExecutor scheduler = new ScheduledThreadPoolExecutor(
             1,
-            new ThreadFactoryBuilder().setNameFormat("barium chunkio scheduler").setDaemon(true).setPriority(Thread.NORM_PRIORITY - 1).build()
+            new ThreadFactoryBuilder().setNameFormat("C2ME chunkio scheduler").setDaemon(true).setPriority(Thread.NORM_PRIORITY - 1).build()
     );
 
     private final RegionBasedStorage storage;
@@ -54,7 +54,7 @@ public class BariumCachedRegionStorage extends StorageIoWorker {
 
     private final AtomicBoolean isClosed = new AtomicBoolean(false);
 
-    public BariumCachedRegionStorage(File file, boolean bl, String string) {
+    public C2MECachedRegionStorage(File file, boolean bl, String string) {
         super(file, bl, string);
         this.storage = new RegionBasedStorage(file, bl);
         this.chunkCache = CacheBuilder.newBuilder()
