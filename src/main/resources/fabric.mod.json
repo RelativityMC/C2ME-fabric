@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "id": "barium",
+  "id": "C2ME",
   "version": "${version}",
-  "name": "Barium",
+  "name": "C2ME",
   "description": "A Fabric mod designed to improve the world generation performance of Minecraft",
   "authors": [
     "YatopiaMC",
@@ -10,19 +10,19 @@
   ],
   "contact": {
     "website": "https://yatopiamc.org/",
-    "repo": "https://github.com/YatopiaMC/barium-fabric"
+    "repo": "https://github.com/YatopiaMC/C2ME-fabric"
   },
   "license": "MIT",
-  "icon": "assets/barium/icon.png",
+  "icon": "assets/C2ME/icon.png",
   "environment": "*",
   "entrypoints": {
     "main": [
-      "org.yatopiamc.barium.BariumMod"
+      "org.yatopiamc.C2ME.C2MEMod"
     ]
   },
-  "accessWidener" : "barium.accesswidener",
+  "accessWidener" : "C2ME.accesswidener",
   "mixins": [
-    "barium.mixins.json"
+    "C2ME.mixins.json"
   ],
   "depends": {
     "fabricloader": ">=0.11.1",
