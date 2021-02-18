@@ -1,4 +1,4 @@
-package org.yatopiamc.barium.mixin.threading.lighting;
+package org.yatopiamc.C2ME.mixin.threading.lighting;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import net.minecraft.server.world.ServerWorld;

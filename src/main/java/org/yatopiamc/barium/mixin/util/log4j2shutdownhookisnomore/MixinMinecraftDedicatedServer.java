@@ -1,4 +1,4 @@
-package org.yatopiamc.barium.mixin.util.log4j2shutdownhookisnomore;
+package org.yatopiamc.C2ME.mixin.util.log4j2shutdownhookisnomore;
 
 import net.minecraft.server.dedicated.MinecraftDedicatedServer;
 import org.apache.logging.log4j.LogManager;

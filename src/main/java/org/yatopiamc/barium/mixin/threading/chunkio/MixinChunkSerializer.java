@@ -1,4 +1,4 @@
-package org.yatopiamc.barium.mixin.threading.chunkio;
+package org.yatopiamc.C2ME.mixin.threading.chunkio;
 
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.ChunkSectionPos;
@@ -11,7 +11,7 @@ import net.minecraft.world.poi.PointOfInterestStorage;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
-import org.yatopiamc.barium.common.threading.chunkio.ChunkIoMainThreadTaskUtils;
+import org.yatopiamc.C2ME.common.threading.chunkio.ChunkIoMainThreadTaskUtils;
 
 @Mixin(ChunkSerializer.class)
 public class MixinChunkSerializer {

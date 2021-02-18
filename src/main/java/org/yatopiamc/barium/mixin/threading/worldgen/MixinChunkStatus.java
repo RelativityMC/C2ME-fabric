@@ -1,4 +1,4 @@
-package org.yatopiamc.barium.mixin.threading.worldgen;
+package org.yatopiamc.C2ME.mixin.threading.worldgen;
 
 import com.mojang.datafixers.util.Either;
 import net.minecraft.server.world.ChunkHolder;
@@ -12,8 +12,8 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
-import org.yatopiamc.barium.common.threading.worldgen.ChunkStatusUtils;
-import org.yatopiamc.barium.common.threading.worldgen.IWorldGenLockable;
+import org.yatopiamc.C2ME.common.threading.worldgen.ChunkStatusUtils;
+import org.yatopiamc.C2ME.common.threading.worldgen.IWorldGenLockable;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;

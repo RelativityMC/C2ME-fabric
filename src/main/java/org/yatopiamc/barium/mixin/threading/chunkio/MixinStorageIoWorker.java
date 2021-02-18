@@ -1,4 +1,4 @@
-package org.yatopiamc.barium.mixin.threading.chunkio;
+package org.yatopiamc.C2ME.mixin.threading.chunkio;
 
 import com.mojang.datafixers.util.Either;
 import net.minecraft.nbt.CompoundTag;
@@ -17,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import org.yatopiamc.barium.common.threading.chunkio.BariumCachedRegionStorage;
+import org.yatopiamc.C2ME.common.threading.chunkio.C2MECachedRegionStorage;
 
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -42,7 +42,7 @@ public abstract class MixinStorageIoWorker {
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onPostInit(CallbackInfo info) {
         //noinspection ConstantConditions
-        if (((Object) this) instanceof BariumCachedRegionStorage) {
+        if (((Object) this) instanceof C2MECachedRegionStorage) {
             this.storage = null;
             this.results = null;
             this.field_24468 = null;
