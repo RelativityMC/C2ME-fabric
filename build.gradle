@@ -12,7 +12,7 @@ version = project.mod_version
 group = project.maven_group
 
 loom {
-    accessWidener "src/main/resources/barium.accesswidener"
+    accessWidener "src/main/resources/C2ME.accesswidener"
 }
 
 dependencies {
