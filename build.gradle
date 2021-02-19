@@ -12,7 +12,7 @@ version = project.mod_version
 group = project.maven_group
 
 loom {
-    accessWidener "src/main/resources/C2ME.accesswidener"
+    accessWidener "src/main/resources/c2me.accesswidener"
 }
 
 dependencies {

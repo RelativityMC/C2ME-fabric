@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "id": "C2ME",
+  "id": "c2me",
   "version": "${version}",
-  "name": "C2ME",
+  "name": "Concurrent Chunk Management Engine",
   "description": "A Fabric mod designed to improve the world generation performance of Minecraft",
   "authors": [
     "YatopiaMC",
@@ -13,16 +13,16 @@
     "repo": "https://github.com/YatopiaMC/C2ME-fabric"
   },
   "license": "MIT",
-  "icon": "assets/C2ME/icon.png",
+  "icon": "assets/c2me/icon.png",
   "environment": "*",
   "entrypoints": {
     "main": [
-      "org.yatopiamc.C2ME.C2MEMod"
+      "org.yatopiamc.c2me.C2MEMod"
     ]
   },
-  "accessWidener" : "C2ME.accesswidener",
+  "accessWidener" : "c2me.accesswidener",
   "mixins": [
-    "C2ME.mixins.json"
+    "c2me.mixins.json"
   ],
   "depends": {
     "fabricloader": ">=0.11.1",

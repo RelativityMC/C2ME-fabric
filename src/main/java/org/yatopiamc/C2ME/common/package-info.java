@@ -1,1 +1,0 @@
-package org.yatopiamc.C2ME.common;
