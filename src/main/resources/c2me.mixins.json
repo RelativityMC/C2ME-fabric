@@ -5,7 +5,10 @@
   "compatibilityLevel": "JAVA_11",
   "mixins": [
     "threading.chunkio.MixinChunkSerializer",
+    "threading.chunkio.MixinChunkTickScheduler",
     "threading.chunkio.MixinSerializingRegionBasedStorage",
+    "threading.chunkio.MixinServerTickScheduler",
+    "threading.chunkio.MixinSimpleTickScheduler",
     "threading.chunkio.MixinStorageIoWorker",
     "threading.chunkio.MixinThreadedAnvilChunkStorage",
     "threading.chunkio.MixinVersionedChunkStorage",

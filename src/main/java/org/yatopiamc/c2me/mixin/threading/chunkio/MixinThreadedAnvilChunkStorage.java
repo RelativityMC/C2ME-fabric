@@ -3,8 +3,11 @@ package org.yatopiamc.c2me.mixin.threading.chunkio;
 import com.ibm.asyncutil.locks.AsyncNamedLock;
 import com.mojang.datafixers.DataFixer;
 import com.mojang.datafixers.util.Either;
+import net.minecraft.block.Block;
+import net.minecraft.fluid.Fluid;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.world.ChunkHolder;
+import net.minecraft.server.world.ServerTickScheduler;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;
 import net.minecraft.structure.StructureManager;
@@ -13,6 +16,7 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.thread.ThreadExecutor;
 import net.minecraft.world.ChunkSerializer;
 import net.minecraft.world.PersistentStateManager;
+import net.minecraft.world.TickScheduler;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.ProtoChunk;
@@ -31,6 +35,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.yatopiamc.c2me.common.threading.chunkio.C2MECachedRegionStorage;
 import org.yatopiamc.c2me.common.threading.chunkio.ChunkIoMainThreadTaskUtils;
 import org.yatopiamc.c2me.common.threading.chunkio.ChunkIoThreadingExecutorUtils;
+import org.yatopiamc.c2me.common.threading.chunkio.ICachedChunkTickScheduler;
+import org.yatopiamc.c2me.common.threading.chunkio.ICachedServerTickScheduler;
 import org.yatopiamc.c2me.common.threading.chunkio.ISerializingRegionBasedStorage;
 import org.yatopiamc.c2me.common.util.SneakyThrow;
 
@@ -205,6 +211,26 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
                 this.world.getProfiler().visit("chunkSave");
                 // C2ME start - async serialization
                 if (saveFutures == null) saveFutures = new ConcurrentLinkedQueue<>();
+
+                final TickScheduler<Block> chunkBlockTickScheduler = chunk.getBlockTickScheduler();
+                final ServerTickScheduler<Block> worldBlockTickScheduler = this.world.getBlockTickScheduler();
+                if (chunkBlockTickScheduler instanceof ICachedChunkTickScheduler) {
+                    ((ICachedChunkTickScheduler) chunkBlockTickScheduler).prepareCachedNbt();
+                } else if (worldBlockTickScheduler instanceof ICachedServerTickScheduler) {
+                    ((ICachedServerTickScheduler) worldBlockTickScheduler).prepareCachedNbt(chunkPos);
+                } else {
+                    new IllegalStateException("Unable to cache block ticklist. Incompatible mods?").printStackTrace();
+                }
+
+                final TickScheduler<Fluid> chunkFluidTickScheduler = chunk.getFluidTickScheduler();
+                final ServerTickScheduler<Fluid> worldFluidTickScheduler = this.world.getFluidTickScheduler();
+                if (chunkFluidTickScheduler instanceof ICachedChunkTickScheduler) {
+                    ((ICachedChunkTickScheduler) chunkFluidTickScheduler).prepareCachedNbt();
+                } else if (worldFluidTickScheduler instanceof ICachedServerTickScheduler) {
+                    ((ICachedServerTickScheduler) worldFluidTickScheduler).prepareCachedNbt(chunkPos);
+                } else {
+                    new IllegalStateException("Unable to cache fluid ticklist. Incompatible mods?").printStackTrace();
+                }
 
                 saveFutures.add(chunkLock.acquireLock(chunk.getPos()).toCompletableFuture().thenCompose(lockToken ->
                         CompletableFuture.supplyAsync(() -> ChunkSerializer.serialize(this.world, chunk), ChunkIoThreadingExecutorUtils.serializerExecutor).thenAcceptAsync(compoundTag -> {
