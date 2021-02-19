@@ -16,7 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Mixin(ServerTickScheduler.class)
 public abstract class MixinServerTickScheduler implements ICachedServerTickScheduler {
 
-    @Shadow public abstract ListTag toTag(ChunkPos chunkPos);
+    @Shadow public abstract ListTag toNbt(ChunkPos chunkPos);
 
     private ConcurrentHashMap<ChunkPos, ListTag> cachedNbt = new ConcurrentHashMap<>();
 
@@ -29,7 +29,7 @@ public abstract class MixinServerTickScheduler implements ICachedServerTickSched
     public void prepareCachedNbt(ChunkPos pos) {
         Preconditions.checkNotNull(pos);
         if (cachedNbt == null) cachedNbt = new ConcurrentHashMap<>();
-        cachedNbt.put(pos, toTag(pos));
+        cachedNbt.put(pos, toNbt(pos));
     }
 
     @Override

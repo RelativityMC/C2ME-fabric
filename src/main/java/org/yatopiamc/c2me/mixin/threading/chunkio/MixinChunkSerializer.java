@@ -57,13 +57,13 @@ public class MixinChunkSerializer {
         }
     }
 
-    @Redirect(method = "serialize", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerTickScheduler;toTag(Lnet/minecraft/util/math/ChunkPos;)Lnet/minecraft/nbt/ListTag;"))
+    @Redirect(method = "serialize", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerTickScheduler;toNbt(Lnet/minecraft/util/math/ChunkPos;)Lnet/minecraft/nbt/ListTag;"))
     private static ListTag onServerTickSchedulerToTag(@SuppressWarnings("rawtypes") ServerTickScheduler serverTickScheduler, ChunkPos chunkPos) {
         if (serverTickScheduler instanceof ICachedServerTickScheduler) {
             return ((ICachedServerTickScheduler) serverTickScheduler).getCachedNbt(chunkPos);
         } else {
             new IllegalStateException("Unable to take cached ticklist. Falling back to uncached query. This will affect data integrity. Incompatible mods?").printStackTrace();
-            return serverTickScheduler.toTag(chunkPos);
+            return serverTickScheduler.toNbt(chunkPos);
         }
     }
 

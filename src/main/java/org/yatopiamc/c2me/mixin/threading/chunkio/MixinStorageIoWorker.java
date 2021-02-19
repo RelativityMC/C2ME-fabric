@@ -26,10 +26,10 @@ public abstract class MixinStorageIoWorker {
     @Mutable
     @Shadow @Final private Map<ChunkPos, StorageIoWorker.Result> results;
 
-    @Mutable
-    @Shadow @Final private TaskExecutor<TaskQueue.PrioritizedTask> field_24468;
-
     @Shadow @Final private AtomicBoolean closed;
+
+    @Mutable
+    @Shadow @Final private TaskExecutor<TaskQueue.PrioritizedTask> executor;
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onPostInit(CallbackInfo info) {
@@ -37,7 +37,7 @@ public abstract class MixinStorageIoWorker {
         if (((Object) this) instanceof C2MECachedRegionStorage) {
             this.storage = null;
             this.results = null;
-            this.field_24468 = null;
+            this.executor = null;
             this.closed.set(true);
         }
     }

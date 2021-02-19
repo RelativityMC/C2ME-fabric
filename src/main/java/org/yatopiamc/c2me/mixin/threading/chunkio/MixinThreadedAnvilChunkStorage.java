@@ -24,7 +24,6 @@ import net.minecraft.world.chunk.UpgradeData;
 import net.minecraft.world.poi.PointOfInterestStorage;
 import net.minecraft.world.storage.VersionedChunkStorage;
 import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -41,7 +40,6 @@ import org.yatopiamc.c2me.common.threading.chunkio.ISerializingRegionBasedStorag
 import org.yatopiamc.c2me.common.util.SneakyThrow;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Supplier;
@@ -52,10 +50,6 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
     public MixinThreadedAnvilChunkStorage(File file, DataFixer dataFixer, boolean bl) {
         super(file, dataFixer, bl);
     }
-
-    @Shadow
-    @Nullable
-    protected abstract CompoundTag getUpdatedChunkTag(ChunkPos pos) throws IOException;
 
     @Shadow
     @Final
@@ -106,7 +100,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
 
         final CompletableFuture<CompoundTag> poiData = ((C2MECachedRegionStorage) this.pointOfInterestStorage.worker).getNbtAtAsync(pos);
 
-        return getUpdatedChunkTagAtAsync(pos).thenApplyAsync(compoundTag -> {
+        return getUpdatedChunkNbtAtAsync(pos).thenApplyAsync(compoundTag -> {
             if (compoundTag != null) {
                 try {
                     if (compoundTag.contains("Level", 10) && compoundTag.getCompound("Level").contains("Status", 8)) {
@@ -123,53 +117,52 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
             ((ISerializingRegionBasedStorage) this.pointOfInterestStorage).update(pos, poiData.join());
             ChunkIoMainThreadTaskUtils.drainQueue();
             if (protoChunk != null) {
-                protoChunk.setLastSaveTime(this.world.getTime());
                 this.method_27053(pos, protoChunk.getStatus().getChunkType());
                 return Either.left(protoChunk);
             } else {
                 this.method_27054(pos);
-                return Either.left(new ProtoChunk(pos, UpgradeData.NO_UPGRADE_DATA));
+                return Either.left(new ProtoChunk(pos, UpgradeData.NO_UPGRADE_DATA, this.world));
             }
         }, this.mainThreadExecutor);
 
         // [VanillaCopy] - for reference
         /*
         return CompletableFuture.supplyAsync(() -> {
-            try {
-                CompoundTag compoundTag = this.getUpdatedChunkTag(pos);
-                if (compoundTag != null) {
-                    boolean bl = compoundTag.contains("Level", 10) && compoundTag.getCompound("Level").contains("Status", 8);
-                    if (bl) {
-                        Chunk chunk = ChunkSerializer.deserialize(this.world, this.structureManager, this.pointOfInterestStorage, pos, compoundTag);
-                        chunk.setLastSaveTime(this.world.getTime());
-                        this.method_27053(pos, chunk.getStatus().getChunkType());
-                        return Either.left(chunk);
-                    }
+         try {
+            this.world.getProfiler().visit("chunkLoad");
+            CompoundTag compoundTag = this.getUpdatedChunkNbt(pos);
+            if (compoundTag != null) {
+               boolean bl = compoundTag.contains("Level", 10) && compoundTag.getCompound("Level").contains("Status", 8);
+               if (bl) {
+                  Chunk chunk = ChunkSerializer.deserialize(this.world, this.structureManager, this.pointOfInterestStorage, pos, compoundTag);
+                  this.method_27053(pos, chunk.getStatus().getChunkType());
+                  return Either.left(chunk);
+               }
 
-                    LOGGER.error((String)"Chunk file at {} is missing level data, skipping", (Object)pos);
-                }
-            } catch (CrashException var5) {
-                Throwable throwable = var5.getCause();
-                if (!(throwable instanceof IOException)) {
-                    this.method_27054(pos);
-                    throw var5;
-                }
-
-                LOGGER.error("Couldn't load chunk {}", pos, throwable);
-            } catch (Exception var6) {
-                LOGGER.error("Couldn't load chunk {}", pos, var6);
+               LOGGER.error((String)"Chunk file at {} is missing level data, skipping", (Object)pos);
+            }
+         } catch (CrashException var5) {
+            Throwable throwable = var5.getCause();
+            if (!(throwable instanceof IOException)) {
+               this.method_27054(pos);
+               throw var5;
             }
 
-            this.method_27054(pos);
-            return Either.left(new ProtoChunk(pos, UpgradeData.NO_UPGRADE_DATA));
-        }, this.mainThreadExecutor);
+            LOGGER.error((String)"Couldn't load chunk {}", (Object)pos, (Object)throwable);
+         } catch (Exception var6) {
+            LOGGER.error((String)"Couldn't load chunk {}", (Object)pos, (Object)var6);
+         }
+
+         this.method_27054(pos);
+         return Either.left(new ProtoChunk(pos, UpgradeData.NO_UPGRADE_DATA, this.world));
+      }, this.mainThreadExecutor);
          */
     }
 
-    private CompletableFuture<CompoundTag> getUpdatedChunkTagAtAsync(ChunkPos pos) {
+    private CompletableFuture<CompoundTag> getUpdatedChunkNbtAtAsync(ChunkPos pos) {
         return chunkLock.acquireLock(pos).toCompletableFuture().thenCompose(lockToken -> ((C2MECachedRegionStorage) this.worker).getNbtAtAsync(pos).thenApply(compoundTag -> {
             if (compoundTag != null)
-                return this.updateChunkTag(this.world.getRegistryKey(), this.persistentStateManagerFactory, compoundTag);
+                return this.updateChunkNbt(this.world.getRegistryKey(), this.persistentStateManagerFactory, compoundTag);
             else return null;
         }).handle((tag, throwable) -> {
             lockToken.releaseLock();
@@ -188,11 +181,10 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
     @Overwrite
     private boolean save(Chunk chunk) {
         // [VanillaCopy]
-        this.pointOfInterestStorage.method_20436(chunk.getPos());
+        this.pointOfInterestStorage.saveChunk(chunk.getPos());
         if (!chunk.needsSaving()) {
             return false;
         } else {
-            chunk.setLastSaveTime(this.world.getTime());
             chunk.setShouldSave(false);
             ChunkPos chunkPos = chunk.getPos();
 
@@ -245,7 +237,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
                 // C2ME end
                 return true;
             } catch (Exception var5) {
-                LOGGER.error("Failed to save chunk {},{}", chunkPos.x, chunkPos.z, var5);
+                LOGGER.error((String)"Failed to save chunk {},{}", (Object)chunkPos.x, chunkPos.z, var5);
                 return false;
             }
         }
