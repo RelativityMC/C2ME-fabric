@@ -5,6 +5,7 @@ import net.minecraft.server.world.ThreadedAnvilChunkStorage;
 import org.spongepowered.asm.mixin.Dynamic;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
+import org.yatopiamc.c2me.common.threading.GlobalExecutors;
 import org.yatopiamc.c2me.common.threading.worldgen.WorldGenThreadingExecutorUtils;
 
 @Mixin(ThreadedAnvilChunkStorage.class)
@@ -18,7 +19,7 @@ public class MixinThreadedAnvilChunkStorage {
     @Dynamic
     @Overwrite
     private void method_17259(ChunkHolder chunkHolder, Runnable runnable) { // synthetic method for worldGenExecutor scheduling
-        WorldGenThreadingExecutorUtils.scheduler.execute(runnable);
+        GlobalExecutors.scheduler.execute(runnable);
     }
 
 }

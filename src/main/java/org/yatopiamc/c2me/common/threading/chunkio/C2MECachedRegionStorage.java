@@ -16,6 +16,7 @@ import net.minecraft.world.storage.StorageIoWorker;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
+import org.yatopiamc.c2me.common.threading.GlobalExecutors;
 import org.yatopiamc.c2me.common.util.C2MEForkJoinWorkerThreadFactory;
 import org.yatopiamc.c2me.common.util.SneakyThrow;
 
@@ -36,13 +37,9 @@ public class C2MECachedRegionStorage extends StorageIoWorker {
     private static final CompoundTag EMPTY_VALUE = new CompoundTag();
     private static final Logger LOGGER = LogManager.getLogger();
     private static final ForkJoinPool IOExecutor = new ForkJoinPool(
-            Math.min(8, Runtime.getRuntime().availableProcessors()),
+            Math.min(6, Runtime.getRuntime().availableProcessors()),
             new C2MEForkJoinWorkerThreadFactory("C2ME chunkio io worker #%d", Thread.NORM_PRIORITY - 3),
             null, true
-    );
-    private static final ScheduledThreadPoolExecutor scheduler = new ScheduledThreadPoolExecutor(
-            1,
-            new ThreadFactoryBuilder().setNameFormat("C2ME chunkio scheduler").setDaemon(true).setPriority(Thread.NORM_PRIORITY - 1).build()
     );
 
     private final RegionBasedStorage storage;
@@ -73,7 +70,7 @@ public class C2MECachedRegionStorage extends StorageIoWorker {
         long startTime = System.currentTimeMillis();
         chunkCache.cleanUp();
         if (!isClosed.get())
-            scheduler.schedule(this::tick, 1000 - (System.currentTimeMillis() - startTime), TimeUnit.MILLISECONDS);
+            GlobalExecutors.scheduler.schedule(this::tick, 1000 - (System.currentTimeMillis() - startTime), TimeUnit.MILLISECONDS);
     }
 
     private CompletableFuture<RegionFile> getRegionFile(ChunkPos pos) {
@@ -86,7 +83,7 @@ public class C2MECachedRegionStorage extends StorageIoWorker {
             } finally {
                 lockToken.releaseLock();
             }
-        }, scheduler);
+        }, GlobalExecutors.scheduler);
     }
 
     private void scheduleWrite(ChunkPos pos, CompoundTag chunkData) {
@@ -164,7 +161,7 @@ public class C2MECachedRegionStorage extends StorageIoWorker {
             } finally {
                 lockToken.releaseLock();
             }
-        }, scheduler);
+        }, GlobalExecutors.scheduler);
     }
 
     @Nullable
