@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit;
 public class WorldGenThreadingExecutorUtils {
 
     public static final ForkJoinPool mainExecutor = new ForkJoinPool(
-            Math.min(8, Runtime.getRuntime().availableProcessors()),
+            Math.min(10, Runtime.getRuntime().availableProcessors()),
             new C2MEForkJoinWorkerThreadFactory("C2ME worldgen worker #%d", Thread.NORM_PRIORITY - 1),
             null,
             true

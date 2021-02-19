@@ -15,6 +15,10 @@ loom {
     accessWidener "src/main/resources/c2me.accesswidener"
 }
 
+minecraft {
+
+}
+
 dependencies {
     //to change the versions see the gradle.properties file
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
