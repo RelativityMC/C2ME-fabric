@@ -1,4 +1,4 @@
-name: Barium Build Script
+name: C2ME Build Script
 
 on:
   push:
@@ -25,13 +25,13 @@ jobs:
         path: ~/.gradle
         key: ${{ runner.os }}-maven-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}-java-11
         
-    - name: Build Barium
+    - name: Build C2ME
       run: |
         ./gradlew clean build
         
     - name: Upload Artifact
       uses: actions/upload-artifact@v2
       with:
-        name: Barrium
+        name: C2ME
         path: ./build/libs/C2ME-fabric-0.1-SNAPSHOT-all.jar
       
