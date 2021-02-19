@@ -4,6 +4,7 @@
   "package": "org.yatopiamc.c2me.mixin",
   "compatibilityLevel": "JAVA_11",
   "mixins": [
+    "optimization.worldgen.threadlocal_noise_sampler.MixinVanillaLayeredBiomeSource",
     "threading.chunkio.MixinChunkSerializer",
     "threading.chunkio.MixinChunkTickScheduler",
     "threading.chunkio.MixinSerializingRegionBasedStorage",
@@ -14,6 +15,7 @@
     "threading.chunkio.MixinVersionedChunkStorage",
     "threading.lighting.MixinThreadedAnvilChunkStorage",
     "threading.worldgen.MixinChunkStatus",
+    "threading.worldgen.MixinNoiseChunkGenerator",
     "threading.worldgen.MixinServerWorld",
     "threading.worldgen.MixinStructureManager",
     "threading.worldgen.MixinThreadedAnvilChunkStorage",
