@@ -21,6 +21,7 @@ import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.ProtoChunk;
 import net.minecraft.world.chunk.UpgradeData;
+import net.minecraft.world.chunk.WorldChunk;
 import net.minecraft.world.poi.PointOfInterestStorage;
 import net.minecraft.world.storage.VersionedChunkStorage;
 import org.apache.logging.log4j.Logger;
@@ -52,10 +53,6 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
     public MixinThreadedAnvilChunkStorage(File file, DataFixer dataFixer, boolean bl) {
         super(file, dataFixer, bl);
     }
-
-    @Shadow
-    @Nullable
-    protected abstract CompoundTag getUpdatedChunkTag(ChunkPos pos) throws IOException;
 
     @Shadow
     @Final
@@ -212,30 +209,33 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
                 // C2ME start - async serialization
                 if (saveFutures == null) saveFutures = new ConcurrentLinkedQueue<>();
 
-                final TickScheduler<Block> chunkBlockTickScheduler = chunk.getBlockTickScheduler();
-                final ServerTickScheduler<Block> worldBlockTickScheduler = this.world.getBlockTickScheduler();
-                if (chunkBlockTickScheduler instanceof ICachedChunkTickScheduler) {
-                    ((ICachedChunkTickScheduler) chunkBlockTickScheduler).prepareCachedNbt();
-                } else if (worldBlockTickScheduler instanceof ICachedServerTickScheduler) {
-                    ((ICachedServerTickScheduler) worldBlockTickScheduler).prepareCachedNbt(chunkPos);
-                } else {
-                    new IllegalStateException("Unable to cache block ticklist. Incompatible mods?").printStackTrace();
-                }
-
-                final TickScheduler<Fluid> chunkFluidTickScheduler = chunk.getFluidTickScheduler();
-                final ServerTickScheduler<Fluid> worldFluidTickScheduler = this.world.getFluidTickScheduler();
-                if (chunkFluidTickScheduler instanceof ICachedChunkTickScheduler) {
-                    ((ICachedChunkTickScheduler) chunkFluidTickScheduler).prepareCachedNbt();
-                } else if (worldFluidTickScheduler instanceof ICachedServerTickScheduler) {
-                    ((ICachedServerTickScheduler) worldFluidTickScheduler).prepareCachedNbt(chunkPos);
-                } else {
-                    new IllegalStateException("Unable to cache fluid ticklist. Incompatible mods?").printStackTrace();
-                }
-
                 saveFutures.add(chunkLock.acquireLock(chunk.getPos()).toCompletableFuture().thenCompose(lockToken ->
-                        CompletableFuture.supplyAsync(() -> ChunkSerializer.serialize(this.world, chunk), ChunkIoThreadingExecutorUtils.serializerExecutor).thenAcceptAsync(compoundTag -> {
-                            this.setTagAt(chunkPos, compoundTag);
-                        }, this.mainThreadExecutor).handle((unused, throwable) -> {
+                        CompletableFuture.runAsync(() -> {
+                            final TickScheduler<Block> chunkBlockTickScheduler = chunk.getBlockTickScheduler();
+                            final ServerTickScheduler<Block> worldBlockTickScheduler = this.world.getBlockTickScheduler();
+                            if (chunkBlockTickScheduler instanceof ICachedChunkTickScheduler) {
+                                ((ICachedChunkTickScheduler) chunkBlockTickScheduler).prepareCachedNbt();
+                                ((ICachedChunkTickScheduler) chunkBlockTickScheduler).setFallbackExecutor(this.mainThreadExecutor);
+                            } else if (worldBlockTickScheduler instanceof ICachedServerTickScheduler) {
+                                ((ICachedServerTickScheduler) worldBlockTickScheduler).prepareCachedNbt(chunkPos);
+                            } else {
+                                new IllegalStateException("Unable to cache block ticklist. Incompatible mods?").printStackTrace();
+                            }
+
+                            final TickScheduler<Fluid> chunkFluidTickScheduler = chunk.getFluidTickScheduler();
+                            final ServerTickScheduler<Fluid> worldFluidTickScheduler = this.world.getFluidTickScheduler();
+                            if (chunkFluidTickScheduler instanceof ICachedChunkTickScheduler) {
+                                ((ICachedChunkTickScheduler) chunkFluidTickScheduler).prepareCachedNbt();
+                                ((ICachedChunkTickScheduler) chunkFluidTickScheduler).setFallbackExecutor(this.mainThreadExecutor);
+                            } else if (worldFluidTickScheduler instanceof ICachedServerTickScheduler) {
+                                ((ICachedServerTickScheduler) worldFluidTickScheduler).prepareCachedNbt(chunkPos);
+                            } else {
+                                new IllegalStateException("Unable to cache fluid ticklist. Incompatible mods?").printStackTrace();
+                            }
+                        }, this.mainThreadExecutor)
+                                .thenApplyAsync(unused -> ChunkSerializer.serialize(this.world, chunk), ChunkIoThreadingExecutorUtils.serializerExecutor)
+                                .thenAcceptAsync(compoundTag -> this.setTagAt(chunkPos, compoundTag), this.mainThreadExecutor)
+                                .handle((unused, throwable) -> {
                             lockToken.releaseLock();
                             if (throwable != null)
                                 LOGGER.error("Failed to save chunk {},{}", chunkPos.x, chunkPos.z, throwable);
@@ -245,7 +245,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
                 // C2ME end
                 return true;
             } catch (Exception var5) {
-                LOGGER.error("Failed to save chunk {},{}", chunkPos.x, chunkPos.z, var5);
+                LOGGER.error("Failed to save chunk {},{}",  chunkPos.x, chunkPos.z, var5);
                 return false;
             }
         }
@@ -261,5 +261,20 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
         final CompletableFuture<Void> future = CompletableFuture.allOf(saveFutures.toArray(new CompletableFuture[0]));
         this.mainThreadExecutor.runTasks(future::isDone); // wait for serialization to complete
         super.completeAll();
+    }
+
+    /**
+     * @author ishland
+     * @reason prevent race condition
+     */
+    @Overwrite
+    public CompletableFuture<Void> enableTickSchedulers(WorldChunk worldChunk) {
+        return chunkLock.acquireLock(worldChunk.getPos()).toCompletableFuture().thenCompose(lockToken -> this.mainThreadExecutor.submit(() -> {
+            try {
+                worldChunk.enableTickSchedulers(this.world);
+            } finally {
+                lockToken.releaseLock();
+            }
+        }));
     }
 }
