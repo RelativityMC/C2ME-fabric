@@ -3,7 +3,7 @@
   "id": "c2me",
   "version": "${version}",
   "name": "Concurrent Chunk Management Engine",
-  "description": "A Fabric mod designed to improve the world generation performance of Minecraft",
+  "description": "A Fabric mod designed to improve the chunk performance of Minecraft.",
   "authors": [
     "YatopiaMC",
     "ishland"
@@ -28,5 +28,8 @@
     "fabricloader": ">=0.11.1",
     "java": ">=11",
     "minecraft": ">=1.17-alpha.21.7.a"
+  },
+  "breaks": {
+    "tic_tacs": "*"
   }
 }
