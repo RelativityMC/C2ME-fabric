@@ -19,6 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ForkJoinPool;
 
 @Mixin(ServerTickScheduler.class)
+
 public abstract class MixinServerTickScheduler implements ICachedServerTickScheduler {
 
     @Shadow public abstract ListTag toTag(ChunkPos chunkPos);
