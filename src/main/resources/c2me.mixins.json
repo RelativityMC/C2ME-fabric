@@ -12,7 +12,6 @@
     "threading.chunkio.MixinStorageIoWorker",
     "threading.chunkio.MixinThreadedAnvilChunkStorage",
     "threading.chunkio.MixinVersionedChunkStorage",
-    "threading.lighting.MixinThreadedAnvilChunkStorage",
     "threading.worldgen.MixinChunkStatus",
     "threading.worldgen.MixinServerWorld",
     "threading.worldgen.MixinStructureManager",
