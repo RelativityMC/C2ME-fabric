@@ -13,6 +13,7 @@ import net.minecraft.world.LightType;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkNibbleArray;
 import net.minecraft.world.chunk.ChunkSection;
+import net.minecraft.world.chunk.light.ChunkLightingView;
 import net.minecraft.world.chunk.light.LightingProvider;
 import net.minecraft.world.poi.PointOfInterestStorage;
 import org.spongepowered.asm.mixin.Mixin;
@@ -74,7 +75,12 @@ public class MixinChunkSerializer {
         }
     }
 
-    @Inject(method = "serialize", at = @At(value = "INVOKE", target = "Lnet/minecraft/nbt/CompoundTag;putByte(Ljava/lang/String;B)V", shift = At.Shift.BY), locals = LocalCapture.CAPTURE_FAILHARD)
+    @Redirect(method = "serialize", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/light/ChunkLightingView;getLightSection(Lnet/minecraft/util/math/ChunkSectionPos;)Lnet/minecraft/world/chunk/ChunkNibbleArray;"))
+    private static ChunkNibbleArray onGetLightSection(ChunkLightingView chunkLightingView, ChunkSectionPos pos) {
+        return null;
+    }
+
+    @Inject(method = "serialize", at = @At(value = "INVOKE", target = "Lnet/minecraft/nbt/CompoundTag;putByte(Ljava/lang/String;B)V"), locals = LocalCapture.CAPTURE_FAILHARD)
     private static void afterChunkSectionInit(ServerWorld world, Chunk chunk, CallbackInfoReturnable<CompoundTag> cir, ChunkPos chunkPos, CompoundTag compoundTag, CompoundTag compoundTag2, ChunkSection[] chunkSections, ListTag listTag, LightingProvider lightingProvider, boolean bl, int i, int j, ChunkSection chunkSection, ChunkNibbleArray chunkNibbleArray, ChunkNibbleArray chunkNibbleArray2, CompoundTag compoundTag3) {
         if (lightingProvider instanceof ICachedLightingProvider) {
             final ICachedLightingProvider.LightData lightData = ((ICachedLightingProvider) lightingProvider).takeLightData(ChunkSectionPos.from(chunkPos, i));
