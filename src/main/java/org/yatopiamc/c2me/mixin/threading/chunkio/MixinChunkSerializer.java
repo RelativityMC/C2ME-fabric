@@ -1,22 +1,29 @@
 package org.yatopiamc.c2me.mixin.threading.chunkio;
 
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.server.world.ServerTickScheduler;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.server.world.SimpleTickScheduler;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.ChunkSectionPos;
 import net.minecraft.world.ChunkSerializer;
 import net.minecraft.world.ChunkTickScheduler;
 import net.minecraft.world.LightType;
+import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkNibbleArray;
 import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.light.LightingProvider;
 import net.minecraft.world.poi.PointOfInterestStorage;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 import org.yatopiamc.c2me.common.threading.chunkio.ChunkIoMainThreadTaskUtils;
 import org.yatopiamc.c2me.common.threading.chunkio.ICachedChunkTickScheduler;
+import org.yatopiamc.c2me.common.threading.chunkio.ICachedLightingProvider;
 import org.yatopiamc.c2me.common.threading.chunkio.ICachedServerTickScheduler;
 
 @Mixin(ChunkSerializer.class)
@@ -64,6 +71,21 @@ public class MixinChunkSerializer {
         } else {
             new IllegalStateException("Unable to take cached ticklist. Falling back to uncached query. This will affect data integrity. Incompatible mods?").printStackTrace();
             return serverTickScheduler.toTag(chunkPos);
+        }
+    }
+
+    @Inject(method = "serialize", at = @At(value = "INVOKE", target = "Lnet/minecraft/nbt/CompoundTag;putByte(Ljava/lang/String;B)V", shift = At.Shift.BY), locals = LocalCapture.CAPTURE_FAILHARD)
+    private static void afterChunkSectionInit(ServerWorld world, Chunk chunk, CallbackInfoReturnable<CompoundTag> cir, ChunkPos chunkPos, CompoundTag compoundTag, CompoundTag compoundTag2, ChunkSection[] chunkSections, ListTag listTag, LightingProvider lightingProvider, boolean bl, int i, int j, ChunkSection chunkSection, ChunkNibbleArray chunkNibbleArray, ChunkNibbleArray chunkNibbleArray2, CompoundTag compoundTag3) {
+        if (lightingProvider instanceof ICachedLightingProvider) {
+            final ICachedLightingProvider.LightData lightData = ((ICachedLightingProvider) lightingProvider).takeLightData(ChunkSectionPos.from(chunkPos, i));
+            if (lightData == null) {
+                System.err.println("Tried to serialize lighting with no cached light data! This will affect data integrity. Incompatible mods?");
+                return;
+            }
+            if (lightData.blockLight != null)
+                compoundTag3.putByteArray("BlockLight", lightData.blockLight);
+            if (lightData.skyLight != null)
+                compoundTag3.putByteArray("SkyLight", lightData.skyLight);
         }
     }
 
