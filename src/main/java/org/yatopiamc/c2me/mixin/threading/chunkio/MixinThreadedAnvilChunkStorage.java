@@ -22,6 +22,7 @@ import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.ProtoChunk;
 import net.minecraft.world.chunk.UpgradeData;
 import net.minecraft.world.chunk.WorldChunk;
+import net.minecraft.world.chunk.light.LightingProvider;
 import net.minecraft.world.poi.PointOfInterestStorage;
 import net.minecraft.world.storage.VersionedChunkStorage;
 import org.apache.logging.log4j.Logger;
@@ -36,6 +37,7 @@ import org.yatopiamc.c2me.common.threading.chunkio.C2MECachedRegionStorage;
 import org.yatopiamc.c2me.common.threading.chunkio.ChunkIoMainThreadTaskUtils;
 import org.yatopiamc.c2me.common.threading.chunkio.ChunkIoThreadingExecutorUtils;
 import org.yatopiamc.c2me.common.threading.chunkio.ICachedChunkTickScheduler;
+import org.yatopiamc.c2me.common.threading.chunkio.ICachedLightingProvider;
 import org.yatopiamc.c2me.common.threading.chunkio.ICachedServerTickScheduler;
 import org.yatopiamc.c2me.common.threading.chunkio.ISerializingRegionBasedStorage;
 import org.yatopiamc.c2me.common.util.SneakyThrow;
@@ -207,6 +209,13 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
 
                 saveFutures.add(chunkLock.acquireLock(chunk.getPos()).toCompletableFuture().thenCompose(lockToken ->
                         CompletableFuture.runAsync(() -> {
+                            final LightingProvider lightingProvider = this.world.getLightingProvider();
+                            if (lightingProvider instanceof ICachedLightingProvider) {
+                                ((ICachedLightingProvider) lightingProvider).prepareLightData(chunkPos);
+                            } else {
+                                new IllegalStateException("Unable to cache lighting data. Incompatible mods?").printStackTrace();
+                            }
+
                             final TickScheduler<Block> chunkBlockTickScheduler = chunk.getBlockTickScheduler();
                             final ServerTickScheduler<Block> worldBlockTickScheduler = this.world.getBlockTickScheduler();
                             if (chunkBlockTickScheduler instanceof ICachedChunkTickScheduler) {
