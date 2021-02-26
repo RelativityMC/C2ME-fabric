@@ -211,38 +211,37 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
                 // C2ME start - async serialization
                 if (saveFutures == null) saveFutures = new ConcurrentLinkedQueue<>();
 
+                final LightingProvider lightingProvider = this.world.getLightingProvider();
+                if (lightingProvider instanceof ICachedLightingProvider) {
+                    ((ICachedLightingProvider) lightingProvider).prepareLightData(chunkPos);
+                } else {
+                    new IllegalStateException("Unable to cache lighting data. Incompatible mods?").printStackTrace();
+                }
+
+                final TickScheduler<Block> chunkBlockTickScheduler = chunk.getBlockTickScheduler();
+                final ServerTickScheduler<Block> worldBlockTickScheduler = this.world.getBlockTickScheduler();
+                if (chunkBlockTickScheduler instanceof ICachedChunkTickScheduler) {
+                    ((ICachedChunkTickScheduler) chunkBlockTickScheduler).prepareCachedNbt();
+                    ((ICachedChunkTickScheduler) chunkBlockTickScheduler).setFallbackExecutor(this.mainThreadExecutor);
+                } else if (worldBlockTickScheduler instanceof ICachedServerTickScheduler) {
+                    ((ICachedServerTickScheduler) worldBlockTickScheduler).prepareCachedNbt(chunkPos);
+                } else {
+                    new IllegalStateException("Unable to cache block ticklist. Incompatible mods?").printStackTrace();
+                }
+
+                final TickScheduler<Fluid> chunkFluidTickScheduler = chunk.getFluidTickScheduler();
+                final ServerTickScheduler<Fluid> worldFluidTickScheduler = this.world.getFluidTickScheduler();
+                if (chunkFluidTickScheduler instanceof ICachedChunkTickScheduler) {
+                    ((ICachedChunkTickScheduler) chunkFluidTickScheduler).prepareCachedNbt();
+                    ((ICachedChunkTickScheduler) chunkFluidTickScheduler).setFallbackExecutor(this.mainThreadExecutor);
+                } else if (worldFluidTickScheduler instanceof ICachedServerTickScheduler) {
+                    ((ICachedServerTickScheduler) worldFluidTickScheduler).prepareCachedNbt(chunkPos);
+                } else {
+                    new IllegalStateException("Unable to cache fluid ticklist. Incompatible mods?").printStackTrace();
+                }
+
                 saveFutures.add(chunkLock.acquireLock(chunk.getPos()).toCompletableFuture().thenCompose(lockToken ->
-                        CompletableFuture.runAsync(() -> {
-                            final LightingProvider lightingProvider = this.world.getLightingProvider();
-                            if (lightingProvider instanceof ICachedLightingProvider) {
-                                ((ICachedLightingProvider) lightingProvider).prepareLightData(chunkPos);
-                            } else {
-                                new IllegalStateException("Unable to cache lighting data. Incompatible mods?").printStackTrace();
-                            }
-
-                            final TickScheduler<Block> chunkBlockTickScheduler = chunk.getBlockTickScheduler();
-                            final ServerTickScheduler<Block> worldBlockTickScheduler = this.world.getBlockTickScheduler();
-                            if (chunkBlockTickScheduler instanceof ICachedChunkTickScheduler) {
-                                ((ICachedChunkTickScheduler) chunkBlockTickScheduler).prepareCachedNbt();
-                                ((ICachedChunkTickScheduler) chunkBlockTickScheduler).setFallbackExecutor(this.mainThreadExecutor);
-                            } else if (worldBlockTickScheduler instanceof ICachedServerTickScheduler) {
-                                ((ICachedServerTickScheduler) worldBlockTickScheduler).prepareCachedNbt(chunkPos);
-                            } else {
-                                new IllegalStateException("Unable to cache block ticklist. Incompatible mods?").printStackTrace();
-                            }
-
-                            final TickScheduler<Fluid> chunkFluidTickScheduler = chunk.getFluidTickScheduler();
-                            final ServerTickScheduler<Fluid> worldFluidTickScheduler = this.world.getFluidTickScheduler();
-                            if (chunkFluidTickScheduler instanceof ICachedChunkTickScheduler) {
-                                ((ICachedChunkTickScheduler) chunkFluidTickScheduler).prepareCachedNbt();
-                                ((ICachedChunkTickScheduler) chunkFluidTickScheduler).setFallbackExecutor(this.mainThreadExecutor);
-                            } else if (worldFluidTickScheduler instanceof ICachedServerTickScheduler) {
-                                ((ICachedServerTickScheduler) worldFluidTickScheduler).prepareCachedNbt(chunkPos);
-                            } else {
-                                new IllegalStateException("Unable to cache fluid ticklist. Incompatible mods?").printStackTrace();
-                            }
-                        }, this.mainThreadExecutor)
-                                .thenApplyAsync(unused -> ChunkSerializer.serialize(this.world, chunk), ChunkIoThreadingExecutorUtils.serializerExecutor)
+                        CompletableFuture.supplyAsync(() -> ChunkSerializer.serialize(this.world, chunk), ChunkIoThreadingExecutorUtils.serializerExecutor)
                                 .thenAcceptAsync(compoundTag -> this.setTagAt(chunkPos, compoundTag), this.mainThreadExecutor)
                                 .handle((unused, throwable) -> {
                             lockToken.releaseLock();
