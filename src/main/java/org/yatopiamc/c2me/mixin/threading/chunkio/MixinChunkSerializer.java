@@ -85,7 +85,7 @@ public class MixinChunkSerializer {
         if (lightingProvider instanceof ICachedLightingProvider) {
             final ICachedLightingProvider.LightData lightData = ((ICachedLightingProvider) lightingProvider).takeLightData(ChunkSectionPos.from(chunkPos, i));
             if (lightData == null) {
-                System.err.println("Tried to serialize lighting with no cached light data! This will affect data integrity. Incompatible mods?");
+                System.err.println("Tried to serialize lighting with no cached light data! This will affect performance. Incompatible mods?");
                 return;
             }
             if (lightData.blockLight != null)

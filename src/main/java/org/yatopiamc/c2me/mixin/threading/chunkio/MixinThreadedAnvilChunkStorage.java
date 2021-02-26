@@ -266,19 +266,4 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
         this.mainThreadExecutor.runTasks(future::isDone); // wait for serialization to complete
         super.completeAll();
     }
-
-    /**
-     * @author ishland
-     * @reason prevent race condition
-     */
-    @Overwrite
-    public CompletableFuture<Void> enableTickSchedulers(WorldChunk worldChunk) {
-        return chunkLock.acquireLock(worldChunk.getPos()).toCompletableFuture().thenCompose(lockToken -> this.mainThreadExecutor.submit(() -> {
-            try {
-                worldChunk.enableTickSchedulers(this.world);
-            } finally {
-                lockToken.releaseLock();
-            }
-        }));
-    }
 }
