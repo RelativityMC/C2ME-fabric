@@ -57,6 +57,7 @@ shadowJar {
     dependencies {
         include(dependency("com.ibm.async:asyncutil:0.1.0"))
         include(dependency("com.electronwill.night-config:toml:3.6.3"))
+        include(dependency("com.electronwill.night-config:core:3.6.3"))
     }
 }
 
