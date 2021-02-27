@@ -2,10 +2,8 @@ package org.yatopiamc.c2me.common.threading.worldgen;
 
 import com.ibm.asyncutil.locks.AsyncLock;
 import com.ibm.asyncutil.locks.AsyncNamedLock;
-import com.ibm.asyncutil.util.Combinators;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.chunk.ChunkStatus;
-import org.jetbrains.annotations.NotNull;
 import org.yatopiamc.c2me.common.threading.GlobalExecutors;
 import org.yatopiamc.c2me.common.util.AsyncCombinedLock;
 import org.yatopiamc.c2me.common.util.AsyncNamedLockDelegateAsyncLock;
@@ -14,9 +12,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 public class ChunkStatusUtils {
 

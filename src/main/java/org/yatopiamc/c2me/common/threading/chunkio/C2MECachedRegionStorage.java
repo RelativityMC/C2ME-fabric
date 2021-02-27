@@ -4,7 +4,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.RemovalNotification;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.ibm.asyncutil.locks.AsyncLock;
 import com.ibm.asyncutil.locks.AsyncNamedLock;
 import net.minecraft.nbt.CompoundTag;
@@ -16,6 +15,7 @@ import net.minecraft.world.storage.StorageIoWorker;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
+import org.yatopiamc.c2me.common.config.C2MEConfig;
 import org.yatopiamc.c2me.common.threading.GlobalExecutors;
 import org.yatopiamc.c2me.common.util.C2MEForkJoinWorkerThreadFactory;
 import org.yatopiamc.c2me.common.util.SneakyThrow;
@@ -28,7 +28,6 @@ import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -37,7 +36,7 @@ public class C2MECachedRegionStorage extends StorageIoWorker {
     private static final CompoundTag EMPTY_VALUE = new CompoundTag();
     private static final Logger LOGGER = LogManager.getLogger();
     private static final ForkJoinPool IOExecutor = new ForkJoinPool(
-            Math.min(6, Runtime.getRuntime().availableProcessors()),
+            C2MEConfig.asyncIoConfig.ioWorkerParallelism,
             new C2MEForkJoinWorkerThreadFactory("C2ME chunkio io worker #%d", Thread.NORM_PRIORITY - 3),
             null, true
     );
@@ -166,7 +165,7 @@ public class C2MECachedRegionStorage extends StorageIoWorker {
 
     @Nullable
     @Override
-    public CompoundTag getNbt(ChunkPos pos) throws IOException {
+    public CompoundTag getNbt(ChunkPos pos) {
         return getNbtAtAsync(pos).join();
     }
 
@@ -197,6 +196,7 @@ public class C2MECachedRegionStorage extends StorageIoWorker {
         private final int x;
         private final int z;
 
+        @SuppressWarnings("unused")
         private RegionPos(int x, int z) {
             this.x = x;
             this.z = z;
@@ -207,10 +207,12 @@ public class C2MECachedRegionStorage extends StorageIoWorker {
             this.z = chunkPos.getRegionZ();
         }
 
+        @SuppressWarnings("unused")
         public int getX() {
             return x;
         }
 
+        @SuppressWarnings("unused")
         public int getZ() {
             return z;
         }
