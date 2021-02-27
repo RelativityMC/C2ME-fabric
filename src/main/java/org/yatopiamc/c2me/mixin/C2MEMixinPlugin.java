@@ -15,7 +15,7 @@ public class C2MEMixinPlugin implements IMixinConfigPlugin {
 
     @Override
     public void onLoad(String mixinPackage) {
-        C2MEConfig.class.getName(); // Load configuration
+        C2MEConfig.threadedWorldGenConfig.getClass().getName(); // Load configuration
         LOGGER.info("Successfully loaded configuration for C2ME");
     }
 
