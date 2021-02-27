@@ -1,6 +1,5 @@
 package org.yatopiamc.c2me.mixin.threading.chunkio;
 
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.ChunkSectionPos;
 import net.minecraft.world.LightType;
@@ -14,7 +13,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.yatopiamc.c2me.common.threading.chunkio.ICachedLightingProvider;
 
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Mixin(LightingProvider.class)

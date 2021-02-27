@@ -1,6 +1,5 @@
 package org.yatopiamc.c2me.mixin.threading.worldgen;
 
-import net.minecraft.server.world.ServerWorld;
 import net.minecraft.server.world.SimpleTickScheduler;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.ScheduledTick;
@@ -10,7 +9,6 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.yatopiamc.c2me.common.threading.chunkio.ICachedChunkTickScheduler;
 

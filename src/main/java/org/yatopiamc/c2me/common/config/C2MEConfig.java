@@ -23,6 +23,7 @@ public class C2MEConfig {
                 .sync()
                 .build();
         config.load();
+        @SuppressWarnings("unused")
         CommentedConfig globalConfig = config.get("global"); // Unused for now
         asyncIoConfig = new AsyncIoConfig(config.get("asyncIO"));
         threadedWorldGenConfig = new ThreadedWorldGenConfig(config.get("threadedWorldGen"));

@@ -9,7 +9,7 @@ public interface ICachedLightingProvider {
 
     LightData takeLightData(ChunkSectionPos pos);
 
-    public static final class LightData {
+    final class LightData {
         public final byte[] blockLight;
         public final byte[] skyLight;
 

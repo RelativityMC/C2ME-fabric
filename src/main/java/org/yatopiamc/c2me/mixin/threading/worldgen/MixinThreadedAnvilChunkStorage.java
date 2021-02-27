@@ -6,7 +6,6 @@ import org.spongepowered.asm.mixin.Dynamic;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.yatopiamc.c2me.common.threading.GlobalExecutors;
-import org.yatopiamc.c2me.common.threading.worldgen.WorldGenThreadingExecutorUtils;
 
 @Mixin(ThreadedAnvilChunkStorage.class)
 public class MixinThreadedAnvilChunkStorage {
