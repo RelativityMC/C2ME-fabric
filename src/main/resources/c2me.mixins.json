@@ -24,6 +24,7 @@
   ],
   "client": [
   ],
+  "plugin": "org.yatopiamc.c2me.mixin.C2MEMixinPlugin",
   "injectors": {
     "defaultRequire": 1
   }

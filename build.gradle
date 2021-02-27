@@ -22,6 +22,7 @@ dependencies {
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
     implementation "com.ibm.async:asyncutil:0.1.0"
+    implementation "com.electronwill.night-config:toml:3.6.3"
 
     // PSA: Some older mods, compiled on Loom 0.2.1, might have outdated Maven POMs.
     // You may need to force-disable transitiveness on them.
@@ -55,6 +56,7 @@ shadowJar {
     archiveClassifier = "all-dev"
     dependencies {
         include(dependency("com.ibm.async:asyncutil:0.1.0"))
+        include(dependency("com.electronwill.night-config:toml:3.6.3"))
     }
 }
 
