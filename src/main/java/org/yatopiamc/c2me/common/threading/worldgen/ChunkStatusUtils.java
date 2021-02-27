@@ -7,12 +7,16 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.chunk.ChunkStatus;
 import org.jetbrains.annotations.NotNull;
 import org.yatopiamc.c2me.common.threading.GlobalExecutors;
+import org.yatopiamc.c2me.common.util.AsyncCombinedLock;
+import org.yatopiamc.c2me.common.util.AsyncNamedLockDelegateAsyncLock;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 public class ChunkStatusUtils {
 
@@ -36,14 +40,14 @@ public class ChunkStatusUtils {
     }
 
     public static <T> CompletableFuture<T> runChunkGenWithLock(ChunkPos target, int radius, AsyncNamedLock<ChunkPos> chunkLock, Supplier<CompletableFuture<T>> action) {
-        List<CompletionStage<AsyncLock.LockToken>> acquiredLocks = new ArrayList<>((radius + 1) * (radius + 1));
+        List<AsyncLock> acquiredLocks = new ArrayList<>((radius + 1) * (radius + 1));
         for (int x = target.x - radius; x <= target.x + radius; x++)
             for (int z = target.z - radius; z <= target.z + radius; z++)
-                acquiredLocks.add(chunkLock.acquireLock(new ChunkPos(x, z)));
+                acquiredLocks.add(new AsyncNamedLockDelegateAsyncLock<>(chunkLock, new ChunkPos(x, z)));
 
-        return Combinators.collect(acquiredLocks).toCompletableFuture().thenComposeAsync(lockTokens -> {
+        return new AsyncCombinedLock(new HashSet<>(acquiredLocks)).getFuture().thenComposeAsync(lockToken -> {
             final CompletableFuture<T> future = action.get();
-            future.thenRun(() -> lockTokens.forEach(AsyncLock.LockToken::releaseLock));
+            future.thenRun(lockToken::releaseLock);
             return future;
         }, GlobalExecutors.scheduler);
     }
