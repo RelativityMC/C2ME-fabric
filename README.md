@@ -1,4 +1,4 @@
-<img width="200" src="https://yatopiamc.org/static/img/barrium.png" alt="Yatopia" align="right">
+<img width="200" src="https://yatopiamc.org/static/img/c2m.png" alt="Yatopia" align="right">
 <div align="left">
 <h1>C^2M-Engine</h1>
 
