@@ -3,6 +3,7 @@ package org.yatopiamc.c2me.metrics;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.MinecraftVersion;
 import net.minecraft.server.MinecraftServer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -109,8 +110,8 @@ public class Metrics {
     private void appendPlatformData(JsonObjectBuilder builder) {
         builder.appendField("playerAmount", getPlayerAmount());
         builder.appendField("onlineMode", 1);
-        builder.appendField("bukkitVersion", FabricLoader.getInstance().getModContainer("fabric-loader").get().getMetadata().getVersion().getFriendlyString() + " (MC: " + FabricLoader.getInstance().getModContainer("minecraft").get().getMetadata().getVersion().getFriendlyString() + ")");
-        builder.appendField("bukkitName", "fabric-" + FabricLoader.getInstance().getEnvironmentType().name());
+        builder.appendField("bukkitVersion", FabricLoader.getInstance().getModContainer("fabricloader").get().getMetadata().getVersion().getFriendlyString() + " (MC: " + MinecraftVersion.field_25319.getName() + ")");
+        builder.appendField("bukkitName", "fabric");
         builder.appendField("javaVersion", System.getProperty("java.version"));
         builder.appendField("osName", System.getProperty("os.name"));
         builder.appendField("osArch", System.getProperty("os.arch"));
@@ -127,7 +128,7 @@ public class Metrics {
         if (minecraftServer != null && minecraftServer.isRunning()) {
             return minecraftServer.getCurrentPlayerCount();
         } else {
-            return 1;
+            return 0;
         }
     }
 
