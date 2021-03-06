@@ -20,6 +20,7 @@
     "threading.worldgen.MixinNoiseChunkGenerator",
     "threading.worldgen.MixinServerWorld",
     "threading.worldgen.MixinStructureManager",
+    "threading.worldgen.MixinStructurePalettedBlockInfoList",
     "threading.worldgen.MixinThreadedAnvilChunkStorage",
     "threading.worldgen.MixinWorldChunk",
     "util.log4j2shutdownhookisnomore.MixinMain",
