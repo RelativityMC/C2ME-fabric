@@ -80,20 +80,23 @@ public class Metrics {
 
     private MetricsConfig readConfig(Path configFile) {
         if (Files.notExists(configFile)) {
-            createConfigFile(configFile);
+            writeConfig(configFile, new MetricsConfig());
         }
+        final MetricsConfig config;
         try {
-            return gson.fromJson(Files.readString(configFile), MetricsConfig.class);
+            config = gson.fromJson(Files.readString(configFile), MetricsConfig.class);
         } catch (IOException e) {
             LOGGER.warn("Failed to read bstats config, creating one...", e);
-            createConfigFile(configFile);
+            writeConfig(configFile, new MetricsConfig());
             return readConfig(configFile);
         }
+        writeConfig(configFile, config);
+        return config;
     }
 
-    private void createConfigFile(Path configFile) {
+    private void writeConfig(Path configFile, MetricsConfig config) {
         try {
-            Files.writeString(configFile, gson.toJson(new MetricsConfig()), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.SYNC);
+            Files.writeString(configFile, gson.toJson(config), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.SYNC);
         } catch (IOException e) {
             LOGGER.error("Unable to create a new config", e);
             throw new RuntimeException(e);
