@@ -8,6 +8,7 @@
     "threading.chunkio.MixinChunkSerializer",
     "threading.chunkio.MixinChunkTickScheduler",
     "threading.chunkio.MixinLightingProvider",
+    "threading.chunkio.MixinScheduledTick",
     "threading.chunkio.MixinSerializingRegionBasedStorage",
     "threading.chunkio.MixinServerTickScheduler",
     "threading.chunkio.MixinSimpleTickScheduler",
