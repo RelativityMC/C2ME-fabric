@@ -4,6 +4,7 @@
   "package": "org.yatopiamc.c2me.mixin",
   "compatibilityLevel": "JAVA_11",
   "mixins": [
+    "metrics.MixinMinecraftServer",
     "optimization.worldgen.threadlocal_block_interpolator.MixinGrimstoneInterpolator",
     "optimization.worldgen.threadlocal_noise_sampler.MixinVanillaLayeredBiomeSource",
     "threading.chunkio.MixinChunkSerializer",
