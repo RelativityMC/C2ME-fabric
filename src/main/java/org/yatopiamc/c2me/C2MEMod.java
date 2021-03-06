@@ -15,6 +15,7 @@ public class C2MEMod implements ModInitializer {
         final Metrics metrics = new Metrics(10514);
         metrics.addCustomChart(new Metrics.SimplePie("environmentType", () -> FabricLoader.getInstance().getEnvironmentType().name().toLowerCase(Locale.ENGLISH)));
         metrics.addCustomChart(new Metrics.SimplePie("useThreadedWorldGeneration", () -> String.valueOf(C2MEConfig.threadedWorldGenConfig.enabled)));
+        metrics.addCustomChart(new Metrics.SimplePie("useThreadedWorldFeatureGeneration", () -> String.valueOf(C2MEConfig.threadedWorldGenConfig.allowThreadedFeatures)));
         metrics.addCustomChart(new Metrics.DrilldownPie("detailedMinecraftVersion", () -> ImmutableMap.of(MinecraftVersion.field_25319.getReleaseTarget(), ImmutableMap.of(MinecraftVersion.field_25319.getName(), 1))));
     }
 }

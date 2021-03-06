@@ -4,6 +4,7 @@ import com.ibm.asyncutil.locks.AsyncLock;
 import com.ibm.asyncutil.locks.AsyncNamedLock;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.chunk.ChunkStatus;
+import org.yatopiamc.c2me.common.config.C2MEConfig;
 import org.yatopiamc.c2me.common.threading.GlobalExecutors;
 import org.yatopiamc.c2me.common.util.AsyncCombinedLock;
 import org.yatopiamc.c2me.common.util.AsyncNamedLockDelegateAsyncLock;
@@ -14,25 +15,28 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
+import static org.yatopiamc.c2me.common.threading.worldgen.ChunkStatusThreadingType.AS_IS;
+import static org.yatopiamc.c2me.common.threading.worldgen.ChunkStatusThreadingType.PARALLELIZED;
+import static org.yatopiamc.c2me.common.threading.worldgen.ChunkStatusThreadingType.SINGLE_THREADED;
+
 public class ChunkStatusUtils {
 
     public static ChunkStatusThreadingType getThreadingType(final ChunkStatus status) {
-        switch (status.getId()) {
-            case "structure_starts":
-            case "structure_references":
-            case "biomes":
-            case "noise":
-            case "surface":
-            case "carvers":
-            case "liquid_carvers":
-            case "heightmaps":
-                return ChunkStatusThreadingType.PARALLELIZED;
-            case "spawn":
-            case "features":
-                return ChunkStatusThreadingType.SINGLE_THREADED;
-            default:
-                return ChunkStatusThreadingType.AS_IS;
+        if (status.equals(ChunkStatus.STRUCTURE_STARTS)
+                || status.equals(ChunkStatus.STRUCTURE_REFERENCES)
+                || status.equals(ChunkStatus.BIOMES)
+                || status.equals(ChunkStatus.NOISE)
+                || status.equals(ChunkStatus.SURFACE)
+                || status.equals(ChunkStatus.CARVERS)
+                || status.equals(ChunkStatus.LIQUID_CARVERS)
+                || status.equals(ChunkStatus.HEIGHTMAPS)) {
+            return PARALLELIZED;
+        } else if (status.equals(ChunkStatus.SPAWN)) {
+            return SINGLE_THREADED;
+        } else if (status.equals(ChunkStatus.FEATURES)) {
+            return C2MEConfig.threadedWorldGenConfig.allowThreadedFeatures ? PARALLELIZED : SINGLE_THREADED;
         }
+        return AS_IS;
     }
 
     public static <T> CompletableFuture<T> runChunkGenWithLock(ChunkPos target, int radius, AsyncNamedLock<ChunkPos> chunkLock, Supplier<CompletableFuture<T>> action) {
