@@ -2,8 +2,10 @@ package org.yatopiamc.c2me.metrics;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import net.fabricmc.api.EnvType;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.MinecraftVersion;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.server.MinecraftServer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -109,7 +111,20 @@ public class Metrics {
 
     private void appendPlatformData(JsonObjectBuilder builder) {
         builder.appendField("playerAmount", getPlayerAmount());
-        builder.appendField("onlineMode", 1);
+        if (FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT) {
+            builder.appendField("onlineMode", MinecraftClient.getInstance().getSession().getAccessToken() != null ? 1 : 0);
+        } else if (FabricLoader.getInstance().getEnvironmentType() == EnvType.SERVER) {
+            final MinecraftServer minecraftServer = capturedServer.get();
+            if (minecraftServer != null) {
+                builder.appendField("onlineMode", minecraftServer.isOnlineMode() ? 1 : 0);
+            } else {
+                LOGGER.warn("No captured server found for dedicated server environment, assuming offline mode");
+                builder.appendField("onlineMode", 0);
+            }
+        } else {
+            LOGGER.warn("Unknown environment, assuming offline mode");
+            builder.appendField("onlineMode", 0);
+        }
         builder.appendField("bukkitVersion", FabricLoader.getInstance().getModContainer("fabricloader").get().getMetadata().getVersion().getFriendlyString() + " (MC: " + MinecraftVersion.field_25319.getReleaseTarget() + ")");
         builder.appendField("bukkitName", "fabric");
         builder.appendField("javaVersion", System.getProperty("java.version"));
