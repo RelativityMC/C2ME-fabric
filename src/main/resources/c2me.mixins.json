@@ -4,6 +4,7 @@
   "package": "org.yatopiamc.c2me.mixin",
   "compatibilityLevel": "JAVA_11",
   "mixins": [
+    "metrics.MixinMinecraftServer",
     "threading.chunkio.MixinChunkSerializer",
     "threading.chunkio.MixinChunkTickScheduler",
     "threading.chunkio.MixinLightingProvider",
