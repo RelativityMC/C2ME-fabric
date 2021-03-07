@@ -182,7 +182,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
      */
     @Overwrite
     private boolean save(Chunk chunk) {
-        // [VanillaCopy]
+        // TODO [VanillaCopy] - check when updating minecraft version
         this.pointOfInterestStorage.saveChunk(chunk.getPos());
         if (!chunk.needsSaving()) {
             return false;

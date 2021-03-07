@@ -23,10 +23,10 @@ public class C2MEConfig {
                 .sync()
                 .build();
         config.load();
-        @SuppressWarnings("unused")
-        CommentedConfig globalConfig = config.get("global"); // Unused for now
+
         asyncIoConfig = new AsyncIoConfig(config.get("asyncIO"));
         threadedWorldGenConfig = new ThreadedWorldGenConfig(config.get("threadedWorldGen"));
+        config.save();
         config.close();
     }
 
@@ -54,9 +54,11 @@ public class C2MEConfig {
     public static class ThreadedWorldGenConfig {
         public final boolean enabled;
         public final int parallelism;
+        public final boolean allowThreadedFeatures;
 
         public ThreadedWorldGenConfig(CommentedConfig config) {
             Preconditions.checkNotNull(config, "threadedWorldGen config is not present");
+            upgrade(config);
             enabled = config.getOrElse("enabled", false);
             int configuredParallelism = config.getIntOrElse("parallelism", -1);
             Preconditions.checkArgument(configuredParallelism >= -1 && configuredParallelism != 0 && configuredParallelism <= 0x7fff, "Invalid parallelism");
@@ -64,6 +66,14 @@ public class C2MEConfig {
                 parallelism = Math.min(6, Runtime.getRuntime().availableProcessors());
             else
                 parallelism = configuredParallelism;
+            allowThreadedFeatures = config.getOrElse("allowThreadedFeatures", false);
+        }
+
+        private void upgrade(CommentedConfig config) {
+            if (!config.contains("allowThreadedFeatures")) {
+                config.set("allowThreadedFeatures", false);
+                config.setComment("allowThreadedFeatures", " Whether to allow feature generation (world decorations like trees, ores and etc.) run in parallel");
+            }
         }
     }
 

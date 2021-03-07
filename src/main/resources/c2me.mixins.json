@@ -10,7 +10,9 @@
     "threading.chunkio.MixinChunkSerializer",
     "threading.chunkio.MixinChunkTickScheduler",
     "threading.chunkio.MixinLightingProvider",
+    "threading.chunkio.MixinScheduledTick",
     "threading.chunkio.MixinSerializingRegionBasedStorage",
+    "threading.chunkio.MixinServerChunkManagerMainThreadExecutor",
     "threading.chunkio.MixinServerTickScheduler",
     "threading.chunkio.MixinSimpleTickScheduler",
     "threading.chunkio.MixinStorageIoWorker",
@@ -23,6 +25,7 @@
     "threading.worldgen.MixinStructureManager",
     "threading.worldgen.MixinStructurePalettedBlockInfoList",
     "threading.worldgen.MixinThreadedAnvilChunkStorage",
+    "threading.worldgen.MixinWeightedBlockStateProvider",
     "threading.worldgen.MixinWorldChunk",
     "util.log4j2shutdownhookisnomore.MixinMain",
     "util.log4j2shutdownhookisnomore.MixinMinecraftDedicatedServer"

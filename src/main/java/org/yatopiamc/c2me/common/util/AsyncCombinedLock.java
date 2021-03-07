@@ -1,8 +1,10 @@
 package org.yatopiamc.c2me.common.util;
 
 import com.ibm.asyncutil.locks.AsyncLock;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import org.yatopiamc.c2me.common.threading.GlobalExecutors;
 
+import java.util.LinkedHashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -21,8 +23,17 @@ public class AsyncCombinedLock {
 
     private void tryAcquire() {
         GlobalExecutors.ensureSchedulerThread();
-        final Set<LockEntry> tryLocks = lockHandles.stream().map(lock -> new LockEntry(lock, lock.tryLock())).collect(Collectors.toUnmodifiableSet());
-        if (tryLocks.stream().allMatch(lockEntry -> lockEntry.lockToken.isPresent())) {
+        final Set<LockEntry> tryLocks = new ObjectOpenHashSet<>(lockHandles.size());
+        boolean allAcquired = true;
+        for (AsyncLock lockHandle : lockHandles) {
+            final LockEntry entry = new LockEntry(lockHandle, lockHandle.tryLock());
+            tryLocks.add(entry);
+            if (entry.lockToken.isEmpty()) {
+                allAcquired = false;
+                break;
+            }
+        }
+        if (allAcquired) {
             future.complete(new CombinedLockToken(tryLocks.stream().flatMap(lockEntry -> lockEntry.lockToken.stream()).collect(Collectors.toUnmodifiableSet())));
         } else {
             tryLocks.stream().flatMap(lockEntry -> lockEntry.lockToken.stream()).forEach(AsyncLock.LockToken::releaseLock);

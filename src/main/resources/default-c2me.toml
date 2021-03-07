@@ -1,12 +1,9 @@
-# Global settings
-[global]
-
 # Configuration for async io system
 [asyncIO]
-# Serializer executor parallelism
-serializerParallelism = -1
 # IO worker executor parallelism
 ioWorkerParallelism = -1
+# Serializer executor parallelism
+serializerParallelism = -1
 
 # Configuration for threaded world generation
 [threadedWorldGen]
@@ -14,3 +11,6 @@ ioWorkerParallelism = -1
 enabled = true
 # World generation worker executor parallelism
 parallelism = -1
+# Whether to allow feature generation (world decorations like trees, ores and etc.) run in parallel
+allowThreadedFeatures = false
+
