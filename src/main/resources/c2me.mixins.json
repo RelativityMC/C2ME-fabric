@@ -5,8 +5,9 @@
   "compatibilityLevel": "JAVA_11",
   "mixins": [
     "metrics.MixinMinecraftServer",
-    "optimization.worldgen.threadlocal_block_interpolator.MixinGrimstoneInterpolator",
+    "optimization.worldgen.threadlocal_block_interpolator.MixinDeepslateInterpolator",
     "optimization.worldgen.threadlocal_noise_sampler.MixinVanillaLayeredBiomeSource",
+    "optimization.worldgen.threadsafe_weightedlist.MixinWeightedList",
     "threading.chunkio.MixinChunkSerializer",
     "threading.chunkio.MixinChunkTickScheduler",
     "threading.chunkio.MixinLightingProvider",
@@ -25,7 +26,6 @@
     "threading.worldgen.MixinStructureManager",
     "threading.worldgen.MixinStructurePalettedBlockInfoList",
     "threading.worldgen.MixinThreadedAnvilChunkStorage",
-    "threading.worldgen.MixinWeightedBlockStateProvider",
     "threading.worldgen.MixinWorldChunk",
     "util.log4j2shutdownhookisnomore.MixinMain",
     "util.log4j2shutdownhookisnomore.MixinMinecraftDedicatedServer"

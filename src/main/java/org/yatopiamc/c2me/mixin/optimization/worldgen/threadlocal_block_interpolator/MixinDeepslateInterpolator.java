@@ -3,7 +3,7 @@ package org.yatopiamc.c2me.mixin.optimization.worldgen.threadlocal_block_interpo
 import net.minecraft.block.BlockState;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.gen.ChunkRandom;
-import net.minecraft.world.gen.GrimstoneInterpolator;
+import net.minecraft.world.gen.DeepslateInterpolator;
 import net.minecraft.world.gen.chunk.ChunkGeneratorSettings;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -13,12 +13,12 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(GrimstoneInterpolator.class)
-public class MixinGrimstoneInterpolator {
+@Mixin(DeepslateInterpolator.class)
+public class MixinDeepslateInterpolator {
 
     @Shadow @Final private BlockState defaultBlock;
-    @Shadow @Final private BlockState grimstone;
     @Shadow @Final private long seed;
+    @Shadow @Final private BlockState deepslateState;
     private ThreadLocal<ChunkRandom> chunkRandomThreadLocal = new ThreadLocal<>();
 
     @Inject(method = "<init>", at = @At("RETURN"))
@@ -32,14 +32,14 @@ public class MixinGrimstoneInterpolator {
      */
     @Overwrite
     public BlockState sample(int x, int y, int z, ChunkGeneratorSettings settings) {
-        // [VanillaCopy]
-        if (!settings.hasGrimstone()) {
+        // TODO [VanillaCopy]
+        if (!settings.hasDeepslate()) {
             return this.defaultBlock;
         } else {
             final ChunkRandom chunkRandom = this.chunkRandomThreadLocal.get(); // C2ME - use thread local
             chunkRandom.setGrimstoneSeed(this.seed, x, y, z);
             double d = MathHelper.clampedLerpFromProgress((double)y, -8.0D, 0.0D, 1.0D, 0.0D);
-            return (double) chunkRandom.nextFloat() < d ? this.grimstone : this.defaultBlock;
+            return (double) chunkRandom.nextFloat() < d ? this.deepslateState : this.defaultBlock;
         }
     }
 
