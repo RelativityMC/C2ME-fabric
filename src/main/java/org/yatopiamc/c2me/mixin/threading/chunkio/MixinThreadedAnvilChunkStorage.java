@@ -209,6 +209,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
 
                 saveFutures.add(chunkLock.acquireLock(chunk.getPos()).toCompletableFuture().thenCompose(lockToken ->
                         CompletableFuture.supplyAsync(() -> {
+                            scope.open();
                             AsyncSerializationManager.push(scope);
                             try {
                                 return ChunkSerializer.serialize(this.world, chunk);
