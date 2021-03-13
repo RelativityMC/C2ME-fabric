@@ -32,12 +32,10 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.yatopiamc.c2me.common.threading.chunkio.AsyncSerializationManager;
 import org.yatopiamc.c2me.common.threading.chunkio.C2MECachedRegionStorage;
 import org.yatopiamc.c2me.common.threading.chunkio.ChunkIoMainThreadTaskUtils;
 import org.yatopiamc.c2me.common.threading.chunkio.ChunkIoThreadingExecutorUtils;
-import org.yatopiamc.c2me.common.threading.chunkio.ICachedChunkTickScheduler;
-import org.yatopiamc.c2me.common.threading.chunkio.ICachedLightingProvider;
-import org.yatopiamc.c2me.common.threading.chunkio.ICachedServerTickScheduler;
 import org.yatopiamc.c2me.common.threading.chunkio.ISerializingRegionBasedStorage;
 import org.yatopiamc.c2me.common.util.SneakyThrow;
 
@@ -207,38 +205,17 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
                 this.world.getProfiler().visit("chunkSave");
                 // C2ME start - async serialization
                 if (saveFutures == null) saveFutures = new ConcurrentLinkedQueue<>();
-
-                final LightingProvider lightingProvider = this.world.getLightingProvider();
-                if (lightingProvider instanceof ICachedLightingProvider) {
-                    ((ICachedLightingProvider) lightingProvider).prepareLightData(chunkPos);
-                } else {
-                    new IllegalStateException("Unable to cache lighting data. Incompatible mods?").printStackTrace();
-                }
-
-                final TickScheduler<Block> chunkBlockTickScheduler = chunk.getBlockTickScheduler();
-                final ServerTickScheduler<Block> worldBlockTickScheduler = this.world.getBlockTickScheduler();
-                if (chunkBlockTickScheduler instanceof ICachedChunkTickScheduler) {
-                    ((ICachedChunkTickScheduler) chunkBlockTickScheduler).prepareCachedNbt();
-                    ((ICachedChunkTickScheduler) chunkBlockTickScheduler).setFallbackExecutor(this.mainThreadExecutor);
-                } else if (worldBlockTickScheduler instanceof ICachedServerTickScheduler) {
-                    ((ICachedServerTickScheduler) worldBlockTickScheduler).prepareCachedNbt(chunkPos);
-                } else {
-                    new IllegalStateException("Unable to cache block ticklist. Incompatible mods?").printStackTrace();
-                }
-
-                final TickScheduler<Fluid> chunkFluidTickScheduler = chunk.getFluidTickScheduler();
-                final ServerTickScheduler<Fluid> worldFluidTickScheduler = this.world.getFluidTickScheduler();
-                if (chunkFluidTickScheduler instanceof ICachedChunkTickScheduler) {
-                    ((ICachedChunkTickScheduler) chunkFluidTickScheduler).prepareCachedNbt();
-                    ((ICachedChunkTickScheduler) chunkFluidTickScheduler).setFallbackExecutor(this.mainThreadExecutor);
-                } else if (worldFluidTickScheduler instanceof ICachedServerTickScheduler) {
-                    ((ICachedServerTickScheduler) worldFluidTickScheduler).prepareCachedNbt(chunkPos);
-                } else {
-                    new IllegalStateException("Unable to cache fluid ticklist. Incompatible mods?").printStackTrace();
-                }
+                AsyncSerializationManager.Scope scope = new AsyncSerializationManager.Scope(chunk, world);
 
                 saveFutures.add(chunkLock.acquireLock(chunk.getPos()).toCompletableFuture().thenCompose(lockToken ->
-                        CompletableFuture.supplyAsync(() -> ChunkSerializer.serialize(this.world, chunk), ChunkIoThreadingExecutorUtils.serializerExecutor)
+                        CompletableFuture.supplyAsync(() -> {
+                            AsyncSerializationManager.push(scope);
+                            try {
+                                return ChunkSerializer.serialize(this.world, chunk);
+                            } finally {
+                                AsyncSerializationManager.pop(scope);
+                            }
+                        }, ChunkIoThreadingExecutorUtils.serializerExecutor)
                                 .thenAcceptAsync(compoundTag -> this.setTagAt(chunkPos, compoundTag), this.mainThreadExecutor)
                                 .handle((unused, throwable) -> {
                             lockToken.releaseLock();

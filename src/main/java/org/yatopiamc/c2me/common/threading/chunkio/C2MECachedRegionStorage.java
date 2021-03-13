@@ -104,8 +104,13 @@ public class C2MECachedRegionStorage extends StorageIoWorker {
         ensureOpen();
         Preconditions.checkNotNull(pos);
         Preconditions.checkNotNull(nbt);
-        this.chunkCache.put(pos, nbt);
-        return CompletableFuture.completedFuture(null);
+        return chunkLocks.acquireLock(pos).toCompletableFuture().thenAcceptAsync(lockToken -> {
+            try {
+                this.chunkCache.put(pos, nbt);
+            } finally {
+                lockToken.releaseLock();
+            }
+        }, GlobalExecutors.scheduler);
     }
 
     public CompletableFuture<CompoundTag> getNbtAtAsync(ChunkPos pos) {
