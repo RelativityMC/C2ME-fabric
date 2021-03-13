@@ -2,6 +2,7 @@ package org.yatopiamc.c2me.common.threading.chunkio;
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.block.Block;
+import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
@@ -21,6 +22,7 @@ import org.yatopiamc.c2me.common.util.DeepCloneable;
 import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -56,6 +58,7 @@ public class AsyncSerializationManager {
         public final Map<LightType, ChunkLightingView> lighting;
         public final TickScheduler<Block> blockTickScheduler;
         public final TickScheduler<Fluid> fluidTickScheduler;
+        public final Map<BlockPos, BlockEntity> blockEntities;
         private final AtomicBoolean isOpen = new AtomicBoolean(false);
 
         public Scope(Chunk chunk, ServerWorld world) {
@@ -73,6 +76,7 @@ public class AsyncSerializationManager {
             } else {
                 this.fluidTickScheduler = null;
             }
+            this.blockEntities = chunk.getBlockEntityPositions().stream().map(chunk::getBlockEntity).filter(Objects::nonNull).filter(blockEntity -> !blockEntity.isRemoved()).collect(Collectors.toMap(BlockEntity::getPos, Function.identity()));
         }
 
         public void open() {
