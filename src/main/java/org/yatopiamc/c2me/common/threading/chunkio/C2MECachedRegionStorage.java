@@ -57,10 +57,7 @@ public class C2MECachedRegionStorage extends StorageIoWorker {
                 .concurrencyLevel(Runtime.getRuntime().availableProcessors() * 2)
                 .expireAfterAccess(3, TimeUnit.SECONDS)
                 .maximumSize(8192)
-                .removalListener((RemovalNotification<ChunkPos, CompoundTag> notification) -> {
-                    if (notification.getValue() != EMPTY_VALUE)
-                        scheduleWrite(notification.getKey(), notification.getValue());
-                })
+                .removalListener((RemovalNotification<ChunkPos, CompoundTag> notification) -> scheduleWrite(notification.getKey(), notification.getValue()))
                 .build();
         this.tick();
     }
@@ -87,10 +84,20 @@ public class C2MECachedRegionStorage extends StorageIoWorker {
 
     private void scheduleWrite(ChunkPos pos, CompoundTag chunkData) {
         writeFutures.put(pos, regionLocks.acquireLock(new RegionPos(pos)).toCompletableFuture().thenCombineAsync(getRegionFile(pos), (lockToken, regionFile) -> {
-            try (final DataOutputStream dataOutputStream = regionFile.getChunkOutputStream(pos)) {
-                NbtIo.write(chunkData, dataOutputStream);
-            } catch (Throwable t) {
-                LOGGER.error("Failed to store chunk {}", pos, t);
+            try {
+                if (chunkData == null || chunkData == EMPTY_VALUE) {
+                    try {
+                        regionFile.method_31740(pos);
+                    } catch (Throwable t) {
+                        LOGGER.error("Failed to store chunk {}", pos, t);
+                    }
+                } else {
+                    try (final DataOutputStream dataOutputStream = regionFile.getChunkOutputStream(pos)) {
+                        NbtIo.write(chunkData, dataOutputStream);
+                    } catch (Throwable t) {
+                        LOGGER.error("Failed to store chunk {}", pos, t);
+                    }
+                }
             } finally {
                 lockToken.releaseLock();
             }
@@ -100,13 +107,12 @@ public class C2MECachedRegionStorage extends StorageIoWorker {
     }
 
     @Override
-    public CompletableFuture<Void> setResult(ChunkPos pos, CompoundTag nbt) {
+    public CompletableFuture<Void> setResult(ChunkPos pos, @Nullable CompoundTag nbt) {
         ensureOpen();
         Preconditions.checkNotNull(pos);
-        Preconditions.checkNotNull(nbt);
         return chunkLocks.acquireLock(pos).toCompletableFuture().thenAcceptAsync(lockToken -> {
             try {
-                this.chunkCache.put(pos, nbt);
+                this.chunkCache.put(pos, nbt == null ? EMPTY_VALUE : nbt);
             } finally {
                 lockToken.releaseLock();
             }
