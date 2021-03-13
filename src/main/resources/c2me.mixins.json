@@ -4,6 +4,10 @@
   "package": "org.yatopiamc.c2me.mixin",
   "compatibilityLevel": "JAVA_11",
   "mixins": [
+    "chunkscheduling.mid_tick_chunk_tasks.MixinMinecraftServer",
+    "chunkscheduling.mid_tick_chunk_tasks.MixinServerChunkManager",
+    "chunkscheduling.mid_tick_chunk_tasks.MixinServerTickScheduler",
+    "chunkscheduling.mid_tick_chunk_tasks.MixinWorld",
     "metrics.MixinMinecraftServer",
     "threading.chunkio.MixinChunkSerializer",
     "threading.chunkio.MixinChunkTickScheduler",
