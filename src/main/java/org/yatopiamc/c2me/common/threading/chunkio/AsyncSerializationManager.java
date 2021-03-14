@@ -4,10 +4,13 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.block.Block;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.fluid.Fluid;
+import net.minecraft.server.world.ServerTickScheduler;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.server.world.SimpleTickScheduler;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.ChunkSectionPos;
+import net.minecraft.util.registry.Registry;
 import net.minecraft.world.LightType;
 import net.minecraft.world.TickScheduler;
 import net.minecraft.world.chunk.Chunk;
@@ -68,13 +71,15 @@ public class AsyncSerializationManager {
             if (blockTickScheduler instanceof DeepCloneable) {
                 this.blockTickScheduler = (TickScheduler<Block>) ((DeepCloneable) blockTickScheduler).deepClone();
             } else {
-                this.blockTickScheduler = null;
+                final ServerTickScheduler<Block> worldBlockTickScheduler = world.getBlockTickScheduler();
+                this.blockTickScheduler = new SimpleTickScheduler<>(Registry.BLOCK::getId, worldBlockTickScheduler.getScheduledTicksInChunk(chunk.getPos(), false, true), world.getTime());
             }
             final TickScheduler<Fluid> fluidTickScheduler = chunk.getFluidTickScheduler();
             if (fluidTickScheduler instanceof DeepCloneable) {
                 this.fluidTickScheduler = (TickScheduler<Fluid>) ((DeepCloneable) fluidTickScheduler).deepClone();
             } else {
-                this.fluidTickScheduler = null;
+                final ServerTickScheduler<Fluid> worldFluidTickScheduler = world.getFluidTickScheduler();
+                this.fluidTickScheduler = new SimpleTickScheduler<>(Registry.FLUID::getId, worldFluidTickScheduler.getScheduledTicksInChunk(chunk.getPos(), false, true), world.getTime());
             }
             this.blockEntities = chunk.getBlockEntityPositions().stream().map(chunk::getBlockEntity).filter(Objects::nonNull).filter(blockEntity -> !blockEntity.isRemoved()).collect(Collectors.toMap(BlockEntity::getPos, Function.identity()));
         }
