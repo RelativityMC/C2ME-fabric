@@ -1,6 +1,6 @@
 package org.yatopiamc.c2me.mixin.threading.chunkio;
 
-import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtList;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.ChunkTickScheduler;
 import net.minecraft.world.HeightLimitView;
@@ -15,7 +15,7 @@ import java.util.function.Predicate;
 public abstract class MixinChunkTickScheduler<T> implements DeepCloneable {
 
     @Shadow
-    public abstract ListTag toNbt();
+    public abstract NbtList toNbt();
 
     @Shadow
     @Final

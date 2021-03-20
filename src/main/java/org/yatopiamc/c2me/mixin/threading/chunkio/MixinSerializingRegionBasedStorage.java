@@ -1,7 +1,7 @@
 package org.yatopiamc.c2me.mixin.threading.chunkio;
 
 import com.mojang.serialization.DynamicOps;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.storage.SerializingRegionBasedStorage;
@@ -23,7 +23,7 @@ public abstract class MixinSerializingRegionBasedStorage implements ISerializing
     protected abstract <T> void update(ChunkPos pos, DynamicOps<T> dynamicOps, @Nullable T data);
 
     @Override
-    public void update(ChunkPos pos, CompoundTag tag) {
+    public void update(ChunkPos pos, NbtCompound tag) {
         this.update(pos, NbtOps.INSTANCE, tag);
     }
 

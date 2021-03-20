@@ -5,7 +5,7 @@ import com.mojang.datafixers.DataFixer;
 import com.mojang.datafixers.util.Either;
 import net.minecraft.block.Block;
 import net.minecraft.fluid.Fluid;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ServerTickScheduler;
 import net.minecraft.server.world.ServerWorld;
@@ -100,7 +100,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
     @Overwrite
     private CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> loadChunk(ChunkPos pos) {
 
-        final CompletableFuture<CompoundTag> poiData = ((C2MECachedRegionStorage) this.pointOfInterestStorage.worker).getNbtAtAsync(pos);
+        final CompletableFuture<NbtCompound> poiData = ((C2MECachedRegionStorage) this.pointOfInterestStorage.worker).getNbtAtAsync(pos);
 
         return getUpdatedChunkNbtAtAsync(pos).thenApplyAsync(compoundTag -> {
             if (compoundTag != null) {
@@ -161,7 +161,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
          */
     }
 
-    private CompletableFuture<CompoundTag> getUpdatedChunkNbtAtAsync(ChunkPos pos) {
+    private CompletableFuture<NbtCompound> getUpdatedChunkNbtAtAsync(ChunkPos pos) {
         return chunkLock.acquireLock(pos).toCompletableFuture().thenCompose(lockToken -> ((C2MECachedRegionStorage) this.worker).getNbtAtAsync(pos).thenApply(compoundTag -> {
             if (compoundTag != null)
                 return this.updateChunkNbt(this.world.getRegistryKey(), this.persistentStateManagerFactory, compoundTag);
@@ -189,7 +189,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
 
             try {
                 ChunkStatus chunkStatus = chunk.getStatus();
-                if (chunkStatus.getChunkType() != ChunkStatus.ChunkType.field_12807) {
+                if (chunkStatus.getChunkType() != ChunkStatus.ChunkType.LEVELCHUNK) {
                     if (this.method_27055(chunkPos)) {
                         return false;
                     }
