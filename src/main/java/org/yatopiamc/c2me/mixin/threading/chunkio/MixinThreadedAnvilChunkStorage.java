@@ -1,5 +1,6 @@
 package org.yatopiamc.c2me.mixin.threading.chunkio;
 
+import com.google.common.collect.Sets;
 import com.ibm.asyncutil.locks.AsyncNamedLock;
 import com.mojang.datafixers.DataFixer;
 import com.mojang.datafixers.util.Either;
@@ -42,7 +43,11 @@ import org.yatopiamc.c2me.common.threading.chunkio.ISerializingRegionBasedStorag
 import org.yatopiamc.c2me.common.util.SneakyThrow;
 
 import java.io.File;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Supplier;
 
@@ -93,16 +98,23 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
         chunkLock = AsyncNamedLock.createFair();
     }
 
+    private Set<ChunkPos> scheduledChunks = new HashSet<>();
+
     /**
      * @author ishland
      * @reason async io and deserialization
      */
     @Overwrite
     private CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> loadChunk(ChunkPos pos) {
+        if (scheduledChunks == null) scheduledChunks = new HashSet<>();
+        synchronized (scheduledChunks) {
+            if (scheduledChunks.contains(pos)) throw new IllegalArgumentException("Already scheduled");
+            scheduledChunks.add(pos);
+        }
 
         final CompletableFuture<CompoundTag> poiData = ((C2MECachedRegionStorage) this.pointOfInterestStorage.worker).getNbtAtAsync(pos);
 
-        return getUpdatedChunkTagAtAsync(pos).thenApplyAsync(compoundTag -> {
+        final CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> future = getUpdatedChunkTagAtAsync(pos).thenApplyAsync(compoundTag -> {
             if (compoundTag != null) {
                 try {
                     if (compoundTag.contains("Level", 10) && compoundTag.getCompound("Level").contains("Status", 8)) {
@@ -127,6 +139,12 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
                 return Either.left(new ProtoChunk(pos, UpgradeData.NO_UPGRADE_DATA));
             }
         }, this.mainThreadExecutor);
+        future.exceptionally(throwable -> null).thenRun(() -> {
+            synchronized (scheduledChunks) {
+                scheduledChunks.remove(pos);
+            }
+        });
+        return future;
 
         // [VanillaCopy] - for reference
         /*
