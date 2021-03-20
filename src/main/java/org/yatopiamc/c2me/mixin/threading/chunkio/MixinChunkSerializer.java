@@ -66,7 +66,8 @@ public class MixinChunkSerializer {
 
     @Redirect(method = "serialize", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerTickScheduler;toTag(Lnet/minecraft/util/math/ChunkPos;)Lnet/minecraft/nbt/ListTag;"))
     private static ListTag onServerTickSchedulerToTag(@SuppressWarnings("rawtypes") ServerTickScheduler serverTickScheduler, ChunkPos chunkPos) {
-        return CompletableFuture.supplyAsync(() -> serverTickScheduler.toTag(chunkPos), serverTickScheduler.world.serverChunkManager.mainThreadExecutor).join();
+        final AsyncSerializationManager.Scope scope = AsyncSerializationManager.getScope(chunkPos);
+        return scope != null ? CompletableFuture.supplyAsync(() -> serverTickScheduler.toTag(chunkPos), serverTickScheduler.world.serverChunkManager.mainThreadExecutor).join() : serverTickScheduler.toTag(chunkPos);
     }
 
     @Redirect(method = "serialize", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/light/LightingProvider;get(Lnet/minecraft/world/LightType;)Lnet/minecraft/world/chunk/light/ChunkLightingView;"))
