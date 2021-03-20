@@ -28,7 +28,8 @@
     "threading.worldgen.MixinThreadedAnvilChunkStorage",
     "threading.worldgen.MixinWeightedBlockStateProvider",
     "util.log4j2shutdownhookisnomore.MixinMain",
-    "util.log4j2shutdownhookisnomore.MixinMinecraftDedicatedServer"
+    "util.log4j2shutdownhookisnomore.MixinMinecraftDedicatedServer",
+    "util.progresslogger.MixinWorldGenerationProgressLogger"
   ],
   "client": [
   ],
