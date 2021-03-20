@@ -1,4 +1,4 @@
-<img width="200" src="https://yatopiamc.org/static/img/c2m.png" alt="Yatopia" align="right">
+<img width="200" src="https://yatopiamc.org/static/img/c2m.png" alt="C2ME icon" align="right">
 <div align="left">
 <h1>C^2M-Engine</h1>
 
@@ -10,22 +10,24 @@
 
 ## So what is C2ME?
 C^2M-Engine, or C2ME for short, is a Fabric mod designed to improve the performance of chunk generation, I/O, and loading. This is done by taking advantage of multiple CPU cores in parallel. For the best performance it is recommended to use C2ME with [Lithium](https://github.com/CaffeineMC/lithium-fabric) and [Starlight](https://github.com/Spottedleaf/Starlight).
-What does C2ME stand for?
-Concurrent chunk management engine, its about making the game better threaded and more scalable in regard to world gen and chunk io performance.
-## So what is C2ME not?
 
+## What does C2ME stand for?
+Concurrent chunk management engine, it's about making the game better threaded and more scalable in regard to world gen and chunk io performance.
+
+## So what is C2ME not?
 C2ME is not production ready and still pretty experimental. 
 So backup your worlds and practice good game modding skills.
- 
+
 ## Building and setting up
 
 Run the following commands in the root directory:
 
 ```shell
-./gradlew clean
-./gradlew build
+./gradlew clean build
 ```
 
 ## License
-
 License information can be found [here](/LICENSE).
+
+## Statistics
+[![](https://bstats.org/signatures/bukkit/C2ME-fabric.svg)](https://bstats.org/plugin/bukkit/C2ME-fabric/10514)
