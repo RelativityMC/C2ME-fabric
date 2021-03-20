@@ -14,7 +14,7 @@ public class ConfigUtils {
         Preconditions.checkNotNull(key);
         Preconditions.checkArgument(!key.isEmpty());
         Preconditions.checkNotNull(def);
-        if (!config.contains(key) || Arrays.stream(checks).noneMatch(checkType -> checkType.check(config.get(key)))) config.set(key, def.get());
+        if (!config.contains(key) || (checks.length != 0 && Arrays.stream(checks).anyMatch(checkType -> !checkType.check(config.get(key))))) config.set(key, def.get());
         config.setComment(key, " " + comment);
         return Objects.requireNonNull(config.get(key));
     }
