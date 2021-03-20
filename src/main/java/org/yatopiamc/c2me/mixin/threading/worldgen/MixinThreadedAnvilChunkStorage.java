@@ -14,6 +14,7 @@ public class MixinThreadedAnvilChunkStorage {
      * @author ishland
      * @reason move to scheduler
      */
+    @SuppressWarnings("OverwriteTarget")
     @Dynamic
     @Overwrite
     private void method_17259(ChunkHolder chunkHolder, Runnable runnable) { // synthetic method for worldGenExecutor scheduling

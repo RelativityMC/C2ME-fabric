@@ -2,11 +2,15 @@ package org.yatopiamc.c2me.common.threading.chunkio;
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.block.Block;
+import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.fluid.Fluid;
+import net.minecraft.server.world.ServerTickScheduler;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.server.world.SimpleTickScheduler;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.ChunkSectionPos;
+import net.minecraft.util.registry.Registry;
 import net.minecraft.world.LightType;
 import net.minecraft.world.TickScheduler;
 import net.minecraft.world.chunk.Chunk;
@@ -21,6 +25,7 @@ import org.yatopiamc.c2me.common.util.DeepCloneable;
 import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -56,6 +61,7 @@ public class AsyncSerializationManager {
         public final Map<LightType, ChunkLightingView> lighting;
         public final TickScheduler<Block> blockTickScheduler;
         public final TickScheduler<Fluid> fluidTickScheduler;
+        public final Map<BlockPos, BlockEntity> blockEntities;
         private final AtomicBoolean isOpen = new AtomicBoolean(false);
 
         public Scope(Chunk chunk, ServerWorld world) {
@@ -65,14 +71,17 @@ public class AsyncSerializationManager {
             if (blockTickScheduler instanceof DeepCloneable) {
                 this.blockTickScheduler = (TickScheduler<Block>) ((DeepCloneable) blockTickScheduler).deepClone();
             } else {
-                this.blockTickScheduler = null;
+                final ServerTickScheduler<Block> worldBlockTickScheduler = world.getBlockTickScheduler();
+                this.blockTickScheduler = new SimpleTickScheduler<>(Registry.BLOCK::getId, worldBlockTickScheduler.getScheduledTicksInChunk(chunk.getPos(), false, true), world.getTime());
             }
             final TickScheduler<Fluid> fluidTickScheduler = chunk.getFluidTickScheduler();
             if (fluidTickScheduler instanceof DeepCloneable) {
                 this.fluidTickScheduler = (TickScheduler<Fluid>) ((DeepCloneable) fluidTickScheduler).deepClone();
             } else {
-                this.fluidTickScheduler = null;
+                final ServerTickScheduler<Fluid> worldFluidTickScheduler = world.getFluidTickScheduler();
+                this.fluidTickScheduler = new SimpleTickScheduler<>(Registry.FLUID::getId, worldFluidTickScheduler.getScheduledTicksInChunk(chunk.getPos(), false, true), world.getTime());
             }
+            this.blockEntities = chunk.getBlockEntityPositions().stream().map(chunk::getBlockEntity).filter(Objects::nonNull).filter(blockEntity -> !blockEntity.isRemoved()).collect(Collectors.toMap(BlockEntity::getPos, Function.identity()));
         }
 
         public void open() {

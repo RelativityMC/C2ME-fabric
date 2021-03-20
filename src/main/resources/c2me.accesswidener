@@ -14,6 +14,8 @@ accessible    method    net/minecraft/util/collection/WeightedList    <init>    
 accessible    method    net/minecraft/util/collection/WeightedList$Entry    setShuffledOrder    (F)V
 accessible    method    net/minecraft/util/collection/WeightedList$Entry    getShuffledOrder    ()D
 accessible    method    net/minecraft/server/world/ServerChunkManager    tick    ()Z
+accessible    method    net/minecraft/server/world/ServerChunkManager$MainThreadExecutor    runTask    ()Z
+accessible    method    net/minecraft/util/thread/ThreadExecutor    runTask    ()Z
 accessible    method    net/minecraft/server/world/SimpleTickScheduler    <init>    (Ljava/util/function/Function;Ljava/util/List;)V
 
 accessible    field    net/minecraft/world/storage/StorageIoWorker$Result    nbt    Lnet/minecraft/nbt/CompoundTag;

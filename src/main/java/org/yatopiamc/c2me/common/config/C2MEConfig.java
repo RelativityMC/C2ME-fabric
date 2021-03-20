@@ -4,6 +4,7 @@ import com.electronwill.nightconfig.core.CommentedConfig;
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import com.google.common.base.Preconditions;
 import net.fabricmc.loader.api.FabricLoader;
+import org.yatopiamc.c2me.C2MEMod;
 
 import java.net.URL;
 
@@ -13,21 +14,19 @@ public class C2MEConfig {
     public static final ThreadedWorldGenConfig threadedWorldGenConfig;
 
     static {
-        URL defaultConfigURL = C2MEConfig.class.getClassLoader().getResource("default-c2me.toml");
-        Preconditions.checkNotNull(defaultConfigURL, "Default configuration file does not exist.");
-
+        long startTime = System.nanoTime();
         CommentedFileConfig config = CommentedFileConfig.builder(FabricLoader.getInstance().getConfigDir().resolve("c2me.toml"))
-                .defaultData(defaultConfigURL)
                 .autosave()
                 .preserveInsertionOrder()
                 .sync()
                 .build();
         config.load();
 
-        asyncIoConfig = new AsyncIoConfig(config.get("asyncIO"));
-        threadedWorldGenConfig = new ThreadedWorldGenConfig(config.get("threadedWorldGen"));
+        asyncIoConfig = new AsyncIoConfig(ConfigUtils.getValue(config, "asyncIO", CommentedConfig::inMemory, "Configuration for async io system"));
+        threadedWorldGenConfig = new ThreadedWorldGenConfig(ConfigUtils.getValue(config, "threadedWorldGen", CommentedConfig::inMemory, "Configuration for threaded world generation"));
         config.save();
         config.close();
+        C2MEMod.LOGGER.info("Configuration loaded successfully after {}ms", (System.nanoTime() - startTime) / 1_000_000.0);
     }
 
     public static class AsyncIoConfig {
@@ -36,18 +35,8 @@ public class C2MEConfig {
 
         public AsyncIoConfig(CommentedConfig config) {
             Preconditions.checkNotNull(config, "asyncIo config is not present");
-            int configuredSerializerParallelism = config.getIntOrElse("serializerParallelism", -1);
-            Preconditions.checkArgument(configuredSerializerParallelism >= -1 && configuredSerializerParallelism != 0 && configuredSerializerParallelism <= 0x7fff, "Invalid serializerParallelism");
-            if (configuredSerializerParallelism == -1)
-                serializerParallelism = Math.min(2, Runtime.getRuntime().availableProcessors());
-            else
-                serializerParallelism = configuredSerializerParallelism;
-            int configuredIoWorkerParallelism = config.getIntOrElse("ioWorkerParallelism", -1);
-            Preconditions.checkArgument(configuredIoWorkerParallelism >= -1 && configuredIoWorkerParallelism != 0 && configuredIoWorkerParallelism <= 0x7fff, "Invalid ioWorkerParallelism");
-            if (configuredIoWorkerParallelism == -1)
-                ioWorkerParallelism = Math.min(10, Runtime.getRuntime().availableProcessors());
-            else
-                ioWorkerParallelism = configuredIoWorkerParallelism;
+            this.serializerParallelism = ConfigUtils.getValue(config, "serializerParallelism", () -> Math.min(2, Runtime.getRuntime().availableProcessors()), "IO worker executor parallelism", ConfigUtils.CheckType.THREAD_COUNT);
+            this.ioWorkerParallelism = ConfigUtils.getValue(config, "ioWorkerParallelism", () -> Math.min(10, Runtime.getRuntime().availableProcessors()), "Serializer executor parallelism", ConfigUtils.CheckType.THREAD_COUNT);
         }
     }
 
@@ -58,22 +47,9 @@ public class C2MEConfig {
 
         public ThreadedWorldGenConfig(CommentedConfig config) {
             Preconditions.checkNotNull(config, "threadedWorldGen config is not present");
-            upgrade(config);
-            enabled = config.getOrElse("enabled", false);
-            int configuredParallelism = config.getIntOrElse("parallelism", -1);
-            Preconditions.checkArgument(configuredParallelism >= -1 && configuredParallelism != 0 && configuredParallelism <= 0x7fff, "Invalid parallelism");
-            if (configuredParallelism == -1)
-                parallelism = Math.min(6, Runtime.getRuntime().availableProcessors());
-            else
-                parallelism = configuredParallelism;
-            allowThreadedFeatures = config.getOrElse("allowThreadedFeatures", false);
-        }
-
-        private void upgrade(CommentedConfig config) {
-            if (!config.contains("allowThreadedFeatures")) {
-                config.set("allowThreadedFeatures", false);
-                config.setComment("allowThreadedFeatures", " Whether to allow feature generation (world decorations like trees, ores and etc.) run in parallel");
-            }
+            this.enabled = ConfigUtils.getValue(config, "enabled", () -> true, "Whether to enable this feature");
+            this.parallelism = ConfigUtils.getValue(config, "parallelism", () -> Math.min(6, Runtime.getRuntime().availableProcessors()), "World generation worker executor parallelism", ConfigUtils.CheckType.THREAD_COUNT);
+            this.allowThreadedFeatures = ConfigUtils.getValue(config, "allowThreadedFeatures", () -> false, "Whether to allow feature generation (world decorations like trees, ores and etc.) run in parallel");
         }
     }
 

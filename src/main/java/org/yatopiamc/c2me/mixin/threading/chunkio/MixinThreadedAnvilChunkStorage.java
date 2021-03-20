@@ -25,12 +25,14 @@ import net.minecraft.world.chunk.light.LightingProvider;
 import net.minecraft.world.poi.PointOfInterestStorage;
 import net.minecraft.world.storage.VersionedChunkStorage;
 import org.apache.logging.log4j.Logger;
+import org.spongepowered.asm.mixin.Dynamic;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.yatopiamc.c2me.common.threading.chunkio.AsyncSerializationManager;
 import org.yatopiamc.c2me.common.threading.chunkio.C2MECachedRegionStorage;
@@ -174,12 +176,9 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
 
     private ConcurrentLinkedQueue<CompletableFuture<Void>> saveFutures = new ConcurrentLinkedQueue<>();
 
-    /**
-     * @author ishland
-     * @reason async serialization
-     */
-    @Overwrite
-    private boolean save(Chunk chunk) {
+    @Dynamic
+    @Redirect(method = "method_18843", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ThreadedAnvilChunkStorage;save(Lnet/minecraft/world/chunk/Chunk;)Z")) // method: consumer in tryUnloadChunk
+    private boolean asyncSave(ThreadedAnvilChunkStorage tacs, Chunk chunk) {
         // TODO [VanillaCopy] - check when updating minecraft version
         this.pointOfInterestStorage.saveChunk(chunk.getPos());
         if (!chunk.needsSaving()) {
@@ -207,6 +206,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
 
                 saveFutures.add(chunkLock.acquireLock(chunk.getPos()).toCompletableFuture().thenCompose(lockToken ->
                         CompletableFuture.supplyAsync(() -> {
+                            scope.open();
                             AsyncSerializationManager.push(scope);
                             try {
                                 return ChunkSerializer.serialize(this.world, chunk);
