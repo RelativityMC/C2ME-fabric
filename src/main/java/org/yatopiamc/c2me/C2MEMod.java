@@ -4,12 +4,16 @@ import com.google.common.collect.ImmutableMap;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.MinecraftVersion;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.yatopiamc.c2me.common.config.C2MEConfig;
 import org.yatopiamc.c2me.metrics.Metrics;
 
 import java.util.Locale;
 
 public class C2MEMod implements ModInitializer {
+    public static final Logger LOGGER = LogManager.getLogger("C2ME");
+
     @Override
     public void onInitialize() {
         final Metrics metrics = new Metrics(10514);
