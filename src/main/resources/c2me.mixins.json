@@ -4,6 +4,7 @@
   "package": "org.yatopiamc.c2me.mixin",
   "compatibilityLevel": "JAVA_11",
   "mixins": [
+    "chunkscheduling.fix_unload.MixinThreadedAnvilChunkStorage",
     "chunkscheduling.mid_tick_chunk_tasks.MixinMinecraftServer",
     "chunkscheduling.mid_tick_chunk_tasks.MixinServerChunkManager",
     "chunkscheduling.mid_tick_chunk_tasks.MixinServerTickScheduler",
@@ -18,6 +19,7 @@
     "threading.chunkio.MixinStorageIoWorker",
     "threading.chunkio.MixinThreadedAnvilChunkStorage",
     "threading.chunkio.MixinVersionedChunkStorage",
+    "threading.lighting.MixinServerLightingProvider",
     "threading.lighting.MixinThreadedAnvilChunkStorage",
     "threading.worldgen.MixinChunkStatus",
     "threading.worldgen.MixinServerWorld",
