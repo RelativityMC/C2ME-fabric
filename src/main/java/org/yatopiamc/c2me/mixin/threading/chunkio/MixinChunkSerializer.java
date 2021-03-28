@@ -45,7 +45,7 @@ public class MixinChunkSerializer {
         final AsyncSerializationManager.Scope scope = AsyncSerializationManager.getScope(chunk.getPos());
         if (scope == null) return chunk.getPackedBlockEntityNbt(pos);
         final BlockEntity blockEntity = scope.blockEntities.get(pos);
-        if (blockEntity == null || blockEntity.isRemoved()) return null;
+        if (blockEntity == null) return null;
         final NbtCompound compoundTag = new NbtCompound();
         if (chunk instanceof WorldChunk) compoundTag.putBoolean("keepPacked", false);
         blockEntity.writeNbt(compoundTag);
