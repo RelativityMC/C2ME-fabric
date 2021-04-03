@@ -109,7 +109,32 @@ public class AsyncSerializationManager {
             }
 
             @Override
+            public void checkBlock(BlockPos blockPos) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public void addLightSource(BlockPos blockPos, int i) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public boolean hasUpdates() {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public int doLightUpdates(int i, boolean bl, boolean bl2) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
             public void setSectionStatus(ChunkSectionPos pos, boolean notReady) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public void setColumnEnabled(ChunkPos chunkPos, boolean bl) {
                 throw new UnsupportedOperationException();
             }
 

@@ -232,7 +232,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
                                 AsyncSerializationManager.pop(scope);
                             }
                         }, ChunkIoThreadingExecutorUtils.serializerExecutor)
-                                .thenAcceptAsync(compoundTag -> this.setTagAt(chunkPos, compoundTag), this.mainThreadExecutor)
+                                .thenAcceptAsync(compoundTag -> this.setNbt(chunkPos, compoundTag), this.mainThreadExecutor)
                                 .handle((unused, throwable) -> {
                             lockToken.releaseLock();
                             if (throwable != null)

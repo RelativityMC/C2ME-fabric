@@ -20,11 +20,11 @@ public class MixinWeightedList<U> {
      * @reason create new instance on shuffling
      */
     @Overwrite
-    public WeightedList<U> shuffle(Random random) {
+    public WeightedList<U> shuffle() {
         // TODO [VanillaCopy]
         final WeightedList<U> newList = new WeightedList<>(entries); // C2ME - use new instance
         newList.entries.forEach((entry) -> { // C2ME - use new instance
-            entry.setShuffledOrder(random.nextFloat());
+            entry.setShuffledOrder(new Random().nextFloat());
         });
         newList.entries.sort(Comparator.comparingDouble((object) -> { // C2ME - use new instance
             return ((WeightedList.Entry)object).getShuffledOrder();

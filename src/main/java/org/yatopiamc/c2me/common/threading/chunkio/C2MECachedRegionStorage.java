@@ -184,7 +184,7 @@ public class C2MECachedRegionStorage extends StorageIoWorker {
     public CompletableFuture<Void> completeAll() {
         chunkCache.invalidateAll();
         try {
-            storage.method_26982();
+            storage.sync();
         } catch (Throwable t) {
             LOGGER.warn("Failed to synchronized chunks", t);
         }
