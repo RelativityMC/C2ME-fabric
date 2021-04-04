@@ -39,6 +39,7 @@ import org.yatopiamc.c2me.common.threading.chunkio.AsyncSerializationManager;
 import org.yatopiamc.c2me.common.threading.chunkio.C2MECachedRegionStorage;
 import org.yatopiamc.c2me.common.threading.chunkio.ChunkIoMainThreadTaskUtils;
 import org.yatopiamc.c2me.common.threading.chunkio.ChunkIoThreadingExecutorUtils;
+import org.yatopiamc.c2me.common.threading.chunkio.IAsyncChunkStorage;
 import org.yatopiamc.c2me.common.threading.chunkio.ISerializingRegionBasedStorage;
 import org.yatopiamc.c2me.common.util.SneakyThrow;
 
@@ -112,7 +113,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
             scheduledChunks.add(pos);
         }
 
-        final CompletableFuture<CompoundTag> poiData = ((C2MECachedRegionStorage) this.pointOfInterestStorage.worker).getNbtAtAsync(pos);
+        final CompletableFuture<CompoundTag> poiData = ((IAsyncChunkStorage) this.pointOfInterestStorage.worker).getNbtAtAsync(pos);
 
         final CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> future = getUpdatedChunkTagAtAsync(pos).thenApplyAsync(compoundTag -> {
             if (compoundTag != null) {
@@ -126,6 +127,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
                     LOGGER.error("Couldn't load chunk {}, chunk data will be lost!", pos, t);
                 }
             }
+            LOGGER.info("Generating chunk {}", pos);
             return null;
         }, ChunkIoThreadingExecutorUtils.serializerExecutor).thenCombine(poiData, (protoChunk, tag) -> protoChunk).thenApplyAsync(protoChunk -> {
             ((ISerializingRegionBasedStorage) this.pointOfInterestStorage).update(pos, poiData.join());
@@ -181,7 +183,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
     }
 
     private CompletableFuture<CompoundTag> getUpdatedChunkTagAtAsync(ChunkPos pos) {
-        return chunkLock.acquireLock(pos).toCompletableFuture().thenCompose(lockToken -> ((C2MECachedRegionStorage) this.worker).getNbtAtAsync(pos).thenApply(compoundTag -> {
+        return chunkLock.acquireLock(pos).toCompletableFuture().thenCompose(lockToken -> ((IAsyncChunkStorage) this.worker).getNbtAtAsync(pos).thenApply(compoundTag -> {
             if (compoundTag != null)
                 return this.updateChunkTag(this.world.getRegistryKey(), this.persistentStateManagerFactory, compoundTag);
             else return null;

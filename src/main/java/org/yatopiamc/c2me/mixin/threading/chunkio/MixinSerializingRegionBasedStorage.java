@@ -5,16 +5,10 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.storage.SerializingRegionBasedStorage;
-import net.minecraft.world.storage.StorageIoWorker;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Redirect;
-import org.yatopiamc.c2me.common.threading.chunkio.C2MECachedRegionStorage;
 import org.yatopiamc.c2me.common.threading.chunkio.ISerializingRegionBasedStorage;
-
-import java.io.File;
 
 @Mixin(SerializingRegionBasedStorage.class)
 public abstract class MixinSerializingRegionBasedStorage implements ISerializingRegionBasedStorage {
@@ -27,8 +21,4 @@ public abstract class MixinSerializingRegionBasedStorage implements ISerializing
         this.update(pos, NbtOps.INSTANCE, tag);
     }
 
-    @Redirect(method = "<init>", at = @At(value = "NEW", target = "net/minecraft/world/storage/StorageIoWorker"))
-    private StorageIoWorker onStorageIoInit(File file, boolean bl, String string) {
-        return new C2MECachedRegionStorage(file, bl, string);
-    }
 }

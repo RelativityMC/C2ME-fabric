@@ -33,11 +33,6 @@ public abstract class MixinVersionedChunkStorage {
 
     @Shadow @Nullable private FeatureUpdater featureUpdater;
 
-    @Redirect(method = "<init>", at = @At(value = "NEW", target = "net/minecraft/world/storage/StorageIoWorker"))
-    private StorageIoWorker onStorageIoInit(File file, boolean bl, String string) {
-        return new C2MECachedRegionStorage(file, bl, string);
-    }
-
     private AsyncLock featureUpdaterLock = AsyncLock.createFair();
 
     @Inject(method = "<init>", at = @At("RETURN"))
