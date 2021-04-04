@@ -127,7 +127,6 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
                     LOGGER.error("Couldn't load chunk {}, chunk data will be lost!", pos, t);
                 }
             }
-            LOGGER.info("Generating chunk {}", pos);
             return null;
         }, ChunkIoThreadingExecutorUtils.serializerExecutor).thenCombine(poiData, (protoChunk, tag) -> protoChunk).thenApplyAsync(protoChunk -> {
             ((ISerializingRegionBasedStorage) this.pointOfInterestStorage).update(pos, poiData.join());
