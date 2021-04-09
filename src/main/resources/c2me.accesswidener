@@ -18,7 +18,7 @@ accessible    method    net/minecraft/server/world/ServerChunkManager$MainThread
 accessible    method    net/minecraft/util/thread/ThreadExecutor    runTask    ()Z
 accessible    method    net/minecraft/server/world/SimpleTickScheduler    <init>    (Ljava/util/function/Function;Ljava/util/List;)V
 
-accessible    field    net/minecraft/world/storage/StorageIoWorker$Result    nbt    Lnet/minecraft/nbt/CompoundTag;
+accessible    field    net/minecraft/world/storage/StorageIoWorker$Result    nbt    Lnet/minecraft/nbt/NbtCompound;
 accessible    field    net/minecraft/world/storage/StorageIoWorker$Result    future    Ljava/util/concurrent/CompletableFuture;
 accessible    field    net/minecraft/world/storage/VersionedChunkStorage    worker    Lnet/minecraft/world/storage/StorageIoWorker;
 accessible    field    net/minecraft/world/storage/SerializingRegionBasedStorage    worker    Lnet/minecraft/world/storage/StorageIoWorker;

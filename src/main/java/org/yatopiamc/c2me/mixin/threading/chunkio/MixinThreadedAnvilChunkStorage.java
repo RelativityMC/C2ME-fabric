@@ -1,14 +1,10 @@
 package org.yatopiamc.c2me.mixin.threading.chunkio;
 
-import com.google.common.collect.Sets;
 import com.ibm.asyncutil.locks.AsyncNamedLock;
 import com.mojang.datafixers.DataFixer;
 import com.mojang.datafixers.util.Either;
-import net.minecraft.block.Block;
-import net.minecraft.fluid.Fluid;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.world.ChunkHolder;
-import net.minecraft.server.world.ServerTickScheduler;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;
 import net.minecraft.structure.StructureManager;
@@ -17,12 +13,10 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.thread.ThreadExecutor;
 import net.minecraft.world.ChunkSerializer;
 import net.minecraft.world.PersistentStateManager;
-import net.minecraft.world.TickScheduler;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.ProtoChunk;
 import net.minecraft.world.chunk.UpgradeData;
-import net.minecraft.world.chunk.light.LightingProvider;
 import net.minecraft.world.poi.PointOfInterestStorage;
 import net.minecraft.world.storage.VersionedChunkStorage;
 import org.apache.logging.log4j.Logger;
@@ -36,18 +30,16 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.yatopiamc.c2me.common.threading.chunkio.AsyncSerializationManager;
-import org.yatopiamc.c2me.common.threading.chunkio.C2MECachedRegionStorage;
 import org.yatopiamc.c2me.common.threading.chunkio.ChunkIoMainThreadTaskUtils;
 import org.yatopiamc.c2me.common.threading.chunkio.ChunkIoThreadingExecutorUtils;
+import org.yatopiamc.c2me.common.threading.chunkio.IAsyncChunkStorage;
 import org.yatopiamc.c2me.common.threading.chunkio.ISerializingRegionBasedStorage;
 import org.yatopiamc.c2me.common.util.SneakyThrow;
 
 import java.io.File;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Supplier;
 
@@ -112,7 +104,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
             scheduledChunks.add(pos);
         }
 
-        final CompletableFuture<NbtCompound> poiData = ((C2MECachedRegionStorage) this.pointOfInterestStorage.worker).getNbtAtAsync(pos);
+        final CompletableFuture<NbtCompound> poiData = ((IAsyncChunkStorage) this.pointOfInterestStorage.worker).getNbtAtAsync(pos);
 
         final CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> future = getUpdatedChunkNbtAtAsync(pos).thenApplyAsync(compoundTag -> {
             if (compoundTag != null) {
@@ -180,7 +172,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
     }
 
     private CompletableFuture<NbtCompound> getUpdatedChunkNbtAtAsync(ChunkPos pos) {
-        return chunkLock.acquireLock(pos).toCompletableFuture().thenCompose(lockToken -> ((C2MECachedRegionStorage) this.worker).getNbtAtAsync(pos).thenApply(compoundTag -> {
+        return chunkLock.acquireLock(pos).toCompletableFuture().thenCompose(lockToken -> ((IAsyncChunkStorage) this.worker).getNbtAtAsync(pos).thenApply(compoundTag -> {
             if (compoundTag != null)
                 return this.updateChunkNbt(this.world.getRegistryKey(), this.persistentStateManagerFactory, compoundTag);
             else return null;
