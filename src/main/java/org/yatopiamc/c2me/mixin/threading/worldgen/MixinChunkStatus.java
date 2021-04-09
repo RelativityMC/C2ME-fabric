@@ -28,6 +28,8 @@ public class MixinChunkStatus {
 
     @Shadow @Final public static ChunkStatus FEATURES;
 
+    @Shadow @Final private int taskMargin;
+
     /**
      * @author ishland
      * @reason take over generation
@@ -36,7 +38,7 @@ public class MixinChunkStatus {
     public CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> runGenerationTask(ServerWorld world, ChunkGenerator chunkGenerator, StructureManager structureManager, ServerLightingProvider lightingProvider, Function<Chunk, CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>>> function, List<Chunk> chunks) {
         final Chunk targetChunk = chunks.get(chunks.size() / 2);
         //noinspection ConstantConditions
-        return ChunkStatusUtils.runChunkGenWithLock(targetChunk.getPos(), (Object) this == FEATURES ? 1 : 0, ((IWorldGenLockable) world).getWorldGenChunkLock(), () ->
+        return ChunkStatusUtils.runChunkGenWithLock(targetChunk.getPos(), this.taskMargin, ((IWorldGenLockable) world).getWorldGenChunkLock(), () ->
                 ChunkStatusUtils.getThreadingType((ChunkStatus) (Object) this).runTask(((IWorldGenLockable) world).getWorldGenSingleThreadedLock(), () ->
                         this.generationTask.doWork((ChunkStatus) (Object) this, world, chunkGenerator, structureManager, lightingProvider, function, chunks, targetChunk)
                 )

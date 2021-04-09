@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static org.yatopiamc.c2me.common.threading.worldgen.ChunkStatusThreadingType.AS_IS;
@@ -40,16 +41,18 @@ public class ChunkStatusUtils {
     }
 
     public static <T> CompletableFuture<T> runChunkGenWithLock(ChunkPos target, int radius, AsyncNamedLock<ChunkPos> chunkLock, Supplier<CompletableFuture<T>> action) {
-        List<AsyncLock> acquiredLocks = new ArrayList<>((radius + 1) * (radius + 1));
-        for (int x = target.x - radius; x <= target.x + radius; x++)
-            for (int z = target.z - radius; z <= target.z + radius; z++)
-                acquiredLocks.add(new AsyncNamedLockDelegateAsyncLock<>(chunkLock, new ChunkPos(x, z)));
+        return CompletableFuture.supplyAsync(() -> {
+            List<AsyncLock> fetchedLocks = new ArrayList<>((radius + 1) * (radius + 1));
+            for (int x = target.x - radius; x <= target.x + radius; x++)
+                for (int z = target.z - radius; z <= target.z + radius; z++)
+                    fetchedLocks.add(new AsyncNamedLockDelegateAsyncLock<>(chunkLock, new ChunkPos(x, z)));
 
-        return new AsyncCombinedLock(new HashSet<>(acquiredLocks)).getFuture().thenComposeAsync(lockToken -> {
-            final CompletableFuture<T> future = action.get();
-            future.thenRun(lockToken::releaseLock);
-            return future;
-        }, GlobalExecutors.scheduler);
+            return new AsyncCombinedLock(new HashSet<>(fetchedLocks)).getFuture().thenComposeAsync(lockToken -> {
+                final CompletableFuture<T> future = action.get();
+                future.thenRun(lockToken::releaseLock);
+                return future;
+            }, GlobalExecutors.scheduler);
+        }, AsyncCombinedLock.lockWorker).thenCompose(Function.identity());
     }
 
 }

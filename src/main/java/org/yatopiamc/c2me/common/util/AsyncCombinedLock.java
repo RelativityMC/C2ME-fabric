@@ -4,25 +4,31 @@ import com.ibm.asyncutil.locks.AsyncLock;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import org.yatopiamc.c2me.common.threading.GlobalExecutors;
 
-import java.util.LinkedHashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ForkJoinPool;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class AsyncCombinedLock {
+
+    public static final ForkJoinPool lockWorker = new ForkJoinPool(
+            2,
+            new C2MEForkJoinWorkerThreadFactory("C2ME lock worker #%d", Thread.NORM_PRIORITY - 1),
+            null,
+            true
+    );
 
     private final Set<AsyncLock> lockHandles;
     private final CompletableFuture<AsyncLock.LockToken> future = new CompletableFuture<>();
 
     public AsyncCombinedLock(Set<AsyncLock> lockHandles) {
         this.lockHandles = Set.copyOf(lockHandles);
-        GlobalExecutors.scheduler.execute(this::tryAcquire);
+        lockWorker.execute(this::tryAcquire);
     }
 
-    private void tryAcquire() {
-        GlobalExecutors.ensureSchedulerThread();
+    private synchronized void tryAcquire() { // TODO optimize logic
         final Set<LockEntry> tryLocks = new ObjectOpenHashSet<>(lockHandles.size());
         boolean allAcquired = true;
         for (AsyncLock lockHandle : lockHandles) {
@@ -40,7 +46,7 @@ public class AsyncCombinedLock {
             tryLocks.stream().unordered().filter(lockEntry -> lockEntry.lockToken.isEmpty()).findFirst().ifPresentOrElse(lockEntry ->
                     lockEntry.lock.acquireLock().thenCompose(lockToken -> {
                         lockToken.releaseLock();
-                        return CompletableFuture.runAsync(this::tryAcquire, GlobalExecutors.scheduler);
+                        return CompletableFuture.runAsync(this::tryAcquire, lockWorker);
                     }), this::tryAcquire);
         }
     }
