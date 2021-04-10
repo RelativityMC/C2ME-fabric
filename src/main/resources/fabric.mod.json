@@ -27,7 +27,7 @@
   "depends": {
     "fabricloader": ">=0.11.3",
     "java": ">=11",
-    "minecraft": ">=1.17-alpha.21.11.a"
+    "minecraft": ">=1.17-alpha.21.14.a"
   },
   "breaks": {
     "tic_tacs": "*"
