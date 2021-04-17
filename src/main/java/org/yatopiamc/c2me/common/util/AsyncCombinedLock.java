@@ -42,12 +42,21 @@ public class AsyncCombinedLock {
         if (allAcquired) {
             future.complete(new CombinedLockToken(tryLocks.stream().flatMap(lockEntry -> lockEntry.lockToken.stream()).collect(Collectors.toUnmodifiableSet())));
         } else {
-            tryLocks.stream().flatMap(lockEntry -> lockEntry.lockToken.stream()).forEach(AsyncLock.LockToken::releaseLock);
-            tryLocks.stream().unordered().filter(lockEntry -> lockEntry.lockToken.isEmpty()).findFirst().ifPresentOrElse(lockEntry ->
-                    lockEntry.lock.acquireLock().thenCompose(lockToken -> {
+            boolean triedRelock = false;
+            for (LockEntry entry : tryLocks) {
+                entry.lockToken.ifPresent(AsyncLock.LockToken::releaseLock);
+                if (!triedRelock && entry.lockToken.isEmpty()) {
+                    entry.lock.acquireLock().thenCompose(lockToken -> {
                         lockToken.releaseLock();
                         return CompletableFuture.runAsync(this::tryAcquire, lockWorker);
-                    }), this::tryAcquire);
+                    });
+                    triedRelock = true;
+                }
+            }
+            if (!triedRelock) {
+                // shouldn't happen at all...
+                lockWorker.execute(this::tryAcquire);
+            }
         }
     }
 
