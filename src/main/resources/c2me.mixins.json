@@ -15,7 +15,6 @@
     "optimization.worldgen.threadsafe_weightedlist.MixinWeightedList",
     "threading.chunkio.MixinChunkSerializer",
     "threading.chunkio.MixinChunkTickScheduler",
-    "threading.chunkio.MixinEntityChunkDataAccess",
     "threading.chunkio.MixinScheduledTick",
     "threading.chunkio.MixinSerializingRegionBasedStorage",
     "threading.chunkio.MixinServerChunkManagerMainThreadExecutor",
