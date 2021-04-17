@@ -47,6 +47,8 @@ public abstract class MixinStorageIoWorker implements IAsyncChunkStorage {
 
     @Shadow protected abstract <T> CompletableFuture<T> run(Supplier<Either<T, Exception>> supplier);
 
+    @Shadow protected abstract CompletableFuture<NbtCompound> readChunkData(ChunkPos pos);
+
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onPostInit(CallbackInfo info) {
         //noinspection ConstantConditions
@@ -74,21 +76,6 @@ public abstract class MixinStorageIoWorker implements IAsyncChunkStorage {
 
     @Override
     public CompletableFuture<NbtCompound> getNbtAtAsync(ChunkPos pos) {
-        // TODO [VanillaCopy]
-        return this.run(() -> {
-            StorageIoWorker.Result result = (StorageIoWorker.Result)this.results.get(pos);
-            if (result != null) {
-                return Either.left(result.nbt);
-            } else {
-                try {
-                    NbtCompound compoundTag = this.storage.getTagAt(pos);
-                    return Either.left(compoundTag);
-                } catch (Exception var4) {
-                    LOGGER.warn((String)"Failed to read chunk {}", (Object)pos, (Object)var4);
-                    return Either.right(var4);
-                }
-            }
-        });
-
+        return readChunkData(pos);
     }
 }
