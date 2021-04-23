@@ -68,7 +68,7 @@ public abstract class MixinStorageIoWorker implements IAsyncChunkStorage {
         return executorService.get();
     }
 
-    @Inject(method = "close", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/thread/TaskExecutor;close()V", shift = At.Shift.AFTER))
+    @Inject(method = "close", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/thread/TaskExecutor;close()V", shift = At.Shift.AFTER), remap = false) // TODO mapping being broken? remap = false
     private void onClose(CallbackInfo ci) {
         final ExecutorService executorService = this.executorService.get();
         if (executorService != null) executorService.shutdown();

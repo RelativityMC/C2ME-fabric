@@ -38,7 +38,7 @@ public class MixinThreadedAnvilChunkStorage {
         return TaskExecutor.create(lightThread, name);
     }
 
-    @Inject(method = "close", at = @At("TAIL"))
+    @Inject(method = "close", at = @At("TAIL"), remap = false) // TODO mapping being broken? remap = false
     private void afterClose(CallbackInfo info) {
         lightThread.shutdown();
     }

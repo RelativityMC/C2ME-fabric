@@ -19,14 +19,10 @@ import java.util.function.Supplier;
 @Mixin(DeepslateBlockSource.class)
 public class MixinDeepslateInterpolator {
 
-    @Shadow @Final private BlockState defaultBlock;
-    @Shadow @Final private long seed;
-    @Shadow @Final private BlockState deepslateState;
-    @Shadow @Final private Supplier<ChunkGeneratorSettings> settings;
     private ThreadLocal<ChunkRandom> chunkRandomThreadLocal = new ThreadLocal<>();
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    private void onInit(long seed, BlockState defaultBlock, BlockState deepslateState, Supplier<ChunkGeneratorSettings> settings, CallbackInfo ci) {
+    private void onInit(long seed, BlockState defaultBlock, BlockState deepslateState, ChunkGeneratorSettings chunkGeneratorSettings, CallbackInfo ci) {
         chunkRandomThreadLocal = ThreadLocal.withInitial(() -> new ChunkRandom(seed));
     }
 
