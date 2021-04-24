@@ -33,6 +33,7 @@
     "optifabric": "*"
   },
   "breaks": {
-    "tic_tacs": "*"
+    "tic_tacs": "*",
+    "voyager": "*"
   }
 }
