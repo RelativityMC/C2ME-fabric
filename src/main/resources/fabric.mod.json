@@ -29,6 +29,9 @@
     "java": ">=11",
     "minecraft": ">=1.16.4"
   },
+  "conflicts": {
+    "optifabric": "*"
+  },
   "breaks": {
     "tic_tacs": "*"
   }
