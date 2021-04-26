@@ -1,11 +1,11 @@
 plugins {
-    id 'fabric-loom' version '0.6-SNAPSHOT'
+    id 'fabric-loom' version '0.7-SNAPSHOT'
     id 'maven-publish'
-    id 'com.github.johnrengelman.shadow' version '5.2.0'
+    id 'com.github.johnrengelman.shadow' version '6.1.0'
 }
 
 sourceCompatibility = JavaVersion.VERSION_11
-targetCompatibility = JavaVersion.VERSION_11
+targetCompatibility = JavaVersion.current()
 
 archivesBaseName = "${project.archives_base_name}-mc${project.minecraft_version}"
 version = project.mod_version
@@ -21,23 +21,21 @@ dependencies {
     mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
-    implementation "com.ibm.async:asyncutil:0.1.0"
-    implementation "com.electronwill.night-config:toml:3.6.3"
+    implementation "com.ibm.async:asyncutil:${async_util_version}"
+    implementation "com.electronwill.night-config:toml:${night_config_version}"
 
     // PSA: Some older mods, compiled on Loom 0.2.1, might have outdated Maven POMs.
     // You may need to force-disable transitiveness on them.
 }
 
 processResources {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+
     inputs.property "version", project.version
 
     from(sourceSets.main.resources.srcDirs) {
         include "fabric.mod.json"
         expand "version": project.version
-    }
-
-    from(sourceSets.main.resources.srcDirs) {
-        exclude "fabric.mod.json"
     }
 }
 
@@ -55,9 +53,9 @@ jar {
 shadowJar {
     archiveClassifier = "all-dev"
     dependencies {
-        include(dependency("com.ibm.async:asyncutil:0.1.0"))
-        include(dependency("com.electronwill.night-config:toml:3.6.3"))
-        include(dependency("com.electronwill.night-config:core:3.6.3"))
+        include(dependency("com.ibm.async:asyncutil:${async_util_version}"))
+        include(dependency("com.electronwill.night-config:toml:${night_config_version}"))
+        include(dependency("com.electronwill.night-config:core:${night_config_version}"))
     }
 }
 
