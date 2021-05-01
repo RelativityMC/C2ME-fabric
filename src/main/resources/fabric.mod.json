@@ -29,7 +29,11 @@
     "java": ">=11",
     "minecraft": ">=1.17-alpha.21.14.a"
   },
+  "conflicts": {
+    "optifabric": "*"
+  },
   "breaks": {
-    "tic_tacs": "*"
+    "tic_tacs": "*",
+    "voyager": "*"
   }
 }
