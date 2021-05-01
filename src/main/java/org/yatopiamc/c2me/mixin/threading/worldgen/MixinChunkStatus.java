@@ -18,6 +18,7 @@ import org.yatopiamc.c2me.common.threading.worldgen.IWorldGenLockable;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 @Mixin(ChunkStatus.class)
 public class MixinChunkStatus {
@@ -26,23 +27,26 @@ public class MixinChunkStatus {
     @Final
     private ChunkStatus.GenerationTask generationTask;
 
-    @Shadow @Final public static ChunkStatus FEATURES;
-
-    @Shadow @Final private int taskMargin;
+    @Shadow
+    @Final
+    private int taskMargin;
 
     /**
      * @author ishland
-     * @reason take over generation
+     * @reason take over generation & improve chunk status transition speed
      */
     @Overwrite
     public CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> runGenerationTask(ServerWorld world, ChunkGenerator chunkGenerator, StructureManager structureManager, ServerLightingProvider lightingProvider, Function<Chunk, CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>>> function, List<Chunk> chunks) {
         final Chunk targetChunk = chunks.get(chunks.size() / 2);
-        //noinspection ConstantConditions
-        return ChunkStatusUtils.runChunkGenWithLock(targetChunk.getPos(), this.taskMargin, ((IWorldGenLockable) world).getWorldGenChunkLock(), () ->
-                ChunkStatusUtils.getThreadingType((ChunkStatus) (Object) this).runTask(((IWorldGenLockable) world).getWorldGenSingleThreadedLock(), () ->
-                        this.generationTask.doWork((ChunkStatus) (Object) this, world, chunkGenerator, structureManager, lightingProvider, function, chunks, targetChunk)
-                )
-        );
+        final Supplier<CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>>> generationTask = () ->
+                this.generationTask.doWork((ChunkStatus) (Object) this, world, chunkGenerator, structureManager, lightingProvider, function, chunks, targetChunk);
+        if (targetChunk.getStatus().isAtLeast((ChunkStatus) (Object) this)) {
+            return generationTask.get();
+        } else {
+            //noinspection ConstantConditions
+            return ChunkStatusUtils.runChunkGenWithLock(targetChunk.getPos(), this.taskMargin, ((IWorldGenLockable) world).getWorldGenChunkLock(), () ->
+                    ChunkStatusUtils.getThreadingType((ChunkStatus) (Object) this).runTask(((IWorldGenLockable) world).getWorldGenSingleThreadedLock(), generationTask));
+        }
     }
 
 }
