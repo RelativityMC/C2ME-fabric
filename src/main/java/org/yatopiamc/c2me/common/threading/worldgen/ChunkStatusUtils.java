@@ -42,7 +42,7 @@ public class ChunkStatusUtils {
 
     public static <T> CompletableFuture<T> runChunkGenWithLock(ChunkPos target, int radius, AsyncNamedLock<ChunkPos> chunkLock, Supplier<CompletableFuture<T>> action) {
         return CompletableFuture.supplyAsync(() -> {
-            List<ChunkPos> fetchedLocks = new ArrayList<>((radius + 1) * (radius + 1));
+            List<ChunkPos> fetchedLocks = new ArrayList<>((2 * radius + 1) * (2 * radius + 1));
             for (int x = target.x - radius; x <= target.x + radius; x++)
                 for (int z = target.z - radius; z <= target.z + radius; z++)
                     fetchedLocks.add(new ChunkPos(x, z));
