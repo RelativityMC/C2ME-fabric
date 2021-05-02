@@ -1,8 +1,10 @@
 package org.yatopiamc.c2me.common.util;
 
+import com.google.common.collect.Sets;
 import com.ibm.asyncutil.locks.AsyncLock;
+import com.ibm.asyncutil.locks.AsyncNamedLock;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
-import org.yatopiamc.c2me.common.threading.GlobalExecutors;
+import net.minecraft.util.math.ChunkPos;
 
 import java.util.Optional;
 import java.util.Set;
@@ -20,33 +22,37 @@ public class AsyncCombinedLock {
             true
     );
 
-    private final Set<AsyncLock> lockHandles;
+    private final AsyncNamedLock<ChunkPos> lock;
+    private final ChunkPos[] names;
     private final CompletableFuture<AsyncLock.LockToken> future = new CompletableFuture<>();
 
-    public AsyncCombinedLock(Set<AsyncLock> lockHandles) {
-        this.lockHandles = Set.copyOf(lockHandles);
+    public AsyncCombinedLock(AsyncNamedLock<ChunkPos> lock, Set<ChunkPos> names) {
+        this.lock = lock;
+        this.names = names.toArray(ChunkPos[]::new);
         lockWorker.execute(this::tryAcquire);
     }
 
-    private synchronized void tryAcquire() { // TODO optimize logic
-        final Set<LockEntry> tryLocks = new ObjectOpenHashSet<>(lockHandles.size());
+    private synchronized void tryAcquire() { // TODO optimize logic further
+        final LockEntry[] tryLocks = new LockEntry[names.length];
         boolean allAcquired = true;
-        for (AsyncLock lockHandle : lockHandles) {
-            final LockEntry entry = new LockEntry(lockHandle, lockHandle.tryLock());
-            tryLocks.add(entry);
+        for (int i = 0, namesLength = names.length; i < namesLength; i++) {
+            ChunkPos name = names[i];
+            final LockEntry entry = new LockEntry(name, this.lock.tryLock(name));
+            tryLocks[i] = entry;
             if (entry.lockToken.isEmpty()) {
                 allAcquired = false;
                 break;
             }
         }
         if (allAcquired) {
-            future.complete(new CombinedLockToken(tryLocks.stream().flatMap(lockEntry -> lockEntry.lockToken.stream()).collect(Collectors.toUnmodifiableSet())));
+            future.complete(new CombinedLockToken(tryLocks));
         } else {
             boolean triedRelock = false;
             for (LockEntry entry : tryLocks) {
+                if (entry == null) continue;
                 entry.lockToken.ifPresent(AsyncLock.LockToken::releaseLock);
                 if (!triedRelock && entry.lockToken.isEmpty()) {
-                    entry.lock.acquireLock().thenCompose(lockToken -> {
+                    this.lock.acquireLock(entry.name).thenCompose(lockToken -> {
                         lockToken.releaseLock();
                         return CompletableFuture.runAsync(this::tryAcquire, lockWorker);
                     });
@@ -66,26 +72,30 @@ public class AsyncCombinedLock {
 
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
     private static class LockEntry {
-        public final AsyncLock lock;
+        public final ChunkPos name;
         public final Optional<AsyncLock.LockToken> lockToken;
 
-        private LockEntry(AsyncLock lock, Optional<AsyncLock.LockToken> lockToken) {
-            this.lock = lock;
+        private LockEntry(ChunkPos name, Optional<AsyncLock.LockToken> lockToken) {
+            this.name = name;
             this.lockToken = lockToken;
         }
     }
 
     private static class CombinedLockToken implements AsyncLock.LockToken {
 
-        private final Set<AsyncLock.LockToken> delegates;
+        private final LockEntry[] delegates;
 
-        private CombinedLockToken(Set<AsyncLock.LockToken> delegates) {
-            this.delegates = Set.copyOf(delegates);
+        private CombinedLockToken(LockEntry[] delegates) {
+            this.delegates = delegates;
         }
 
+        @SuppressWarnings("OptionalGetWithoutIsPresent") // If it does then something went wrong
         @Override
         public void releaseLock() {
-            delegates.forEach(AsyncLock.LockToken::releaseLock);
+            for (LockEntry lockEntry : delegates) {
+                lockEntry.lockToken.get().releaseLock();
+            }
+
         }
 
         @Override
