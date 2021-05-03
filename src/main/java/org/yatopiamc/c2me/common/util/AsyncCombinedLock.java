@@ -45,7 +45,12 @@ public class AsyncCombinedLock {
             }
         }
         if (allAcquired) {
-            future.complete(new CombinedLockToken(tryLocks));
+            future.complete(() -> {
+                for (LockEntry entry : tryLocks) {
+                    //noinspection OptionalGetWithoutIsPresent
+                    entry.lockToken.get().releaseLock(); // if it isn't present then something is really wrong
+                }
+            });
         } else {
             boolean triedRelock = false;
             for (LockEntry entry : tryLocks) {
@@ -78,29 +83,6 @@ public class AsyncCombinedLock {
         private LockEntry(ChunkPos name, Optional<AsyncLock.LockToken> lockToken) {
             this.name = name;
             this.lockToken = lockToken;
-        }
-    }
-
-    private static class CombinedLockToken implements AsyncLock.LockToken {
-
-        private final LockEntry[] delegates;
-
-        private CombinedLockToken(LockEntry[] delegates) {
-            this.delegates = delegates;
-        }
-
-        @SuppressWarnings("OptionalGetWithoutIsPresent") // If it does then something went wrong
-        @Override
-        public void releaseLock() {
-            for (LockEntry lockEntry : delegates) {
-                lockEntry.lockToken.get().releaseLock();
-            }
-
-        }
-
-        @Override
-        public void close() {
-            this.releaseLock();
         }
     }
 }
