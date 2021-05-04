@@ -5,26 +5,40 @@ import com.electronwill.nightconfig.core.Config;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
+import net.fabricmc.loader.api.FabricLoader;
+import net.fabricmc.loader.api.ModContainer;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class ConfigUtils {
 
-    public static <T> T getValue(ConfigScope config, String key, Supplier<T> deff, String comment, CheckType... checks) {
+    private static final boolean IGNORE_INCOMPATIBILITY = Boolean.parseBoolean(System.getProperty("org.yatopia.c2me.common.config.ignoreIncompatibility", "false"));
+
+    public static <T> T getValue(ConfigScope config, String key, Supplier<T> deff, String comment, List<String> incompatibleMods, T incompatibleDefault, CheckType... checks) {
+        if (IGNORE_INCOMPATIBILITY) C2MEConfig.LOGGER.fatal("Ignoring incompatibility check. You will get NO support if you do this unless explicitly stated. ");
         Preconditions.checkNotNull(config);
         Preconditions.checkNotNull(key);
         Preconditions.checkArgument(!key.isEmpty());
         Preconditions.checkNotNull(deff);
+        Preconditions.checkNotNull(incompatibleMods);
+        final Set<ModContainer> foundIncompatibleMods = IGNORE_INCOMPATIBILITY ? Collections.emptySet() : incompatibleMods.stream().flatMap(modId -> FabricLoader.getInstance().getModContainer(modId).stream()).collect(Collectors.toSet());
         Supplier<T> def = Suppliers.memoize(deff);
+        if (!foundIncompatibleMods.isEmpty()) {
+            comment = comment + " \n INCOMPATIBILITY: Set to " + incompatibleDefault + " forcefully by: " + String.join(", ", foundIncompatibleMods.stream().map(modContainer -> modContainer.getMetadata().getId()).collect(Collectors.toSet()));
+
+        }
         config.processedKeys.add(key);
         if (!config.config.contains(key) || (checks.length != 0 && Arrays.stream(checks).anyMatch(checkType -> !checkType.check(config.config.get(key)))))
             config.config.set(key, def.get());
         if (def.get() instanceof Config) config.config.setComment(key, String.format(" %s", comment));
         else config.config.setComment(key, String.format(" (Default: %s) %s", def.get(), comment));
-        return Objects.requireNonNull(config.config.get(key));
+        return foundIncompatibleMods.isEmpty() ? Objects.requireNonNull(config.config.get(key)) : incompatibleDefault;
     }
 
     static class ConfigScope {
