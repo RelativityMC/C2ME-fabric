@@ -32,13 +32,15 @@ public class C2MEConfig {
     }
 
     public static class AsyncIoConfig {
+        public final boolean enabled;
         public final int serializerParallelism;
         public final int ioWorkerParallelism;
 
         public AsyncIoConfig(CommentedConfig config) {
             Preconditions.checkNotNull(config, "asyncIo config is not present");
             final ConfigUtils.ConfigScope configScope = new ConfigUtils.ConfigScope(config);
-            this.serializerParallelism = ConfigUtils.getValue(configScope, "serializerParallelism", () -> Math.min(2, Runtime.getRuntime().availableProcessors()), "IO worker executor parallelism", ConfigUtils.CheckType.THREAD_COUNT);
+            this.enabled = ConfigUtils.getValue(configScope, "enabled", () -> true, "Whether to enable this feature");
+            this.serializerParallelism = ConfigUtils.getValue(configScope, "serializerParallelism", () -> Math.min(2, Runtime.getRuntime().availableProcessors()), "unused", ConfigUtils.CheckType.THREAD_COUNT);
             this.ioWorkerParallelism = ConfigUtils.getValue(configScope, "ioWorkerParallelism", () -> Math.min(6, Runtime.getRuntime().availableProcessors()), "Serializer executor parallelism", ConfigUtils.CheckType.THREAD_COUNT);
             configScope.removeUnusedKeys();
         }
