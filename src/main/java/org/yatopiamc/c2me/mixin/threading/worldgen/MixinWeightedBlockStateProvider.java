@@ -14,7 +14,9 @@ import java.util.Random;
 @Mixin(WeightedBlockStateProvider.class)
 public class MixinWeightedBlockStateProvider {
 
-    @Shadow @Final private WeightedList<BlockState> states;
+    @Shadow
+    @Final
+    private WeightedList<BlockState> states;
 
     /**
      * @author ishland

@@ -17,7 +17,7 @@ public class PriorityCompletableFuture<T> extends CompletableFuture {
         } catch (InvocationTargetException | InstantiationException | IllegalAccessException e) {
             e.printStackTrace();
         }
-           return null;
+        return null;
     }
 
     private static <U> CompletableFuture<U> asyncSupplyStage(C2MEWorldGenPriorityExecutor e, Supplier<U> f, TaskPriority priority) throws InvocationTargetException, InstantiationException, IllegalAccessException {

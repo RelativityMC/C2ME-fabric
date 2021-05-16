@@ -14,9 +14,12 @@ import java.util.function.Function;
 @Mixin(SimpleTickScheduler.class)
 public abstract class MixinSimpleTickScheduler<T> implements DeepCloneable {
 
-    @Shadow @Final private Function<T, Identifier> identifierProvider;
+    @Shadow
+    @Final
+    private Function<T, Identifier> identifierProvider;
 
-    @Shadow public abstract void scheduleTo(TickScheduler<T> scheduler);
+    @Shadow
+    public abstract void scheduleTo(TickScheduler<T> scheduler);
 
     @Override
     public Object deepClone() {

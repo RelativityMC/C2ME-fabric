@@ -14,7 +14,9 @@ import org.yatopiamc.c2me.common.chunkscheduling.ServerMidTickTask;
 @Mixin(ServerChunkManager.class)
 public class MixinServerChunkManager {
 
-    @Shadow @Final private ServerWorld world;
+    @Shadow
+    @Final
+    private ServerWorld world;
 
     @Dynamic
     @Inject(method = "method_20801", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerWorld;tickChunk(Lnet/minecraft/world/chunk/WorldChunk;I)V"))

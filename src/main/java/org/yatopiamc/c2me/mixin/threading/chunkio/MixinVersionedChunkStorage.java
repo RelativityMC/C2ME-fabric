@@ -26,9 +26,13 @@ import java.util.function.Supplier;
 @Mixin(VersionedChunkStorage.class)
 public abstract class MixinVersionedChunkStorage {
 
-    @Shadow @Final protected DataFixer dataFixer;
+    @Shadow
+    @Final
+    protected DataFixer dataFixer;
 
-    @Shadow @Nullable private FeatureUpdater featureUpdater;
+    @Shadow
+    @Nullable
+    private FeatureUpdater featureUpdater;
 
     private AsyncLock featureUpdaterLock = AsyncLock.createFair();
 
@@ -50,7 +54,7 @@ public abstract class MixinVersionedChunkStorage {
                 tag = NbtHelper.update(this.dataFixer, DataFixTypes.CHUNK, tag, i, 1493);
                 if (tag.getCompound("Level").getBoolean("hasLegacyStructureData")) {
                     if (this.featureUpdater == null) {
-                        this.featureUpdater = FeatureUpdater.create(registryKey, (PersistentStateManager)persistentStateManagerFactory.get());
+                        this.featureUpdater = FeatureUpdater.create(registryKey, (PersistentStateManager) persistentStateManagerFactory.get());
                     }
 
                     tag = this.featureUpdater.getUpdatedReferences(tag);

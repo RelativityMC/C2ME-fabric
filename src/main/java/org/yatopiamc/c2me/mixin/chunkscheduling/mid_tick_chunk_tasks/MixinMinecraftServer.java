@@ -12,11 +12,14 @@ import java.util.concurrent.atomic.AtomicLong;
 @Mixin(MinecraftServer.class)
 public abstract class MixinMinecraftServer implements ServerMidTickTask {
 
-    @Shadow public abstract Iterable<ServerWorld> getWorlds();
-
-    @Shadow @Final private Thread serverThread;
     private static final long minMidTickTaskInterval = 25_000L; // 25us
     private final AtomicLong lastRun = new AtomicLong(System.nanoTime());
+    @Shadow
+    @Final
+    private Thread serverThread;
+
+    @Shadow
+    public abstract Iterable<ServerWorld> getWorlds();
 
     public void executeTasksMidTick() {
         if (this.serverThread != Thread.currentThread()) return;

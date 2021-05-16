@@ -36,6 +36,14 @@ public abstract class MixinChunkStatus implements IChunkStatus {
 
     private int reducedTaskRadius = -1;
 
+    @Dynamic
+    @Inject(method = "<clinit>", at = @At("RETURN"))
+    private static void onCLInit(CallbackInfo info) {
+        for (ChunkStatus chunkStatus : Registry.CHUNK_STATUS) {
+            ((IChunkStatus) chunkStatus).calculateReducedTaskRadius();
+        }
+    }
+
     public void calculateReducedTaskRadius() {
         if (this.taskMargin == 0) {
             this.reducedTaskRadius = 0;
@@ -53,14 +61,6 @@ public abstract class MixinChunkStatus implements IChunkStatus {
             this.reducedTaskRadius = 1;
         }
         System.out.printf("%s task radius: %d -> %d%n", this, this.taskMargin, this.reducedTaskRadius);
-    }
-
-    @Dynamic
-    @Inject(method = "<clinit>", at = @At("RETURN"))
-    private static void onCLInit(CallbackInfo info) {
-        for (ChunkStatus chunkStatus : Registry.CHUNK_STATUS) {
-            ((IChunkStatus) chunkStatus).calculateReducedTaskRadius();
-        }
     }
 
     /**

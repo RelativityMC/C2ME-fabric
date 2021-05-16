@@ -38,10 +38,9 @@ import java.util.function.Supplier;
 @Mixin(ThreadedAnvilChunkStorage.class)
 public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStorage implements ChunkHolder.PlayersWatchingChunkProvider {
 
-    public MixinThreadedAnvilChunkStorage(File file, DataFixer dataFixer, boolean bl) {
-        super(file, dataFixer, bl);
-    }
-
+    @Shadow
+    @Final
+    private static Logger LOGGER;
     @Shadow
     @Final
     private ServerWorld world;
@@ -53,36 +52,33 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
     @Shadow
     @Final
     private PointOfInterestStorage pointOfInterestStorage;
+    @Shadow
+    @Final
+    private Supplier<PersistentStateManager> persistentStateManagerFactory;
+    @Shadow
+    @Final
+    private ThreadExecutor<Runnable> mainThreadExecutor;
+    private AsyncNamedLock<ChunkPos> chunkLock = AsyncNamedLock.createFair();
+    private Set<ChunkPos> scheduledChunks = new HashSet<>();
+    private ConcurrentLinkedQueue<CompletableFuture<Void>> saveFutures = new ConcurrentLinkedQueue<>();
+
+    public MixinThreadedAnvilChunkStorage(File file, DataFixer dataFixer, boolean bl) {
+        super(file, dataFixer, bl);
+    }
 
     @Shadow
     protected abstract byte method_27053(ChunkPos chunkPos, ChunkStatus.ChunkType chunkType);
 
     @Shadow
-    @Final
-    private static Logger LOGGER;
-
-    @Shadow
     protected abstract void method_27054(ChunkPos chunkPos);
 
     @Shadow
-    @Final
-    private Supplier<PersistentStateManager> persistentStateManagerFactory;
-
-    @Shadow
-    @Final
-    private ThreadExecutor<Runnable> mainThreadExecutor;
-
-    @Shadow
     protected abstract boolean method_27055(ChunkPos chunkPos);
-
-    private AsyncNamedLock<ChunkPos> chunkLock = AsyncNamedLock.createFair();
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(CallbackInfo info) {
         chunkLock = AsyncNamedLock.createFair();
     }
-
-    private Set<ChunkPos> scheduledChunks = new HashSet<>();
 
     /**
      * @author ishland
@@ -177,10 +173,9 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
         }));
     }
 
-    private ConcurrentLinkedQueue<CompletableFuture<Void>> saveFutures = new ConcurrentLinkedQueue<>();
-
     @Dynamic
-    @Redirect(method = "method_18843", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ThreadedAnvilChunkStorage;save(Lnet/minecraft/world/chunk/Chunk;)Z")) // method: consumer in tryUnloadChunk
+    @Redirect(method = "method_18843", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ThreadedAnvilChunkStorage;save(Lnet/minecraft/world/chunk/Chunk;)Z"))
+    // method: consumer in tryUnloadChunk
     private boolean asyncSave(ThreadedAnvilChunkStorage tacs, Chunk chunk) {
         // TODO [VanillaCopy] - check when updating minecraft version
         this.pointOfInterestStorage.method_20436(chunk.getPos());
@@ -220,16 +215,16 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
                         }, ChunkIoThreadingExecutorUtils.serializerExecutor)
                                 .thenAcceptAsync(compoundTag -> this.setTagAt(chunkPos, compoundTag), this.mainThreadExecutor)
                                 .handle((unused, throwable) -> {
-                            lockToken.releaseLock();
-                            if (throwable != null)
-                                LOGGER.error("Failed to save chunk {},{}", chunkPos.x, chunkPos.z, throwable);
-                            return unused;
-                        })));
+                                    lockToken.releaseLock();
+                                    if (throwable != null)
+                                        LOGGER.error("Failed to save chunk {},{}", chunkPos.x, chunkPos.z, throwable);
+                                    return unused;
+                                })));
                 this.method_27053(chunkPos, chunkStatus.getChunkType());
                 // C2ME end
                 return true;
             } catch (Exception var5) {
-                LOGGER.error("Failed to save chunk {},{}",  chunkPos.x, chunkPos.z, var5);
+                LOGGER.error("Failed to save chunk {},{}", chunkPos.x, chunkPos.z, var5);
                 return false;
             }
         }

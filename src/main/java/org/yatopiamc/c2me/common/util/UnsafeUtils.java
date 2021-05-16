@@ -13,7 +13,7 @@ public class UnsafeUtils {
             assert returnConstructor != null;
             returnConstructor.setAccessible(true);
             return returnConstructor;
-        } catch(NoSuchMethodException e) {
+        } catch (NoSuchMethodException e) {
             e.printStackTrace();
         }
         return null;

@@ -14,9 +14,11 @@ import java.util.concurrent.atomic.AtomicLong;
 @Mixin(ScheduledTick.class)
 public class MixinScheduledTick {
 
-    @Mutable
-    @Shadow @Final private long id;
     private static final AtomicLong COUNTER = new AtomicLong(0);
+    @Mutable
+    @Shadow
+    @Final
+    private long id;
 
     @Inject(method = "<init>", at = @At("TAIL"))
     private void onInit(CallbackInfo info) {

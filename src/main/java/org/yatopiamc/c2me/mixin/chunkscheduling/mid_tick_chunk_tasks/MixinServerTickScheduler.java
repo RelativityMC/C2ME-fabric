@@ -13,7 +13,9 @@ import org.yatopiamc.c2me.common.chunkscheduling.ServerMidTickTask;
 @Mixin(ServerTickScheduler.class)
 public class MixinServerTickScheduler {
 
-    @Shadow @Final public ServerWorld world;
+    @Shadow
+    @Final
+    public ServerWorld world;
 
     @Inject(method = "tick", at = @At(value = "INVOKE", target = "Ljava/util/function/Consumer;accept(Ljava/lang/Object;)V", shift = At.Shift.AFTER))
     private void onPostActionTick(CallbackInfo ci) {

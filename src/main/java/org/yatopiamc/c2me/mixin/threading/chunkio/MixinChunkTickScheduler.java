@@ -14,12 +14,14 @@ import java.util.function.Predicate;
 public abstract class MixinChunkTickScheduler<T> implements DeepCloneable {
 
     @Shadow
-    public abstract ListTag toNbt();
-
+    @Final
+    protected Predicate<T> shouldExclude;
     @Shadow
     @Final
     private ChunkPos pos;
-    @Shadow @Final protected Predicate<T> shouldExclude;
+
+    @Shadow
+    public abstract ListTag toNbt();
 
     public ChunkTickScheduler<T> deepClone() {
         return new ChunkTickScheduler<>(shouldExclude, pos, toNbt());

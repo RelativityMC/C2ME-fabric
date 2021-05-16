@@ -11,7 +11,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(ServerLightingProvider.class)
 public abstract class MixinServerLightingProvider {
 
-    @Shadow public abstract void tick();
+    @Shadow
+    public abstract void tick();
 
     @Dynamic
     @Inject(method = "method_19505", at = @At("RETURN"))

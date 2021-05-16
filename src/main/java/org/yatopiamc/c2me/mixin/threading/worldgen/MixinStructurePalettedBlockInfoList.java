@@ -18,7 +18,9 @@ import java.util.concurrent.ConcurrentHashMap;
 public class MixinStructurePalettedBlockInfoList {
 
     @Mutable
-    @Shadow @Final private Map<Block, List<Structure.StructureBlockInfo>> blockToInfos;
+    @Shadow
+    @Final
+    private Map<Block, List<Structure.StructureBlockInfo>> blockToInfos;
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(CallbackInfo info) {

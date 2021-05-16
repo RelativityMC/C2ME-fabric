@@ -18,12 +18,16 @@ import java.util.function.BooleanSupplier;
 @Mixin(ThreadedAnvilChunkStorage.class)
 public abstract class MixinThreadedAnvilChunkStorage {
 
-    @Shadow @Final private ThreadExecutor<Runnable> mainThreadExecutor;
-
-    @Shadow protected abstract void unloadChunks(BooleanSupplier shouldKeepTicking);
-
+    @Shadow
+    @Final
+    private ThreadExecutor<Runnable> mainThreadExecutor;
     @Mutable
-    @Shadow @Final private LongSet unloadedChunks;
+    @Shadow
+    @Final
+    private LongSet unloadedChunks;
+
+    @Shadow
+    protected abstract void unloadChunks(BooleanSupplier shouldKeepTicking);
 
     /**
      * @author ishland

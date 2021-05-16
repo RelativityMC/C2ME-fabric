@@ -16,7 +16,8 @@ public class ConfigUtils {
     private static final boolean IGNORE_INCOMPATIBILITY = Boolean.parseBoolean(System.getProperty("org.yatopia.c2me.common.config.ignoreIncompatibility", "false"));
 
     public static <T> T getValue(ConfigScope config, String key, Supplier<T> deff, String comment, List<String> incompatibleMods, T incompatibleDefault, CheckType... checks) {
-        if (IGNORE_INCOMPATIBILITY) C2MEConfig.LOGGER.fatal("Ignoring incompatibility check. You will get NO support if you do this unless explicitly stated. ");
+        if (IGNORE_INCOMPATIBILITY)
+            C2MEConfig.LOGGER.fatal("Ignoring incompatibility check. You will get NO support if you do this unless explicitly stated. ");
         Preconditions.checkNotNull(config);
         Preconditions.checkNotNull(key);
         Preconditions.checkArgument(!key.isEmpty());
@@ -36,6 +37,17 @@ public class ConfigUtils {
         return foundIncompatibleMods.isEmpty() ? Objects.requireNonNull(config.config.get(key)) : incompatibleDefault;
     }
 
+    public enum CheckType {
+        THREAD_COUNT() {
+            @Override
+            public <T> boolean check(T value) {
+                return value instanceof Number && ((Number) value).intValue() >= 1 && ((Number) value).intValue() <= 0x7fff;
+            }
+        };
+
+        public abstract <T> boolean check(T value);
+    }
+
     static class ConfigScope {
         final CommentedConfig config;
         final Set<String> processedKeys;
@@ -48,17 +60,6 @@ public class ConfigUtils {
         void removeUnusedKeys() {
             config.entrySet().removeIf(entry -> !processedKeys.contains(entry.getKey()));
         }
-    }
-
-    public enum CheckType {
-        THREAD_COUNT() {
-            @Override
-            public <T> boolean check(T value) {
-                return value instanceof Number && ((Number) value).intValue() >= 1 && ((Number) value).intValue() <= 0x7fff;
-            }
-        };
-
-        public abstract <T> boolean check(T value);
     }
 
 }

@@ -12,10 +12,9 @@ import java.util.List;
 
 public class C2MEConfig {
 
-    static final Logger LOGGER = LogManager.getLogger("C2ME Config");
-
     public static final AsyncIoConfig asyncIoConfig;
     public static final ThreadedWorldGenConfig threadedWorldGenConfig;
+    static final Logger LOGGER = LogManager.getLogger("C2ME Config");
 
     static {
         long startTime = System.nanoTime();

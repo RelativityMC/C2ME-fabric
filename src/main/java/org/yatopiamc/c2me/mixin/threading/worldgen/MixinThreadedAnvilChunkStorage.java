@@ -22,9 +22,13 @@ import java.util.function.Function;
 @Mixin(ThreadedAnvilChunkStorage.class)
 public class MixinThreadedAnvilChunkStorage {
 
-    @Shadow @Final private ServerWorld world;
-    @Shadow @Final private ThreadExecutor<Runnable> mainThreadExecutor;
-
+    private final ThreadLocal<ChunkStatus> capturedRequiredStatus = new ThreadLocal<>();
+    @Shadow
+    @Final
+    private ServerWorld world;
+    @Shadow
+    @Final
+    private ThreadExecutor<Runnable> mainThreadExecutor;
     private final Executor mainInvokingExecutor = runnable -> {
         if (this.world.getServer().isOnThread()) {
             runnable.run();
@@ -32,8 +36,6 @@ public class MixinThreadedAnvilChunkStorage {
             this.mainThreadExecutor.execute(runnable);
         }
     };
-
-    private final ThreadLocal<ChunkStatus> capturedRequiredStatus = new ThreadLocal<>();
 
     @Inject(method = "upgradeChunk", at = @At("HEAD"))
     private void onUpgradeChunk(ChunkHolder holder, ChunkStatus requiredStatus, CallbackInfoReturnable<CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>>> cir) {

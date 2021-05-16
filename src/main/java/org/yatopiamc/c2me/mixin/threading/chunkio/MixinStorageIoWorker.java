@@ -32,20 +32,28 @@ import java.util.function.Supplier;
 @Mixin(StorageIoWorker.class)
 public abstract class MixinStorageIoWorker implements IAsyncChunkStorage {
 
+    @Shadow
+    @Final
+    private static Logger LOGGER;
+    private final AtomicReference<ExecutorService> executorService = new AtomicReference<>();
     @Mutable
-    @Shadow @Final private RegionBasedStorage storage;
-
+    @Shadow
+    @Final
+    private RegionBasedStorage storage;
     @Mutable
-    @Shadow @Final private Map<ChunkPos, StorageIoWorker.Result> results;
-
+    @Shadow
+    @Final
+    private Map<ChunkPos, StorageIoWorker.Result> results;
     @Mutable
-    @Shadow @Final private TaskExecutor<TaskQueue.PrioritizedTask> field_24468;
+    @Shadow
+    @Final
+    private TaskExecutor<TaskQueue.PrioritizedTask> field_24468;
+    @Shadow
+    @Final
+    private AtomicBoolean closed;
 
-    @Shadow @Final private AtomicBoolean closed;
-
-    @Shadow @Final private static Logger LOGGER;
-
-    @Shadow protected abstract <T> CompletableFuture<T> run(Supplier<Either<T, Exception>> supplier);
+    @Shadow
+    protected abstract <T> CompletableFuture<T> run(Supplier<Either<T, Exception>> supplier);
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onPostInit(CallbackInfo info) {
@@ -57,8 +65,6 @@ public abstract class MixinStorageIoWorker implements IAsyncChunkStorage {
             this.closed.set(true);
         }
     }
-
-    private final AtomicReference<ExecutorService> executorService = new AtomicReference<>();
 
     @Redirect(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/Util;getIoWorkerExecutor()Ljava/util/concurrent/Executor;"))
     private Executor onGetStorageIoWorker() {
@@ -76,7 +82,7 @@ public abstract class MixinStorageIoWorker implements IAsyncChunkStorage {
     public CompletableFuture<CompoundTag> getNbtAtAsync(ChunkPos pos) {
         // TODO [VanillaCopy]
         return this.run(() -> {
-            StorageIoWorker.Result result = (StorageIoWorker.Result)this.results.get(pos);
+            StorageIoWorker.Result result = (StorageIoWorker.Result) this.results.get(pos);
             if (result != null) {
                 return Either.left(result.nbt);
             } else {
@@ -84,7 +90,7 @@ public abstract class MixinStorageIoWorker implements IAsyncChunkStorage {
                     CompoundTag compoundTag = this.storage.getTagAt(pos);
                     return Either.left(compoundTag);
                 } catch (Exception var4) {
-                    LOGGER.warn((String)"Failed to read chunk {}", (Object)pos, (Object)var4);
+                    LOGGER.warn((String) "Failed to read chunk {}", (Object) pos, (Object) var4);
                     return Either.right(var4);
                 }
             }

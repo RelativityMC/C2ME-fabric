@@ -14,9 +14,13 @@ import org.yatopiamc.c2me.common.chunkscheduling.ServerMidTickTask;
 @Mixin(World.class)
 public abstract class MixinWorld {
 
-    @Shadow @Nullable public abstract MinecraftServer getServer();
+    @Shadow
+    @Final
+    public boolean isClient;
 
-    @Shadow @Final public boolean isClient;
+    @Shadow
+    @Nullable
+    public abstract MinecraftServer getServer();
 
     @Inject(method = "tickEntity", at = @At("TAIL"))
     private void onPostTickEntity(CallbackInfo ci) {
