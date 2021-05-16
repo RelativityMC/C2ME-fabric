@@ -10,7 +10,6 @@ import org.yatopiamc.c2me.common.config.C2MEConfig;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ForkJoinPool;
 import java.util.function.Function;
 
 public class AsyncCombinedLock {

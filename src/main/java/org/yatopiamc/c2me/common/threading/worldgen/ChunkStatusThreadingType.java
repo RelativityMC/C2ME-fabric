@@ -5,6 +5,8 @@ import com.ibm.asyncutil.locks.AsyncLock;
 import com.mojang.datafixers.util.Either;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.world.chunk.Chunk;
+import org.threadly.concurrent.TaskPriority;
+import org.yatopiamc.c2me.common.threading.GlobalExecutors;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
@@ -15,20 +17,20 @@ public enum ChunkStatusThreadingType {
     PARALLELIZED() {
         @Override
         public CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> runTask(AsyncLock lock, Supplier<CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>>> completableFuture) {
-            return CompletableFuture.supplyAsync(completableFuture, WorldGenThreadingExecutorUtils.mainExecutor).thenCompose(Function.identity());
+            return PriorityCompletableFuture.supplyAsync(completableFuture, WorldGenThreadingExecutorUtils.mainExecutor, TaskPriority.Low).thenComposeAsync(Function.identity());
         }
     },
     SINGLE_THREADED() {
         @Override
         public CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> runTask(AsyncLock lock, Supplier<CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>>> completableFuture) {
             Preconditions.checkNotNull(lock);
-            return lock.acquireLock().toCompletableFuture().thenComposeAsync(lockToken -> {
+            return lock.acquireLock().thenComposeAsync(lockToken -> {
                 try {
-                    return completableFuture.get();
+                    return PriorityCompletableFuture.supplyAsync(completableFuture, WorldGenThreadingExecutorUtils.mainExecutor, TaskPriority.High).thenComposeAsync(Function.identity());
                 } finally {
                     lockToken.releaseLock();
                 }
-            }, WorldGenThreadingExecutorUtils.mainExecutor);
+            }, GlobalExecutors.scheduler).toCompletableFuture();
         }
     },
     AS_IS() {

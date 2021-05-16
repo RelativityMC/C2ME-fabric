@@ -1,7 +1,6 @@
 package org.yatopiamc.c2me.mixin.threading.chunkio;
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import net.minecraft.nbt.ListTag;
 import net.minecraft.server.world.SimpleTickScheduler;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.TickScheduler;

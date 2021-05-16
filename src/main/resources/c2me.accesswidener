@@ -23,4 +23,3 @@ accessible    field    net/minecraft/util/collection/WeightedList    entries    
 accessible    field    net/minecraft/server/world/ServerTickScheduler    world    Lnet/minecraft/server/world/ServerWorld;
 accessible    field    net/minecraft/server/world/ServerWorld    serverChunkManager    Lnet/minecraft/server/world/ServerChunkManager;
 accessible    field    net/minecraft/server/world/ServerChunkManager    mainThreadExecutor    Lnet/minecraft/server/world/ServerChunkManager$MainThreadExecutor;
-

@@ -1,17 +1,17 @@
 package org.yatopiamc.c2me.common.threading.worldgen;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import org.threadly.concurrent.TaskPriority;
 import org.yatopiamc.c2me.common.config.C2MEConfig;
-import org.yatopiamc.c2me.common.util.C2MEForkJoinWorkerThreadFactory;
-
-import java.util.concurrent.ForkJoinPool;
 
 public class WorldGenThreadingExecutorUtils {
 
-    public static final ForkJoinPool mainExecutor = new ForkJoinPool(
+    public static final C2MEWorldGenPriorityExecutor mainExecutor = new C2MEWorldGenPriorityExecutor(
             C2MEConfig.threadedWorldGenConfig.parallelism,
-            new C2MEForkJoinWorkerThreadFactory("C2ME worldgen worker #%d", Thread.NORM_PRIORITY - 1),
-            null,
-            true
+            TaskPriority.High,
+            10,
+            new ThreadFactoryBuilder().setDaemon(true).setPriority(Thread.NORM_PRIORITY - 1).setNameFormat("C2ME world gen worker #%d").build()
     );
+
 
 }
