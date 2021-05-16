@@ -4,7 +4,7 @@ pipeline {
     stages {
         stage('Build') {
             tools {
-                jdk "OpenJDK 11"
+                jdk "OpenJDK 16"
             }
             steps {
                 withMaven(
