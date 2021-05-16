@@ -42,12 +42,12 @@ public class ChunkStatusUtils {
 
     public static <T> CompletableFuture<T> runChunkGenWithLock(ChunkPos target, int radius, AsyncNamedLock<ChunkPos> chunkLock, Supplier<CompletableFuture<T>> action) {
         return CompletableFuture.supplyAsync(() -> {
-            List<AsyncLock> fetchedLocks = new ArrayList<>((radius + 1) * (radius + 1));
+            ArrayList<ChunkPos> fetchedLocks = new ArrayList<>((2 * radius + 1) * (2 * radius + 1));
             for (int x = target.x - radius; x <= target.x + radius; x++)
                 for (int z = target.z - radius; z <= target.z + radius; z++)
-                    fetchedLocks.add(new AsyncNamedLockDelegateAsyncLock<>(chunkLock, new ChunkPos(x, z)));
+                    fetchedLocks.add(new ChunkPos(x, z));
 
-            return new AsyncCombinedLock(new HashSet<>(fetchedLocks)).getFuture().thenComposeAsync(lockToken -> {
+            return new AsyncCombinedLock(chunkLock, new HashSet<>(fetchedLocks)).getFuture().thenComposeAsync(lockToken -> {
                 final CompletableFuture<T> future = action.get();
                 future.thenRun(lockToken::releaseLock);
                 return future;
