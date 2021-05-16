@@ -2,7 +2,7 @@
   "required": true,
   "minVersion": "0.8",
   "package": "org.yatopiamc.c2me.mixin",
-  "compatibilityLevel": "JAVA_11",
+  "compatibilityLevel": "JAVA_16",
   "mixins": [
     "chunkscheduling.fix_unload.MixinThreadedAnvilChunkStorage",
     "chunkscheduling.mid_tick_chunk_tasks.MixinMinecraftServer",
