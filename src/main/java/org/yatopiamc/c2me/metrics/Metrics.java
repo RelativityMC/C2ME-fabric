@@ -13,22 +13,18 @@ import org.apache.logging.log4j.Logger;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.lang.reflect.Method;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -37,7 +33,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPOutputStream;
 import javax.net.ssl.HttpsURLConnection;
@@ -128,6 +123,7 @@ public class Metrics {
             LOGGER.warn("Unknown environment, assuming offline mode");
             builder.appendField("onlineMode", 0);
         }
+        //noinspection OptionalGetWithoutIsPresent
         builder.appendField("bukkitVersion", FabricLoader.getInstance().getModContainer("fabricloader").get().getMetadata().getVersion().getFriendlyString() + " (MC: " + MinecraftVersion.GAME_VERSION.getReleaseTarget() + ")");
         builder.appendField("bukkitName", "fabric");
         builder.appendField("javaVersion", System.getProperty("java.version"));
@@ -138,6 +134,7 @@ public class Metrics {
     }
 
     private void appendServiceData(JsonObjectBuilder builder) {
+        //noinspection OptionalGetWithoutIsPresent
         builder.appendField("pluginVersion", FabricLoader.getInstance().getModContainer("c2me").get().getMetadata().getVersion().getFriendlyString());
     }
 
@@ -845,13 +842,7 @@ public class Metrics {
          * allow a raw string inputs for methods like {@link JsonObjectBuilder#appendField(String,
          * JsonObject)}.
          */
-        public static class JsonObject {
-
-            private final String value;
-
-            private JsonObject(String value) {
-                this.value = value;
-            }
+        public record JsonObject(String value) {
 
             @Override
             public String toString() {

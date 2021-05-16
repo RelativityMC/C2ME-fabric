@@ -3,7 +3,6 @@ package org.yatopiamc.c2me.common.config;
 import com.electronwill.nightconfig.core.CommentedConfig;
 import com.electronwill.nightconfig.core.Config;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
@@ -15,6 +14,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import org.yatopiamc.c2me.common.config.ConfigUtils.ConfigScope;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class ConfigUtils {
@@ -29,7 +29,7 @@ public class ConfigUtils {
         Preconditions.checkNotNull(deff);
         Preconditions.checkNotNull(incompatibleMods);
         final Set<ModContainer> foundIncompatibleMods = IGNORE_INCOMPATIBILITY ? Collections.emptySet() : incompatibleMods.stream().flatMap(modId -> FabricLoader.getInstance().getModContainer(modId).stream()).collect(Collectors.toSet());
-        Supplier<T> def = Suppliers.memoize(deff);
+        Supplier<T> def = Suppliers.memoize(deff::get);
         if (!foundIncompatibleMods.isEmpty()) {
             comment = comment + " \n INCOMPATIBILITY: Set to " + incompatibleDefault + " forcefully by: " + String.join(", ", foundIncompatibleMods.stream().map(modContainer -> modContainer.getMetadata().getId()).collect(Collectors.toSet()));
 

@@ -64,19 +64,20 @@ public class AsyncSerializationManager {
         public final Map<BlockPos, BlockEntity> blockEntities;
         private final AtomicBoolean isOpen = new AtomicBoolean(false);
 
+        @SuppressWarnings("unchecked")
         public Scope(Chunk chunk, ServerWorld world) {
             this.pos = chunk.getPos();
             this.lighting = Arrays.stream(LightType.values()).map(type -> new CachedLightingView(world.getLightingProvider(), chunk.getPos(), type)).collect(Collectors.toMap(CachedLightingView::getLightType, Function.identity()));
             final TickScheduler<Block> blockTickScheduler = chunk.getBlockTickScheduler();
-            if (blockTickScheduler instanceof DeepCloneable) {
-                this.blockTickScheduler = (TickScheduler<Block>) ((DeepCloneable) blockTickScheduler).deepClone();
+            if (blockTickScheduler instanceof DeepCloneable cloneable) {
+                this.blockTickScheduler = (TickScheduler<Block>) cloneable.deepClone();
             } else {
                 final ServerTickScheduler<Block> worldBlockTickScheduler = world.getBlockTickScheduler();
                 this.blockTickScheduler = new SimpleTickScheduler<>(Registry.BLOCK::getId, worldBlockTickScheduler.getScheduledTicksInChunk(chunk.getPos(), false, true), world.getTime());
             }
             final TickScheduler<Fluid> fluidTickScheduler = chunk.getFluidTickScheduler();
-            if (fluidTickScheduler instanceof DeepCloneable) {
-                this.fluidTickScheduler = (TickScheduler<Fluid>) ((DeepCloneable) fluidTickScheduler).deepClone();
+            if (fluidTickScheduler instanceof DeepCloneable cloneable) {
+                this.fluidTickScheduler = (TickScheduler<Fluid>) cloneable.deepClone();
             } else {
                 final ServerTickScheduler<Fluid> worldFluidTickScheduler = world.getFluidTickScheduler();
                 this.fluidTickScheduler = new SimpleTickScheduler<>(Registry.FLUID::getId, worldFluidTickScheduler.getScheduledTicksInChunk(chunk.getPos(), false, true), world.getTime());
