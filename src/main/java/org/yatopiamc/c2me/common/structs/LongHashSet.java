@@ -46,13 +46,14 @@ public class LongHashSet implements LongSet {
 
     @NotNull
     @Override
-    public Object[] toArray() {
+    public Object @NotNull [] toArray() {
         return delegate.toArray();
     }
 
+    @SuppressWarnings("SuspiciousToArrayCall")
     @NotNull
     @Override
-    public <T> T[] toArray(@NotNull T[] a) {
+    public <T> T[] toArray(@NotNull T @NotNull [] a) {
         return delegate.toArray(a);
     }
 
