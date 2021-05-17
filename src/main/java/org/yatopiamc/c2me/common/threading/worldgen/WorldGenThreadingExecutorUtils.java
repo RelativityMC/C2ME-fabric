@@ -9,7 +9,7 @@ public class WorldGenThreadingExecutorUtils {
     public static final C2MEWorldGenPriorityExecutor mainExecutor = new C2MEWorldGenPriorityExecutor(
             C2MEConfig.threadedWorldGenConfig.parallelism,
             TaskPriority.High,
-            10,
+            1,
             new ThreadFactoryBuilder().setDaemon(true).setPriority(Thread.NORM_PRIORITY - 1).setNameFormat("C2ME world gen worker #%d").build()
     );
 
