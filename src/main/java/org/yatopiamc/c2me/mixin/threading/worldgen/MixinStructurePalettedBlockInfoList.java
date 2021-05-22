@@ -10,9 +10,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Mixin(Structure.PalettedBlockInfoList.class)
 public class MixinStructurePalettedBlockInfoList {
@@ -22,7 +22,7 @@ public class MixinStructurePalettedBlockInfoList {
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(CallbackInfo info) {
-        this.blockToInfos = new ConcurrentHashMap<>();
+        this.blockToInfos = Collections.synchronizedMap(blockToInfos);
     }
 
 }
