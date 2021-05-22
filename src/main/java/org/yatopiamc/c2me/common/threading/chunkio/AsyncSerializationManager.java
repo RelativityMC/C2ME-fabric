@@ -98,7 +98,7 @@ public class AsyncSerializationManager {
 
             CachedLightingView(LightingProvider provider, ChunkPos pos, LightType type) {
                 this.lightType = type;
-                for (int i = provider.method_31929(); i < provider.method_31930(); i++) {
+                for (int i = provider.getBottomY(); i < provider.getTopY(); i++) {
                     final ChunkSectionPos sectionPos = ChunkSectionPos.from(pos, i);
                     ChunkNibbleArray lighting = provider.get(type).getLightSection(sectionPos);
                     cachedData.put(sectionPos, lighting != null ? lighting.copy() : null);
