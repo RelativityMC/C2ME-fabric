@@ -1,8 +1,11 @@
 package org.yatopiamc.c2me.common.util;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.ibm.asyncutil.locks.AsyncLock;
 import com.ibm.asyncutil.locks.AsyncNamedLock;
 import net.minecraft.util.math.ChunkPos;
+import org.threadly.concurrent.UnfairExecutor;
+import org.yatopiamc.c2me.common.config.C2MEConfig;
 
 import java.util.Optional;
 import java.util.Set;
@@ -12,11 +15,9 @@ import java.util.function.Function;
 
 public class AsyncCombinedLock {
 
-    public static final ForkJoinPool lockWorker = new ForkJoinPool(
-            2,
-            new C2MEForkJoinWorkerThreadFactory("C2ME lock worker #%d", Thread.NORM_PRIORITY - 1),
-            null,
-            true
+    public static final UnfairExecutor lockWorker = new UnfairExecutor(
+            C2MEConfig.asyncIoConfig.serializerParallelism,
+            new ThreadFactoryBuilder().setDaemon(true).setPriority(Thread.NORM_PRIORITY - 1).setNameFormat("C2ME lock worker #%d").build()
     );
 
     private final AsyncNamedLock<ChunkPos> lock;

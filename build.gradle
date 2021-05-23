@@ -23,6 +23,7 @@ dependencies {
 
     implementation "com.ibm.async:asyncutil:${async_util_version}"
     implementation "com.electronwill.night-config:toml:${night_config_version}"
+    implementation "org.threadly:threadly:${threadly_version}"
 
     // PSA: Some older mods, compiled on Loom 0.2.1, might have outdated Maven POMs.
     // You may need to force-disable transitiveness on them.
@@ -56,6 +57,7 @@ shadowJar {
         include(dependency("com.ibm.async:asyncutil:${async_util_version}"))
         include(dependency("com.electronwill.night-config:toml:${night_config_version}"))
         include(dependency("com.electronwill.night-config:core:${night_config_version}"))
+        include(dependency("org.threadly:threadly:${threadly_version}"))
     }
 }
 

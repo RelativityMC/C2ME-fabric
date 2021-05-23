@@ -44,8 +44,8 @@ public class C2MEConfig {
             Preconditions.checkNotNull(config, "asyncIo config is not present");
             final ConfigUtils.ConfigScope configScope = new ConfigUtils.ConfigScope(config);
             this.enabled = ConfigUtils.getValue(configScope, "enabled", () -> true, "Whether to enable this feature", List.of("radon", "immersive_portals"), false);
-            this.serializerParallelism = ConfigUtils.getValue(configScope, "serializerParallelism", () -> Math.min(2, Runtime.getRuntime().availableProcessors()), "unused", List.of(), null, ConfigUtils.CheckType.THREAD_COUNT);
-            this.ioWorkerParallelism = ConfigUtils.getValue(configScope, "ioWorkerParallelism", () -> Math.min(10, Runtime.getRuntime().availableProcessors()), "Serializer executor parallelism", List.of(), null, ConfigUtils.CheckType.THREAD_COUNT);
+            this.serializerParallelism = ConfigUtils.getValue(configScope, "serializerParallelism", () -> Math.min(2, Runtime.getRuntime().availableProcessors()), "IO worker executor parallelism", List.of(), null, ConfigUtils.CheckType.THREAD_COUNT);
+            this.ioWorkerParallelism = ConfigUtils.getValue(configScope, "ioWorkerParallelism", () -> Math.min(10, Runtime.getRuntime().availableProcessors()), "unused", List.of(), null, ConfigUtils.CheckType.THREAD_COUNT);
             configScope.removeUnusedKeys();
         }
     }
