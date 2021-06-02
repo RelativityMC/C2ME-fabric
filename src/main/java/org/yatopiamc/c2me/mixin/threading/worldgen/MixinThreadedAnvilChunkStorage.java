@@ -19,7 +19,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.yatopiamc.c2me.common.threading.GlobalExecutors;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Executor;
 import java.util.function.Function;
 
@@ -47,11 +46,6 @@ public class MixinThreadedAnvilChunkStorage {
     @Redirect(method = "makeChunkEntitiesTickable", at = @At(value = "INVOKE", target = "Ljava/util/concurrent/CompletableFuture;thenApplyAsync(Ljava/util/function/Function;Ljava/util/concurrent/Executor;)Ljava/util/concurrent/CompletableFuture;"))
     private <U, T> CompletableFuture<U> redirectMainThreadExecutor1(CompletableFuture<T> completableFuture, Function<? super T, ? extends U> fn, Executor executor) {
         return completableFuture.thenApplyAsync(fn, this.mainInvokingExecutor);
-    }
-
-    @Redirect(method = "getChunk", at = @At(value = "INVOKE", target = "Ljava/util/concurrent/CompletableFuture;thenComposeAsync(Ljava/util/function/Function;Ljava/util/concurrent/Executor;)Ljava/util/concurrent/CompletableFuture;"))
-    private <T, U> CompletableFuture<U> redirectMainThreadExecutor2(CompletableFuture<T> completableFuture, Function<? super T, ? extends CompletionStage<U>> fn, Executor executor) {
-        return completableFuture.thenComposeAsync(fn, this.mainInvokingExecutor);
     }
 
     /**
