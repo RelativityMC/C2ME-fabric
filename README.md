@@ -15,11 +15,17 @@ C^2M-Engine, or C2ME for short, is a Fabric mod designed to improve the performa
 Concurrent chunk management engine, it's about making the game better threaded and more scalable in regard to world gen and chunk io performance.
 
 ## So what is C2ME not?
-C2ME is not production ready and still pretty experimental. 
-So backup your worlds and practice good game modding skills.
+C2ME is not production ready and still pretty experimental. So backup your worlds and practice good game modding skills.
+
+## Branch development status
+| Branch | Status |
+| ------ | ------ |
+| fabric/ver/1.16.5 | Active |
+| fabric/ver/1.17 | Active |
+| forge/ver/1.16.5 | Partial<sup>[[1]](#forgePartial116)</sup> |
 
 ## Building and setting up
-
+JDK 16+ is required to build and use C2ME  
 Run the following commands in the root directory:
 
 ```shell
@@ -31,3 +37,6 @@ License information can be found [here](/LICENSE).
 
 ## Statistics
 [![](https://bstats.org/signatures/bukkit/C2ME-fabric.svg)](https://bstats.org/plugin/bukkit/C2ME-fabric/10514)
+
+## Footnotes
+<a name="forgePartial116">[1]</a>: Forge doesn't appear to support Java 16 on 1.16.5, so these versions uses Java 11 and may not contain some features which is present in the fabric versions.  
