@@ -5,33 +5,32 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.mojang.serialization.Codec;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.math.ChunkSectionPos;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.HeightLimitView;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.source.BiomeArray;
 import net.minecraft.world.biome.source.BiomeCoords;
 import net.minecraft.world.biome.source.BiomeLayerSampler;
-import net.minecraft.world.biome.source.BiomeSource;
-import net.minecraft.world.biome.source.VanillaLayeredBiomeSource;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.threadly.concurrent.UnfairExecutor;
-import org.yatopiamc.c2me.common.util.IBiomeArray;
 
 import java.util.List;
-import java.util.Map;
 import java.util.WeakHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class BiomeCache {
 
     public static final UnfairExecutor EXECUTOR = new UnfairExecutor(2, new ThreadFactoryBuilder().setNameFormat("C2ME biomes #%d").setDaemon(true).setPriority(Thread.NORM_PRIORITY - 1).build());
+    private static final Logger LOGGER = LogManager.getLogger("C2ME Biome Cache");
 
     private final Registry<Biome> registry;
     private final List<Biome> biomes;
 
     private final UncachedBiomeSource uncachedBiomeSource;
+
+    private final AtomicReference<HeightLimitView> finalHeightLimitView = new AtomicReference<>(null);
 
     public BiomeCache(ThreadLocal<BiomeLayerSampler> sampler, Registry<Biome> registry, List<Biome> biomes) {
         this.registry = registry;
@@ -39,71 +38,46 @@ public class BiomeCache {
         this.uncachedBiomeSource = new UncachedBiomeSource(biomes, sampler, registry);
     }
 
-    private final LoadingCache<ChunkSectionPos, BiomeArray> biomeCache = CacheBuilder.newBuilder()
+    private final LoadingCache<ChunkPos, BiomeArray> biomeCache = CacheBuilder.newBuilder()
             .weakKeys()
             .softValues()
             .maximumSize(8192)
             .build(new CacheLoader<>() {
                 @Override
-                public BiomeArray load(ChunkSectionPos key) {
-                    return new BiomeArray(registry, new HeightViewFromSectionPos(key), key.toChunkPos(), uncachedBiomeSource);
+                public BiomeArray load(ChunkPos key) {
+                    if (finalHeightLimitView.get() == null) throw new IllegalStateException(String.format("Cannot populate non-configured biome cache %s", BiomeCache.this));
+                    return new BiomeArray(registry, finalHeightLimitView.get(), key, uncachedBiomeSource);
                 }
             });
 
-    private final ThreadLocal<WeakHashMap<ChunkSectionPos, BiomeArray>> threadLocalCache = ThreadLocal.withInitial(WeakHashMap::new);
+    private final ThreadLocal<WeakHashMap<ChunkPos, BiomeArray>> threadLocalCache = ThreadLocal.withInitial(WeakHashMap::new);
 
     public Biome getBiomeForNoiseGen(int biomeX, int biomeY, int biomeZ) {
-        final ChunkSectionPos chunkPos = ChunkSectionPos.from(BiomeCoords.toChunk(biomeX), BiomeCoords.toChunk(biomeY), BiomeCoords.toChunk(biomeZ));
-        final int startX = BiomeCoords.fromBlock(chunkPos.getMinX());
-        final int startZ = BiomeCoords.fromBlock(chunkPos.getMinZ());
+        if (finalHeightLimitView.get() == null) {
+            LOGGER.warn("Tried to lookup non-configured biome cache {}, falling back to uncached lookup", this);
+            return uncachedBiomeSource.getBiomeForNoiseGen(biomeX, biomeY, biomeZ);
+        }
+        final ChunkPos chunkPos = new ChunkPos(BiomeCoords.toChunk(biomeX), BiomeCoords.toChunk(biomeZ));
+        final int startX = BiomeCoords.fromBlock(chunkPos.getStartX());
+        final int startZ = BiomeCoords.fromBlock(chunkPos.getStartZ());
         return threadLocalCache.get().computeIfAbsent(chunkPos, biomeCache).getBiomeForNoiseGen(biomeX - startX, biomeY, biomeZ - startZ);
     }
 
     public BiomeArray preloadBiomes(HeightLimitView view, ChunkPos pos, BiomeArray def) {
         Preconditions.checkNotNull(view);
-        Map<Integer, BiomeArray> subArrays = new Object2ObjectOpenHashMap<>();
-        for (int y = view.getBottomSectionCoord(); y <= view.getTopSectionCoord(); y ++) {
-            final ChunkSectionPos chunkSectionPos = ChunkSectionPos.from(pos, y);
-            if (def != null && ((IBiomeArray) def).isWithinRange(BiomeCoords.fromChunk(y))) {
-                biomeCache.put(chunkSectionPos, def);
-                subArrays.put(y, def);
-            } else {
-                subArrays.put(y, biomeCache.getUnchecked(chunkSectionPos));
-            }
+        if (!finalHeightLimitView.compareAndSet(null, view)) {
+            if (view.getBottomY() != finalHeightLimitView.get().getBottomY()
+                    || view.getTopY() != finalHeightLimitView.get().getTopY())
+                throw new IllegalArgumentException(String.format("Cannot modify %s height value : expected %d ~ %d but got %d ~ %d",
+                        this, finalHeightLimitView.get().getBottomY(), finalHeightLimitView.get().getTopY(), view.getBottomY(), view.getTopY()));
+        } else {
+            LOGGER.info("Successfully setup {} with height: {} ~ {}", this, view.getBottomY(), view.getTopY());
         }
-        return new BiomeArray(registry, view, new ChunkPos(0, 0), new BiomeSource(biomes) {
-            @Override
-            protected Codec<? extends BiomeSource> getCodec() {
-                return VanillaLayeredBiomeSource.CODEC;
-            }
-
-            @Override
-            public BiomeSource withSeed(long seed) {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public Biome getBiomeForNoiseGen(int biomeX, int biomeY, int biomeZ) {
-                return subArrays.get(BiomeCoords.toChunk(biomeY)).getBiomeForNoiseGen(biomeX, biomeY, biomeZ);
-            }
-        });
-    }
-
-    private record HeightViewFromSectionPos(ChunkSectionPos pos) implements HeightLimitView {
-
-        @Override
-        public int getHeight() {
-            return 16;
-        }
-
-        @Override
-        public int getBottomY() {
-            return pos().getMinY();
-        }
-
-        @Override
-        public int hashCode() {
-            return pos().hashCode();
+        if (def != null) {
+            this.biomeCache.put(pos, def);
+            return def;
+        } else {
+            return this.biomeCache.getUnchecked(pos);
         }
     }
 
