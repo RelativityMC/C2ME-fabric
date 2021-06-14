@@ -5,15 +5,18 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.yatopiamc.c2me.common.optimization.worldgen.threadsafe_weightedlist.IWeightedList;
 
 import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
 
 @Mixin(WeightedList.class)
-public class MixinWeightedList<U> {
+public class MixinWeightedList<U> implements IWeightedList<U> {
 
     @Shadow @Final public List<WeightedList.Entry<U>> entries;
+
+    @Shadow @Final private Random random;
 
     /**
      * @author ishland
@@ -23,8 +26,9 @@ public class MixinWeightedList<U> {
     public WeightedList<U> shuffle() {
         // TODO [VanillaCopy]
         final WeightedList<U> newList = new WeightedList<>(entries); // C2ME - use new instance
+        final Random random = new Random(); // C2ME - use new instance
         newList.entries.forEach((entry) -> { // C2ME - use new instance
-            entry.setShuffledOrder(new Random().nextFloat());
+            entry.setShuffledOrder(random.nextFloat());
         });
         newList.entries.sort(Comparator.comparingDouble((object) -> { // C2ME - use new instance
             return ((WeightedList.Entry)object).getShuffledOrder();
@@ -32,4 +36,13 @@ public class MixinWeightedList<U> {
         return newList; // C2ME - use new instance
     }
 
+    @Override
+    public WeightedList<U> shuffleVanilla() {
+        // TODO [VanillaCopy]
+        this.entries.forEach((entry) -> {
+            entry.setShuffledOrder(this.random.nextFloat());
+        });
+        this.entries.sort(Comparator.comparingDouble(WeightedList.Entry::getShuffledOrder));
+        return (WeightedList<U> ) (Object) this;
+    }
 }

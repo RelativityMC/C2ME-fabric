@@ -16,6 +16,7 @@
     "optimization.worldgen.global_biome_cache.MixinVanillaLayeredBiomeSource",
     "optimization.worldgen.thread_local_biome_cache.MixinVanillaLayeredBiomeSource",
     "optimization.worldgen.threadlocal_block_interpolator.MixinDeepslateInterpolator",
+    "optimization.worldgen.threadsafe_weightedlist.MixinOrder",
     "optimization.worldgen.threadsafe_weightedlist.MixinWeightedList",
     "threading.chunkio.MixinChunkSerializer",
     "threading.chunkio.MixinChunkTickScheduler",
