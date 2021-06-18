@@ -2,10 +2,8 @@ package com.ishland.c2me.metrics;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import net.fabricmc.api.EnvType;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.MinecraftVersion;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.server.MinecraftServer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -30,7 +28,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -41,9 +38,9 @@ public class Metrics {
 
     private static final Logger LOGGER = LogManager.getLogger("Bstats-Metrics");
     private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
-    public static final AtomicReference<MinecraftServer> capturedServer = new AtomicReference<>(null);
 
     private final MetricsBase metricsBase;
+    private final MinecraftServer server;
 
     /**
      * Creates a new Metrics instance.
@@ -51,7 +48,8 @@ public class Metrics {
      * @param serviceId The id of the service. It can be found at <a
      *     href="https://bstats.org/what-is-my-plugin-id">What is my plugin id?</a>
      */
-    public Metrics(int serviceId) {
+    public Metrics(int serviceId, MinecraftServer server) {
+        this.server = server;
         // Get the config file
         final Path configFile = FabricLoader.getInstance().getConfigDir().resolve("c2me-bstats.json");
         final MetricsConfig config = readConfig(configFile);
@@ -64,7 +62,7 @@ public class Metrics {
                         config.enabled,
                         this::appendPlatformData,
                         this::appendServiceData,
-                        Runnable::run,
+                        server::execute,
                         () -> true,
                         LOGGER::warn,
                         LOGGER::info,
@@ -109,20 +107,7 @@ public class Metrics {
 
     private void appendPlatformData(JsonObjectBuilder builder) {
         builder.appendField("playerAmount", getPlayerAmount());
-        if (FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT) {
-            builder.appendField("onlineMode", MinecraftClient.getInstance().getSession().getAccessToken() != null ? 1 : 0);
-        } else if (FabricLoader.getInstance().getEnvironmentType() == EnvType.SERVER) {
-            final MinecraftServer minecraftServer = capturedServer.get();
-            if (minecraftServer != null) {
-                builder.appendField("onlineMode", minecraftServer.isOnlineMode() ? 1 : 0);
-            } else {
-                LOGGER.warn("No captured server found for dedicated server environment, assuming offline mode");
-                builder.appendField("onlineMode", 0);
-            }
-        } else {
-            LOGGER.warn("Unknown environment, assuming offline mode");
-            builder.appendField("onlineMode", 0);
-        }
+        builder.appendField("onlineMode", server.isOnlineMode() ? 1 : 0);
         //noinspection OptionalGetWithoutIsPresent
         builder.appendField("bukkitVersion", FabricLoader.getInstance().getModContainer("fabricloader").get().getMetadata().getVersion().getFriendlyString() + " (MC: " + MinecraftVersion.GAME_VERSION.getReleaseTarget() + ")");
         builder.appendField("bukkitName", "fabric");
@@ -139,7 +124,7 @@ public class Metrics {
     }
 
     private int getPlayerAmount() {
-        final MinecraftServer minecraftServer = capturedServer.get();
+        final MinecraftServer minecraftServer = server;
         if (minecraftServer != null && minecraftServer.isRunning()) {
             return minecraftServer.getCurrentPlayerCount();
         } else {
