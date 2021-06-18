@@ -9,13 +9,16 @@ accessible    class    net/minecraft/server/world/ServerChunkManager$MainThreadE
 accessible    method    net/minecraft/world/storage/RegionBasedStorage    <init>    (Ljava/io/File;Z)V
 accessible    method    net/minecraft/world/storage/RegionBasedStorage    getRegionFile    (Lnet/minecraft/util/math/ChunkPos;)Lnet/minecraft/world/storage/RegionFile;
 accessible    method    net/minecraft/world/storage/RegionBasedStorage    write    (Lnet/minecraft/util/math/ChunkPos;Lnet/minecraft/nbt/CompoundTag;)V
+accessible    method    net/minecraft/world/gen/chunk/ChunkGeneratorSettings    hasDeepslate    ()Z
 accessible    method    net/minecraft/util/collection/WeightedList    <init>    (Ljava/util/List;)V
+accessible    method    net/minecraft/util/collection/WeightedList$Entry    setShuffledOrder    (F)V
+accessible    method    net/minecraft/util/collection/WeightedList$Entry    getShuffledOrder    ()D
 accessible    method    net/minecraft/server/world/ServerChunkManager    tick    ()Z
 accessible    method    net/minecraft/server/world/ServerChunkManager$MainThreadExecutor    runTask    ()Z
 accessible    method    net/minecraft/util/thread/ThreadExecutor    runTask    ()Z
 accessible    method    net/minecraft/server/world/SimpleTickScheduler    <init>    (Ljava/util/function/Function;Ljava/util/List;)V
 
-accessible    field    net/minecraft/world/storage/StorageIoWorker$Result    nbt    Lnet/minecraft/nbt/CompoundTag;
+accessible    field    net/minecraft/world/storage/StorageIoWorker$Result    nbt    Lnet/minecraft/nbt/NbtCompound;
 accessible    field    net/minecraft/world/storage/StorageIoWorker$Result    future    Ljava/util/concurrent/CompletableFuture;
 accessible    field    net/minecraft/world/storage/VersionedChunkStorage    worker    Lnet/minecraft/world/storage/StorageIoWorker;
 accessible    field    net/minecraft/world/storage/SerializingRegionBasedStorage    worker    Lnet/minecraft/world/storage/StorageIoWorker;

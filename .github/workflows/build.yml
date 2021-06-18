@@ -1,10 +1,8 @@
 name: C2ME Build Script
 
 on:
-  push:
-    branches: [ ver/1.16.5 ]
-  pull_request:
-    branches: [ ver/1.16.5 ]
+  push: {}
+  pull_request: {}
 
 jobs:
   build:
