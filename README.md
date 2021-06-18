@@ -1,10 +1,11 @@
-<img width="200" src="https://yatopiamc.org/static/img/c2m.png" alt="C2ME icon" align="right">
+<img width="200" src="https://github.com/ishlandbukkit/C2ME-fabric/raw/ver/1.17/src/main/resources/assets/c2me/icon.png" alt="C2ME icon" align="right">
 <div align="left">
 <h1>C^2M-Engine</h1>
 
-[![Github-CI](https://github.com/YatopiaMC/C2ME-fabric/workflows/C2ME%20Build%20Script/badge.svg)](https://github.com/YatopiaMC/C2ME-fabric/actions?query=workflow%3ACI)
-[![CodeMC](https://ci.codemc.io/buildStatus/icon?job=YatopiaMC%2FC2ME-fabric%2Fver%252F1.17)](https://ci.codemc.io/job/YatopiaMC/job/C2ME-fabric/job/ver%252F1.17/)
-[![Discord](https://img.shields.io/discord/342814924310970398?color=%237289DA&label=Discord&logo=discord&logoColor=white)](https://discord.io/YatopiaMC)
+[![Github-CI](https://github.com/ishlandbukkit/C2ME-fabric/workflows/C2ME%20Build%20Script/badge.svg)](https://github.com/YatopiaMC/C2ME-fabric/actions?query=workflow%3ACI)
+
+[comment]: <> ([![CodeMC]&#40;https://ci.codemc.io/buildStatus/icon?job=YatopiaMC%2FC2ME-fabric%2Fver%252F1.17&#41;]&#40;https://ci.codemc.io/job/YatopiaMC/job/C2ME-fabric/job/ver%252F1.17/&#41;)
+[![Discord](https://img.shields.io/discord/756715786747248641?logo=discord&logoColor=white)](https://discord.io/ishlandbukkit)
 <h3>A Fabric mod designed to improve the chunk performance of Minecraft.</h3>
 </div>
 

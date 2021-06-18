@@ -1,7 +1,7 @@
 {
   "required": true,
   "minVersion": "0.8",
-  "package": "org.yatopiamc.c2me.mixin",
+  "package": "com.ishland.c2me.mixin",
   "compatibilityLevel": "JAVA_16",
   "mixinPriority": 1100,
   "mixins": [
@@ -41,7 +41,7 @@
   ],
   "client": [
   ],
-  "plugin": "org.yatopiamc.c2me.mixin.C2MEMixinPlugin",
+  "plugin": "com.ishland.c2me.mixin.C2MEMixinPlugin",
   "injectors": {
     "defaultRequire": 1
   },
