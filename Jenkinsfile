@@ -13,6 +13,7 @@ pipeline {
                     publisherStrategy: 'EXPLICIT'
                 ) {
                     scmSkip(deleteBuild: true, skipPattern:'.*\\[CI-SKIP\\].*')
+                    sh 'git fetch --tags'
                     sh 'chmod +x ./gradlew'
                     sh './gradlew clean build'
                 }
