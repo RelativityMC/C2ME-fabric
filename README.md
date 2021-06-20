@@ -21,9 +21,10 @@ C2ME is not production ready and still pretty experimental. So backup your world
 ## Branch development status
 | Branch | Status |
 | ------ | ------ |
-| fabric/ver/1.16.5 | Active |
+| fabric/ver/1.16.5 | Inactive |
 | fabric/ver/1.17 | Active |
-| forge/ver/1.16.5 | Partial<sup>[[1]](#forgePartial116)</sup> |
+| forge/ver/1.16.5 | Partial<sup>[[1]](#forgePartial116)</sup>, Inactive |
+| forge/ver/1.17 | Waiting for forge |
 
 ## Building and setting up
 JDK 16+ is required to build and use C2ME  
