@@ -3,8 +3,7 @@
 <h1>C^2M-Engine</h1>
 
 [![Github-CI](https://github.com/ishlandbukkit/C2ME-fabric/workflows/C2ME%20Build%20Script/badge.svg)](https://github.com/YatopiaMC/C2ME-fabric/actions?query=workflow%3ACI)
-
-[comment]: <> ([![CodeMC]&#40;https://ci.codemc.io/buildStatus/icon?job=YatopiaMC%2FC2ME-fabric%2Fver%252F1.17&#41;]&#40;https://ci.codemc.io/job/YatopiaMC/job/C2ME-fabric/job/ver%252F1.17/&#41;)
+[![Build Status](https://ci.codemc.io/job/ishlandbukkit/job/C2ME-fabric/job/ver%252F1.17/badge/icon)](https://ci.codemc.io/job/ishlandbukkit/job/C2ME-fabric/job/ver%252F1.17/)
 [![Discord](https://img.shields.io/discord/756715786747248641?logo=discord&logoColor=white)](https://discord.io/ishlandbukkit)
 <h3>A Fabric mod designed to improve the chunk performance of Minecraft.</h3>
 </div>
@@ -25,6 +24,10 @@ C2ME is not production ready and still pretty experimental. So backup your world
 | fabric/ver/1.17 | Active |
 | forge/ver/1.16.5 | Partial<sup>[[1]](#forgePartial116)</sup>, Inactive |
 | forge/ver/1.17 | Waiting for forge |
+
+## Downloads
+You can find semi-stable releases here: https://github.com/ishlandbukkit/C2ME-fabric/releases  
+You can find development builds here: https://ci.codemc.io/job/ishlandbukkit/job/C2ME-fabric
 
 ## Building and setting up
 JDK 16+ is required to build and use C2ME  
