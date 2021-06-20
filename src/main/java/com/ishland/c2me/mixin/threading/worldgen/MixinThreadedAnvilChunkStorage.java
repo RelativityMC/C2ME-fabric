@@ -1,6 +1,5 @@
 package com.ishland.c2me.mixin.threading.worldgen;
 
-import com.ishland.c2me.common.threading.GlobalExecutors;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;
@@ -38,13 +37,13 @@ public class MixinThreadedAnvilChunkStorage {
 
     /**
      * @author ishland
-     * @reason move to scheduler
+     * @reason reduce scheduling overhead
      */
     @SuppressWarnings("OverwriteTarget")
     @Dynamic
     @Overwrite
     private void method_17259(ChunkHolder chunkHolder, Runnable runnable) { // synthetic method for worldGenExecutor scheduling in upgradeChunk
-        GlobalExecutors.scheduler.execute(runnable);
+        runnable.run();
     }
 
 }

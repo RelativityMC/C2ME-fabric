@@ -1,5 +1,8 @@
 package com.ishland.c2me.mixin.threading.worldgen;
 
+import com.ishland.c2me.common.config.C2MEConfig;
+import com.ishland.c2me.common.threading.worldgen.ChunkStatusUtils;
+import com.ishland.c2me.common.threading.worldgen.IChunkStatus;
 import com.ishland.c2me.common.threading.worldgen.IWorldGenLockable;
 import com.mojang.datafixers.util.Either;
 import net.minecraft.server.world.ChunkHolder;
@@ -18,9 +21,6 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import com.ishland.c2me.common.config.C2MEConfig;
-import com.ishland.c2me.common.threading.worldgen.ChunkStatusUtils;
-import com.ishland.c2me.common.threading.worldgen.IChunkStatus;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -77,6 +77,9 @@ public abstract class MixinChunkStatus implements IChunkStatus {
         final Chunk targetChunk = list.get(list.size() / 2);
         final Supplier<CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>>> generationTask = () ->
                 this.generationTask.doWork((ChunkStatus) (Object) this, executor, serverWorld, chunkGenerator, structureManager, serverLightingProvider, function, list, targetChunk);
+        if (targetChunk.getStatus().isAtLeast((ChunkStatus) (Object) this)) {
+            return generationTask.get();
+        }
         int lockRadius = C2MEConfig.threadedWorldGenConfig.reduceLockRadius && this.reducedTaskRadius != -1 ? this.reducedTaskRadius : this.taskMargin;
         //noinspection ConstantConditions
         return ChunkStatusUtils.runChunkGenWithLock(targetChunk.getPos(), lockRadius, ((IWorldGenLockable) serverWorld).getWorldGenChunkLock(), () ->
