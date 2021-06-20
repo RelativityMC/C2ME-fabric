@@ -6,7 +6,6 @@ import com.mojang.datafixers.util.Either;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;
 import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.thread.ThreadExecutor;
 import net.minecraft.world.biome.source.BiomeArray;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ProtoChunk;
@@ -18,7 +17,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Function;
 
 @Mixin(ThreadedAnvilChunkStorage.class)
 public abstract class MixinThreadedChunkAnvilStorage {
@@ -26,8 +24,6 @@ public abstract class MixinThreadedChunkAnvilStorage {
     @Shadow protected abstract CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> loadChunk(ChunkPos pos);
 
     @Shadow @Final private ChunkGenerator chunkGenerator;
-
-    @Shadow @Final private ThreadExecutor<Runnable> mainThreadExecutor;
 
     @Redirect(method = "getChunk", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ThreadedAnvilChunkStorage;loadChunk(Lnet/minecraft/util/math/ChunkPos;)Ljava/util/concurrent/CompletableFuture;"))
     private CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> redirectLoadChunk(ThreadedAnvilChunkStorage threadedAnvilChunkStorage, ChunkPos pos) {
@@ -39,7 +35,7 @@ public abstract class MixinThreadedChunkAnvilStorage {
                 });
             }
             return either;
-        }, BiomeCache.EXECUTOR).thenApplyAsync(Function.identity(), this.mainThreadExecutor);
+        }, BiomeCache.EXECUTOR);
     }
 
 }
