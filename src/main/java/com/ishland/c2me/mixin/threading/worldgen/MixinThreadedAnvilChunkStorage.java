@@ -1,22 +1,17 @@
 package com.ishland.c2me.mixin.threading.worldgen;
 
-import com.mojang.datafixers.util.Either;
+import com.ishland.c2me.common.threading.GlobalExecutors;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;
 import net.minecraft.util.thread.ThreadExecutor;
-import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.chunk.ChunkStatus;
 import org.spongepowered.asm.mixin.Dynamic;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import com.ishland.c2me.common.threading.GlobalExecutors;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -36,13 +31,6 @@ public class MixinThreadedAnvilChunkStorage {
         }
     };
 
-    private final ThreadLocal<ChunkStatus> capturedRequiredStatus = new ThreadLocal<>();
-
-    @Inject(method = "upgradeChunk", at = @At("HEAD"))
-    private void onUpgradeChunk(ChunkHolder holder, ChunkStatus requiredStatus, CallbackInfoReturnable<CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>>> cir) {
-        capturedRequiredStatus.set(requiredStatus);
-    }
-
     @Redirect(method = "makeChunkEntitiesTickable", at = @At(value = "INVOKE", target = "Ljava/util/concurrent/CompletableFuture;thenApplyAsync(Ljava/util/function/Function;Ljava/util/concurrent/Executor;)Ljava/util/concurrent/CompletableFuture;"))
     private <U, T> CompletableFuture<U> redirectMainThreadExecutor1(CompletableFuture<T> completableFuture, Function<? super T, ? extends U> fn, Executor executor) {
         return completableFuture.thenApplyAsync(fn, this.mainInvokingExecutor);
@@ -50,21 +38,12 @@ public class MixinThreadedAnvilChunkStorage {
 
     /**
      * @author ishland
-     * @reason move to scheduler & improve chunk status transition speed
+     * @reason move to scheduler
      */
     @SuppressWarnings("OverwriteTarget")
     @Dynamic
     @Overwrite
     private void method_17259(ChunkHolder chunkHolder, Runnable runnable) { // synthetic method for worldGenExecutor scheduling in upgradeChunk
-        final ChunkStatus capturedStatus = capturedRequiredStatus.get();
-        capturedRequiredStatus.remove();
-        if (capturedStatus != null) {
-            final Chunk currentChunk = chunkHolder.getCurrentChunk();
-            if (currentChunk != null && currentChunk.getStatus().isAtLeast(capturedStatus)) {
-                this.mainInvokingExecutor.execute(runnable);
-                return;
-            }
-        }
         GlobalExecutors.scheduler.execute(runnable);
     }
 

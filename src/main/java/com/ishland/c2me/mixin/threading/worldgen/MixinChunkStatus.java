@@ -70,21 +70,17 @@ public abstract class MixinChunkStatus implements IChunkStatus {
 
     /**
      * @author ishland
-     * @reason take over generation & improve chunk status transition speed
+     * @reason take over generation
      */
     @Overwrite
     public CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> runGenerationTask(Executor executor, ServerWorld serverWorld, ChunkGenerator chunkGenerator, StructureManager structureManager, ServerLightingProvider serverLightingProvider, Function<Chunk, CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>>> function, List<Chunk> list) {
         final Chunk targetChunk = list.get(list.size() / 2);
         final Supplier<CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>>> generationTask = () ->
                 this.generationTask.doWork((ChunkStatus) (Object) this, executor, serverWorld, chunkGenerator, structureManager, serverLightingProvider, function, list, targetChunk);
-        if (targetChunk.getStatus().isAtLeast((ChunkStatus) (Object) this)) {
-            return generationTask.get();
-        } else {
-            int lockRadius = C2MEConfig.threadedWorldGenConfig.reduceLockRadius && this.reducedTaskRadius != -1 ? this.reducedTaskRadius : this.taskMargin;
-            //noinspection ConstantConditions
-            return ChunkStatusUtils.runChunkGenWithLock(targetChunk.getPos(), lockRadius, ((IWorldGenLockable) serverWorld).getWorldGenChunkLock(), () ->
-                    ChunkStatusUtils.getThreadingType((ChunkStatus) (Object) this).runTask(((IWorldGenLockable) serverWorld).getWorldGenSingleThreadedLock(), generationTask));
-        }
+        int lockRadius = C2MEConfig.threadedWorldGenConfig.reduceLockRadius && this.reducedTaskRadius != -1 ? this.reducedTaskRadius : this.taskMargin;
+        //noinspection ConstantConditions
+        return ChunkStatusUtils.runChunkGenWithLock(targetChunk.getPos(), lockRadius, ((IWorldGenLockable) serverWorld).getWorldGenChunkLock(), () ->
+                ChunkStatusUtils.getThreadingType((ChunkStatus) (Object) this).runTask(((IWorldGenLockable) serverWorld).getWorldGenSingleThreadedLock(), generationTask));
     }
 
 }
