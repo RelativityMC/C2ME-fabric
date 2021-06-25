@@ -8,10 +8,12 @@ sourceCompatibility = JavaVersion.VERSION_16
 targetCompatibility = JavaVersion.VERSION_16
 
 archivesBaseName = "${project.archives_base_name}-mc${project.minecraft_version}"
-version = project.mod_version + "." + commitsSinceLastTag()
+version = project.mod_version + "." + getVersionSuffix()
 group = project.maven_group
 
-getLogger().info("Version String: ${version}")
+afterEvaluate {
+    logger.lifecycle("Version String: ${version}")
+}
 
 loom {
     accessWidener "src/main/resources/c2me.accesswidener"
@@ -90,16 +92,25 @@ publishing {
     }
 }
 
-String commitsSinceLastTag() {
+String getVersionSuffix() {
     def stdout = new ByteArrayOutputStream()
     exec {
-        commandLine 'git', 'describe', '--tags'
+        commandLine 'git', 'describe', '--tags', '--dirty', '--broken'
         standardOutput = stdout
     }
-    stdout = stdout.toString()
+    stdout = stdout.toString().strip()
+    def suffix = ""
+    if (stdout.endsWith("-dirty")) {
+        stdout = stdout.substring(0, stdout.length() - "-dirty".length())
+        suffix = "-dirty"
+    }
+    if (stdout.endsWith("-broken")) {
+        stdout = stdout.substring(0, stdout.length() - "-broken".length())
+        suffix = "-broken"
+    }
     if (stdout.indexOf('-') < 0) {
         return 0;
     }
     def split = stdout.split('-')
-    return split[split.length - 2]
+    return split[split.length - 2] + suffix
 }
