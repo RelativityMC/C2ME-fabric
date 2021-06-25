@@ -2,7 +2,6 @@ package com.ishland.c2me.common.threading.worldgen;
 
 import com.ibm.asyncutil.locks.AsyncNamedLock;
 import com.ishland.c2me.common.config.C2MEConfig;
-import com.ishland.c2me.common.threading.GlobalExecutors;
 import com.ishland.c2me.common.util.AsyncCombinedLock;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.chunk.ChunkStatus;
@@ -44,11 +43,11 @@ public class ChunkStatusUtils {
                 for (int z = target.z - radius; z <= target.z + radius; z++)
                     fetchedLocks.add(new ChunkPos(x, z));
 
-            return new AsyncCombinedLock(chunkLock, new HashSet<>(fetchedLocks)).getFuture().thenComposeAsync(lockToken -> {
+            return new AsyncCombinedLock(chunkLock, new HashSet<>(fetchedLocks)).getFuture().thenCompose(lockToken -> {
                 final CompletableFuture<T> future = action.get();
                 future.thenRun(lockToken::releaseLock);
                 return future;
-            }, GlobalExecutors.scheduler);
+            });
         }, AsyncCombinedLock.lockWorker).thenCompose(Function.identity());
     }
 
