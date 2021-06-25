@@ -18,7 +18,7 @@ pipeline {
                     publisherStrategy: 'EXPLICIT'
                 ) {
                     sh 'git fetch --tags'
-                    sh 'chmod +x ./gradlew'
+                    sh 'git reset --hard'
                     sh './gradlew clean build'
                 }
             }
