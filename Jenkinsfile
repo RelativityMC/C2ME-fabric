@@ -2,6 +2,11 @@ pipeline {
     agent { label 'slave' }
     options { timestamps() }
     stages {
+        stage('SCM-SKIP') {
+            steps {
+                scmSkip(deleteBuild: true, skipPattern:'.*\\[CI-SKIP\\].*')
+            }
+        }
         stage('Build') {
             tools {
                 jdk "OpenJDK 16"
@@ -12,7 +17,6 @@ pipeline {
                     mavenLocalRepo: '.repository',
                     publisherStrategy: 'EXPLICIT'
                 ) {
-                    scmSkip(deleteBuild: true, skipPattern:'.*\\[CI-SKIP\\].*')
                     sh 'git fetch --tags'
                     sh 'chmod +x ./gradlew'
                     sh './gradlew clean build'
