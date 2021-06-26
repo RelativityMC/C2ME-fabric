@@ -11,7 +11,7 @@ sourceSets {
 
 loom {
     runs {
-        testVanillaServer {
+        testC2MEServer {
             server()
             runDir getRootProject().getProjectDir().toPath().relativize(project.getBuildDir().toPath()).resolve("testServer").toString()
             source sourceSets.testmod
@@ -19,7 +19,7 @@ loom {
     }
 }
 
-runTestVanillaServer.configure {
+runTestC2MEServer.configure {
     doFirst {
         standardOutput = new RedirectingOutputStream(project, getName())
     }
@@ -31,6 +31,8 @@ repositories {
 
 dependencies {
     testmodImplementation project(":tests:test-mod").sourceSets.main.output
+    testmodImplementation project(":").sourceSets.main.output
+    testmodImplementation project(":").configurations.getByName("shadowImpl").allDependencies
     modApi 'com.github.ishland:Starlight:08d63f4095'
 }
 

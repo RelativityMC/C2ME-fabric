@@ -1,0 +1,17 @@
+plugins {
+    id 'java'
+}
+
+group 'com.ishland.c2me'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+
+}
+
+test {
+    useJUnitPlatform()
+}

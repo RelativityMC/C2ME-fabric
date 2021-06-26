@@ -24,7 +24,7 @@ public class PreGenTask {
     private static final Logger LOGGER = LogManager.getLogger("C2ME Test");
     private static final ChunkTicketType<Unit> TICKET = ChunkTicketType.create("c2metest", (unit, unit2) -> 0);
 
-    private static final int PREGEN_RADIUS = 64;
+    private static final int PREGEN_RADIUS = 48;
 
     public static CompletableFuture<Void> runPreGen(ServerWorld world) {
         LOGGER.info("Starting pre-generation in {};{}", world.toString(), world.getRegistryKey().getValue().toString());

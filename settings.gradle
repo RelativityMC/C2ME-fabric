@@ -11,3 +11,5 @@ pluginManagement {
 include 'tests'
 include 'tests:test-mod'
 include 'tests:vanilla-test'
+include 'tests:c2me-test'
+
