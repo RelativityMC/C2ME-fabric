@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "c2metests",
+  "version": "${version}",
+  "authors": [
+    "ishlandbukkit",
+    "ishland"
+  ],
+  "license": "MIT",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.ishland.c2me.tests.testmod.C2METestMod"
+    ]
+  },
+  "mixins": [
+    "c2metests.mixins.json"
+  ]
+}

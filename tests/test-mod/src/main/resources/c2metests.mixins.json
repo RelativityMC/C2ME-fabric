@@ -1,0 +1,21 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.ishland.c2me.tests.testmod.mixin",
+  "compatibilityLevel": "JAVA_16",
+  "mixinPriority": 1100,
+  "mixins": [
+    "IServerChunkManager",
+    "IThreadedAnvilChunkStorage",
+    "MixinMain",
+    "MixinMinecraftDedicatedServer",
+    "MixinMinecraftServer",
+    "MixinServerPropertiesHandler"
+  ],
+  "client": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "setSourceFile": true
+}

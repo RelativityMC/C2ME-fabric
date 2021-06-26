@@ -8,8 +8,14 @@ sourceCompatibility = JavaVersion.VERSION_16
 targetCompatibility = JavaVersion.VERSION_16
 
 archivesBaseName = "${project.archives_base_name}-mc${project.minecraft_version}"
-version = project.mod_version + "." + getVersionSuffix()
 group = project.maven_group
+
+allprojects {
+    version = project.mod_version + "." + getVersionSuffix()
+    loom {
+        shareCaches = true
+    }
+}
 
 afterEvaluate {
     logger.lifecycle("Version String: ${version}")

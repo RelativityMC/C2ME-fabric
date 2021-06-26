@@ -1,0 +1,26 @@
+evaluationDependsOn(":tests:test-mod")
+
+sourceSets {
+    testmod {
+        compileClasspath += main.compileClasspath
+        runtimeClasspath += main.runtimeClasspath
+    }
+}
+
+loom {
+    runs {
+        testVanillaServer {
+            server()
+            runDir getRootProject().getProjectDir().toPath().relativize(project.getBuildDir().toPath()).resolve("testServer").toString()
+            source sourceSets.testmod
+        }
+    }
+}
+
+dependencies {
+    testmodImplementation project(":tests:test-mod").sourceSets.main.output
+}
+
+test {
+    useJUnitPlatform()
+}

@@ -8,3 +8,6 @@ pluginManagement {
         gradlePluginPortal()
     }
 }
+include 'tests'
+include 'tests:test-mod'
+include 'tests:vanilla-test'

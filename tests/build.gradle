@@ -1,0 +1,46 @@
+allprojects {
+    apply plugin: 'fabric-loom'
+    apply plugin: 'java-library'
+
+    sourceCompatibility = JavaVersion.VERSION_16
+    targetCompatibility = JavaVersion.VERSION_16
+
+    group = project.maven_group + ".tests"
+    repositories {
+        mavenCentral()
+    }
+    loom {
+        shareCaches = true
+    }
+    dependencies {
+        minecraft "com.mojang:minecraft:${project.minecraft_version}"
+        mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+        modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    }
+    processResources {
+        duplicatesStrategy = DuplicatesStrategy.INCLUDE
+
+        inputs.property "version", project.version
+
+        from(sourceSets.main.resources.srcDirs) {
+            include "fabric.mod.json"
+            expand "version": project.version
+        }
+    }
+    afterEvaluate {
+        tasks.forEach {
+            if (it.getName() == "remapJar"
+                    || it.getName() == "remapSourcesJar"
+                    || it.getName() == "runClient"
+                    || it.getName() == "runServer"
+                    || it.getName() == "build") {
+                it.onlyIf { false }
+                it.enabled = false
+            }
+        }
+    }
+}
+
+test {
+    useJUnitPlatform()
+}
