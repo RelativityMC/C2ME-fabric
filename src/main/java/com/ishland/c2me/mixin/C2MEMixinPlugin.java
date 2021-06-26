@@ -32,9 +32,9 @@ public class C2MEMixinPlugin implements IMixinConfigPlugin {
         if (mixinClassName.startsWith("com.ishland.c2me.mixin.threading.chunkio."))
             return C2MEConfig.asyncIoConfig.enabled;
         if (mixinClassName.startsWith("com.ishland.c2me.mixin.optimization.worldgen.global_biome_cache."))
-            return C2MEConfig.threadedWorldGenConfig.useGlobalBiomeCache;
+            return C2MEConfig.threadedWorldGenConfig.enabled && C2MEConfig.threadedWorldGenConfig.useGlobalBiomeCache;
         if (mixinClassName.startsWith("com.ishland.c2me.mixin.optimization.worldgen.thread_local_biome_cache."))
-            return !C2MEConfig.threadedWorldGenConfig.useGlobalBiomeCache;
+            return !(C2MEConfig.threadedWorldGenConfig.enabled && C2MEConfig.threadedWorldGenConfig.useGlobalBiomeCache);
         return true;
     }
 
