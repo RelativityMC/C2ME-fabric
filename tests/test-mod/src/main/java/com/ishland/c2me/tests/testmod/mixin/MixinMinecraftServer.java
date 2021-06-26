@@ -24,12 +24,6 @@ import java.util.stream.Collectors;
 @Mixin(MinecraftServer.class)
 public abstract class MixinMinecraftServer {
 
-    @Shadow public abstract void shutdown();
-
-    @Shadow private boolean stopped;
-
-    @Shadow public abstract Iterable<ServerWorld> getWorlds();
-
     @Shadow @Final private static Logger LOGGER;
     @Shadow @Final private Map<RegistryKey<World>, ServerWorld> worlds;
     @Shadow private volatile boolean running;
@@ -40,7 +34,7 @@ public abstract class MixinMinecraftServer {
 
     private final AtomicBoolean ranTest = new AtomicBoolean(false);
 
-    @Inject(method = "tick", at = @At("HEAD"))
+    @Inject(method = "tick", at = @At("RETURN"))
     private void onTick(CallbackInfo info) {
         if (ranTest.compareAndSet(false, true)) {
             LOGGER.info("Starting pre-generation task for worlds: {}",
@@ -51,6 +45,7 @@ public abstract class MixinMinecraftServer {
                                             worldEntry.getKey().getValue().toString()))
                                     .collect(Collectors.toSet())
                     ));
+            long startTime = System.nanoTime();
             final CompletableFuture<Void> future = CompletableFuture.allOf(this.worlds.values().stream().map(PreGenTask::runPreGen).distinct().toArray(CompletableFuture[]::new));
             while (isRunning() && !future.isDone()) {
                 boolean hasTask;
@@ -60,6 +55,9 @@ public abstract class MixinMinecraftServer {
                 }
                 if (!hasTask) LockSupport.parkNanos("waiting for tasks", 100000L);
             }
+            long duration = System.nanoTime() - startTime;
+            final String message = String.format("PreGen completed after %.1fs", duration / 1_000_000_000.0);
+            LOGGER.info(message);
         } else {
             this.running = false;
         }

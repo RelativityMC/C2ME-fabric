@@ -51,6 +51,12 @@ public class C2MEConfig {
     }
 
     public static class ThreadedWorldGenConfig {
+
+        // For Testing Purposes
+        private static final boolean global_allowThreadedFeatures = Boolean.parseBoolean(System.getProperty("com.ishland.c2me.common.config.threadedWorldGen.allowThreadedFeatures", "false"));
+        private static final boolean global_useGlobalBiomeCache = Boolean.parseBoolean(System.getProperty("com.ishland.c2me.common.config.threadedWorldGen.useGlobalBiomeCache", "false"));
+        private static final boolean global_reduceLockRadius = Boolean.parseBoolean(System.getProperty("com.ishland.c2me.common.config.threadedWorldGen.reduceLockRadius", "false"));
+
         public final boolean enabled;
         public final int parallelism;
         public final boolean allowThreadedFeatures;
@@ -62,9 +68,9 @@ public class C2MEConfig {
             final ConfigUtils.ConfigScope configScope = new ConfigUtils.ConfigScope(config);
             this.enabled = ConfigUtils.getValue(configScope, "enabled", () -> true, "Whether to enable this feature", List.of(), false);
             this.parallelism = ConfigUtils.getValue(configScope, "parallelism", () -> Math.min(6, Runtime.getRuntime().availableProcessors()), "World generation worker executor parallelism", List.of(), null, ConfigUtils.CheckType.THREAD_COUNT);
-            this.allowThreadedFeatures = ConfigUtils.getValue(configScope, "allowThreadedFeatures", () -> false, "Whether to allow feature generation (world decorations like trees, ores and etc.) run in parallel \n (may cause incompatibility with other mods)", List.of(), null);
-            this.reduceLockRadius = ConfigUtils.getValue(configScope, "reduceLockRadius", () -> false, "Whether to allow reducing lock radius (faster but UNSAFE) (YOU HAVE BEEN WARNED) \n (may cause incompatibility with other mods)", List.of(), null);
-            this.useGlobalBiomeCache = ConfigUtils.getValue(configScope, "useGlobalBiomeCache", () -> false, "(Experimental) Whether to enable global BiomeCache to accelerate worldgen \n This increases memory allocation ", List.of(), false);
+            this.allowThreadedFeatures = ConfigUtils.getValue(configScope, "allowThreadedFeatures", () -> false || global_allowThreadedFeatures, "Whether to allow feature generation (world decorations like trees, ores and etc.) run in parallel \n (may cause incompatibility with other mods)", List.of(), null);
+            this.reduceLockRadius = ConfigUtils.getValue(configScope, "reduceLockRadius", () -> false || global_reduceLockRadius, "Whether to allow reducing lock radius (faster but UNSAFE) (YOU HAVE BEEN WARNED) \n (may cause incompatibility with other mods)", List.of(), null);
+            this.useGlobalBiomeCache = ConfigUtils.getValue(configScope, "useGlobalBiomeCache", () -> false || global_useGlobalBiomeCache, "(Experimental) Whether to enable global BiomeCache to accelerate worldgen \n This increases memory allocation ", List.of(), false);
             configScope.removeUnusedKeys();
         }
     }

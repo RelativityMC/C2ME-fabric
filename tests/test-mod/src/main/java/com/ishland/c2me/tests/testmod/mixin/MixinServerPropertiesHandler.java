@@ -18,7 +18,7 @@ public class MixinServerPropertiesHandler {
         final Properties properties1 = new Properties();
         properties1.put("level-seed", "c2metest");
         final GeneratorOptions generatorOptions = GeneratorOptions.fromProperties(registryManager, properties1);
-        properties1.store(System.out, "C2ME Test Generated Generator Settings");
+        properties1.store(System.err, "C2ME Test Generated Generator Settings");
         return generatorOptions;
     }
 

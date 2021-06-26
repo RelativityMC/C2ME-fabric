@@ -29,8 +29,10 @@ public class RedirectingOutputStream extends OutputStream {
         synchronized (buffer) {
             if (closed.get()) throw new IOException("Attempted to write to a closed resource");
             if (b == '\n') {
+                final String s = buffer.toString();
                 progressLogger.progress(buffer.toString());
                 project.getLogger().info(buffer.toString());
+                if (s.contains("PreGen completed")) project.getLogger().lifecycle(s);
                 buffer.reset();
             } else {
                 buffer.write(b);
