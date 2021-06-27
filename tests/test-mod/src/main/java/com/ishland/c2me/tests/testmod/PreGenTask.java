@@ -1,6 +1,8 @@
 package com.ishland.c2me.tests.testmod;
 
 import com.google.common.base.Preconditions;
+import com.ibm.asyncutil.locks.AsyncSemaphore;
+import com.ibm.asyncutil.locks.FairAsyncSemaphore;
 import com.ishland.c2me.tests.testmod.mixin.IServerChunkManager;
 import com.ishland.c2me.tests.testmod.mixin.IThreadedAnvilChunkStorage;
 import net.minecraft.server.world.ChunkHolder;
@@ -34,7 +36,10 @@ public class PreGenTask {
             for (int z = center.z - PREGEN_RADIUS; z <= center.z + PREGEN_RADIUS; z++)
                 chunks.add(new ChunkPos(x, z));
         final int total = chunks.size();
-        final Set<CompletableFuture<Void>> futures = chunks.stream().map(pos -> getChunkAtAsync(world, pos)).collect(Collectors.toSet());
+        AsyncSemaphore working = new FairAsyncSemaphore(320);
+        final Set<CompletableFuture<Void>> futures = chunks.stream()
+                .map(pos -> working.acquire().toCompletableFuture().thenCompose(unused -> getChunkAtAsync(world, pos)))
+                .collect(Collectors.toSet());
         AtomicInteger generatedCount = new AtomicInteger();
         AtomicLong lastPrint = new AtomicLong();
         for (CompletableFuture<Void> future : futures) {
@@ -45,6 +50,7 @@ public class PreGenTask {
                     lastPrint.set(currentTime);
                     LOGGER.info("Generation for {};{} in progress: {} / {} ({}%)", world, world.getRegistryKey().getValue().toString(), generatedCount, total, Math.round(generatedCount.get() / (float) total * 1000.0) / 10.0);
                 }
+                working.release();
             });
         }
         LOGGER.info("Task for {};{} started", world, world.getRegistryKey().getValue().toString());
