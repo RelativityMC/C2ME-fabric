@@ -1,5 +1,6 @@
 package com.ishland.c2me.tests.worlddiff;
 
+import net.minecraft.util.Util;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -28,11 +29,15 @@ public class Main {
                     LOGGER.error("World not present: {}", to);
                     return;
                 }
-                new ComparisonSession(from, to);
+                try (final ComparisonSession session = new ComparisonSession(from, to)) {
+                    session.compareChunks();
+                }
             }
         } catch (Throwable t) {
             LOGGER.error("Unexpected exception thrown while testing", t);
         }
+        System.out.println("Closing test instance");
+        Util.shutdownExecutors();
     }
 
 }
