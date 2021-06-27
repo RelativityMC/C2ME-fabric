@@ -28,15 +28,10 @@ runTestC2MEServer.configure {
     }
 }
 
-repositories {
-    maven { url 'https://jitpack.io' }
-}
-
 dependencies {
     testmodImplementation project(":tests:test-mod").sourceSets.main.output
     testmodImplementation project(":").sourceSets.main.output
     testmodImplementation project(":").configurations.getByName("shadowImpl").allDependencies
-    modApi 'com.github.ishland:Starlight:08d63f4095'
 }
 
 test {

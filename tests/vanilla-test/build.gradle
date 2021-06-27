@@ -25,13 +25,8 @@ runTestVanillaServer.configure {
     }
 }
 
-repositories {
-    maven { url 'https://jitpack.io' }
-}
-
 dependencies {
     testmodImplementation project(":tests:test-mod").sourceSets.main.output
-    modApi 'com.github.ishland:Starlight:08d63f4095'
 }
 
 test {
