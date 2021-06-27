@@ -11,7 +11,6 @@ import net.minecraft.world.HeightLimitView;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.source.BiomeArray;
 import net.minecraft.world.biome.source.BiomeCoords;
-import net.minecraft.world.biome.source.BiomeLayerSampler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.threadly.concurrent.UnfairExecutor;
@@ -26,15 +25,13 @@ public class BiomeCache {
     private static final Logger LOGGER = LogManager.getLogger("C2ME Biome Cache");
 
     private final Registry<Biome> registry;
-    private final List<Biome> biomes;
 
     private final UncachedBiomeSource uncachedBiomeSource;
 
     private final AtomicReference<HeightLimitView> finalHeightLimitView = new AtomicReference<>(null);
 
-    public BiomeCache(ThreadLocal<BiomeLayerSampler> sampler, Registry<Biome> registry, List<Biome> biomes) {
+    public BiomeCache(BiomeProvider sampler, Registry<Biome> registry, List<Biome> biomes) {
         this.registry = registry;
-        this.biomes = biomes;
         this.uncachedBiomeSource = new UncachedBiomeSource(biomes, sampler, registry);
     }
 
@@ -54,7 +51,6 @@ public class BiomeCache {
 
     public Biome getBiomeForNoiseGen(int biomeX, int biomeY, int biomeZ) {
         if (finalHeightLimitView.get() == null) {
-            LOGGER.warn("Tried to lookup non-configured biome cache {}, falling back to uncached lookup", this);
             return uncachedBiomeSource.getBiomeForNoiseGen(biomeX, biomeY, biomeZ);
         }
         final ChunkPos chunkPos = new ChunkPos(BiomeCoords.toChunk(biomeX), BiomeCoords.toChunk(biomeZ));
@@ -79,6 +75,10 @@ public class BiomeCache {
         } else {
             return this.biomeCache.getUnchecked(pos);
         }
+    }
+
+    public interface BiomeProvider {
+        Biome sample(Registry<Biome> biomeRegistry, int x, int y, int z);
     }
 
 }
