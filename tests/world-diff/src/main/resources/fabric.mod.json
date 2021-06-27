@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "id": "c2meworlddiff",
+  "version": "${version}",
+  "authors": [
+    "ishlandbukkit",
+    "ishland"
+  ],
+  "license": "MIT",
+  "environment": "*",
+  "entrypoints": {
+  },
+  "mixins": [
+    "c2meworlddiff.mixins.json"
+  ]
+}

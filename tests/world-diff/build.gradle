@@ -1,0 +1,40 @@
+import com.ishland.c2me.gradle.RedirectingOutputStream
+
+evaluationDependsOn(":tests:vanilla-test")
+evaluationDependsOn(":tests:c2me-test")
+
+sourceSets {
+    testmod {
+        compileClasspath += main.compileClasspath
+        runtimeClasspath += main.runtimeClasspath
+    }
+}
+
+loom {
+    runs {
+        worldDiff {
+            server()
+            runDir getRootProject().getProjectDir().toPath().relativize(project.getBuildDir().toPath()).resolve("testServer").toString()
+            source sourceSets.testmod
+            vmArgs String.format("-Dcom.ishland.c2me.tests.worlddiff.worlds=%s", groovy.json.StringEscapeUtils.escapeJava(
+                    project(":tests:vanilla-test").getBuildDir().toPath().resolve("testServer").resolve("world").toAbsolutePath().toString() +
+                            "," +
+                            project(":tests:c2me-test").getBuildDir().toPath().resolve("testServer").resolve("world").toAbsolutePath().toString()
+            ))
+        }
+    }
+}
+
+runWorldDiff.configure {
+    doFirst {
+        standardOutput = new RedirectingOutputStream(project, getName())
+    }
+    if (!project(":tests:vanilla-test").getBuildDir().toPath().resolve("testServer").resolve("world").toFile().isDirectory())
+    dependsOn project(":tests:vanilla-test").runTestVanillaServer
+    if (!project(":tests:c2me-test").getBuildDir().toPath().resolve("testServer").resolve("world").toFile().isDirectory())
+    dependsOn project(":tests:c2me-test").runTestC2MEServer
+}
+
+test {
+    useJUnitPlatform()
+}
