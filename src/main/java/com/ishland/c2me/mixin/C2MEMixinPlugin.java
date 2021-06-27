@@ -1,5 +1,6 @@
 package com.ishland.c2me.mixin;
 
+import net.fabricmc.loader.api.FabricLoader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.objectweb.asm.tree.ClassNode;
@@ -35,6 +36,8 @@ public class C2MEMixinPlugin implements IMixinConfigPlugin {
             return C2MEConfig.threadedWorldGenConfig.enabled && C2MEConfig.threadedWorldGenConfig.useGlobalBiomeCache;
         if (mixinClassName.startsWith("com.ishland.c2me.mixin.optimization.worldgen.thread_local_biome_cache."))
             return !(C2MEConfig.threadedWorldGenConfig.enabled && C2MEConfig.threadedWorldGenConfig.useGlobalBiomeCache);
+        if (mixinClassName.startsWith("com.ishland.c2me.mixin.optimization.worldgen.the_end_biome_cache."))
+            return !FabricLoader.getInstance().isModLoaded("lithium");
         return true;
     }
 
