@@ -25,6 +25,8 @@ runTestVanillaServer.configure {
     }
 }
 
+migrateMappings.onlyIf { false }
+
 dependencies {
     testmodImplementation project(":tests:test-mod").sourceSets.main.output
 }

@@ -15,6 +15,11 @@ allprojects {
     loom {
         shareCaches = true
     }
+    afterEvaluate {
+        migrateMappings.configure {
+            outputDir = project.file("src/main/java")
+        }
+    }
 }
 
 afterEvaluate {

@@ -47,6 +47,8 @@ allprojects {
     }
 }
 
+migrateMappings.onlyIf { false }
+
 test {
     useJUnitPlatform()
 }
