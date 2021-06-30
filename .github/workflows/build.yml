@@ -30,7 +30,7 @@ jobs:
         
     - name: Build C2ME
       run: |
-        ./gradlew clean build
+        ./gradlew clean build runTestC2MEServer
         
     - name: Upload Artifact
       uses: actions/upload-artifact@v2
