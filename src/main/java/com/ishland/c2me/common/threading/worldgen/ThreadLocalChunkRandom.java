@@ -54,8 +54,8 @@ public class ThreadLocalChunkRandom extends ChunkRandom {
     }
 
     @Override
-    public long setGrimstoneSeed(long worldSeed, int x, int y, int z) {
-        return chunkRandomThreadLocal.get().setGrimstoneSeed(worldSeed, x, y, z);
+    public long setDeepslateSeed(long worldSeed, int x, int y, int z) {
+        return chunkRandomThreadLocal.get().setDeepslateSeed(worldSeed, x, y, z);
     }
 
     @Override
