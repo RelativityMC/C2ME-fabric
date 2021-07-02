@@ -145,10 +145,11 @@ public class ComparisonSession implements Closeable {
         this.targetWorld.handle.close();
     }
 
+    @SuppressWarnings({"rawtypes", "unchecked"})
     private static boolean blockStateEquals(BlockState state1, BlockState state2) {
         if (!Registry.BLOCK.getId(state1.getBlock()).equals(Registry.BLOCK.getId(state2.getBlock()))) return false;
-        for (Property<?> property : state1.getProperties()) {
-            if (!state1.get(property).equals(state2.get(property))) return false;
+        for (Property property : state1.getProperties()) {
+            if (state1.get(property).compareTo(state2.get(property)) != 0) return false;
         }
         return true;
     }

@@ -29,9 +29,7 @@ runWorldDiff.configure {
     doFirst {
         standardOutput = new RedirectingOutputStream(project, getName())
     }
-    if (!project(":tests:vanilla-test").getBuildDir().toPath().resolve("testServer").resolve("world").toFile().isDirectory())
     dependsOn project(":tests:vanilla-test").runTestVanillaServer
-    if (!project(":tests:c2me-test").getBuildDir().toPath().resolve("testServer").resolve("world").toFile().isDirectory())
     dependsOn project(":tests:c2me-test").runTestC2MEServer
 }
 

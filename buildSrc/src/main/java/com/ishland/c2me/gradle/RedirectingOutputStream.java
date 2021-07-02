@@ -31,23 +31,42 @@ public class RedirectingOutputStream extends OutputStream {
         synchronized (buffer) {
             if (closed.get()) throw new IOException("Attempted to write to a closed resource");
             if (b == '\n') {
-                final String s = buffer.toString();
-                progressLogger.progress(s);
-                if (System.currentTimeMillis() - lastError.get() < 500) {
-                    project.getLogger().lifecycle(s);
-                } else {
-                    project.getLogger().info(s);
+                String s = buffer.toString();
+                try {
+                    boolean doProgress = true;
+                    boolean doPrint = false;
+                    if (s.contains("[noprogress]")) {
+                        doProgress = false;
+                        s = s.replace("[noprogress]", "");
+                    }
+                    if (s.contains("[print]")) {
+                        doPrint = true;
+                        s = s.replace("[print]", "");
+                    }
+                    if (doProgress) {
+                        progressLogger.progress(s);
+                    }
+                    if (doPrint) {
+                        project.getLogger().lifecycle(s);
+                    }
+                    if (s.contains("ERROR")) {
+                        lastError.set(System.currentTimeMillis());
+                        project.getLogger().error(s);
+                        return;
+                    }
+                    if (s.contains("WARN") || s.contains("[FabricLoader]")) {
+                        lastError.set(System.currentTimeMillis());
+                        project.getLogger().warn(s);
+                        return;
+                    }
+                    if (System.currentTimeMillis() - lastError.get() < 500) {
+                        project.getLogger().lifecycle(s);
+                    } else {
+                        project.getLogger().info(s);
+                    }
+                } finally {
+                    buffer.reset();
                 }
-                if (s.contains("ERROR")) {
-                    lastError.set(System.currentTimeMillis());
-                    project.getLogger().error(s);
-                }
-                if (s.contains("WARN")) {
-                    lastError.set(System.currentTimeMillis());
-                    project.getLogger().warn(s);
-                }
-                if (s.contains("PreGen completed")) project.getLogger().lifecycle(s);
-                buffer.reset();
             } else {
                 buffer.write(b);
             }

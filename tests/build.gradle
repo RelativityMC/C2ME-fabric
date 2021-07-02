@@ -39,7 +39,8 @@ allprojects {
                     || it.getName() == "remapSourcesJar"
                     || it.getName() == "runClient"
                     || it.getName() == "runServer"
-                    || it.getName() == "build") {
+                    || it.getName() == "build"
+                    || it.getName() == "genSources") {
                 it.onlyIf { false }
                 it.enabled = false
             }

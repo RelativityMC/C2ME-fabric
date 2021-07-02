@@ -1,6 +1,7 @@
 package com.ishland.c2me.tests.testmod;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Suppliers;
 import com.ibm.asyncutil.locks.AsyncSemaphore;
 import com.ibm.asyncutil.locks.FairAsyncSemaphore;
 import com.ishland.c2me.tests.testmod.mixin.IServerChunkManager;
@@ -14,11 +15,14 @@ import net.minecraft.world.chunk.ChunkStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class PreGenTask {
@@ -28,8 +32,9 @@ public class PreGenTask {
 
     private static final int PREGEN_RADIUS = 48;
 
-    public static CompletableFuture<Void> runPreGen(ServerWorld world) {
-        LOGGER.info("Starting pre-generation in {};{}", world.toString(), world.getRegistryKey().getValue().toString());
+    public static CompletableFuture<Void> runPreGen(ServerWorld world, Consumer<ChunkGeneratedEventInfo> eventListener) {
+        Preconditions.checkNotNull(eventListener);
+        System.err.printf("Starting pre-generation in %s;%s\n", world.toString(), world.getRegistryKey().getValue().toString());
         final ChunkPos center = new ChunkPos(world.getSpawnPos());
         final ArrayList<ChunkPos> chunks = new ArrayList<>((int) Math.pow(PREGEN_RADIUS * 2 + 1, 2));
         for (int x = center.x - PREGEN_RADIUS; x <= center.x + PREGEN_RADIUS; x++)
@@ -37,30 +42,26 @@ public class PreGenTask {
                 chunks.add(new ChunkPos(x, z));
         final int total = chunks.size();
         AsyncSemaphore working = new FairAsyncSemaphore(320);
+        AtomicLong generatedCount = new AtomicLong();
         final Set<CompletableFuture<Void>> futures = chunks.stream()
                 .map(pos -> working.acquire()
                         .thenComposeAsync(CompletableFuture::completedFuture, runnable -> {
                             if (world.getServer().isOnThread()) runnable.run();
-                            else ((IThreadedAnvilChunkStorage) world.getChunkManager().threadedAnvilChunkStorage).getMainThreadExecutor().execute(runnable);
+                            else
+                                ((IThreadedAnvilChunkStorage) world.getChunkManager().threadedAnvilChunkStorage).getMainThreadExecutor().execute(runnable);
                         })
-                        .toCompletableFuture().thenCompose(unused -> getChunkAtAsync(world, pos)))
+                        .toCompletableFuture()
+                        .thenCompose(unused -> getChunkAtAsync(world, pos).thenAccept(unused1 -> {
+                                    generatedCount.incrementAndGet();
+                                    working.release();
+                                    eventListener.accept(new ChunkGeneratedEventInfo(generatedCount.get(), total, world));
+                                })
+                        )
+                )
                 .collect(Collectors.toSet());
-        AtomicInteger generatedCount = new AtomicInteger();
-        AtomicLong lastPrint = new AtomicLong();
-        for (CompletableFuture<Void> future : futures) {
-            future.thenAccept(unused -> {
-                generatedCount.incrementAndGet();
-                final long currentTime = System.currentTimeMillis();
-                if (currentTime - lastPrint.get() > 1000) {
-                    lastPrint.set(currentTime);
-                    LOGGER.info("Generation for {};{} in progress: {} / {} ({}%)", world, world.getRegistryKey().getValue().toString(), generatedCount, total, Math.round(generatedCount.get() / (float) total * 1000.0) / 10.0);
-                }
-                working.release();
-            });
-        }
-        LOGGER.info("Task for {};{} started", world, world.getRegistryKey().getValue().toString());
+        System.err.printf("Task for %s;%s started\n", world, world.getRegistryKey().getValue().toString());
         final CompletableFuture<Void> future = CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new));
-        future.thenRun(() -> LOGGER.info("Task for {};{} completed", world, world.getRegistryKey().getValue().toString()));
+        future.thenRun(() -> System.err.printf("Task for %s;%s completed\n", world, world.getRegistryKey().getValue().toString()));
         return future;
     }
 
@@ -76,8 +77,58 @@ public class PreGenTask {
                 future.complete(null);
             else if (either.right().isPresent())
                 future.completeExceptionally(new RuntimeException(either.right().get().toString()));
+        }).exceptionally(throwable -> {
+            future.completeExceptionally(throwable);
+            return null;
         });
         return future;
+    }
+
+    public record ChunkGeneratedEventInfo(long generatedCount, long totalCount, ServerWorld world) {
+    }
+
+    public static class PreGenEventListener implements Consumer<PreGenTask.ChunkGeneratedEventInfo> {
+
+        private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("0.00%");
+        private final HashMap<ServerWorld, ChunkGeneratedEventInfo> inProgressWorlds = new HashMap<>();
+        private long lastLog = System.currentTimeMillis();
+        private long lastPrint = System.currentTimeMillis();
+
+        @Override
+        public synchronized void accept(PreGenTask.ChunkGeneratedEventInfo chunkGeneratedEventInfo) {
+            if (chunkGeneratedEventInfo.generatedCount >= chunkGeneratedEventInfo.totalCount) {
+                inProgressWorlds.remove(chunkGeneratedEventInfo.world);
+            } else {
+                inProgressWorlds.put(chunkGeneratedEventInfo.world, chunkGeneratedEventInfo);
+            }
+
+            Supplier<String> resultSupplier = Suppliers.memoize(() -> {
+                StringBuilder result = new StringBuilder();
+                for (ChunkGeneratedEventInfo value : inProgressWorlds.values()) {
+                    result
+                            .append(value.world.getRegistryKey().getValue())
+                            .append(":")
+                            .append(value.generatedCount)
+                            .append("/")
+                            .append(value.totalCount)
+                            .append(",")
+                            .append(DECIMAL_FORMAT.format(value.generatedCount / (double) value.totalCount))
+                            .append(" ");
+                }
+                return result.toString();
+            });
+
+            final long timeMillis = System.currentTimeMillis();
+            if (timeMillis >= lastLog + 5000L) {
+                lastLog += 5000L;
+                LOGGER.info("[noprogress][print] " + resultSupplier.get());
+            }
+            if (timeMillis >= lastPrint + 100L) {
+                lastPrint += 100L;
+                System.out.print(resultSupplier.get() + "\n");
+            }
+        }
+
     }
 
 }
