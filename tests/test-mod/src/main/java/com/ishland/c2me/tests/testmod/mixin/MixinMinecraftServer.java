@@ -71,7 +71,7 @@ public abstract class MixinMinecraftServer {
                 if (this.runTask()) hasTask = true;
                 for (ServerWorld world : this.worlds.values()) {
                     if (world.getChunkManager().executeQueuedTasks()) hasTask = true;
-                    if (doTick) world.getChunkManager().tick(ShouldKeepTickingUtils.maxTime(5));
+                    if (doTick) world.getChunkManager().tick(ShouldKeepTickingUtils.maxTime(10));
                 }
                 if (doTick) lastTick.set(System.currentTimeMillis());
                 if (!hasTask) LockSupport.parkNanos("waiting for tasks", 100000L);

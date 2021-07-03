@@ -1,16 +1,15 @@
 plugins {
     id 'fabric-loom' version '0.8-SNAPSHOT'
     id 'maven-publish'
-    id 'com.github.johnrengelman.shadow' version '6.1.0'
+    id 'com.github.johnrengelman.shadow' version '7.0.0'
 }
-
-sourceCompatibility = JavaVersion.VERSION_16
-targetCompatibility = JavaVersion.VERSION_16
 
 archivesBaseName = "${project.archives_base_name}-mc${project.minecraft_version}"
 group = project.maven_group
 
 allprojects {
+    sourceCompatibility = JavaVersion.VERSION_16
+    targetCompatibility = JavaVersion.VERSION_16
     version = project.mod_version + "." + getVersionSuffix()
     loom {
         shareCaches = true
@@ -49,12 +48,9 @@ dependencies {
 }
 
 processResources {
-    duplicatesStrategy = DuplicatesStrategy.INCLUDE
-
     inputs.property "version", project.version
 
-    from(sourceSets.main.resources.srcDirs) {
-        include "fabric.mod.json"
+    filesMatching("fabric.mod.json") {
         expand "version": project.version
     }
 }

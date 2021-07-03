@@ -121,11 +121,11 @@ public class PreGenTask {
             final long timeMillis = System.currentTimeMillis();
             if (timeMillis >= lastLog + 5000L) {
                 lastLog += 5000L;
-                LOGGER.info("[noprogress][print] " + resultSupplier.get());
+                LOGGER.info("[noprogress] " + resultSupplier.get());
             }
             if (timeMillis >= lastPrint + 100L) {
                 lastPrint += 100L;
-                System.out.print(resultSupplier.get() + "\n");
+                System.out.print("[noprint]" + resultSupplier.get() + "\n");
             }
         }
 

@@ -34,30 +34,20 @@ public class RedirectingOutputStream extends OutputStream {
                 String s = buffer.toString();
                 try {
                     boolean doProgress = true;
-                    boolean doPrint = false;
+                    boolean doPrint = true;
                     if (s.contains("[noprogress]")) {
                         doProgress = false;
                         s = s.replace("[noprogress]", "");
                     }
-                    if (s.contains("[print]")) {
-                        doPrint = true;
-                        s = s.replace("[print]", "");
+                    if (s.contains("[noprint]")) {
+                        doPrint = false;
+                        s = s.replace("[noprint]", "");
                     }
                     if (doProgress) {
                         progressLogger.progress(s);
                     }
                     if (doPrint) {
                         project.getLogger().lifecycle(s);
-                    }
-                    if (s.contains("ERROR")) {
-                        lastError.set(System.currentTimeMillis());
-                        project.getLogger().error(s);
-                        return;
-                    }
-                    if (s.contains("WARN") || s.contains("[FabricLoader]")) {
-                        lastError.set(System.currentTimeMillis());
-                        project.getLogger().warn(s);
-                        return;
                     }
                     if (System.currentTimeMillis() - lastError.get() < 500) {
                         project.getLogger().lifecycle(s);
