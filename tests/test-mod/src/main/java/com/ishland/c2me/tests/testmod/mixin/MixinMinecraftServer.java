@@ -1,6 +1,7 @@
 package com.ishland.c2me.tests.testmod.mixin;
 
 import com.ishland.c2me.tests.testmod.PreGenTask;
+import com.ishland.c2me.tests.testmod.ShouldKeepTickingUtils;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.WorldGenerationProgressListener;
 import net.minecraft.server.world.ServerWorld;
@@ -20,6 +21,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.LockSupport;
 import java.util.stream.Collectors;
 
@@ -62,15 +64,22 @@ public abstract class MixinMinecraftServer {
                             .distinct()
                             .toArray(CompletableFuture[]::new)
             );
+            AtomicLong lastTick = new AtomicLong(System.currentTimeMillis());
             while (isRunning() && !future.isDone()) {
-                boolean hasTask;
-                hasTask = this.runTask();
+                boolean doTick = System.currentTimeMillis() - lastTick.get() > 50L;
+                boolean hasTask = doTick;
+                if (this.runTask()) hasTask = true;
                 for (ServerWorld world : this.worlds.values()) {
-                    hasTask = world.getChunkManager().executeQueuedTasks();
+                    if (world.getChunkManager().executeQueuedTasks()) hasTask = true;
+                    if (doTick) world.getChunkManager().tick(ShouldKeepTickingUtils.maxTime(5));
                 }
+                if (doTick) lastTick.set(System.currentTimeMillis());
                 if (!hasTask) LockSupport.parkNanos("waiting for tasks", 100000L);
             }
             future.join();
+            for (ServerWorld world : this.worlds.values()) {
+                world.getChunkManager().tick(() -> true);
+            }
             long duration = System.nanoTime() - startTime;
             final String message = String.format("PreGen completed after %.1fs", duration / 1_000_000_000.0);
             LOGGER.info(message);
