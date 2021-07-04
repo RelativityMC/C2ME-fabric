@@ -65,7 +65,7 @@ public class C2MEConfig {
         public ThreadedWorldGenConfig(CommentedConfig config) {
             Preconditions.checkNotNull(config, "threadedWorldGen config is not present");
             final ConfigUtils.ConfigScope configScope = new ConfigUtils.ConfigScope(config);
-            this.enabled = ConfigUtils.getValue(configScope, "enabled", () -> Runtime.getRuntime().availableProcessors() <= 4 || global_enabled, "Whether to enable this feature", List.of(), false);
+            this.enabled = ConfigUtils.getValue(configScope, "enabled", () -> Runtime.getRuntime().availableProcessors() >= 4 || global_enabled, "Whether to enable this feature", List.of(), false);
             this.parallelism = ConfigUtils.getValue(configScope, "parallelism", () -> Math.max(2, Runtime.getRuntime().availableProcessors() / 2 - 2), "World generation worker executor parallelism", List.of(), null, ConfigUtils.CheckType.THREAD_COUNT);
             this.allowThreadedFeatures = ConfigUtils.getValue(configScope, "allowThreadedFeatures", () -> false || global_allowThreadedFeatures, "Whether to allow feature generation (world decorations like trees, ores and etc.) run in parallel \n (may cause incompatibility with other mods)", List.of(), null);
             this.reduceLockRadius = ConfigUtils.getValue(configScope, "reduceLockRadius", () -> false || global_reduceLockRadius, "Whether to allow reducing lock radius (faster but UNSAFE) (YOU HAVE BEEN WARNED) \n (may cause incompatibility with other mods)", List.of(), null);

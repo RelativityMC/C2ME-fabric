@@ -53,7 +53,9 @@ dependencies {
 
     afterEvaluate {
         project(":compatibility").subprojects.each {
-            shadowRuntime it
+            shadowRuntime(it) {
+                transitive false
+            }
         }
     }
 
