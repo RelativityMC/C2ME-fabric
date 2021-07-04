@@ -1,5 +1,6 @@
 import com.ishland.c2me.gradle.RedirectingOutputStream
 
+evaluationDependsOn(":tests")
 evaluationDependsOn(":tests:test-mod")
 
 sourceSets {
@@ -26,6 +27,9 @@ loom {
 runTestC2MEServer.configure {
     doFirst {
         standardOutput = new RedirectingOutputStream(project, getName())
+    }
+    onlyIf {
+        !getRootProject().getProjectDir().toPath().relativize(project.getBuildDir().toPath()).resolve("testServer").toFile().isDirectory()
     }
 }
 

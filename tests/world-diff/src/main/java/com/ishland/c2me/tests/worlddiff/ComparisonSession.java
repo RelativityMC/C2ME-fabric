@@ -124,7 +124,7 @@ public class ComparisonSession implements Closeable {
                             })
             )).distinct().toArray(CompletableFuture[]::new));
             while (!future.isDone()) {
-                System.out.printf("%s: %d / %d (%.1f%%) chunks, %d blocks, %d block differences (%.4f%%)\n",
+                System.out.printf("[noprint]%s: %d / %d (%.1f%%) chunks, %d blocks, %d block differences (%.4f%%)\n",
                         world, completedChunks.get(), totalChunks, completedChunks.get() / (float) totalChunks * 100.0,
                         completedBlocks.get(), differenceBlocks.get(), differenceBlocks.get() / completedBlocks.floatValue() * 100.0);
                 try {

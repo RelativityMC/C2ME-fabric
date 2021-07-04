@@ -20,6 +20,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.LockSupport;
@@ -76,7 +79,11 @@ public abstract class MixinMinecraftServer {
                 if (doTick) lastTick.set(System.currentTimeMillis());
                 if (!hasTask) LockSupport.parkNanos("waiting for tasks", 100000L);
             }
-            future.join();
+            try {
+                future.get(10, TimeUnit.SECONDS);
+            } catch (InterruptedException | ExecutionException | TimeoutException e) {
+                LOGGER.error("Timeout stopping tasks");
+            }
             for (ServerWorld world : this.worlds.values()) {
                 world.getChunkManager().tick(() -> true);
             }

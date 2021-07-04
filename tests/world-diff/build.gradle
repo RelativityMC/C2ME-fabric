@@ -1,5 +1,6 @@
 import com.ishland.c2me.gradle.RedirectingOutputStream
 
+evaluationDependsOn(":tests")
 evaluationDependsOn(":tests:vanilla-test")
 evaluationDependsOn(":tests:c2me-test")
 

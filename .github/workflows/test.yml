@@ -32,4 +32,3 @@ jobs:
     - name: Test C2ME
       run: |
         ./gradlew clean runTestC2MEServer
-      
