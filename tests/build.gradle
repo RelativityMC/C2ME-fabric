@@ -24,12 +24,9 @@ allprojects {
         implementation "com.ibm.async:asyncutil:${async_util_version}"
     }
     processResources {
-        duplicatesStrategy = DuplicatesStrategy.INCLUDE
-
         inputs.property "version", project.version
 
-        from(sourceSets.main.resources.srcDirs) {
-            include "fabric.mod.json"
+        filesMatching("fabric.mod.json") {
             expand "version": project.version
         }
     }

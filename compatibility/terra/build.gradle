@@ -1,0 +1,4 @@
+dependencies {
+    implementation 'com.github.ishland.Terra:common:546cebd'
+    modImplementation 'com.github.ishland.Terra:fabric:546cebd'
+}

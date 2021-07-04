@@ -1,0 +1,14 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.ishland.c2me.compatibility.mixin",
+  "compatibilityLevel": "JAVA_16",
+  "mixinPriority": 1100,
+  "mixins": [
+  ],
+  "plugin": "com.ishland.c2me.compatibility.mixin.C2MECompatibilityModule",
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "setSourceFile": true
+}

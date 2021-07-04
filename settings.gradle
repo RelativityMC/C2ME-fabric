@@ -1,6 +1,5 @@
 pluginManagement {
     repositories {
-        jcenter()
         maven {
             name = 'Fabric'
             url = 'https://maven.fabricmc.net/'
@@ -13,4 +12,6 @@ include 'tests:test-mod'
 include 'tests:vanilla-test'
 include 'tests:c2me-test'
 include 'tests:world-diff'
+include 'compatibility'
+include 'compatibility:terra'
 

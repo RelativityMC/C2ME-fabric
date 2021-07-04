@@ -1,0 +1,30 @@
+subprojects {
+    apply plugin: 'fabric-loom'
+    apply plugin: 'java-library'
+    apply plugin: 'maven-publish'
+
+    dependencies {
+        //to change the versions see the gradle.properties file
+        minecraft "com.mojang:minecraft:${project.minecraft_version}"
+        mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+        modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    }
+
+    // configure the maven publication
+    publishing {
+        publications {
+            mavenJava(MavenPublication) {
+                // add all the jars that should be included when publishing to maven
+                artifact(remapJar) {
+                    builtBy remapJar
+                }
+            }
+        }
+
+        // select the repositories you want to publish to
+        repositories {
+            // uncomment to publish to the local maven
+            // mavenLocal()
+        }
+    }
+}

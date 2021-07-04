@@ -41,16 +41,16 @@ public class ConfigUtils {
         return foundIncompatibleMods.isEmpty() ? Objects.requireNonNull(config.config.get(key)) : incompatibleDefault;
     }
 
-    static class ConfigScope {
+    public static class ConfigScope {
         final CommentedConfig config;
         final Set<String> processedKeys;
 
-        ConfigScope(CommentedConfig config) {
+        public ConfigScope(CommentedConfig config) {
             this.config = config;
             this.processedKeys = new HashSet<>();
         }
 
-        void removeUnusedKeys() {
+        public void removeUnusedKeys() {
             config.entrySet().removeIf(entry -> !processedKeys.contains(entry.getKey()));
         }
     }

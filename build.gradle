@@ -11,12 +11,19 @@ allprojects {
     sourceCompatibility = JavaVersion.VERSION_16
     targetCompatibility = JavaVersion.VERSION_16
     version = project.mod_version + "." + getVersionSuffix()
-    loom {
-        shareCaches = true
+
+    repositories {
+        maven { url 'https://jitpack.io' }
     }
-    afterEvaluate {
-        migrateMappings.configure {
-            outputDir = project.file("src/main/java")
+
+    if (plugins.hasPlugin("fabric-loom")) {
+        loom {
+            shareCaches = true
+        }
+        afterEvaluate {
+            migrateMappings.configure {
+                outputDir = project.file("src/main/java")
+            }
         }
     }
 }
@@ -31,6 +38,7 @@ loom {
 
 configurations {
     implementation.extendsFrom shadowImpl
+    runtimeOnly.extendsFrom shadowRuntime
 }
 
 dependencies {
@@ -42,6 +50,12 @@ dependencies {
     shadowImpl "com.ibm.async:asyncutil:${async_util_version}"
     shadowImpl "com.electronwill.night-config:toml:${night_config_version}"
     shadowImpl "org.threadly:threadly:${threadly_version}"
+
+    afterEvaluate {
+        project(":compatibility").subprojects.each {
+            shadowRuntime it
+        }
+    }
 
     // PSA: Some older mods, compiled on Loom 0.2.1, might have outdated Maven POMs.
     // You may need to force-disable transitiveness on them.
@@ -68,7 +82,7 @@ jar {
 
 shadowJar {
     archiveClassifier = "all-dev"
-    configurations = [ project.configurations.shadowImpl ]
+    configurations = [ project.configurations.shadowImpl, project.configurations.shadowRuntime ]
 }
 
 //noinspection UnnecessaryQualifiedReference
