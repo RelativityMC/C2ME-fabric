@@ -6,6 +6,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.ishland.c2me.common.config.ConfigUtils;
 import net.fabricmc.loader.api.FabricLoader;
+import net.fabricmc.loader.api.ModContainer;
 import net.fabricmc.loader.util.version.SemanticVersionImpl;
 import net.fabricmc.loader.util.version.SemanticVersionPredicateParser;
 import org.apache.logging.log4j.LogManager;
@@ -17,19 +18,28 @@ import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Predicate;
 
 public class C2MECompatibilityModule implements IMixinConfigPlugin {
     private static final Logger LOGGER = LogManager.getLogger("C2ME Compatibility Module");
     private static final String mixinPackage = "com.ishland.c2me.compatibility.mixin.";
-    private final HashSet<String> enabledSubPackages = new HashSet<>();
+    private static final HashSet<String> enabledSubPackages = new HashSet<>();
+    private static final HashSet<ModContainer> enabledMods = new HashSet<>();
+    private static final AtomicBoolean initialized = new AtomicBoolean(false);
+
+    public static Set<ModContainer> getEnabledMods() {
+        return Collections.unmodifiableSet(enabledMods);
+    }
 
     @Override
     public void onLoad(String mixinPackage) {
+        if (!initialized.compareAndSet(false, true)) throw new IllegalStateException("Already initialized");
         LOGGER.info("Initializing C2ME Compatibility Module");
         CommentedFileConfig config = CommentedFileConfig.builder(FabricLoader.getInstance().getConfigDir().resolve("c2me-compat.toml"))
                 .autosave()
@@ -55,7 +65,7 @@ public class C2MECompatibilityModule implements IMixinConfigPlugin {
             LOGGER.warn("Attempted to call shouldApplyMixin for foreign mixin {}", mixinClassName);
             return false;
         }
-        return enabledSubPackages.contains(mixinClassName.substring(mixinPackage.length()).split("\\.")[0]);
+        return true;
     }
 
     @Override
@@ -108,6 +118,7 @@ public class C2MECompatibilityModule implements IMixinConfigPlugin {
                             false)) {
                         LOGGER.info("Adding compatibility module for {}@{}({})", modid, modVersion.getFriendlyString(), versionRange);
                         enabledSubPackages.add(subPackage);
+                        enabledMods.add(modContainer);
                     } else {
                         LOGGER.info("Not adding compatibility module for {}@{}({}) (disabled in config)", modid, modVersion.getFriendlyString(), versionRange);
                     }
