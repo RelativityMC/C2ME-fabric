@@ -1,0 +1,9 @@
+repositories {
+    maven { url "https://maven.dblsaiko.net/" }
+    maven { url 'https://maven.blamejared.com/' }
+    maven { url "https://maven.shedaniel.me/" }
+}
+
+dependencies {
+    modImplementation "com.github.ishland:BetterEnd:3c0120db2e"
+}
