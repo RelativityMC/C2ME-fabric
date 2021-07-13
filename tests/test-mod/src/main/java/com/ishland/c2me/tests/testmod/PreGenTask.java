@@ -45,17 +45,17 @@ public class PreGenTask {
         AtomicLong generatedCount = new AtomicLong();
         final Set<CompletableFuture<Void>> futures = chunks.stream()
                 .map(pos -> working.acquire()
-                        .thenComposeAsync(CompletableFuture::completedFuture, runnable -> {
-                            if (world.getServer().isOnThread()) runnable.run();
-                            else
-                                ((IThreadedAnvilChunkStorage) world.getChunkManager().threadedAnvilChunkStorage).getMainThreadExecutor().execute(runnable);
-                        })
                         .toCompletableFuture()
-                        .thenCompose(unused -> getChunkAtAsync(world, pos).thenAccept(unused1 -> {
+                        .thenComposeAsync(unused -> getChunkAtAsync(world, pos).thenAccept(unused1 -> {
                                     generatedCount.incrementAndGet();
                                     working.release();
                                     eventListener.accept(new ChunkGeneratedEventInfo(generatedCount.get(), total, world));
-                                })
+                                }),
+                                runnable -> {
+                                    if (world.getServer().isOnThread()) runnable.run();
+                                    else
+                                        ((IThreadedAnvilChunkStorage) world.getChunkManager().threadedAnvilChunkStorage).getMainThreadExecutor().execute(runnable);
+                                }
                         )
                 )
                 .collect(Collectors.toSet());
