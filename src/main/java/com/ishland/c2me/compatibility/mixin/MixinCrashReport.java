@@ -18,7 +18,7 @@ public class MixinCrashReport {
             stringBuilder.append("C2ME Compatibility Module Notice: \n");
             stringBuilder.append("Do NOT report to mod authors if you encountered issues with the following mods: \n");
             for (ModContainer mod : C2MECompatibilityModule.getEnabledMods()) {
-                stringBuilder.append(String.format("- %s@%s\n", mod.getMetadata().getName(), mod.getMetadata().getVersion().getFriendlyString()));
+                stringBuilder.append(String.format("- %s@%s\n", mod.getMetadata().getId(), mod.getMetadata().getVersion().getFriendlyString()));
             }
             stringBuilder.append("You can try disabling compatibility modules for these mods in \"c2me-compat.toml\" and try reproduce again. \n");
             stringBuilder.append("Or try reproduce without C2ME. \n");

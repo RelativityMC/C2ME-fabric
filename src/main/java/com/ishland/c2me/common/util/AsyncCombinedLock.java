@@ -1,22 +1,23 @@
 package com.ishland.c2me.common.util;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.ibm.asyncutil.locks.AsyncLock;
 import com.ibm.asyncutil.locks.AsyncNamedLock;
-import net.minecraft.util.math.ChunkPos;
-import org.threadly.concurrent.UnfairExecutor;
 import com.ishland.c2me.common.config.C2MEConfig;
+import net.minecraft.util.math.ChunkPos;
 
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ForkJoinPool;
 import java.util.function.Function;
 
 public class AsyncCombinedLock {
 
-    public static final UnfairExecutor lockWorker = new UnfairExecutor(
+    public static final ForkJoinPool lockWorker = new ForkJoinPool(
             C2MEConfig.asyncIoConfig.serializerParallelism,
-            new ThreadFactoryBuilder().setDaemon(true).setPriority(Thread.NORM_PRIORITY - 1).setNameFormat("C2ME lock worker #%d").build()
+            new C2MEForkJoinWorkerThreadFactory("C2ME lock worker #%d", Thread.NORM_PRIORITY - 1),
+            null,
+            true
     );
 
     private final AsyncNamedLock<ChunkPos> lock;
