@@ -42,7 +42,7 @@ public class C2MEConfig {
         public AsyncIoConfig(CommentedConfig config) {
             Preconditions.checkNotNull(config, "asyncIo config is not present");
             final ConfigUtils.ConfigScope configScope = new ConfigUtils.ConfigScope(config);
-            this.enabled = ConfigUtils.getValue(configScope, "enabled", () -> true, "Whether to enable this feature", List.of("radon", "immersive_portals"), false);
+            this.enabled = ConfigUtils.getValue(configScope, "enabled", () -> true, "Whether to enable this feature", List.of("radon"), false);
             this.serializerParallelism = ConfigUtils.getValue(configScope, "serializerParallelism", () -> Math.max(2, Runtime.getRuntime().availableProcessors() / 6), "IO worker executor parallelism", List.of(), null, ConfigUtils.CheckType.THREAD_COUNT);
             configScope.removeUnusedKeys();
         }
