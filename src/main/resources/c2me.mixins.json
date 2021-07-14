@@ -5,6 +5,7 @@
   "compatibilityLevel": "JAVA_16",
   "mixinPriority": 1100,
   "mixins": [
+    "access.IMultiNoiseBiomeSource",
     "chunkscheduling.fix_unload.MixinThreadedAnvilChunkStorage",
     "chunkscheduling.mid_tick_chunk_tasks.MixinMinecraftServer",
     "chunkscheduling.mid_tick_chunk_tasks.MixinServerChunkManager",
@@ -12,11 +13,12 @@
     "chunkscheduling.mid_tick_chunk_tasks.MixinWorld",
     "metrics.MixinMinecraftServer",
     "optimization.chunkio.hide_sync_disk_writes_behind_flag.MixinRegionBasedStorage",
+    "optimization.worldgen.global_biome_cache.MixinBiomeSource",
     "optimization.worldgen.global_biome_cache.MixinChunkGenerator",
+    "optimization.worldgen.global_biome_cache.MixinMultiNoiseBiomeSource",
     "optimization.worldgen.global_biome_cache.MixinThreadedChunkAnvilStorage",
-    "optimization.worldgen.global_biome_cache.MixinVanillaLayeredBiomeSource",
+    "optimization.worldgen.thread_local_biome_cache.MixinMultiNoiseBiomeSource",
     "optimization.worldgen.the_end_biome_cache.MixinTheEndBiomeSource",
-    "optimization.worldgen.thread_local_biome_cache.MixinVanillaLayeredBiomeSource",
     "optimization.worldgen.threadsafe_weightedlist.MixinOrder",
     "optimization.worldgen.threadsafe_weightedlist.MixinWeightedList",
     "threading.chunkio.MixinChunkSerializer",
@@ -35,7 +37,6 @@
     "threading.worldgen.MixinServerWorld",
     "threading.worldgen.MixinStructurePalettedBlockInfoList",
     "threading.worldgen.MixinThreadedAnvilChunkStorage",
-    "threading.worldgen.fixes.chunk_random.MixinDeepslateBlockSource",
     "threading.worldgen.fixes.chunk_random.MixinOreVeinSource",
     "threading.worldgen.fixes.chunk_random.MixinStructureStart",
     "util.log4j2shutdownhookisnomore.MixinMain",
@@ -48,6 +49,5 @@
   "plugin": "com.ishland.c2me.mixin.C2MEMixinPlugin",
   "injectors": {
     "defaultRequire": 1
-  },
-  "setSourceFile": true
+  }
 }

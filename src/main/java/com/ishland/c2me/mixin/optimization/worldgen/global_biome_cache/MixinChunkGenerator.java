@@ -1,6 +1,6 @@
 package com.ishland.c2me.mixin.optimization.worldgen.global_biome_cache;
 
-import com.ishland.c2me.common.optimization.worldgen.global_biome_cache.IBiomePreloadable;
+import com.ishland.c2me.common.optimization.worldgen.global_biome_cache.IGlobalBiomeCache;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.source.BiomeSource;
@@ -21,7 +21,7 @@ public class MixinChunkGenerator {
 
     @Inject(method = "populateBiomes", at = @At("HEAD"), cancellable = true)
     private void onPopulateBiomes(Registry<Biome> biomeRegistry, Chunk chunk, CallbackInfo ci) {
-        if (biomeSource instanceof IBiomePreloadable biomeSource1) {
+        if (biomeSource instanceof IGlobalBiomeCache biomeSource1) {
             ((ProtoChunk) chunk).setBiomes(biomeSource1.preloadBiomes(chunk, chunk.getPos(), chunk.getBiomeArray()));
             ci.cancel();
         }

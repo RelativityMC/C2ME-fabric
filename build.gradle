@@ -19,8 +19,11 @@ allprojects {
     if (plugins.hasPlugin("fabric-loom")) {
         loom {
             shareCaches = true
+            customManifest = "https://gist.githubusercontent.com/modmuss50/6e00baf80dcbaa42f3a2fc846b290128/raw/f035ef8f75164f56ec6352809a34841d326bae1c/1_18_experimental-snapshot-1.json"
         }
-        afterEvaluate {
+    }
+    afterEvaluate {
+        if (plugins.hasPlugin("fabric-loom")) {
             migrateMappings.configure {
                 outputDir = project.file("src/main/java")
             }

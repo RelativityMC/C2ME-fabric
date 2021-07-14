@@ -9,6 +9,8 @@ import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ServerLightingProvider;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.structure.StructureManager;
+import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.profiling.jfr.event.worldgen.ChunkGenerationEvent;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
@@ -39,6 +41,7 @@ public abstract class MixinChunkStatus implements IChunkStatus {
     @Final
     private int taskMargin;
 
+    @Shadow @Final private String id;
     private int reducedTaskRadius = -1;
 
     public void calculateReducedTaskRadius() {
@@ -73,18 +76,43 @@ public abstract class MixinChunkStatus implements IChunkStatus {
      * @reason take over generation
      */
     @Overwrite
-    public CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> runGenerationTask(Executor executor, ServerWorld serverWorld, ChunkGenerator chunkGenerator, StructureManager structureManager, ServerLightingProvider serverLightingProvider, Function<Chunk, CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>>> function, List<Chunk> list) {
+    public CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> runGenerationTask(Executor executor, ServerWorld world, ChunkGenerator chunkGenerator, StructureManager structureManager, ServerLightingProvider lightingProvider, Function<Chunk, CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>>> function, List<Chunk> list, boolean bl) {
         final Chunk targetChunk = list.get(list.size() / 2);
+
+        // TODO [VanillaCopy]
+        ChunkGenerationEvent chunkGenerationEvent = new ChunkGenerationEvent();
+        if (chunkGenerationEvent.isEnabled()) {
+            ChunkPos chunkPos = targetChunk.getPos();
+            chunkGenerationEvent.targetStatus = this.id;
+            chunkGenerationEvent.level = world.getRegistryKey().toString();
+            chunkGenerationEvent.chunkPosX = chunkPos.x;
+            chunkGenerationEvent.chunkPosZ = chunkPos.z;
+            chunkGenerationEvent.centerBlockPosX = chunkPos.getCenterX();
+            chunkGenerationEvent.centerBlockPosZ = chunkPos.getCenterZ();
+            chunkGenerationEvent.begin();
+        }
+
         final Supplier<CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>>> generationTask = () ->
-                this.generationTask.doWork((ChunkStatus) (Object) this, executor, serverWorld, chunkGenerator, structureManager, serverLightingProvider, function, list, targetChunk);
+                this.generationTask.doWork((ChunkStatus) (Object) this, executor, world, chunkGenerator, structureManager, lightingProvider, function, list, targetChunk, bl);
+
+        final CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> completableFuture;
         if (targetChunk.getStatus().isAtLeast((ChunkStatus) (Object) this)) {
-            return generationTask.get();
+            completableFuture =  generationTask.get();
         } else {
             int lockRadius = C2MEConfig.threadedWorldGenConfig.reduceLockRadius && this.reducedTaskRadius != -1 ? this.reducedTaskRadius : this.taskMargin;
             //noinspection ConstantConditions
-            return ChunkStatusUtils.runChunkGenWithLock(targetChunk.getPos(), lockRadius, ((IWorldGenLockable) serverWorld).getWorldGenChunkLock(), () ->
-                    ChunkStatusUtils.getThreadingType((ChunkStatus) (Object) this).runTask(((IWorldGenLockable) serverWorld).getWorldGenSingleThreadedLock(), generationTask));
+            completableFuture = ChunkStatusUtils.runChunkGenWithLock(targetChunk.getPos(), lockRadius, ((IWorldGenLockable) world).getWorldGenChunkLock(), () ->
+                    ChunkStatusUtils.getThreadingType((ChunkStatus) (Object) this).runTask(((IWorldGenLockable) world).getWorldGenSingleThreadedLock(), generationTask));
         }
+
+        // TODO [VanillaCopy]
+        return chunkGenerationEvent.shouldCommit() ? completableFuture.thenApply((either) -> {
+            either.ifLeft((chunk) -> {
+                chunkGenerationEvent.success = true;
+            });
+            chunkGenerationEvent.commit();
+            return either;
+        }) : completableFuture;
     }
 
 }

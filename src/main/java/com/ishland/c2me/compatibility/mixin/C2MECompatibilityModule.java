@@ -48,8 +48,8 @@ public class C2MECompatibilityModule implements IMixinConfigPlugin {
                 .build();
         config.load();
         final ConfigUtils.ConfigScope configScope = new ConfigUtils.ConfigScope(config);
-        addMixins("terra", ">=5.0.0", "terra", configScope);
-        addMixins("betterend", ">=0.10.2-pre", "betterend", configScope);
+//        addMixins("terra", ">=5.0.0", "terra", configScope);
+//        addMixins("betterend", ">=0.10.2-pre", "betterend", configScope);
         configScope.removeUnusedKeys();
         config.save();
         config.close();

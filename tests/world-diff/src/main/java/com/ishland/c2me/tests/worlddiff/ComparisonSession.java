@@ -211,7 +211,7 @@ public class ComparisonSession implements Closeable {
         return new WorldHandle(chunkPosesMap, regionIoWorkers, poiIoWorkers, () -> {
             System.out.println("Shutting down IOWorkers...");
             Stream.concat(regionIoWorkers.values().stream(), poiIoWorkers.values().stream()).forEach(storageIoWorker -> {
-                storageIoWorker.completeAll(true).join();
+                storageIoWorker.method_23698().join();
                 try {
                     storageIoWorker.close();
                 } catch (IOException e) {

@@ -5,6 +5,9 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.ishland.c2me.common.optimization.worldgen.threadlocal_biome_cache.BiomeSourceCachingDelegate;
+import com.mojang.datafixers.util.Function3;
+import net.minecraft.util.collection.IndexedIterable;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.HeightLimitView;
@@ -15,7 +18,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.threadly.concurrent.UnfairExecutor;
 
-import java.util.List;
 import java.util.WeakHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -24,39 +26,54 @@ public class BiomeCache {
     public static final UnfairExecutor EXECUTOR = new UnfairExecutor(2, new ThreadFactoryBuilder().setNameFormat("C2ME biomes #%d").setDaemon(true).setPriority(Thread.NORM_PRIORITY - 1).build());
     private static final Logger LOGGER = LogManager.getLogger("C2ME Biome Cache");
 
-    private final Registry<Biome> registry;
+    private final IndexedIterable<Biome> registry;
 
-    private final UncachedBiomeSource uncachedBiomeSource;
+    private final Function3<Integer, Integer, Integer, Biome> delegate;
+    private final BiomeSourceCachingDelegate biomeSourceCachingDelegate;
 
     private final AtomicReference<HeightLimitView> finalHeightLimitView = new AtomicReference<>(null);
 
-    public BiomeCache(BiomeProvider sampler, Registry<Biome> registry, List<Biome> biomes) {
+    public BiomeCache(Function3<Integer, Integer, Integer, Biome> delegate, IndexedIterable<Biome> registry) {
         this.registry = registry;
-        this.uncachedBiomeSource = new UncachedBiomeSource(biomes, sampler, registry);
+        this.delegate = delegate;
+        this.biomeSourceCachingDelegate = new BiomeSourceCachingDelegate(this.delegate);
     }
 
     private final LoadingCache<ChunkPos, BiomeArray> biomeCache = CacheBuilder.newBuilder()
-            .weakKeys()
             .softValues()
             .maximumSize(8192)
             .build(new CacheLoader<>() {
                 @Override
                 public BiomeArray load(ChunkPos key) {
                     if (finalHeightLimitView.get() == null) throw new IllegalStateException(String.format("Cannot populate non-configured biome cache %s", BiomeCache.this));
-                    return new BiomeArray(registry, finalHeightLimitView.get(), key, uncachedBiomeSource);
+                    long startTime = System.nanoTime();
+                    final BiomeArray biomeArray = new BiomeArray(registry, finalHeightLimitView.get(), key, biomeSourceCachingDelegate);
+                    return biomeArray;
                 }
             });
 
     private final ThreadLocal<WeakHashMap<ChunkPos, BiomeArray>> threadLocalCache = ThreadLocal.withInitial(WeakHashMap::new);
 
-    public Biome getBiomeForNoiseGen(int biomeX, int biomeY, int biomeZ) {
+    public Biome getBiomeForNoiseGen(int biomeX, int biomeY, int biomeZ, boolean fast) {
         if (finalHeightLimitView.get() == null) {
-            return uncachedBiomeSource.getBiomeForNoiseGen(biomeX, biomeY, biomeZ);
+            return delegate.apply(biomeX, biomeY, biomeZ);
         }
         final ChunkPos chunkPos = new ChunkPos(BiomeCoords.toChunk(biomeX), BiomeCoords.toChunk(biomeZ));
         final int startX = BiomeCoords.fromBlock(chunkPos.getStartX());
         final int startZ = BiomeCoords.fromBlock(chunkPos.getStartZ());
-        return threadLocalCache.get().computeIfAbsent(chunkPos, biomeCache).getBiomeForNoiseGen(biomeX - startX, biomeY, biomeZ - startZ);
+        if (fast) {
+            final WeakHashMap<ChunkPos, BiomeArray> localCache = threadLocalCache.get();
+            final BiomeArray biomeArray1 = localCache.get(chunkPos);
+            if (biomeArray1 != null) return biomeArray1.getBiomeForNoiseGen(biomeX - startX, biomeY, biomeZ - startZ);
+            final BiomeArray biomeArray2 = this.biomeCache.asMap().get(chunkPos);
+            if (biomeArray2 != null) {
+                localCache.put(chunkPos, biomeArray2);
+                return biomeArray2.getBiomeForNoiseGen(biomeX - startX, biomeY, biomeZ - startZ);
+            }
+            return biomeSourceCachingDelegate.getBiomeForNoiseGen(biomeX, biomeY, biomeZ);
+        } else {
+            return threadLocalCache.get().computeIfAbsent(chunkPos, biomeCache).getBiomeForNoiseGen(biomeX - startX, biomeY, biomeZ - startZ);
+        }
     }
 
     public BiomeArray preloadBiomes(HeightLimitView view, ChunkPos pos, BiomeArray def) {
