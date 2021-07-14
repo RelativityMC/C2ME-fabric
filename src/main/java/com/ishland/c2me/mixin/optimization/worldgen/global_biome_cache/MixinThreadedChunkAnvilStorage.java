@@ -1,7 +1,7 @@
 package com.ishland.c2me.mixin.optimization.worldgen.global_biome_cache;
 
 import com.ishland.c2me.common.optimization.worldgen.global_biome_cache.BiomeCache;
-import com.ishland.c2me.common.optimization.worldgen.global_biome_cache.IBiomePreloadable;
+import com.ishland.c2me.common.optimization.worldgen.global_biome_cache.IGlobalBiomeCache;
 import com.mojang.datafixers.util.Either;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;
@@ -30,7 +30,7 @@ public abstract class MixinThreadedChunkAnvilStorage {
 
     @Redirect(method = "getChunk", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ThreadedAnvilChunkStorage;loadChunk(Lnet/minecraft/util/math/ChunkPos;)Ljava/util/concurrent/CompletableFuture;"))
     private CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> redirectLoadChunk(ThreadedAnvilChunkStorage threadedAnvilChunkStorage, ChunkPos pos) {
-        if (chunkGenerator.getBiomeSource() instanceof IBiomePreloadable source)
+        if (chunkGenerator.getBiomeSource() instanceof IGlobalBiomeCache source)
             return this.loadChunk(pos).thenApplyAsync(either -> {
                 either.left().ifPresent(chunk -> {
                     final BiomeArray biomeArray = source.preloadBiomes(chunk, pos, chunk.getBiomeArray());

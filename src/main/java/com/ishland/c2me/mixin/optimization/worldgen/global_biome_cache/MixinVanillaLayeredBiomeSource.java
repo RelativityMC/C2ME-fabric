@@ -1,7 +1,7 @@
 package com.ishland.c2me.mixin.optimization.worldgen.global_biome_cache;
 
 import com.ishland.c2me.common.optimization.worldgen.global_biome_cache.BiomeCache;
-import com.ishland.c2me.common.optimization.worldgen.global_biome_cache.IBiomePreloadable;
+import com.ishland.c2me.common.optimization.worldgen.global_biome_cache.IGlobalBiomeCache;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.HeightLimitView;
@@ -20,7 +20,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.List;
 
 @Mixin(VanillaLayeredBiomeSource.class)
-public abstract class MixinVanillaLayeredBiomeSource extends BiomeSource implements IBiomePreloadable {
+public abstract class MixinVanillaLayeredBiomeSource extends BiomeSource implements IGlobalBiomeCache {
 
     protected MixinVanillaLayeredBiomeSource(List<Biome> biomes) {
         super(biomes);
@@ -40,7 +40,12 @@ public abstract class MixinVanillaLayeredBiomeSource extends BiomeSource impleme
      */
     @Overwrite
     public Biome getBiomeForNoiseGen(int biomeX, int biomeY, int biomeZ) {
-        return this.cacheImpl.getBiomeForNoiseGen(biomeX, biomeY, biomeZ);
+        return this.cacheImpl.getBiomeForNoiseGen(biomeX, biomeY, biomeZ, false);
+    }
+
+    @Override
+    public Biome getBiomeForNoiseGenFast(int biomeX, int biomeY, int biomeZ) {
+        return this.cacheImpl.getBiomeForNoiseGen(biomeX, biomeY, biomeZ, true);
     }
 
     @Override

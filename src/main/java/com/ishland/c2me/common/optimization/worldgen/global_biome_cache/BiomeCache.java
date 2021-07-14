@@ -36,7 +36,6 @@ public class BiomeCache {
     }
 
     private final LoadingCache<ChunkPos, BiomeArray> biomeCache = CacheBuilder.newBuilder()
-            .weakKeys()
             .softValues()
             .maximumSize(8192)
             .build(new CacheLoader<>() {
@@ -49,14 +48,26 @@ public class BiomeCache {
 
     private final ThreadLocal<WeakHashMap<ChunkPos, BiomeArray>> threadLocalCache = ThreadLocal.withInitial(WeakHashMap::new);
 
-    public Biome getBiomeForNoiseGen(int biomeX, int biomeY, int biomeZ) {
+    public Biome getBiomeForNoiseGen(int biomeX, int biomeY, int biomeZ, boolean fast) {
         if (finalHeightLimitView.get() == null) {
             return uncachedBiomeSource.getBiomeForNoiseGen(biomeX, biomeY, biomeZ);
         }
         final ChunkPos chunkPos = new ChunkPos(BiomeCoords.toChunk(biomeX), BiomeCoords.toChunk(biomeZ));
         final int startX = BiomeCoords.fromBlock(chunkPos.getStartX());
         final int startZ = BiomeCoords.fromBlock(chunkPos.getStartZ());
-        return threadLocalCache.get().computeIfAbsent(chunkPos, biomeCache).getBiomeForNoiseGen(biomeX - startX, biomeY, biomeZ - startZ);
+        if (fast) {
+            final WeakHashMap<ChunkPos, BiomeArray> localCache = threadLocalCache.get();
+            final BiomeArray biomeArray1 = localCache.get(chunkPos);
+            if (biomeArray1 != null) return biomeArray1.getBiomeForNoiseGen(biomeX - startX, biomeY, biomeZ - startZ);
+            final BiomeArray biomeArray2 = this.biomeCache.asMap().get(chunkPos);
+            if (biomeArray2 != null) {
+                localCache.put(chunkPos, biomeArray2);
+                return biomeArray2.getBiomeForNoiseGen(biomeX - startX, biomeY, biomeZ - startZ);
+            }
+            return uncachedBiomeSource.getBiomeForNoiseGen(biomeX, biomeY, biomeZ);
+        } else {
+            return threadLocalCache.get().computeIfAbsent(chunkPos, biomeCache).getBiomeForNoiseGen(biomeX - startX, biomeY, biomeZ - startZ);
+        }
     }
 
     public BiomeArray preloadBiomes(HeightLimitView view, ChunkPos pos, BiomeArray def) {
