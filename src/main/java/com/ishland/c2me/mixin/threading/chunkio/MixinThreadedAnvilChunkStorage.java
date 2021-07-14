@@ -110,7 +110,12 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
             if (compoundTag != null) {
                 try {
                     if (compoundTag.contains("Level", 10) && compoundTag.getCompound("Level").contains("Status", 8)) {
-                        return ChunkSerializer.deserialize(this.world, this.structureManager, this.pointOfInterestStorage, pos, compoundTag);
+                        ChunkIoMainThreadTaskUtils.push();
+                        try {
+                            return ChunkSerializer.deserialize(this.world, this.structureManager, this.pointOfInterestStorage, pos, compoundTag);
+                        } finally {
+                            ChunkIoMainThreadTaskUtils.pop();
+                        }
                     }
 
                     LOGGER.warn("Chunk file at {} is missing level data, skipping", pos);
