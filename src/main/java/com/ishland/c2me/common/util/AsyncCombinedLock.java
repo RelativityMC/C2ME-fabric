@@ -2,7 +2,6 @@ package com.ishland.c2me.common.util;
 
 import com.ibm.asyncutil.locks.AsyncLock;
 import com.ibm.asyncutil.locks.AsyncNamedLock;
-import com.ishland.c2me.common.config.C2MEConfig;
 import net.minecraft.util.math.ChunkPos;
 
 import java.util.Optional;
@@ -14,7 +13,7 @@ import java.util.function.Function;
 public class AsyncCombinedLock {
 
     public static final ForkJoinPool lockWorker = new ForkJoinPool(
-            C2MEConfig.asyncIoConfig.serializerParallelism,
+            Math.max(1, Runtime.getRuntime().availableProcessors() / 7),
             new C2MEForkJoinWorkerThreadFactory("C2ME lock worker #%d", Thread.NORM_PRIORITY - 1),
             null,
             true
