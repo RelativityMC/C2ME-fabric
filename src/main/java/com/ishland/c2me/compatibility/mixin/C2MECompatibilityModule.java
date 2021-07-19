@@ -12,19 +12,29 @@ import net.fabricmc.loader.util.version.SemanticVersionPredicateParser;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.objectweb.asm.tree.ClassNode;
+import org.spongepowered.asm.mixin.MixinEnvironment;
+import org.spongepowered.asm.mixin.extensibility.IMixinConfig;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
+import org.spongepowered.asm.mixin.refmap.IReferenceMapper;
+import org.spongepowered.asm.mixin.refmap.ReferenceMapper;
+import org.spongepowered.asm.mixin.refmap.RemappingReferenceMapper;
+import org.spongepowered.asm.mixin.transformer.Config;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class C2MECompatibilityModule implements IMixinConfigPlugin {
     private static final Logger LOGGER = LogManager.getLogger("C2ME Compatibility Module");
@@ -32,6 +42,7 @@ public class C2MECompatibilityModule implements IMixinConfigPlugin {
     private static final HashSet<String> enabledSubPackages = new HashSet<>();
     private static final HashSet<ModContainer> enabledMods = new HashSet<>();
     private static final AtomicBoolean initialized = new AtomicBoolean(false);
+    private final AtomicBoolean isRefMapPrepared = new AtomicBoolean(false);
 
     public static Set<ModContainer> getEnabledMods() {
         return Collections.unmodifiableSet(enabledMods);
@@ -93,6 +104,8 @@ public class C2MECompatibilityModule implements IMixinConfigPlugin {
             LOGGER.info("- {}", s);
         }
 
+        checkInjectReferenceMaps();
+
         return extraMixins;
     }
 
@@ -128,6 +141,62 @@ public class C2MECompatibilityModule implements IMixinConfigPlugin {
                 LOGGER.warn("Cannot add compatibility module for {}({})", modid, versionRange);
             }
         });
+    }
+
+    private void checkInjectReferenceMaps() {
+        if (!isRefMapPrepared.compareAndSet(false, true)) return;
+        if (MixinEnvironment.getCurrentEnvironment().getOption(MixinEnvironment.Option.DISABLE_REFMAP)) {
+            LOGGER.info("Skipping refmap injection");
+            return;
+        }
+        try {
+            // find mixin config
+            final IMixinConfig mixinConfig = ((Map<String, Config>) accessible(Config.class.getDeclaredField("allConfigs")).get(null)).get("c2me-compat.mixins.json").getConfig();
+            if (mixinConfig == null) {
+                throw new IllegalStateException("Unable to find mixin config");
+            }
+            // obtain reference mapper
+            IReferenceMapper rootRefMapper = (IReferenceMapper) accessible(Class.forName("org.spongepowered.asm.mixin.transformer.MixinConfig").getDeclaredField("refMapper")).get(mixinConfig);
+            while (rootRefMapper instanceof RemappingReferenceMapper) {
+                rootRefMapper = (IReferenceMapper) accessible(RemappingReferenceMapper.class.getDeclaredField("refMap")).get(rootRefMapper);
+            }
+            if (rootRefMapper instanceof ReferenceMapper rootRefMapper1) {
+                if (rootRefMapper1.isDefault()) {
+                    LOGGER.warn("Found default reference mapper, skipping init");
+                    return;
+                }
+                // get reference mapper of all loaded modules
+                final Set<ReferenceMapper> childRefMappers = enabledSubPackages.stream()
+                        .map(s -> ReferenceMapper.read(String.format("c2me-compat-%s-refmap.json", s)))
+                        .collect(Collectors.toSet());
+                // iterate
+                for (ReferenceMapper childRefMapper : childRefMappers) {
+                    LOGGER.info("Injecting refmap {}", childRefMapper.getResourceName());
+                    // merge data
+                    final Map<String, Map<String, Map<String, String>>> childMap = (Map<String, Map<String, Map<String, String>>>) accessible(ReferenceMapper.class.getDeclaredField("data")).get(childRefMapper);
+                    childMap.forEach((context, _children1) -> _children1.forEach((className, _children2) -> _children2.forEach((reference, newReference) -> {
+                        rootRefMapper1.addMapping(null, className, reference, newReference);
+                        rootRefMapper1.addMapping(context, className, reference, newReference);
+                    })));
+                }
+                // tell users that this refMapper is injected
+                final StringBuilder stringBuilder = new StringBuilder();
+                Stream.concat(Stream.of(rootRefMapper1), childRefMappers.stream()).forEach(childRefMapper -> stringBuilder.append(childRefMapper.getResourceName()).append(", "));
+                stringBuilder.deleteCharAt(stringBuilder.length() - 1);
+                stringBuilder.deleteCharAt(stringBuilder.length() - 1);
+                stringBuilder.append(" <c2me-compat injected>");
+                accessible(ReferenceMapper.class.getDeclaredField("resource")).set(rootRefMapper1, stringBuilder.toString());
+            } else {
+                throw new IllegalArgumentException("Unknown reference mapper: " + rootRefMapper.getClass().getName());
+            }
+        } catch (Throwable t) {
+            throw new RuntimeException("An unexpected error occurred while injecting reference maps", t);
+        }
+    }
+
+    private static Field accessible(Field field) {
+        field.setAccessible(true);
+        return field;
     }
 
 }
