@@ -19,6 +19,7 @@ accessible    method    net/minecraft/server/world/ServerChunkManager    tick   
 accessible    method    net/minecraft/server/world/ServerChunkManager$MainThreadExecutor    runTask    ()Z
 accessible    method    net/minecraft/util/thread/ThreadExecutor    runTask    ()Z
 accessible    method    net/minecraft/server/world/SimpleTickScheduler    <init>    (Ljava/util/function/Function;Ljava/util/List;)V
+accessible    method    net/minecraft/world/gen/StructureWeightSampler    <init>    ()V
 
 accessible    field    net/minecraft/world/storage/StorageIoWorker$Result    nbt    Lnet/minecraft/nbt/NbtCompound;
 accessible    field    net/minecraft/world/storage/StorageIoWorker$Result    future    Ljava/util/concurrent/CompletableFuture;
