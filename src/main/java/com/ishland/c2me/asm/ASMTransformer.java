@@ -54,6 +54,21 @@ public class ASMTransformer {
                         "field_14506:Lnet/minecraft/class_3390$class_3404;" // lastPiece:Lnet/minecraft/structure/NetherFortressGenerator$PieceData;
                 )
         );
+        makeVolatileFields.put(
+                "net/minecraft/class_3366$class_3388", // net/minecraft/structure/OceanMonumentGenerator$PieceSetting
+                List.of(
+                        "field_14485:Z", // used:Z
+                        "field_14484:Z", // not mapped by yarn
+                        "field_14483:I"  // not mapped by yarn
+                )
+        );
+        makeVolatileFields.put(
+                "net/minecraft/class_3366$class_3374", // net/minecraft/structure/OceanMonumentGenerator$Base
+                List.of(
+                        "field_14464:Lnet/minecraft/class_3366$class_3388;", // not mapped by yarn
+                        "field_14466:Lnet/minecraft/class_3366$class_3388;"  // not mapped by yarn
+                )
+        );
 
         makeVolatileFieldsMapped = makeVolatileFields.entrySet().stream()
                 .map(entry -> {
@@ -95,7 +110,6 @@ public class ASMTransformer {
                         LOGGER.info("Making field L{};{}:{} volatile", classNode.name, fieldNode.name, fieldNode.desc);
                         fieldNode.access |= Opcodes.ACC_VOLATILE;
                     });
-
         }
     }
 
