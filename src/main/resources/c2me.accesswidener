@@ -10,6 +10,11 @@ accessible    class    net/minecraft/world/gen/chunk/NoiseChunkGenerator$NoodleC
 accessible    class    net/minecraft/structure/NetherFortressGenerator$PieceData
 accessible    class    net/minecraft/structure/NetherFortressGenerator$Piece
 accessible    class    net/minecraft/structure/OceanMonumentGenerator$PieceSetting
+accessible    class    net/minecraft/structure/StrongholdGenerator$PieceData
+accessible    class    net/minecraft/structure/StrongholdGenerator$Piece
+accessible    class    net/minecraft/structure/WoodlandMansionGenerator$FlagMatrix
+accessible    class    net/minecraft/structure/WoodlandMansionGenerator$MansionParameters
+accessible    class    net/minecraft/structure/WoodlandMansionGenerator$GenerationPiece
 
 accessible    method    net/minecraft/world/storage/RegionBasedStorage    <init>    (Ljava/io/File;Z)V
 accessible    method    net/minecraft/world/storage/RegionBasedStorage    getRegionFile    (Lnet/minecraft/util/math/ChunkPos;)Lnet/minecraft/world/storage/RegionFile;

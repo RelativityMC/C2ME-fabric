@@ -1,20 +1,18 @@
-package com.ishland.c2me.mixin.threading.worldgen.fixes.chunk_random;
+package com.ishland.c2me.mixin.threading.worldgen.fixes.threading_issues;
 
 import com.ishland.c2me.common.threading.worldgen.ThreadLocalChunkRandom;
 import net.minecraft.world.gen.ChunkRandom;
-import net.minecraft.world.gen.chunk.NoiseChunkGenerator;
-import org.spongepowered.asm.mixin.Dynamic;
+import net.minecraft.world.gen.DeepslateBlockSource;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
-@Mixin(NoiseChunkGenerator.OreVeinSource.class)
-public class MixinOreVeinSource {
+@Mixin(DeepslateBlockSource.class)
+public class MixinDeepslateBlockSource {
 
-    @Dynamic
     @Redirect(method = "<init>", at = @At(value = "NEW", target = "net/minecraft/world/gen/ChunkRandom"))
-    private ChunkRandom redirectNewChunkRandom() {
-        return new ThreadLocalChunkRandom(System.nanoTime());
+    private ChunkRandom redirectNewChunkRandom(long seed) {
+        return new ThreadLocalChunkRandom(seed);
     }
 
 }

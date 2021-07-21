@@ -69,6 +69,52 @@ public class ASMTransformer {
                         "field_14466:Lnet/minecraft/class_3366$class_3388;"  // not mapped by yarn
                 )
         );
+        makeVolatileFields.put(
+                "net/minecraft/class_3470", // net/minecraft/structure/SimpleStructurePiece
+                List.of(
+                        "field_15432:Lnet/minecraft/class_2338;" // pos:Lnet/minecraft/util/math/BlockPos;
+                )
+        );
+        makeVolatileFields.put(
+                "net/minecraft/class_3421$class_3422", // net/minecraft/structure/StrongholdGenerator$ChestCorridor
+                List.of(
+                        "field_15268:Z" // chestGenerated:Z
+                )
+        );
+        makeVolatileFields.put(
+                "net/minecraft/class_3421$class_3428", // net/minecraft/structure/StrongholdGenerator$PortalRoom
+                List.of(
+                        "field_15279:Z" // spawnerPlaced:Z
+                )
+        );
+        makeVolatileFields.put(
+                "net/minecraft/class_3421$class_3434", // net/minecraft/structure/StrongholdGenerator$Start
+                List.of(
+                        "field_15284:Lnet/minecraft/class_3421$class_3427;", // lastPiece:Lnet/minecraft/structure/StrongholdGenerator$PieceData;
+                        "field_15283:Lnet/minecraft/class_3421$class_3428;"  // portalRoom:Lnet/minecraft/structure/StrongholdGenerator$PortalRoom;
+                )
+        );
+        makeVolatileFields.put(
+                "net/minecraft/class_3418", // net/minecraft/structure/StructurePieceWithDimensions
+                List.of(
+                        "field_15241:I" // hPos:I
+                )
+        );
+        makeVolatileFields.put(
+                "net/minecraft/class_3447", // net/minecraft/structure/SwampHutGenerator
+                List.of(
+                        "field_15322:Z", // hasWitch:Z
+                        "field_16445:Z"  // hasCat:Z
+                )
+        );
+        makeVolatileFields.put(
+                "net/minecraft/class_3471$class_3476", // net/minecraft/structure/WoodlandMansionGenerator$GenerationPiece
+                List.of(
+                        "field_15450:Lnet/minecraft/class_2470;", // rotation:Lnet/minecraft/util/BlockRotation;
+                        "field_15449:Lnet/minecraft/class_2338;", // position:Lnet/minecraft/util/math/BlockPos;
+                        "field_15448:Ljava/lang/String;"          // template:Ljava/lang/String;
+                )
+        );
 
         makeVolatileFieldsMapped = makeVolatileFields.entrySet().stream()
                 .map(entry -> {
