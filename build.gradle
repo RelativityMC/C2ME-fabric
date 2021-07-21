@@ -19,7 +19,7 @@ allprojects {
     if (plugins.hasPlugin("fabric-loom")) {
         loom {
             shareCaches = true
-            customManifest = "https://maven.fabricmc.net/net/minecraft/1_18_experimental-snapshot-2.json"
+            customManifest = "https://gist.githubusercontent.com/ishland/dc9775539621ff2bd6d9fdd26fc0efa7/raw/5d9e12128ad90b99811418a87649c0db2c8b30f1/1_18_experimental-snapshot-2.json"
         }
     }
     afterEvaluate {
