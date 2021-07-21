@@ -1,5 +1,5 @@
 plugins {
-    id 'fabric-loom' version '0.9-SNAPSHOT'
+    id 'fabric-loom' version '0.8-SNAPSHOT'
     id 'maven-publish'
     id 'com.github.johnrengelman.shadow' version '7.0.0'
 }
@@ -19,6 +19,7 @@ allprojects {
     if (plugins.hasPlugin("fabric-loom")) {
         loom {
             shareCaches = true
+            customManifest = "https://maven.fabricmc.net/net/minecraft/1_18_experimental-snapshot-2.json"
         }
     }
     afterEvaluate {
