@@ -1,4 +1,4 @@
-package com.ishland.c2me.mixin.threading.worldgen.fixes.threading_issues;
+package com.ishland.c2me.mixin.threading.worldgen.fixes.threading_issues.math;
 
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.DirectionTransformation;
