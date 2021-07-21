@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.ishland.c2me.asm.targets",
+  "compatibilityLevel": "JAVA_16",
+  "mixins": [
+    "ASMMixinTargets"
+  ],
+  "plugin": "com.ishland.c2me.asm.ASMMixinPlugin",
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

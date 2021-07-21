@@ -22,7 +22,8 @@
   "accessWidener" : "c2me.accesswidener",
   "mixins": [
     "c2me.mixins.json",
-    "c2me-compat.mixins.json"
+    "c2me-compat.mixins.json",
+    "c2me-asm.mixins.json"
   ],
   "depends": {
     "fabricloader": ">=0.11.3",

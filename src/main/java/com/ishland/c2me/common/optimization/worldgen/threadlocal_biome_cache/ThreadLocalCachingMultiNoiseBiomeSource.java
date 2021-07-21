@@ -2,7 +2,6 @@ package com.ishland.c2me.common.optimization.worldgen.threadlocal_biome_cache;
 
 import com.mojang.datafixers.util.Pair;
 import net.minecraft.class_6452;
-import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.source.MultiNoiseBiomeSource;
@@ -22,7 +21,8 @@ public class ThreadLocalCachingMultiNoiseBiomeSource extends MultiNoiseBiomeSour
     }
 
     @Override
-    public Biome getBiomeForNoiseGen(ChunkPos chunkPos) {
-        return biomeSourceCachingDelegate.getBiomeForNoiseGen(chunkPos);
+    public Biome getBiomeForNoiseGen(int biomeX, int biomeY, int biomeZ) {
+        return biomeSourceCachingDelegate.getBiomeForNoiseGen(biomeX, biomeY, biomeZ);
     }
+
 }

@@ -26,12 +26,14 @@ loom {
     }
 }
 
-runWorldDiff.configure {
-    doFirst {
-        standardOutput = new RedirectingOutputStream(project, getName())
+afterEvaluate {
+    runWorldDiff.configure {
+        doFirst {
+            standardOutput = new RedirectingOutputStream(project, getName())
+        }
+        dependsOn project(":tests:vanilla-test").runTestVanillaServer
+        dependsOn project(":tests:c2me-test").runTestC2MEServer
     }
-    dependsOn project(":tests:vanilla-test").runTestVanillaServer
-    dependsOn project(":tests:c2me-test").runTestC2MEServer
 }
 
 test {

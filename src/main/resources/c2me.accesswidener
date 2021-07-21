@@ -6,6 +6,15 @@ accessible    class    net/minecraft/world/chunk/ChunkStatus$GenerationTask
 accessible    class    net/minecraft/world/storage/StorageIoWorker$Result
 accessible    class    net/minecraft/server/world/ServerChunkManager$MainThreadExecutor
 accessible    class    net/minecraft/world/gen/chunk/NoiseChunkGenerator$OreVeinSource
+accessible    class    net/minecraft/world/gen/chunk/NoiseChunkGenerator$NoodleCavesSampler
+accessible    class    net/minecraft/structure/NetherFortressGenerator$PieceData
+accessible    class    net/minecraft/structure/NetherFortressGenerator$Piece
+accessible    class    net/minecraft/structure/OceanMonumentGenerator$PieceSetting
+accessible    class    net/minecraft/structure/StrongholdGenerator$PieceData
+accessible    class    net/minecraft/structure/StrongholdGenerator$Piece
+accessible    class    net/minecraft/structure/WoodlandMansionGenerator$FlagMatrix
+accessible    class    net/minecraft/structure/WoodlandMansionGenerator$MansionParameters
+accessible    class    net/minecraft/structure/WoodlandMansionGenerator$GenerationPiece
 
 accessible    method    net/minecraft/world/storage/RegionBasedStorage    <init>    (Ljava/io/File;Z)V
 accessible    method    net/minecraft/world/storage/RegionBasedStorage    getRegionFile    (Lnet/minecraft/util/math/ChunkPos;)Lnet/minecraft/world/storage/RegionFile;
@@ -18,6 +27,7 @@ accessible    method    net/minecraft/server/world/ServerChunkManager    tick   
 accessible    method    net/minecraft/server/world/ServerChunkManager$MainThreadExecutor    runTask    ()Z
 accessible    method    net/minecraft/util/thread/ThreadExecutor    runTask    ()Z
 accessible    method    net/minecraft/server/world/SimpleTickScheduler    <init>    (Ljava/util/function/Function;Ljava/util/List;)V
+accessible    method    net/minecraft/world/gen/StructureWeightSampler    <init>    ()V
 
 accessible    field    net/minecraft/world/storage/StorageIoWorker$Result    nbt    Lnet/minecraft/nbt/NbtCompound;
 accessible    field    net/minecraft/world/storage/StorageIoWorker$Result    future    Ljava/util/concurrent/CompletableFuture;

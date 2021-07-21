@@ -23,16 +23,18 @@ loom {
     }
 }
 
-runTestC2MEServer.configure {
-    doFirst {
-        standardOutput = new RedirectingOutputStream(project, getName())
+afterEvaluate {
+    runTestC2MEServer.configure {
+        doFirst {
+            standardOutput = new RedirectingOutputStream(project, getName())
+        }
+        onlyIf {
+            !getRootProject().getProjectDir().toPath().relativize(project.getBuildDir().toPath()).resolve("testServer").toFile().isDirectory()
+        }
     }
-    onlyIf {
-        !getRootProject().getProjectDir().toPath().relativize(project.getBuildDir().toPath()).resolve("testServer").toFile().isDirectory()
-    }
-}
 
-migrateMappings.onlyIf { false }
+    migrateMappings.onlyIf { false }
+}
 
 dependencies {
     testmodImplementation project(":tests:test-mod").sourceSets.main.output

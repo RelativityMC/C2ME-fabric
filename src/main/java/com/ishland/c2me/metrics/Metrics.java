@@ -109,7 +109,7 @@ public class Metrics {
         builder.appendField("playerAmount", getPlayerAmount());
         builder.appendField("onlineMode", server.isOnlineMode() ? 1 : 0);
         //noinspection OptionalGetWithoutIsPresent
-        builder.appendField("bukkitVersion", FabricLoader.getInstance().getModContainer("fabricloader").get().getMetadata().getVersion().getFriendlyString() + " (MC: " + MinecraftVersion.GAME_VERSION.getReleaseTarget() + ")");
+        builder.appendField("bukkitVersion", FabricLoader.getInstance().getModContainer("fabricloader").get().getMetadata().getVersion().getFriendlyString() + " (MC: " + MinecraftVersion.CURRENT.getReleaseTarget() + ")");
         builder.appendField("bukkitName", "fabric");
         builder.appendField("javaVersion", System.getProperty("java.version"));
         builder.appendField("osName", System.getProperty("os.name"));
