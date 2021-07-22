@@ -1,7 +1,7 @@
 package com.ishland.c2me.tests.testmod.mixin;
 
 import com.ishland.c2me.tests.testmod.PreGenTask;
-import com.ishland.c2me.tests.testmod.ShouldKeepTickingUtils;
+import com.sun.management.GcInfo;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.WorldGenerationProgressListener;
 import net.minecraft.server.world.ServerWorld;
@@ -18,11 +18,11 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.lang.management.GarbageCollectorMXBean;
+import java.lang.management.ManagementFactory;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.LockSupport;
@@ -68,22 +68,19 @@ public abstract class MixinMinecraftServer {
                             .toArray(CompletableFuture[]::new)
             );
             AtomicLong lastTick = new AtomicLong(System.currentTimeMillis());
-            while (isRunning() && !future.isDone()) {
+            while (!future.isDone() && isRunning()) {
+                test$handleGC();
                 boolean doTick = System.currentTimeMillis() - lastTick.get() > 50L;
                 boolean hasTask = doTick;
                 if (this.runTask()) hasTask = true;
                 for (ServerWorld world : this.worlds.values()) {
                     if (world.getChunkManager().executeQueuedTasks()) hasTask = true;
-                    if (doTick) world.getChunkManager().tick(ShouldKeepTickingUtils.maxTime(10));
+                    if (doTick) world.getChunkManager().tick(() -> true);
                 }
                 if (doTick) lastTick.set(System.currentTimeMillis());
                 if (!hasTask) LockSupport.parkNanos("waiting for tasks", 100000L);
             }
-            try {
-                future.get(10, TimeUnit.SECONDS);
-            } catch (InterruptedException | ExecutionException | TimeoutException e) {
-                LOGGER.error("Timeout stopping tasks");
-            }
+            if (!isRunning()) LOGGER.error("Exiting due to server stopping");
             for (ServerWorld world : this.worlds.values()) {
                 world.getChunkManager().tick(() -> true);
             }
@@ -94,6 +91,21 @@ public abstract class MixinMinecraftServer {
         } else {
             this.running = false;
         }
+    }
+
+    private void test$handleGC() {
+        final Optional<GarbageCollectorMXBean> optional = ManagementFactory.getGarbageCollectorMXBeans().stream().filter(obj -> obj instanceof com.sun.management.GarbageCollectorMXBean).findAny();
+        optional.ifPresent(garbageCollectorMXBean -> {
+            final GcInfo lastGcInfo = ((com.sun.management.GarbageCollectorMXBean) garbageCollectorMXBean).getLastGcInfo();
+            if (lastGcInfo.getDuration() > 200) {
+                LOGGER.warn("High GC overhead, saving worlds...");
+                this.worlds.values().forEach(world -> {
+                    world.getChunkManager().tick(() -> true);
+                    world.getChunkManager().save(false);
+                });
+                this.worlds.values().forEach(world -> world.getChunkManager().threadedAnvilChunkStorage.completeAll());
+            }
+        });
     }
 
     @Redirect(method = "loadWorld", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;prepareStartRegion(Lnet/minecraft/server/WorldGenerationProgressListener;)V"))
