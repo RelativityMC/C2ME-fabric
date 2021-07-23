@@ -1,5 +1,6 @@
-package com.ishland.c2me.mixin.optimization.worldgen.threadsafe_weightedlist;
+package com.ishland.c2me.mixin.threading.worldgen.fixes.threading_issues;
 
+import com.ishland.c2me.common.threading.worldgen.fixes.threading_fixes.IWeightedList;
 import net.minecraft.entity.ai.brain.task.CompositeTask;
 import net.minecraft.util.collection.WeightedList;
 import org.spongepowered.asm.mixin.Final;
@@ -9,7 +10,6 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import com.ishland.c2me.common.optimization.worldgen.threadsafe_weightedlist.IWeightedList;
 
 import java.util.function.Consumer;
 

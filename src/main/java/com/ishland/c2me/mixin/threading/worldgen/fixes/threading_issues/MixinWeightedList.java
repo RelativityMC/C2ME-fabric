@@ -1,6 +1,6 @@
-package com.ishland.c2me.mixin.optimization.worldgen.threadsafe_weightedlist;
+package com.ishland.c2me.mixin.threading.worldgen.fixes.threading_issues;
 
-import com.ishland.c2me.common.optimization.worldgen.threadsafe_weightedlist.IWeightedList;
+import com.ishland.c2me.common.threading.worldgen.fixes.threading_fixes.IWeightedList;
 import net.minecraft.util.collection.WeightedList;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
