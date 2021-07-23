@@ -1,4 +1,4 @@
-package com.ishland.c2me.mixin.threading.worldgen.fixes.threading_issues.math;
+package com.ishland.c2me.mixin.fixes.worldgen.threading.math;
 
 import net.minecraft.util.math.AffineTransformation;
 import org.spongepowered.asm.mixin.Mixin;

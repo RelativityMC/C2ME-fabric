@@ -1,4 +1,4 @@
-package com.ishland.c2me.mixin.threading.worldgen.fixes.threading_issues;
+package com.ishland.c2me.mixin.fixes.worldgen.threading;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.world.biome.source.BiomeSource;

@@ -1,6 +1,5 @@
 package com.ishland.c2me.mixin;
 
-import net.fabricmc.loader.api.FabricLoader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.objectweb.asm.tree.ClassNode;
@@ -28,7 +27,7 @@ public class C2MEMixinPlugin implements IMixinConfigPlugin {
 
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
-        if (mixinClassName.startsWith("com.ishland.c2me.mixin.threading.worldgen.") && !mixinClassName.startsWith("com.ishland.c2me.mixin.threading.worldgen.fixes.threading_issues."))
+        if (mixinClassName.startsWith("com.ishland.c2me.mixin.threading.worldgen."))
             return C2MEConfig.threadedWorldGenConfig.enabled;
         if (mixinClassName.startsWith("com.ishland.c2me.mixin.threading.chunkio."))
             return C2MEConfig.asyncIoConfig.enabled;
@@ -37,7 +36,7 @@ public class C2MEMixinPlugin implements IMixinConfigPlugin {
         if (mixinClassName.startsWith("com.ishland.c2me.mixin.optimization.worldgen.thread_local_biome_cache."))
             return !(C2MEConfig.threadedWorldGenConfig.enabled && C2MEConfig.threadedWorldGenConfig.useGlobalBiomeCache);
         if (mixinClassName.startsWith("com.ishland.c2me.mixin.optimization.worldgen.vanilla_optimization.the_end_biome_cache."))
-            return C2MEConfig.vanillaWorldGenConfig.useEndBiomeCache;
+            return C2MEConfig.vanillaWorldGenOptimizationsConfig.useEndBiomeCache;
         return true;
     }
 

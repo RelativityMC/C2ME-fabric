@@ -1,4 +1,4 @@
-package com.ishland.c2me.mixin.threading.worldgen.fixes.threading_issues;
+package com.ishland.c2me.mixin.fixes.worldgen.threading;
 
 import net.minecraft.state.property.IntProperty;
 import net.minecraft.world.gen.stateprovider.RandomizedIntBlockStateProvider;

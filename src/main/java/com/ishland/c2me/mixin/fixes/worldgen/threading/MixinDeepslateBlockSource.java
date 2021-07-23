@@ -1,4 +1,4 @@
-package com.ishland.c2me.mixin.threading.worldgen.fixes.threading_issues;
+package com.ishland.c2me.mixin.fixes.worldgen.threading;
 
 import com.ishland.c2me.common.threading.worldgen.ThreadLocalChunkRandom;
 import net.minecraft.world.gen.ChunkRandom;

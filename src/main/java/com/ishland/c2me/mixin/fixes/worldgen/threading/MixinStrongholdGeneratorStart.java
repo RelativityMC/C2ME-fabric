@@ -1,4 +1,4 @@
-package com.ishland.c2me.mixin.threading.worldgen.fixes.threading_issues;
+package com.ishland.c2me.mixin.fixes.worldgen.threading;
 
 import net.minecraft.structure.StrongholdGenerator;
 import net.minecraft.structure.StructurePiece;
