@@ -1,4 +1,4 @@
-package com.ishland.c2me.common.threading.worldgen.fixes.threading_fixes;
+package com.ishland.c2me.common.fixes.worldgen.threading;
 
 import java.util.concurrent.atomic.AtomicInteger;
 

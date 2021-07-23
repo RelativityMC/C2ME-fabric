@@ -1,6 +1,6 @@
 package com.ishland.c2me.mixin.fixes.worldgen.threading;
 
-import com.ishland.c2me.common.threading.worldgen.fixes.threading_fixes.ThreadLocalStructureWeightSampler;
+import com.ishland.c2me.common.fixes.worldgen.threading.ThreadLocalStructureWeightSampler;
 import net.minecraft.world.gen.StructureWeightSampler;
 import org.spongepowered.asm.mixin.Dynamic;
 import org.spongepowered.asm.mixin.Final;

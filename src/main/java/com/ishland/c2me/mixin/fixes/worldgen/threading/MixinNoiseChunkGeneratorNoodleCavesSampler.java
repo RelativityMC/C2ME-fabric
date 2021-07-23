@@ -1,6 +1,6 @@
 package com.ishland.c2me.mixin.fixes.worldgen.threading;
 
-import com.ishland.c2me.common.threading.worldgen.fixes.threading_fixes.ThreadLocalNoiseInterpolator;
+import com.ishland.c2me.common.fixes.worldgen.threading.ThreadLocalNoiseInterpolator;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.gen.NoiseInterpolator;
 import net.minecraft.world.gen.chunk.NoiseChunkGenerator;

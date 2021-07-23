@@ -1,6 +1,6 @@
 package com.ishland.c2me.mixin.fixes.worldgen.threading;
 
-import com.ishland.c2me.common.threading.worldgen.fixes.threading_fixes.IWeightedList;
+import com.ishland.c2me.common.fixes.worldgen.threading.IWeightedList;
 import net.minecraft.entity.ai.brain.task.CompositeTask;
 import net.minecraft.util.collection.WeightedList;
 import org.spongepowered.asm.mixin.Final;

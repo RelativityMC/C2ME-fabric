@@ -1,6 +1,6 @@
 package com.ishland.c2me.mixin.fixes.worldgen.threading;
 
-import com.ishland.c2me.common.threading.worldgen.fixes.threading_fixes.ThreadLocalSurfaceBuilder;
+import com.ishland.c2me.common.fixes.worldgen.threading.ThreadLocalSurfaceBuilder;
 import net.minecraft.world.gen.surfacebuilder.BadlandsSurfaceBuilder;
 import net.minecraft.world.gen.surfacebuilder.BasaltDeltasSurfaceBuilder;
 import net.minecraft.world.gen.surfacebuilder.DefaultSurfaceBuilder;

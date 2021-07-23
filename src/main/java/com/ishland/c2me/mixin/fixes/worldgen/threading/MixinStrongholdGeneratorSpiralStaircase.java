@@ -1,6 +1,6 @@
 package com.ishland.c2me.mixin.fixes.worldgen.threading;
 
-import com.ishland.c2me.common.threading.worldgen.fixes.threading_fixes.IStrongholdGenerator;
+import com.ishland.c2me.common.fixes.worldgen.threading.IStrongholdGenerator;
 import net.minecraft.structure.StrongholdGenerator;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;

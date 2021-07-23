@@ -1,4 +1,4 @@
-package com.ishland.c2me.common.threading.worldgen.fixes.threading_fixes;
+package com.ishland.c2me.common.fixes.worldgen.threading;
 
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.gen.NoiseInterpolator;

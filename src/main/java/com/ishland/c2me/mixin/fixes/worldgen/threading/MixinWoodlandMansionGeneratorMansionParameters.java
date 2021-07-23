@@ -1,6 +1,6 @@
 package com.ishland.c2me.mixin.fixes.worldgen.threading;
 
-import com.ishland.c2me.common.threading.worldgen.fixes.threading_fixes.ConcurrentFlagMatrix;
+import com.ishland.c2me.common.fixes.worldgen.threading.ConcurrentFlagMatrix;
 import net.minecraft.structure.WoodlandMansionGenerator;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
