@@ -28,7 +28,7 @@ public class C2MEMixinPlugin implements IMixinConfigPlugin {
 
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
-        if (mixinClassName.startsWith("com.ishland.c2me.mixin.threading.worldgen."))
+        if (mixinClassName.startsWith("com.ishland.c2me.mixin.threading.worldgen.") && !mixinClassName.startsWith("com.ishland.c2me.mixin.threading.worldgen.fixes.threading_issues."))
             return C2MEConfig.threadedWorldGenConfig.enabled;
         if (mixinClassName.startsWith("com.ishland.c2me.mixin.threading.chunkio."))
             return C2MEConfig.asyncIoConfig.enabled;
