@@ -36,8 +36,8 @@ public class C2MEMixinPlugin implements IMixinConfigPlugin {
             return C2MEConfig.threadedWorldGenConfig.enabled && C2MEConfig.threadedWorldGenConfig.useGlobalBiomeCache;
         if (mixinClassName.startsWith("com.ishland.c2me.mixin.optimization.worldgen.thread_local_biome_cache."))
             return !(C2MEConfig.threadedWorldGenConfig.enabled && C2MEConfig.threadedWorldGenConfig.useGlobalBiomeCache);
-        if (mixinClassName.startsWith("com.ishland.c2me.mixin.optimization.worldgen.the_end_biome_cache."))
-            return !FabricLoader.getInstance().isModLoaded("lithium");
+        if (mixinClassName.startsWith("com.ishland.c2me.mixin.optimization.worldgen.vanilla_optimization.the_end_biome_cache."))
+            return C2MEConfig.vanillaWorldGenConfig.useEndBiomeCache;
         return true;
     }
 

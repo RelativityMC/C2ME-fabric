@@ -1,4 +1,4 @@
-package com.ishland.c2me.mixin.optimization.worldgen.the_end_biome_cache;
+package com.ishland.c2me.mixin.optimization.worldgen.vanilla_optimization.the_end_biome_cache;
 
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 import net.minecraft.util.math.ChunkPos;
