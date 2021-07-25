@@ -1,4 +1,4 @@
-package com.ishland.c2me.common.chunkscheduling;
+package com.ishland.c2me.common.optimization.chunkscheduling;
 
 public interface ServerMidTickTask {
 

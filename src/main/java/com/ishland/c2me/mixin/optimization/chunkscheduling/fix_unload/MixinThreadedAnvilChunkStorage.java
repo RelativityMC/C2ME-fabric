@@ -1,4 +1,4 @@
-package com.ishland.c2me.mixin.chunkscheduling.fix_unload;
+package com.ishland.c2me.mixin.optimization.chunkscheduling.fix_unload;
 
 import com.ishland.c2me.common.structs.LongHashSet;
 import com.ishland.c2me.common.util.ShouldKeepTickingUtils;

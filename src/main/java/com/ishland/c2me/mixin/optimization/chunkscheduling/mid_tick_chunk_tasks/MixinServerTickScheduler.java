@@ -1,4 +1,4 @@
-package com.ishland.c2me.mixin.chunkscheduling.mid_tick_chunk_tasks;
+package com.ishland.c2me.mixin.optimization.chunkscheduling.mid_tick_chunk_tasks;
 
 import net.minecraft.server.world.ServerTickScheduler;
 import net.minecraft.server.world.ServerWorld;
@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import com.ishland.c2me.common.chunkscheduling.ServerMidTickTask;
+import com.ishland.c2me.common.optimization.chunkscheduling.ServerMidTickTask;
 
 @Mixin(ServerTickScheduler.class)
 public class MixinServerTickScheduler {
