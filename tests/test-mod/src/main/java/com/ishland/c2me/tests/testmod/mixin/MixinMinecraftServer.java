@@ -93,10 +93,14 @@ public abstract class MixinMinecraftServer {
         }
     }
 
+    private long handledGc = -1L;
+
     private void test$handleGC() {
         final Optional<GarbageCollectorMXBean> optional = ManagementFactory.getGarbageCollectorMXBeans().stream().filter(obj -> obj instanceof com.sun.management.GarbageCollectorMXBean).findAny();
         optional.ifPresent(garbageCollectorMXBean -> {
             final GcInfo lastGcInfo = ((com.sun.management.GarbageCollectorMXBean) garbageCollectorMXBean).getLastGcInfo();
+            if (handledGc == lastGcInfo.getId()) return;
+            handledGc = lastGcInfo.getId();
             if (lastGcInfo.getDuration() > 200) {
                 LOGGER.warn("High GC overhead, saving worlds...");
                 this.worlds.values().forEach(world -> {
