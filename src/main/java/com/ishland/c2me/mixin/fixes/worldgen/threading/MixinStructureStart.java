@@ -1,11 +1,13 @@
 package com.ishland.c2me.mixin.fixes.worldgen.threading;
 
+import com.ishland.c2me.common.fixes.worldgen.threading.IStructureStart;
 import com.ishland.c2me.common.threading.worldgen.ThreadLocalChunkRandom;
 import net.minecraft.structure.StructureStart;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.gen.ChunkRandom;
 import net.minecraft.world.gen.feature.FeatureConfig;
 import net.minecraft.world.gen.feature.StructureFeature;
+import org.apache.logging.log4j.Logger;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Dynamic;
 import org.spongepowered.asm.mixin.Final;
@@ -21,13 +23,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Mixin(StructureStart.class)
-public class MixinStructureStart<C extends FeatureConfig> {
+public class MixinStructureStart<C extends FeatureConfig> implements IStructureStart {
 
     @Mutable
     @Shadow
     @Final
     protected ChunkRandom random;
 
+    @Shadow @Final private static Logger LOGGER;
     private final AtomicInteger referencesAtomic = new AtomicInteger();
 
     @Inject(method = "<init>", at = @At("RETURN"))
@@ -52,4 +55,12 @@ public class MixinStructureStart<C extends FeatureConfig> {
         this.referencesAtomic.incrementAndGet();
     }
 
+    @Override
+    public void resetRandom() {
+        if (random instanceof ThreadLocalChunkRandom random1) {
+            random1.reset();
+        } else {
+            LOGGER.warn("Unable to reset random class: {}", random.getClass().getName());
+        }
+    }
 }

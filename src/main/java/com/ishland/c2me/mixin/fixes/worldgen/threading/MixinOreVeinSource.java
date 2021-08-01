@@ -19,7 +19,7 @@ public class MixinOreVeinSource {
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(CallbackInfo info) {
-        this.random = new ThreadLocalChunkRandom(System.nanoTime());
+        this.random = new ThreadLocalChunkRandom();
     }
 
 }

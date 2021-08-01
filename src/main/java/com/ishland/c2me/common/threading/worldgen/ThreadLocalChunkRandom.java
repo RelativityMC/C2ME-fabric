@@ -1,5 +1,6 @@
 package com.ishland.c2me.common.threading.worldgen;
 
+import com.ishland.c2me.common.config.IdentityWorldGen;
 import net.minecraft.world.gen.ChunkRandom;
 
 import java.util.function.Consumer;
@@ -10,6 +11,18 @@ import java.util.stream.LongStream;
 public class ThreadLocalChunkRandom extends ChunkRandom {
 
     private final ThreadLocal<ChunkRandom> chunkRandomThreadLocal;
+
+    static {
+        if (IdentityWorldGen.getIdentityWorldGenSeed() == 0) {
+            System.out.println("Identity WorldGen state: not enabled");
+        } else {
+            System.out.println("Identity WorldGen state: enabled: " + IdentityWorldGen.getIdentityWorldGenSeed());
+        }
+    }
+
+    public ThreadLocalChunkRandom() {
+        this(IdentityWorldGen.getIdentityWorldGenSeed() != 0 ? IdentityWorldGen.getIdentityWorldGenSeed() : System.nanoTime());
+    }
 
     public ThreadLocalChunkRandom(long seed) {
         this(seed, chunkRandom -> {});
@@ -192,5 +205,9 @@ public class ThreadLocalChunkRandom extends ChunkRandom {
     @Override
     public String toString() {
         return chunkRandomThreadLocal.get().toString();
+    }
+
+    public void reset() {
+        chunkRandomThreadLocal.remove();
     }
 }

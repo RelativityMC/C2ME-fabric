@@ -6,6 +6,7 @@ import com.ibm.asyncutil.locks.FairAsyncSemaphore;
 import com.ishland.c2me.tests.worlddiff.mixin.IStorageIoWorker;
 import com.ishland.c2me.tests.worlddiff.mixin.IWorldUpdater;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.datafixer.Schemas;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
@@ -93,16 +94,11 @@ public class ComparisonSession implements Closeable {
                                     final Map<ChunkSectionPos, ChunkSection> sectionsTarget = readSections(pos, chunkDataTarget);
                                     sectionsBase.forEach((chunkSectionPos, chunkSectionBase) -> {
                                         final ChunkSection chunkSectionTarget = sectionsTarget.get(chunkSectionPos);
-                                        if (chunkSectionBase == null || chunkSectionTarget == null) {
-                                            completedBlocks.addAndGet(16 * 16 * 16);
-                                            differenceBlocks.addAndGet(16 * 16 * 16);
-                                            return;
-                                        }
                                         for (int x = 0; x < 16; x++)
                                             for (int y = 0; y < 16; y++)
                                                 for (int z = 0; z < 16; z++) {
-                                                    final BlockState state1 = chunkSectionBase.getBlockState(x, y, z);
-                                                    final BlockState state2 = chunkSectionTarget.getBlockState(x, y, z);
+                                                    final BlockState state1 = chunkSectionBase != null ? chunkSectionBase.getBlockState(x, y, z) : Blocks.AIR.getDefaultState();
+                                                    final BlockState state2 = chunkSectionTarget != null ? chunkSectionTarget.getBlockState(x, y, z) : Blocks.AIR.getDefaultState();
                                                     if (!blockStateEquals(state1, state2)) {
                                                         differenceBlocks.incrementAndGet();
                                                         if (!Registry.BLOCK.getId(state1.getBlock()).equals(Registry.BLOCK.getId(state2.getBlock()))) {

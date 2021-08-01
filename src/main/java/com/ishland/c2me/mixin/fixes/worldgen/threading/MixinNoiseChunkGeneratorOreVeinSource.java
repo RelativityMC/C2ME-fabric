@@ -23,7 +23,7 @@ public class MixinNoiseChunkGeneratorOreVeinSource {
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(CallbackInfo info) {
-        this.random = new ThreadLocalChunkRandom(System.nanoTime());
+        this.random = new ThreadLocalChunkRandom();
     }
 
     @Redirect(method = "<init>", at = @At(value = "NEW", target = "net/minecraft/world/gen/NoiseInterpolator"))

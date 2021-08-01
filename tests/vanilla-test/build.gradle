@@ -16,6 +16,7 @@ loom {
             server()
             runDir getRootProject().getProjectDir().toPath().relativize(project.getBuildDir().toPath()).resolve("testServer").toString()
             source sourceSets.testmod
+            vmArgs "-javaagent:" + project.parent.file("identityworldgen-1.0.0-dev.jar").absolutePath
         }
     }
 }
