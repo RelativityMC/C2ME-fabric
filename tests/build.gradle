@@ -12,6 +12,10 @@ allprojects {
         maven { url "https://api.modrinth.com/maven/" }
         maven { url "https://maven.shedaniel.me/" }
         maven { url "https://jitpack.io" }
+        maven {
+            url "https://www.cursemaven.com"
+            content { includeGroup "curse.maven" }
+        }
     }
     loom {
         shareCaches = true
