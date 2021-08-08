@@ -1,0 +1,47 @@
+import com.ishland.c2me.gradle.ModpackConfig
+import com.ishland.c2me.gradle.RedirectingOutputStream
+
+evaluationDependsOn(":tests")
+evaluationDependsOn(":tests:test-mod")
+
+sourceSets {
+    testmod {
+        compileClasspath += main.compileClasspath
+        runtimeClasspath += main.runtimeClasspath
+    }
+}
+
+loom {
+    runs {
+        testC2MEModpackServer {
+            server()
+            runDir getRootProject().getProjectDir().toPath().relativize(project.getBuildDir().toPath()).resolve("testServer").toString()
+            source sourceSets.testmod
+            vmArgs "-Dcom.ishland.c2me.common.config.threadedWorldGen.allowThreadedFeatures=true",
+                    "-Dcom.ishland.c2me.common.config.threadedWorldGen.reduceLockRadius=true",
+                    "-Dcom.ishland.c2me.common.config.threadedWorldGen.enabled=true"
+        }
+    }
+}
+
+runTestC2MEModpackServer.configure {
+    doFirst {
+        standardOutput = new RedirectingOutputStream(project, getName())
+    }
+    onlyIf {
+        !getRootProject().getProjectDir().toPath().relativize(project.getBuildDir().toPath()).resolve("testServer").toFile().isDirectory()
+    }
+}
+
+migrateMappings.onlyIf { false }
+
+dependencies {
+    testmodImplementation project(":tests:test-mod").sourceSets.main.output
+    testmodImplementation project(":").sourceSets.main.output
+    testmodImplementation project(":").configurations.getByName("shadowImpl").allDependencies
+    ModpackConfig.applyModpack(it)
+}
+
+test {
+    useJUnitPlatform()
+}

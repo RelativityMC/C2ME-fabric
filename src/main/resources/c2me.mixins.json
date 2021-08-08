@@ -7,6 +7,7 @@
   "mixins": [
     "access.IStructureWeightSampler",
     "fixes.asynccatchers.MixinServerChunkManager",
+    "fixes.chunkio.threading.MixinStructurePoolElement",
     "fixes.worldgen.threading.MixinBiomeSource",
     "fixes.worldgen.threading.MixinChunkGenerator",
     "fixes.worldgen.threading.MixinDeepslateBlockSource",

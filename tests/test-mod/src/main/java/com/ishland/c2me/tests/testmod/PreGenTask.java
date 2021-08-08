@@ -59,7 +59,7 @@ public class PreGenTask {
         final Set<StructureFeature<?>> structureFeatures = StructureFeature.STRUCTURES.values().stream()
                 .filter(structureFeature -> ((IChunkGenerator) world.getChunkManager().getChunkGenerator()).getPopulationSource().hasStructureFeature(structureFeature))
                 .collect(Collectors.toSet());
-        final Registry<Biome> biomeRegistry = (Registry<Biome>) Registry.REGISTRIES.get(Registry.BIOME_KEY.getValue());
+        final Registry<Biome> biomeRegistry = world.getRegistryManager().get(Registry.BIOME_KEY);
         final CompletableFuture<Void> biomeFuture = CompletableFuture.allOf(biomes.stream()
                 .map(biome -> CompletableFuture.runAsync(() -> {
                     final BlockPos blockPos = world.locateBiome(biome, spawnPos, SEARCH_RADIUS, 8);
@@ -83,8 +83,15 @@ public class PreGenTask {
                     LOGGER.info("Unable to locate structure {}", structureFeature.getName());
                 })).distinct().toArray(CompletableFuture[]::new));
         final CompletableFuture<Void> locateFuture = CompletableFuture.allOf(biomeFuture, structureFuture);
+        int printCounter = 0;
         while (!locateFuture.isDone() && world.getServer().isRunning()) {
-            System.out.printf("[noprint]Locating: Biomes: %d / %d, Structures: %d / %d\n", locatedBiomes.get(), biomes.size(), locatedStructures.get(), structureFeatures.size());
+            printCounter ++;
+            final String formatted = String.format("Locating: Biomes: %d / %d, Structures: %d / %d\n", locatedBiomes.get(), biomes.size(), locatedStructures.get(), structureFeatures.size());
+            System.out.print("[noprint]" + formatted);
+            if (printCounter > 128) {
+                System.out.print(formatted);
+                printCounter = 0;
+            }
             world.getChunkManager().executeQueuedTasks();
             try {
                 //noinspection BusyWait

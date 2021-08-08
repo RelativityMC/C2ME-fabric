@@ -14,7 +14,8 @@
     "MixinMinecraftServer",
     "MixinServerChunkManager",
     "MixinServerPropertiesHandler",
-    "MixinStructureFeature"
+    "MixinStructureFeature",
+    "MixinWorldView"
   ],
   "client": [
   ],
