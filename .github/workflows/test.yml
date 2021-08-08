@@ -6,8 +6,12 @@ on:
 
 jobs:
   test:
-
     runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        testTask: [runTestC2MEModpackServer,runTestC2MEServer]
 
     steps:
     - uses: actions/checkout@v2
@@ -31,4 +35,4 @@ jobs:
         
     - name: Test C2ME
       run: |
-        ./gradlew clean runTestC2MEServer
+        ./gradlew clean ${{ matrix.testTask }}
