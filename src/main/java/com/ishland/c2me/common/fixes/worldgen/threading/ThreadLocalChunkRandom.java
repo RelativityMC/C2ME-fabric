@@ -1,4 +1,4 @@
-package com.ishland.c2me.common.threading.worldgen;
+package com.ishland.c2me.common.fixes.worldgen.threading;
 
 import net.minecraft.world.gen.ChunkRandom;
 
@@ -172,11 +172,6 @@ public class ThreadLocalChunkRandom extends ChunkRandom {
     @Override
     public void skip(int count) {
         chunkRandomThreadLocal.get().skip(count);
-    }
-
-    @Override
-    public int hashCode() {
-        return chunkRandomThreadLocal.get().hashCode();
     }
 
     @Override

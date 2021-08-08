@@ -1,6 +1,6 @@
 package com.ishland.c2me.mixin.fixes.worldgen.threading;
 
-import com.ishland.c2me.common.threading.worldgen.ThreadLocalChunkRandom;
+import com.ishland.c2me.common.fixes.worldgen.threading.ThreadLocalChunkRandom;
 import net.minecraft.world.gen.ChunkRandom;
 import net.minecraft.world.gen.DeepslateBlockSource;
 import org.spongepowered.asm.mixin.Mixin;

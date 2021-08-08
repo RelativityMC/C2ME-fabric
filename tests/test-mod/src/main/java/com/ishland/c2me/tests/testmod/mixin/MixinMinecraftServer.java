@@ -78,7 +78,7 @@ public abstract class MixinMinecraftServer {
                     if (doTick) world.getChunkManager().tick(() -> true);
                 }
                 if (doTick) lastTick.set(System.currentTimeMillis());
-                if (!hasTask) LockSupport.parkNanos("waiting for tasks", 100000L);
+                if (!hasTask) LockSupport.parkNanos("waiting for tasks", 1000000L);
             }
             if (!isRunning()) LOGGER.error("Exiting due to server stopping");
             for (ServerWorld world : this.worlds.values()) {
