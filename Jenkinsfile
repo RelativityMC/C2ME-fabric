@@ -19,7 +19,7 @@ pipeline {
                 ) {
                     sh 'git fetch --tags'
                     sh 'git reset --hard'
-                    sh './gradlew clean build runTestC2MEModpackServer'
+                    sh './gradlew clean build runTestC2MEServer'
                 }
             }
             post {

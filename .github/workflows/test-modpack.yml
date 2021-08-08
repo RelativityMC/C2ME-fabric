@@ -5,7 +5,7 @@ on:
   pull_request: {}
 
 jobs:
-  test:
+  test-modpack:
 
     runs-on: ubuntu-latest
 
@@ -31,4 +31,4 @@ jobs:
         
     - name: Test C2ME
       run: |
-        ./gradlew clean runTestC2MEServer
+        ./gradlew clean runTestC2MEModpackServer
