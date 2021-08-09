@@ -20,7 +20,7 @@ public class SynchronizedCodec<A> implements Codec<A> {
     @Override
     public <T> DataResult<Pair<A, T>> decode(DynamicOps<T> ops, T input) {
         try {
-            ForkJoinPool.managedBlock(new ManagedLocker());
+            lock.lockInterruptibly();
             return this.delegate.decode(ops, input);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
@@ -32,7 +32,7 @@ public class SynchronizedCodec<A> implements Codec<A> {
     @Override
     public <T> DataResult<T> encode(A input, DynamicOps<T> ops, T prefix) {
         try {
-            ForkJoinPool.managedBlock(new ManagedLocker());
+            lock.lockInterruptibly();
             return this.delegate.encode(input, ops, prefix);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);

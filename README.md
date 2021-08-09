@@ -29,6 +29,9 @@ C2ME is not production ready and still pretty experimental. So backup your world
 You can find semi-stable releases here: https://github.com/ishlandbukkit/C2ME-fabric/releases  
 You can find development builds here: https://ci.codemc.io/job/ishlandbukkit/job/C2ME-fabric
 
+## Mod compatibility
+<!-- Update this accordingly when updating ModpackConfig.groovy -->
+
 ## Building and setting up
 JDK 16+ is required to build and use C2ME  
 Run the following commands in the root directory:

@@ -73,7 +73,7 @@ public class PreGenTask {
                 })).distinct().toArray(CompletableFuture[]::new));
         final CompletableFuture<Void> structureFuture = CompletableFuture.allOf(structureFeatures.stream()
                 .map(structureFeature -> CompletableFuture.runAsync(() -> {
-                    final BlockPos blockPos = world.locateStructure(structureFeature, spawnPos, SEARCH_RADIUS, false);
+                    final BlockPos blockPos = world.locateStructure(structureFeature, spawnPos, SEARCH_RADIUS / 16, false);
                     locatedStructures.incrementAndGet();
                     if (blockPos != null) {
                         final ChunkPos chunkPos = new ChunkPos(blockPos);

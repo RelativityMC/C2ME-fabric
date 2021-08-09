@@ -7,6 +7,7 @@ import com.google.gson.JsonObject;
 import com.ishland.c2me.common.config.ConfigUtils;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
+import net.fabricmc.loader.util.UrlUtil;
 import net.fabricmc.loader.util.version.SemanticVersionImpl;
 import net.fabricmc.loader.util.version.SemanticVersionPredicateParser;
 import org.apache.logging.log4j.LogManager;
@@ -24,6 +25,9 @@ import org.spongepowered.asm.mixin.transformer.Config;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.net.URL;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -88,13 +92,31 @@ public class C2MECompatibilityModule implements IMixinConfigPlugin {
     public List<String> getMixins() {
         final ArrayList<String> extraMixins = new ArrayList<>();
         for (String subPackage : enabledSubPackages) {
-            try (final InputStream in = C2MECompatibilityModule.class.getClassLoader().getResourceAsStream("c2me-compat." + subPackage + ".mixins.json");
+            final String name = "c2me-compat." + subPackage + ".mixins.json";
+            try (final InputStream in = C2MECompatibilityModule.class.getClassLoader().getResourceAsStream(name);
                  final InputStreamReader reader = new InputStreamReader(Objects.requireNonNull(in, "Cannot find specified module mixins"))) {
                 final JsonObject jsonObject = new Gson().fromJson(reader, JsonObject.class);
                 for (JsonElement element : jsonObject.getAsJsonArray("mixins")) {
                     extraMixins.add(subPackage + "." + element.getAsString());
                 }
 
+                // extra checks for dev env
+                final ClassLoader classLoader = C2MECompatibilityModule.class.getClassLoader();
+                final Class<?> classLoaderInterface = Class.forName("net.fabricmc.loader.launch.knot.KnotClassLoaderInterface");
+                if (classLoaderInterface.isInstance(classLoader)) {
+                    final InputStream stream = (InputStream) accessible(classLoaderInterface.getMethod("getResourceAsStream", String.class, boolean.class)).invoke(classLoader, name, true);
+                    if (stream != null) {
+                        stream.close();
+                        continue;
+                    }
+
+                    final URL resource = classLoader.getResource(name);
+                    assert resource != null;
+                    final String resourcePath = resource.getPath();
+                    final URL url = UrlUtil.asUrl(Path.of("/", resourcePath.substring(resourcePath.indexOf('/'), resourcePath.lastIndexOf('!'))).toAbsolutePath());
+                    LOGGER.info("Purposed {} to classpath", url);
+                    accessible(classLoaderInterface.getMethod("addURL", URL.class)).invoke(classLoader, url);
+                }
             } catch (Throwable t) {
                 LOGGER.warn("Unable to apply compatibility module " + subPackage, t);
             }
@@ -197,6 +219,11 @@ public class C2MECompatibilityModule implements IMixinConfigPlugin {
     private static Field accessible(Field field) {
         field.setAccessible(true);
         return field;
+    }
+
+    private static Method accessible(Method method) {
+        method.setAccessible(true);
+        return method;
     }
 
 }

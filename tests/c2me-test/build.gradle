@@ -38,6 +38,7 @@ dependencies {
     testmodImplementation project(":tests:test-mod").sourceSets.main.output
     testmodImplementation project(":").sourceSets.main.output
     testmodImplementation project(":").configurations.getByName("shadowImpl").allDependencies
+    testmodImplementation project(":").configurations.getByName("shadowRuntime").allDependencies
 }
 
 test {
