@@ -15,7 +15,8 @@
     "MixinServerChunkManager",
     "MixinServerPropertiesHandler",
     "MixinStructureFeature",
-    "MixinWorldView"
+    "MixinWorldView",
+    "what.MixinLevelPropagator"
   ],
   "client": [
   ],

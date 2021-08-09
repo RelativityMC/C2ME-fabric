@@ -9,10 +9,6 @@ import net.minecraft.util.math.Vec3i;
 
 public class ThreadLocalMutableBlockPos extends BlockPos.Mutable {
 
-    static {
-        new Throwable(ThreadLocalMutableBlockPos.class.getClassLoader().toString()).printStackTrace();
-    }
-
     private final ThreadLocal<BlockPos.Mutable> delegate = ThreadLocal.withInitial(BlockPos.Mutable::new);
 
     @Override

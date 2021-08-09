@@ -1,13 +1,18 @@
 package com.ishland.c2me.tests.testmod.mixin;
 
+import com.ishland.c2me.tests.testmod.IMinecraftServer;
 import com.ishland.c2me.tests.testmod.PreGenTask;
 import com.sun.management.GcInfo;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.ServerTask;
 import net.minecraft.server.WorldGenerationProgressListener;
+import net.minecraft.server.command.CommandOutput;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.SystemDetails;
 import net.minecraft.util.crash.CrashMemoryReserve;
 import net.minecraft.util.registry.RegistryKey;
+import net.minecraft.util.snooper.SnooperListener;
+import net.minecraft.util.thread.ReentrantThreadExecutor;
 import net.minecraft.world.World;
 import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.mixin.Final;
@@ -29,7 +34,7 @@ import java.util.concurrent.locks.LockSupport;
 import java.util.stream.Collectors;
 
 @Mixin(MinecraftServer.class)
-public abstract class MixinMinecraftServer {
+public abstract class MixinMinecraftServer extends ReentrantThreadExecutor<ServerTask> implements SnooperListener, CommandOutput, AutoCloseable, IMinecraftServer {
 
     @Shadow
     @Final
@@ -39,6 +44,10 @@ public abstract class MixinMinecraftServer {
     private Map<RegistryKey<World>, ServerWorld> worlds;
     @Shadow
     private volatile boolean running;
+
+    public MixinMinecraftServer(String string) {
+        super(string);
+    }
 
     @Shadow
     public abstract boolean runTask();
@@ -67,18 +76,20 @@ public abstract class MixinMinecraftServer {
                             .distinct()
                             .toArray(CompletableFuture[]::new)
             );
+            eventListener.fullyStarted = true;
             AtomicLong lastTick = new AtomicLong(System.currentTimeMillis());
             while (!future.isDone() && isRunning()) {
-                test$handleGC();
                 boolean doTick = System.currentTimeMillis() - lastTick.get() > 50L;
                 boolean hasTask = doTick;
-                if (this.runTask()) hasTask = true;
-                for (ServerWorld world : this.worlds.values()) {
-                    if (world.getChunkManager().executeQueuedTasks()) hasTask = true;
-                    if (doTick) world.getChunkManager().tick(() -> true);
+                if (c2metest$runAsyncTask()) hasTask = true;
+                if (doTick) {
+                    c2metest$handleGC();
+                    for (ServerWorld world : this.worlds.values()) {
+                        world.getChunkManager().tick(() -> true);
+                    }
+                    lastTick.set(System.currentTimeMillis());
                 }
-                if (doTick) lastTick.set(System.currentTimeMillis());
-                if (!hasTask) LockSupport.parkNanos("waiting for tasks", 1000000L);
+                if (!hasTask) LockSupport.parkNanos("waiting for tasks", 100000L);
             }
             if (!isRunning()) LOGGER.error("Exiting due to server stopping");
             for (ServerWorld world : this.worlds.values()) {
@@ -95,7 +106,7 @@ public abstract class MixinMinecraftServer {
 
     private long handledGc = -1L;
 
-    private void test$handleGC() {
+    private void c2metest$handleGC() {
         final Optional<GarbageCollectorMXBean> optional = ManagementFactory.getGarbageCollectorMXBeans().stream().filter(obj -> obj instanceof com.sun.management.GarbageCollectorMXBean).findAny();
         optional.ifPresent(garbageCollectorMXBean -> {
             final GcInfo lastGcInfo = ((com.sun.management.GarbageCollectorMXBean) garbageCollectorMXBean).getLastGcInfo();
@@ -103,13 +114,21 @@ public abstract class MixinMinecraftServer {
             handledGc = lastGcInfo.getId();
             if (lastGcInfo.getDuration() > 200) {
                 LOGGER.warn("High GC overhead, saving worlds...");
-                this.worlds.values().forEach(world -> {
-                    world.getChunkManager().tick(() -> true);
-                    world.getChunkManager().save(false);
-                });
+                this.worlds.values().forEach(world -> world.getChunkManager().tick(() -> true));
+                this.worlds.values().forEach(world -> world.getChunkManager().save(false));
                 this.worlds.values().forEach(world -> world.getChunkManager().threadedAnvilChunkStorage.completeAll());
             }
         });
+    }
+
+    @Override
+    public boolean c2metest$runAsyncTask() {
+        boolean hasTask = false;
+        while (super.runTask()) hasTask = true;
+        for (ServerWorld world : this.worlds.values()) {
+            while (world.getChunkManager().executeQueuedTasks()) hasTask = true;
+        }
+        return hasTask;
     }
 
     @Redirect(method = "loadWorld", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;prepareStartRegion(Lnet/minecraft/server/WorldGenerationProgressListener;)V"))

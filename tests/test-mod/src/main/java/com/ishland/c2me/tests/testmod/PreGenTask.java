@@ -32,6 +32,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.LockSupport;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -83,21 +84,21 @@ public class PreGenTask {
                     LOGGER.info("Unable to locate structure {}", structureFeature.getName());
                 })).distinct().toArray(CompletableFuture[]::new));
         final CompletableFuture<Void> locateFuture = CompletableFuture.allOf(biomeFuture, structureFuture);
+        long lastProgress = System.currentTimeMillis();
         int printCounter = 0;
         while (!locateFuture.isDone() && world.getServer().isRunning()) {
-            printCounter ++;
-            final String formatted = String.format("Locating: Biomes: %d / %d, Structures: %d / %d\n", locatedBiomes.get(), biomes.size(), locatedStructures.get(), structureFeatures.size());
-            System.out.print("[noprint]" + formatted);
-            if (printCounter > 128) {
-                System.out.print(formatted);
-                printCounter = 0;
+            if (System.currentTimeMillis() - lastProgress > 40) {
+                lastProgress += 40;
+                printCounter++;
+                final String formatted = String.format("Locating: Biomes: %d / %d, Structures: %d / %d\n", locatedBiomes.get(), biomes.size(), locatedStructures.get(), structureFeatures.size());
+                System.out.print("[noprint]" + formatted);
+                if (printCounter > 128) {
+                    System.out.print(formatted);
+                    printCounter = 0;
+                }
             }
-            world.getChunkManager().executeQueuedTasks();
-            try {
-                //noinspection BusyWait
-                Thread.sleep(40);
-            } catch (InterruptedException ignored) {
-            }
+            if (!((IMinecraftServer) world.getServer()).c2metest$runAsyncTask())
+                LockSupport.parkNanos("waiting for tasks", 100000L);
         }
         if (!world.getServer().isRunning()) return CompletableFuture.completedFuture(null);
         chunksHashed.clear();
@@ -170,6 +171,7 @@ public class PreGenTask {
 
         private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("0.00%");
         private final HashMap<ServerWorld, ChunkGeneratedEventInfo> inProgressWorlds = new HashMap<>();
+        public boolean fullyStarted = false;
         private long lastLog = System.currentTimeMillis();
         private long lastPrint = System.currentTimeMillis();
 
@@ -202,7 +204,7 @@ public class PreGenTask {
                 lastLog += 5000L;
                 LOGGER.info("[noprogress] " + resultSupplier.get());
             }
-            if (timeMillis >= lastPrint + 100L) {
+            if (fullyStarted && timeMillis >= lastPrint + 100L) {
                 lastPrint += 100L;
                 System.out.print("[noprint]" + resultSupplier.get() + "\n");
             }
