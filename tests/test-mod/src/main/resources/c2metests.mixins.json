@@ -15,6 +15,7 @@
     "MixinServerChunkManager",
     "MixinServerPropertiesHandler",
     "MixinServerTask",
+    "MixinServerWorld",
     "MixinStructureFeature",
     "MixinWorldView"
   ],

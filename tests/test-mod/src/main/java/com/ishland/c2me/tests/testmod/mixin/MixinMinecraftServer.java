@@ -89,6 +89,8 @@ public abstract class MixinMinecraftServer extends ReentrantThreadExecutor<Serve
                 if (doTick) {
                     for (ServerWorld world : this.worlds.values()) {
                         world.getChunkManager().tick(() -> true);
+                        world.getBlockTickScheduler().tick();
+                        world.getFluidTickScheduler().tick();
                     }
                     lastTick.set(System.currentTimeMillis());
                 }
