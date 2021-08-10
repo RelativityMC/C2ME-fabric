@@ -12,7 +12,7 @@ class ModpackConfig {
         // mods
 
         // https://github.com/TelepathicGrunt/RepurposedStructures-Fabric
-        handler.modImplementation("com.telepathicgrunt:RepurposedStructures-Fabric:2.1.11+1.17.1") {
+        handler.modImplementation("com.telepathicgrunt:RepurposedStructures-Fabric:2.2.0+1.17.1") {
             exclude(group: "net.fabricmc.fabric-api")
             exclude(group: "maven.modrinth", module: "modmenu")
         }
