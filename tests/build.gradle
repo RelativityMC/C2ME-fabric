@@ -12,8 +12,11 @@ allprojects {
         maven { url "https://nexus.resourcefulbees.com/repository/maven-public/" }
         maven { url "https://maven.shedaniel.me/" }
         maven { url "https://ladysnake.jfrog.io/artifactory/mods/" }
-        maven { url "https://api.modrinth.com/maven/" }
         maven { url "https://jitpack.io" }
+        maven {
+            url "https://api.modrinth.com/maven/"
+            content { includeGroup "maven.modrinth" }
+        }
         maven {
             url "https://www.cursemaven.com"
             content { includeGroup "curse.maven" }

@@ -100,9 +100,6 @@ public abstract class MixinMinecraftServer extends ReentrantThreadExecutor<Serve
             final String message = String.format("PreGen completed after %.1fs", duration / 1_000_000_000.0);
             LOGGER.info(message);
             System.err.print(message + "\n");
-            while (true) {
-                if (!c2metest$runAsyncTask()) LockSupport.parkNanos("waiting for tasks", 100000L);
-            }
         } else {
             this.running = false;
         }

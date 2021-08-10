@@ -1,4 +1,4 @@
-package com.ishland.c2me.mixin.fixes.deadlocks.async_chunk_request;
+package com.ishland.c2me.mixin.optimization.chunkaccess.async_chunk_request;
 
 import com.ishland.c2me.common.util.CFUtil;
 import com.mojang.datafixers.util.Either;

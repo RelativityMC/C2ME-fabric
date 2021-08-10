@@ -36,7 +36,7 @@ You can find development builds here: https://ci.codemc.io/job/ishlandbukkit/job
 - [Terra 5.4.1-BETA+efd1665](https://modrinth.com/mod/terra/version/i38N6tkR)
 - [BetterEnd 0.10.5-pre](https://github.com/paulevsGitch/BetterEnd/releases/tag/0.10.5-pre)
 - [RepurposedStructures-Fabric 2.2.0+1.17.1](https://modrinth.com/mod/repurposed-structures-fabric/version/Hp3zNCHi)
-
+- [Bumblezone-Fabric](https://modrinth.com/mod/the-bumblezone-fabric)
 
 ## Building and setting up
 JDK 16+ is required to build and use C2ME  
