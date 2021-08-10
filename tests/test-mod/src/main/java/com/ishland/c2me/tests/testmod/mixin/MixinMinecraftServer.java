@@ -55,6 +55,7 @@ public abstract class MixinMinecraftServer extends ReentrantThreadExecutor<Serve
     @Shadow
     public abstract boolean isRunning();
 
+    @Shadow private int ticks;
     private final AtomicBoolean ranTest = new AtomicBoolean(false);
 
     @Inject(method = "tick", at = @At("RETURN"))
@@ -79,11 +80,11 @@ public abstract class MixinMinecraftServer extends ReentrantThreadExecutor<Serve
             eventListener.fullyStarted = true;
             AtomicLong lastTick = new AtomicLong(System.currentTimeMillis());
             while (!future.isDone() && isRunning()) {
+                c2metest$handleGC();
                 boolean doTick = System.currentTimeMillis() - lastTick.get() > 50L;
                 boolean hasTask = doTick;
                 if (c2metest$runAsyncTask()) hasTask = true;
                 if (doTick) {
-                    c2metest$handleGC();
                     for (ServerWorld world : this.worlds.values()) {
                         world.getChunkManager().tick(() -> true);
                     }
@@ -99,14 +100,21 @@ public abstract class MixinMinecraftServer extends ReentrantThreadExecutor<Serve
             final String message = String.format("PreGen completed after %.1fs", duration / 1_000_000_000.0);
             LOGGER.info(message);
             System.err.print(message + "\n");
+            while (true) {
+                if (!c2metest$runAsyncTask()) LockSupport.parkNanos("waiting for tasks", 100000L);
+            }
         } else {
             this.running = false;
         }
     }
 
     private long handledGc = -1L;
+    private volatile long lastHandleTime = System.currentTimeMillis();
 
     private void c2metest$handleGC() {
+        final long currentTimeMillis = System.currentTimeMillis();
+        if (currentTimeMillis - this.lastHandleTime < 100) return;
+        this.lastHandleTime = currentTimeMillis;
         final Optional<GarbageCollectorMXBean> optional = ManagementFactory.getGarbageCollectorMXBeans().stream().filter(obj -> obj instanceof com.sun.management.GarbageCollectorMXBean).findAny();
         optional.ifPresent(garbageCollectorMXBean -> {
             final GcInfo lastGcInfo = ((com.sun.management.GarbageCollectorMXBean) garbageCollectorMXBean).getLastGcInfo();
@@ -123,6 +131,7 @@ public abstract class MixinMinecraftServer extends ReentrantThreadExecutor<Serve
 
     @Override
     public boolean c2metest$runAsyncTask() {
+        c2metest$handleGC();
         boolean hasTask = false;
         while (super.runTask()) hasTask = true;
         for (ServerWorld world : this.worlds.values()) {

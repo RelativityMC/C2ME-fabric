@@ -14,9 +14,9 @@
     "MixinMinecraftServer",
     "MixinServerChunkManager",
     "MixinServerPropertiesHandler",
+    "MixinServerTask",
     "MixinStructureFeature",
-    "MixinWorldView",
-    "what.MixinLevelPropagator"
+    "MixinWorldView"
   ],
   "client": [
   ],

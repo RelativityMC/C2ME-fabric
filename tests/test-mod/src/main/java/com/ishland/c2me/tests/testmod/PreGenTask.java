@@ -151,13 +151,13 @@ public class PreGenTask {
         ((IServerChunkManager) world.getChunkManager()).invokeTick();
         final ChunkHolder chunkHolder = ((IThreadedAnvilChunkStorage) world.getChunkManager().threadedAnvilChunkStorage).invokeGetChunkHolder(pos.toLong());
         Preconditions.checkNotNull(chunkHolder, "chunkHolder is null");
-        chunkHolder.getChunkAt(ChunkStatus.FULL, world.getChunkManager().threadedAnvilChunkStorage).thenAccept(either -> {
+        chunkHolder.getChunkAt(ChunkStatus.FULL, world.getChunkManager().threadedAnvilChunkStorage).thenAcceptAsync(either -> {
             world.getChunkManager().removeTicket(TICKET, pos, 0, Unit.INSTANCE);
             if (either.left().isPresent())
                 future.complete(null);
             else if (either.right().isPresent())
                 future.completeExceptionally(new RuntimeException(either.right().get().toString()));
-        }).exceptionally(throwable -> {
+        }, ((IThreadedAnvilChunkStorage) world.getChunkManager().threadedAnvilChunkStorage).getMainThreadExecutor()).exceptionally(throwable -> {
             future.completeExceptionally(throwable);
             return null;
         });
