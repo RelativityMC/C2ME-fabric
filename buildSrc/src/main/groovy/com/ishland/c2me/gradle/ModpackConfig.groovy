@@ -31,7 +31,7 @@ class ModpackConfig {
         }
 
         // https://github.com/TelepathicGrunt/UltraAmplifiedDimension-Fabric
-        // TODO removed due to bad memleak
+        // TODO removed due to bad memleak when paired with starlight
 //        handler.modImplementation("com.telepathicgrunt:UltraAmplifiedModFabric:10.0.0+1.17.1") {
 //            exclude(group: "net.fabricmc.fabric-api")
 //            exclude(group: "maven.modrinth", module: "modmenu")

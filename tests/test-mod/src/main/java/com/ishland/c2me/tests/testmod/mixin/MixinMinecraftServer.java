@@ -2,6 +2,7 @@ package com.ishland.c2me.tests.testmod.mixin;
 
 import com.ishland.c2me.tests.testmod.IMinecraftServer;
 import com.ishland.c2me.tests.testmod.PreGenTask;
+import com.sun.management.GarbageCollectionNotificationInfo;
 import com.sun.management.GcInfo;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.ServerTask;
@@ -23,15 +24,16 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.lang.management.GarbageCollectorMXBean;
+import javax.management.NotificationEmitter;
+import javax.management.openmbean.CompositeData;
 import java.lang.management.ManagementFactory;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.LockSupport;
 import java.util.stream.Collectors;
+import java.util.stream.LongStream;
 
 @Mixin(MinecraftServer.class)
 public abstract class MixinMinecraftServer extends ReentrantThreadExecutor<ServerTask> implements SnooperListener, CommandOutput, AutoCloseable, IMinecraftServer {
@@ -105,25 +107,40 @@ public abstract class MixinMinecraftServer extends ReentrantThreadExecutor<Serve
         }
     }
 
-    private long handledGc = -1L;
-    private volatile long lastHandleTime = System.currentTimeMillis();
+    private volatile long handledGc = -1L;
+    private volatile long largeOverheadGC = -2L;
 
     private void c2metest$handleGC() {
-        final long currentTimeMillis = System.currentTimeMillis();
-        if (currentTimeMillis - this.lastHandleTime < 100) return;
-        this.lastHandleTime = currentTimeMillis;
-        final Optional<GarbageCollectorMXBean> optional = ManagementFactory.getGarbageCollectorMXBeans().stream().filter(obj -> obj instanceof com.sun.management.GarbageCollectorMXBean).findAny();
-        optional.ifPresent(garbageCollectorMXBean -> {
-            final GcInfo lastGcInfo = ((com.sun.management.GarbageCollectorMXBean) garbageCollectorMXBean).getLastGcInfo();
-            if (handledGc == lastGcInfo.getId()) return;
-            handledGc = lastGcInfo.getId();
-            if (lastGcInfo.getDuration() > 200) {
-                LOGGER.warn("High GC overhead, saving worlds...");
-                this.worlds.values().forEach(world -> world.getChunkManager().tick(() -> true));
-                this.worlds.values().forEach(world -> world.getChunkManager().save(false));
-                this.worlds.values().forEach(world -> world.getChunkManager().threadedAnvilChunkStorage.completeAll());
+        if (largeOverheadGC == -2L) {
+            synchronized (this) {
+                if (largeOverheadGC != -2L) return;
+                ManagementFactory.getGarbageCollectorMXBeans().stream().filter(obj -> obj instanceof NotificationEmitter).forEach(bean -> {
+                    ((NotificationEmitter) bean).addNotificationListener((notification, __unused) -> {
+                        if (!notification.getType().equals(GarbageCollectionNotificationInfo.GARBAGE_COLLECTION_NOTIFICATION))
+                            return;
+                        final GarbageCollectionNotificationInfo info = GarbageCollectionNotificationInfo.from((CompositeData) notification.getUserData());
+                        final GcInfo gcInfo = info.getGcInfo();
+                        final long usedBefore = gcInfo.getMemoryUsageBeforeGc().values().stream().flatMapToLong(memoryUsage -> LongStream.of(memoryUsage.getUsed())).sum();
+                        final long usedAfter = gcInfo.getMemoryUsageAfterGc().values().stream().flatMapToLong(memoryUsage -> LongStream.of(memoryUsage.getUsed())).sum();
+                        final long total = Runtime.getRuntime().totalMemory();
+                        final long max = Runtime.getRuntime().maxMemory();
+                        LOGGER.info(String.format("GC: %s: [%d] %s caused by %s took %dms, %.1fMB -> %.1fMB (%.1fMB committed %.1fMB max)",
+                                info.getGcName(), gcInfo.getId(), info.getGcAction(), info.getGcCause(), gcInfo.getDuration(),
+                                usedBefore / 1024.0 / 1024.0, usedAfter / 1024.0 / 1024.0, total / 1024.0 / 1024.0, max / 1024.0 / 1024.0));
+                        if (gcInfo.getDuration() >= 200) largeOverheadGC = gcInfo.getId();
+                    }, null, null);
+                });
+                largeOverheadGC = -1L;
             }
-        });
+        }
+        final long largeOverheadGC = this.largeOverheadGC;
+        if (largeOverheadGC != handledGc) {
+            LOGGER.warn("High GC overhead, saving worlds...");
+            this.worlds.values().forEach(world -> world.getChunkManager().tick(() -> true));
+            this.worlds.values().forEach(world -> world.getChunkManager().save(false));
+            this.worlds.values().forEach(world -> world.getChunkManager().threadedAnvilChunkStorage.completeAll());
+            handledGc = largeOverheadGC;
+        }
     }
 
     @Override
