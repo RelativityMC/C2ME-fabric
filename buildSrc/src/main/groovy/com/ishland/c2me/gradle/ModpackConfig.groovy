@@ -13,10 +13,16 @@ class ModpackConfig {
 
         // mods
 
+        ////////////////////////////////////////
+        // Optimization mods
+
         // https://modrinth.com/mod/lithium
         handler.modImplementation("maven.modrinth:lithium:mc1.17.1-0.7.3") {
             transitive false
         }
+
+        ////////////////////////////////////////
+        // TelepathicGrunt content mods
 
         // https://github.com/TelepathicGrunt/RepurposedStructures-Fabric
         handler.modImplementation("com.telepathicgrunt:RepurposedStructures-Fabric:2.2.0+1.17.1") {
@@ -37,14 +43,31 @@ class ModpackConfig {
             exclude(group: "maven.modrinth", module: "modmenu")
         }
 
+        ////////////////////////////////////////
+        // paulevsGitch content mods
+
         // https://www.curseforge.com/minecraft/mc-mods/betterend
         // https://github.com/ishland/BetterEnd/
         handler.modImplementation("com.github.ishland:BetterEnd:3c0120db2e") {
             exclude(group: "net.fabricmc.fabric-api")
         }
 
+        ////////////////////////////////////////
+        // PolyDev content mods
+
         // TODO https://modrinth.com/mod/terra
         // handler.modImplementation("maven.modrinth:terra:5.4.1-BETA+40e95073")
+
+        ////////////////////////////////////////
+        // SuperCoder79 content mods
+
+        // https://www.curseforge.com/minecraft/mc-mods/ecotones
+        // Ecotones 0.8.1 for 1.17.1 TODO need workaround for dev environment detection
+        // handler.modImplementation("curse.maven:ecotones-356678:3402996")
+
+        // https://www.curseforge.com/minecraft/mc-mods/vanilla-biomes
+        // Vanilla+ Biomes 0.3.2 for 1.17
+        handler.modImplementation("curse.maven:vanilla-biomes-367944:3355670")
     }
 
 }
