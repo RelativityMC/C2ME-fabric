@@ -16,6 +16,13 @@ loom {
             server()
             runDir getRootProject().getProjectDir().toPath().relativize(project.getBuildDir().toPath()).resolve("testServer").toString()
             source sourceSets.testmod
+            if (!System.getenv("GITHUB_WORKFLOW").isBlank()) {
+                if (System.getenv("RUNNER_OS").equals("macOS")) {
+                    vmArgs "-Xmx12G"
+                } else if (System.getenv("RUNNER_OS").equals("Linux")) {
+                    vmArgs "-Xmx6G"
+                }
+            }
         }
     }
 }
