@@ -53,7 +53,7 @@ public abstract class MixinTheEndBiomeSource {
 
     /**
      * @author ishland
-     * @return the end biome cache
+     * @reason the end biome cache
      */
     @Overwrite
     public Biome getBiomeForNoiseGen(int biomeX, int biomeY, int biomeZ) {
