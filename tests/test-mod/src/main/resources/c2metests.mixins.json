@@ -5,13 +5,16 @@
   "compatibilityLevel": "JAVA_16",
   "mixinPriority": 1100,
   "mixins": [
+    "IChunkGenerator",
     "IServerChunkManager",
     "IThreadedAnvilChunkStorage",
     "MixinCrashReport",
     "MixinMain",
     "MixinMinecraftDedicatedServer",
     "MixinMinecraftServer",
-    "MixinServerPropertiesHandler"
+    "MixinServerChunkManager",
+    "MixinServerPropertiesHandler",
+    "MixinStructureFeature"
   ],
   "client": [
   ],

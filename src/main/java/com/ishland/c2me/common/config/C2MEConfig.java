@@ -17,6 +17,7 @@ public class C2MEConfig {
 
     public static final AsyncIoConfig asyncIoConfig;
     public static final ThreadedWorldGenConfig threadedWorldGenConfig;
+    public static final VanillaWorldGenOptimizationsConfig vanillaWorldGenOptimizationsConfig;
 
     static {
         long startTime = System.nanoTime();
@@ -30,6 +31,7 @@ public class C2MEConfig {
         final ConfigUtils.ConfigScope configScope = new ConfigUtils.ConfigScope(config);
         asyncIoConfig = new AsyncIoConfig(ConfigUtils.getValue(configScope, "asyncIO", CommentedConfig::inMemory, "Configuration for async io system", List.of(), null));
         threadedWorldGenConfig = new ThreadedWorldGenConfig(ConfigUtils.getValue(configScope, "threadedWorldGen", CommentedConfig::inMemory, "Configuration for threaded world generation", List.of(), null));
+        vanillaWorldGenOptimizationsConfig = new VanillaWorldGenOptimizationsConfig(ConfigUtils.getValue(configScope, "vanillaWorldGenOptimizations", CommentedConfig::inMemory, "Configuration for vanilla worldgen optimizations", List.of(), null));
         configScope.removeUnusedKeys();
         config.save();
         config.close();
@@ -79,6 +81,19 @@ public class C2MEConfig {
             this.allowThreadedFeatures = ConfigUtils.getValue(configScope, "allowThreadedFeatures", () -> false || global_allowThreadedFeatures, "Whether to allow feature generation (world decorations like trees, ores and etc.) run in parallel \n (may cause incompatibility with other mods)", List.of(), null);
             this.reduceLockRadius = ConfigUtils.getValue(configScope, "reduceLockRadius", () -> false || global_reduceLockRadius, "Whether to allow reducing lock radius (faster but UNSAFE) (YOU HAVE BEEN WARNED) \n (may cause incompatibility with other mods)", List.of(), null);
             this.useGlobalBiomeCache = ConfigUtils.getValue(configScope, "useGlobalBiomeCache", () -> false || global_useGlobalBiomeCache, "(Experimental) Whether to enable global BiomeCache to accelerate worldgen \n This increases memory allocation ", List.of(), false);
+            configScope.removeUnusedKeys();
+        }
+    }
+
+    public static class VanillaWorldGenOptimizationsConfig {
+        public final boolean enabled;
+        public final boolean useEndBiomeCache;
+
+        public VanillaWorldGenOptimizationsConfig(CommentedConfig config) {
+            Preconditions.checkNotNull(config, "vanillaWorldGenOptimizationsConfig config is not present");
+            final ConfigUtils.ConfigScope configScope = new ConfigUtils.ConfigScope(config);
+            this.enabled = ConfigUtils.getValue(configScope, "enabled", () -> true, "Whether to enable this feature \n (may cause incompatibility with other mods)", List.of(), false);
+            this.useEndBiomeCache = ConfigUtils.getValue(configScope, "useEndBiomeCache", () -> true, "Whether to enable End BiomeCache to accelerate The End worldgen \n (may cause incompatibility with other mods)", List.of("lithium"), false);
             configScope.removeUnusedKeys();
         }
     }
