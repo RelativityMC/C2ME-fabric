@@ -17,7 +17,7 @@ public class MixinRegionBasedStorage {
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onPostInit(CallbackInfo info) {
-        this.dsync = !Boolean.parseBoolean(System.getProperty("com.ishland.c2me.chunkio.syncDiskWrites", "false"));
+        this.dsync = Boolean.parseBoolean(System.getProperty("com.ishland.c2me.chunkio.syncDiskWrites", "false"));
     }
 
 }
