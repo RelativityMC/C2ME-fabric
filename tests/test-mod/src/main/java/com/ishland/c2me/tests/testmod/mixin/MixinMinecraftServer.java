@@ -124,8 +124,8 @@ public abstract class MixinMinecraftServer extends ReentrantThreadExecutor<Serve
                         final GcInfo gcInfo = info.getGcInfo();
                         final long usedBefore = gcInfo.getMemoryUsageBeforeGc().values().stream().flatMapToLong(memoryUsage -> LongStream.of(memoryUsage.getUsed())).sum();
                         final long usedAfter = gcInfo.getMemoryUsageAfterGc().values().stream().flatMapToLong(memoryUsage -> LongStream.of(memoryUsage.getUsed())).sum();
-                        final long total = Runtime.getRuntime().totalMemory();
-                        final long max = Runtime.getRuntime().maxMemory();
+                        final long total = gcInfo.getMemoryUsageAfterGc().values().stream().flatMapToLong(memoryUsage -> LongStream.of(memoryUsage.getCommitted())).sum();
+                        final long max = gcInfo.getMemoryUsageAfterGc().values().stream().flatMapToLong(memoryUsage -> LongStream.of(memoryUsage.getMax())).sum();
                         LOGGER.info(String.format("GC: %s: [%d] %s caused by %s took %dms, %.1fMB -> %.1fMB (%.1fMB committed %.1fMB max)",
                                 info.getGcName(), gcInfo.getId(), info.getGcAction(), info.getGcCause(), gcInfo.getDuration(),
                                 usedBefore / 1024.0 / 1024.0, usedAfter / 1024.0 / 1024.0, total / 1024.0 / 1024.0, max / 1024.0 / 1024.0));
