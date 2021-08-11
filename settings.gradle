@@ -17,4 +17,5 @@ include 'tests:world-diff'
 include 'compatibility'
 include 'compatibility:terra'
 include 'compatibility:betterend'
+include 'compatibility:thebumblezone'
 
