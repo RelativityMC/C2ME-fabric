@@ -104,7 +104,7 @@ public class PreGenTask {
         chunksHashed.clear();
         final int total = chunks.size();
         LOGGER.info("Total chunks: {}", total);
-        AsyncSemaphore working = new FairAsyncSemaphore(320);
+        AsyncSemaphore working = new FairAsyncSemaphore(Runtime.getRuntime().maxMemory() / 1024 / 1024 / 1024 * 24);
         AtomicLong generatedCount = new AtomicLong();
         final Set<CompletableFuture<Void>> futures = chunks.stream()
                 .map(pos -> working.acquire()
