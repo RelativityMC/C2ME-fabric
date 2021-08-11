@@ -27,6 +27,7 @@ class ModpackConfig {
         // https://github.com/TelepathicGrunt/RepurposedStructures-Fabric
         handler.modImplementation("com.telepathicgrunt:RepurposedStructures-Fabric:2.2.0+1.17.1") {
             exclude(group: "net.fabricmc.fabric-api")
+            exclude(group: "net.fabricmc", module: "fabric-loader")
             exclude(group: "maven.modrinth", module: "modmenu")
         }
 
@@ -34,12 +35,14 @@ class ModpackConfig {
         // TODO removed due to bad memleak when paired with starlight
 //        handler.modImplementation("com.telepathicgrunt:UltraAmplifiedModFabric:10.0.0+1.17.1") {
 //            exclude(group: "net.fabricmc.fabric-api")
+//            exclude(group: "net.fabricmc", module: "fabric-loader")
 //            exclude(group: "maven.modrinth", module: "modmenu")
 //        }
 
         // https://github.com/TelepathicGrunt/Bumblezone-Fabric
         handler.modImplementation("com.telepathicgrunt:Bumblezone-Fabric:3.0.9+1.17.1") {
             exclude(group: "net.fabricmc.fabric-api")
+            exclude(group: "net.fabricmc", module: "fabric-loader")
             exclude(group: "maven.modrinth", module: "modmenu")
         }
 
@@ -50,6 +53,7 @@ class ModpackConfig {
         // https://github.com/ishland/BetterEnd/
         handler.modImplementation("com.github.ishland:BetterEnd:3c0120db2e") {
             exclude(group: "net.fabricmc.fabric-api")
+            exclude(group: "net.fabricmc", module: "fabric-loader")
         }
 
         ////////////////////////////////////////
@@ -76,6 +80,16 @@ class ModpackConfig {
         // https://www.curseforge.com/minecraft/mc-mods/cave-biomes
         // Cave Biomes 0.6.3 for 1.17
         handler.modImplementation("curse.maven:cave-biomes-371307:3344491")
+
+        ////////////////////////////////////////
+        // TerraformersMC content mods
+
+        // https://github.com/TerraformersMC/Traverse/
+        // Traverse v4.0.0-beta.2 for 1.17.1
+        handler.modImplementation("com.terraformersmc:traverse:4.0.0-beta.2") {
+            exclude(group: "net.fabricmc.fabric-api")
+            exclude(group: "net.fabricmc", module: "fabric-loader")
+        }
     }
 
 }
