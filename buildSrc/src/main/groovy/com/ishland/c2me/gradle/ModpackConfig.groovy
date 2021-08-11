@@ -68,6 +68,14 @@ class ModpackConfig {
         // https://www.curseforge.com/minecraft/mc-mods/vanilla-biomes
         // Vanilla+ Biomes 0.3.2 for 1.17
         handler.modImplementation("curse.maven:vanilla-biomes-367944:3355670")
+
+        // https://www.curseforge.com/minecraft/mc-mods/river-redux
+        // River Redux 0.2.0 for 1.17
+        handler.modImplementation("curse.maven:river-redux-380548:3344516")
+
+        // https://www.curseforge.com/minecraft/mc-mods/cave-biomes
+        // Cave Biomes 0.6.3 for 1.17
+        handler.modImplementation("curse.maven:cave-biomes-371307:3344491")
     }
 
 }
