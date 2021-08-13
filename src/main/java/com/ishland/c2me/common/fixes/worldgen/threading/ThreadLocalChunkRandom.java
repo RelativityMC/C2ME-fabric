@@ -11,6 +11,11 @@ public class ThreadLocalChunkRandom extends ChunkRandom {
 
     private final ThreadLocal<ChunkRandom> chunkRandomThreadLocal;
 
+    @SuppressWarnings("unused")
+    public ThreadLocalChunkRandom() { // called by asm generated code
+        this(System.nanoTime());
+    }
+
     public ThreadLocalChunkRandom(long seed) {
         this(seed, chunkRandom -> {});
     }

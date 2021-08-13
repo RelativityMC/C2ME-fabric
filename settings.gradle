@@ -18,5 +18,6 @@ include 'tests:c2me-modpack-devlaunch'
 include 'compatibility'
 include 'compatibility:terra'
 include 'compatibility:betterend'
+include 'compatibility:betternether'
 include 'compatibility:thebumblezone'
 

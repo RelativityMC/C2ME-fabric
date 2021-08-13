@@ -5,6 +5,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.ishland.c2me.common.config.ConfigUtils;
+import com.ishland.c2me.compatibility.common.asm.ASMTransformer;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 import net.fabricmc.loader.util.UrlUtil;
@@ -66,6 +67,7 @@ public class C2MECompatibilityModule implements IMixinConfigPlugin {
         addMixins("terra", ">=5.0.0", "terra", configScope);
         addMixins("betterend", ">=0.10.2-pre", "betterend", configScope);
         addMixins("the_bumblezone", ">=3.0.4+1.17", "thebumblezone", configScope);
+        addMixins("betternether", ">=5.1.3", "betternether", configScope);
         configScope.removeUnusedKeys();
         config.save();
         config.close();
@@ -138,6 +140,7 @@ public class C2MECompatibilityModule implements IMixinConfigPlugin {
 
     @Override
     public void postApply(String targetClassName, ClassNode targetClass, String mixinClassName, IMixinInfo mixinInfo) {
+        ASMTransformer.transform(targetClass);
     }
 
     private void addMixins(String modid, String versionRange, String subPackage, ConfigUtils.ConfigScope configScope) {

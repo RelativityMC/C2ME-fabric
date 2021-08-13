@@ -1,0 +1,13 @@
+{
+  "parent": "c2me-compat.mixins.json",
+  "package": "com.ishland.c2me.compatibility.mixin.betternether",
+  "mixins": [
+    "MixinASMTargets",
+    "MixinCityFeatureCityStart",
+    "MixinNetherBiomeSource",
+    "MixinStructureAnchorTree",
+    "MixinStructureAnchorTreeBranch",
+    "MixinStructureOldWillow",
+    "MixinStructureRubeus"
+  ]
+}
