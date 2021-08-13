@@ -1,5 +1,6 @@
 package com.ishland.c2me.mixin;
 
+import com.ishland.c2me.common.fixes.DataFixerUpperClasspathFix;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.objectweb.asm.tree.ClassNode;
@@ -18,6 +19,7 @@ public class C2MEMixinPlugin implements IMixinConfigPlugin {
         //noinspection ResultOfMethodCallIgnored
         C2MEConfig.threadedWorldGenConfig.getClass().getName(); // Load configuration
         LOGGER.info("Successfully loaded configuration for C2ME");
+        DataFixerUpperClasspathFix.fix();
     }
 
     @Override

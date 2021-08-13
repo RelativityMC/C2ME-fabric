@@ -1,5 +1,6 @@
 package com.ishland.c2me.mixin.optimization.chunkaccess.async_chunk_request;
 
+import com.ishland.c2me.common.util.CFUtil;
 import com.mojang.datafixers.util.Either;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ChunkTicketManager;
@@ -56,7 +57,7 @@ public abstract class MixinServerChunkManager {
     @Inject(method = "getChunk(IILnet/minecraft/world/chunk/ChunkStatus;Z)Lnet/minecraft/world/chunk/Chunk;", at = @At("HEAD"), cancellable = true)
     private void onGetChunk(int chunkX, int chunkZ, ChunkStatus leastStatus, boolean create, CallbackInfoReturnable<Chunk> cir) {
         if (Thread.currentThread() != this.serverThread) {
-            cir.setReturnValue(CompletableFuture.supplyAsync(() -> {
+            cir.setReturnValue(CFUtil.join(CompletableFuture.supplyAsync(() -> {
                 // TODO [VanillaCopy] getChunkFuture
                 ChunkPos chunkPos = new ChunkPos(chunkX, chunkZ);
                 long chunkPosLong = chunkPos.toLong();
@@ -89,7 +90,7 @@ public abstract class MixinServerChunkManager {
                 } else {
                     return null;
                 }
-            })).join());
+            }))));
         }
     }
 

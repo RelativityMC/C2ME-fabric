@@ -6,8 +6,10 @@
   "mixinPriority": 1100,
   "mixins": [
     "access.IStructureWeightSampler",
+    "failsafe.MixinSinglePoolElement",
     "fixes.asynccatchers.MixinServerChunkManager",
     "fixes.chunkio.threading.MixinStructurePoolElement",
+    "fixes.worldgen.deadlocks.MixinDataFixerType",
     "fixes.worldgen.threading.MixinBiomeSource",
     "fixes.worldgen.threading.MixinChunkGenerator",
     "fixes.worldgen.threading.MixinDeepslateBlockSource",
@@ -22,7 +24,6 @@
     "fixes.worldgen.threading.MixinOrder",
     "fixes.worldgen.threading.MixinOreVeinSource",
     "fixes.worldgen.threading.MixinRandomizedIntBlockStateProvider",
-    "failsafe.MixinSinglePoolElement",
     "fixes.worldgen.threading.MixinStrongholdGenerator",
     "fixes.worldgen.threading.MixinStrongholdGeneratorSpiralStaircase",
     "fixes.worldgen.threading.MixinStrongholdGeneratorStart",

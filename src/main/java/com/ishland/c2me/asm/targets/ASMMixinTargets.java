@@ -1,5 +1,6 @@
 package com.ishland.c2me.asm.targets;
 
+import net.minecraft.server.world.ServerChunkManager;
 import net.minecraft.structure.MineshaftGenerator;
 import net.minecraft.structure.NetherFortressGenerator;
 import net.minecraft.structure.OceanMonumentGenerator;
@@ -24,7 +25,8 @@ import org.spongepowered.asm.mixin.Mixin;
         StrongholdGenerator.Start.class,
         StructurePieceWithDimensions.class,
         SwampHutGenerator.class,
-        WoodlandMansionGenerator.GenerationPiece.class
+        WoodlandMansionGenerator.GenerationPiece.class,
+        ServerChunkManager.class
 })
 public class ASMMixinTargets {
 }

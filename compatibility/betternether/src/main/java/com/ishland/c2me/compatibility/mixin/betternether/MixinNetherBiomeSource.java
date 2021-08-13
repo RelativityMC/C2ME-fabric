@@ -21,7 +21,7 @@ public class MixinNetherBiomeSource {
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(Registry<Biome> biomeRegistry, long seed, CallbackInfo ci) {
-        this.biomeMapThreadLocal = ThreadLocal.withInitial(() -> new BiomeMap(seed, getField("biomeSizeXZ"), getField("biomeSizeY"), getField("biomeSizeY")));
+        this.biomeMapThreadLocal = ThreadLocal.withInitial(() -> new BiomeMap(seed, getField("biomeSizeXZ"), getField("biomeSizeY"), getField("volumetric")));
     }
 
     private <T> T getField(String name) {

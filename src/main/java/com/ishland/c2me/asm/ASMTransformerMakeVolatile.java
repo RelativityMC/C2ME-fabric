@@ -2,8 +2,6 @@ package com.ishland.c2me.asm;
 
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.MappingResolver;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
@@ -13,9 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class ASMTransformer {
-
-    static final Logger LOGGER = LogManager.getLogger("C2ME ASM Transformer");
+public class ASMTransformerMakeVolatile {
 
     private static final String INTERMEDIARY = "intermediary";
 
@@ -128,7 +124,7 @@ public class ASMTransformer {
                 }).collect(Collectors.toMap(KeyValue::key, KeyValue::value));
     }
 
-    private static String remapDescriptor(String desc) {
+    static String remapDescriptor(String desc) {
         final Type type = Type.getType(desc);
         if (type.getSort() == Type.ARRAY) { // remap arrays
             return "[".repeat(type.getDimensions()) + remapDescriptor(type.getElementType().getDescriptor());
@@ -149,11 +145,11 @@ public class ASMTransformer {
     public static void transform(ClassNode classNode) {
         final List<String> pendingFields = makeVolatileFieldsMapped.get(classNode.name);
         if (pendingFields != null) {
-            LOGGER.info("Transforming class {}", classNode.name.replace('/', '.'));
+            ASMMixinPlugin.LOGGER.info("Transforming class {}", classNode.name.replace('/', '.'));
             classNode.fields.stream()
                     .filter(fieldNode -> pendingFields.contains(fieldNode.name + ":" + fieldNode.desc))
                     .forEach(fieldNode -> {
-                        LOGGER.info("Making field L{};{}:{} volatile", classNode.name, fieldNode.name, fieldNode.desc);
+                        ASMMixinPlugin.LOGGER.info("Making field L{};{}:{} volatile", classNode.name, fieldNode.name, fieldNode.desc);
                         fieldNode.access |= Opcodes.ACC_VOLATILE;
                     });
         }

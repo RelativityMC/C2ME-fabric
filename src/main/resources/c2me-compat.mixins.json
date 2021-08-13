@@ -10,6 +10,5 @@
   "plugin": "com.ishland.c2me.compatibility.mixin.C2MECompatibilityModule",
   "injectors": {
     "defaultRequire": 1
-  },
-  "setSourceFile": true
+  }
 }
