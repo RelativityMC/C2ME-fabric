@@ -58,7 +58,7 @@ class ModpackConfig {
 
         // https://github.com/paulevsGitch/BetterNether/
         // better-nether-5.1.3-1.17/1.17.1
-        handler.modImplementation("curse.maven:betternether-311377:3379682")
+        // handler.modImplementation("curse.maven:betternether-311377:3379682")
 
         ////////////////////////////////////////
         // PolyDev content mods
