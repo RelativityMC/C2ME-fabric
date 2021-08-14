@@ -17,6 +17,7 @@ import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
@@ -57,41 +58,58 @@ public abstract class MixinServerChunkManager {
     @Inject(method = "getChunk(IILnet/minecraft/world/chunk/ChunkStatus;Z)Lnet/minecraft/world/chunk/Chunk;", at = @At("HEAD"), cancellable = true)
     private void onGetChunk(int chunkX, int chunkZ, ChunkStatus leastStatus, boolean create, CallbackInfoReturnable<Chunk> cir) {
         if (Thread.currentThread() != this.serverThread) {
-            cir.setReturnValue(CFUtil.join(CompletableFuture.supplyAsync(() -> {
-                // TODO [VanillaCopy] getChunkFuture
-                ChunkPos chunkPos = new ChunkPos(chunkX, chunkZ);
-                long chunkPosLong = chunkPos.toLong();
-                int ticketLevel = 33 + ChunkStatus.getDistanceFromFull(leastStatus);
-                ChunkHolder chunkHolder = this.getChunkHolder(chunkPosLong);
-                if (create) {
-                    this.ticketManager.addTicketWithLevel(ASYNC_LOAD, chunkPos, ticketLevel, chunkPos);
-                    if (this.isMissingForLevel(chunkHolder, ticketLevel)) {
-                        Profiler profiler = this.world.getProfiler();
-                        profiler.push("chunkLoad");
-                        this.tick();
-                        chunkHolder = this.getChunkHolder(chunkPosLong);
-                        profiler.pop();
-                        if (this.isMissingForLevel(chunkHolder, ticketLevel)) {
-                            throw Util.throwOrPause(new IllegalStateException("No chunk holder after ticket has been added"));
-                        }
-                    }
-                }
-
-                final CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> future = this.isMissingForLevel(chunkHolder, ticketLevel) ? ChunkHolder.UNLOADED_CHUNK_FUTURE : chunkHolder.getChunkAt(leastStatus, this.threadedAnvilChunkStorage);
-                if (create) {
-                    future.exceptionally(__ -> null).thenRunAsync(() -> {
-                        this.ticketManager.removeTicketWithLevel(ASYNC_LOAD, chunkPos, ticketLevel, chunkPos);
-                    }, this.mainThreadExecutor);
-                }
-                return future;
-            }, this.mainThreadExecutor).thenCompose(Function.identity()).thenApply(either -> either.map(Function.identity(), unloaded -> {
-                if (create) {
-                    throw Util.throwOrPause(new IllegalStateException("Chunk not there when requested: " + unloaded));
-                } else {
-                    return null;
-                }
-            }))));
+            cir.setReturnValue(c2me$getChunkOffThread(chunkX, chunkZ, leastStatus, create));
         }
     }
+
+    @Unique
+    @Final
+    private Chunk c2me$getChunkOffThread(int chunkX, int chunkZ, ChunkStatus leastStatus, boolean create) {
+        final CompletableFuture<Chunk> chunkLoad = c2me$getChunkFutureOffThread(chunkX, chunkZ, leastStatus, create);
+        assert chunkLoad != null;
+        return CFUtil.join(chunkLoad);
+    }
+
+    @Unique
+    @Final
+    @Nullable
+    private CompletableFuture<Chunk> c2me$getChunkFutureOffThread(int chunkX, int chunkZ, ChunkStatus leastStatus, boolean create) {
+        return CompletableFuture.supplyAsync(() -> {
+            // TODO [VanillaCopy] getChunkFuture
+            ChunkPos chunkPos = new ChunkPos(chunkX, chunkZ);
+            long chunkPosLong = chunkPos.toLong();
+            int ticketLevel = 33 + ChunkStatus.getDistanceFromFull(leastStatus);
+            ChunkHolder chunkHolder = this.getChunkHolder(chunkPosLong);
+            if (create) {
+                this.ticketManager.addTicketWithLevel(ASYNC_LOAD, chunkPos, ticketLevel, chunkPos);
+                if (this.isMissingForLevel(chunkHolder, ticketLevel)) {
+                    Profiler profiler = this.world.getProfiler();
+                    profiler.push("chunkLoad");
+                    this.tick();
+                    chunkHolder = this.getChunkHolder(chunkPosLong);
+                    profiler.pop();
+                    if (this.isMissingForLevel(chunkHolder, ticketLevel)) {
+                        throw Util.throwOrPause(new IllegalStateException("No chunk holder after ticket has been added"));
+                    }
+                }
+            }
+
+            final CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> future = this.isMissingForLevel(chunkHolder, ticketLevel) ? ChunkHolder.UNLOADED_CHUNK_FUTURE : chunkHolder.getChunkAt(leastStatus, this.threadedAnvilChunkStorage);
+            if (create) {
+                future.exceptionally(__ -> null).thenRunAsync(() -> {
+                    this.ticketManager.removeTicketWithLevel(ASYNC_LOAD, chunkPos, ticketLevel, chunkPos);
+                }, this.mainThreadExecutor);
+            }
+            return future;
+        }, this.mainThreadExecutor).thenCompose(Function.identity()).thenApply(either -> either.map(Function.identity(), unloaded -> {
+            if (create) {
+                throw Util.throwOrPause(new IllegalStateException("Chunk not there when requested: " + unloaded));
+            } else {
+                return null;
+            }
+        }));
+    }
+
+
 
 }

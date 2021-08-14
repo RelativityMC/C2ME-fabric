@@ -95,7 +95,7 @@ public class C2MEConfig {
             final ConfigUtils.ConfigScope configScope = new ConfigUtils.ConfigScope(config);
             this.enabled = ConfigUtils.getValue(configScope, "enabled", () -> true, "Whether to enable this feature \n (may cause incompatibility with other mods)", List.of(), false);
             this.useEndBiomeCache = ConfigUtils.getValue(configScope, "useEndBiomeCache", () -> true, "Whether to enable End BiomeCache to accelerate The End worldgen \n This is included in lithium-fabric \n (may cause incompatibility with other mods) ", List.of("lithium"), false);
-            this.optimizeAsyncChunkRequest = ConfigUtils.getValue(configScope, "optimizeAsyncChunkRequest", () -> true, "Whether to let async chunk request no longer block server thread \n (may cause incompatibility with other mods) ", List.of("lithium"), false);
+            this.optimizeAsyncChunkRequest = ConfigUtils.getValue(configScope, "optimizeAsyncChunkRequest", () -> true, "Whether to let async chunk request no longer block server thread \n (may cause incompatibility with other mods) ", List.of(), false);
             configScope.removeUnusedKeys();
         }
     }

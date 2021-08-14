@@ -94,7 +94,7 @@ public class PreGenTask {
                 final String formatted = String.format("Locating: Biomes: %d / %d, Structures: %d / %d\n", locatedBiomes.get(), biomes.size(), locatedStructures.get(), structureFeatures.size());
                 System.out.print("[noprint]" + formatted);
                 if (printCounter > 128) {
-                    LOGGER.info(formatted.substring(0, formatted.length() - 1));
+                    LOGGER.info("[noprogress]" + formatted.substring(0, formatted.length() - 1));
                     printCounter = 0;
                 }
             }
