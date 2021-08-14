@@ -3,10 +3,12 @@
   "package": "com.ishland.c2me.compatibility.mixin.betternether",
   "mixins": [
     "MixinASMTargets",
+    "MixinBNWorldGenerator",
     "MixinCityFeatureCityStart",
     "MixinNetherBiomeSource",
     "MixinStructureAnchorTree",
     "MixinStructureAnchorTreeBranch",
+    "MixinStructureAnchorTreeRoot",
     "MixinStructureOldWillow",
     "MixinStructureRubeus"
   ]

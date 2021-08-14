@@ -69,7 +69,7 @@ public class ThreadLocalChunkRandom extends ChunkRandom {
     }
 
     @Override
-    public synchronized void setSeed(long seed) {
+    public void setSeed(long seed) {
         if (chunkRandomThreadLocal == null) return; // Special case when doing <init>
         chunkRandomThreadLocal.get().setSeed(seed);
     }
@@ -110,7 +110,7 @@ public class ThreadLocalChunkRandom extends ChunkRandom {
     }
 
     @Override
-    public synchronized double nextGaussian() {
+    public double nextGaussian() {
         return chunkRandomThreadLocal.get().nextGaussian();
     }
 

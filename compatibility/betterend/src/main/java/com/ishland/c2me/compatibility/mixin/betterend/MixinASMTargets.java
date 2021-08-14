@@ -10,6 +10,7 @@ import ru.betterend.world.features.UnderwaterPlantScatter;
 import ru.betterend.world.features.terrain.DesertLakeFeature;
 import ru.betterend.world.features.terrain.EndLakeFeature;
 import ru.betterend.world.features.terrain.SulphuricLakeFeature;
+import ru.betterend.world.generator.IslandLayer;
 
 @Mixin({
         DesertLakeFeature.class,
@@ -20,7 +21,8 @@ import ru.betterend.world.features.terrain.SulphuricLakeFeature;
         SilkMothNestFeature.class,
         SulphuricLakeFeature.class,
         UnderwaterPlantScatter.class,
-        BiomeIslandFeature.class
+        BiomeIslandFeature.class,
+        IslandLayer.class
 })
 public class MixinASMTargets {
 }
