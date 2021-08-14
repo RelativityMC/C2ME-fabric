@@ -43,8 +43,6 @@ public class PreGenTask {
     private static final Logger LOGGER = LogManager.getLogger("C2ME Test");
     private static final ChunkTicketType<Unit> TICKET = ChunkTicketType.create("c2metest", (unit, unit2) -> 0);
 
-    private static final int PREGEN_SPAWN_RADIUS = 32;
-    private static final int PREGEN_RADIUS = 12;
     private static final int SEARCH_RADIUS = 512 * 16;
 
     public static CompletableFuture<Void> runPreGen(ServerWorld world, Consumer<ChunkGeneratedEventInfo> eventListener) {
@@ -53,7 +51,7 @@ public class PreGenTask {
         final BlockPos spawnPos = world.getSpawnPos();
         final Set<ChunkPos> chunksHashed = Sets.newConcurrentHashSet();
         final List<ChunkPos> chunks = Collections.synchronizedList(new ArrayList<>());
-        chunks.addAll(createPreGenChunks(new ChunkPos(spawnPos), PREGEN_SPAWN_RADIUS, chunksHashed::add));
+        chunks.addAll(createPreGenChunks33(new ChunkPos(spawnPos), chunksHashed::add));
         final AtomicInteger locatedBiomes = new AtomicInteger();
         final AtomicInteger locatedStructures = new AtomicInteger();
         System.err.printf("Fetching structure and biome list\n");
@@ -69,7 +67,7 @@ public class PreGenTask {
                     locatedBiomes.incrementAndGet();
                     if (blockPos != null) {
                         final ChunkPos chunkPos = new ChunkPos(blockPos);
-                        chunks.addAll(createPreGenChunks(chunkPos, PREGEN_RADIUS, chunksHashed::add));
+                        chunks.addAll(createPreGenChunks25(chunkPos, chunksHashed::add));
                         return;
                     }
                     LOGGER.info("Unable to locate biome {}", biomeRegistry.getId(biome));
@@ -80,7 +78,7 @@ public class PreGenTask {
                     locatedStructures.incrementAndGet();
                     if (blockPos != null) {
                         final ChunkPos chunkPos = new ChunkPos(blockPos);
-                        chunks.addAll(createPreGenChunks(chunkPos, PREGEN_RADIUS, chunksHashed::add));
+                        chunks.addAll(createPreGenChunks25(chunkPos, chunksHashed::add));
                         return;
                     }
                     LOGGER.info("Unable to locate structure {}", structureFeature.getName());
@@ -134,8 +132,44 @@ public class PreGenTask {
         return future;
     }
 
+    /**
+     * Add a generation range of 33x33 (hardcoded) with 16 pregen regions
+     */
+    private static ArrayList<ChunkPos> createPreGenChunks33(ChunkPos center, Predicate<ChunkPos> shouldAdd) {
+        final ArrayList<ChunkPos> chunks = new ArrayList<>(33 * 33);
+        chunks.addAll(createPreGenChunks17(new ChunkPos(center.x - 8, center.z - 8), shouldAdd));
+        chunks.addAll(createPreGenChunks17(new ChunkPos(center.x - 8, center.z + 8), shouldAdd));
+        chunks.addAll(createPreGenChunks17(new ChunkPos(center.x + 8, center.z - 8), shouldAdd));
+        chunks.addAll(createPreGenChunks17(new ChunkPos(center.x + 8, center.z + 8), shouldAdd));
+        return chunks;
+    }
+
+    /**
+     * Add a generation range of 25x25 (hardcoded) with 16 pregen regions
+     */
+    private static ArrayList<ChunkPos> createPreGenChunks25(ChunkPos center, Predicate<ChunkPos> shouldAdd) {
+        final ArrayList<ChunkPos> chunks = new ArrayList<>(25 * 25);
+        chunks.addAll(createPreGenChunks17(new ChunkPos(center.x - 4, center.z - 4), shouldAdd));
+        chunks.addAll(createPreGenChunks17(new ChunkPos(center.x - 4, center.z + 4), shouldAdd));
+        chunks.addAll(createPreGenChunks17(new ChunkPos(center.x + 4, center.z - 4), shouldAdd));
+        chunks.addAll(createPreGenChunks17(new ChunkPos(center.x + 4, center.z + 4), shouldAdd));
+        return chunks;
+    }
+
+    /**
+     * Add a generation range of 17x17 (hardcoded) with 4 pregen regions
+     */
+    private static ArrayList<ChunkPos> createPreGenChunks17(ChunkPos center, Predicate<ChunkPos> shouldAdd) {
+        final ArrayList<ChunkPos> chunks = new ArrayList<>(17 * 17);
+        chunks.addAll(createPreGenChunks0(new ChunkPos(center.x - 4, center.z - 4), 4, shouldAdd));
+        chunks.addAll(createPreGenChunks0(new ChunkPos(center.x - 4, center.z + 4), 4, shouldAdd));
+        chunks.addAll(createPreGenChunks0(new ChunkPos(center.x + 4, center.z - 4), 4, shouldAdd));
+        chunks.addAll(createPreGenChunks0(new ChunkPos(center.x + 4, center.z + 4), 4, shouldAdd));
+        return chunks;
+    }
+
     @NotNull
-    private static ArrayList<ChunkPos> createPreGenChunks(ChunkPos center, int radius, Predicate<ChunkPos> shouldAdd) {
+    private static ArrayList<ChunkPos> createPreGenChunks0(ChunkPos center, int radius, Predicate<ChunkPos> shouldAdd) {
         final ArrayList<ChunkPos> chunks = new ArrayList<>((radius * 2 + 1) * (radius * 2 + 1));
         for (int x = center.x - radius; x <= center.x + radius; x++)
             for (int z = center.z - radius; z <= center.z + radius; z++) {
