@@ -88,13 +88,13 @@ public class PreGenTask {
         int printCounter = 0;
         System.err.printf("Waiting for tasks to finish\n");
         while (!locateFuture.isDone() && world.getServer().isRunning()) {
-            if (System.currentTimeMillis() - lastProgress > 40) {
+            while (System.currentTimeMillis() - lastProgress > 40) {
                 lastProgress += 40;
                 printCounter++;
                 final String formatted = String.format("Locating: Biomes: %d / %d, Structures: %d / %d\n", locatedBiomes.get(), biomes.size(), locatedStructures.get(), structureFeatures.size());
                 System.out.print("[noprint]" + formatted);
                 if (printCounter > 128) {
-                    System.out.print(formatted);
+                    LOGGER.info(formatted.substring(0, formatted.length() - 1));
                     printCounter = 0;
                 }
             }
