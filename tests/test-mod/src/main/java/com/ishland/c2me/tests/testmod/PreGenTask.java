@@ -56,11 +56,13 @@ public class PreGenTask {
         chunks.addAll(createPreGenChunks(new ChunkPos(spawnPos), PREGEN_SPAWN_RADIUS, chunksHashed::add));
         final AtomicInteger locatedBiomes = new AtomicInteger();
         final AtomicInteger locatedStructures = new AtomicInteger();
+        System.err.printf("Fetching structure and biome list\n");
         final List<Biome> biomes = world.getChunkManager().getChunkGenerator().getBiomeSource().getBiomes();
         final Set<StructureFeature<?>> structureFeatures = StructureFeature.STRUCTURES.values().stream()
                 .filter(structureFeature -> ((IChunkGenerator) world.getChunkManager().getChunkGenerator()).getPopulationSource().hasStructureFeature(structureFeature))
                 .collect(Collectors.toSet());
         final Registry<Biome> biomeRegistry = world.getRegistryManager().get(Registry.BIOME_KEY);
+        System.err.printf("Submitting tasks\n");
         final CompletableFuture<Void> biomeFuture = CompletableFuture.allOf(biomes.stream()
                 .map(biome -> CompletableFuture.runAsync(() -> {
                     final BlockPos blockPos = world.locateBiome(biome, spawnPos, SEARCH_RADIUS, 8);
@@ -86,6 +88,7 @@ public class PreGenTask {
         final CompletableFuture<Void> locateFuture = CompletableFuture.allOf(biomeFuture, structureFuture);
         long lastProgress = System.currentTimeMillis();
         int printCounter = 0;
+        System.err.printf("Waiting for tasks to finish\n");
         while (!locateFuture.isDone() && world.getServer().isRunning()) {
             if (System.currentTimeMillis() - lastProgress > 40) {
                 lastProgress += 40;
