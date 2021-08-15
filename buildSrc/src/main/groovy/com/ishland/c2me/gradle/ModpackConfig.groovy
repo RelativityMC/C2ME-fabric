@@ -108,6 +108,10 @@ class ModpackConfig {
         // [1.17] YUNG's Better Mineshafts (Fabric) v1.0.1
         handler.modImplementation("curse.maven:yungs-better-mineshafts-fabric-373591:3414789")
 
+        // https://www.curseforge.com/minecraft/mc-mods/yungs-better-strongholds-fabric
+        // [1.17 - 1.17.1] YUNG's Better Strongholds (Fabric) v1.1.1
+        handler.modImplementation("curse.maven:yungs-better-strongholds-fabric-480684:3412649")
+
     }
 
 }

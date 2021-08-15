@@ -45,6 +45,7 @@ You can find development builds here: https://ci.codemc.io/job/ishlandbukkit/job
 - [Cave Biomes 0.6.3 for 1.17](https://www.curseforge.com/minecraft/mc-mods/cave-biomes/files/3344491)
 - [Traverse v4.0.0-beta.2 for 1.17.1](https://github.com/TerraformersMC/Traverse/releases/tag/v4.0.0-beta.2)
 - [YUNG's Better Mineshafts (Fabric) v1.0.1](https://www.curseforge.com/minecraft/mc-mods/yungs-better-mineshafts-fabric/files/3414789)
+- [YUNG's Better Strongholds (Fabric) v1.1.1](https://www.curseforge.com/minecraft/mc-mods/yungs-better-strongholds-fabric/files/3412649)
 
 ## Building and setting up
 JDK 16+ is required to build and use C2ME  
