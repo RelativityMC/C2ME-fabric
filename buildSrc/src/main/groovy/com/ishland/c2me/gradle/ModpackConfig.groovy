@@ -94,6 +94,20 @@ class ModpackConfig {
             exclude(group: "net.fabricmc.fabric-api")
             exclude(group: "net.fabricmc", module: "fabric-loader")
         }
+
+        ////////////////////////////////////////
+        // yungnickyoung content mods
+
+        // https://www.curseforge.com/minecraft/mc-mods/yungs-api-fabric
+        // [1.17 - 1.17.1] YUNG's API vFabric-15
+        handler.modImplementation("com.yungnickyoung.minecraft.yungsapi:YungsApi:1.17-Fabric-15") {
+            transitive false
+        }
+
+        // https://www.curseforge.com/minecraft/mc-mods/yungs-better-mineshafts-fabric
+        // [1.17] YUNG's Better Mineshafts (Fabric) v1.0.1
+        handler.modImplementation("curse.maven:yungs-better-mineshafts-fabric-373591:3414789")
+
     }
 
 }
