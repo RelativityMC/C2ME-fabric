@@ -1,16 +1,31 @@
 plugins {
     id 'java'
+    id 'java-library'
+    id 'java-gradle-plugin'
 }
 
 group 'com.ishland.c2me'
 
 repositories {
     mavenCentral()
+    maven { url "https://jitpack.io" }
+    maven { url "https://maven.fabricmc.net/" }
 }
 
 dependencies {
+    api "com.github.TeamAOF:ServerStarter:v2.1.1"
+    api "fabric-loom:fabric-loom.gradle.plugin:0.8-SNAPSHOT"
 }
 
 test {
     useJUnitPlatform()
+}
+
+gradlePlugin {
+    plugins {
+        curseModpackResolver {
+            id = 'com.ishland.curseforge.modpackresolver'
+            implementationClass = 'com.ishland.curseforge.modpackresolver.ModPackResolverPlugin'
+        }
+    }
 }

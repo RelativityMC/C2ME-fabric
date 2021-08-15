@@ -1,4 +1,5 @@
 allprojects {
+    apply plugin: 'com.ishland.curseforge.modpackresolver'
     apply plugin: 'fabric-loom'
     apply plugin: 'java-library'
 
