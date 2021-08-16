@@ -1,5 +1,7 @@
 package com.ishland.curseforge.modpackresolver.provider;
 
+import com.google.gson.Gson;
+import com.google.gson.annotations.SerializedName;
 import com.ishland.curseforge.modpackresolver.Constants;
 import com.ishland.curseforge.modpackresolver.meta.CurseMeta;
 import com.ishland.curseforge.modpackresolver.meta.ModPackManifest;
@@ -19,42 +21,114 @@ import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Reader;
+import java.io.Writer;
 import java.net.URL;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Consumer;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 public class ModPackProvider {
 
+    private static final long CURRENT_PLUGIN_VERSION = 0L;
+
     public static void provide(Dependency dependency, Project project) throws IOException {
         final String projectId = dependency.getName();
         final String fileId = dependency.getVersion();
         assert fileId != null;
+        final Path cacheDir = project.getRootProject().file(".gradle").toPath().resolve(Constants.CACHE_DIR);
+        final Path modpackCacheDir = cacheDir.resolve(projectId).resolve(fileId);
+        if (!loadModResulutionCache(project, modpackCacheDir)) {
+            final Path statusJson = modpackCacheDir.resolve("status.json");
+            final Path repository = modpackCacheDir.resolve("repository");
+            final CachedResolutionResults cachedResolutionResults = provideImpl(project, projectId, fileId);
+            defineModsFromCache(project, repository, cachedResolutionResults);
+            try (final Writer writer = Files.newBufferedWriter(statusJson, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE)) {
+                new Gson().toJson(cachedResolutionResults, writer);
+            } catch (IOException e) {
+                try {
+                    Files.delete(statusJson);
+                } catch (Throwable t) {
+                    e.addSuppressed(t);
+                }
+                project.getLogger().warn("Unable to save cache to " + statusJson, e);
+            }
+        }
+    }
+
+    private static boolean loadModResulutionCache(Project project, Path modpackCacheDir) {
+        final Path statusJson = modpackCacheDir.resolve("status.json");
+        final Path repository = modpackCacheDir.resolve("repository");
+        if (Files.exists(statusJson)) {
+            final CachedResolutionResults cachedResolutionResults;
+            try (final Reader reader = Files.newBufferedReader(statusJson)) {
+                cachedResolutionResults = new Gson().fromJson(reader, CachedResolutionResults.class);
+            } catch (Throwable t) {
+                project.getLogger().info("Cache failed, falling back to uncached query");
+                return false;
+            }
+            if (cachedResolutionResults != null) {
+                if (cachedResolutionResults.pluginVersion != CURRENT_PLUGIN_VERSION) {
+                    project.getLogger().lifecycle("The previous cache is provided by a different plugin version (expected {} but got {}), falling back to uncached query", CURRENT_PLUGIN_VERSION, cachedResolutionResults.pluginVersion);
+                    return false;
+                }
+                for (CachedResolutionResults.ModResolutionResult entry : cachedResolutionResults.modResolutionResults) {
+                    try {
+                        final Path jarPath = repository.resolve(String.format("%s-%s.jar", entry.modId, entry.modVersion));
+                        final String jarHash = Hashing.sha256().hashBytes(Files.readAllBytes(jarPath)).toString();
+                        if (!jarHash.equals(entry.sha256)) {
+                            project.getLogger().lifecycle("Cache hash mismatch, falling back to uncached query");
+                            return false;
+                        }
+                    } catch (Throwable t) {
+                        project.getLogger().info("Some errors happened during hashing cached files, fallng back to uncached query", t);
+                        return false;
+                    }
+                }
+                project.getLogger().lifecycle("Defining {} mods from cache", cachedResolutionResults.modResolutionResults.size());
+                defineModsFromCache(project, repository, cachedResolutionResults);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static void defineModsFromCache(Project project, Path repository, CachedResolutionResults cachedResolutionResults) {
+        project.getRepositories().flatDir(repo -> repo.dir(repository.toFile()));
+        for (CachedResolutionResults.ModResolutionResult entry : cachedResolutionResults.modResolutionResults) {
+            project.getDependencies().add("modImplementation", String.format("modpackresolver-generated:%s:%s", entry.modId, entry.modVersion));
+        }
+    }
+
+    private static CachedResolutionResults provideImpl(Project project, String projectId, String fileId) throws IOException {
         final ModPackManifest modPackManifest = resolveModPack(projectId, fileId, project);
         final List<ModPackManifest.FilesItem> files = modPackManifest.getFiles();
         final Map<String, ModCandidate> resolvedMods = resolveModsAndNestedJars(project, projectId, fileId, modPackManifest, files);
-        defineMods(project, projectId, fileId, files, resolvedMods);
-
+        List<CachedResolutionResults.ModResolutionResult> resolutionResults = new ArrayList<>();
+        defineMods(project, projectId, fileId, files, resolvedMods, resolutionResults::add);
+        return new CachedResolutionResults(resolutionResults);
     }
 
-    private static void defineMods(Project project, String projectId, String fileId, List<ModPackManifest.FilesItem> files, Map<String, ModCandidate> resolvedMods) throws IOException {
+    private static void defineMods(Project project, String projectId, String fileId, List<ModPackManifest.FilesItem> files, Map<String, ModCandidate> resolvedMods, Consumer<CachedResolutionResults.ModResolutionResult> dependencyConsumer) throws IOException {
         project.getLogger().lifecycle("Defining {} mods ({} normal, {} nested)", resolvedMods.size(), files.size(), resolvedMods.size() - files.size());
         final Path cacheDir = project.getRootProject().file(".gradle").toPath().resolve(Constants.CACHE_DIR);
         final Path repository = cacheDir.resolve(projectId).resolve(fileId).resolve("repository");
         repository.toFile().mkdirs();
-        project.getRepositories().flatDir(repo -> repo.dir(repository.toFile()));
         for (ModCandidate candidate : resolvedMods.values()) {
             final String modId = candidate.getInfo().getId();
             final Version version = candidate.getInfo().getVersion();
@@ -80,7 +154,7 @@ public class ModPackProvider {
                         StandardCopyOption.REPLACE_EXISTING
                 );
                 stripMetaInf(jarPath);
-                project.getDependencies().add("modImplementation", String.format("modpackresolver-generated:%s:%s", modId, modVersion));
+                dependencyConsumer.accept(new CachedResolutionResults.ModResolutionResult(modId, modVersion, Hashing.sha256().hashBytes(Files.readAllBytes(jarPath)).toString()));
             } catch (UrlConversionException e) {
                 throw new IOException(e);
             } catch (IOException e) {
@@ -125,8 +199,7 @@ public class ModPackProvider {
         for (File resolvedFile : resolvedFiles) {
             fabricModResolver.addMod(resolvedFile.toPath());
         }
-        final Map<String, ModCandidate> resolvedMods = fabricModResolver.getResolvedMods();
-        return resolvedMods;
+        return fabricModResolver.getResolvedMods();
     }
 
     @NotNull
@@ -204,6 +277,82 @@ public class ModPackProvider {
             }
             throw e;
         }
+    }
+
+    private static class CachedResolutionResults {
+
+        @SerializedName("pluginVersion")
+        private long pluginVersion;
+
+        @SerializedName("modResolutionResults")
+        private List<ModResolutionResult> modResolutionResults;
+
+        public CachedResolutionResults(List<ModResolutionResult> modResolutionResults) {
+            this.pluginVersion = CURRENT_PLUGIN_VERSION;
+            this.modResolutionResults = modResolutionResults;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            CachedResolutionResults that = (CachedResolutionResults) o;
+            return pluginVersion == that.pluginVersion && modResolutionResults.equals(that.modResolutionResults);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(pluginVersion, modResolutionResults);
+        }
+
+        @Override
+        public String toString() {
+            return "CachedResolutionResults{" +
+                    "pluginVersion=" + pluginVersion +
+                    ", modResolutionResults=" + modResolutionResults +
+                    '}';
+        }
+
+        private static class ModResolutionResult {
+
+            @SerializedName("modId")
+            private String modId;
+
+            @SerializedName("modVersion")
+            private String modVersion;
+
+            @SerializedName("sha256Hash")
+            private String sha256;
+
+            public ModResolutionResult(String modId, String modVersion, String sha256) {
+                this.modId = modId;
+                this.modVersion = modVersion;
+                this.sha256 = sha256;
+            }
+
+            @Override
+            public boolean equals(Object o) {
+                if (this == o) return true;
+                if (o == null || getClass() != o.getClass()) return false;
+                ModResolutionResult that = (ModResolutionResult) o;
+                return modId.equals(that.modId) && modVersion.equals(that.modVersion) && sha256.equals(that.sha256);
+            }
+
+            @Override
+            public int hashCode() {
+                return Objects.hash(modId, modVersion, sha256);
+            }
+
+            @Override
+            public String toString() {
+                return "ModResolutionResult{" +
+                        "modId='" + modId + '\'' +
+                        ", modVersion='" + modVersion + '\'' +
+                        ", sha256='" + sha256 + '\'' +
+                        '}';
+            }
+        }
+
     }
 
 }
