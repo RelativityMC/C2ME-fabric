@@ -53,7 +53,7 @@ public class ModPackProvider {
         assert fileId != null;
         final Path cacheDir = project.getRootProject().file(".gradle").toPath().resolve(Constants.CACHE_DIR);
         final Path modpackCacheDir = cacheDir.resolve(projectId).resolve(fileId);
-        if (!loadModResulutionCache(project, modpackCacheDir)) {
+        if (!verifyModPack(project, modpackCacheDir) || !loadModResolutionCache(project, modpackCacheDir)) {
             final Path statusJson = modpackCacheDir.resolve("status.json");
             final Path repository = modpackCacheDir.resolve("repository");
             final CachedResolutionResults cachedResolutionResults = provideImpl(project, projectId, fileId);
@@ -71,7 +71,27 @@ public class ModPackProvider {
         }
     }
 
-    private static boolean loadModResulutionCache(Project project, Path modpackCacheDir) {
+    private static boolean verifyModPack(Project project, Path modpackCacheDir) {
+        if (project.getGradle().getStartParameter().isRefreshDependencies()) {
+            project.getLogger().lifecycle("Refresh dependencies is turned on, disabling cache");
+            return false;
+        }
+        try {
+            final String expectedHash = Files.readString(modpackCacheDir.resolve(Constants.MODPACK_DOWNLOAD_FILENAME + ".sha256"));
+            final String actualHash = Hashing.sha256().hashBytes(Files.readAllBytes(modpackCacheDir.resolve(Constants.MODPACK_DOWNLOAD_FILENAME))).toString();
+            if (!expectedHash.equals(actualHash)) {
+                project.getLogger().info("Hash mismatch (expected {} but got {}), falling back to uncached query", expectedHash, actualHash);
+                return false;
+            }
+            decompressModpack(modpackCacheDir.resolve(Constants.MODPACK_DOWNLOAD_FILENAME), modpackCacheDir.resolve(Constants.MODPACK_DECOMPRESSED_DIR));
+            return true;
+        } catch (Throwable t) {
+            project.getLogger().info("An error occurred while checking modpack integrity, falling back to uncached query", t);
+            return false;
+        }
+    }
+
+    private static boolean loadModResolutionCache(Project project, Path modpackCacheDir) {
         if (project.getGradle().getStartParameter().isRefreshDependencies()) {
             project.getLogger().lifecycle("Refresh dependencies is turned on, disabling cache");
             return false;
@@ -241,6 +261,10 @@ public class ModPackProvider {
         final URL url = new URL(curseMeta.getDownloadURL());
         try (final InputStream in = url.openStream()) {
             Files.copy(in, modpackFile, StandardCopyOption.REPLACE_EXISTING);
+            Files.writeString(
+                    modpackFile.getParent().resolve(modpackFile.getFileName() + ".sha256"),
+                    Hashing.sha256().hashBytes(Files.readAllBytes(modpackFile)).toString()
+            );
         } catch (IOException e) {
             // The file is probably broken, delete this
             try {
