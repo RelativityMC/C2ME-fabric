@@ -72,6 +72,10 @@ public class ModPackProvider {
     }
 
     private static boolean loadModResulutionCache(Project project, Path modpackCacheDir) {
+        if (project.getGradle().getStartParameter().isRefreshDependencies()) {
+            project.getLogger().lifecycle("Refresh dependencies is turned on, disabling cache");
+            return false;
+        }
         final Path statusJson = modpackCacheDir.resolve("status.json");
         final Path repository = modpackCacheDir.resolve("repository");
         if (Files.exists(statusJson)) {
