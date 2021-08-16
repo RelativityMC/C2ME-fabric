@@ -17,7 +17,8 @@
     "MixinServerTask",
     "MixinServerWorld",
     "MixinStructureFeature",
-    "MixinWorldView"
+    "MixinWorldView",
+    "fix.MixinFixDevLaunch"
   ],
   "client": [
   ],

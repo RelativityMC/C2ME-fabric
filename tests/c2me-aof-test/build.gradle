@@ -19,6 +19,7 @@ loom {
             vmArgs "-Dcom.ishland.c2me.common.config.threadedWorldGen.allowThreadedFeatures=true",
                     "-Dcom.ishland.c2me.common.config.threadedWorldGen.reduceLockRadius=true",
                     "-Dcom.ishland.c2me.common.config.threadedWorldGen.enabled=true"
+            vmArgs "-Xshare:off"
             if (System.getenv("GITHUB_WORKFLOW") != null) {
                 if (System.getenv("RUNNER_OS").equals("macOS")) {
                     vmArgs "-Xmx12G"

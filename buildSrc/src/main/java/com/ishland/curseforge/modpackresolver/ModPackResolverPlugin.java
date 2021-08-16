@@ -15,6 +15,10 @@ public class ModPackResolverPlugin implements Plugin<Project> {
     public void apply(@NotNull Project project) {
         applyRepositories(project);
 
+        System.setProperty("log4j2.disable.jmx", "true");
+        System.setProperty("log4j.shutdownHookEnabled", "false");
+        System.setProperty("log4j.skipJansi", "true");
+
         final NamedDomainObjectProvider<Configuration> curseforgeModpack = project.getConfigurations().register("curseforgeModpack", files -> files.setTransitive(false));
         project.afterEvaluate(__ -> {
             curseforgeModpack.configure(files -> {
