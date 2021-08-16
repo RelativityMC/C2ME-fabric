@@ -18,7 +18,8 @@
     "MixinServerWorld",
     "MixinStructureFeature",
     "MixinWorldView",
-    "fix.MixinFixDevLaunch"
+    "fix.MixinFixDevLaunch",
+    "fix.mem_effects.MixinIngredient"
   ],
   "client": [
   ],

@@ -11,6 +11,9 @@ import net.fabricmc.loader.api.Version;
 import net.fabricmc.loader.discovery.ModCandidate;
 import net.fabricmc.loader.util.UrlConversionException;
 import net.fabricmc.loader.util.UrlUtil;
+import net.fabricmc.loom.configuration.ide.RunConfig;
+import net.fabricmc.loom.task.AbstractRunTask;
+import net.fabricmc.loom.task.RunGameTask;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.ModuleDependency;
@@ -23,6 +26,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.io.Writer;
+import java.lang.reflect.Field;
 import java.net.URL;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
@@ -69,6 +73,36 @@ public class ModPackProvider {
                 project.getLogger().warn("Unable to save cache to " + statusJson, e);
             }
         }
+        project.getLogger().lifecycle("Adding override files to run configurations");
+        final Path decompressDir = modpackCacheDir.resolve(Constants.MODPACK_DECOMPRESSED_DIR);
+        final Path manifestPath = decompressDir.resolve("manifest.json");
+        final ModPackManifest modPackManifest = MetadataResolver.parseManifest(manifestPath);
+        final Path overridesDir = decompressDir.resolve(modPackManifest.getOverrides());
+        final List<RunGameTask> runGameTasks = project.getTasks().stream().filter(task -> task instanceof RunGameTask).map(task -> (RunGameTask) task).toList();
+        for (RunGameTask runGameTask : runGameTasks) {
+            runGameTask.doFirst(__ -> {
+                try {
+                    project.getLogger().lifecycle("Setting up modpack {}@{} file overrides before running the configuration", modPackManifest.getName(), modPackManifest.getVersion());
+                    final Field configField = AbstractRunTask.class.getDeclaredField("config");
+                    configField.setAccessible(true);
+                    final RunConfig config = (RunConfig) configField.get(runGameTask);
+                    final List<Path> sourcePaths = Files.walk(overridesDir).toList();
+                    final Path target = project.getRootDir().toPath().resolve(config.runDir);
+                    for (Path sourcePath : sourcePaths) {
+                        Path targetPath = target.resolve(overridesDir.relativize(sourcePath).toString());
+                        if (Files.isDirectory(sourcePath)) {
+                            if (!Files.isDirectory(targetPath)) Files.createDirectories(targetPath);
+                        } else if (Files.isRegularFile(sourcePath)) {
+                            if (!Files.isDirectory(targetPath.getParent())) Files.createDirectories(targetPath.getParent());
+                            if (!Files.isRegularFile(targetPath)) Files.copy(sourcePath, targetPath, StandardCopyOption.COPY_ATTRIBUTES);
+                        }
+                    }
+                } catch (Throwable t) {
+                    project.getLogger().warn("Unable to copy overrides to run configuration dir", t);
+                }
+            });
+        }
+
     }
 
     private static boolean verifyModPack(Project project, Path modpackCacheDir) {
