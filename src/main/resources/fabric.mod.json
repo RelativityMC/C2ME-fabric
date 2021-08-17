@@ -32,8 +32,8 @@
   },
   "conflicts": {
     "optifabric": "*",
-    "betterend": "!0.10.4-pre",
-    "betternether": "!5.1.3"
+    "betterend": [">0.10.4-pre", "<0.10.4-pre"],
+    "betternether": [">5.1.3", "<5.1.3"]
   },
   "breaks": {
     "tic_tacs": "*"

@@ -6,6 +6,7 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -118,16 +119,27 @@ public class ASMTransformerMakeVolatile {
                     List<String> mappedFieldNames = entry.getValue().stream()
                             .map(fieldName -> {
                                 String[] split = fieldName.split(":");
-                                return mappingResolver.mapFieldName(INTERMEDIARY, entry.getKey().replace('/', '.'), split[0], split[1]) + ":" + remapDescriptor(split[1]);
+                                return mappingResolver.mapFieldName(INTERMEDIARY, entry.getKey().replace('/', '.'), split[0], split[1]) + ":" + remapFieldDescriptor(split[1]);
                             }).toList();
                     return new KeyValue<>(mappedClassName, mappedFieldNames);
                 }).collect(Collectors.toMap(KeyValue::key, KeyValue::value));
     }
 
-    static String remapDescriptor(String desc) {
+    static String remapMethodDescriptor(String desc) {
+        final Type returnType = Type.getReturnType(desc);
+        final Type[] argumentTypes = Type.getArgumentTypes(desc);
+        return Type.getMethodDescriptor(
+                Type.getType(remapFieldDescriptor(returnType.getDescriptor())),
+                Arrays.stream(argumentTypes)
+                        .map(type -> Type.getType(remapFieldDescriptor(type.getDescriptor())))
+                        .toArray(Type[]::new)
+        );
+    }
+
+    static String remapFieldDescriptor(String desc) {
         final Type type = Type.getType(desc);
         if (type.getSort() == Type.ARRAY) { // remap arrays
-            return "[".repeat(type.getDimensions()) + remapDescriptor(type.getElementType().getDescriptor());
+            return "[".repeat(type.getDimensions()) + remapFieldDescriptor(type.getElementType().getDescriptor());
         }
         if (type.getSort() != Type.OBJECT) { // no need to remap primitives
             return desc;
