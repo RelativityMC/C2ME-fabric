@@ -46,6 +46,9 @@ You can find development builds here: https://ci.codemc.io/job/ishlandbukkit/job
 - [Traverse v4.0.0-beta.2 for 1.17.1](https://github.com/TerraformersMC/Traverse/releases/tag/v4.0.0-beta.2)
 - [YUNG's Better Mineshafts (Fabric) v1.0.1](https://www.curseforge.com/minecraft/mc-mods/yungs-better-mineshafts-fabric/files/3414789)
 - [YUNG's Better Strongholds (Fabric) v1.1.1](https://www.curseforge.com/minecraft/mc-mods/yungs-better-strongholds-fabric/files/3412649)
+- [Charm 3.3.2](https://www.curseforge.com/minecraft/mc-mods/charm/files/3393290)
+
+[All of Fabric 4 - 0.0.9](https://www.curseforge.com/minecraft/modpacks/all-of-fabric-4/files/3420600) should work without crashes now. 
 
 ## Building and setting up
 JDK 16+ is required to build and use C2ME  

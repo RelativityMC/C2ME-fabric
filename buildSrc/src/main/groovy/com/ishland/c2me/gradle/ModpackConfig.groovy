@@ -44,6 +44,7 @@ class ModpackConfig {
             exclude(group: "net.fabricmc.fabric-api")
             exclude(group: "net.fabricmc", module: "fabric-loader")
             exclude(group: "maven.modrinth", module: "modmenu")
+            exclude(group: "com.telepathicgrunt", module: "Blame-Fabric")
         }
 
         ////////////////////////////////////////
@@ -111,6 +112,14 @@ class ModpackConfig {
         // https://www.curseforge.com/minecraft/mc-mods/yungs-better-strongholds-fabric
         // [1.17 - 1.17.1] YUNG's Better Strongholds (Fabric) v1.1.1
         handler.modImplementation("curse.maven:yungs-better-strongholds-fabric-480684:3412649")
+
+        ////////////////////////////////////////
+        // Others
+
+        // https://www.curseforge.com/minecraft/mc-mods/charm
+        // charm-fabric-1.17-3.3.2.jar
+        handler.modImplementation("curse.maven:charm-318872:3393290")
+        handler.implementation("com.moandjiezana.toml:toml4j:0.7.2")
 
     }
 
