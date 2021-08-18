@@ -21,4 +21,5 @@ include 'compatibility:terra'
 include 'compatibility:betterend'
 include 'compatibility:betternether'
 include 'compatibility:thebumblezone'
+include 'compatibility:charm'
 

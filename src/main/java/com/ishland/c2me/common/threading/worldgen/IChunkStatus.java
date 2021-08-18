@@ -4,4 +4,6 @@ public interface IChunkStatus {
 
     void calculateReducedTaskRadius();
 
+    int getReducedTaskRadius();
+
 }
