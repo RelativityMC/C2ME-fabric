@@ -1,0 +1,19 @@
+evaluationDependsOn(":compatibility")
+
+repositories {
+    mavenCentral()
+    maven { url 'https://jitpack.io' }
+    maven { url "https://maven.shedaniel.me/" }
+    maven { url "https://maven.terraformersmc.com/releases/" }
+    maven {
+        url "https://www.cursemaven.com"
+        content { includeGroup "curse.maven" }
+    }
+}
+
+dependencies {
+    modImplementation("net.fabricmc.fabric-api:fabric-api:0.37.1+1.17")
+    modImplementation("curse.maven:betternether-311377:3379682")
+
+}
+

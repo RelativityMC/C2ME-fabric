@@ -31,7 +31,9 @@
     "minecraft": ">1.17.100"
   },
   "conflicts": {
-    "optifabric": "*"
+    "optifabric": "*",
+    "betterend": [">0.10.4-pre", "<0.10.4-pre"],
+    "betternether": [">5.1.3", "<5.1.3"]
   },
   "breaks": {
     "tic_tacs": "*"

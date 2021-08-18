@@ -6,8 +6,12 @@ on:
 
 jobs:
   test:
-
     runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        testTask: [runTestC2MEServer]
 
     steps:
     - uses: actions/checkout@v2
@@ -15,9 +19,11 @@ jobs:
         fetch-depth: 0
 
     - name: Set up JDK 16
-      uses: actions/setup-java@v1
+      uses: actions/setup-java@v2
       with:
+        distribution: 'zulu'
         java-version: 16
+        java-package: jdk
         
     - uses: actions/cache@v2
       with:
@@ -31,4 +37,4 @@ jobs:
         
     - name: Test C2ME
       run: |
-        ./gradlew clean runTestC2MEServer
+        ./gradlew clean ${{ matrix.testTask }}

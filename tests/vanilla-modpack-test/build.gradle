@@ -1,0 +1,49 @@
+import com.ishland.c2me.gradle.ModpackConfig
+import com.ishland.c2me.gradle.RedirectingOutputStream
+
+evaluationDependsOn(":tests")
+evaluationDependsOn(":tests:test-mod")
+
+sourceSets {
+    testmod {
+        compileClasspath += main.compileClasspath
+        runtimeClasspath += main.runtimeClasspath
+    }
+}
+
+loom {
+    runs {
+        testVanillaModpackServer {
+            server()
+            runDir getRootProject().getProjectDir().toPath().relativize(project.getBuildDir().toPath()).resolve("testServer").toString()
+            source sourceSets.testmod
+            if (System.getenv("GITHUB_WORKFLOW") != null) {
+                if (System.getenv("RUNNER_OS").equals("macOS")) {
+                    vmArgs "-Xmx12G"
+                } else if (System.getenv("RUNNER_OS").equals("Linux")) {
+                    vmArgs "-Xmx6G"
+                }
+            }
+        }
+    }
+}
+
+runTestVanillaModpackServer.configure {
+    doFirst {
+        standardOutput = new RedirectingOutputStream(project, getName())
+    }
+    onlyIf {
+        !getRootProject().getProjectDir().toPath().relativize(project.getBuildDir().toPath()).resolve("testServer").toFile().isDirectory()
+    }
+}
+
+migrateMappings.onlyIf { false }
+
+dependencies {
+    testmodImplementation project(":tests:test-mod").sourceSets.main.output
+    ModpackConfig.applyModpack(it)
+}
+
+test {
+    useJUnitPlatform()
+}

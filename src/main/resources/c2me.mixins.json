@@ -7,7 +7,10 @@
   "mixins": [
     "access.IMultiNoiseBiomeSource",
     "access.IStructureWeightSampler",
+    "failsafe.MixinSinglePoolElement",
     "fixes.asynccatchers.MixinServerChunkManager",
+    "fixes.chunkio.threading.MixinStructurePoolElement",
+    "fixes.worldgen.deadlocks.MixinDataFixerType",
     "fixes.worldgen.threading.MixinChunkGenerator",
     "fixes.worldgen.threading.MixinDesertTempleGenerator",
     "fixes.worldgen.threading.MixinJungleTempleGenerator",
@@ -32,6 +35,7 @@
     "fixes.worldgen.threading.math.MixinAffineTransformation",
     "fixes.worldgen.threading.math.MixinDirectionTransformation",
     "metrics.MixinMinecraftServer",
+    "optimization.chunkaccess.async_chunk_request.MixinServerChunkManager",
     "optimization.chunkio.hide_sync_disk_writes_behind_flag.MixinRegionBasedStorage",
     "optimization.chunkscheduling.fix_unload.MixinThreadedAnvilChunkStorage",
     "optimization.chunkscheduling.mid_tick_chunk_tasks.MixinMinecraftServer",

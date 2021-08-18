@@ -1,4 +1,4 @@
-package com.ishland.c2me.common.threading.worldgen;
+package com.ishland.c2me.common.fixes.worldgen.threading;
 
 import net.minecraft.world.gen.ChunkRandom;
 
@@ -10,6 +10,11 @@ import java.util.stream.LongStream;
 public class ThreadLocalChunkRandom extends ChunkRandom {
 
     private final ThreadLocal<ChunkRandom> chunkRandomThreadLocal;
+
+    @SuppressWarnings("unused")
+    public ThreadLocalChunkRandom() { // called by asm generated code
+        this(System.nanoTime());
+    }
 
     public ThreadLocalChunkRandom(long seed) {
         this(seed, chunkRandom -> {});
@@ -64,7 +69,7 @@ public class ThreadLocalChunkRandom extends ChunkRandom {
     }
 
     @Override
-    public synchronized void setSeed(long seed) {
+    public void setSeed(long seed) {
         if (chunkRandomThreadLocal == null) return; // Special case when doing <init>
         chunkRandomThreadLocal.get().setSeed(seed);
     }
@@ -105,7 +110,7 @@ public class ThreadLocalChunkRandom extends ChunkRandom {
     }
 
     @Override
-    public synchronized double nextGaussian() {
+    public double nextGaussian() {
         return chunkRandomThreadLocal.get().nextGaussian();
     }
 
@@ -172,11 +177,6 @@ public class ThreadLocalChunkRandom extends ChunkRandom {
     @Override
     public void skip(int count) {
         chunkRandomThreadLocal.get().skip(count);
-    }
-
-    @Override
-    public int hashCode() {
-        return chunkRandomThreadLocal.get().hashCode();
     }
 
     @Override

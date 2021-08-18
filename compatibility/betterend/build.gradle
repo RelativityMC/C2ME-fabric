@@ -1,3 +1,5 @@
+evaluationDependsOn(":compatibility")
+
 repositories {
     maven { url "https://maven.dblsaiko.net/" }
     maven { url 'https://maven.blamejared.com/' }

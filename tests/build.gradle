@@ -1,4 +1,5 @@
 allprojects {
+    apply plugin: 'com.ishland.curseforge.modpackresolver'
     apply plugin: 'fabric-loom'
     apply plugin: 'java-library'
 
@@ -7,10 +8,29 @@ allprojects {
 
     group = project.maven_group + ".tests"
     repositories {
+        mavenLocal()
         mavenCentral()
+        // maven { url "https://nexus.resourcefulbees.com/repository/maven-public/" }
+        maven { url "https://maven.terraformersmc.com/releases/" }
+        maven { url "https://maven.shedaniel.me/" }
+        maven { url "https://ladysnake.jfrog.io/artifactory/mods/" }
+        maven { url "https://jitpack.io" }
+        maven {
+            url "https://api.modrinth.com/maven/"
+            content { includeGroup "maven.modrinth" }
+        }
+        maven {
+            url "https://www.cursemaven.com"
+            content { includeGroup "curse.maven" }
+        }
     }
     loom {
         shareCaches = true
+    }
+    afterEvaluate {
+        migrateMappings.configure {
+            outputDir = project.file("src/main/java")
+        }
     }
     repositories {
         maven { url 'https://jitpack.io' }

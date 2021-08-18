@@ -3,10 +3,9 @@
   "package": "com.ishland.c2me.compatibility.mixin.betterend",
   "mixins": [
     "MixinBetterEndBiomeSource",
-    "MixinBiomeIslandFeature",
     "MixinBlueVineFeature",
     "MixinDoublePlantFeature",
-    "MixinModifyPoses",
+    "MixinASMTargets",
     "MixinTerrainGenerator"
   ]
 }

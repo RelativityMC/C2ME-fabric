@@ -32,7 +32,12 @@ jobs:
     - name: Build C2ME
       run: |
         ./gradlew clean build
-        
+
+    - name: Run FOSSA
+      uses: fossa-contrib/fossa-action@v1
+      with:
+        fossa-api-key: 46711dc8ef0a8d57d06010c8148bb6ea
+
     - name: Upload Artifact
       uses: actions/upload-artifact@v2
       with:
