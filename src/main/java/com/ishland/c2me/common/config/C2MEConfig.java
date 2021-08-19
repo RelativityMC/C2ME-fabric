@@ -18,6 +18,7 @@ public class C2MEConfig {
     public static final AsyncIoConfig asyncIoConfig;
     public static final ThreadedWorldGenConfig threadedWorldGenConfig;
     public static final VanillaWorldGenOptimizationsConfig vanillaWorldGenOptimizationsConfig;
+    public static final GeneralOptimizationsConfig generalOptimizationsConfig;
 
     static {
         long startTime = System.nanoTime();
@@ -32,6 +33,7 @@ public class C2MEConfig {
         asyncIoConfig = new AsyncIoConfig(ConfigUtils.getValue(configScope, "asyncIO", CommentedConfig::inMemory, "Configuration for async io system", List.of(), null));
         threadedWorldGenConfig = new ThreadedWorldGenConfig(ConfigUtils.getValue(configScope, "threadedWorldGen", CommentedConfig::inMemory, "Configuration for threaded world generation", List.of(), null));
         vanillaWorldGenOptimizationsConfig = new VanillaWorldGenOptimizationsConfig(ConfigUtils.getValue(configScope, "vanillaWorldGenOptimizations", CommentedConfig::inMemory, "Configuration for vanilla worldgen optimizations", List.of(), null));
+        generalOptimizationsConfig = new GeneralOptimizationsConfig(ConfigUtils.getValue(configScope, "vanillaWorldGenOptimizations", CommentedConfig::inMemory, "Configuration for general optimizations", List.of(), null));
         configScope.removeUnusedKeys();
         config.save();
         config.close();
@@ -88,13 +90,22 @@ public class C2MEConfig {
     public static class VanillaWorldGenOptimizationsConfig {
         public final boolean enabled;
         public final boolean useEndBiomeCache;
-        public final boolean optimizeAsyncChunkRequest;
 
         public VanillaWorldGenOptimizationsConfig(CommentedConfig config) {
             Preconditions.checkNotNull(config, "vanillaWorldGenOptimizationsConfig config is not present");
             final ConfigUtils.ConfigScope configScope = new ConfigUtils.ConfigScope(config);
             this.enabled = ConfigUtils.getValue(configScope, "enabled", () -> true, "Whether to enable this feature \n (may cause incompatibility with other mods)", List.of(), false);
             this.useEndBiomeCache = ConfigUtils.getValue(configScope, "useEndBiomeCache", () -> true, "Whether to enable End BiomeCache to accelerate The End worldgen \n This is included in lithium-fabric \n (may cause incompatibility with other mods) ", List.of("lithium"), false);
+            configScope.removeUnusedKeys();
+        }
+    }
+
+    public static class GeneralOptimizationsConfig {
+        public final boolean optimizeAsyncChunkRequest;
+
+        public GeneralOptimizationsConfig(CommentedConfig config) {
+            Preconditions.checkNotNull(config, "generalOptimizationsConfig config is not present");
+            final ConfigUtils.ConfigScope configScope = new ConfigUtils.ConfigScope(config);
             this.optimizeAsyncChunkRequest = ConfigUtils.getValue(configScope, "optimizeAsyncChunkRequest", () -> true, "Whether to let async chunk request no longer block server thread \n (may cause incompatibility with other mods) ", List.of(), false);
             configScope.removeUnusedKeys();
         }
