@@ -4,6 +4,7 @@ import com.ishland.c2me.common.config.C2MEConfig;
 import com.ishland.c2me.common.notickvd.PlayerNoTickDistanceMap;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ChunkTicketManager;
+import net.minecraft.server.world.ThreadedAnvilChunkStorage;
 import net.minecraft.util.math.ChunkSectionPos;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -32,8 +33,8 @@ public class MixinChunkTicketManager {
     }
 
     @Inject(method = "tick", at = @At("HEAD"))
-    private void onTick(CallbackInfoReturnable<Boolean> info) {
-        playerNoTickDistanceMap.update();
+    private void onTick(ThreadedAnvilChunkStorage threadedAnvilChunkStorage, CallbackInfoReturnable<Boolean> info) {
+        playerNoTickDistanceMap.update(threadedAnvilChunkStorage);
     }
 
 }

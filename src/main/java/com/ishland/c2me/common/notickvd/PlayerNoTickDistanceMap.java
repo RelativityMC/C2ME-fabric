@@ -1,25 +1,32 @@
 package com.ishland.c2me.common.notickvd;
 
+import com.ishland.c2me.common.config.C2MEConfig;
 import com.ishland.c2me.mixin.access.IChunkTicketManager;
+import com.ishland.c2me.mixin.access.IThreadedAnvilChunkStorage;
+import it.unimi.dsi.fastutil.longs.Long2BooleanMap;
 import it.unimi.dsi.fastutil.longs.Long2BooleanOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+import it.unimi.dsi.fastutil.objects.ObjectIterator;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ChunkTicketManager;
 import net.minecraft.server.world.ChunkTicketType;
+import net.minecraft.server.world.ThreadedAnvilChunkStorage;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.ChunkPosDistanceLevelPropagator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.Comparator;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class PlayerNoTickDistanceMap extends ChunkPosDistanceLevelPropagator {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final ChunkTicketType<ChunkPos> TICKET_TYPE = ChunkTicketType.create("c2me_no_tick_vd", Comparator.comparingLong(ChunkPos::toLong));
+    public static final ChunkTicketType<ChunkPos> TICKET_TYPE = ChunkTicketType.create("c2me_no_tick_vd", Comparator.comparingLong(ChunkPos::toLong));
+
+    private static final int MAX_TICKET_UPDATES_PER_TICK = C2MEConfig.noTickViewDistanceConfig.updatesPerTick;
 
     private final Long2IntOpenHashMap distanceFromNearestPlayer = new Long2IntOpenHashMap();
     private final Long2BooleanOpenHashMap pendingTicketUpdates = new Long2BooleanOpenHashMap();
@@ -27,6 +34,8 @@ public class PlayerNoTickDistanceMap extends ChunkPosDistanceLevelPropagator {
 
     private final ChunkTicketManager chunkTicketManager;
     private final int maxDistance;
+
+    private final AtomicLong lastTickNumber = new AtomicLong();
 
     public PlayerNoTickDistanceMap(ChunkTicketManager chunkTicketManager, int maxDistance) {
         super(maxDistance + 2, 16, 256);
@@ -69,30 +78,33 @@ public class PlayerNoTickDistanceMap extends ChunkPosDistanceLevelPropagator {
         this.updateLevel(chunkPos.toLong(), Integer.MAX_VALUE, false);
     }
 
-    public void update() {
-        long startTime = System.nanoTime();
+    public void update(ThreadedAnvilChunkStorage threadedAnvilChunkStorage) {
+        if (((IThreadedAnvilChunkStorage) threadedAnvilChunkStorage).getWorld().getServer().getTicks() == lastTickNumber.get()) return;
+        this.runPendingTicketUpdates();
+        lastTickNumber.addAndGet(1);
         final int pendingRawUpdateCount = this.getPendingUpdateCount();
         if (pendingRawUpdateCount == 0) return;
         this.applyPendingUpdates(Integer.MAX_VALUE);
-        final AtomicInteger ticketUpdates = new AtomicInteger(0);
-        this.pendingTicketUpdates.long2BooleanEntrySet().fastForEach(entry -> {
+    }
+
+    private void runPendingTicketUpdates() {
+        final ObjectIterator<Long2BooleanMap.Entry> iterator = this.pendingTicketUpdates.long2BooleanEntrySet().fastIterator();
+        int i = 0;
+        while (iterator.hasNext() && ++i <= MAX_TICKET_UPDATES_PER_TICK) {
+            final Long2BooleanMap.Entry entry = iterator.next();
             final long chunkPos = entry.getLongKey();
             ChunkPos pos = new ChunkPos(chunkPos);
             if (entry.getBooleanValue()) {
                 if (this.managedChunkTickets.add(chunkPos)) {
                     this.chunkTicketManager.addTicketWithLevel(TICKET_TYPE, pos, 33, pos);
-                    ticketUpdates.incrementAndGet();
                 }
             } else {
                 if (this.managedChunkTickets.remove(chunkPos)) {
                     this.chunkTicketManager.removeTicketWithLevel(TICKET_TYPE, pos, 33, pos);
-                    ticketUpdates.incrementAndGet();
                 }
             }
-        });
-        this.pendingTicketUpdates.clear();
-        LOGGER.info(String.format("No-tick distance map updated in %.1fms, %d requests, %d ticket updates",
-                (System.nanoTime() - startTime) / 1_000_000.0, pendingRawUpdateCount, ticketUpdates.get()));
+            iterator.remove();
+        }
     }
 
 }

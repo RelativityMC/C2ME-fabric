@@ -5,6 +5,7 @@ import com.google.common.collect.Sets;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.structure.processor.RuleStructureProcessor;
 import net.minecraft.world.BlockCollisionSpliterator;
+import net.minecraft.world.WorldView;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -39,6 +40,8 @@ public class StacktraceRecorder {
                 .mapMethodName("intermediary", "net.minecraft.class_3491", "method_15110", "(Lnet/minecraft/class_4538;Lnet/minecraft/class_2338;Lnet/minecraft/class_2338;Lnet/minecraft/class_3499$class_3501;Lnet/minecraft/class_3499$class_3501;Lnet/minecraft/class_3492;)Lnet/minecraft/class_3499$class_3501;");
         private static final String BlockCollisionSpliterator$offerBlockShape = FabricLoader.getInstance().getMappingResolver()
                 .mapMethodName("intermediary", "net.minecraft.class_5329", "method_29285", "(Ljava/util/function/Consumer;)Z");
+        private static final String BiomeAccess$Storage$getBiomeForNoiseGen = FabricLoader.getInstance().getMappingResolver()
+                .mapMethodName("intermediary", "net.minecraft.class_4543$class_4544", "method_16359", "(III)Lnet/minecraft/class_1959;");
 
         @NotNull
         private final StackTraceElement[] stackTrace;
@@ -58,6 +61,9 @@ public class StacktraceRecorder {
                     return false;
                 if (stackTraceElement.getClassName().equals(BlockCollisionSpliterator.class.getName()) &&
                         stackTraceElement.getMethodName().equals(BlockCollisionSpliterator$offerBlockShape))
+                    return false;
+                if (stackTraceElement.getClassName().equals(WorldView.class.getName()) &&
+                        stackTraceElement.getMethodName().equals(BiomeAccess$Storage$getBiomeForNoiseGen))
                     return false;
 
                 // lithium

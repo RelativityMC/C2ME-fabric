@@ -35,7 +35,7 @@ public class C2MEConfig {
         threadedWorldGenConfig = new ThreadedWorldGenConfig(ConfigUtils.getValue(configScope, "threadedWorldGen", CommentedConfig::inMemory, "Configuration for threaded world generation", List.of(), null));
         vanillaWorldGenOptimizationsConfig = new VanillaWorldGenOptimizationsConfig(ConfigUtils.getValue(configScope, "vanillaWorldGenOptimizations", CommentedConfig::inMemory, "Configuration for vanilla worldgen optimizations", List.of(), null));
         generalOptimizationsConfig = new GeneralOptimizationsConfig(ConfigUtils.getValue(configScope, "vanillaWorldGenOptimizations", CommentedConfig::inMemory, "Configuration for general optimizations", List.of(), null));
-        noTickViewDistanceConfig = new NoTickViewDistanceConfig(ConfigUtils.getValue(configScope, "noTickViewDistance", CommentedConfig::inMemory, "Configuration for general optimizations", List.of(), null));
+        noTickViewDistanceConfig = new NoTickViewDistanceConfig(ConfigUtils.getValue(configScope, "noTickViewDistance", CommentedConfig::inMemory, "Configuration for no-tick view distance", List.of(), null));
         configScope.removeUnusedKeys();
         config.save();
         config.close();
@@ -116,12 +116,14 @@ public class C2MEConfig {
     public static class NoTickViewDistanceConfig {
         public final boolean enabled;
         public final int viewDistance;
+        public final int updatesPerTick;
 
         public NoTickViewDistanceConfig(CommentedConfig config) {
             Preconditions.checkNotNull(config, "noTickViewDistanceConfig config is not present");
             final ConfigUtils.ConfigScope configScope = new ConfigUtils.ConfigScope(config);
             this.enabled = ConfigUtils.getValue(configScope, "enabled", () -> false, "Weather to enable no-tick view distance", List.of(), false);
-            this.viewDistance = ConfigUtils.getValue(configScope, "viewDistance", () -> 12, "No-tick view distance value", List.of(), 12);
+            this.viewDistance = ConfigUtils.getValue(configScope, "viewDistance", () -> 12, "No-tick view distance value", List.of(), 12, ConfigUtils.CheckType.NO_TICK_VIEW_DISTANCE);
+            this.updatesPerTick = ConfigUtils.getValue(configScope, "updatesPerTick", () -> 6, "No-tick view distance updates per tick \n Lower this for a better latency and higher this for a faster loading", List.of(), 6, ConfigUtils.CheckType.POSITIVE_VALUE_ONLY);
             configScope.removeUnusedKeys();
         }
     }

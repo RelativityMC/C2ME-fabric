@@ -61,6 +61,18 @@ public class ConfigUtils {
             public <T> boolean check(T value) {
                 return value instanceof Number && ((Number) value).intValue() >= 1 && ((Number) value).intValue() <= 0x7fff;
             }
+        },
+        NO_TICK_VIEW_DISTANCE() {
+            @Override
+            public <T> boolean check(T value) {
+                return value instanceof Number && ((Number) value).intValue() >= 1 && ((Number) value).intValue() <= 250;
+            }
+        },
+        POSITIVE_VALUE_ONLY() {
+            @Override
+            public <T> boolean check(T value) {
+                return value instanceof Number && ((Number) value).intValue() >= 1;
+            }
         };
 
         public abstract <T> boolean check(T value);
