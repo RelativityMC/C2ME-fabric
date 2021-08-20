@@ -19,6 +19,7 @@ public class C2MEConfig {
     public static final ThreadedWorldGenConfig threadedWorldGenConfig;
     public static final VanillaWorldGenOptimizationsConfig vanillaWorldGenOptimizationsConfig;
     public static final GeneralOptimizationsConfig generalOptimizationsConfig;
+    public static final NoTickViewDistanceConfig noTickViewDistanceConfig;
 
     static {
         long startTime = System.nanoTime();
@@ -34,6 +35,7 @@ public class C2MEConfig {
         threadedWorldGenConfig = new ThreadedWorldGenConfig(ConfigUtils.getValue(configScope, "threadedWorldGen", CommentedConfig::inMemory, "Configuration for threaded world generation", List.of(), null));
         vanillaWorldGenOptimizationsConfig = new VanillaWorldGenOptimizationsConfig(ConfigUtils.getValue(configScope, "vanillaWorldGenOptimizations", CommentedConfig::inMemory, "Configuration for vanilla worldgen optimizations", List.of(), null));
         generalOptimizationsConfig = new GeneralOptimizationsConfig(ConfigUtils.getValue(configScope, "vanillaWorldGenOptimizations", CommentedConfig::inMemory, "Configuration for general optimizations", List.of(), null));
+        noTickViewDistanceConfig = new NoTickViewDistanceConfig(ConfigUtils.getValue(configScope, "noTickViewDistance", CommentedConfig::inMemory, "Configuration for general optimizations", List.of(), null));
         configScope.removeUnusedKeys();
         config.save();
         config.close();
@@ -107,6 +109,19 @@ public class C2MEConfig {
             Preconditions.checkNotNull(config, "generalOptimizationsConfig config is not present");
             final ConfigUtils.ConfigScope configScope = new ConfigUtils.ConfigScope(config);
             this.optimizeAsyncChunkRequest = ConfigUtils.getValue(configScope, "optimizeAsyncChunkRequest", () -> true, "Whether to let async chunk request no longer block server thread \n (may cause incompatibility with other mods) ", List.of(), false);
+            configScope.removeUnusedKeys();
+        }
+    }
+
+    public static class NoTickViewDistanceConfig {
+        public final boolean enabled;
+        public final int viewDistance;
+
+        public NoTickViewDistanceConfig(CommentedConfig config) {
+            Preconditions.checkNotNull(config, "noTickViewDistanceConfig config is not present");
+            final ConfigUtils.ConfigScope configScope = new ConfigUtils.ConfigScope(config);
+            this.enabled = ConfigUtils.getValue(configScope, "enabled", () -> false, "Weather to enable no-tick view distance", List.of(), false);
+            this.viewDistance = ConfigUtils.getValue(configScope, "viewDistance", () -> 12, "No-tick view distance value", List.of(), 12);
             configScope.removeUnusedKeys();
         }
     }
