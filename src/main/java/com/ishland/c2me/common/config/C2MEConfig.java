@@ -20,6 +20,7 @@ public class C2MEConfig {
     public static final VanillaWorldGenOptimizationsConfig vanillaWorldGenOptimizationsConfig;
     public static final GeneralOptimizationsConfig generalOptimizationsConfig;
     public static final NoTickViewDistanceConfig noTickViewDistanceConfig;
+    public static final ClientSideConfig clientSideConfig;
 
     static {
         long startTime = System.nanoTime();
@@ -31,11 +32,12 @@ public class C2MEConfig {
         config.load();
 
         final ConfigUtils.ConfigScope configScope = new ConfigUtils.ConfigScope(config);
-        asyncIoConfig = new AsyncIoConfig(ConfigUtils.getValue(configScope, "asyncIO", CommentedConfig::inMemory, "Configuration for async io system", List.of(), null));
-        threadedWorldGenConfig = new ThreadedWorldGenConfig(ConfigUtils.getValue(configScope, "threadedWorldGen", CommentedConfig::inMemory, "Configuration for threaded world generation", List.of(), null));
-        vanillaWorldGenOptimizationsConfig = new VanillaWorldGenOptimizationsConfig(ConfigUtils.getValue(configScope, "vanillaWorldGenOptimizations", CommentedConfig::inMemory, "Configuration for vanilla worldgen optimizations", List.of(), null));
-        generalOptimizationsConfig = new GeneralOptimizationsConfig(ConfigUtils.getValue(configScope, "vanillaWorldGenOptimizations", CommentedConfig::inMemory, "Configuration for general optimizations", List.of(), null));
-        noTickViewDistanceConfig = new NoTickViewDistanceConfig(ConfigUtils.getValue(configScope, "noTickViewDistance", CommentedConfig::inMemory, "Configuration for no-tick view distance", List.of(), null));
+        asyncIoConfig = new AsyncIoConfig(ConfigUtils.getValue(configScope, "asyncIO", ConfigUtils::config, "Configuration for async io system", List.of(), null));
+        threadedWorldGenConfig = new ThreadedWorldGenConfig(ConfigUtils.getValue(configScope, "threadedWorldGen", ConfigUtils::config, "Configuration for threaded world generation", List.of(), null));
+        vanillaWorldGenOptimizationsConfig = new VanillaWorldGenOptimizationsConfig(ConfigUtils.getValue(configScope, "vanillaWorldGenOptimizations", ConfigUtils::config, "Configuration for vanilla worldgen optimizations", List.of(), null));
+        generalOptimizationsConfig = new GeneralOptimizationsConfig(ConfigUtils.getValue(configScope, "vanillaWorldGenOptimizations", ConfigUtils::config, "Configuration for general optimizations", List.of(), null));
+        noTickViewDistanceConfig = new NoTickViewDistanceConfig(ConfigUtils.getValue(configScope, "noTickViewDistance", ConfigUtils::config, "Configuration for no-tick view distance", List.of(), null));
+        clientSideConfig = new ClientSideConfig(ConfigUtils.getValue(configScope, "clientSide", ConfigUtils::config, "Configuration for clientside functions", List.of(), null));
         configScope.removeUnusedKeys();
         config.save();
         config.close();
@@ -124,6 +126,19 @@ public class C2MEConfig {
             this.enabled = ConfigUtils.getValue(configScope, "enabled", () -> false, "Weather to enable no-tick view distance", List.of(), false);
             this.viewDistance = ConfigUtils.getValue(configScope, "viewDistance", () -> 12, "No-tick view distance value", List.of(), 12, ConfigUtils.CheckType.NO_TICK_VIEW_DISTANCE);
             this.updatesPerTick = ConfigUtils.getValue(configScope, "updatesPerTick", () -> 6, "No-tick view distance updates per tick \n Lower this for a better latency and higher this for a faster loading", List.of(), 6, ConfigUtils.CheckType.POSITIVE_VALUE_ONLY);
+            configScope.removeUnusedKeys();
+        }
+    }
+
+    public static class ClientSideConfig {
+        public final boolean enabled;
+        public final int maxViewDistance;
+
+        public ClientSideConfig(CommentedConfig config) {
+            Preconditions.checkNotNull(config, "clientSideConfig config is not present");
+            final ConfigUtils.ConfigScope configScope = new ConfigUtils.ConfigScope(config);
+            this.enabled = ConfigUtils.getValue(configScope, "enabled", () -> true, "Weather to enable c2me clientside features", List.of(), false);
+            this.maxViewDistance = ConfigUtils.getValue(configScope, "maxViewDistance", () -> 64, "Max render distance allowed in game options", List.of(), 64, ConfigUtils.CheckType.NO_TICK_VIEW_DISTANCE);
             configScope.removeUnusedKeys();
         }
     }

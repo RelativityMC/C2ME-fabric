@@ -45,7 +45,9 @@
     "notickvd.MixinChunkHolder",
     "notickvd.MixinChunkTicketManager",
     "notickvd.MixinPlayerManager",
+    "notickvd.MixinServerChunkManager",
     "notickvd.MixinThreadedAnvilChunkStorage",
+    "notickvd.MixinWorld",
     "optimization.chunkaccess.async_chunk_request.MixinServerChunkManager",
     "optimization.chunkio.hide_sync_disk_writes_behind_flag.MixinRegionBasedStorage",
     "optimization.chunkscheduling.fix_unload.MixinThreadedAnvilChunkStorage",
@@ -84,6 +86,5 @@
   "plugin": "com.ishland.c2me.mixin.C2MEMixinPlugin",
   "injectors": {
     "defaultRequire": 1
-  },
-  "setSourceFile": true
+  }
 }

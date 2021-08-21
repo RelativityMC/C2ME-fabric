@@ -2,6 +2,7 @@ package com.ishland.c2me.common.config;
 
 import com.electronwill.nightconfig.core.CommentedConfig;
 import com.electronwill.nightconfig.core.Config;
+import com.electronwill.nightconfig.core.InMemoryCommentedFormat;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import net.fabricmc.loader.api.FabricLoader;
@@ -10,6 +11,7 @@ import net.fabricmc.loader.api.ModContainer;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -41,6 +43,10 @@ public class ConfigUtils {
         return foundIncompatibleMods.isEmpty() ? Objects.requireNonNull(config.config.get(key)) : incompatibleDefault;
     }
 
+    public static CommentedConfig config() {
+        return CommentedConfig.of(LinkedHashMap::new, InMemoryCommentedFormat.defaultInstance());
+    }
+
     public static class ConfigScope {
         final CommentedConfig config;
         final Set<String> processedKeys;
@@ -65,7 +71,7 @@ public class ConfigUtils {
         NO_TICK_VIEW_DISTANCE() {
             @Override
             public <T> boolean check(T value) {
-                return value instanceof Number && ((Number) value).intValue() >= 1 && ((Number) value).intValue() <= 250;
+                return value instanceof Number && ((Number) value).intValue() >= 2 && ((Number) value).intValue() <= 248;
             }
         },
         POSITIVE_VALUE_ONLY() {

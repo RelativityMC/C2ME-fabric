@@ -3,11 +3,8 @@ package com.ishland.c2me.common.notickvd;
 import com.ishland.c2me.common.config.C2MEConfig;
 import com.ishland.c2me.mixin.access.IChunkTicketManager;
 import com.ishland.c2me.mixin.access.IThreadedAnvilChunkStorage;
-import it.unimi.dsi.fastutil.longs.Long2BooleanMap;
-import it.unimi.dsi.fastutil.longs.Long2BooleanOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
-import it.unimi.dsi.fastutil.objects.ObjectIterator;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ChunkTicketManager;
@@ -19,6 +16,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.Comparator;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class PlayerNoTickDistanceMap extends ChunkPosDistanceLevelPropagator {
@@ -29,7 +29,7 @@ public class PlayerNoTickDistanceMap extends ChunkPosDistanceLevelPropagator {
     private static final int MAX_TICKET_UPDATES_PER_TICK = C2MEConfig.noTickViewDistanceConfig.updatesPerTick;
 
     private final Long2IntOpenHashMap distanceFromNearestPlayer = new Long2IntOpenHashMap();
-    private final Long2BooleanOpenHashMap pendingTicketUpdates = new Long2BooleanOpenHashMap();
+    private final TreeMap<Long, Boolean> pendingTicketUpdates = new TreeMap<>();
     private final LongOpenHashSet managedChunkTickets = new LongOpenHashSet();
 
     private final ChunkTicketManager chunkTicketManager;
@@ -88,13 +88,13 @@ public class PlayerNoTickDistanceMap extends ChunkPosDistanceLevelPropagator {
     }
 
     private void runPendingTicketUpdates() {
-        final ObjectIterator<Long2BooleanMap.Entry> iterator = this.pendingTicketUpdates.long2BooleanEntrySet().fastIterator();
+        final Iterator<Map.Entry<Long, Boolean>> iterator = this.pendingTicketUpdates.entrySet().iterator();
         int i = 0;
         while (iterator.hasNext() && ++i <= MAX_TICKET_UPDATES_PER_TICK) {
-            final Long2BooleanMap.Entry entry = iterator.next();
-            final long chunkPos = entry.getLongKey();
+            final Map.Entry<Long, Boolean> entry = iterator.next();
+            final long chunkPos = entry.getKey();
             ChunkPos pos = new ChunkPos(chunkPos);
-            if (entry.getBooleanValue()) {
+            if (entry.getValue()) {
                 if (this.managedChunkTickets.add(chunkPos)) {
                     this.chunkTicketManager.addTicketWithLevel(TICKET_TYPE, pos, 33, pos);
                 }
