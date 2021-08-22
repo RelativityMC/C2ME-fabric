@@ -2,21 +2,17 @@ package com.ishland.c2me.mixin.notickvd;
 
 import com.ishland.c2me.common.config.C2MEConfig;
 import com.ishland.c2me.common.notickvd.IChunkHolder;
-import com.ishland.c2me.common.notickvd.PlayerNoTickDistanceMap;
 import com.ishland.c2me.mixin.access.IChunkTicketManager;
 import com.ishland.c2me.mixin.access.IServerChunkManager;
 import com.mojang.datafixers.util.Either;
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
-import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
 import net.minecraft.network.Packet;
 import net.minecraft.network.packet.s2c.play.ChunkLoadDistanceS2CPacket;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ChunkHolder;
-import net.minecraft.server.world.ChunkTicket;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;
-import net.minecraft.util.collection.SortedArraySet;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.chunk.Chunk;
@@ -130,11 +126,9 @@ public abstract class MixinThreadedAnvilChunkStorage {
         if (chunk instanceof WorldChunk worldChunk) {
             final ServerWorld serverWorld = (ServerWorld) worldChunk.getWorld();
             final IServerChunkManager serverChunkManager = (IServerChunkManager) serverWorld.getChunkManager();
-            final IChunkTicketManager ticketManager = (IChunkTicketManager) serverChunkManager.getTicketManager();
-            final Long2ObjectOpenHashMap<SortedArraySet<ChunkTicket<?>>> ticketsByPosition = ticketManager.getTicketsByPosition();
-            final SortedArraySet<ChunkTicket<?>> tickets = ticketsByPosition.getOrDefault(chunk.getPos().toLong(), null);
-            final boolean isHeldByOnlyNoTick = tickets != null && tickets.size() == 1 && tickets.first().getType() == PlayerNoTickDistanceMap.TICKET_TYPE;
-            cir.setReturnValue(cir.getReturnValueZ() && !isHeldByOnlyNoTick);
+            final com.ishland.c2me.common.notickvd.IChunkTicketManager ticketManager =
+                    (com.ishland.c2me.common.notickvd.IChunkTicketManager) serverChunkManager.getTicketManager();
+            cir.setReturnValue(cir.getReturnValueZ() && !ticketManager.getNoTickOnlyChunks().contains(chunk.getPos()));
         }
     }
 
