@@ -123,6 +123,7 @@ public abstract class MixinThreadedAnvilChunkStorage {
     @Dynamic
     @Inject(method = "method_20582", at = @At("RETURN"), cancellable = true) // TODO lambda expression of the 1st filter "chunk instanceof ReadOnlyChunk || chunk instanceof WorldChunk"
     private static void onSaveFilter1(Chunk chunk, CallbackInfoReturnable<Boolean> cir) {
+        if (true) return;
         if (chunk instanceof WorldChunk worldChunk) {
             final ServerWorld serverWorld = (ServerWorld) worldChunk.getWorld();
             final IServerChunkManager serverChunkManager = (IServerChunkManager) serverWorld.getChunkManager();

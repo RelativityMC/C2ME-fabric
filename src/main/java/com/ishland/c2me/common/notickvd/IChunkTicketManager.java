@@ -8,4 +8,6 @@ public interface IChunkTicketManager {
 
     Set<ChunkPos> getNoTickOnlyChunks();
 
+    int getNoTickPendingTicketUpdates();
+
 }

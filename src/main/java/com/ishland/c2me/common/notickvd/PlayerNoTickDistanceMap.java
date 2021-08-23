@@ -90,21 +90,27 @@ public class PlayerNoTickDistanceMap extends ChunkPosDistanceLevelPropagator {
     private void runPendingTicketUpdates() {
         final Iterator<Map.Entry<Long, Boolean>> iterator = this.pendingTicketUpdates.entrySet().iterator();
         int i = 0;
-        while (iterator.hasNext() && ++i <= MAX_TICKET_UPDATES_PER_TICK) {
+        while (iterator.hasNext() && i <= MAX_TICKET_UPDATES_PER_TICK) {
             final Map.Entry<Long, Boolean> entry = iterator.next();
             final long chunkPos = entry.getKey();
             ChunkPos pos = new ChunkPos(chunkPos);
             if (entry.getValue()) {
                 if (this.managedChunkTickets.add(chunkPos)) {
                     this.chunkTicketManager.addTicketWithLevel(TICKET_TYPE, pos, 33, pos);
+                    i ++;
                 }
             } else {
                 if (this.managedChunkTickets.remove(chunkPos)) {
                     this.chunkTicketManager.removeTicketWithLevel(TICKET_TYPE, pos, 33, pos);
+                    i ++;
                 }
             }
             iterator.remove();
         }
+    }
+
+    public int getPendingTicketUpdatesCount() {
+        return this.pendingTicketUpdates.size();
     }
 
 }
