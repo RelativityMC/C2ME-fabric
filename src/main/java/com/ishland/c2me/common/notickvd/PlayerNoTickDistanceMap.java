@@ -5,6 +5,7 @@ import com.ishland.c2me.mixin.access.IChunkTicketManager;
 import com.ishland.c2me.mixin.access.IThreadedAnvilChunkStorage;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ChunkTicketManager;
@@ -35,7 +36,7 @@ public class PlayerNoTickDistanceMap extends ChunkPosDistanceLevelPropagator {
     private final ChunkTicketManager chunkTicketManager;
     private final int maxDistance;
 
-    private final AtomicLong lastTickNumber = new AtomicLong();
+    private final AtomicLong lastTickNumber = new AtomicLong(0L);
 
     public PlayerNoTickDistanceMap(ChunkTicketManager chunkTicketManager, int maxDistance) {
         super(maxDistance + 2, 16, 256);
@@ -80,8 +81,8 @@ public class PlayerNoTickDistanceMap extends ChunkPosDistanceLevelPropagator {
 
     public void update(ThreadedAnvilChunkStorage threadedAnvilChunkStorage) {
         if (((IThreadedAnvilChunkStorage) threadedAnvilChunkStorage).getWorld().getServer().getTicks() == lastTickNumber.get()) return;
-        this.runPendingTicketUpdates();
         lastTickNumber.addAndGet(1);
+        this.runPendingTicketUpdates();
         final int pendingRawUpdateCount = this.getPendingUpdateCount();
         if (pendingRawUpdateCount == 0) return;
         this.applyPendingUpdates(Integer.MAX_VALUE);
@@ -111,6 +112,10 @@ public class PlayerNoTickDistanceMap extends ChunkPosDistanceLevelPropagator {
 
     public int getPendingTicketUpdatesCount() {
         return this.pendingTicketUpdates.size();
+    }
+
+    public LongSet getChunks() {
+        return managedChunkTickets;
     }
 
 }

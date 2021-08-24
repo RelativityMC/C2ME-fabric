@@ -5,6 +5,7 @@
   "compatibilityLevel": "JAVA_16",
   "mixinPriority": 1100,
   "mixins": [
+    "access.IChunkTicket",
     "access.IChunkTicketManager",
     "access.IServerChunkManager",
     "access.IStructureWeightSampler",

@@ -129,7 +129,7 @@ public abstract class MixinThreadedAnvilChunkStorage {
             final IServerChunkManager serverChunkManager = (IServerChunkManager) serverWorld.getChunkManager();
             final com.ishland.c2me.common.notickvd.IChunkTicketManager ticketManager =
                     (com.ishland.c2me.common.notickvd.IChunkTicketManager) serverChunkManager.getTicketManager();
-            cir.setReturnValue(cir.getReturnValueZ() && !ticketManager.getNoTickOnlyChunks().contains(chunk.getPos()));
+            cir.setReturnValue(cir.getReturnValueZ() && !ticketManager.getNoTickOnlyChunks().contains(chunk.getPos().toLong()));
         }
     }
 

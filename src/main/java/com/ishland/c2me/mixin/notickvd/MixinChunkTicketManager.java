@@ -1,20 +1,20 @@
 package com.ishland.c2me.mixin.notickvd;
 
+import com.google.common.base.Suppliers;
 import com.ishland.c2me.common.config.C2MEConfig;
 import com.ishland.c2me.common.notickvd.IChunkTicketManager;
+import com.ishland.c2me.common.notickvd.NormalTicketDistanceMap;
 import com.ishland.c2me.common.notickvd.PlayerNoTickDistanceMap;
-import com.ishland.c2me.mixin.access.IThreadedAnvilChunkStorage;
-import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.longs.LongIterator;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
-import it.unimi.dsi.fastutil.objects.ObjectIterator;
+import it.unimi.dsi.fastutil.longs.LongSet;
+import it.unimi.dsi.fastutil.longs.LongSets;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ChunkTicket;
 import net.minecraft.server.world.ChunkTicketManager;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;
 import net.minecraft.util.collection.SortedArraySet;
-import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.ChunkSectionPos;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -24,9 +24,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.function.Supplier;
 
 @Mixin(ChunkTicketManager.class)
 public class MixinChunkTicketManager implements IChunkTicketManager {
@@ -34,13 +32,16 @@ public class MixinChunkTicketManager implements IChunkTicketManager {
     @Shadow
     @Final
     private Long2ObjectOpenHashMap<SortedArraySet<ChunkTicket<?>>> ticketsByPosition;
+    @Shadow private long age;
     private PlayerNoTickDistanceMap playerNoTickDistanceMap;
+    private NormalTicketDistanceMap normalTicketDistanceMap;
 
-    private volatile Set<ChunkPos> noTickOnlyChunksCacheView;
+    private volatile Supplier<LongSet> noTickOnlyChunksCacheView;
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(CallbackInfo ci) {
         playerNoTickDistanceMap = new PlayerNoTickDistanceMap((ChunkTicketManager) (Object) this, C2MEConfig.noTickViewDistanceConfig.viewDistance + 1);
+        normalTicketDistanceMap = new NormalTicketDistanceMap((ChunkTicketManager) (Object) this);
     }
 
     @Inject(method = "handleChunkEnter", at = @At("HEAD"))
@@ -55,42 +56,43 @@ public class MixinChunkTicketManager implements IChunkTicketManager {
 
     @Inject(method = "tick", at = @At("RETURN"))
     private void onTick(ThreadedAnvilChunkStorage threadedAnvilChunkStorage, CallbackInfoReturnable<Boolean> info) {
-        playerNoTickDistanceMap.update(threadedAnvilChunkStorage);
+        this.playerNoTickDistanceMap.update(threadedAnvilChunkStorage);
+        if (this.normalTicketDistanceMap.update(threadedAnvilChunkStorage)) {
+            this.noTickOnlyChunksCacheView = Suppliers.memoize(() -> {
+                final LongSet noTickChunks = this.playerNoTickDistanceMap.getChunks();
+                final LongSet normalChunks = this.normalTicketDistanceMap.getChunks();
+                final LongOpenHashSet longs = new LongOpenHashSet(noTickChunks.size() * 3 / 2);
+                final LongIterator iterator = noTickChunks.iterator();
+                while (iterator.hasNext()) {
+                    final long chunk = iterator.nextLong();
+                    if (normalChunks.contains(chunk)) continue;
+                    longs.add(chunk);
+                }
+                return LongSets.unmodifiable(longs);
+            });
+        }
     }
 
-    @Inject(method = "tick", at = @At("RETURN"))
-    private void afterTick(ThreadedAnvilChunkStorage threadedAnvilChunkStorage, CallbackInfoReturnable<Boolean> cir) {
-        if (!cir.getReturnValueZ()) return;
-        final HashSet<ChunkPos> noTickOnlyChunksCache = new HashSet<>(this.ticketsByPosition.size() * 4);
-        final ObjectIterator<Long2ObjectMap.Entry<SortedArraySet<ChunkTicket<?>>>> iterator = this.ticketsByPosition.long2ObjectEntrySet().fastIterator();
-        while (iterator.hasNext()) {
-            final Long2ObjectMap.Entry<SortedArraySet<ChunkTicket<?>>> entry = iterator.next();
-            final SortedArraySet<ChunkTicket<?>> chunkTickets = entry.getValue();
-            final ChunkHolder chunkHolder = ((IThreadedAnvilChunkStorage) threadedAnvilChunkStorage).getChunkHolders().get(entry.getLongKey());
-            final ChunkHolder.LevelType levelType = chunkHolder != null ? chunkHolder.getLevelType() : ChunkHolder.LevelType.ENTITY_TICKING;
-            if (levelType == ChunkHolder.LevelType.BORDER && chunkTickets.size() == 1 && chunkTickets.first().getType() == PlayerNoTickDistanceMap.TICKET_TYPE) {
-                noTickOnlyChunksCache.add(new ChunkPos(entry.getLongKey()));
-            }
-        }
-        LongOpenHashSet coveredChunks = new LongOpenHashSet();
-        this.ticketsByPosition.long2ObjectEntrySet().fastForEach(entry -> {
-            for (ChunkTicket<?> chunkTicket : entry.getValue()) {
-                if (chunkTicket.getType() == PlayerNoTickDistanceMap.TICKET_TYPE) continue;
-                final int radius = 33 - chunkTicket.getLevel();
-                final ChunkPos chunkPos = new ChunkPos(entry.getLongKey());
-                for (int x = chunkPos.x - radius; x <= chunkPos.x + radius; x ++)
-                    for (int z = chunkPos.z - radius; z <= chunkPos.z + radius; z ++) {
-                        coveredChunks.add(ChunkPos.toLong(x, z));
-                    }
-            }
-        });
-        noTickOnlyChunksCache.removeIf(chunkPos -> coveredChunks.contains(chunkPos.toLong()));
-        this.noTickOnlyChunksCacheView = Collections.unmodifiableSet(noTickOnlyChunksCache);
+    @Inject(method = "purge", at = @At("RETURN"))
+    private void onPurge(CallbackInfo ci) {
+        this.normalTicketDistanceMap.purge(this.age);
+    }
+
+    @Inject(method = "addTicket(JLnet/minecraft/server/world/ChunkTicket;)V", at = @At("RETURN"))
+    private void onAddTicket(long position, ChunkTicket<?> ticket, CallbackInfo ci) {
+//        if (ticket.getType() != ChunkTicketType.UNKNOWN) System.err.printf("Added ticket (%s) at %s\n", ticket, new ChunkPos(position));
+        this.normalTicketDistanceMap.addTicket(position, ticket);
+    }
+
+    @Inject(method = "removeTicket(JLnet/minecraft/server/world/ChunkTicket;)V", at = @At("RETURN"))
+    private void onRemoveTicket(long pos, ChunkTicket<?> ticket, CallbackInfo ci) {
+//        if (ticket.getType() != ChunkTicketType.UNKNOWN) System.err.printf("Removed ticket (%s) at %s\n", ticket, new ChunkPos(pos));
+        this.normalTicketDistanceMap.removeTicket(pos, ticket);
     }
 
     @Override
-    public Set<ChunkPos> getNoTickOnlyChunks() {
-        return this.noTickOnlyChunksCacheView;
+    public LongSet getNoTickOnlyChunks() {
+        return this.noTickOnlyChunksCacheView != null ? this.noTickOnlyChunksCacheView.get() : null;
     }
 
     @Override

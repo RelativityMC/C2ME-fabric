@@ -1,9 +1,15 @@
 package com.ishland.c2me.common.util;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 
 public class IntegerRollingAverage {
+
+    public static final ScheduledExecutorService SCHEDULER = Executors.newSingleThreadScheduledExecutor(new ThreadFactoryBuilder().setDaemon(true).setNameFormat("C2ME rolling average").build());
 
     private final AtomicIntegerArray history;
     private final AtomicInteger counter = new AtomicInteger(0);

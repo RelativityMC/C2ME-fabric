@@ -8,16 +8,60 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 
 public class AsyncCombinedLock {
 
-    public static final ForkJoinPool lockWorker = new ForkJoinPool(
+    private static final ForkJoinPool lockWorker0 = new ForkJoinPool(
             Math.max(1, Runtime.getRuntime().availableProcessors() / 7),
             new C2MEForkJoinWorkerThreadFactory("C2ME lock worker #%d", Thread.NORM_PRIORITY - 1),
             null,
             true
     );
+    public static final StatsTrackingExecutor lockWorker = new StatsTrackingExecutor(lockWorker0);
+
+    private static final AtomicLong totalLocks = new AtomicLong(0L);
+    private static final AtomicLong completedLocks = new AtomicLong(0L);
+    private static final IntegerRollingAverage average5s = new IntegerRollingAverage(5 * 2);
+    private static final IntegerRollingAverage average10s = new IntegerRollingAverage(10 * 2);
+    private static final IntegerRollingAverage average1m = new IntegerRollingAverage(60 * 2);
+    private static final IntegerRollingAverage average5m = new IntegerRollingAverage(5 * 60 * 2);
+    private static final IntegerRollingAverage average15m = new IntegerRollingAverage(15 * 60 * 2);
+
+    static {
+        IntegerRollingAverage.SCHEDULER.scheduleAtFixedRate(() -> {
+            final long totalTasks = totalLocks.get();
+            final long completedTasks = completedLocks.get();
+            final int lockSystemLoad = (int) (totalTasks - completedTasks);
+            average5s.submit(lockSystemLoad);
+            average10s.submit(lockSystemLoad);
+            average1m.submit(lockSystemLoad);
+            average5m.submit(lockSystemLoad);
+            average15m.submit(lockSystemLoad);
+        }, 500, 500, TimeUnit.MILLISECONDS);
+    }
+
+    public static IntegerRollingAverage getAverage5s() {
+        return average5s;
+    }
+
+    public static IntegerRollingAverage getAverage10s() {
+        return average10s;
+    }
+
+    public static IntegerRollingAverage getAverage1m() {
+        return average1m;
+    }
+
+    public static IntegerRollingAverage getAverage5m() {
+        return average5m;
+    }
+
+    public static IntegerRollingAverage getAverage15m() {
+        return average15m;
+    }
 
     private final AsyncNamedLock<ChunkPos> lock;
     private final ChunkPos[] names;
@@ -26,6 +70,7 @@ public class AsyncCombinedLock {
     public AsyncCombinedLock(AsyncNamedLock<ChunkPos> lock, Set<ChunkPos> names) {
         this.lock = lock;
         this.names = names.toArray(ChunkPos[]::new);
+        totalLocks.incrementAndGet();
         lockWorker.execute(this::tryAcquire);
     }
 
@@ -42,6 +87,7 @@ public class AsyncCombinedLock {
             }
         }
         if (allAcquired) {
+            completedLocks.incrementAndGet();
             future.complete(() -> {
                 for (LockEntry entry : tryLocks) {
                     //noinspection OptionalGetWithoutIsPresent
@@ -63,7 +109,8 @@ public class AsyncCombinedLock {
             }
             if (!triedRelock) {
                 // shouldn't happen at all...
-                lockWorker.execute(this::tryAcquire);
+                System.err.println("Some issue occurred while doing locking, retrying");
+                this.tryAcquire();
             }
         }
     }

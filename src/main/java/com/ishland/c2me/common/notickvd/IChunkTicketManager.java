@@ -1,12 +1,10 @@
 package com.ishland.c2me.common.notickvd;
 
-import net.minecraft.util.math.ChunkPos;
-
-import java.util.Set;
+import it.unimi.dsi.fastutil.longs.LongSet;
 
 public interface IChunkTicketManager {
 
-    Set<ChunkPos> getNoTickOnlyChunks();
+    LongSet getNoTickOnlyChunks();
 
     int getNoTickPendingTicketUpdates();
 
