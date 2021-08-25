@@ -17,7 +17,7 @@ import java.util.Set;
 public class StacktraceRecorder {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final boolean doRecord = FabricLoader.getInstance().isDevelopmentEnvironment();
+    private static final boolean doRecord = Boolean.getBoolean("com.ishland.c2me.common.threading.worldgen.debug.DebugReducedLockRadius");
 
     private static final Set<StacktraceHolder> recordedStacktraces = Sets.newConcurrentHashSet();
 

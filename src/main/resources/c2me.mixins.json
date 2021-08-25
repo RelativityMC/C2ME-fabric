@@ -5,6 +5,7 @@
   "compatibilityLevel": "JAVA_16",
   "mixinPriority": 1100,
   "mixins": [
+    "access.IChunkHolder",
     "access.IChunkTicket",
     "access.IChunkTicketManager",
     "access.INbtCompound",
@@ -67,9 +68,6 @@
     "optimization.worldgen.global_biome_cache.MixinVanillaLayeredBiomeSource",
     "optimization.worldgen.thread_local_biome_cache.MixinVanillaLayeredBiomeSource",
     "optimization.worldgen.vanilla_optimization.the_end_biome_cache.MixinTheEndBiomeSource",
-    "perftracking.MixinStorageIoWorker",
-    "perftracking.MixinThreadedAnvilChunkStorage",
-    "perftracking.MixinThreadExecutor",
     "test.MixinSayCommand",
     "threading.chunkio.MixinChunkSerializer",
     "threading.chunkio.MixinChunkTickScheduler",
