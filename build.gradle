@@ -19,7 +19,7 @@ allprojects {
     if (plugins.hasPlugin("fabric-loom")) {
         loom {
             shareCaches = true
-            customManifest = "https://gist.githubusercontent.com/ishland/5f4ff5c7207238760d2fea455ec6e90e/raw/b840fba28be49299aab3c987467071c7585b95c0/1_18_experimental-snapshot-4.json"
+            customManifest = "https://gist.githubusercontent.com/ishland/4cef6b863bfee8589944bb4f61b94186/raw/c54ea42087244aae1d45f1d146682b94882f71a1/1_18_experimental-snapshot-5.json"
         }
     }
     afterEvaluate {
