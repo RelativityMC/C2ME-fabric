@@ -2,7 +2,7 @@ package com.ishland.c2me.common.threading.worldgen;
 
 import com.ishland.c2me.common.config.C2MEConfig;
 import com.ishland.c2me.common.util.C2MEForkJoinWorkerThreadFactory;
-import com.ishland.c2me.common.util.StatsTrackingExecutor;
+import com.ishland.c2me.common.perftracking.StatsTrackingExecutor;
 
 import java.util.concurrent.ForkJoinPool;
 

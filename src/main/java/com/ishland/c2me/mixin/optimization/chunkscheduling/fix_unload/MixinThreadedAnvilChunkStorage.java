@@ -3,15 +3,12 @@ package com.ishland.c2me.mixin.optimization.chunkscheduling.fix_unload;
 import com.ishland.c2me.common.structs.LongHashSet;
 import com.ishland.c2me.common.util.ShouldKeepTickingUtils;
 import it.unimi.dsi.fastutil.longs.LongSet;
-import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;
 import net.minecraft.util.thread.ThreadExecutor;
 import net.minecraft.world.poi.PointOfInterestStorage;
-import org.spongepowered.asm.mixin.Dynamic;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -29,17 +26,6 @@ public abstract class MixinThreadedAnvilChunkStorage {
 
     @Mutable
     @Shadow @Final private LongSet unloadedChunks;
-
-    /**
-     * @author ishland
-     * @reason Queue unload immediately
-     */
-    @SuppressWarnings("OverwriteTarget")
-    @Dynamic
-    @Overwrite
-    private void method_20579(ChunkHolder holder, Runnable runnable) { // TODO synthetic method in thenApplyAsync call of makeChunkAccessible
-        this.mainThreadExecutor.execute(runnable);
-    }
 
     @Redirect(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/poi/PointOfInterestStorage;tick(Ljava/util/function/BooleanSupplier;)V"))
     private void redirectTickPointOfInterestStorageTick(PointOfInterestStorage pointOfInterestStorage, BooleanSupplier shouldKeepTicking) {

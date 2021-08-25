@@ -6,6 +6,7 @@ import com.ishland.c2me.common.threading.chunkio.ChunkIoMainThreadTaskUtils;
 import com.ishland.c2me.common.threading.chunkio.ChunkIoThreadingExecutorUtils;
 import com.ishland.c2me.common.threading.chunkio.IAsyncChunkStorage;
 import com.ishland.c2me.common.threading.chunkio.ISerializingRegionBasedStorage;
+import com.ishland.c2me.common.util.SneakyThrow;
 import com.mojang.datafixers.DataFixer;
 import com.mojang.datafixers.util.Either;
 import net.minecraft.nbt.NbtCompound;
@@ -34,7 +35,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import com.ishland.c2me.common.util.SneakyThrow;
 
 import java.io.File;
 import java.util.HashSet;
@@ -192,7 +192,8 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
     private ConcurrentLinkedQueue<CompletableFuture<Void>> saveFutures = new ConcurrentLinkedQueue<>();
 
     @Dynamic
-    @Redirect(method = "method_18843", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ThreadedAnvilChunkStorage;save(Lnet/minecraft/world/chunk/Chunk;)Z")) // method: consumer in tryUnloadChunk
+    @Redirect(method = "method_18843", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ThreadedAnvilChunkStorage;save(Lnet/minecraft/world/chunk/Chunk;)Z"))
+    // method: consumer in tryUnloadChunk
     private boolean asyncSave(ThreadedAnvilChunkStorage tacs, Chunk chunk) {
         // TODO [VanillaCopy] - check when updating minecraft version
         this.pointOfInterestStorage.saveChunk(chunk.getPos());
@@ -221,21 +222,21 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
 
                 saveFutures.add(chunkLock.acquireLock(chunk.getPos()).toCompletableFuture().thenCompose(lockToken ->
                         CompletableFuture.supplyAsync(() -> {
-                            scope.open();
-                            AsyncSerializationManager.push(scope);
-                            try {
-                                return ChunkSerializer.serialize(this.world, chunk);
-                            } finally {
-                                AsyncSerializationManager.pop(scope);
-                            }
-                        }, ChunkIoThreadingExecutorUtils.serializerExecutor)
-                                .thenAcceptAsync(compoundTag -> this.setNbt(chunkPos, compoundTag), this.mainThreadExecutor)
+                                    scope.open();
+                                    AsyncSerializationManager.push(scope);
+                                    try {
+                                        return ChunkSerializer.serialize(this.world, chunk);
+                                    } finally {
+                                        AsyncSerializationManager.pop(scope);
+                                    }
+                                }, ChunkIoThreadingExecutorUtils.serializerExecutor)
+                                .thenAccept(compoundTag -> this.setNbt(chunkPos, compoundTag))
                                 .handle((unused, throwable) -> {
-                            lockToken.releaseLock();
-                            if (throwable != null)
-                                LOGGER.error("Failed to save chunk {},{}", chunkPos.x, chunkPos.z, throwable);
-                            return unused;
-                        })));
+                                    lockToken.releaseLock();
+                                    if (throwable != null)
+                                        LOGGER.error("Failed to save chunk {},{}", chunkPos.x, chunkPos.z, throwable);
+                                    return unused;
+                                })));
                 this.method_27053(chunkPos, chunkStatus.getChunkType());
                 // C2ME end
                 return true;

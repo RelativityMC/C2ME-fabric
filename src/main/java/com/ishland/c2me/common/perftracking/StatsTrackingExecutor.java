@@ -1,4 +1,4 @@
-package com.ishland.c2me.common.util;
+package com.ishland.c2me.common.perftracking;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class StatsTrackingExecutor implements Executor, Closeable {
+public class StatsTrackingExecutor implements Executor, Closeable, PerfTrackingObject {
 
     private final Executor delegate;
     private final ScheduledFuture<?> scheduledFuture;
@@ -43,29 +43,29 @@ public class StatsTrackingExecutor implements Executor, Closeable {
         });
     }
 
-    public IntegerRollingAverage getAverage5s() {
-        ensureOpen();
-        return average5s;
+    @Override
+    public double getAverage5s() {
+        return average5s.average();
     }
 
-    public IntegerRollingAverage getAverage10s() {
-        ensureOpen();
-        return average10s;
+    @Override
+    public double getAverage10s() {
+        return average10s.average();
     }
 
-    public IntegerRollingAverage getAverage1m() {
-        ensureOpen();
-        return average1m;
+    @Override
+    public double getAverage1m() {
+        return average1m.average();
     }
 
-    public IntegerRollingAverage getAverage5m() {
-        ensureOpen();
-        return average5m;
+    @Override
+    public double getAverage5m() {
+        return average5m.average();
     }
 
-    public IntegerRollingAverage getAverage15m() {
-        ensureOpen();
-        return average15m;
+    @Override
+    public double getAverage15m() {
+        return average15m.average();
     }
 
     @Override

@@ -2,6 +2,9 @@ package com.ishland.c2me.common.util;
 
 import com.ibm.asyncutil.locks.AsyncLock;
 import com.ibm.asyncutil.locks.AsyncNamedLock;
+import com.ishland.c2me.common.perftracking.IntegerRollingAverage;
+import com.ishland.c2me.common.perftracking.PerfTrackingObject;
+import com.ishland.c2me.common.perftracking.StatsTrackingExecutor;
 import net.minecraft.util.math.ChunkPos;
 
 import java.util.Optional;
@@ -43,24 +46,33 @@ public class AsyncCombinedLock {
         }, 500, 500, TimeUnit.MILLISECONDS);
     }
 
-    public static IntegerRollingAverage getAverage5s() {
-        return average5s;
-    }
+    public static PerfTrackingObject getPerfTrackingObject() {
+        return new PerfTrackingObject() {
+            @Override
+            public double getAverage5s() {
+                return average5s.average();
+            }
 
-    public static IntegerRollingAverage getAverage10s() {
-        return average10s;
-    }
+            @Override
+            public double getAverage10s() {
+                return average10s.average();
+            }
 
-    public static IntegerRollingAverage getAverage1m() {
-        return average1m;
-    }
+            @Override
+            public double getAverage1m() {
+                return average1m.average();
+            }
 
-    public static IntegerRollingAverage getAverage5m() {
-        return average5m;
-    }
+            @Override
+            public double getAverage5m() {
+                return average5m.average();
+            }
 
-    public static IntegerRollingAverage getAverage15m() {
-        return average15m;
+            @Override
+            public double getAverage15m() {
+                return average15m.average();
+            }
+        };
     }
 
     private final AsyncNamedLock<ChunkPos> lock;

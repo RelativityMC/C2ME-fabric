@@ -1,4 +1,4 @@
-package com.ishland.c2me.common.util;
+package com.ishland.c2me.common.perftracking;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 

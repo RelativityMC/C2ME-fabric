@@ -40,6 +40,7 @@ public class ASMMixinPlugin implements IMixinConfigPlugin {
     @Override
     public void preApply(String targetClassName, ClassNode targetClass, String mixinClassName, IMixinInfo mixinInfo) {
         ASMTransformerMakeVolatile.transform(targetClass);
+        ASMTransformerNbtOpsMapBuilderFastUtilMap.transform(targetClass);
     }
 
     @Override

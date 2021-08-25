@@ -1,17 +1,20 @@
 package com.ishland.c2me.common.threading.chunkio;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.ishland.c2me.common.util.StatsTrackingExecutor;
-import org.threadly.concurrent.UnfairExecutor;
 import com.ishland.c2me.common.config.C2MEConfig;
+import com.ishland.c2me.common.util.C2MEForkJoinWorkerThreadFactory;
+import com.ishland.c2me.common.perftracking.StatsTrackingExecutor;
 
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ThreadFactory;
 
 public class ChunkIoThreadingExecutorUtils {
 
-    private static final UnfairExecutor serializerExecutor0 = new UnfairExecutor(
+    private static final ForkJoinPool serializerExecutor0 = new ForkJoinPool(
             C2MEConfig.asyncIoConfig.serializerParallelism,
-            new ThreadFactoryBuilder().setDaemon(true).setPriority(Thread.NORM_PRIORITY - 1).setNameFormat("C2ME serializer worker #%d").build()
+            new C2MEForkJoinWorkerThreadFactory("C2ME serializer worker #%d", Thread.NORM_PRIORITY - 1),
+            null,
+            true
     );
 
     public static final StatsTrackingExecutor serializerExecutor = new StatsTrackingExecutor(serializerExecutor0);
