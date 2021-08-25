@@ -9,7 +9,6 @@ import net.minecraft.util.Util;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.thread.ThreadExecutor;
 import net.minecraft.world.chunk.ChunkStatus;
-import net.minecraft.world.chunk.WorldChunk;
 import org.spongepowered.asm.mixin.Dynamic;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -64,18 +63,6 @@ public class MixinThreadedAnvilChunkStorage implements IThreadedAnvilChunkStorag
         }, () -> {
             return "release light ticket " + pos;
         }));
-    }
-
-    /**
-     * @author ishland
-     * @reason reduce scheduling overhead with mainInvokingExecutor
-     */
-    @Overwrite
-    public CompletableFuture<Void> enableTickSchedulers(WorldChunk chunk) {
-        // TODO [VanillaCopy]
-        return CompletableFuture.runAsync(() -> {
-            chunk.enableTickSchedulers(this.world);
-        }, this.mainInvokingExecutor);
     }
 
     // private synthetic method_17252(Lnet/minecraft/server/world/ChunkHolder;Ljava/lang/Runnable;)V
