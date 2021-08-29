@@ -11,6 +11,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 
 public class ModPackResolverPlugin implements Plugin<Project> {
+
     @Override
     public void apply(@NotNull Project project) {
         applyRepositories(project);
