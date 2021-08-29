@@ -31,7 +31,7 @@ jobs:
         
     - name: Build C2ME
       run: |
-        ./gradlew clean build
+        ./gradlew clean build --stacktrace
 
     - name: Run FOSSA
       uses: fossa-contrib/fossa-action@v1
