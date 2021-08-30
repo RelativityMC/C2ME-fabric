@@ -9,7 +9,7 @@ class ModpackConfig {
 
         // mod dependencies
         // https://fabricmc.net/versions.html
-        handler.modImplementation("net.fabricmc.fabric-api:fabric-api:0.37.1+1.17")
+        handler.modImplementation("net.fabricmc.fabric-api:fabric-api:0.39.2+1.17")
 
         // mods
 
@@ -17,7 +17,7 @@ class ModpackConfig {
         // Optimization mods
 
         // https://modrinth.com/mod/lithium
-        handler.modImplementation("maven.modrinth:lithium:mc1.17.1-0.7.3") {
+        handler.modImplementation("com.github.CaffeineMC.lithium-fabric:lithium:mc1.17.1-0.7.4") {
             transitive false
         }
 
@@ -52,7 +52,7 @@ class ModpackConfig {
 
         // https://www.curseforge.com/minecraft/mc-mods/betterend
         // https://github.com/ishland/BetterEnd/
-        handler.modImplementation("com.github.ishland:BetterEnd:3c0120db2e") {
+        handler.modImplementation("com.github.ishland:BetterEnd:2cce1d2") {
             exclude(group: "net.fabricmc.fabric-api")
             exclude(group: "net.fabricmc", module: "fabric-loader")
         }

@@ -26,7 +26,7 @@ allprojects {
         }
     }
     loom {
-        shareCaches = true
+        shareRemapCaches = true
     }
     afterEvaluate {
         migrateMappings.configure {

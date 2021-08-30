@@ -6,7 +6,7 @@ subprojects {
     archivesBaseName = "c2me-compat-" + project.getName()
 
     loom {
-        shareCaches = true
+        shareRemapCaches = true
     }
     afterEvaluate {
         migrateMappings.configure {

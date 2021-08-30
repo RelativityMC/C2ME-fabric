@@ -12,7 +12,7 @@ repositories {
 }
 
 dependencies {
-    modImplementation("net.fabricmc.fabric-api:fabric-api:0.37.2+1.17")
+    modImplementation("net.fabricmc.fabric-api:fabric-api:0.39.2+1.17")
     modImplementation("curse.maven:charm-318872:3393290")
 }
 
