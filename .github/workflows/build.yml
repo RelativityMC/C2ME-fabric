@@ -25,9 +25,9 @@ jobs:
           ~/.gradle/caches
           ~/.gradle/wrapper
           ./.gradle/loom-cache
-        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        key: ${{ runner.os }}-gradle3-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
         restore-keys: |
-          ${{ runner.os }}-gradle-
+          ${{ runner.os }}-gradle3-
         
     - name: Build C2ME
       run: |
