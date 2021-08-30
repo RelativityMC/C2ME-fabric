@@ -5,11 +5,11 @@
   "compatibilityLevel": "JAVA_16",
   "mixinPriority": 1100,
   "mixins": [
-    "MixinCrashReport"
+    "MixinCrashReport",
+    "targets.ASMTargets"
   ],
   "plugin": "com.ishland.c2me.compatibility.mixin.C2MECompatibilityModule",
   "injectors": {
     "defaultRequire": 1
-  },
-  "setSourceFile": true
+  }
 }

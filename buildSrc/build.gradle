@@ -1,17 +1,48 @@
 plugins {
     id 'java'
+    id 'java-library'
+    id 'java-gradle-plugin'
 }
 
 group 'com.ishland.c2me'
 
 repositories {
     mavenCentral()
+    maven { url "https://jitpack.io" }
+    maven { url "https://maven.fabricmc.net/" }
 }
 
 dependencies {
 
+    // libraries
+    implementation ('commons-io:commons-io:2.8.0')
+    implementation ('org.zeroturnaround:zt-zip:1.14')
+    implementation ('com.google.code.gson:gson:2.8.7')
+    implementation ('com.fasterxml.jackson.core:jackson-databind:2.12.4')
+    implementation ('com.google.guava:guava:30.1.1-jre')
+    implementation ('org.ow2.asm:asm:9.2')
+    implementation ('org.ow2.asm:asm-analysis:9.2')
+    implementation ('org.ow2.asm:asm-commons:9.2')
+    implementation ('org.ow2.asm:asm-tree:9.2')
+    implementation ('org.ow2.asm:asm-util:9.2')
+
+    // https://mvnrepository.com/artifact/org.jetbrains/annotations
+    implementation 'org.jetbrains:annotations:22.0.0'
+
+    api "net.fabricmc:fabric-loader:0.11.6"
+    api 'net.fabricmc:access-widener:1.1.0'
+    api "org.apache.logging.log4j:log4j-core:2.14.1"
 }
 
 test {
     useJUnitPlatform()
+}
+
+gradlePlugin {
+    plugins {
+        curseModpackResolver {
+            id = 'com.ishland.curseforge.modpackresolver'
+            implementationClass = 'com.ishland.curseforge.modpackresolver.ModPackResolverPlugin'
+        }
+    }
 }

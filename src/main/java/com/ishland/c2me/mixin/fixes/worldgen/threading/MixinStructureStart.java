@@ -1,6 +1,7 @@
 package com.ishland.c2me.mixin.fixes.worldgen.threading;
 
-import com.ishland.c2me.common.threading.worldgen.ThreadLocalChunkRandom;
+import com.ishland.c2me.common.fixes.worldgen.threading.ThreadLocalChunkRandom;
+import net.minecraft.structure.StructurePiece;
 import net.minecraft.structure.StructureStart;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.gen.ChunkRandom;
@@ -18,6 +19,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Mixin(StructureStart.class)
@@ -28,6 +31,8 @@ public class MixinStructureStart<C extends FeatureConfig> {
     @Final
     protected ChunkRandom random;
 
+    @Mutable
+    @Shadow @Final protected List<StructurePiece> children;
     private final AtomicInteger referencesAtomic = new AtomicInteger();
 
     @Inject(method = "<init>", at = @At("RETURN"))
@@ -35,6 +40,7 @@ public class MixinStructureStart<C extends FeatureConfig> {
         this.random = new ThreadLocalChunkRandom(seed,
                 chunkRandom -> chunkRandom.setCarverSeed(seed, pos.x, pos.z) // TODO [VanillaCopy]
         );
+        this.children = Collections.synchronizedList(children);
     }
 
     @Dynamic

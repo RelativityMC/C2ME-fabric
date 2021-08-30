@@ -1,9 +1,14 @@
 package com.ishland.c2me.common.threading.worldgen;
 
+import com.google.common.base.Preconditions;
+import com.ibm.asyncutil.locks.AsyncLock;
 import com.ibm.asyncutil.locks.AsyncNamedLock;
 import com.ishland.c2me.common.config.C2MEConfig;
 import com.ishland.c2me.common.util.AsyncCombinedLock;
+import com.mojang.datafixers.util.Either;
+import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
 
 import java.util.ArrayList;
@@ -12,9 +17,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static com.ishland.c2me.common.threading.worldgen.ChunkStatusThreadingType.AS_IS;
-import static com.ishland.c2me.common.threading.worldgen.ChunkStatusThreadingType.PARALLELIZED;
-import static com.ishland.c2me.common.threading.worldgen.ChunkStatusThreadingType.SINGLE_THREADED;
+import static com.ishland.c2me.common.threading.worldgen.ChunkStatusUtils.ChunkStatusThreadingType.AS_IS;
+import static com.ishland.c2me.common.threading.worldgen.ChunkStatusUtils.ChunkStatusThreadingType.PARALLELIZED;
+import static com.ishland.c2me.common.threading.worldgen.ChunkStatusUtils.ChunkStatusThreadingType.SINGLE_THREADED;
 
 public class ChunkStatusUtils {
 
@@ -51,4 +56,35 @@ public class ChunkStatusUtils {
         }, AsyncCombinedLock.lockWorker).thenCompose(Function.identity());
     }
 
+    public enum ChunkStatusThreadingType {
+
+        PARALLELIZED() {
+            @Override
+            public CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> runTask(AsyncLock lock, Supplier<CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>>> completableFuture) {
+                return CompletableFuture.supplyAsync(completableFuture, WorldGenThreadingExecutorUtils.mainExecutor).thenCompose(Function.identity());
+            }
+        },
+        SINGLE_THREADED() {
+            @Override
+            public CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> runTask(AsyncLock lock, Supplier<CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>>> completableFuture) {
+                Preconditions.checkNotNull(lock);
+                return lock.acquireLock().toCompletableFuture().thenComposeAsync(lockToken -> {
+                    try {
+                        return completableFuture.get();
+                    } finally {
+                        lockToken.releaseLock();
+                    }
+                }, WorldGenThreadingExecutorUtils.mainExecutor);
+            }
+        },
+        AS_IS() {
+            @Override
+            public CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> runTask(AsyncLock lock, Supplier<CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>>> completableFuture) {
+                return completableFuture.get();
+            }
+        };
+
+        public abstract CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> runTask(AsyncLock lock, Supplier<CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>>> completableFuture);
+
+    }
 }

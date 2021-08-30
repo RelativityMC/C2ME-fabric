@@ -4,15 +4,26 @@ pluginManagement {
             name = 'Fabric'
             url = 'https://maven.fabricmc.net/'
         }
+        maven {
+            name = 'Cotton'
+            url = 'https://server.bbkr.space/artifactory/libs-release/'
+        }
         gradlePluginPortal()
     }
 }
 include 'tests'
 include 'tests:test-mod'
 include 'tests:vanilla-test'
+include 'tests:vanilla-modpack-test'
 include 'tests:c2me-test'
+include 'tests:c2me-modpack-test'
+include 'tests:c2me-aof-test'
 include 'tests:world-diff'
+include 'tests:c2me-modpack-devlaunch'
 include 'compatibility'
 include 'compatibility:terra'
 include 'compatibility:betterend'
+include 'compatibility:betternether'
+include 'compatibility:thebumblezone'
+include 'compatibility:charm'
 

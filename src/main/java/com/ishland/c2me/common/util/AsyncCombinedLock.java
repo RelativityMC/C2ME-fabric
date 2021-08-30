@@ -63,7 +63,8 @@ public class AsyncCombinedLock {
             }
             if (!triedRelock) {
                 // shouldn't happen at all...
-                lockWorker.execute(this::tryAcquire);
+                System.err.println("Some issue occurred while doing locking, retrying");
+                this.tryAcquire();
             }
         }
     }

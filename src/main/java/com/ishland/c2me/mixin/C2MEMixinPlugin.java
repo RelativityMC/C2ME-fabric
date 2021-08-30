@@ -1,5 +1,6 @@
 package com.ishland.c2me.mixin;
 
+import com.ishland.c2me.common.fixes.DataFixerUpperClasspathFix;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.objectweb.asm.tree.ClassNode;
@@ -18,6 +19,7 @@ public class C2MEMixinPlugin implements IMixinConfigPlugin {
         //noinspection ResultOfMethodCallIgnored
         C2MEConfig.threadedWorldGenConfig.getClass().getName(); // Load configuration
         LOGGER.info("Successfully loaded configuration for C2ME");
+        DataFixerUpperClasspathFix.fix();
     }
 
     @Override
@@ -37,6 +39,10 @@ public class C2MEMixinPlugin implements IMixinConfigPlugin {
             return !(C2MEConfig.threadedWorldGenConfig.enabled && C2MEConfig.threadedWorldGenConfig.useGlobalBiomeCache);
         if (mixinClassName.startsWith("com.ishland.c2me.mixin.optimization.worldgen.vanilla_optimization.the_end_biome_cache."))
             return C2MEConfig.vanillaWorldGenOptimizationsConfig.useEndBiomeCache;
+        if (mixinClassName.startsWith("com.ishland.c2me.mixin.optimization.chunkaccess.async_chunk_request."))
+            return C2MEConfig.generalOptimizationsConfig.optimizeAsyncChunkRequest;
+        if (mixinClassName.startsWith("com.ishland.c2me.mixin.notickvd."))
+            return C2MEConfig.noTickViewDistanceConfig.enabled;
         return true;
     }
 

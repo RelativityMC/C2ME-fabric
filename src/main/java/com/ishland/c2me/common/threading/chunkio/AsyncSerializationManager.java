@@ -5,6 +5,7 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.block.Block;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.fluid.Fluid;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.world.ServerTickScheduler;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.server.world.SimpleTickScheduler;
@@ -24,8 +25,10 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayDeque;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -61,7 +64,9 @@ public class AsyncSerializationManager {
         public final Map<LightType, ChunkLightingView> lighting;
         public final TickScheduler<Block> blockTickScheduler;
         public final TickScheduler<Fluid> fluidTickScheduler;
+        public final Set<BlockPos> blockEntityPositions;
         public final Map<BlockPos, BlockEntity> blockEntities;
+        public final Map<BlockPos, NbtCompound> pendingBlockEntityNbtsPacked;
         private final AtomicBoolean isOpen = new AtomicBoolean(false);
 
         @SuppressWarnings("unchecked")
@@ -82,7 +87,24 @@ public class AsyncSerializationManager {
                 final ServerTickScheduler<Fluid> worldFluidTickScheduler = world.getFluidTickScheduler();
                 this.fluidTickScheduler = new SimpleTickScheduler<>(Registry.FLUID::getId, worldFluidTickScheduler.getScheduledTicksInChunk(chunk.getPos(), false, true), world.getTime());
             }
-            this.blockEntities = chunk.getBlockEntityPositions().stream().map(chunk::getBlockEntity).filter(Objects::nonNull).filter(blockEntity -> !blockEntity.isRemoved()).collect(Collectors.toMap(BlockEntity::getPos, Function.identity()));
+            this.blockEntityPositions = chunk.getBlockEntityPositions();
+            this.blockEntities = this.blockEntityPositions.stream().map(chunk::getBlockEntity).filter(Objects::nonNull).filter(blockEntity -> !blockEntity.isRemoved()).collect(Collectors.toMap(BlockEntity::getPos, Function.identity()));
+            {
+                Map<BlockPos, NbtCompound> pendingBlockEntitiesNbtPacked = new Object2ObjectOpenHashMap<>();
+                for (BlockPos blockPos : this.blockEntityPositions) {
+                    final NbtCompound blockEntityNbt = chunk.getBlockEntityNbt(blockPos);
+                    if (blockEntityNbt == null) continue;
+                    final NbtCompound copy = blockEntityNbt.copy();
+                    copy.putBoolean("keepPacked", true);
+                    pendingBlockEntitiesNbtPacked.put(blockPos, copy);
+                }
+                this.pendingBlockEntityNbtsPacked = pendingBlockEntitiesNbtPacked;
+            }
+            final HashSet<BlockPos> blockPos = new HashSet<>(this.blockEntities.keySet());
+            blockPos.addAll(this.pendingBlockEntityNbtsPacked.keySet());
+            if (this.blockEntityPositions.size() != blockPos.size()) {
+                LOGGER.warn("Block entities size mismatch! expected {} but got {}", this.blockEntityPositions.size(), blockPos.size());
+            }
         }
 
         public void open() {

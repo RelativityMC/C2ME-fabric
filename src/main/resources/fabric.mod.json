@@ -17,13 +17,17 @@
   "entrypoints": {
     "main": [
       "com.ishland.c2me.C2MEMod"
+    ],
+    "client": [
+      "com.ishland.c2me.client.C2MEClient"
     ]
   },
   "accessWidener" : "c2me.accesswidener",
   "mixins": [
     "c2me.mixins.json",
     "c2me-compat.mixins.json",
-    "c2me-asm.mixins.json"
+    "c2me-asm.mixins.json",
+    "c2me.client.mixins.json"
   ],
   "depends": {
     "fabricloader": ">=0.11.3",
@@ -31,7 +35,9 @@
     "minecraft": ">=1.17-rc.2"
   },
   "conflicts": {
-    "optifabric": "*"
+    "optifabric": "*",
+    "betterend": [">0.11.0-pre", "<0.10.4-pre"],
+    "betternether": [">5.1.3", "<5.1.3"]
   },
   "breaks": {
     "tic_tacs": "*"
