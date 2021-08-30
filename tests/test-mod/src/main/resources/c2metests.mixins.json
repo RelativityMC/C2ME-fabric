@@ -19,7 +19,8 @@
     "MixinStructureFeature",
     "MixinWorldView",
     "fix.MixinFixDevLaunch",
-    "fix.mem_effects.MixinIngredient"
+    "fix.mem_effects.MixinIngredient",
+    "fix.remapper_being_broken.MixinFabricMaterialBuilder"
   ],
   "client": [
   ],
