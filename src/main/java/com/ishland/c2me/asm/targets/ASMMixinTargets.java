@@ -6,8 +6,8 @@ import net.minecraft.structure.MineshaftGenerator;
 import net.minecraft.structure.NetherFortressGenerator;
 import net.minecraft.structure.OceanMonumentGenerator;
 import net.minecraft.structure.PoolStructurePiece;
+import net.minecraft.structure.ShiftableStructurePiece;
 import net.minecraft.structure.StrongholdGenerator;
-import net.minecraft.structure.StructurePieceWithDimensions;
 import net.minecraft.structure.SwampHutGenerator;
 import net.minecraft.structure.WoodlandMansionGenerator;
 import org.spongepowered.asm.mixin.Mixin;
@@ -24,7 +24,7 @@ import org.spongepowered.asm.mixin.Mixin;
         StrongholdGenerator.ChestCorridor.class,
         StrongholdGenerator.PortalRoom.class,
         StrongholdGenerator.Start.class,
-        StructurePieceWithDimensions.class,
+        ShiftableStructurePiece.class,
         SwampHutGenerator.class,
         WoodlandMansionGenerator.GenerationPiece.class,
         ServerChunkManager.class,
