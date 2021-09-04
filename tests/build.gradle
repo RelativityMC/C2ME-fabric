@@ -1,6 +1,7 @@
 allprojects {
     apply plugin: 'com.ishland.curseforge.modpackresolver'
     apply plugin: 'fabric-loom'
+    apply plugin: 'io.github.juuxel.loom-quiltflower'
     apply plugin: 'java-library'
 
     sourceCompatibility = JavaVersion.VERSION_16
@@ -25,7 +26,7 @@ allprojects {
         }
     }
     loom {
-        shareCaches = true
+        shareRemapCaches = true
     }
     afterEvaluate {
         migrateMappings.configure {
@@ -56,8 +57,7 @@ allprojects {
                     || it.getName() == "remapSourcesJar"
                     || it.getName() == "runClient"
                     || it.getName() == "runServer"
-                    || it.getName() == "build"
-                    || it.getName() == "genSources") {
+                    || it.getName() == "build") {
                 it.onlyIf { false }
                 it.enabled = false
             }

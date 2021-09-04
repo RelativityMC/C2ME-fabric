@@ -12,7 +12,7 @@ repositories {
 }
 
 dependencies {
-    modImplementation("net.fabricmc.fabric-api:fabric-api:0.37.1+1.17")
+    modImplementation("net.fabricmc.fabric-api:fabric-api:0.39.2+1.17")
     modImplementation("curse.maven:betternether-311377:3379682")
 
 }

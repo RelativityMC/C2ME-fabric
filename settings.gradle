@@ -4,6 +4,10 @@ pluginManagement {
             name = 'Fabric'
             url = 'https://maven.fabricmc.net/'
         }
+        maven {
+            name = 'Cotton'
+            url = 'https://server.bbkr.space/artifactory/libs-release/'
+        }
         gradlePluginPortal()
     }
 }
@@ -21,4 +25,5 @@ include 'compatibility'
 // include 'compatibility:betterend'
 // include 'compatibility:betternether'
 // include 'compatibility:thebumblezone'
+//include 'compatibility:charm'
 

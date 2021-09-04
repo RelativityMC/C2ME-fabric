@@ -1,5 +1,6 @@
 plugins {
-    id 'fabric-loom'
+    id 'fabric-loom' version '0.9-SNAPSHOT'
+    id 'io.github.juuxel.loom-quiltflower' version '1.3.0'
     id 'maven-publish'
     id 'com.github.johnrengelman.shadow' version '7.0.0'
 }
@@ -18,8 +19,7 @@ allprojects {
 
     if (plugins.hasPlugin("fabric-loom")) {
         loom {
-            shareCaches = true
-            customManifest = "https://gist.githubusercontent.com/ishland/4cef6b863bfee8589944bb4f61b94186/raw/c54ea42087244aae1d45f1d146682b94882f71a1/1_18_experimental-snapshot-5.json"
+            shareRemapCaches = true
         }
     }
     afterEvaluate {
@@ -36,7 +36,7 @@ afterEvaluate {
 }
 
 loom {
-    accessWidener "src/main/resources/c2me.accesswidener"
+    accessWidenerPath = file("src/main/resources/c2me.accesswidener")
 }
 
 configurations {

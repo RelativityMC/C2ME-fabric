@@ -17,7 +17,7 @@ loom {
             runDir getRootProject().getProjectDir().toPath().relativize(project.getBuildDir().toPath()).resolve("testServer").toString()
             source sourceSets.testmod
             vmArgs "-Dcom.ishland.c2me.common.config.threadedWorldGen.allowThreadedFeatures=true",
-//                    "-Dcom.ishland.c2me.common.config.threadedWorldGen.reduceLockRadius=true",
+                    "-Dcom.ishland.c2me.common.config.threadedWorldGen.reduceLockRadius=true",
                     "-Dcom.ishland.c2me.common.config.threadedWorldGen.enabled=true"
             if (System.getenv("GITHUB_WORKFLOW") != null) {
                 if (System.getenv("RUNNER_OS").equals("macOS")) {

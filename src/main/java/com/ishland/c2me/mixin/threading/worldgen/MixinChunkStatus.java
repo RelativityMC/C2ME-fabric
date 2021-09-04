@@ -63,6 +63,11 @@ public abstract class MixinChunkStatus implements IChunkStatus {
         System.out.printf("%s task radius: %d -> %d%n", this, this.taskMargin, this.reducedTaskRadius);
     }
 
+    @Override
+    public int getReducedTaskRadius() {
+        return this.reducedTaskRadius;
+    }
+
     @Dynamic
     @Inject(method = "<clinit>", at = @At("RETURN"))
     private static void onCLInit(CallbackInfo info) {

@@ -40,7 +40,9 @@ public class C2MEMixinPlugin implements IMixinConfigPlugin {
         if (mixinClassName.startsWith("com.ishland.c2me.mixin.optimization.worldgen.vanilla_optimization.the_end_biome_cache."))
             return C2MEConfig.vanillaWorldGenOptimizationsConfig.useEndBiomeCache;
         if (mixinClassName.startsWith("com.ishland.c2me.mixin.optimization.chunkaccess.async_chunk_request."))
-            return C2MEConfig.vanillaWorldGenOptimizationsConfig.optimizeAsyncChunkRequest;
+            return C2MEConfig.generalOptimizationsConfig.optimizeAsyncChunkRequest;
+        if (mixinClassName.startsWith("com.ishland.c2me.mixin.notickvd."))
+            return C2MEConfig.noTickViewDistanceConfig.enabled;
         return true;
     }
 

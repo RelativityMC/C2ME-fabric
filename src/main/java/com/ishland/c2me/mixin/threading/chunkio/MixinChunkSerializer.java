@@ -19,7 +19,10 @@ import net.minecraft.world.chunk.WorldChunk;
 import net.minecraft.world.chunk.light.ChunkLightingView;
 import net.minecraft.world.chunk.light.LightingProvider;
 import net.minecraft.world.poi.PointOfInterestStorage;
+import org.apache.logging.log4j.Logger;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
@@ -29,6 +32,8 @@ import java.util.concurrent.CompletableFuture;
 @Mixin(ChunkSerializer.class)
 public class MixinChunkSerializer {
 
+    @Shadow @Final private static Logger LOGGER;
+
     @Redirect(method = "deserialize", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/poi/PointOfInterestStorage;initForPalette(Lnet/minecraft/util/math/ChunkPos;Lnet/minecraft/world/chunk/ChunkSection;)V"))
     private static void onPoiStorageInitForPalette(PointOfInterestStorage pointOfInterestStorage, ChunkPos chunkPos, ChunkSection chunkSection) {
         ChunkIoMainThreadTaskUtils.executeMain(() -> pointOfInterestStorage.initForPalette(chunkPos, chunkSection));
@@ -37,7 +42,7 @@ public class MixinChunkSerializer {
     @Redirect(method = "serialize", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/Chunk;getBlockEntityPositions()Ljava/util/Set;"))
     private static Set<BlockPos> onChunkGetBlockEntityPositions(Chunk chunk) {
         final AsyncSerializationManager.Scope scope = AsyncSerializationManager.getScope(chunk.getPos());
-        return scope != null ? scope.blockEntities.keySet() : chunk.getBlockEntityPositions();
+        return scope != null ? scope.blockEntityPositions : chunk.getBlockEntityPositions();
     }
 
     @Redirect(method = "serialize", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/Chunk;getPackedBlockEntityNbt(Lnet/minecraft/util/math/BlockPos;)Lnet/minecraft/nbt/NbtCompound;"))
@@ -45,11 +50,16 @@ public class MixinChunkSerializer {
         final AsyncSerializationManager.Scope scope = AsyncSerializationManager.getScope(chunk.getPos());
         if (scope == null) return chunk.getPackedBlockEntityNbt(pos);
         final BlockEntity blockEntity = scope.blockEntities.get(pos);
-        if (blockEntity == null) return null;
-        final NbtCompound compoundTag = new NbtCompound();
-        if (chunk instanceof WorldChunk) compoundTag.putBoolean("keepPacked", false);
-        blockEntity.writeNbt(compoundTag);
-        return compoundTag;
+        if (blockEntity != null) {
+            final NbtCompound compoundTag = new NbtCompound();
+            if (chunk instanceof WorldChunk) compoundTag.putBoolean("keepPacked", false);
+            blockEntity.writeNbt(compoundTag);
+            return compoundTag;
+        } else {
+            final NbtCompound nbtCompound = scope.pendingBlockEntityNbtsPacked.get(pos);
+            if (nbtCompound == null) LOGGER.warn("Block Entity at {} for block {} doesn't exist", pos, chunk.getBlockState(pos).getBlock());
+            return nbtCompound;
+        }
     }
 
     @Redirect(method = "serialize", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/Chunk;getBlockTickScheduler()Lnet/minecraft/world/TickScheduler;"))

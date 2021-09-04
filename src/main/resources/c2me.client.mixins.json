@@ -1,0 +1,18 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.ishland.c2me.client.mixin",
+  "compatibilityLevel": "JAVA_16",
+  "mixinPriority": 1100,
+  "mixins": [
+    "uncapvd.MixinGameOptions",
+    "uncapvd.MixinOption",
+    "uncapvd.MixinSodiumGameOptionPages"
+  ],
+  "client": [
+  ],
+  "plugin": "com.ishland.c2me.client.mixin.C2MEClientMixinPlugin",
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

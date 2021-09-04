@@ -11,10 +11,8 @@ import net.fabricmc.loader.api.Version;
 import net.fabricmc.loader.discovery.ModCandidate;
 import net.fabricmc.loader.util.UrlConversionException;
 import net.fabricmc.loader.util.UrlUtil;
-import net.fabricmc.loom.configuration.ide.RunConfig;
-import net.fabricmc.loom.task.AbstractRunTask;
-import net.fabricmc.loom.task.RunGameTask;
 import org.gradle.api.Project;
+import org.gradle.api.Task;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.ModuleDependency;
 import org.gradle.api.artifacts.dsl.DependencyHandler;
@@ -78,16 +76,17 @@ public class ModPackProvider {
         final Path manifestPath = decompressDir.resolve("manifest.json");
         final ModPackManifest modPackManifest = MetadataResolver.parseManifest(manifestPath);
         final Path overridesDir = decompressDir.resolve(modPackManifest.getOverrides());
-        final List<RunGameTask> runGameTasks = project.getTasks().stream().filter(task -> task instanceof RunGameTask).map(task -> (RunGameTask) task).toList();
-        for (RunGameTask runGameTask : runGameTasks) {
+        String className = "net.fabricmc.loom.task.RunGameTask";
+        final List<Task> runGameTasks = project.getTasks().stream().filter(task -> task.getClass().getName().startsWith(className)).toList();
+        for (Task runGameTask : runGameTasks) {
             runGameTask.doFirst(__ -> {
                 try {
                     project.getLogger().lifecycle("Setting up modpack {}@{} file overrides before running the configuration", modPackManifest.getName(), modPackManifest.getVersion());
-                    final Field configField = AbstractRunTask.class.getDeclaredField("config");
+                    final Field configField = Class.forName("net.fabricmc.loom.task.AbstractRunTask", true, runGameTask.getClass().getClassLoader()).getDeclaredField("config");
                     configField.setAccessible(true);
-                    final RunConfig config = (RunConfig) configField.get(runGameTask);
+                    final Object config = configField.get(runGameTask);
                     final List<Path> sourcePaths = Files.walk(overridesDir).toList();
-                    final Path target = project.getRootDir().toPath().resolve(config.runDir);
+                    final Path target = project.getRootDir().toPath().resolve((String) Class.forName("net.fabricmc.loom.configuration.ide.RunConfig", true, runGameTask.getClass().getClassLoader()).getField("runDir").get(config));
                     for (Path sourcePath : sourcePaths) {
                         Path targetPath = target.resolve(overridesDir.relativize(sourcePath).toString());
                         if (Files.isDirectory(sourcePath)) {

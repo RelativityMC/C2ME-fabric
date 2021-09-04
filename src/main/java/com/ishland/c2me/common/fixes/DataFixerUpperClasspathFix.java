@@ -32,7 +32,8 @@ public class DataFixerUpperClasspathFix {
                 accessible(classLoaderInterface.getMethod("addURL", URL.class)).invoke(classLoader, url);
             }
         } catch (Throwable t) {
-            throw new RuntimeException(t);
+            System.err.println("Something went wrong with DataFixerUpperClasspathFix");
+            t.printStackTrace();
         }
     }
 

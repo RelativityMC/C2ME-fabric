@@ -5,6 +5,9 @@ import com.google.gson.GsonBuilder;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.MinecraftVersion;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.dedicated.MinecraftDedicatedServer;
+import net.minecraft.server.integrated.IntegratedServer;
+import net.minecraft.test.TestServer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -69,6 +72,12 @@ public class Metrics {
                         config.logFailedRequests,
                         config.logSentData,
                         config.logResponseStatusText);
+        this.addCustomChart(new Metrics.SimplePie("serverType", () -> {
+            if (server instanceof MinecraftDedicatedServer) return "Dedicated Server";
+            if (server instanceof IntegratedServer) return "Integrated Server";
+            if (server instanceof TestServer) return "Test Server";
+            return "Unknown: " + this.getClass().getName();
+        }));
     }
 
     private MetricsConfig readConfig(Path configFile) {

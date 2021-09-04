@@ -34,18 +34,19 @@ You can find development builds here: https://ci.codemc.io/job/ishlandbukkit/job
 
 **Fabric known fully compatible<sup>[[2]](#fullyCompatible)</sup> content mods:**  
 - [Terra 5.4.1-BETA+efd1665](https://modrinth.com/mod/terra/version/i38N6tkR)
-- [BetterEnd 0.10.4-pre](https://github.com/paulevsGitch/BetterEnd/releases/tag/0.10.4-pre)
+- [BetterEnd 0.11.0-pre](https://github.com/paulevsGitch/BetterEnd/releases/tag/0.11.0-pre)
 - [BetterNether 5.1.3](https://www.curseforge.com/minecraft/mc-mods/betternether/files/3379682)
 - [RepurposedStructures-Fabric 2.2.0+1.17.1](https://modrinth.com/mod/repurposed-structures-fabric/version/Hp3zNCHi)
-- ~~[UltraAmplifiedDimension-Fabric 10.0.0+1.17.1](https://modrinth.com/mod/ultra-amplified-dimension-fabric/version/qWOEJ7RV)~~ Removed temporarily due to memleaks with starlight
 - [Bumblezone-Fabric 3.0.9+1.17.1](https://modrinth.com/mod/the-bumblezone-fabric/version/VK0znAOW)
-- ~~[Ecotones 0.8.1 for 1.17.1](https://www.curseforge.com/minecraft/mc-mods/ecotones/files/3402996)~~ Unable to launch Ecotones in development environment
 - [Vanilla+ Biomes 0.3.2 for 1.17](https://www.curseforge.com/minecraft/mc-mods/vanilla-biomes/files/3355670)
 - [River Redux 0.2.0 for 1.17](https://www.curseforge.com/minecraft/mc-mods/river-redux/files/3344516)
 - [Cave Biomes 0.6.3 for 1.17](https://www.curseforge.com/minecraft/mc-mods/cave-biomes/files/3344491)
 - [Traverse v4.0.0-beta.2 for 1.17.1](https://github.com/TerraformersMC/Traverse/releases/tag/v4.0.0-beta.2)
 - [YUNG's Better Mineshafts (Fabric) v1.0.1](https://www.curseforge.com/minecraft/mc-mods/yungs-better-mineshafts-fabric/files/3414789)
 - [YUNG's Better Strongholds (Fabric) v1.1.1](https://www.curseforge.com/minecraft/mc-mods/yungs-better-strongholds-fabric/files/3412649)
+- [Charm 3.3.2](https://www.curseforge.com/minecraft/mc-mods/charm/files/3393290)
+
+[All of Fabric 4 - 0.0.9](https://www.curseforge.com/minecraft/modpacks/all-of-fabric-4/files/3420600) should work without crashes now. 
 
 ## Building and setting up
 JDK 16+ is required to build and use C2ME  

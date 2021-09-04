@@ -19,10 +19,6 @@ import java.util.function.Supplier;
 @Mixin(SinglePoolElement.class)
 public class MixinSinglePoolElement {
 
-    @Shadow
-    @Final
-    protected Supplier<StructureProcessorList> processors;
-
     @Shadow @Final protected Either<Identifier, Structure> location;
 
     @Redirect(method = "createPlacementData", at = @At(value = "INVOKE", target = "Ljava/util/function/Supplier;get()Ljava/lang/Object;"))

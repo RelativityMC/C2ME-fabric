@@ -21,7 +21,7 @@ public class ASMTransformerLithiumChunkAccessWorkaround {
     // private getChunkOffThread(IILnet/minecraft/world/chunk/ChunkStatus;Z)Lnet/minecraft/world/chunk/Chunk;
     // INVOKEVIRTUAL java/util/concurrent/CompletableFuture.join ()Ljava/lang/Object;
     static void transform(ClassNode classNode) {
-        if (!C2MEConfig.vanillaWorldGenOptimizationsConfig.optimizeAsyncChunkRequest) return;
+        if (!C2MEConfig.generalOptimizationsConfig.optimizeAsyncChunkRequest) return;
         try {
             if (classNode.name.equals(ServerChunkManager) && FabricLoader.getInstance().isModLoaded("lithium")) {
                 for (MethodNode method : classNode.methods) {
