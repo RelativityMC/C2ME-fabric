@@ -31,7 +31,7 @@ public abstract class MixinChunkHolder {
 
     @Shadow
     public static ChunkStatus getTargetStatusForLevel(int level) {
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     @Shadow
