@@ -13,7 +13,7 @@ public class MixinOption {
     @Dynamic("Mixin AP and MinecraftDev cannot see this")
     @ModifyConstant(method = "<clinit>", constant = @Constant(doubleValue = 16.0D))
     private static double modifyMaxViewDistance(double value) {
-        return C2MEConfig.clientSideConfig.maxViewDistance;
+        return C2MEConfig.clientSideConfig.modifyMaxVDConfig.maxViewDistance;
     }
 
 }

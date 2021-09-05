@@ -131,15 +131,26 @@ public class C2MEConfig {
     }
 
     public static class ClientSideConfig {
-        public final boolean enabled;
-        public final int maxViewDistance;
+        public final ModifyMaxVDConfig modifyMaxVDConfig;
 
         public ClientSideConfig(CommentedConfig config) {
             Preconditions.checkNotNull(config, "clientSideConfig config is not present");
             final ConfigUtils.ConfigScope configScope = new ConfigUtils.ConfigScope(config);
-            this.enabled = ConfigUtils.getValue(configScope, "enabled", () -> true, "Weather to enable c2me clientside features", List.of(), false);
-            this.maxViewDistance = ConfigUtils.getValue(configScope, "maxViewDistance", () -> 64, "Max render distance allowed in game options", List.of(), 64, ConfigUtils.CheckType.NO_TICK_VIEW_DISTANCE);
+            this.modifyMaxVDConfig = new ModifyMaxVDConfig(ConfigUtils.getValue(configScope, "modifyMaxVDConfig", ConfigUtils::config, "Configuration for modifying clientside max view distance", List.of(), null));
             configScope.removeUnusedKeys();
+        }
+
+        public static class ModifyMaxVDConfig {
+            public final boolean enabled;
+            public final int maxViewDistance;
+
+            public ModifyMaxVDConfig(CommentedConfig config) {
+                Preconditions.checkNotNull(config, "clientSideConfig config is not present");
+                final ConfigUtils.ConfigScope configScope = new ConfigUtils.ConfigScope(config);
+                this.enabled = ConfigUtils.getValue(configScope, "enabled", () -> true, "Weather to enable c2me clientside features", List.of("bobby"), false);
+                this.maxViewDistance = ConfigUtils.getValue(configScope, "maxViewDistance", () -> 64, "Max render distance allowed in game options", List.of(), 64, ConfigUtils.CheckType.NO_TICK_VIEW_DISTANCE);
+                configScope.removeUnusedKeys();
+            }
         }
     }
 
