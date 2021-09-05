@@ -19,6 +19,7 @@ import net.minecraft.util.math.ChunkSectionPos;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -91,11 +92,13 @@ public class MixinChunkTicketManager implements IChunkTicketManager {
     }
 
     @Override
+    @Unique
     public LongSet getNoTickOnlyChunks() {
         return this.noTickOnlyChunksCacheView != null ? this.noTickOnlyChunksCacheView.get() : null;
     }
 
     @Override
+    @Unique
     public int getNoTickPendingTicketUpdates() {
         return this.playerNoTickDistanceMap.getPendingTicketUpdatesCount();
     }
