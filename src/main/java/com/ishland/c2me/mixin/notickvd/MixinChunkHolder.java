@@ -60,7 +60,8 @@ public abstract class MixinChunkHolder implements IChunkHolder {
         if (accessibleChunk != null) {
             chunkStorage.enableTickSchedulers(accessibleChunk);
         } else {
-            System.err.println("Unable to set tick scheduler for chunk " + this.getPos());
+//            System.err.println("Unable to set tick scheduler for chunk " + this.getPos());
+            // Vanilla ignores this so we can also ignore this
         }
     }
 
