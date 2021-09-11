@@ -3,7 +3,6 @@ package com.ishland.c2me.common.config;
 import com.electronwill.nightconfig.core.CommentedConfig;
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import com.google.common.base.Preconditions;
-import com.ishland.c2me.C2MEMod;
 import io.netty.util.internal.PlatformDependent;
 import net.fabricmc.loader.api.FabricLoader;
 import org.apache.logging.log4j.LogManager;
@@ -35,13 +34,13 @@ public class C2MEConfig {
         asyncIoConfig = new AsyncIoConfig(ConfigUtils.getValue(configScope, "asyncIO", ConfigUtils::config, "Configuration for async io system", List.of(), null));
         threadedWorldGenConfig = new ThreadedWorldGenConfig(ConfigUtils.getValue(configScope, "threadedWorldGen", ConfigUtils::config, "Configuration for threaded world generation", List.of(), null));
         vanillaWorldGenOptimizationsConfig = new VanillaWorldGenOptimizationsConfig(ConfigUtils.getValue(configScope, "vanillaWorldGenOptimizations", ConfigUtils::config, "Configuration for vanilla worldgen optimizations", List.of(), null));
-        generalOptimizationsConfig = new GeneralOptimizationsConfig(ConfigUtils.getValue(configScope, "vanillaWorldGenOptimizations", ConfigUtils::config, "Configuration for general optimizations", List.of(), null));
+        generalOptimizationsConfig = new GeneralOptimizationsConfig(ConfigUtils.getValue(configScope, "generalOptimizations", ConfigUtils::config, "Configuration for general optimizations", List.of(), null));
         noTickViewDistanceConfig = new NoTickViewDistanceConfig(ConfigUtils.getValue(configScope, "noTickViewDistance", ConfigUtils::config, "Configuration for no-tick view distance", List.of(), null));
         clientSideConfig = new ClientSideConfig(ConfigUtils.getValue(configScope, "clientSide", ConfigUtils::config, "Configuration for clientside functions", List.of(), null));
         configScope.removeUnusedKeys();
         config.save();
         config.close();
-        C2MEMod.LOGGER.info("Configuration loaded successfully after {}ms", (System.nanoTime() - startTime) / 1_000_000.0);
+        LOGGER.info("Configuration loaded successfully after {}ms", (System.nanoTime() - startTime) / 1_000_000.0);
     }
 
     public static class AsyncIoConfig {
@@ -106,11 +105,28 @@ public class C2MEConfig {
 
     public static class GeneralOptimizationsConfig {
         public final boolean optimizeAsyncChunkRequest;
+        public final int chunkStreamVersion;
 
         public GeneralOptimizationsConfig(CommentedConfig config) {
             Preconditions.checkNotNull(config, "generalOptimizationsConfig config is not present");
             final ConfigUtils.ConfigScope configScope = new ConfigUtils.ConfigScope(config);
             this.optimizeAsyncChunkRequest = ConfigUtils.getValue(configScope, "optimizeAsyncChunkRequest", () -> true, "Whether to let async chunk request no longer block server thread \n (may cause incompatibility with other mods) ", List.of(), false);
+            this.chunkStreamVersion = ConfigUtils.getValue(configScope, "chunkStreamVersion", () -> -1,
+                    """
+                            Defines which chunk compression should be used\s
+                             -1 for Vanilla default (also prevents mixin modifying vanilla default \s
+                             from being applied)\s
+                             1  for GZip (RFC1952) (Vanilla compatible)\s
+                             2  for Zlib (RFC1950) (Vanilla default) (Vanilla compatible)\s
+                             3  for Uncompressed (Fastest, but higher disk usage) (Vanilla compatible)\s
+                             \s
+                             Original chunk data will still readable after modifying this option \s
+                             as this option only affects newly stored chunks\s
+                             Other values can result in crashes when starting minecraft \s
+                             to prevent further damage
+                             """,
+                    List.of(), -1
+            );
             configScope.removeUnusedKeys();
         }
     }

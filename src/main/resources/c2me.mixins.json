@@ -55,6 +55,8 @@
     "notickvd.MixinThreadedAnvilChunkStorage",
     "notickvd.MixinWorld",
     "optimization.chunkaccess.async_chunk_request.MixinServerChunkManager",
+    "optimization.chunkio.compression.increase_buffer_size.MixinChunkStreamVersion",
+    "optimization.chunkio.compression.modify_default_chunk_compression.MixinRegionFile",
     "optimization.chunkio.hide_sync_disk_writes_behind_flag.MixinRegionBasedStorage",
     "optimization.chunkio.nbtcompound.MixinNbtCompound",
     "optimization.chunkio.nbtcompound.MixinNbtCompound1",

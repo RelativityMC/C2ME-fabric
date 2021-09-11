@@ -43,6 +43,8 @@ public class C2MEMixinPlugin implements IMixinConfigPlugin {
             return C2MEConfig.generalOptimizationsConfig.optimizeAsyncChunkRequest;
         if (mixinClassName.startsWith("com.ishland.c2me.mixin.notickvd."))
             return C2MEConfig.noTickViewDistanceConfig.enabled;
+        if (mixinClassName.startsWith("com.ishland.c2me.mixin.optimization.chunkio.compression.modify_default_chunk_compression."))
+            return C2MEConfig.generalOptimizationsConfig.chunkStreamVersion != -1;
         return true;
     }
 
