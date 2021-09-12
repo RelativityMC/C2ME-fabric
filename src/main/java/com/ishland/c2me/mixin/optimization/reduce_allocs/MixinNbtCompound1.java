@@ -1,4 +1,4 @@
-package com.ishland.c2me.mixin.optimization.chunkio.nbtcompound;
+package com.ishland.c2me.mixin.optimization.reduce_allocs;
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.nbt.NbtCompound;

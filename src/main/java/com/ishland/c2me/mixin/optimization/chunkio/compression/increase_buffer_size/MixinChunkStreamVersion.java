@@ -6,6 +6,8 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.zip.Deflater;
@@ -25,6 +27,8 @@ public class MixinChunkStreamVersion {
             return new ChunkStreamVersion(id, in -> new GZIPInputStream(in, 16 * 1024), out -> new GZIPOutputStream(out, 16 * 1024));
         } else if (id == 2) { // DEFLATE
             return new ChunkStreamVersion(id, in -> new InflaterInputStream(in, new Inflater(), 16 * 1024), out -> new DeflaterOutputStream(out, new Deflater(), 16 * 1024));
+        } else if (id == 3) { // UNCOMPRESSED
+            return new ChunkStreamVersion(id, BufferedInputStream::new, BufferedOutputStream::new);
         } else {
             return new ChunkStreamVersion(id, inputStreamWrapper, outputStreamWrapper);
         }

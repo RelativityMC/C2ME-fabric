@@ -1,7 +1,9 @@
 package com.ishland.c2me;
 
+import com.ibm.asyncutil.util.Combinators;
 import com.ishland.c2me.common.config.C2MEConfig;
 import net.fabricmc.api.ModInitializer;
+import net.minecraft.world.gen.ChunkRandom;
 import net.minecraft.world.storage.ChunkStreamVersion;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -12,7 +14,12 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.DecimalFormat;
+import java.util.List;
 import java.util.Random;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicIntegerArray;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class C2MEMod implements ModInitializer {
     public static final Logger LOGGER = LogManager.getLogger("C2ME");
@@ -38,6 +45,7 @@ public class C2MEMod implements ModInitializer {
             LOGGER.error("Unknown chunk stream version in config: {}", C2MEConfig.generalOptimizationsConfig.chunkStreamVersion);
             throw new IllegalArgumentException(String.format("Unknown chunk stream version in config: %s", C2MEConfig.generalOptimizationsConfig.chunkStreamVersion));
         }
+        consistencyTest();
     }
 
     private void runBenchmark(String name, ChunkStreamVersion version, boolean suppressLog) {
@@ -68,6 +76,25 @@ public class C2MEMod implements ModInitializer {
             }
         } catch (Throwable t) {
             t.printStackTrace();
+        }
+    }
+
+    private void consistencyTest() {
+        int taskSize = 512;
+        AtomicIntegerArray array = new AtomicIntegerArray(taskSize);
+        final List<CompletableFuture<Integer>> futures = IntStream.range(0, taskSize)
+                .mapToObj(value -> CompletableFuture.supplyAsync(() -> {
+                    final ChunkRandom chunkRandom = new ChunkRandom();
+                    chunkRandom.skip(4096);
+                    final int i = chunkRandom.nextInt();
+                    array.set(value, i);
+                    return i;
+                }))
+                .toList();
+        final List<Integer> join = Combinators.collect(futures, Collectors.toList()).toCompletableFuture().join();
+        for (int i = 0; i < taskSize; i++) {
+            if (array.get(i) != join.get(i))
+                throw new IllegalArgumentException("Mismatch at index " + i);
         }
     }
 }

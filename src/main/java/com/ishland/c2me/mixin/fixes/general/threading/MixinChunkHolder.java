@@ -2,6 +2,9 @@ package com.ishland.c2me.mixin.fixes.general.threading;
 
 import com.ibm.asyncutil.locks.AsyncLock;
 import com.ibm.asyncutil.util.StageSupport;
+import com.ishland.c2me.common.config.C2MEConfig;
+import com.ishland.c2me.common.threading.worldgen.WorldGenThreadingExecutorUtils;
+import com.ishland.c2me.mixin.access.IThreadedAnvilChunkStorage;
 import com.mojang.datafixers.util.Either;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;
@@ -19,6 +22,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 import java.util.function.Function;
 
@@ -68,7 +72,17 @@ public abstract class MixinChunkHolder {
                 return completableFuture;
             }
         }
-        return StageSupport.tryWith(this.schedulingLock.acquireLock(), ignored -> {
+        final boolean isOnThread = Thread.currentThread() == ((IThreadedAnvilChunkStorage) chunkStorage).getWorld().getServer().getThread();
+        final Executor offThreadExecutor = command -> {
+            if (isOnThread) {
+                if (C2MEConfig.threadedWorldGenConfig.enabled) {
+                    WorldGenThreadingExecutorUtils.mainExecutor.execute(command);
+                    return;
+                }
+            }
+            command.run();
+        };
+        return StageSupport.tryWith(this.schedulingLock.acquireLock().thenComposeAsync(CompletableFuture::completedFuture, offThreadExecutor), ignored -> {
             CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> completableFuture1 = this.futuresByStatus.get(i);
             if (completableFuture1 != null) {
                 Either<Chunk, ChunkHolder.Unloaded> either = completableFuture1.getNow(null);
