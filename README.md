@@ -47,6 +47,11 @@ You can find development builds here: https://ci.codemc.io/job/ishlandbukkit/job
 
 [All of Fabric 4 - 0.0.9](https://www.curseforge.com/minecraft/modpacks/all-of-fabric-4/files/3420600) should work without crashes now. 
 
+## Support
+Our issue tracker: [link](https://github.com/ishlandbukkit/C2ME-fabric/issues)
+Our discord server: [link](https://discord.io/ishlandbukkit)
+
+
 ## Building and setting up
 JDK 16+ is required to build and use C2ME  
 Run the following commands in the root directory:
