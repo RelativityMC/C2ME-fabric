@@ -23,7 +23,9 @@ public class C2MEClientMixinPlugin implements IMixinConfigPlugin {
 
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
-        return C2MEConfig.clientSideConfig.enabled && FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT;
+        if (FabricLoader.getInstance().getEnvironmentType() != EnvType.CLIENT) return false;
+        if (mixinClassName.startsWith("com.ishland.c2me.client.mixin.uncapvd.")) return C2MEConfig.clientSideConfig.modifyMaxVDConfig.enabled;
+        return true;
     }
 
     @Override

@@ -3,7 +3,6 @@ package com.ishland.c2me.common.config;
 import com.electronwill.nightconfig.core.CommentedConfig;
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import com.google.common.base.Preconditions;
-import com.ishland.c2me.C2MEMod;
 import io.netty.util.internal.PlatformDependent;
 import net.fabricmc.loader.api.FabricLoader;
 import org.apache.logging.log4j.LogManager;
@@ -35,13 +34,13 @@ public class C2MEConfig {
         asyncIoConfig = new AsyncIoConfig(ConfigUtils.getValue(configScope, "asyncIO", ConfigUtils::config, "Configuration for async io system", List.of(), null));
         threadedWorldGenConfig = new ThreadedWorldGenConfig(ConfigUtils.getValue(configScope, "threadedWorldGen", ConfigUtils::config, "Configuration for threaded world generation", List.of(), null));
         vanillaWorldGenOptimizationsConfig = new VanillaWorldGenOptimizationsConfig(ConfigUtils.getValue(configScope, "vanillaWorldGenOptimizations", ConfigUtils::config, "Configuration for vanilla worldgen optimizations", List.of(), null));
-        generalOptimizationsConfig = new GeneralOptimizationsConfig(ConfigUtils.getValue(configScope, "vanillaWorldGenOptimizations", ConfigUtils::config, "Configuration for general optimizations", List.of(), null));
+        generalOptimizationsConfig = new GeneralOptimizationsConfig(ConfigUtils.getValue(configScope, "generalOptimizations", ConfigUtils::config, "Configuration for general optimizations", List.of(), null));
         noTickViewDistanceConfig = new NoTickViewDistanceConfig(ConfigUtils.getValue(configScope, "noTickViewDistance", ConfigUtils::config, "Configuration for no-tick view distance", List.of(), null));
         clientSideConfig = new ClientSideConfig(ConfigUtils.getValue(configScope, "clientSide", ConfigUtils::config, "Configuration for clientside functions", List.of(), null));
         configScope.removeUnusedKeys();
         config.save();
         config.close();
-        C2MEMod.LOGGER.info("Configuration loaded successfully after {}ms", (System.nanoTime() - startTime) / 1_000_000.0);
+        LOGGER.info("Configuration loaded successfully after {}ms", (System.nanoTime() - startTime) / 1_000_000.0);
     }
 
     public static class AsyncIoConfig {
@@ -84,9 +83,9 @@ public class C2MEConfig {
             final ConfigUtils.ConfigScope configScope = new ConfigUtils.ConfigScope(config);
             this.enabled = ConfigUtils.getValue(configScope, "enabled", () -> getWorldGenDefaultParallelism0() >= 2 || global_enabled, "Whether to enable this feature", List.of(), false);
             this.parallelism = ConfigUtils.getValue(configScope, "parallelism", () -> Math.max(2, getWorldGenDefaultParallelism0()), "World generation worker executor parallelism", List.of(), null, ConfigUtils.CheckType.THREAD_COUNT);
-            this.allowThreadedFeatures = ConfigUtils.getValue(configScope, "allowThreadedFeatures", () -> false || global_allowThreadedFeatures, "Whether to allow feature generation (world decorations like trees, ores and etc.) run in parallel \n (may cause incompatibility with other mods)", List.of(), null);
-            this.reduceLockRadius = ConfigUtils.getValue(configScope, "reduceLockRadius", () -> false || global_reduceLockRadius, "Whether to allow reducing lock radius (faster but UNSAFE) (YOU HAVE BEEN WARNED) \n (may cause incompatibility with other mods)", List.of(), null);
-            this.useGlobalBiomeCache = ConfigUtils.getValue(configScope, "useGlobalBiomeCache", () -> false || global_useGlobalBiomeCache, "(Experimental) Whether to enable global BiomeCache to accelerate worldgen \n This increases memory allocation ", List.of(), false);
+            this.allowThreadedFeatures = ConfigUtils.getValue(configScope, "allowThreadedFeatures", () -> true || global_allowThreadedFeatures, "Whether to allow feature generation (world decorations like trees, ores and etc.) run in parallel \n (may cause incompatibility with other mods)", List.of(), null);
+            this.reduceLockRadius = ConfigUtils.getValue(configScope, "reduceLockRadius", () -> false || global_reduceLockRadius, "Whether to allow reducing lock radius \n (may cause incompatibility with other mods)", List.of(), null);
+            this.useGlobalBiomeCache = ConfigUtils.getValue(configScope, "useGlobalBiomeCache", () -> false || global_useGlobalBiomeCache, "Whether to enable global BiomeCache to accelerate worldgen \n This increases memory allocation ", List.of(), false);
             configScope.removeUnusedKeys();
         }
     }
@@ -106,11 +105,28 @@ public class C2MEConfig {
 
     public static class GeneralOptimizationsConfig {
         public final boolean optimizeAsyncChunkRequest;
+        public final int chunkStreamVersion;
 
         public GeneralOptimizationsConfig(CommentedConfig config) {
             Preconditions.checkNotNull(config, "generalOptimizationsConfig config is not present");
             final ConfigUtils.ConfigScope configScope = new ConfigUtils.ConfigScope(config);
             this.optimizeAsyncChunkRequest = ConfigUtils.getValue(configScope, "optimizeAsyncChunkRequest", () -> true, "Whether to let async chunk request no longer block server thread \n (may cause incompatibility with other mods) ", List.of(), false);
+            this.chunkStreamVersion = ConfigUtils.getValue(configScope, "chunkStreamVersion", () -> -1,
+                    """
+                            Defines which chunk compression should be used\s
+                             -1 for Vanilla default (also prevents mixin modifying vanilla default \s
+                             from being applied)\s
+                             1  for GZip (RFC1952) (Vanilla compatible)\s
+                             2  for Zlib (RFC1950) (Vanilla default) (Vanilla compatible)\s
+                             3  for Uncompressed (Fastest, but higher disk usage) (Vanilla compatible)\s
+                             \s
+                             Original chunk data will still readable after modifying this option \s
+                             as this option only affects newly stored chunks\s
+                             Other values can result in crashes when starting minecraft \s
+                             to prevent further damage
+                             """,
+                    List.of(), -1
+            );
             configScope.removeUnusedKeys();
         }
     }
@@ -131,15 +147,26 @@ public class C2MEConfig {
     }
 
     public static class ClientSideConfig {
-        public final boolean enabled;
-        public final int maxViewDistance;
+        public final ModifyMaxVDConfig modifyMaxVDConfig;
 
         public ClientSideConfig(CommentedConfig config) {
             Preconditions.checkNotNull(config, "clientSideConfig config is not present");
             final ConfigUtils.ConfigScope configScope = new ConfigUtils.ConfigScope(config);
-            this.enabled = ConfigUtils.getValue(configScope, "enabled", () -> true, "Weather to enable c2me clientside features", List.of(), false);
-            this.maxViewDistance = ConfigUtils.getValue(configScope, "maxViewDistance", () -> 64, "Max render distance allowed in game options", List.of(), 64, ConfigUtils.CheckType.NO_TICK_VIEW_DISTANCE);
+            this.modifyMaxVDConfig = new ModifyMaxVDConfig(ConfigUtils.getValue(configScope, "modifyMaxVDConfig", ConfigUtils::config, "Configuration for modifying clientside max view distance", List.of(), null));
             configScope.removeUnusedKeys();
+        }
+
+        public static class ModifyMaxVDConfig {
+            public final boolean enabled;
+            public final int maxViewDistance;
+
+            public ModifyMaxVDConfig(CommentedConfig config) {
+                Preconditions.checkNotNull(config, "clientSideConfig config is not present");
+                final ConfigUtils.ConfigScope configScope = new ConfigUtils.ConfigScope(config);
+                this.enabled = ConfigUtils.getValue(configScope, "enabled", () -> true, "Weather to enable c2me clientside features", List.of("bobby"), false);
+                this.maxViewDistance = ConfigUtils.getValue(configScope, "maxViewDistance", () -> 64, "Max render distance allowed in game options", List.of(), 64, ConfigUtils.CheckType.NO_TICK_VIEW_DISTANCE);
+                configScope.removeUnusedKeys();
+            }
         }
     }
 

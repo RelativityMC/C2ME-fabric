@@ -7,5 +7,5 @@ repositories {
 }
 
 dependencies {
-    modImplementation "com.github.ishland:BetterEnd:3c0120db2e"
+    modImplementation "com.github.ishland:BetterEnd:2cce1d2"
 }

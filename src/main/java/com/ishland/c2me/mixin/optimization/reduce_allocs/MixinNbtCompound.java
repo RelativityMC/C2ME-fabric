@@ -1,4 +1,4 @@
-package com.ishland.c2me.mixin.optimization.chunkio.nbtcompound;
+package com.ishland.c2me.mixin.optimization.reduce_allocs;
 
 import com.google.common.collect.Maps;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;

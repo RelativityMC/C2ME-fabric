@@ -14,7 +14,7 @@ public class MixinSodiumGameOptionPages {
     @Dynamic
     @ModifyConstant(method = "*", constant = @Constant(intValue = 32), remap = false)
     private static int modifyMaxViewDistance(int value) {
-        return C2MEConfig.clientSideConfig.maxViewDistance;
+        return C2MEConfig.clientSideConfig.modifyMaxVDConfig.maxViewDistance;
     }
 
 }
