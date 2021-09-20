@@ -5,7 +5,10 @@ import com.ibm.asyncutil.locks.AsyncSemaphore;
 import com.ibm.asyncutil.locks.FairAsyncSemaphore;
 import com.ishland.c2me.tests.worlddiff.mixin.IStorageIoWorker;
 import com.ishland.c2me.tests.worlddiff.mixin.IWorldUpdater;
+import com.mojang.serialization.Codec;
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.datafixer.Schemas;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
@@ -33,11 +36,16 @@ import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.ChunkSerializer;
 import net.minecraft.world.SaveProperties;
 import net.minecraft.world.World;
+import net.minecraft.world.biome.Biome;
+import net.minecraft.world.biome.BiomeKeys;
 import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.ChunkStatus;
+import net.minecraft.world.chunk.PalettedContainer;
 import net.minecraft.world.level.storage.LevelStorage;
 import net.minecraft.world.storage.StorageIoWorker;
 import net.minecraft.world.updater.WorldUpdater;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.Closeable;
 import java.io.File;
@@ -53,6 +61,11 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Stream;
 
 public class ComparisonSession implements Closeable {
+
+    // From ChunkSerializer
+    private static final Codec<PalettedContainer<BlockState>> field_34576 = PalettedContainer.method_38298(Block.STATE_IDS, BlockState.CODEC, PalettedContainer.class_6563.field_34569);
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private final WorldHandle baseWorld;
     private final WorldHandle targetWorld;
@@ -89,8 +102,8 @@ public class ComparisonSession implements Closeable {
                                     if (ChunkSerializer.getChunkType(chunkDataBase) == ChunkStatus.ChunkType.PROTOCHUNK
                                             || ChunkSerializer.getChunkType(chunkDataBase) == ChunkStatus.ChunkType.PROTOCHUNK)
                                         return null;
-                                    final Map<ChunkSectionPos, ChunkSection> sectionsBase = readSections(pos, chunkDataBase);
-                                    final Map<ChunkSectionPos, ChunkSection> sectionsTarget = readSections(pos, chunkDataTarget);
+                                    final Map<ChunkSectionPos, ChunkSection> sectionsBase = readSections(pos, chunkDataBase, baseWorld.dynamicRegistryManager.get(Registry.BIOME_KEY));
+                                    final Map<ChunkSectionPos, ChunkSection> sectionsTarget = readSections(pos, chunkDataTarget, baseWorld.dynamicRegistryManager.get(Registry.BIOME_KEY));
                                     sectionsBase.forEach((chunkSectionPos, chunkSectionBase) -> {
                                         final ChunkSection chunkSectionTarget = sectionsTarget.get(chunkSectionPos);
                                         if (chunkSectionBase == null || chunkSectionTarget == null) {
@@ -154,15 +167,28 @@ public class ComparisonSession implements Closeable {
         return true;
     }
 
-    private static Map<ChunkSectionPos, ChunkSection> readSections(ChunkPos pos, NbtCompound chunkData) {
+    private static Map<ChunkSectionPos, ChunkSection> readSections(ChunkPos pos, NbtCompound chunkData, Registry<Biome> registry) {
         NbtList nbtList = chunkData.getCompound("Level").getList("Sections", 10);
+        Codec<PalettedContainer<Biome>> codec = PalettedContainer.method_38298(registry, registry, PalettedContainer.class_6563.field_34570);
         HashMap<ChunkSectionPos, ChunkSection> result = new HashMap<>();
         for (int i = 0; i < nbtList.size(); i++) {
             final NbtCompound sectionData = nbtList.getCompound(i);
             int y = sectionData.getByte("Y");
             if (sectionData.contains("Palette", 9) && sectionData.contains("BlockStates", 12)) {
-                final ChunkSection chunkSection = new ChunkSection(y);
-                chunkSection.getContainer().read(sectionData.getList("Palette", 10), sectionData.getLongArray("BlockStates"));
+                PalettedContainer<BlockState> palettedContainer;
+                if (chunkData.contains("block_states", 10)) {
+                    palettedContainer = field_34576.parse(NbtOps.INSTANCE, chunkData.getCompound("block_states")).getOrThrow(false, LOGGER::error);
+                } else {
+                    palettedContainer = new PalettedContainer<>(Block.STATE_IDS, Blocks.AIR.getDefaultState(), PalettedContainer.class_6563.field_34569);
+                }
+
+                PalettedContainer<Biome> palettedContainer3;
+                if (chunkData.contains("biomes", 10)) {
+                    palettedContainer3 = codec.parse(NbtOps.INSTANCE, chunkData.getCompound("biomes")).getOrThrow(false, LOGGER::error);
+                } else {
+                    palettedContainer3 = new PalettedContainer<>(registry, registry.getOrThrow(BiomeKeys.PLAINS), PalettedContainer.class_6563.field_34570);
+                }
+                ChunkSection chunkSection = new ChunkSection(y, palettedContainer, palettedContainer3);
                 chunkSection.calculateCounts();
                 result.put(ChunkSectionPos.from(pos, y), chunkSection);
             }
@@ -208,10 +234,10 @@ public class ComparisonSession implements Closeable {
             poiIoWorkers.put(world, new StorageIoWorker(new File(session.getWorldDirectory(world), "poi"), true, "poi") {
             });
         }
-        return new WorldHandle(chunkPosesMap, regionIoWorkers, poiIoWorkers, () -> {
+        return new WorldHandle(chunkPosesMap, regionIoWorkers, poiIoWorkers, impl, () -> {
             System.out.println("Shutting down IOWorkers...");
             Stream.concat(regionIoWorkers.values().stream(), poiIoWorkers.values().stream()).forEach(storageIoWorker -> {
-                storageIoWorker.method_23698().join();
+                storageIoWorker.completeAll(true).join();
                 try {
                     storageIoWorker.close();
                 } catch (IOException e) {
@@ -228,6 +254,7 @@ public class ComparisonSession implements Closeable {
     public record WorldHandle(HashMap<RegistryKey<World>, List<ChunkPos>> chunkPosesMap,
                               HashMap<RegistryKey<World>, StorageIoWorker> regionIoWorkers,
                               HashMap<RegistryKey<World>, StorageIoWorker> poiIoWorkers,
+                              DynamicRegistryManager.Impl dynamicRegistryManager,
                               Closeable handle) {
     }
 

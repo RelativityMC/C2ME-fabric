@@ -16,6 +16,7 @@ import net.minecraft.server.world.ThreadedAnvilChunkStorage;
 import net.minecraft.structure.StructureManager;
 import net.minecraft.structure.StructureStart;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.registry.Registry;
 import net.minecraft.util.thread.ThreadExecutor;
 import net.minecraft.world.ChunkSerializer;
 import net.minecraft.world.PersistentStateManager;
@@ -112,7 +113,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
                     if (compoundTag.contains("Level", 10) && compoundTag.getCompound("Level").contains("Status", 8)) {
                         ChunkIoMainThreadTaskUtils.push();
                         try {
-                            return ChunkSerializer.deserialize(this.world, this.structureManager, this.pointOfInterestStorage, pos, compoundTag);
+                            return ChunkSerializer.deserialize(this.world, this.pointOfInterestStorage, pos, compoundTag);
                         } finally {
                             ChunkIoMainThreadTaskUtils.pop();
                         }
@@ -132,7 +133,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
                 return Either.left(protoChunk);
             } else {
                 this.method_27054(pos);
-                return Either.left(new ProtoChunk(pos, UpgradeData.NO_UPGRADE_DATA, this.world));
+                return Either.left(new ProtoChunk(pos, UpgradeData.NO_UPGRADE_DATA, this.world, this.world.getRegistryManager().get(Registry.BIOME_KEY)));
             }
         }, this.mainThreadExecutor);
         future.exceptionally(throwable -> null).thenRun(() -> {

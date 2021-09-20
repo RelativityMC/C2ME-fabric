@@ -85,16 +85,13 @@ public abstract class MixinChunkStatus implements IChunkStatus {
         final Chunk targetChunk = list.get(list.size() / 2);
 
         // TODO [VanillaCopy]
-        ChunkGenerationEvent chunkGenerationEvent = new ChunkGenerationEvent();
-        if (chunkGenerationEvent.isEnabled()) {
+        ChunkGenerationEvent chunkGenerationEvent;
+        if (ChunkGenerationEvent.TYPE.isEnabled()) {
             ChunkPos chunkPos = targetChunk.getPos();
-            chunkGenerationEvent.targetStatus = this.id;
-            chunkGenerationEvent.level = world.getRegistryKey().toString();
-            chunkGenerationEvent.chunkPosX = chunkPos.x;
-            chunkGenerationEvent.chunkPosZ = chunkPos.z;
-            chunkGenerationEvent.centerBlockPosX = chunkPos.getCenterX();
-            chunkGenerationEvent.centerBlockPosZ = chunkPos.getCenterZ();
+            chunkGenerationEvent = new ChunkGenerationEvent(chunkPos, world.getRegistryKey(), this.id);
             chunkGenerationEvent.begin();
+        } else {
+            chunkGenerationEvent = null;
         }
 
         final Supplier<CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>>> generationTask = () ->
@@ -110,11 +107,14 @@ public abstract class MixinChunkStatus implements IChunkStatus {
                     ChunkStatusUtils.getThreadingType((ChunkStatus) (Object) this).runTask(((IWorldGenLockable) world).getWorldGenSingleThreadedLock(), generationTask));
         }
 
+        completableFuture.exceptionally(throwable -> {
+            throwable.printStackTrace();
+            return null;
+        });
+
         // TODO [VanillaCopy]
-        return chunkGenerationEvent.shouldCommit() ? completableFuture.thenApply((either) -> {
-            either.ifLeft((chunk) -> {
-                chunkGenerationEvent.success = true;
-            });
+        return chunkGenerationEvent != null && chunkGenerationEvent.shouldCommit() ? completableFuture.thenApply(either -> {
+            either.ifLeft(chunk -> chunkGenerationEvent.success = true);
             chunkGenerationEvent.commit();
             return either;
         }) : completableFuture;

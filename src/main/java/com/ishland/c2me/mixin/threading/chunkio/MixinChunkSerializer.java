@@ -51,12 +51,12 @@ public class MixinChunkSerializer {
         if (scope == null) return chunk.getPackedBlockEntityNbt(pos);
         final BlockEntity blockEntity = scope.blockEntities.get(pos);
         if (blockEntity != null) {
-            final NbtCompound compoundTag = new NbtCompound();
-            if (chunk instanceof WorldChunk) compoundTag.putBoolean("keepPacked", false);
-            blockEntity.writeNbt(compoundTag);
-            return compoundTag;
+            final NbtCompound nbtCompound = blockEntity.createNbtWithIdentifyingData();
+            if (chunk instanceof WorldChunk) nbtCompound.putBoolean("keepPacked", false);
+            return nbtCompound;
         } else {
             final NbtCompound nbtCompound = scope.pendingBlockEntityNbtsPacked.get(pos);
+            if (nbtCompound != null && chunk instanceof WorldChunk) nbtCompound.putBoolean("keepPacked", true);
             if (nbtCompound == null) LOGGER.warn("Block Entity at {} for block {} doesn't exist", pos, chunk.getBlockState(pos).getBlock());
             return nbtCompound;
         }

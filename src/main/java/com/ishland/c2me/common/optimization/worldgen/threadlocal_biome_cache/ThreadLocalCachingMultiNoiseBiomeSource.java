@@ -5,23 +5,23 @@ import net.minecraft.util.registry.Registry;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.source.MultiNoiseBiomeSource;
 import net.minecraft.world.biome.source.util.MultiNoiseUtil;
+
 import java.util.Optional;
 
 public class ThreadLocalCachingMultiNoiseBiomeSource extends MultiNoiseBiomeSource {
 
-    private final BiomeSourceCachingDelegate biomeSourceCachingDelegate = new BiomeSourceCachingDelegate(super::getBiomeForNoiseGen);
+    private final BiomeSourceCachingDelegate biomeSourceCachingDelegate = new BiomeSourceCachingDelegate(super::method_38109);
 
-    public ThreadLocalCachingMultiNoiseBiomeSource(long l, MultiNoiseUtil.Entries arg, Optional<Pair<Registry<Biome>, Preset>> optional) {
-        super(l, arg, optional);
+    public ThreadLocalCachingMultiNoiseBiomeSource(MultiNoiseUtil.Entries<Biome> entries) {
+        super(entries);
     }
 
-    public ThreadLocalCachingMultiNoiseBiomeSource(long l, MultiNoiseUtil.Entries<Biome> arg, NoiseParameters noiseParameters, NoiseParameters noiseParameters2, NoiseParameters noiseParameters3, NoiseParameters noiseParameters4, NoiseParameters noiseParameters5, int i, int j, boolean bl, Optional<Pair<Registry<Biome>, Preset>> optional) {
-        super(l, arg, noiseParameters, noiseParameters2, noiseParameters3, noiseParameters4, noiseParameters5, i, j, bl, optional);
+    public ThreadLocalCachingMultiNoiseBiomeSource(MultiNoiseUtil.Entries<Biome> entries, @SuppressWarnings("OptionalUsedAsFieldOrParameterType") Optional<Pair<Registry<Biome>, Preset>> optional) {
+        super(entries, optional);
     }
 
     @Override
-    public Biome getBiomeForNoiseGen(int biomeX, int biomeY, int biomeZ) {
-        return biomeSourceCachingDelegate.getBiomeForNoiseGen(biomeX, biomeY, biomeZ);
+    public Biome method_38109(int biomeX, int biomeY, int biomeZ, MultiNoiseUtil.MultiNoiseSampler multiNoiseSampler) {
+        return this.biomeSourceCachingDelegate.method_38109(biomeX, biomeY, biomeZ, multiNoiseSampler);
     }
-
 }

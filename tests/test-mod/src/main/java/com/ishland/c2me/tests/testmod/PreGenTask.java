@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -55,9 +56,9 @@ public class PreGenTask {
         final AtomicInteger locatedBiomes = new AtomicInteger();
         final AtomicInteger locatedStructures = new AtomicInteger();
         System.err.printf("Fetching structure and biome list\n");
-        final List<Biome> biomes = world.getChunkManager().getChunkGenerator().getBiomeSource().getBiomes();
+        final Set<Biome> biomes = new HashSet<>(world.getChunkManager().getChunkGenerator().getBiomeSource().getBiomes());
         final Set<StructureFeature<?>> structureFeatures = StructureFeature.STRUCTURES.values().stream()
-                .filter(structureFeature -> ((IChunkGenerator) world.getChunkManager().getChunkGenerator()).getPopulationSource().hasStructureFeature(structureFeature))
+                .filter(structureFeature -> ((IChunkGenerator) world.getChunkManager().getChunkGenerator()).hasStructureFeature(world, structureFeature))
                 .collect(Collectors.toSet());
         final Registry<Biome> biomeRegistry = world.getRegistryManager().get(Registry.BIOME_KEY);
         System.err.printf("Submitting tasks\n");

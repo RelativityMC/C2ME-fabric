@@ -1,13 +1,12 @@
 package com.ishland.c2me.common.optimization.worldgen.global_biome_cache;
 
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.world.HeightLimitView;
+import net.minecraft.util.math.ChunkSectionPos;
 import net.minecraft.world.biome.Biome;
-import net.minecraft.world.biome.source.BiomeArray;
+import net.minecraft.world.biome.source.util.MultiNoiseUtil;
 
 public interface IGlobalBiomeCache {
 
-    BiomeArray preloadBiomes(HeightLimitView view, ChunkPos pos, BiomeArray def);
+    Biome[][][] preloadBiomes(ChunkSectionPos pos, Biome[][][] def, MultiNoiseUtil.MultiNoiseSampler multiNoiseSampler);
 
-    Biome getBiomeForNoiseGenFast(int biomeX, int biomeY, int biomeZ);
+    Biome getBiomeForNoiseGenFast(int biomeX, int biomeY, int biomeZ, MultiNoiseUtil.MultiNoiseSampler multiNoiseSampler);
 }

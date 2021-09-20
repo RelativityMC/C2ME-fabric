@@ -30,7 +30,7 @@ dependencies {
     implementation 'org.jetbrains:annotations:22.0.0'
 
     api "net.fabricmc:fabric-loader:0.11.6"
-    api 'net.fabricmc:access-widener:1.1.0'
+    api 'net.fabricmc:access-widener:2.0.0'
     api "org.apache.logging.log4j:log4j-core:2.14.1"
 }
 

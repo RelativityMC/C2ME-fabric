@@ -1,8 +1,9 @@
 package com.ishland.c2me.mixin.fixes.worldgen.threading;
 
-import com.ishland.c2me.common.fixes.worldgen.threading.ThreadLocalChunkRandom;
-import net.minecraft.world.gen.ChunkRandom;
-import net.minecraft.world.gen.chunk.NoiseChunkGenerator;
+import com.ishland.c2me.common.util.CMETrackingMap;
+import net.minecraft.structure.StructureStart;
+import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.gen.feature.StructureFeature;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
@@ -11,15 +12,17 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(NoiseChunkGenerator.OreVeinSource.class)
-public class MixinNoiseChunkGeneratorOreVeinSource {
+import java.util.Map;
+
+@Mixin(Chunk.class)
+public abstract class MixinChunk {
 
     @Mutable
-    @Shadow @Final private ChunkRandom random;
+    @Shadow @Final private Map<StructureFeature<?>, StructureStart<?>> field_34552;
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(CallbackInfo info) {
-        this.random = new ThreadLocalChunkRandom(System.nanoTime());
+        this.field_34552 = new CMETrackingMap<>(this.field_34552);
     }
 
 }

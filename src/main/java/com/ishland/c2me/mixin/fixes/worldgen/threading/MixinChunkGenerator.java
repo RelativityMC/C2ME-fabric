@@ -1,6 +1,7 @@
 package com.ishland.c2me.mixin.fixes.worldgen.threading;
 
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.world.biome.source.util.MultiNoiseUtil;
 import net.minecraft.world.gen.chunk.ChunkGenerator;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -21,10 +22,16 @@ public abstract class MixinChunkGenerator {
 
     @Shadow protected abstract void generateStrongholdPositions();
 
+    @Shadow public abstract MultiNoiseUtil.MultiNoiseSampler method_38276();
+
     @Inject(method = "<init>(Lnet/minecraft/world/biome/source/BiomeSource;Lnet/minecraft/world/biome/source/BiomeSource;Lnet/minecraft/world/gen/chunk/StructuresConfig;J)V", at = @At("RETURN"))
     private void onInit(CallbackInfo info) {
         this.strongholds = Collections.synchronizedList(strongholds);
-        generateStrongholdPositions(); // early init
+        if (this.method_38276() != null) {
+            generateStrongholdPositions(); // early init
+        } else {
+            System.out.println("Delaying init for stronghold positions");
+        }
     }
 
 }

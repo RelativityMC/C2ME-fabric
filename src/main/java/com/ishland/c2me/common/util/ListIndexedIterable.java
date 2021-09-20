@@ -20,6 +20,11 @@ public record ListIndexedIterable<T>(List<T> delegate) implements IndexedIterabl
         return delegate.get(index);
     }
 
+    @Override
+    public int size() {
+        return delegate.size();
+    }
+
     @NotNull
     @Override
     public Iterator<T> iterator() {

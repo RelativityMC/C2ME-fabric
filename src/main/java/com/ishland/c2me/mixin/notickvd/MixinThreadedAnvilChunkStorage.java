@@ -6,8 +6,7 @@ import com.ishland.c2me.mixin.access.IChunkTicketManager;
 import com.ishland.c2me.mixin.access.IServerChunkManager;
 import com.mojang.datafixers.util.Either;
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
-import it.unimi.dsi.fastutil.objects.ObjectIterator;
-import net.minecraft.network.Packet;
+import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
 import net.minecraft.network.packet.s2c.play.ChunkLoadDistanceS2CPacket;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ChunkHolder;
@@ -17,6 +16,7 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.WorldChunk;
+import org.apache.commons.lang3.mutable.MutableObject;
 import org.spongepowered.asm.mixin.Dynamic;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -43,16 +43,16 @@ public abstract class MixinThreadedAnvilChunkStorage {
 
     @Shadow public abstract Stream<ServerPlayerEntity> getPlayersWatchingChunk(ChunkPos chunkPos, boolean onlyOnWatchDistanceEdge);
 
+    @Shadow @Final private ServerWorld world;
+
+    @Shadow protected abstract void sendWatchPackets(ServerPlayerEntity player, ChunkPos pos, MutableObject<ChunkDataS2CPacket> mutableObject, boolean withinMaxWatchDistance, boolean withinViewDistance);
+
     @Shadow
-    private static int getChebyshevDistance(ChunkPos pos, ServerPlayerEntity player, boolean useWatchedPosition) {
+    private static boolean method_37901(ChunkPos chunkPos, ServerPlayerEntity serverPlayerEntity, boolean bl, int i) {
         throw new UnsupportedOperationException();
     }
 
-    @Shadow protected abstract void sendWatchPackets(ServerPlayerEntity player, ChunkPos pos, Packet<?>[] packets, boolean withinMaxWatchDistance, boolean withinViewDistance);
-
-    @Shadow protected abstract void sendChunkDataPackets(ServerPlayerEntity player, Packet<?>[] packets, WorldChunk chunk);
-
-    @Shadow @Final private ServerWorld world;
+    @Shadow protected abstract void sendChunkDataPackets(ServerPlayerEntity player, MutableObject<ChunkDataS2CPacket> mutableObject, WorldChunk chunk);
 
     /**
      * @author ishland
@@ -68,17 +68,13 @@ public abstract class MixinThreadedAnvilChunkStorage {
             this.watchDistance = Math.max(i, C2MEConfig.noTickViewDistanceConfig.viewDistance + 1); // C2ME
             ((IChunkTicketManager) this.ticketManager).invokeSetWatchDistance(i);
             this.world.getServer().getPlayerManager().sendToAll(new ChunkLoadDistanceS2CPacket(this.watchDistance));
-            ObjectIterator<ChunkHolder> var4 = this.currentChunkHolders.values().iterator();
-
-            while(var4.hasNext()) {
-                ChunkHolder chunkHolder = var4.next();
+            for(ChunkHolder chunkHolder : this.currentChunkHolders.values()) {
                 ChunkPos chunkPos = chunkHolder.getPos();
-                Packet<?>[] packets = new Packet[2];
-                this.getPlayersWatchingChunk(chunkPos, false).forEach((serverPlayerEntity) -> {
-                    int jx = getChebyshevDistance(chunkPos, serverPlayerEntity, true);
-                    boolean bl = jx <= before; // C2ME
-                    boolean bl2 = jx <= Math.max(this.watchDistance, C2MEConfig.noTickViewDistanceConfig.viewDistance + 1); // C2ME
-                    this.sendWatchPackets(serverPlayerEntity, chunkPos, packets, bl, bl2);
+                MutableObject<ChunkDataS2CPacket> mutableObject = new MutableObject<>();
+                this.getPlayersWatchingChunk(chunkPos, false).forEach(serverPlayerEntity -> {
+                    boolean bl = method_37901(chunkPos, serverPlayerEntity, true, before);
+                    boolean bl2 = method_37901(chunkPos, serverPlayerEntity, true, Math.max(this.watchDistance, C2MEConfig.noTickViewDistanceConfig.viewDistance + 1));
+                    this.sendWatchPackets(serverPlayerEntity, chunkPos, mutableObject, bl, bl2);
                 });
             }
         }
@@ -93,9 +89,9 @@ public abstract class MixinThreadedAnvilChunkStorage {
     @Inject(method = "method_31417", at = @At("RETURN"))
     private void onMakeChunkAccessible(ChunkHolder chunkHolder, CallbackInfoReturnable<CompletableFuture<Either<WorldChunk, ChunkHolder.Unloaded>>> cir) {
         cir.getReturnValue().thenAccept(either -> either.left().ifPresent(worldChunk -> {
-            Packet<?>[] packets = new Packet[2];
+            MutableObject<ChunkDataS2CPacket> mutableObject = new MutableObject<>();
             this.getPlayersWatchingChunk(worldChunk.getPos(), false).forEach((serverPlayerEntity) -> {
-                this.sendChunkDataPackets(serverPlayerEntity, packets, worldChunk);
+                this.sendChunkDataPackets(serverPlayerEntity, mutableObject, worldChunk);
             });
         }));
     }

@@ -5,14 +5,17 @@ import net.minecraft.util.registry.Registry;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.source.BiomeSource;
 import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.chunk.ProtoChunk;
+import net.minecraft.world.gen.StructureAccessor;
 import net.minecraft.world.gen.chunk.ChunkGenerator;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 
 @Mixin(ChunkGenerator.class)
 public class MixinChunkGenerator {
@@ -20,10 +23,10 @@ public class MixinChunkGenerator {
     @Shadow @Final protected BiomeSource biomeSource;
 
     @Inject(method = "populateBiomes", at = @At("HEAD"), cancellable = true)
-    private void onPopulateBiomes(Registry<Biome> biomeRegistry, Chunk chunk, CallbackInfo ci) {
+    private void onPopulateBiomes(Executor executor, Registry<Biome> registry, StructureAccessor structureAccessor, Chunk chunk, CallbackInfoReturnable<CompletableFuture<Chunk>> cir) {
         if (biomeSource instanceof IGlobalBiomeCache biomeSource1) {
-            ((ProtoChunk) chunk).setBiomes(biomeSource1.preloadBiomes(chunk, chunk.getPos(), chunk.getBiomeArray()));
-            ci.cancel();
+//            ((ProtoChunk) chunk).setBiomes(biomeSource1.preloadBiomes(chunk.getPos(), chunk.getBiomeArray()));
+            cir.setReturnValue(CompletableFuture.completedFuture(chunk));
         }
     }
 

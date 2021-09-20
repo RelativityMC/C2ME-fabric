@@ -5,6 +5,7 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.noise.SimplexNoiseSampler;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.source.TheEndBiomeSource;
+import net.minecraft.world.biome.source.util.MultiNoiseUtil;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -56,7 +57,7 @@ public abstract class MixinTheEndBiomeSource {
      * @reason the end biome cache
      */
     @Overwrite
-    public Biome getBiomeForNoiseGen(int biomeX, int biomeY, int biomeZ) {
+    public Biome method_38109(int biomeX, int biomeY, int biomeZ, MultiNoiseUtil.MultiNoiseSampler multiNoiseSampler) {
         final long key = ChunkPos.toLong(biomeX, biomeZ);
         final Long2ObjectLinkedOpenHashMap<Biome> cacheThreadLocal = cache.get();
         final Biome biome = cacheThreadLocal.get(key);

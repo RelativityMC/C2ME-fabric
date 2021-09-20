@@ -1,14 +1,17 @@
 package com.ishland.c2me.mixin.optimization.worldgen.global_biome_cache;
 
-import com.ishland.c2me.common.optimization.worldgen.global_biome_cache.BiomeCache;
 import com.ishland.c2me.common.optimization.worldgen.global_biome_cache.IGlobalBiomeCache;
+import com.ishland.c2me.common.optimization.worldgen.global_biome_cache.MultiBiomeCache;
+import com.ishland.c2me.common.util.PalettedContainerUtil;
 import com.mojang.datafixers.util.Either;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;
 import net.minecraft.util.math.ChunkPos;
-import net.minecraft.world.biome.source.BiomeArray;
+import net.minecraft.util.math.ChunkSectionPos;
+import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.chunk.ProtoChunk;
+import net.minecraft.world.chunk.ChunkSection;
+import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.gen.chunk.ChunkGenerator;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -33,11 +36,14 @@ public abstract class MixinThreadedChunkAnvilStorage {
         if (chunkGenerator.getBiomeSource() instanceof IGlobalBiomeCache source) {
             return this.loadChunk(pos).thenApplyAsync(either -> {
                 either.left().ifPresent(chunk -> {
-                    final BiomeArray biomeArray = source.preloadBiomes(chunk, pos, chunk.getBiomeArray());
-                    if (chunk instanceof ProtoChunk protoChunk) protoChunk.setBiomes(biomeArray);
+                    for (ChunkSection chunkSection : chunk.getSectionArray()) {
+                        final ChunkSectionPos chunkSectionPos = ChunkSectionPos.from(chunk.getPos(), chunkSection.getYOffset());
+                        final Biome[][][] biomes = source.preloadBiomes(chunkSectionPos, chunk.getStatus().isAtLeast(ChunkStatus.FEATURES) ? null : PalettedContainerUtil.toArray(chunkSection.method_38294(), 4, 4, 4), chunkGenerator.method_38276());
+                        PalettedContainerUtil.writeArray(chunkSection.method_38294(), biomes);
+                    }
                 });
                 return either;
-            }, BiomeCache.EXECUTOR);
+            }, MultiBiomeCache.EXECUTOR);
         }
         return this.loadChunk(pos);
     }

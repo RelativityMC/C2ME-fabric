@@ -85,7 +85,7 @@ public class C2MEConfig {
             this.parallelism = ConfigUtils.getValue(configScope, "parallelism", () -> Math.max(2, getWorldGenDefaultParallelism0()), "World generation worker executor parallelism", List.of(), null, ConfigUtils.CheckType.THREAD_COUNT);
             this.allowThreadedFeatures = ConfigUtils.getValue(configScope, "allowThreadedFeatures", () -> true || global_allowThreadedFeatures, "Whether to allow feature generation (world decorations like trees, ores and etc.) run in parallel \n (may cause incompatibility with other mods)", List.of(), null);
             this.reduceLockRadius = ConfigUtils.getValue(configScope, "reduceLockRadius", () -> false || global_reduceLockRadius, "Whether to allow reducing lock radius \n (may cause incompatibility with other mods)", List.of(), null);
-            this.useGlobalBiomeCache = ConfigUtils.getValue(configScope, "useGlobalBiomeCache", () -> false || global_useGlobalBiomeCache, "Whether to enable global BiomeCache to accelerate worldgen \n This increases memory allocation ", List.of(), false);
+            this.useGlobalBiomeCache = ConfigUtils.getValue(configScope, "useGlobalBiomeCache", () -> false || global_useGlobalBiomeCache, "Whether to enable global MultiBiomeCache to accelerate worldgen \n This increases memory allocation ", List.of(), false);
             configScope.removeUnusedKeys();
         }
     }
@@ -98,7 +98,7 @@ public class C2MEConfig {
             Preconditions.checkNotNull(config, "vanillaWorldGenOptimizationsConfig config is not present");
             final ConfigUtils.ConfigScope configScope = new ConfigUtils.ConfigScope(config);
             this.enabled = ConfigUtils.getValue(configScope, "enabled", () -> true, "Whether to enable this feature \n (may cause incompatibility with other mods)", List.of(), false);
-            this.useEndBiomeCache = ConfigUtils.getValue(configScope, "useEndBiomeCache", () -> true, "Whether to enable End BiomeCache to accelerate The End worldgen \n This is included in lithium-fabric \n (may cause incompatibility with other mods) ", List.of("lithium"), false);
+            this.useEndBiomeCache = ConfigUtils.getValue(configScope, "useEndBiomeCache", () -> true, "Whether to enable End MultiBiomeCache to accelerate The End worldgen \n This is included in lithium-fabric \n (may cause incompatibility with other mods) ", List.of("lithium"), false);
             configScope.removeUnusedKeys();
         }
     }

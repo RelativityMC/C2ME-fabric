@@ -1,6 +1,7 @@
 package com.ishland.c2me.common.fixes.worldgen.threading;
 
 import net.minecraft.world.gen.ChunkRandom;
+import net.minecraft.world.gen.WorldGenRandom;
 
 import java.util.function.Consumer;
 import java.util.stream.DoubleStream;
@@ -39,8 +40,13 @@ public class ThreadLocalChunkRandom extends ChunkRandom {
     }
 
     @Override
-    public long setTerrainSeed(int chunkX, int chunkZ) {
-        return chunkRandomThreadLocal.get().setTerrainSeed(chunkX, chunkZ);
+    public WorldGenRandom method_38420() {
+        return chunkRandomThreadLocal.get().method_38420();
+    }
+
+    @Override
+    public void setTerrainSeed(int chunkX, int chunkZ) {
+        chunkRandomThreadLocal.get().setTerrainSeed(chunkX, chunkZ);
     }
 
     @Override
@@ -49,23 +55,18 @@ public class ThreadLocalChunkRandom extends ChunkRandom {
     }
 
     @Override
-    public long setDecoratorSeed(long populationSeed, int index, int step) {
-        return chunkRandomThreadLocal.get().setDecoratorSeed(populationSeed, index, step);
+    public void setDecoratorSeed(long populationSeed, int index, int step) {
+        chunkRandomThreadLocal.get().setDecoratorSeed(populationSeed, index, step);
     }
 
     @Override
-    public long setCarverSeed(long worldSeed, int chunkX, int chunkZ) {
-        return chunkRandomThreadLocal.get().setCarverSeed(worldSeed, chunkX, chunkZ);
+    public void setCarverSeed(long worldSeed, int chunkX, int chunkZ) {
+        chunkRandomThreadLocal.get().setCarverSeed(worldSeed, chunkX, chunkZ);
     }
 
     @Override
-    public long setDeepslateSeed(long worldSeed, int x, int y, int z) {
-        return chunkRandomThreadLocal.get().setDeepslateSeed(worldSeed, x, y, z);
-    }
-
-    @Override
-    public long setRegionSeed(long worldSeed, int regionX, int regionZ, int salt) {
-        return chunkRandomThreadLocal.get().setRegionSeed(worldSeed, regionX, regionZ, salt);
+    public void setRegionSeed(long worldSeed, int regionX, int regionZ, int salt) {
+        chunkRandomThreadLocal.get().setRegionSeed(worldSeed, regionX, regionZ, salt);
     }
 
     @Override
