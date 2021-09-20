@@ -1,19 +1,13 @@
 package com.ishland.c2me.mixin.fixes.worldgen.threading;
 
-import com.ishland.c2me.common.fixes.worldgen.threading.ThreadLocalStructureWeightSampler;
 import com.ishland.c2me.mixin.access.IChunkGenerator;
 import net.minecraft.world.biome.source.BiomeSource;
-import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.gen.StructureAccessor;
-import net.minecraft.world.gen.StructureWeightSampler;
 import net.minecraft.world.gen.chunk.ChunkGenerator;
 import net.minecraft.world.gen.chunk.NoiseChunkGenerator;
 import net.minecraft.world.gen.chunk.StructuresConfig;
-import org.spongepowered.asm.mixin.Dynamic;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(NoiseChunkGenerator.class)
@@ -23,11 +17,11 @@ public abstract class MixinNoiseChunkGenerator extends ChunkGenerator {
         super(biomeSource, structuresConfig);
     }
 
-    @Dynamic
-    @Redirect(method = "*", at = @At(value = "NEW", target = "net/minecraft/world/gen/StructureWeightSampler"), require = 4)
-    private static StructureWeightSampler redirectStructureWeightSamplers(StructureAccessor structureAccessor, Chunk chunk) {
-        return new ThreadLocalStructureWeightSampler(structureAccessor, chunk);
-    }
+//    @Dynamic
+//    @Redirect(method = "*", at = @At(value = "NEW", target = "net/minecraft/world/gen/StructureWeightSampler"), require = 4)
+//    private static StructureWeightSampler redirectStructureWeightSamplers(StructureAccessor structureAccessor, Chunk chunk) {
+//        return new ThreadLocalStructureWeightSampler(structureAccessor, chunk);
+//    }
 
     @Inject(method = "<init>(Lnet/minecraft/world/biome/source/BiomeSource;Lnet/minecraft/world/biome/source/BiomeSource;JLjava/util/function/Supplier;)V", at = @At(value = "RETURN"))
     private void onInit(CallbackInfo info) {

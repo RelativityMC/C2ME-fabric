@@ -18,7 +18,9 @@ import java.util.Map;
 public abstract class MixinChunk {
 
     @Mutable
-    @Shadow @Final private Map<StructureFeature<?>, StructureStart<?>> field_34552;
+    @Shadow
+    @Final
+    private Map<StructureFeature<?>, StructureStart<?>> field_34552;
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(CallbackInfo info) {
