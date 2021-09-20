@@ -34,7 +34,7 @@ public class GlobalCachingMultiNoiseBiomeSource extends MultiNoiseBiomeSource im
 
     @Override
     public Biome method_38109(int biomeX, int biomeY, int biomeZ, MultiNoiseUtil.MultiNoiseSampler multiNoiseSampler) {
-        if (this.multiBiomeCache != null && !multiNoiseSampler.getClass().isSynthetic()) {
+        if (this.multiBiomeCache != null && !multiNoiseSampler.getClass().isSynthetic() && !multiNoiseSampler.getClass().isHidden()) {
             return this.multiBiomeCache.getBiomeForNoiseGen(biomeX, biomeY, biomeZ, multiNoiseSampler, false);
         } else {
             return super.method_38109(biomeX, biomeY, biomeZ, multiNoiseSampler);
@@ -43,7 +43,7 @@ public class GlobalCachingMultiNoiseBiomeSource extends MultiNoiseBiomeSource im
 
     @Override
     public Biome getBiomeForNoiseGenFast(int biomeX, int biomeY, int biomeZ, MultiNoiseUtil.MultiNoiseSampler multiNoiseSampler) {
-        if (this.multiBiomeCache != null) {
+        if (this.multiBiomeCache != null && !multiNoiseSampler.getClass().isSynthetic() && !multiNoiseSampler.getClass().isHidden()) {
             return this.multiBiomeCache.getBiomeForNoiseGen(biomeX, biomeY, biomeZ, multiNoiseSampler, true);
         } else {
             return super.method_38109(biomeX, biomeY, biomeZ, multiNoiseSampler);

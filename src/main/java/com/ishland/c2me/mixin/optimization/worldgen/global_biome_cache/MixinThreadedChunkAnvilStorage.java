@@ -1,7 +1,9 @@
 package com.ishland.c2me.mixin.optimization.worldgen.global_biome_cache;
 
+import com.ishland.c2me.common.config.C2MEConfig;
 import com.ishland.c2me.common.optimization.worldgen.global_biome_cache.IGlobalBiomeCache;
 import com.ishland.c2me.common.optimization.worldgen.global_biome_cache.MultiBiomeCache;
+import com.ishland.c2me.common.threading.worldgen.WorldGenThreadingExecutorUtils;
 import com.ishland.c2me.common.util.PalettedContainerUtil;
 import com.mojang.datafixers.util.Either;
 import net.minecraft.server.world.ChunkHolder;
@@ -43,7 +45,7 @@ public abstract class MixinThreadedChunkAnvilStorage {
                     }
                 });
                 return either;
-            }, MultiBiomeCache.EXECUTOR);
+            }, C2MEConfig.threadedWorldGenConfig.enabled ? WorldGenThreadingExecutorUtils.mainExecutor : MultiBiomeCache.EXECUTOR);
         }
         return this.loadChunk(pos);
     }
