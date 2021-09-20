@@ -80,6 +80,7 @@
     "optimization.worldgen.global_biome_cache.MixinThreadedChunkAnvilStorage",
     "optimization.worldgen.thread_local_biome_cache.MixinMultiNoiseBiomeSourcePreset",
     "optimization.worldgen.vanilla_optimization.the_end_biome_cache.MixinTheEndBiomeSource",
+    "optimization.vectorizations.vectorize_noise.MixinPerlinNoiseSampler",
     "threading.chunkio.MixinChunkSerializer",
     "threading.chunkio.MixinChunkTickScheduler",
     "threading.chunkio.MixinScheduledTick",

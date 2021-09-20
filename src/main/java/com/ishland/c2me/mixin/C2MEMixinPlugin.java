@@ -1,6 +1,7 @@
 package com.ishland.c2me.mixin;
 
 import com.ishland.c2me.common.fixes.DataFixerUpperClasspathFix;
+import com.ishland.c2me.common.util.ModuleUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.objectweb.asm.tree.ClassNode;
@@ -20,6 +21,9 @@ public class C2MEMixinPlugin implements IMixinConfigPlugin {
         C2MEConfig.threadedWorldGenConfig.getClass().getName(); // Load configuration
         LOGGER.info("Successfully loaded configuration for C2ME");
         DataFixerUpperClasspathFix.fix();
+        if (ModuleUtil.isModuleLoaded) {
+            LOGGER.info("Successfully loaded submodule for additional acceleration");
+        }
     }
 
     @Override
@@ -45,6 +49,8 @@ public class C2MEMixinPlugin implements IMixinConfigPlugin {
             return C2MEConfig.noTickViewDistanceConfig.enabled;
         if (mixinClassName.startsWith("com.ishland.c2me.mixin.optimization.chunkio.compression.modify_default_chunk_compression."))
             return C2MEConfig.generalOptimizationsConfig.chunkStreamVersion != -1;
+        if (mixinClassName.startsWith("com.ishland.c2me.mixin.optimization.vectorizations."))
+            return ModuleUtil.isModuleLoaded;
         return true;
     }
 

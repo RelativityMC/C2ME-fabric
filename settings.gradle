@@ -26,4 +26,5 @@ include 'compatibility'
 // include 'compatibility:betternether'
 // include 'compatibility:thebumblezone'
 //include 'compatibility:charm'
+include 'libs'
 

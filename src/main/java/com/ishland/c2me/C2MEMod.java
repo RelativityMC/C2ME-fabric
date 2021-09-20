@@ -32,7 +32,7 @@ public class C2MEMod implements ModInitializer {
         if (Boolean.getBoolean("com.ishland.c2me.runCompressionBenchmark")) {
             LOGGER.info("Benchmarking chunk stream speed");
             LOGGER.info("Warming up");
-            for (int i = 0; i < 3; i ++) {
+            for (int i = 0; i < 3; i++) {
                 runBenchmark("GZIP", ChunkStreamVersion.GZIP, true);
                 runBenchmark("DEFLATE", ChunkStreamVersion.DEFLATE, true);
                 runBenchmark("UNCOMPRESSED", ChunkStreamVersion.UNCOMPRESSED, true);
