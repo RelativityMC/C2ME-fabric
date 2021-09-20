@@ -30,9 +30,9 @@
     "c2me.client.mixins.json"
   ],
   "depends": {
-    "fabricloader": ">=0.11.3",
+    "fabricloader": ">=0.11.7",
     "java": ">=16",
-    "minecraft": ">1.17.100"
+    "minecraft": ">=1.18-alpha.21.37.a"
   },
   "conflicts": {
     "optifabric": "*",
