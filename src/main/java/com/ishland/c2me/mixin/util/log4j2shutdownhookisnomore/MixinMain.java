@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(Main.class)
 public class MixinMain {
 
-    @Inject(method = "main", at = @At("HEAD"))
+    @Inject(method = "main", at = @At("HEAD"), remap = false)
     private static void preMain(CallbackInfo info) {
         try {
             ((DefaultShutdownCallbackRegistry) ((Log4jContextFactory) LogManager.getFactory()).getShutdownCallbackRegistry()).stop();
