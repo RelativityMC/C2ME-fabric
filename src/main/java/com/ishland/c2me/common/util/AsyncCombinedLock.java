@@ -13,7 +13,7 @@ import java.util.function.Function;
 public class AsyncCombinedLock {
 
     public static final ForkJoinPool lockWorker = new ForkJoinPool(
-            Math.max(1, Runtime.getRuntime().availableProcessors() / 7),
+            Math.min(Math.max(1, Runtime.getRuntime().availableProcessors() / 7), 4),
             new C2MEForkJoinWorkerThreadFactory("C2ME lock worker #%d", Thread.NORM_PRIORITY - 1),
             null,
             true
