@@ -6,6 +6,14 @@ import jdk.incubator.vector.VectorSpecies;
 public class VectorizedPerlinNoise {
 
     protected static final int[][] GRADIENTS = new int[][]{{1, 1, 0}, {-1, 1, 0}, {1, -1, 0}, {-1, -1, 0}, {1, 0, 1}, {-1, 0, 1}, {1, 0, -1}, {-1, 0, -1}, {0, 1, 1}, {0, -1, 1}, {0, 1, -1}, {0, -1, -1}, {1, 1, 0}, {0, -1, 1}, {-1, 1, 0}, {0, -1, -1}};
+    private static final VectorSpecies<Double> speciesPreferred = DoubleVector.SPECIES_PREFERRED;
+    private static final VectorSpecies<Double> speciesGrad = speciesPreferred.length() > 8 ? DoubleVector.SPECIES_512 : speciesPreferred;
+    private static final VectorSpecies<Double> speciesPerlinFade = speciesPreferred.length() > 4 ? DoubleVector.SPECIES_256 : speciesPreferred;
+
+    static {
+        System.out.println("Using vector size of " + speciesGrad.vectorBitSize() + " bits for grad()");
+        System.out.println("Using vector size of " + speciesPerlinFade.vectorBitSize() + " bits for perlinFade()");
+    }
 
     private static double lerp(double delta, double start, double end) {
         return start + delta * (end - start);
@@ -18,8 +26,6 @@ public class VectorizedPerlinNoise {
         int l = permutations[i + sectionY + 1 & 0xFF] & 255;
         int m = permutations[j + sectionY & 0xFF] & 255;
         int n = permutations[j + sectionY + 1 & 0xFF] & 255;
-
-        final VectorSpecies<Double> speciesPreferred = DoubleVector.SPECIES_PREFERRED;
 
         // grad ops
         double[] gradX = new double[] {
@@ -65,16 +71,16 @@ public class VectorizedPerlinNoise {
                 localZ - 1.0, localZ - 1.0, localZ - 1.0, localZ - 1.0,
         };
 
-        double[] gradResArray = new double[gradX.length];
-        for (int i1 = 0; i1 < gradX.length; i1 += speciesPreferred.length()) {
-            final DoubleVector gradXVector = DoubleVector.fromArray(speciesPreferred, gradX, i1);
-            final DoubleVector mulXVector = DoubleVector.fromArray(speciesPreferred, mulX, i1);
+        double[] gradResArray = new double[8];
+        for (int i1 = 0; i1 < gradX.length; i1 += speciesGrad.length()) {
+            final DoubleVector gradXVector = DoubleVector.fromArray(speciesGrad, gradX, i1);
+            final DoubleVector mulXVector = DoubleVector.fromArray(speciesGrad, mulX, i1);
             final DoubleVector resX = gradXVector.mul(mulXVector);
-            final DoubleVector gradYVector = DoubleVector.fromArray(speciesPreferred, gradY, i1);
-            final DoubleVector mulYVector = DoubleVector.fromArray(speciesPreferred, mulY, i1);
+            final DoubleVector gradYVector = DoubleVector.fromArray(speciesGrad, gradY, i1);
+            final DoubleVector mulYVector = DoubleVector.fromArray(speciesGrad, mulY, i1);
             final DoubleVector resY = gradYVector.mul(mulYVector);
-            final DoubleVector gradZVector = DoubleVector.fromArray(speciesPreferred, gradZ, i1);
-            final DoubleVector mulZVector = DoubleVector.fromArray(speciesPreferred, mulZ, i1);
+            final DoubleVector gradZVector = DoubleVector.fromArray(speciesGrad, gradZ, i1);
+            final DoubleVector mulZVector = DoubleVector.fromArray(speciesGrad, mulZ, i1);
             final DoubleVector resZ = gradZVector.mul(mulZVector);
             final DoubleVector res = resX.add(resY).add(resZ);
             res.intoArray(gradResArray, i1);
@@ -82,10 +88,10 @@ public class VectorizedPerlinNoise {
 
         // fade ops
         // perlinFade(value): value * value * value * (value * (value * 6.0 - 15.0) + 10.0)
-        final double[] fades = {localX, fadeLocalX, localZ, 0};
-        final double[] fadeResArray = new double[fades.length];
-        for (int i1 = 0; i1 < fades.length; i1 += speciesPreferred.length()) {
-            final DoubleVector vector = DoubleVector.fromArray(speciesPreferred, fades, i1);
+        final double[] fades = new double[]{localX, fadeLocalX, localZ, 0.0};
+        final double[] fadeResArray = new double[4];
+        for (int i1 = 0; i1 < fades.length; i1 += speciesPerlinFade.length()) {
+            final DoubleVector vector = DoubleVector.fromArray(speciesPerlinFade, fades, i1);
             final DoubleVector res = vector
                     .mul(6.0)
                     .add(-15.0)

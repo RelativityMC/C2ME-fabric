@@ -36,7 +36,8 @@ public abstract class MixinDesertTempleGenerator {
     @SuppressWarnings({"InvalidInjectorMethodSignature", "RedundantSuppression"})
     @Redirect(method = "*", at = @At(value = "FIELD", target = "Lnet/minecraft/structure/DesertTempleGenerator;hasPlacedChest:[Z", opcode = Opcodes.GETFIELD, args = "array=get"))
     private boolean redirectGetHasPlacedChest(boolean[] array, int index) {
-        return this.hasPlacedChestAtomic.get(index);
+        final Boolean aBoolean = this.hasPlacedChestAtomic.get(index);
+        return aBoolean != null ? aBoolean : false;
     }
 
 }
