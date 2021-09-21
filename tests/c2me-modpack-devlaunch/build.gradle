@@ -34,6 +34,7 @@ migrateMappings.onlyIf { false }
 
 dependencies {
     testmodImplementation project(":").sourceSets.main.output
+    testmodImplementation project(":").configurations.getByName("includeApi").allDependencies
     testmodImplementation project(":").configurations.getByName("shadowImpl").allDependencies
     testmodImplementation project(":").configurations.getByName("shadowRuntime").allDependencies
     ModpackConfig.applyModpack(it)
