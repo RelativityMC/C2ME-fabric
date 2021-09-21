@@ -23,9 +23,9 @@ loom {
             vmArgs "-Dcom.ishland.c2me.mixin.doAudit=true"
             if (System.getenv("GITHUB_WORKFLOW") != null) {
                 if (System.getenv("RUNNER_OS").equals("macOS")) {
-                    vmArgs "-Xmx12G"
+                    vmArgs "-Xmx11G"
                 } else if (System.getenv("RUNNER_OS").equals("Linux")) {
-                    vmArgs "-Xmx6G"
+                    vmArgs "-Xmx5G"
                 }
             }
         }
