@@ -68,7 +68,6 @@
     "optimization.chunkscheduling.mid_tick_chunk_tasks.MixinWorld",
     "optimization.chunkscheduling.task_scheduling.MixinThreadedAnvilChunkStorage",
     "optimization.chunkscheduling.task_scheduling.MixinThreadExecutor",
-    "optimization.math.MixinMathHelper",
     "optimization.math.MixinOctavePerlinNoiseSampler",
     "optimization.reduce_allocs.MixinIdentifier",
     "optimization.reduce_allocs.MixinNbtCompound",
