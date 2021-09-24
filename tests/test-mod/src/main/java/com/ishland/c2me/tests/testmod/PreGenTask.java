@@ -5,7 +5,6 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.Sets;
 import com.ibm.asyncutil.locks.AsyncSemaphore;
 import com.ibm.asyncutil.locks.FairAsyncSemaphore;
-import com.ishland.c2me.tests.testmod.mixin.IChunkGenerator;
 import com.ishland.c2me.tests.testmod.mixin.IServerChunkManager;
 import com.ishland.c2me.tests.testmod.mixin.IThreadedAnvilChunkStorage;
 import net.minecraft.server.world.ChunkHolder;
@@ -17,6 +16,7 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.ChunkStatus;
+import net.minecraft.world.gen.chunk.StructuresConfig;
 import net.minecraft.world.gen.feature.StructureFeature;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -58,7 +58,10 @@ public class PreGenTask {
         System.err.printf("Fetching structure and biome list\n");
         final Set<Biome> biomes = new HashSet<>(world.getChunkManager().getChunkGenerator().getBiomeSource().getBiomes());
         final Set<StructureFeature<?>> structureFeatures = StructureFeature.STRUCTURES.values().stream()
-                .filter(structureFeature -> ((IChunkGenerator) world.getChunkManager().getChunkGenerator()).hasStructureFeature(world, structureFeature))
+                .filter(structureFeature -> {
+                    final StructuresConfig structuresConfig = world.getChunkManager().getChunkGenerator().getStructuresConfig();
+                    return structuresConfig.getForType(structureFeature) != null && !structuresConfig.getConfiguredStructureFeature(structureFeature).isEmpty();
+                })
                 .collect(Collectors.toSet());
         final Registry<Biome> biomeRegistry = world.getRegistryManager().get(Registry.BIOME_KEY);
         System.err.printf("Submitting tasks\n");

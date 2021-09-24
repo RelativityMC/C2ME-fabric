@@ -1,7 +1,7 @@
 package com.ishland.c2me.common.fixes.worldgen.threading;
 
-import net.minecraft.world.gen.ChunkRandom;
-import net.minecraft.world.gen.WorldGenRandom;
+import net.minecraft.world.gen.random.AbstractRandom;
+import net.minecraft.world.gen.random.ChunkRandom;
 
 import java.util.function.Consumer;
 import java.util.stream.DoubleStream;
@@ -40,8 +40,8 @@ public class ThreadLocalChunkRandom extends ChunkRandom {
     }
 
     @Override
-    public WorldGenRandom method_38420() {
-        return chunkRandomThreadLocal.get().method_38420();
+    public AbstractRandom derive() {
+        return chunkRandomThreadLocal.get().derive();
     }
 
     @Override
