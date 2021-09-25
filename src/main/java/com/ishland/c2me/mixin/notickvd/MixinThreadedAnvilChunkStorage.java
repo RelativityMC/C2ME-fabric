@@ -1,29 +1,25 @@
 package com.ishland.c2me.mixin.notickvd;
 
-import com.ishland.c2me.common.config.C2MEConfig;
 import com.ishland.c2me.common.notickvd.IChunkHolder;
-import com.ishland.c2me.mixin.access.IChunkTicketManager;
 import com.ishland.c2me.mixin.access.IServerChunkManager;
 import com.mojang.datafixers.util.Either;
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
-import net.minecraft.network.packet.s2c.play.ChunkLoadDistanceS2CPacket;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;
 import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.WorldChunk;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.spongepowered.asm.mixin.Dynamic;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
@@ -54,31 +50,9 @@ public abstract class MixinThreadedAnvilChunkStorage {
 
     @Shadow protected abstract void sendChunkDataPackets(ServerPlayerEntity player, MutableObject<ChunkDataS2CPacket> mutableObject, WorldChunk chunk);
 
-    /**
-     * @author ishland
-     * @reason no-tick view distance: TODO replace with redirect: not sure how to redirect watchDistance without ordinal
-     */
-    @Overwrite
-    public void setViewDistance(int watchDistance) {
-        // TODO [VanillaCopy]
-        int i = MathHelper.clamp(watchDistance + 1, 3, 33);
-        if (i != this.watchDistance) {
-            int j = this.watchDistance;
-            int before = Math.max(this.watchDistance, C2MEConfig.noTickViewDistanceConfig.viewDistance + 1); // C2ME
-            this.watchDistance = Math.max(i, C2MEConfig.noTickViewDistanceConfig.viewDistance + 1); // C2ME
-            ((IChunkTicketManager) this.ticketManager).invokeSetWatchDistance(i);
-            this.world.getServer().getPlayerManager().sendToAll(new ChunkLoadDistanceS2CPacket(this.watchDistance));
-            for(ChunkHolder chunkHolder : this.currentChunkHolders.values()) {
-                ChunkPos chunkPos = chunkHolder.getPos();
-                MutableObject<ChunkDataS2CPacket> mutableObject = new MutableObject<>();
-                this.getPlayersWatchingChunk(chunkPos, false).forEach(serverPlayerEntity -> {
-                    boolean bl = method_37901(chunkPos, serverPlayerEntity, true, before);
-                    boolean bl2 = method_37901(chunkPos, serverPlayerEntity, true, Math.max(this.watchDistance, C2MEConfig.noTickViewDistanceConfig.viewDistance + 1));
-                    this.sendWatchPackets(serverPlayerEntity, chunkPos, mutableObject, bl, bl2);
-                });
-            }
-        }
-
+    @ModifyArg(method = "setViewDistance", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/MathHelper;clamp(III)I"), index = 2)
+    private int modifyMaxVD(int max) {
+        return 251;
     }
 
     @Redirect(method = "sendWatchPackets", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ChunkHolder;getWorldChunk()Lnet/minecraft/world/chunk/WorldChunk;"))

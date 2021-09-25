@@ -12,6 +12,7 @@ import net.minecraft.server.world.ChunkTicketManager;
 import net.minecraft.server.world.ChunkTicketType;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.ChunkPosDistanceLevelPropagator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -29,26 +30,27 @@ public class PlayerNoTickDistanceMap extends ChunkPosDistanceLevelPropagator {
 
     private static final int MAX_TICKET_UPDATES_PER_TICK = C2MEConfig.noTickViewDistanceConfig.updatesPerTick;
 
+    private final LongSet sourceChunks = new LongOpenHashSet();
     private final Long2IntOpenHashMap distanceFromNearestPlayer = new Long2IntOpenHashMap();
     private final TreeMap<Long, Boolean> pendingTicketUpdates = new TreeMap<>();
     private final LongOpenHashSet managedChunkTickets = new LongOpenHashSet();
 
     private final ChunkTicketManager chunkTicketManager;
-    private final int maxDistance;
+    private volatile int viewDistance;
 
     private final AtomicLong lastTickNumber = new AtomicLong(0L);
 
-    public PlayerNoTickDistanceMap(ChunkTicketManager chunkTicketManager, int maxDistance) {
-        super(maxDistance + 2, 16, 256);
+    public PlayerNoTickDistanceMap(ChunkTicketManager chunkTicketManager) {
+        super(251, 16, 256);
         this.chunkTicketManager = chunkTicketManager;
-        this.maxDistance = maxDistance;
-        this.distanceFromNearestPlayer.defaultReturnValue(maxDistance + 2);
+        this.distanceFromNearestPlayer.defaultReturnValue(251);
+        this.setViewDistance(12);
     }
 
     @Override
     protected int getInitialLevel(long chunkPos) {
         final ObjectSet<ServerPlayerEntity> players = ((IChunkTicketManager) chunkTicketManager).getPlayersByChunkPos().get(chunkPos);
-        return players != null && !players.isEmpty() ? 0 : Integer.MAX_VALUE;
+        return players != null && !players.isEmpty() ? 249 - viewDistance : Integer.MAX_VALUE;
     }
 
     @Override
@@ -58,7 +60,7 @@ public class PlayerNoTickDistanceMap extends ChunkPosDistanceLevelPropagator {
 
     @Override
     protected void setLevel(long chunkPos, int level) {
-        if (level > this.maxDistance) {
+        if (level > 249) {
             if (this.distanceFromNearestPlayer.containsKey(chunkPos)) {
                 pendingTicketUpdates.put(chunkPos, false);
                 this.distanceFromNearestPlayer.remove(chunkPos);
@@ -72,11 +74,13 @@ public class PlayerNoTickDistanceMap extends ChunkPosDistanceLevelPropagator {
     }
 
     public void addSource(ChunkPos chunkPos) {
-        this.updateLevel(chunkPos.toLong(), 0, true);
+        this.updateLevel(chunkPos.toLong(), 249 - this.viewDistance, true);
+        this.sourceChunks.add(chunkPos.toLong());
     }
 
     public void removeSource(ChunkPos chunkPos) {
         this.updateLevel(chunkPos.toLong(), Integer.MAX_VALUE, false);
+        this.sourceChunks.remove(chunkPos.toLong());
     }
 
     public void update(ThreadedAnvilChunkStorage threadedAnvilChunkStorage) {
@@ -108,6 +112,14 @@ public class PlayerNoTickDistanceMap extends ChunkPosDistanceLevelPropagator {
             }
             iterator.remove();
         }
+    }
+
+    public void setViewDistance(int viewDistance) {
+        this.viewDistance = MathHelper.clamp(viewDistance, 3, 249);
+        sourceChunks.forEach((long value) -> {
+            removeSource(new ChunkPos(value));
+            addSource(new ChunkPos(value));
+        });
     }
 
     public int getPendingTicketUpdatesCount() {
