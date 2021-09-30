@@ -1,6 +1,5 @@
 package com.ishland.c2me.mixin.notickvd;
 
-import com.ishland.c2me.common.config.C2MEConfig;
 import com.ishland.c2me.common.notickvd.IChunkHolder;
 import com.ishland.c2me.mixin.access.IChunkTicketManager;
 import com.ishland.c2me.mixin.access.IServerChunkManager;
@@ -61,11 +60,11 @@ public abstract class MixinThreadedAnvilChunkStorage {
     @Overwrite
     public void setViewDistance(int watchDistance) {
         // TODO [VanillaCopy]
-        int i = MathHelper.clamp(watchDistance + 1, 3, 33);
+        int i = MathHelper.clamp(watchDistance + 1, 3, 249);
         if (i != this.watchDistance) {
             int j = this.watchDistance;
-            int before = Math.max(this.watchDistance, C2MEConfig.noTickViewDistanceConfig.viewDistance + 1); // C2ME
-            this.watchDistance = Math.max(i, C2MEConfig.noTickViewDistanceConfig.viewDistance + 1); // C2ME
+            int before = this.watchDistance; // C2ME
+            this.watchDistance = i; // C2ME
             ((IChunkTicketManager) this.ticketManager).invokeSetWatchDistance(i);
             this.world.getServer().getPlayerManager().sendToAll(new ChunkLoadDistanceS2CPacket(this.watchDistance));
             ObjectIterator<ChunkHolder> var4 = this.currentChunkHolders.values().iterator();
@@ -77,7 +76,7 @@ public abstract class MixinThreadedAnvilChunkStorage {
                 this.getPlayersWatchingChunk(chunkPos, false).forEach((serverPlayerEntity) -> {
                     int jx = getChebyshevDistance(chunkPos, serverPlayerEntity, true);
                     boolean bl = jx <= before; // C2ME
-                    boolean bl2 = jx <= Math.max(this.watchDistance, C2MEConfig.noTickViewDistanceConfig.viewDistance + 1); // C2ME
+                    boolean bl2 = jx <= this.watchDistance; // C2ME
                     this.sendWatchPackets(serverPlayerEntity, chunkPos, packets, bl, bl2);
                 });
             }
