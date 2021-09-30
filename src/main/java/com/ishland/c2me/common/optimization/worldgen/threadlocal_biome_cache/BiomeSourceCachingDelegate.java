@@ -33,7 +33,7 @@ public class BiomeSourceCachingDelegate extends BiomeSource {
     }
 
     @Override
-    public Biome method_38109(int biomeX, int biomeY, int biomeZ, MultiNoiseUtil.MultiNoiseSampler multiNoiseSampler) {
+    public Biome getBiome(int biomeX, int biomeY, int biomeZ, MultiNoiseUtil.MultiNoiseSampler multiNoiseSampler) {
         final Long2ObjectLinkedOpenHashMap<Biome> cache = this.cache.get();
         final long key = BlockPos.asLong(biomeX, biomeY, biomeZ);
         final Biome cachedBiome = cache.get(key);

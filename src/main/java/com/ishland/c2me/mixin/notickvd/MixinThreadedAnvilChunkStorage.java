@@ -25,7 +25,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Stream;
 
 @Mixin(ThreadedAnvilChunkStorage.class)
 public abstract class MixinThreadedAnvilChunkStorage {
@@ -37,8 +36,6 @@ public abstract class MixinThreadedAnvilChunkStorage {
 
     @Shadow @Final private Long2ObjectLinkedOpenHashMap<ChunkHolder> currentChunkHolders;
 
-    @Shadow public abstract Stream<ServerPlayerEntity> getPlayersWatchingChunk(ChunkPos chunkPos, boolean onlyOnWatchDistanceEdge);
-
     @Shadow @Final private ServerWorld world;
 
     @Shadow protected abstract void sendWatchPackets(ServerPlayerEntity player, ChunkPos pos, MutableObject<ChunkDataS2CPacket> mutableObject, boolean withinMaxWatchDistance, boolean withinViewDistance);
@@ -49,6 +46,8 @@ public abstract class MixinThreadedAnvilChunkStorage {
     }
 
     @Shadow protected abstract void sendChunkDataPackets(ServerPlayerEntity player, MutableObject<ChunkDataS2CPacket> mutableObject, WorldChunk chunk);
+
+    @Shadow public abstract List<ServerPlayerEntity> getPlayersWatchingChunk(ChunkPos chunkPos, boolean onlyOnWatchDistanceEdge);
 
     @ModifyArg(method = "setViewDistance", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/MathHelper;clamp(III)I"), index = 2)
     private int modifyMaxVD(int max) {

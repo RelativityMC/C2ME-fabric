@@ -17,8 +17,8 @@ public class MixinServerChunkManager {
     @Shadow @Final private ServerWorld world;
 
     @Dynamic
-    @Inject(method = "method_20801", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerWorld;tickChunk(Lnet/minecraft/world/chunk/WorldChunk;I)V"))
-    private void onPostTickChunk(CallbackInfo ci) { // TODO synthetic method - in tickChunks()
+    @Inject(method = "tickChunks", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerWorld;tickChunk(Lnet/minecraft/world/chunk/WorldChunk;I)V"))
+    private void onPostTickChunk(CallbackInfo ci) {
         ((ServerMidTickTask) this.world.getServer()).executeTasksMidTick();
     }
 

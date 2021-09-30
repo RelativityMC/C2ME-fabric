@@ -11,12 +11,12 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(BiomeSource.class)
 public class MixinBiomeSource {
 
-    @Redirect(method = {"getBiomesInArea", "locateBiome(IIIIILjava/util/function/Predicate;Ljava/util/Random;ZLnet/minecraft/world/biome/source/util/MultiNoiseUtil$MultiNoiseSampler;)Lnet/minecraft/util/math/BlockPos;"}, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/biome/source/BiomeSource;method_38109(IIILnet/minecraft/world/biome/source/util/MultiNoiseUtil$MultiNoiseSampler;)Lnet/minecraft/world/biome/Biome;"))
+    @Redirect(method = {"getBiomesInArea", "locateBiome(IIIIILjava/util/function/Predicate;Ljava/util/Random;ZLnet/minecraft/world/biome/source/util/MultiNoiseUtil$MultiNoiseSampler;)Lnet/minecraft/util/math/BlockPos;"}, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/biome/source/BiomeSource;getBiome(IIILnet/minecraft/world/biome/source/util/MultiNoiseUtil$MultiNoiseSampler;)Lnet/minecraft/world/biome/Biome;"))
     private Biome redirectGetBiomeForNoiseGen(BiomeSource biomeSource, int biomeX, int biomeY, int biomeZ, MultiNoiseUtil.MultiNoiseSampler multiNoiseSampler) {
         if (biomeSource instanceof IGlobalBiomeCache globalBiomeCache) {
             return globalBiomeCache.getBiomeForNoiseGenFast(biomeX, biomeY, biomeZ, multiNoiseSampler);
         }
-        return biomeSource.method_38109(biomeX, biomeY, biomeZ, multiNoiseSampler);
+        return biomeSource.getBiome(biomeX, biomeY, biomeZ, multiNoiseSampler);
     }
 
 }

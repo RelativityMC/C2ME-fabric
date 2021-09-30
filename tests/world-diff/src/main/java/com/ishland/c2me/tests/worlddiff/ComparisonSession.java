@@ -63,7 +63,7 @@ import java.util.stream.Stream;
 public class ComparisonSession implements Closeable {
 
     // From ChunkSerializer
-    private static final Codec<PalettedContainer<BlockState>> field_34576 = PalettedContainer.method_38298(Block.STATE_IDS, BlockState.CODEC, PalettedContainer.class_6563.field_34569);
+    private static final Codec<PalettedContainer<BlockState>> field_34576 = PalettedContainer.createCodec(Block.STATE_IDS, BlockState.CODEC, PalettedContainer.PaletteProvider.BLOCK_STATE);
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -169,7 +169,7 @@ public class ComparisonSession implements Closeable {
 
     private static Map<ChunkSectionPos, ChunkSection> readSections(ChunkPos pos, NbtCompound chunkData, Registry<Biome> registry) {
         NbtList nbtList = chunkData.getCompound("Level").getList("Sections", 10);
-        Codec<PalettedContainer<Biome>> codec = PalettedContainer.method_38298(registry, registry, PalettedContainer.class_6563.field_34570);
+        Codec<PalettedContainer<Biome>> codec = PalettedContainer.createCodec(registry, registry, PalettedContainer.PaletteProvider.BIOME);
         HashMap<ChunkSectionPos, ChunkSection> result = new HashMap<>();
         for (int i = 0; i < nbtList.size(); i++) {
             final NbtCompound sectionData = nbtList.getCompound(i);
@@ -179,14 +179,14 @@ public class ComparisonSession implements Closeable {
                 if (chunkData.contains("block_states", 10)) {
                     palettedContainer = field_34576.parse(NbtOps.INSTANCE, chunkData.getCompound("block_states")).getOrThrow(false, LOGGER::error);
                 } else {
-                    palettedContainer = new PalettedContainer<>(Block.STATE_IDS, Blocks.AIR.getDefaultState(), PalettedContainer.class_6563.field_34569);
+                    palettedContainer = new PalettedContainer<>(Block.STATE_IDS, Blocks.AIR.getDefaultState(), PalettedContainer.PaletteProvider.BLOCK_STATE);
                 }
 
                 PalettedContainer<Biome> palettedContainer3;
                 if (chunkData.contains("biomes", 10)) {
                     palettedContainer3 = codec.parse(NbtOps.INSTANCE, chunkData.getCompound("biomes")).getOrThrow(false, LOGGER::error);
                 } else {
-                    palettedContainer3 = new PalettedContainer<>(registry, registry.getOrThrow(BiomeKeys.PLAINS), PalettedContainer.class_6563.field_34570);
+                    palettedContainer3 = new PalettedContainer<>(registry, registry.getOrThrow(BiomeKeys.PLAINS), PalettedContainer.PaletteProvider.BIOME);
                 }
                 ChunkSection chunkSection = new ChunkSection(y, palettedContainer, palettedContainer3);
                 chunkSection.calculateCounts();

@@ -29,15 +29,15 @@ public class GlobalCachingMultiNoiseBiomeSource extends MultiNoiseBiomeSource im
     private void initCache() {
         final List<Biome> biomes = ((IMultiNoiseBiomeSource) this).getBiomeEntries().getEntries().stream()
                 .map(pair -> pair.getSecond().get()).toList();
-        this.multiBiomeCache = new MultiBiomeCache(super::method_38109, new ListIndexedIterable<>(biomes));
+        this.multiBiomeCache = new MultiBiomeCache(super::getBiome, new ListIndexedIterable<>(biomes));
     }
 
     @Override
-    public Biome method_38109(int biomeX, int biomeY, int biomeZ, MultiNoiseUtil.MultiNoiseSampler multiNoiseSampler) {
+    public Biome getBiome(int biomeX, int biomeY, int biomeZ, MultiNoiseUtil.MultiNoiseSampler multiNoiseSampler) {
         if (this.multiBiomeCache != null && !multiNoiseSampler.getClass().isSynthetic() && !multiNoiseSampler.getClass().isHidden()) {
             return this.multiBiomeCache.getBiomeForNoiseGen(biomeX, biomeY, biomeZ, multiNoiseSampler, false);
         } else {
-            return super.method_38109(biomeX, biomeY, biomeZ, multiNoiseSampler);
+            return super.getBiome(biomeX, biomeY, biomeZ, multiNoiseSampler);
         }
     }
 
@@ -46,7 +46,7 @@ public class GlobalCachingMultiNoiseBiomeSource extends MultiNoiseBiomeSource im
         if (this.multiBiomeCache != null && !multiNoiseSampler.getClass().isSynthetic() && !multiNoiseSampler.getClass().isHidden()) {
             return this.multiBiomeCache.getBiomeForNoiseGen(biomeX, biomeY, biomeZ, multiNoiseSampler, true);
         } else {
-            return super.method_38109(biomeX, biomeY, biomeZ, multiNoiseSampler);
+            return super.getBiome(biomeX, biomeY, biomeZ, multiNoiseSampler);
         }
     }
 

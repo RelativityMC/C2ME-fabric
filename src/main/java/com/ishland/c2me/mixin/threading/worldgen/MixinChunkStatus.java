@@ -5,12 +5,12 @@ import com.ishland.c2me.common.threading.worldgen.ChunkStatusUtils;
 import com.ishland.c2me.common.threading.worldgen.IChunkStatus;
 import com.ishland.c2me.common.threading.worldgen.IWorldGenLockable;
 import com.mojang.datafixers.util.Either;
-import net.minecraft.class_6611;
-import net.minecraft.class_6613;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ServerLightingProvider;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.structure.StructureManager;
+import net.minecraft.util.profiling.jfr.Finishable;
+import net.minecraft.util.profiling.jfr.FlightProfiler;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
@@ -84,7 +84,7 @@ public abstract class MixinChunkStatus implements IChunkStatus {
     public CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> runGenerationTask(Executor executor, ServerWorld world, ChunkGenerator chunkGenerator, StructureManager structureManager, ServerLightingProvider lightingProvider, Function<Chunk, CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>>> function, List<Chunk> list, boolean bl) {
         final Chunk targetChunk = list.get(list.size() / 2);
 
-        class_6613 lv = class_6611.field_34923.method_38655(targetChunk.getPos(), world.getRegistryKey(), this.id);
+        Finishable finishable = FlightProfiler.INSTANCE.startChunkGenerationProfiling(targetChunk.getPos(), world.getRegistryKey(), this.id);
 
         final Supplier<CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>>> generationTask = () ->
                 this.generationTask.doWork((ChunkStatus) (Object) this, executor, world, chunkGenerator, structureManager, lightingProvider, function, list, targetChunk, bl);
@@ -105,8 +105,8 @@ public abstract class MixinChunkStatus implements IChunkStatus {
         });
 
         // TODO [VanillaCopy]
-        return lv != null ? completableFuture.thenApply(either -> {
-            lv.finish();
+        return finishable != null ? completableFuture.thenApply(either -> {
+            finishable.finish();
             return either;
         }) : completableFuture;
     }

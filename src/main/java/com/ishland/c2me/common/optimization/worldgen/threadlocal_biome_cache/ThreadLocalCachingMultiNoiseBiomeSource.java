@@ -10,7 +10,7 @@ import java.util.Optional;
 
 public class ThreadLocalCachingMultiNoiseBiomeSource extends MultiNoiseBiomeSource {
 
-    private final BiomeSourceCachingDelegate biomeSourceCachingDelegate = new BiomeSourceCachingDelegate(super::method_38109);
+    private final BiomeSourceCachingDelegate biomeSourceCachingDelegate = new BiomeSourceCachingDelegate(super::getBiome);
 
     public ThreadLocalCachingMultiNoiseBiomeSource(MultiNoiseUtil.Entries<Biome> entries) {
         super(entries);
@@ -21,7 +21,7 @@ public class ThreadLocalCachingMultiNoiseBiomeSource extends MultiNoiseBiomeSour
     }
 
     @Override
-    public Biome method_38109(int biomeX, int biomeY, int biomeZ, MultiNoiseUtil.MultiNoiseSampler multiNoiseSampler) {
-        return this.biomeSourceCachingDelegate.method_38109(biomeX, biomeY, biomeZ, multiNoiseSampler);
+    public Biome getBiome(int biomeX, int biomeY, int biomeZ, MultiNoiseUtil.MultiNoiseSampler multiNoiseSampler) {
+        return this.biomeSourceCachingDelegate.getBiome(biomeX, biomeY, biomeZ, multiNoiseSampler);
     }
 }
