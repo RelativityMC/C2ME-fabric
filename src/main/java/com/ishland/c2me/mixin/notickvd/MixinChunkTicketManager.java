@@ -1,6 +1,7 @@
 package com.ishland.c2me.mixin.notickvd;
 
 import com.google.common.base.Suppliers;
+import com.ishland.c2me.common.config.C2MEConfig;
 import com.ishland.c2me.common.notickvd.IChunkTicketManager;
 import com.ishland.c2me.common.notickvd.NormalTicketDistanceMap;
 import com.ishland.c2me.common.notickvd.PlayerNoTickDistanceMap;
@@ -97,7 +98,7 @@ public class MixinChunkTicketManager implements IChunkTicketManager {
     @Overwrite
     public void setWatchDistance(int viewDistance) {
         this.nearbyChunkTicketUpdater.setWatchDistance(MathHelper.clamp(viewDistance, 3, 33));
-        this.playerNoTickDistanceMap.setViewDistance(viewDistance); // TODO not final
+        this.playerNoTickDistanceMap.setViewDistance(Math.max(viewDistance, C2MEConfig.noTickViewDistanceConfig.viewDistance + 1)); // TODO not final
     }
 
     @Override

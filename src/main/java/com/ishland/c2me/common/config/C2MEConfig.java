@@ -133,12 +133,14 @@ public class C2MEConfig {
 
     public static class NoTickViewDistanceConfig {
         public final boolean enabled;
+        public final int viewDistance;
         public final int updatesPerTick;
 
         public NoTickViewDistanceConfig(CommentedConfig config) {
             Preconditions.checkNotNull(config, "noTickViewDistanceConfig config is not present");
             final ConfigUtils.ConfigScope configScope = new ConfigUtils.ConfigScope(config);
             this.enabled = ConfigUtils.getValue(configScope, "enabled", () -> false, "Weather to enable no-tick view distance", List.of(), false);
+            this.viewDistance = ConfigUtils.getValue(configScope, "viewDistance", () -> 12, "Minimum no-tick view distance value", List.of(), 12, ConfigUtils.CheckType.NO_TICK_VIEW_DISTANCE);
             this.updatesPerTick = ConfigUtils.getValue(configScope, "updatesPerTick", () -> 6, "No-tick view distance updates per tick \n Lower this for a better latency and higher this for a faster loading", List.of(), 6, ConfigUtils.CheckType.POSITIVE_VALUE_ONLY);
             configScope.removeUnusedKeys();
         }
