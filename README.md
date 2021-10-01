@@ -72,6 +72,3 @@ Run the following commands in the root directory:
 ## License
 License information can be found [here](/LICENSE).
 
-## Statistics
-[![](https://bstats.org/signatures/bukkit/C2ME-fabric.svg)](https://bstats.org/plugin/bukkit/C2ME-fabric/10514)
-
