@@ -6,6 +6,7 @@
   "mixinPriority": 1100,
   "mixins": [
     "MixinCrashReport",
+    "targets.ASMMinersHorizonTargets",
     "targets.ASMTargets"
   ],
   "plugin": "com.ishland.c2me.compatibility.mixin.C2MECompatibilityModule",

@@ -36,7 +36,7 @@ You can find development builds here: https://ci.codemc.io/job/ishlandbukkit/job
 ## Mod compatibility
 <!-- Update this accordingly when updating ModpackConfig.groovy -->
 
-**Fabric known fully compatible<sup>[^fullyCompatible]</sup> content mods:**  
+**Fabric known compatible<sup>[^compatible]</sup> content mods:**  
 - [Terra 5.4.1-BETA+efd1665](https://modrinth.com/mod/terra/version/i38N6tkR)
 - [BetterEnd 0.10.5-pre](https://github.com/paulevsGitch/BetterEnd/releases/tag/0.10.5-pre)
 - [BetterNether 5.1.3](https://www.curseforge.com/minecraft/mc-mods/betternether/files/3379682)
@@ -48,11 +48,13 @@ You can find development builds here: https://ci.codemc.io/job/ishlandbukkit/job
 - [Traverse v4.0.0-beta.2 for 1.17.1](https://github.com/TerraformersMC/Traverse/releases/tag/v4.0.0-beta.2)
 - [YUNG's Better Mineshafts (Fabric) v1.0.1](https://www.curseforge.com/minecraft/mc-mods/yungs-better-mineshafts-fabric/files/3414789)
 - [YUNG's Better Strongholds (Fabric) v1.1.1](https://www.curseforge.com/minecraft/mc-mods/yungs-better-strongholds-fabric/files/3412649)
+- [YUNG's Better Dongeons (Fabric) v1.0.2](https://www.curseforge.com/minecraft/mc-mods/yungs-better-dungeons-fabric/files/3476131)
 - [Charm 3.3.2](https://www.curseforge.com/minecraft/mc-mods/charm/files/3393290)
+- [The Graveyard 1.4 (FABRIC) for 1.17-1.17.1](https://www.curseforge.com/minecraft/mc-mods/the-graveyard-fabric/files/3457664)
 
 [All of Fabric 4 - 0.0.9](https://www.curseforge.com/minecraft/modpacks/all-of-fabric-4/files/3420600) should work without crashes now. 
 
-[^fullyCompatible]: Fully working with `chunkio` and `threadedWorldGen` with `allowThreadedFeatures` `reduceLockRadius` enabled
+[^compatible]: Working with `chunkio` and `threadedWorldGen` with `allowThreadedFeatures` `reduceLockRadius` enabled
 
 ## Support
 Our issue tracker: [link](https://github.com/ishlandbukkit/C2ME-fabric/issues)  

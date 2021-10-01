@@ -87,8 +87,13 @@ public abstract class MixinChunkStatus implements IChunkStatus {
         } else {
             int lockRadius = C2MEConfig.threadedWorldGenConfig.reduceLockRadius && this.reducedTaskRadius != -1 ? this.reducedTaskRadius : this.taskMargin;
             //noinspection ConstantConditions
-            return ChunkStatusUtils.runChunkGenWithLock(targetChunk.getPos(), lockRadius, ((IWorldGenLockable) serverWorld).getWorldGenChunkLock(), () ->
+            final CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> future = ChunkStatusUtils.runChunkGenWithLock(targetChunk.getPos(), lockRadius, ((IWorldGenLockable) serverWorld).getWorldGenChunkLock(), () ->
                     ChunkStatusUtils.getThreadingType((ChunkStatus) (Object) this).runTask(((IWorldGenLockable) serverWorld).getWorldGenSingleThreadedLock(), generationTask));
+            future.exceptionally(throwable -> {
+                throwable.printStackTrace();
+                return null;
+            });
+            return future;
         }
     }
 
