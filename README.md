@@ -15,7 +15,9 @@ C^2M-Engine, or C2ME for short, is a Fabric mod designed to improve the performa
 Concurrent chunk management engine, it's about making the game better threaded and more scalable in regard to world gen and chunk io performance.
 
 ## So what is C2ME not?
-C2ME is not production ready and still pretty experimental. So backup your worlds and practice good game modding skills.
+**C2ME is currently in alpha stage and pretty experimental.**  
+Although it is usable in most cases and tested during build time, it doesn't mean that it is fully stable for a production server.  
+So backup your worlds and practice good game modding skills.
 
 ## Branch development status
 | Branch | Status |
