@@ -22,7 +22,7 @@ C2ME is not production ready and still pretty experimental. So backup your world
 | ------ | ------ |
 | fabric/ver/1.16.5 | Inactive |
 | fabric/ver/1.17 | Active |
-| forge/ver/1.16.5 | Partial<sup>[[1]](#forgePartial116)</sup>, Inactive |
+| forge/ver/1.16.5 | Partial[^forgePartial116], Inactive |
 | forge/ver/1.17 | Waiting for forge |
 
 ## Downloads
@@ -32,7 +32,7 @@ You can find development builds here: https://ci.codemc.io/job/ishlandbukkit/job
 ## Mod compatibility
 <!-- Update this accordingly when updating ModpackConfig.groovy -->
 
-**Fabric known fully compatible<sup>[[2]](#fullyCompatible)</sup> content mods:**  
+**Fabric known fully compatible<sup>[^fullyCompatible]</sup> content mods:**  
 - [Terra 5.4.1-BETA+efd1665](https://modrinth.com/mod/terra/version/i38N6tkR)
 - [BetterEnd 0.10.5-pre](https://github.com/paulevsGitch/BetterEnd/releases/tag/0.10.5-pre)
 - [BetterNether 5.1.3](https://www.curseforge.com/minecraft/mc-mods/betternether/files/3379682)
@@ -68,5 +68,5 @@ License information can be found [here](/LICENSE).
 [![](https://bstats.org/signatures/bukkit/C2ME-fabric.svg)](https://bstats.org/plugin/bukkit/C2ME-fabric/10514)
 
 ## Footnotes
-<a name="forgePartial116">[1]</a>: Forge doesn't appear to support Java 16 on 1.16.5, so these versions uses Java 11 and may not contain some features which is present in the fabric versions.  
-<a name="fullyCompatible">[2]</a>: Fully working with `chunkio` and `threadedWorldGen` with `allowThreadedFeatures` `reduceLockRadius` enabled  
+[^forgePartial116]: Forge doesn't appear to support Java 16 on 1.16.5, so these versions uses Java 11 and may not contain some features which is present in the fabric versions.  
+[^fullyCompatible]: Fully working with `chunkio` and `threadedWorldGen` with `allowThreadedFeatures` `reduceLockRadius` enabled  
