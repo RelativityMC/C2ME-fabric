@@ -15,6 +15,7 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.thread.ThreadExecutor;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.WorldChunk;
 import org.spongepowered.asm.mixin.Dynamic;
@@ -53,6 +54,8 @@ public abstract class MixinThreadedAnvilChunkStorage {
     @Shadow protected abstract void sendChunkDataPackets(ServerPlayerEntity player, Packet<?>[] packets, WorldChunk chunk);
 
     @Shadow @Final private ServerWorld world;
+
+    @Shadow @Final private ThreadExecutor<Runnable> mainThreadExecutor;
 
     /**
      * @author ishland
@@ -95,7 +98,11 @@ public abstract class MixinThreadedAnvilChunkStorage {
         cir.getReturnValue().thenAccept(either -> either.left().ifPresent(worldChunk -> {
             Packet<?>[] packets = new Packet[2];
             this.getPlayersWatchingChunk(worldChunk.getPos(), false).forEach((serverPlayerEntity) -> {
-                this.sendChunkDataPackets(serverPlayerEntity, packets, worldChunk);
+                if (C2MEConfig.noTickViewDistanceConfig.compatibilityMode) {
+                    this.mainThreadExecutor.send(() -> this.sendChunkDataPackets(serverPlayerEntity, packets, worldChunk));
+                } else {
+                    this.sendChunkDataPackets(serverPlayerEntity, packets, worldChunk);
+                }
             });
         }));
     }
