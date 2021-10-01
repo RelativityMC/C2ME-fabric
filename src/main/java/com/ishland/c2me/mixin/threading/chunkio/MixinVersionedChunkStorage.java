@@ -42,28 +42,30 @@ public abstract class MixinVersionedChunkStorage {
      * @reason async loading
      */
     @Overwrite
-    public NbtCompound updateChunkNbt(RegistryKey<World> registryKey, Supplier<PersistentStateManager> persistentStateManagerFactory, NbtCompound tag) {
+    public NbtCompound updateChunkNbt(RegistryKey<World> worldKey, Supplier<PersistentStateManager> persistentStateManagerFactory, NbtCompound nbt) {
         // TODO [VanillaCopy] - check when updating minecraft version
-        int i = VersionedChunkStorage.getDataVersion(tag);
+        int i = VersionedChunkStorage.getDataVersion(nbt);
         if (i < 1493) {
             try (final AsyncLock.LockToken ignored = featureUpdaterLock.acquireLock().toCompletableFuture().join()) { // C2ME - async chunk loading
-                tag = NbtHelper.update(this.dataFixer, DataFixTypes.CHUNK, tag, i, 1493);
-                if (tag.getCompound("Level").getBoolean("hasLegacyStructureData")) {
+                nbt = NbtHelper.update(this.dataFixer, DataFixTypes.CHUNK, nbt, i, 1493);
+                if (nbt.getCompound("Level").getBoolean("hasLegacyStructureData")) {
                     if (this.featureUpdater == null) {
-                        this.featureUpdater = FeatureUpdater.create(registryKey, (PersistentStateManager)persistentStateManagerFactory.get());
+                        this.featureUpdater = FeatureUpdater.create(worldKey, (PersistentStateManager)persistentStateManagerFactory.get());
                     }
 
-                    tag = this.featureUpdater.getUpdatedReferences(tag);
+                    nbt = this.featureUpdater.getUpdatedReferences(nbt);
                 }
             } // C2ME - async chunk loading
         }
 
-        tag = NbtHelper.update(this.dataFixer, DataFixTypes.CHUNK, tag, Math.max(1493, i));
+        nbt.getCompound("Level").putString("__dimension", worldKey.getValue().toString());
+        nbt = NbtHelper.update(this.dataFixer, DataFixTypes.CHUNK, nbt, Math.max(1493, i));
         if (i < SharedConstants.getGameVersion().getWorldVersion()) {
-            tag.putInt("DataVersion", SharedConstants.getGameVersion().getWorldVersion());
+            nbt.putInt("DataVersion", SharedConstants.getGameVersion().getWorldVersion());
         }
+        nbt.getCompound("Level").remove("__dimension");
 
-        return tag;
+        return nbt;
     }
 
     @Redirect(method = "setNbt", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/FeatureUpdater;markResolved(J)V"))
