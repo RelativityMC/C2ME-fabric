@@ -27,6 +27,8 @@ So backup your worlds and practice good game modding skills.
 | forge/ver/1.16.5 | Partial[^forgePartial116], Inactive |
 | forge/ver/1.17 | Waiting for forge |
 
+[^forgePartial116]: Forge doesn't appear to support Java 16 on 1.16.5, so these versions uses Java 11 and may not contain some features which is present in the fabric versions.
+
 ## Downloads
 You can find semi-stable releases here: https://github.com/ishlandbukkit/C2ME-fabric/releases  
 You can find development builds here: https://ci.codemc.io/job/ishlandbukkit/job/C2ME-fabric
@@ -50,6 +52,8 @@ You can find development builds here: https://ci.codemc.io/job/ishlandbukkit/job
 
 [All of Fabric 4 - 0.0.9](https://www.curseforge.com/minecraft/modpacks/all-of-fabric-4/files/3420600) should work without crashes now. 
 
+[^fullyCompatible]: Fully working with `chunkio` and `threadedWorldGen` with `allowThreadedFeatures` `reduceLockRadius` enabled
+
 ## Support
 Our issue tracker: [link](https://github.com/ishlandbukkit/C2ME-fabric/issues)  
 Our discord server: [link](https://discord.io/ishlandbukkit)
@@ -69,6 +73,3 @@ License information can be found [here](/LICENSE).
 ## Statistics
 [![](https://bstats.org/signatures/bukkit/C2ME-fabric.svg)](https://bstats.org/plugin/bukkit/C2ME-fabric/10514)
 
-## Footnotes
-[^forgePartial116]: Forge doesn't appear to support Java 16 on 1.16.5, so these versions uses Java 11 and may not contain some features which is present in the fabric versions.  
-[^fullyCompatible]: Fully working with `chunkio` and `threadedWorldGen` with `allowThreadedFeatures` `reduceLockRadius` enabled  
