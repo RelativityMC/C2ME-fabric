@@ -47,7 +47,6 @@
     "fixes.worldgen.threading.MixinWoodlandMansionGeneratorMansionParameters",
     "fixes.worldgen.threading.math.MixinAffineTransformation",
     "fixes.worldgen.threading.math.MixinDirectionTransformation",
-    "metrics.MixinMinecraftServer",
     "notickvd.MixinChunkHolder",
     "notickvd.MixinChunkTicketManager",
     "notickvd.MixinPlayerManager",
