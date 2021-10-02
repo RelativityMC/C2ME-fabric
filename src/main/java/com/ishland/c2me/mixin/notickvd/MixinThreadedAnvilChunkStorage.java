@@ -1,5 +1,6 @@
 package com.ishland.c2me.mixin.notickvd;
 
+import com.ishland.c2me.common.config.C2MEConfig;
 import com.ishland.c2me.common.notickvd.IChunkHolder;
 import com.ishland.c2me.mixin.access.IServerChunkManager;
 import com.mojang.datafixers.util.Either;
@@ -10,6 +11,7 @@ import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.thread.ThreadExecutor;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.WorldChunk;
 import org.apache.commons.lang3.mutable.MutableObject;
@@ -49,6 +51,8 @@ public abstract class MixinThreadedAnvilChunkStorage {
 
     @Shadow public abstract List<ServerPlayerEntity> getPlayersWatchingChunk(ChunkPos chunkPos, boolean onlyOnWatchDistanceEdge);
 
+    @Shadow @Final private ThreadExecutor<Runnable> mainThreadExecutor;
+
     @ModifyArg(method = "setViewDistance", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/MathHelper;clamp(III)I"), index = 2)
     private int modifyMaxVD(int max) {
         return 251;
@@ -64,7 +68,11 @@ public abstract class MixinThreadedAnvilChunkStorage {
         cir.getReturnValue().thenAccept(either -> either.left().ifPresent(worldChunk -> {
             MutableObject<ChunkDataS2CPacket> mutableObject = new MutableObject<>();
             this.getPlayersWatchingChunk(worldChunk.getPos(), false).forEach((serverPlayerEntity) -> {
-                this.sendChunkDataPackets(serverPlayerEntity, mutableObject, worldChunk);
+                if (C2MEConfig.noTickViewDistanceConfig.compatibilityMode) {
+                    this.mainThreadExecutor.send(() -> this.sendChunkDataPackets(serverPlayerEntity, mutableObject, worldChunk));
+                } else {
+                    this.sendChunkDataPackets(serverPlayerEntity, mutableObject, worldChunk);
+                }
             });
         }));
     }

@@ -30,7 +30,6 @@ import java.lang.management.ManagementFactory;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.LockSupport;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
@@ -80,21 +79,8 @@ public abstract class MixinMinecraftServer extends ReentrantThreadExecutor<Serve
                             .toArray(CompletableFuture[]::new)
             );
             eventListener.fullyStarted = true;
-            AtomicLong lastTick = new AtomicLong(System.currentTimeMillis());
             while (!future.isDone() && isRunning()) {
-                c2metest$handleGC();
-                boolean doTick = System.currentTimeMillis() - lastTick.get() > 50L;
-                boolean hasTask = doTick;
-                if (c2metest$runAsyncTask()) hasTask = true;
-                if (doTick) {
-                    for (ServerWorld world : this.worlds.values()) {
-                        world.getChunkManager().tick(() -> true);
-                        world.getBlockTickScheduler().tick();
-                        world.getFluidTickScheduler().tick();
-                    }
-                    lastTick.set(System.currentTimeMillis());
-                }
-                if (!hasTask) LockSupport.parkNanos("waiting for tasks", 100000L);
+                if (!c2metest$runAsyncTask()) LockSupport.parkNanos("waiting for tasks", 100000L);
             }
             if (!isRunning()) LOGGER.error("Exiting due to server stopping");
             for (ServerWorld world : this.worlds.values()) {
@@ -146,10 +132,21 @@ public abstract class MixinMinecraftServer extends ReentrantThreadExecutor<Serve
         }
     }
 
+    private volatile long lastTick = System.currentTimeMillis();
+
     @Override
     public boolean c2metest$runAsyncTask() {
         c2metest$handleGC();
         boolean hasTask = false;
+        if (System.currentTimeMillis() - lastTick > 50) {
+            for (ServerWorld world : this.worlds.values()) {
+                world.getChunkManager().tick(() -> true);
+                world.getBlockTickScheduler().tick();
+                world.getFluidTickScheduler().tick();
+            }
+            lastTick += 50;
+            hasTask = true;
+        }
         while (super.runTask()) hasTask = true;
         for (ServerWorld world : this.worlds.values()) {
             while (world.getChunkManager().executeQueuedTasks()) hasTask = true;

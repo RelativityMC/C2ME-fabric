@@ -100,8 +100,8 @@ class ModpackConfig {
         // yungnickyoung content mods
 
         // https://www.curseforge.com/minecraft/mc-mods/yungs-api-fabric
-        // [1.17 - 1.17.1] YUNG's API vFabric-15
-        handler.modImplementation("com.yungnickyoung.minecraft.yungsapi:YungsApi:1.17-Fabric-15") {
+        // [1.17 - 1.17.1] YUNG's API vFabric-16
+        handler.modImplementation("com.yungnickyoung.minecraft.yungsapi:YungsApi:1.17-Fabric-16") {
             transitive false
         }
 
@@ -113,6 +113,10 @@ class ModpackConfig {
         // [1.17 - 1.17.1] YUNG's Better Strongholds (Fabric) v1.1.1
         handler.modImplementation("curse.maven:yungs-better-strongholds-fabric-480684:3412649")
 
+        // https://www.curseforge.com/minecraft/mc-mods/yungs-better-dungeons-fabric
+        // [1.17] YUNG's Better Dungeons (Fabric) v1.0.2
+        handler.modImplementation("curse.maven:yungs-better-dungeons-fabric-525586:3476131")
+
         ////////////////////////////////////////
         // Others
 
@@ -120,6 +124,15 @@ class ModpackConfig {
         // charm-fabric-1.17-3.3.2.jar
         handler.modImplementation("curse.maven:charm-318872:3393290")
         handler.implementation("com.moandjiezana.toml:toml4j:0.7.2")
+
+//        // https://www.curseforge.com/minecraft/mc-mods/miners-horizon
+//        // https://github.com/Draylar/miners-horizon/issues/20
+//        // miners-horizon-1.7.0-1.17.1.jar
+//        handler.modImplementation("curse.maven:miners-horizon-319826:3455972")
+
+        // https://www.curseforge.com/minecraft/mc-mods/the-graveyard-fabric
+        // The Graveyard 1.4 (FABRIC) for 1.17-1.17.1
+        handler.modImplementation("curse.maven:the-graveyard-fabric-514468:3457664")
 
     }
 

@@ -15,15 +15,19 @@ C^2M-Engine, or C2ME for short, is a Fabric mod designed to improve the performa
 Concurrent chunk management engine, it's about making the game better threaded and more scalable in regard to world gen and chunk io performance.
 
 ## So what is C2ME not?
-C2ME is not production ready and still pretty experimental. So backup your worlds and practice good game modding skills.
+**C2ME is currently in alpha stage and pretty experimental.**  
+Although it is usable in most cases and tested during build time, it doesn't mean that it is fully stable for a production server.  
+So backup your worlds and practice good game modding skills.
 
 ## Branch development status
 | Branch | Status |
 | ------ | ------ |
 | fabric/ver/1.16.5 | Inactive |
 | fabric/ver/1.17 | Active |
-| forge/ver/1.16.5 | Partial<sup>[[1]](#forgePartial116)</sup>, Inactive |
+| forge/ver/1.16.5 | Partial[^forgePartial116], Inactive |
 | forge/ver/1.17 | Waiting for forge |
+
+[^forgePartial116]: Forge doesn't appear to support Java 16 on 1.16.5, so these versions uses Java 11 and may not contain some features which is present in the fabric versions.
 
 ## Downloads
 You can find semi-stable releases here: https://github.com/ishlandbukkit/C2ME-fabric/releases  
@@ -32,8 +36,9 @@ You can find development builds here: https://ci.codemc.io/job/ishlandbukkit/job
 ## Mod compatibility
 <!-- Update this accordingly when updating ModpackConfig.groovy -->
 
-**Fabric known fully compatible<sup>[[2]](#fullyCompatible)</sup> content mods:**  
+**Fabric known compatible<sup>[^compatible]</sup> content mods:**  
 - [Terra 5.4.1-BETA+efd1665](https://modrinth.com/mod/terra/version/i38N6tkR)
+- [BetterEnd 0.10.5-pre](https://github.com/paulevsGitch/BetterEnd/releases/tag/0.10.5-pre)
 - [BetterNether 5.1.3](https://www.curseforge.com/minecraft/mc-mods/betternether/files/3379682)
 - [RepurposedStructures-Fabric 2.2.0+1.17.1](https://modrinth.com/mod/repurposed-structures-fabric/version/Hp3zNCHi)
 - [Bumblezone-Fabric 3.0.9+1.17.1](https://modrinth.com/mod/the-bumblezone-fabric/version/VK0znAOW)
@@ -43,9 +48,13 @@ You can find development builds here: https://ci.codemc.io/job/ishlandbukkit/job
 - [Traverse v4.0.0-beta.2 for 1.17.1](https://github.com/TerraformersMC/Traverse/releases/tag/v4.0.0-beta.2)
 - [YUNG's Better Mineshafts (Fabric) v1.0.1](https://www.curseforge.com/minecraft/mc-mods/yungs-better-mineshafts-fabric/files/3414789)
 - [YUNG's Better Strongholds (Fabric) v1.1.1](https://www.curseforge.com/minecraft/mc-mods/yungs-better-strongholds-fabric/files/3412649)
+- [YUNG's Better Dongeons (Fabric) v1.0.2](https://www.curseforge.com/minecraft/mc-mods/yungs-better-dungeons-fabric/files/3476131)
 - [Charm 3.3.2](https://www.curseforge.com/minecraft/mc-mods/charm/files/3393290)
+- [The Graveyard 1.4 (FABRIC) for 1.17-1.17.1](https://www.curseforge.com/minecraft/mc-mods/the-graveyard-fabric/files/3457664)
 
 [All of Fabric 4 - 0.0.9](https://www.curseforge.com/minecraft/modpacks/all-of-fabric-4/files/3420600) should work without crashes now. 
+
+[^compatible]: Working with `chunkio` and `threadedWorldGen` with `allowThreadedFeatures` `reduceLockRadius` enabled
 
 ## Support
 Our issue tracker: [link](https://github.com/ishlandbukkit/C2ME-fabric/issues)  
@@ -63,9 +72,3 @@ Run the following commands in the root directory:
 ## License
 License information can be found [here](/LICENSE).
 
-## Statistics
-[![](https://bstats.org/signatures/bukkit/C2ME-fabric.svg)](https://bstats.org/plugin/bukkit/C2ME-fabric/10514)
-
-## Footnotes
-<a name="forgePartial116">[1]</a>: Forge doesn't appear to support Java 16 on 1.16.5, so these versions uses Java 11 and may not contain some features which is present in the fabric versions.  
-<a name="fullyCompatible">[2]</a>: Fully working with `chunkio` and `threadedWorldGen` with `allowThreadedFeatures` `reduceLockRadius` enabled  

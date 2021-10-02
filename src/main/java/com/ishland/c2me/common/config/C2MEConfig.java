@@ -134,12 +134,14 @@ public class C2MEConfig {
     public static class NoTickViewDistanceConfig {
         public final boolean enabled;
         public final int updatesPerTick;
+        public final boolean compatibilityMode;
 
         public NoTickViewDistanceConfig(CommentedConfig config) {
             Preconditions.checkNotNull(config, "noTickViewDistanceConfig config is not present");
             final ConfigUtils.ConfigScope configScope = new ConfigUtils.ConfigScope(config);
-            this.enabled = ConfigUtils.getValue(configScope, "enabled", () -> false, "Weather to enable no-tick view distance", List.of(), false);
+            this.enabled = ConfigUtils.getValue(configScope, "enabled", () -> true, "Weather to enable no-tick view distance", List.of(), false);
             this.updatesPerTick = ConfigUtils.getValue(configScope, "updatesPerTick", () -> 6, "No-tick view distance updates per tick \n Lower this for a better latency and higher this for a faster loading", List.of(), 6, ConfigUtils.CheckType.POSITIVE_VALUE_ONLY);
+            this.compatibilityMode = ConfigUtils.getValue(configScope, "compatibilityMode", () -> false, "Whether to use compatibility mode to send chunks \n This may fix some mod compatibility issues", List.of("antixray"), true);
             configScope.removeUnusedKeys();
         }
     }
