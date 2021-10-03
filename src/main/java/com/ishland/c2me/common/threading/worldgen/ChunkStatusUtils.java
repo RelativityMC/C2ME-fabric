@@ -3,6 +3,7 @@ package com.ishland.c2me.common.threading.worldgen;
 import com.google.common.base.Preconditions;
 import com.ibm.asyncutil.locks.AsyncLock;
 import com.ibm.asyncutil.locks.AsyncNamedLock;
+import com.ibm.asyncutil.util.StageSupport;
 import com.ishland.c2me.common.config.C2MEConfig;
 import com.ishland.c2me.common.util.AsyncCombinedLock;
 import com.mojang.datafixers.util.Either;
@@ -43,6 +44,9 @@ public class ChunkStatusUtils {
 
     public static <T> CompletableFuture<T> runChunkGenWithLock(ChunkPos target, int radius, AsyncNamedLock<ChunkPos> chunkLock, Supplier<CompletableFuture<T>> action) {
         return CompletableFuture.supplyAsync(() -> {
+            if (radius == 0)
+                return StageSupport.tryWith(chunkLock.acquireLock(target), unused -> action.get()).toCompletableFuture().thenCompose(Function.identity());
+
             ArrayList<ChunkPos> fetchedLocks = new ArrayList<>((2 * radius + 1) * (2 * radius + 1));
             for (int x = target.x - radius; x <= target.x + radius; x++)
                 for (int z = target.z - radius; z <= target.z + radius; z++)
