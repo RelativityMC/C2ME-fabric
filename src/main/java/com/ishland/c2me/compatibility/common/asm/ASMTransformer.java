@@ -1,6 +1,5 @@
 package com.ishland.c2me.compatibility.common.asm;
 
-import com.ishland.c2me.common.fixes.worldgen.threading.ThreadLocalChunkRandom;
 import com.ishland.c2me.compatibility.common.ThreadLocalMutableBlockPos;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.MappingResolver;
@@ -37,20 +36,22 @@ public class ASMTransformer {
                         if (BlockPosMutableName.equals(typeInsnNode.desc)) {
                             LOGGER.info("Replacing NEW {} with NEW {}", typeInsnNode.desc, Type.getInternalName(ThreadLocalMutableBlockPos.class));
                             iterator.set(new TypeInsnNode(Opcodes.NEW, Type.getInternalName(ThreadLocalMutableBlockPos.class)));
-                        } else if (ChunkRandomName.equals(typeInsnNode.desc) || "java/util/Random".equals(typeInsnNode.desc)) {
-                            LOGGER.info("Replacing NEW {} with NEW {}", typeInsnNode.desc, Type.getInternalName(ThreadLocalChunkRandom.class));
-                            iterator.set(new TypeInsnNode(Opcodes.NEW, Type.getInternalName(ThreadLocalChunkRandom.class)));
                         }
+//                        else if (ChunkRandomName.equals(typeInsnNode.desc) || "java/util/Random".equals(typeInsnNode.desc)) {
+//                            LOGGER.info("Replacing NEW {} with NEW {}", typeInsnNode.desc, Type.getInternalName(ThreadLocalChunkRandom.class));
+//                            iterator.set(new TypeInsnNode(Opcodes.NEW, Type.getInternalName(ThreadLocalChunkRandom.class)));
+//                        }
                     }
                 } else if (insnNode instanceof MethodInsnNode methodInsnNode) {
                     if (methodInsnNode.getOpcode() == Opcodes.INVOKESPECIAL && methodInsnNode.name.equals("<init>")) {
                         if (BlockPosMutableName.equals(methodInsnNode.owner)) {
                             LOGGER.info("Replacing initializer call of {} with {}", methodInsnNode.owner, Type.getInternalName(ThreadLocalMutableBlockPos.class));
                             iterator.set(new MethodInsnNode(Opcodes.INVOKESPECIAL, Type.getInternalName(ThreadLocalMutableBlockPos.class), "<init>", methodInsnNode.desc));
-                        } else if (ChunkRandomName.equals(methodInsnNode.owner) || "java/util/Random".equals(methodInsnNode.owner)) {
-                            LOGGER.info("Replacing initializer call of {} with {}", methodInsnNode.owner, Type.getInternalName(ThreadLocalChunkRandom.class));
-                            iterator.set(new MethodInsnNode(Opcodes.INVOKESPECIAL, Type.getInternalName(ThreadLocalChunkRandom.class), "<init>", methodInsnNode.desc));
                         }
+//                        else if (ChunkRandomName.equals(methodInsnNode.owner) || "java/util/Random".equals(methodInsnNode.owner)) {
+//                            LOGGER.info("Replacing initializer call of {} with {}", methodInsnNode.owner, Type.getInternalName(ThreadLocalChunkRandom.class));
+//                            iterator.set(new MethodInsnNode(Opcodes.INVOKESPECIAL, Type.getInternalName(ThreadLocalChunkRandom.class), "<init>", methodInsnNode.desc));
+//                        }
                     }
                 }
             }

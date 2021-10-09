@@ -9,12 +9,12 @@ import it.unimi.dsi.fastutil.longs.LongIterator;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.longs.LongSets;
-import net.minecraft.class_6609;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ChunkTicket;
 import net.minecraft.server.world.ChunkTicketManager;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;
 import net.minecraft.util.math.ChunkSectionPos;
+import net.minecraft.world.SimulationDistanceLevelPropagator;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
@@ -33,7 +33,7 @@ public class MixinChunkTicketManager implements IChunkTicketManager {
 
     @Shadow private long age;
     @Mutable
-    @Shadow @Final private class_6609 field_34886;
+    @Shadow @Final private SimulationDistanceLevelPropagator field_34886;
     @Shadow @Final private ChunkTicketManager.NearbyChunkTicketUpdater nearbyChunkTicketUpdater;
     private PlayerNoTickDistanceMap playerNoTickDistanceMap;
     private NormalTicketDistanceMap normalTicketDistanceMap;
@@ -98,7 +98,7 @@ public class MixinChunkTicketManager implements IChunkTicketManager {
      * @reason remap setSimulationDistance to the normal one
      */
     @Overwrite
-    public void method_38629(int i) {
+    public void setSimulationDistance(int i) {
         this.nearbyChunkTicketUpdater.setWatchDistance(i);
     }
 

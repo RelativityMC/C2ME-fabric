@@ -1,32 +1,31 @@
 package com.ishland.c2me.common.notickvd;
 
-import net.minecraft.class_6609;
 import net.minecraft.server.world.ChunkTicket;
 import net.minecraft.server.world.ChunkTicketType;
 import net.minecraft.util.math.ChunkPos;
-
+import net.minecraft.world.SimulationDistanceLevelPropagator;
 import java.util.function.LongPredicate;
 
-public class NoOPTickingMap extends class_6609 {
+public class NoOPTickingMap extends SimulationDistanceLevelPropagator {
 
     @Override
-    public void method_38637(long l, ChunkTicket<?> chunkTicket) {
+    public void add(long l, ChunkTicket<?> chunkTicket) {
     }
 
     @Override
-    public void method_38641(long l, ChunkTicket<?> chunkTicket) {
+    public void remove(long l, ChunkTicket<?> chunkTicket) {
     }
 
     @Override
-    public <T> void method_38638(ChunkTicketType<T> chunkTicketType, ChunkPos chunkPos, int i, T object) {
+    public <T> void add(ChunkTicketType<T> chunkTicketType, ChunkPos chunkPos, int i, T object) {
     }
 
     @Override
-    public <T> void method_38642(ChunkTicketType<T> chunkTicketType, ChunkPos chunkPos, int i, T object) {
+    public <T> void remove(ChunkTicketType<T> chunkTicketType, ChunkPos chunkPos, int i, T object) {
     }
 
     @Override
-    public void method_38636(int i) {
+    public void updatePlayerTickets(int i) {
     }
 
     @Override
@@ -35,7 +34,7 @@ public class NoOPTickingMap extends class_6609 {
     }
 
     @Override
-    public int method_38640(ChunkPos chunkPos) {
+    public int getLevel(ChunkPos chunkPos) {
         return 0;
     }
 
@@ -49,11 +48,11 @@ public class NoOPTickingMap extends class_6609 {
     }
 
     @Override
-    public void method_38635() {
+    public void updateLevels() {
     }
 
     @Override
-    public String method_38643(long l) {
+    public String getTickingTicket(long l) {
         return "no-op";
     }
 

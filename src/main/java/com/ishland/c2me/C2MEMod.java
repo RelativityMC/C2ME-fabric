@@ -4,6 +4,7 @@ import com.ibm.asyncutil.util.Combinators;
 import com.ishland.c2me.common.config.C2MEConfig;
 import net.fabricmc.api.ModInitializer;
 import net.minecraft.world.gen.random.ChunkRandom;
+import net.minecraft.world.gen.random.SimpleRandom;
 import net.minecraft.world.storage.ChunkStreamVersion;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -84,7 +85,7 @@ public class C2MEMod implements ModInitializer {
         AtomicIntegerArray array = new AtomicIntegerArray(taskSize);
         final List<CompletableFuture<Integer>> futures = IntStream.range(0, taskSize)
                 .mapToObj(value -> CompletableFuture.supplyAsync(() -> {
-                    final ChunkRandom chunkRandom = new ChunkRandom();
+                    final ChunkRandom chunkRandom = new ChunkRandom(new SimpleRandom(System.nanoTime()));
                     chunkRandom.skip(4096);
                     final int i = chunkRandom.nextInt();
                     array.set(value, i);
