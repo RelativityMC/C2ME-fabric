@@ -1,9 +1,7 @@
 package com.ishland.c2me.mixin.optimization.worldgen.global_biome_cache;
 
-import com.ishland.c2me.common.config.C2MEConfig;
+import com.ishland.c2me.common.GlobalExecutors;
 import com.ishland.c2me.common.optimization.worldgen.global_biome_cache.IGlobalBiomeCache;
-import com.ishland.c2me.common.optimization.worldgen.global_biome_cache.MultiBiomeCache;
-import com.ishland.c2me.common.threading.worldgen.WorldGenThreadingExecutorUtils;
 import com.ishland.c2me.common.util.PalettedContainerUtil;
 import com.mojang.datafixers.util.Either;
 import net.minecraft.server.world.ChunkHolder;
@@ -35,7 +33,7 @@ public abstract class MixinThreadedChunkAnvilStorage {
 
     @Redirect(method = "getChunk", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ThreadedAnvilChunkStorage;loadChunk(Lnet/minecraft/util/math/ChunkPos;)Ljava/util/concurrent/CompletableFuture;"))
     private CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> redirectLoadChunk(ThreadedAnvilChunkStorage threadedAnvilChunkStorage, ChunkPos pos) {
-        if (chunkGenerator.getBiomeSource() instanceof IGlobalBiomeCache source) {
+        if (chunkGenerator.getBiomeSource() instanceof IGlobalBiomeCache source)
             return this.loadChunk(pos).thenApplyAsync(either -> {
                 either.left().ifPresent(chunk -> {
                     for (ChunkSection chunkSection : chunk.getSectionArray()) {
@@ -45,9 +43,9 @@ public abstract class MixinThreadedChunkAnvilStorage {
                     }
                 });
                 return either;
-            }, C2MEConfig.threadedWorldGenConfig.enabled ? WorldGenThreadingExecutorUtils.mainExecutor : MultiBiomeCache.EXECUTOR);
-        }
-        return this.loadChunk(pos);
+            }, GlobalExecutors.invokingExecutor);
+        else
+            return this.loadChunk(pos);
     }
 
 }

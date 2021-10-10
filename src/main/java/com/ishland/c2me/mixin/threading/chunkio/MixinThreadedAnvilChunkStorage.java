@@ -1,9 +1,9 @@
 package com.ishland.c2me.mixin.threading.chunkio;
 
 import com.ibm.asyncutil.locks.AsyncNamedLock;
+import com.ishland.c2me.common.GlobalExecutors;
 import com.ishland.c2me.common.threading.chunkio.AsyncSerializationManager;
 import com.ishland.c2me.common.threading.chunkio.ChunkIoMainThreadTaskUtils;
-import com.ishland.c2me.common.threading.chunkio.ChunkIoThreadingExecutorUtils;
 import com.ishland.c2me.common.threading.chunkio.IAsyncChunkStorage;
 import com.ishland.c2me.common.threading.chunkio.ISerializingRegionBasedStorage;
 import com.ishland.c2me.common.util.SneakyThrow;
@@ -125,7 +125,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
                 }
             }
             return null;
-        }, ChunkIoThreadingExecutorUtils.serializerExecutor).thenCombine(poiData, (protoChunk, tag) -> protoChunk).thenApplyAsync(protoChunk -> {
+        }, GlobalExecutors.executor).thenCombine(poiData, (protoChunk, tag) -> protoChunk).thenApplyAsync(protoChunk -> {
             ((ISerializingRegionBasedStorage) this.pointOfInterestStorage).update(pos, poiData.join());
             ChunkIoMainThreadTaskUtils.drainQueue();
             if (protoChunk != null) {
@@ -230,7 +230,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
                                     } finally {
                                         AsyncSerializationManager.pop(scope);
                                     }
-                                }, ChunkIoThreadingExecutorUtils.serializerExecutor)
+                                }, GlobalExecutors.executor)
                                 .thenAccept(compoundTag -> this.setNbt(chunkPos, compoundTag))
                                 .handle((unused, throwable) -> {
                                     lockToken.releaseLock();
@@ -250,7 +250,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
 
     @Inject(method = "tick", at = @At("HEAD"))
     private void onTick(CallbackInfo info) {
-        ChunkIoThreadingExecutorUtils.serializerExecutor.execute(() -> saveFutures.removeIf(CompletableFuture::isDone));
+        GlobalExecutors.executor.execute(() -> saveFutures.removeIf(CompletableFuture::isDone));
     }
 
     @Override
