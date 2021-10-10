@@ -45,7 +45,7 @@ public class MixinWorldGenerationProgressLogger {
 
     @Inject(method = "setChunkStatus", at = @At("HEAD"))
     private void onSetChunkStatus(ChunkPos pos, ChunkStatus status, CallbackInfo ci) {
-        if (status != null && (this.spawnPos == null || pos.getChebyshevDistance(spawnPos) <= radius)) this.chunkStatusTransitions++;
+        if (status != null && (this.spawnPos == null || Math.min(Math.abs(pos.x - spawnPos.x), Math.abs(pos.z - spawnPos.z)) <= radius)) this.chunkStatusTransitions++;
     }
 
     /**

@@ -85,7 +85,6 @@ public class C2MEMod implements ModInitializer {
         final List<CompletableFuture<Integer>> futures = IntStream.range(0, taskSize)
                 .mapToObj(value -> CompletableFuture.supplyAsync(() -> {
                     final ChunkRandom chunkRandom = new ChunkRandom();
-                    chunkRandom.skip(4096);
                     final int i = chunkRandom.nextInt();
                     array.set(value, i);
                     return i;

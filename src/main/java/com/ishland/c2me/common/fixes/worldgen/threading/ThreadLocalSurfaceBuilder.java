@@ -25,7 +25,7 @@ public class ThreadLocalSurfaceBuilder<C extends SurfaceConfig> extends SurfaceB
     }
 
     @Override
-    public void generate(Random random, Chunk chunk, Biome biome, int x, int z, int height, double noise, BlockState defaultBlock, BlockState defaultFluid, int seaLevel, int i, long l, C surfaceConfig) {
-        this.surfaceBuilderThreadLocal.get().generate(random, chunk, biome, x, z, height, noise, defaultBlock, defaultFluid, seaLevel, i, l, surfaceConfig);
+    public void generate(Random random, Chunk chunk, Biome biome, int x, int z, int height, double noise, BlockState defaultBlock, BlockState defaultFluid, int seaLevel, long seed, C surfaceBlocks) {
+        this.surfaceBuilderThreadLocal.get().generate(random, chunk, biome, x, z, height, noise, defaultBlock, defaultFluid, seaLevel, seed, surfaceBlocks);
     }
 }

@@ -14,12 +14,11 @@ import java.util.Collections;
 import java.util.List;
 
 @Mixin(StrongholdGenerator.class)
-public class MixinStrongholdGenerator implements IStrongholdGenerator {
+public class MixinStrongholdGenerator {
 
     @Shadow @Final private static StrongholdGenerator.PieceData[] ALL_PIECES;
     @Shadow private static List<StrongholdGenerator.PieceData> possiblePieces;
     private static final ThreadLocal<Integer> totalWeightThreadLocal = ThreadLocal.withInitial(() -> 0);
-    private static final ThreadLocal<Class<? extends StrongholdGenerator.Piece>> activePieceTypeThreadLocal = new ThreadLocal<>();
 
     @Redirect(method = "init", at = @At(value = "FIELD", target = "Lnet/minecraft/structure/StrongholdGenerator;possiblePieces:Ljava/util/List;", opcode = Opcodes.PUTSTATIC))
     private static void redirectAssignList(List<StrongholdGenerator.PieceData> value) {
@@ -51,16 +50,11 @@ public class MixinStrongholdGenerator implements IStrongholdGenerator {
 
     @Redirect(method = "pickPiece", at = @At(value = "FIELD", target = "Lnet/minecraft/structure/StrongholdGenerator;activePieceType:Ljava/lang/Class;", opcode = Opcodes.PUTSTATIC))
     private static void redirectSetActivePieceType(Class<? extends StrongholdGenerator.Piece> value) {
-        activePieceTypeThreadLocal.set(value);
+        IStrongholdGenerator.getActivePieceTypeThreadLocal.set(value);
     }
 
     @Redirect(method = "pickPiece", at = @At(value = "FIELD", target = "Lnet/minecraft/structure/StrongholdGenerator;activePieceType:Ljava/lang/Class;", opcode = Opcodes.GETSTATIC))
     private static Class<? extends StrongholdGenerator.Piece> redirectGetActivePieceType() {
-        return activePieceTypeThreadLocal.get();
-    }
-
-    @Override
-    public ThreadLocal<Class<? extends StrongholdGenerator.Piece>> getActivePieceTypeThreadLocal() {
-        return activePieceTypeThreadLocal;
+        return IStrongholdGenerator.getActivePieceTypeThreadLocal.get();
     }
 }

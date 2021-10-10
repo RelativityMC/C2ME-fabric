@@ -1,21 +1,17 @@
 package com.ishland.c2me.common.optimization.worldgen.global_biome_cache;
 
-import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.registry.Registry;
-import net.minecraft.world.HeightLimitView;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.source.BiomeArray;
-import net.minecraft.world.biome.source.BiomeCoords;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.List;
 import java.util.WeakHashMap;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class BiomeCache {
 
@@ -25,7 +21,6 @@ public class BiomeCache {
 
     private final UncachedBiomeSource uncachedBiomeSource;
 
-    private final AtomicReference<HeightLimitView> finalHeightLimitView = new AtomicReference<>(null);
 
     public BiomeCache(BiomeProvider sampler, Registry<Biome> registry, List<Biome> biomes) {
         this.registry = registry;
@@ -38,20 +33,16 @@ public class BiomeCache {
             .build(new CacheLoader<>() {
                 @Override
                 public BiomeArray load(ChunkPos key) {
-                    if (finalHeightLimitView.get() == null) throw new IllegalStateException(String.format("Cannot populate non-configured biome cache %s", BiomeCache.this));
-                    return new BiomeArray(registry, finalHeightLimitView.get(), key, uncachedBiomeSource);
+                    return new BiomeArray(registry, key, uncachedBiomeSource);
                 }
             });
 
     private final ThreadLocal<WeakHashMap<ChunkPos, BiomeArray>> threadLocalCache = ThreadLocal.withInitial(WeakHashMap::new);
 
     public Biome getBiomeForNoiseGen(int biomeX, int biomeY, int biomeZ, boolean fast) {
-        if (finalHeightLimitView.get() == null) {
-            return uncachedBiomeSource.getBiomeForNoiseGen(biomeX, biomeY, biomeZ);
-        }
-        final ChunkPos chunkPos = new ChunkPos(BiomeCoords.toChunk(biomeX), BiomeCoords.toChunk(biomeZ));
-        final int startX = BiomeCoords.fromBlock(chunkPos.getStartX());
-        final int startZ = BiomeCoords.fromBlock(chunkPos.getStartZ());
+        final ChunkPos chunkPos = new ChunkPos(biomeX >> 2, biomeZ >> 2);
+        final int startX = chunkPos.getStartX() >> 2;
+        final int startZ = chunkPos.getStartZ() >> 2;
         if (fast) {
             final WeakHashMap<ChunkPos, BiomeArray> localCache = threadLocalCache.get();
             final BiomeArray biomeArray1 = localCache.get(chunkPos);
@@ -67,16 +58,7 @@ public class BiomeCache {
         }
     }
 
-    public BiomeArray preloadBiomes(HeightLimitView view, ChunkPos pos, BiomeArray def) {
-        Preconditions.checkNotNull(view);
-        if (!finalHeightLimitView.compareAndSet(null, view)) {
-            if (view.getBottomY() != finalHeightLimitView.get().getBottomY()
-                    || view.getTopY() != finalHeightLimitView.get().getTopY())
-                throw new IllegalArgumentException(String.format("Cannot modify %s height value : expected %d ~ %d but got %d ~ %d",
-                        this, finalHeightLimitView.get().getBottomY(), finalHeightLimitView.get().getTopY(), view.getBottomY(), view.getTopY()));
-        } else {
-            LOGGER.info("Successfully setup {} with height: {} ~ {}", this, view.getBottomY(), view.getTopY());
-        }
+    public BiomeArray preloadBiomes(ChunkPos pos, BiomeArray def) {
         if (def != null) {
             this.biomeCache.put(pos, def);
             return def;

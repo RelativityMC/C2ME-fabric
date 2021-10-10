@@ -19,13 +19,13 @@ import java.util.function.Supplier;
 @Mixin(SinglePoolElement.class)
 public class MixinSinglePoolElement {
 
-    @Shadow @Final protected Either<Identifier, Structure> location;
+    @Shadow @Final protected Either<Identifier, Structure> field_24015;
 
     @Redirect(method = "createPlacementData", at = @At(value = "INVOKE", target = "Ljava/util/function/Supplier;get()Ljava/lang/Object;"))
     private <T> T redirectProcessor(Supplier<T> supplier) {
         final StructureProcessorList structureProcessorList = (StructureProcessorList) supplier.get();
         if (structureProcessorList == null) {
-            final String identifier = this.location.map(Objects::toString, structure -> String.format("<Raw structure: %s>", structure));
+            final String identifier = this.field_24015.map(Objects::toString, structure -> String.format("<Raw structure: %s>", structure));
             C2MEMod.LOGGER.error("An recoverable error is detected by C2ME while preparing to generate structure {}",
                     identifier);
             C2MEMod.LOGGER.error("Reason: null processor list");

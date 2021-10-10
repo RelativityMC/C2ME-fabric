@@ -22,7 +22,7 @@ public abstract class MixinMinecraftServer implements ServerMidTickTask {
         if (this.serverThread != Thread.currentThread()) return;
         if (System.nanoTime() - lastRun.get() < minMidTickTaskInterval) return;
         for (ServerWorld world : this.getWorlds()) {
-            world.chunkManager.mainThreadExecutor.runTask();
+            world.serverChunkManager.mainThreadExecutor.runTask();
         }
         lastRun.set(System.nanoTime());
     }

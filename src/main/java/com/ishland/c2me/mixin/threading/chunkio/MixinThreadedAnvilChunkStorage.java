@@ -112,7 +112,9 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
                     if (compoundTag.contains("Level", 10) && compoundTag.getCompound("Level").contains("Status", 8)) {
                         ChunkIoMainThreadTaskUtils.push();
                         try {
-                            return ChunkSerializer.deserialize(this.world, this.structureManager, this.pointOfInterestStorage, pos, compoundTag);
+                            final ProtoChunk chunk = ChunkSerializer.deserialize(this.world, this.structureManager, this.pointOfInterestStorage, pos, compoundTag);
+                            chunk.setLastSaveTime(this.world.getTime());
+                            return chunk;
                         } finally {
                             ChunkIoMainThreadTaskUtils.pop();
                         }
@@ -132,7 +134,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
                 return Either.left(protoChunk);
             } else {
                 this.method_27054(pos);
-                return Either.left(new ProtoChunk(pos, UpgradeData.NO_UPGRADE_DATA, this.world));
+                return Either.left(new ProtoChunk(pos, UpgradeData.NO_UPGRADE_DATA));
             }
         }, this.mainThreadExecutor);
         future.exceptionally(throwable -> null).thenRun(() -> {
@@ -196,7 +198,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
     // method: consumer in tryUnloadChunk
     private boolean asyncSave(ThreadedAnvilChunkStorage tacs, Chunk chunk) {
         // TODO [VanillaCopy] - check when updating minecraft version
-        this.pointOfInterestStorage.saveChunk(chunk.getPos());
+        this.pointOfInterestStorage.method_20436(chunk.getPos());
         if (!chunk.needsSaving()) {
             return false;
         } else {
@@ -205,7 +207,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
 
             try {
                 ChunkStatus chunkStatus = chunk.getStatus();
-                if (chunkStatus.getChunkType() != ChunkStatus.ChunkType.LEVELCHUNK) {
+                if (chunkStatus.getChunkType() != ChunkStatus.ChunkType.field_12807) {
                     if (this.method_27055(chunkPos)) {
                         return false;
                     }

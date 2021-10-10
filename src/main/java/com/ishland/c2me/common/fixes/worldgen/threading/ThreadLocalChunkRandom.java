@@ -29,16 +29,6 @@ public class ThreadLocalChunkRandom extends ChunkRandom {
     }
 
     @Override
-    public int getSampleCount() {
-        return chunkRandomThreadLocal.get().getSampleCount();
-    }
-
-    @Override
-    public int next(int count) {
-        return chunkRandomThreadLocal.get().next(count);
-    }
-
-    @Override
     public long setTerrainSeed(int chunkX, int chunkZ) {
         return chunkRandomThreadLocal.get().setTerrainSeed(chunkX, chunkZ);
     }
@@ -56,11 +46,6 @@ public class ThreadLocalChunkRandom extends ChunkRandom {
     @Override
     public long setCarverSeed(long worldSeed, int chunkX, int chunkZ) {
         return chunkRandomThreadLocal.get().setCarverSeed(worldSeed, chunkX, chunkZ);
-    }
-
-    @Override
-    public long setDeepslateSeed(long worldSeed, int x, int y, int z) {
-        return chunkRandomThreadLocal.get().setDeepslateSeed(worldSeed, x, y, z);
     }
 
     @Override
@@ -175,8 +160,8 @@ public class ThreadLocalChunkRandom extends ChunkRandom {
     }
 
     @Override
-    public void skip(int count) {
-        chunkRandomThreadLocal.get().skip(count);
+    public void consume(int count) {
+        chunkRandomThreadLocal.get().consume(count);
     }
 
     @Override

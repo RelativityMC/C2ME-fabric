@@ -178,7 +178,7 @@ public class PreGenTask {
                     chunks.add(chunkPos);
                 }
             }
-        chunks.sort(Comparator.comparingInt(one -> one.getChebyshevDistance(center)));
+        chunks.sort(Comparator.comparingInt(one -> Math.min(Math.abs(one.x - center.x), Math.abs(one.z - center.z))));
         return chunks;
     }
 

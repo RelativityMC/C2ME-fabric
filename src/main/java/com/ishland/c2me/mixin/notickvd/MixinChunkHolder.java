@@ -18,7 +18,6 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
 
 @Mixin(ChunkHolder.class)
 public abstract class MixinChunkHolder implements IChunkHolder {
@@ -55,7 +54,7 @@ public abstract class MixinChunkHolder implements IChunkHolder {
     }
 
     @Inject(method = "tick", at = @At(value = "INVOKE", target = "Ljava/util/concurrent/CompletableFuture;complete(Ljava/lang/Object;)Z", ordinal = 0, shift = At.Shift.BEFORE)) // TODO check ordinal when updating minecraft version
-    private void redirectSetTickingFuture(ThreadedAnvilChunkStorage chunkStorage, Executor executor, CallbackInfo ci) {
+    private void redirectSetTickingFuture(ThreadedAnvilChunkStorage chunkStorage, CallbackInfo ci) {
         final WorldChunk accessibleChunk = getAccessibleChunk();
         if (accessibleChunk != null) {
             chunkStorage.enableTickSchedulers(accessibleChunk);

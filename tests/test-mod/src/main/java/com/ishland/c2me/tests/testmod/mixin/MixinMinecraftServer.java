@@ -9,8 +9,7 @@ import net.minecraft.server.ServerTask;
 import net.minecraft.server.WorldGenerationProgressListener;
 import net.minecraft.server.command.CommandOutput;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.SystemDetails;
-import net.minecraft.util.crash.CrashMemoryReserve;
+import net.minecraft.util.crash.CrashReport;
 import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.util.snooper.SnooperListener;
 import net.minecraft.util.thread.ReentrantThreadExecutor;
@@ -159,10 +158,10 @@ public abstract class MixinMinecraftServer extends ReentrantThreadExecutor<Serve
         LOGGER.info("Not preparing start region");
     }
 
-    @Redirect(method = "runServer", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;addSystemDetails(Lnet/minecraft/util/SystemDetails;)Lnet/minecraft/util/SystemDetails;"))
-    private SystemDetails redirectRunServerAddSystemDetails(MinecraftServer server, SystemDetails details) {
-        CrashMemoryReserve.releaseMemory();
-        return server.addSystemDetails(details);
+    @Redirect(method = "runServer", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;populateCrashReport(Lnet/minecraft/util/crash/CrashReport;)Lnet/minecraft/util/crash/CrashReport;"))
+    private CrashReport redirectRunServerAddSystemDetails(MinecraftServer minecraftServer, CrashReport report) {
+//        CrashMemoryReserve.releaseMemory();
+        return minecraftServer.populateCrashReport(report);
     }
 
 }

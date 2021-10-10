@@ -22,11 +22,6 @@ public class ThreadLocalMutableBlockPos extends BlockPos.Mutable {
     }
 
     @Override
-    public BlockPos multiply(int i) {
-        return delegate.get().multiply(i);
-    }
-
-    @Override
     public BlockPos offset(Direction direction, int i) {
         return delegate.get().offset(direction, i);
     }
@@ -77,11 +72,6 @@ public class ThreadLocalMutableBlockPos extends BlockPos.Mutable {
     }
 
     @Override
-    public Mutable set(Vec3i vec1, Vec3i vec2) {
-        return delegate.get().set(vec1, vec2);
-    }
-
-    @Override
     public Mutable move(Direction direction) {
         return delegate.get().move(direction);
     }
@@ -104,21 +94,6 @@ public class ThreadLocalMutableBlockPos extends BlockPos.Mutable {
     @Override
     public Mutable clamp(Direction.Axis axis, int min, int max) {
         return delegate.get().clamp(axis, min, max);
-    }
-
-    @Override
-    public Mutable setX(int i) {
-        return delegate.get().setX(i);
-    }
-
-    @Override
-    public Mutable setY(int i) {
-        return delegate.get().setY(i);
-    }
-
-    @Override
-    public Mutable setZ(int i) {
-        return delegate.get().setZ(i);
     }
 
     @Override
@@ -212,11 +187,6 @@ public class ThreadLocalMutableBlockPos extends BlockPos.Mutable {
     }
 
     @Override
-    public BlockPos withY(int y) {
-        return delegate.get().withY(y);
-    }
-
-    @Override
     public Mutable mutableCopy() {
         return delegate.get().mutableCopy();
     }
@@ -272,11 +242,6 @@ public class ThreadLocalMutableBlockPos extends BlockPos.Mutable {
     }
 
     @Override
-    public double getSquaredDistance(Vec3i vec, boolean treatAsBlockPos) {
-        return delegate.get().getSquaredDistance(vec, treatAsBlockPos);
-    }
-
-    @Override
     public double getSquaredDistance(double x, double y, double z, boolean treatAsBlockPos) {
         return delegate.get().getSquaredDistance(x, y, z, treatAsBlockPos);
     }
@@ -301,4 +266,18 @@ public class ThreadLocalMutableBlockPos extends BlockPos.Mutable {
         return delegate.get().toShortString();
     }
 
+    @Override
+    public void setX(int x) {
+        delegate.get().setX(x);
+    }
+
+    @Override
+    public void setY(int y) {
+        delegate.get().setY(y);
+    }
+
+    @Override
+    public void setZ(int z) {
+        delegate.get().setZ(z);
+    }
 }

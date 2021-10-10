@@ -23,7 +23,7 @@ public class MixinWeightedList<U> implements IWeightedList<U> {
      * @reason create new instance on shuffling
      */
     @Overwrite
-    public WeightedList<U> shuffle() {
+    public WeightedList<U> shuffle(Random unused) {
         // TODO [VanillaCopy]
         final WeightedList<U> newList = new WeightedList<>(entries); // C2ME - use new instance
         final Random random = new Random(); // C2ME - use new instance

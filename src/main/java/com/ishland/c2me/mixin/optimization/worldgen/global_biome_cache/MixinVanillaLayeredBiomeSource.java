@@ -4,7 +4,6 @@ import com.ishland.c2me.common.optimization.worldgen.global_biome_cache.BiomeCac
 import com.ishland.c2me.common.optimization.worldgen.global_biome_cache.IGlobalBiomeCache;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.registry.Registry;
-import net.minecraft.world.HeightLimitView;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.layer.BiomeLayers;
 import net.minecraft.world.biome.source.BiomeArray;
@@ -49,8 +48,8 @@ public abstract class MixinVanillaLayeredBiomeSource extends BiomeSource impleme
     }
 
     @Override
-    public BiomeArray preloadBiomes(HeightLimitView view, ChunkPos pos, BiomeArray def) {
-        return cacheImpl.preloadBiomes(view, pos, def);
+    public BiomeArray preloadBiomes(ChunkPos pos, BiomeArray def) {
+        return cacheImpl.preloadBiomes(pos, def);
     }
 
 }

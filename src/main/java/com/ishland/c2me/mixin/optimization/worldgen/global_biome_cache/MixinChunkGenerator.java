@@ -22,7 +22,7 @@ public class MixinChunkGenerator {
     @Inject(method = "populateBiomes", at = @At("HEAD"), cancellable = true)
     private void onPopulateBiomes(Registry<Biome> biomeRegistry, Chunk chunk, CallbackInfo ci) {
         if (biomeSource instanceof IGlobalBiomeCache biomeSource1) {
-            ((ProtoChunk) chunk).setBiomes(biomeSource1.preloadBiomes(chunk, chunk.getPos(), chunk.getBiomeArray()));
+            ((ProtoChunk) chunk).setBiomes(biomeSource1.preloadBiomes(chunk.getPos(), chunk.getBiomeArray()));
             ci.cancel();
         }
     }

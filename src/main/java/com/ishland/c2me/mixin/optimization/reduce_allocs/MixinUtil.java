@@ -17,15 +17,6 @@ public class MixinUtil {
      * @reason use another impl
      */
     @Overwrite
-    public static <V> CompletableFuture<List<V>> combineSafe(List<CompletableFuture<V>> futures) {
-        return combine(futures);
-    }
-
-    /**
-     * @author ishland
-     * @reason use another impl
-     */
-    @Overwrite
     public static <V> CompletableFuture<List<V>> combine(List<CompletableFuture<V>> futures) {
         return Combinators.collect(futures, Collectors.toList()).toCompletableFuture();
     }

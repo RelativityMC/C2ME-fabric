@@ -5,6 +5,7 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.thread.ThreadExecutor;
+import org.spongepowered.asm.mixin.Dynamic;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -18,7 +19,8 @@ public class MixinThreadedAnvilChunkStorage {
 
     @Shadow @Final private ServerWorld world;
 
-    @Redirect(method = "getChunk", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ThreadedAnvilChunkStorage$TicketManager;addTicketWithLevel(Lnet/minecraft/server/world/ChunkTicketType;Lnet/minecraft/util/math/ChunkPos;ILjava/lang/Object;)V"))
+    @Dynamic
+    @Redirect(method = "method_20616", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ThreadedAnvilChunkStorage$TicketManager;addTicketWithLevel(Lnet/minecraft/server/world/ChunkTicketType;Lnet/minecraft/util/math/ChunkPos;ILjava/lang/Object;)V"))
     private <T> void redirectAddLightTicket(ThreadedAnvilChunkStorage.TicketManager ticketManager, ChunkTicketType<T> type, ChunkPos pos, int level, T argument) {
         if (this.world.getServer().getThread() != Thread.currentThread()) {
             this.mainThreadExecutor.execute(() -> ticketManager.addTicketWithLevel(type, pos, level, argument));

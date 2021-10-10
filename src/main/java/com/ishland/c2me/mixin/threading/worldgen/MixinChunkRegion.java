@@ -1,5 +1,5 @@
 package com.ishland.c2me.mixin.threading.worldgen;
-
+/*
 import com.ishland.c2me.common.config.C2MEConfig;
 import com.ishland.c2me.common.threading.worldgen.IChunkStatus;
 import com.ishland.c2me.common.threading.worldgen.debug.StacktraceRecorder;
@@ -73,3 +73,4 @@ public class MixinChunkRegion {
     }
 
 }
+ */

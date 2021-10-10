@@ -120,7 +120,7 @@ public class AsyncSerializationManager {
 
             CachedLightingView(LightingProvider provider, ChunkPos pos, LightType type) {
                 this.lightType = type;
-                for (int i = provider.getBottomY(); i < provider.getTopY(); i++) {
+                for (int i = -1; i < 17; i++) {
                     final ChunkSectionPos sectionPos = ChunkSectionPos.from(pos, i);
                     ChunkNibbleArray lighting = provider.get(type).getLightSection(sectionPos);
                     cachedData.put(sectionPos, lighting != null ? lighting.copy() : null);
@@ -132,32 +132,7 @@ public class AsyncSerializationManager {
             }
 
             @Override
-            public void checkBlock(BlockPos blockPos) {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public void addLightSource(BlockPos blockPos, int i) {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public boolean hasUpdates() {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public int doLightUpdates(int i, boolean bl, boolean bl2) {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
             public void setSectionStatus(ChunkSectionPos pos, boolean notReady) {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public void setColumnEnabled(ChunkPos chunkPos, boolean bl) {
                 throw new UnsupportedOperationException();
             }
 
@@ -169,6 +144,11 @@ public class AsyncSerializationManager {
 
             @Override
             public int getLightLevel(BlockPos pos) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public void setSectionStatus(BlockPos pos, boolean notReady) {
                 throw new UnsupportedOperationException();
             }
         }

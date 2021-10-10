@@ -16,6 +16,7 @@ import net.minecraft.server.world.ChunkTicketManager;
 import net.minecraft.server.world.ServerChunkManager;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.LiteralText;
+import net.minecraft.util.math.ChunkPos;
 
 public class C2MECommands {
 
@@ -59,13 +60,13 @@ public class C2MECommands {
         if (noTickOnlyChunks == null) {
             iterable = serverWorld.iterateEntities();
         } else {
-            iterable = new FilteringIterable<>(serverWorld.iterateEntities(), entity -> !noTickOnlyChunks.contains(entity.getChunkPos().toLong()));
+            iterable = new FilteringIterable<>(serverWorld.iterateEntities(), entity -> !noTickOnlyChunks.contains(new ChunkPos(entity.getBlockPos()).toLong()));
         }
 
         ctx.getSource().sendFeedback(new LiteralText("Mobcap details"), true);
         for (Entity entity : iterable) {
             if (entity instanceof MobEntity mobEntity) {
-                ctx.getSource().sendFeedback(new LiteralText(String.format("%s: ", mobEntity.getType().getSpawnGroup().asString())).append(mobEntity.getDisplayName()).append(String.format(" in %s", mobEntity.getChunkPos())), true);
+                ctx.getSource().sendFeedback(new LiteralText(String.format("%s: ", mobEntity.getType().getSpawnGroup().asString())).append(mobEntity.getDisplayName()).append(String.format(" in %s", new ChunkPos(mobEntity.getBlockPos()))), true);
             }
         }
         return 0;

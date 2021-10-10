@@ -33,7 +33,7 @@ public abstract class MixinThreadedChunkAnvilStorage {
         if (chunkGenerator.getBiomeSource() instanceof IGlobalBiomeCache source)
             return this.loadChunk(pos).thenApplyAsync(either -> {
                 either.left().ifPresent(chunk -> {
-                    final BiomeArray biomeArray = source.preloadBiomes(chunk, pos, chunk.getBiomeArray());
+                    final BiomeArray biomeArray = source.preloadBiomes(pos, chunk.getBiomeArray());
                     if (chunk instanceof ProtoChunk protoChunk) protoChunk.setBiomes(biomeArray);
                 });
                 return either;
