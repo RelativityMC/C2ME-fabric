@@ -20,6 +20,7 @@ public class C2MEConfig {
     public static final GeneralOptimizationsConfig generalOptimizationsConfig;
     public static final NoTickViewDistanceConfig noTickViewDistanceConfig;
     public static final ClientSideConfig clientSideConfig;
+    public static final int globalExecutorParallelism;
 
     static {
         long startTime = System.nanoTime();
@@ -31,6 +32,7 @@ public class C2MEConfig {
         config.load();
 
         final ConfigUtils.ConfigScope configScope = new ConfigUtils.ConfigScope(config);
+        globalExecutorParallelism = ConfigUtils.getValue(configScope, "globalExecutorParallelism", C2MEConfig::getDefaultGlobalExecutorParallelism, "Configures the parallelism of global executor", List.of(), null);
         asyncIoConfig = new AsyncIoConfig(ConfigUtils.getValue(configScope, "asyncIO", ConfigUtils::config, "Configuration for async io system", List.of(), null));
         threadedWorldGenConfig = new ThreadedWorldGenConfig(ConfigUtils.getValue(configScope, "threadedWorldGen", ConfigUtils::config, "Configuration for threaded world generation", List.of(), null));
         vanillaWorldGenOptimizationsConfig = new VanillaWorldGenOptimizationsConfig(ConfigUtils.getValue(configScope, "vanillaWorldGenOptimizations", ConfigUtils::config, "Configuration for vanilla worldgen optimizations", List.of(), null));
@@ -43,15 +45,21 @@ public class C2MEConfig {
         LOGGER.info("Configuration loaded successfully after {}ms", (System.nanoTime() - startTime) / 1_000_000.0);
     }
 
+    private static int getDefaultGlobalExecutorParallelism() {
+        if (PlatformDependent.isWindows()) {
+            return (int) (Runtime.getRuntime().availableProcessors() / 1.6 - 2);
+        } else {
+            return (int) (Runtime.getRuntime().availableProcessors() / 1.2 - 2);
+        }
+    }
+
     public static class AsyncIoConfig {
         public final boolean enabled;
-        public final int serializerParallelism;
 
         public AsyncIoConfig(CommentedConfig config) {
             Preconditions.checkNotNull(config, "asyncIo config is not present");
             final ConfigUtils.ConfigScope configScope = new ConfigUtils.ConfigScope(config);
             this.enabled = ConfigUtils.getValue(configScope, "enabled", () -> true, "Whether to enable this feature", List.of("radon"), false);
-            this.serializerParallelism = ConfigUtils.getValue(configScope, "serializerParallelism", () -> Math.max(2, Runtime.getRuntime().availableProcessors() / 4 - 1), "IO worker executor parallelism", List.of(), null, ConfigUtils.CheckType.THREAD_COUNT);
             configScope.removeUnusedKeys();
         }
     }
@@ -65,24 +73,14 @@ public class C2MEConfig {
         private static final boolean global_reduceLockRadius = Boolean.parseBoolean(System.getProperty("com.ishland.c2me.common.config.threadedWorldGen.reduceLockRadius", "false"));
 
         public final boolean enabled;
-        public final int parallelism;
         public final boolean allowThreadedFeatures;
         public final boolean reduceLockRadius;
         public final boolean useGlobalBiomeCache;
 
-        private static int getWorldGenDefaultParallelism0() {
-            if (PlatformDependent.isWindows()) {
-                return Runtime.getRuntime().availableProcessors() / 2 - 2;
-            } else {
-                return (int) (Runtime.getRuntime().availableProcessors() / 1.6) - 2;
-            }
-        }
-
         public ThreadedWorldGenConfig(CommentedConfig config) {
             Preconditions.checkNotNull(config, "threadedWorldGen config is not present");
             final ConfigUtils.ConfigScope configScope = new ConfigUtils.ConfigScope(config);
-            this.enabled = ConfigUtils.getValue(configScope, "enabled", () -> getWorldGenDefaultParallelism0() >= 2 || global_enabled, "Whether to enable this feature", List.of(), false);
-            this.parallelism = ConfigUtils.getValue(configScope, "parallelism", () -> Math.max(2, getWorldGenDefaultParallelism0()), "World generation worker executor parallelism", List.of(), null, ConfigUtils.CheckType.THREAD_COUNT);
+            this.enabled = ConfigUtils.getValue(configScope, "enabled", () -> getDefaultGlobalExecutorParallelism() >= 3 || global_enabled, "Whether to enable this feature", List.of(), false);
             this.allowThreadedFeatures = ConfigUtils.getValue(configScope, "allowThreadedFeatures", () -> true || global_allowThreadedFeatures, "Whether to allow feature generation (world decorations like trees, ores and etc.) run in parallel \n (may cause incompatibility with other mods)", List.of(), null);
             this.reduceLockRadius = ConfigUtils.getValue(configScope, "reduceLockRadius", () -> false || global_reduceLockRadius, "Whether to allow reducing lock radius \n (may cause incompatibility with other mods)", List.of(), null);
             this.useGlobalBiomeCache = ConfigUtils.getValue(configScope, "useGlobalBiomeCache", () -> false || global_useGlobalBiomeCache, "Whether to enable global BiomeCache to accelerate worldgen \n This increases memory allocation ", List.of(), false);

@@ -2,22 +2,15 @@ package com.ishland.c2me.common.util;
 
 import com.ibm.asyncutil.locks.AsyncLock;
 import com.ibm.asyncutil.locks.AsyncNamedLock;
+import com.ishland.c2me.common.GlobalExecutors;
 import net.minecraft.util.math.ChunkPos;
 
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ForkJoinPool;
 import java.util.function.Function;
 
 public class AsyncCombinedLock {
-
-    public static final ForkJoinPool lockWorker = new ForkJoinPool(
-            Math.min(Math.max(1, Runtime.getRuntime().availableProcessors() / 7), 4),
-            new C2MEForkJoinWorkerThreadFactory("C2ME lock worker #%d", Thread.NORM_PRIORITY - 1),
-            null,
-            true
-    );
 
     private final AsyncNamedLock<ChunkPos> lock;
     private final ChunkPos[] names;
@@ -26,7 +19,7 @@ public class AsyncCombinedLock {
     public AsyncCombinedLock(AsyncNamedLock<ChunkPos> lock, Set<ChunkPos> names) {
         this.lock = lock;
         this.names = names.toArray(ChunkPos[]::new);
-        lockWorker.execute(this::tryAcquire);
+        this.tryAcquire();
     }
 
     private synchronized void tryAcquire() { // TODO optimize logic further
@@ -56,7 +49,7 @@ public class AsyncCombinedLock {
                 if (!triedRelock && entry.lockToken.isEmpty()) {
                     this.lock.acquireLock(entry.name).thenCompose(lockToken -> {
                         lockToken.releaseLock();
-                        return CompletableFuture.runAsync(this::tryAcquire, lockWorker);
+                        return CompletableFuture.runAsync(this::tryAcquire, GlobalExecutors.executor);
                     });
                     triedRelock = true;
                 }

@@ -4,7 +4,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.HeightLimitView;
@@ -13,7 +12,6 @@ import net.minecraft.world.biome.source.BiomeArray;
 import net.minecraft.world.biome.source.BiomeCoords;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.threadly.concurrent.UnfairExecutor;
 
 import java.util.List;
 import java.util.WeakHashMap;
@@ -21,7 +19,6 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class BiomeCache {
 
-    public static final UnfairExecutor EXECUTOR = new UnfairExecutor(2, new ThreadFactoryBuilder().setNameFormat("C2ME biomes #%d").setDaemon(true).setPriority(Thread.NORM_PRIORITY - 1).build());
     private static final Logger LOGGER = LogManager.getLogger("C2ME Biome Cache");
 
     private final Registry<Biome> registry;
