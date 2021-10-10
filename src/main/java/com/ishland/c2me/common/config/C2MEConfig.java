@@ -32,7 +32,7 @@ public class C2MEConfig {
         config.load();
 
         final ConfigUtils.ConfigScope configScope = new ConfigUtils.ConfigScope(config);
-        globalExecutorParallelism = ConfigUtils.getValue(configScope, "globalExecutorParallelism", C2MEConfig::getDefaultGlobalExecutorParallelism, "Configures the parallelism of global executor", List.of(), null);
+        globalExecutorParallelism = ConfigUtils.getValue(configScope, "globalExecutorParallelism", C2MEConfig::getDefaultGlobalExecutorParallelism, "Configures the parallelism of global executor", List.of(), null, ConfigUtils.CheckType.THREAD_COUNT);
         asyncIoConfig = new AsyncIoConfig(ConfigUtils.getValue(configScope, "asyncIO", ConfigUtils::config, "Configuration for async io system", List.of(), null));
         threadedWorldGenConfig = new ThreadedWorldGenConfig(ConfigUtils.getValue(configScope, "threadedWorldGen", ConfigUtils::config, "Configuration for threaded world generation", List.of(), null));
         vanillaWorldGenOptimizationsConfig = new VanillaWorldGenOptimizationsConfig(ConfigUtils.getValue(configScope, "vanillaWorldGenOptimizations", ConfigUtils::config, "Configuration for vanilla worldgen optimizations", List.of(), null));
@@ -47,9 +47,9 @@ public class C2MEConfig {
 
     private static int getDefaultGlobalExecutorParallelism() {
         if (PlatformDependent.isWindows()) {
-            return (int) (Runtime.getRuntime().availableProcessors() / 1.6 - 2);
+            return Math.max(1, (int) (Runtime.getRuntime().availableProcessors() / 1.6 - 2));
         } else {
-            return (int) (Runtime.getRuntime().availableProcessors() / 1.2 - 2);
+            return Math.max(1, (int) (Runtime.getRuntime().availableProcessors() / 1.2 - 2));
         }
     }
 
