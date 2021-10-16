@@ -1,4 +1,4 @@
-package com.ishland.c2me.tests.testmod.mixin;
+package com.ishland.c2me.tests.testmod.mixin.pregen;
 
 import net.minecraft.util.crash.CrashReport;
 import org.apache.logging.log4j.Logger;

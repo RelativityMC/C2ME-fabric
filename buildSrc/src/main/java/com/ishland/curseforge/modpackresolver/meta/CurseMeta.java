@@ -200,12 +200,12 @@ public class CurseMeta {
     public static class ModulesItem {
 
         @SerializedName("Fingerprint")
-        private int fingerprint;
+        private long fingerprint;
 
         @SerializedName("Foldername")
         private String foldername;
 
-        public int getFingerprint() {
+        public long getFingerprint() {
             return fingerprint;
         }
 

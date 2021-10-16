@@ -229,7 +229,8 @@ public class ModPackProvider {
         try (final FileSystem fileSystem = FileSystems.newFileSystem(jarPath)) {
             for (Path rootDirectory : fileSystem.getRootDirectories()) {
                 for (Path path : Files.walk(rootDirectory).sorted(Comparator.reverseOrder()).toList()) {
-                    if (path.startsWith("/META-INF")) {
+                    if (path.startsWith("/META-INF") && !path.toString().startsWith("/META-INF/services") && !path.getFileName().toString().endsWith(".accesswidener")) {
+                        if (Files.isDirectory(path)) continue;
                         Files.delete(path);
                     }
                 }

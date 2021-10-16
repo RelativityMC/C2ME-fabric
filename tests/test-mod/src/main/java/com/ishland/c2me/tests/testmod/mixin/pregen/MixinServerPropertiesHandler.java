@@ -1,4 +1,4 @@
-package com.ishland.c2me.tests.testmod.mixin;
+package com.ishland.c2me.tests.testmod.mixin.pregen;
 
 import net.minecraft.server.dedicated.ServerPropertiesHandler;
 import net.minecraft.util.registry.DynamicRegistryManager;

@@ -1,4 +1,4 @@
-package com.ishland.c2me.tests.testmod.mixin;
+package com.ishland.c2me.tests.testmod.mixin.pregen;
 
 import net.minecraft.block.Block;
 import net.minecraft.fluid.Fluid;
