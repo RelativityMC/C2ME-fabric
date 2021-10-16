@@ -38,8 +38,8 @@ public abstract class MixinThreadedChunkAnvilStorage {
                 either.left().ifPresent(chunk -> {
                     for (ChunkSection chunkSection : chunk.getSectionArray()) {
                         final ChunkSectionPos chunkSectionPos = ChunkSectionPos.from(chunk.getPos(), chunkSection.getYOffset());
-                        final Biome[][][] biomes = source.preloadBiomes(chunkSectionPos, chunk.getStatus().isAtLeast(ChunkStatus.FEATURES) ? null : PalettedContainerUtil.toArray(chunkSection.method_38294(), 4, 4, 4), chunkGenerator.getMultiNoiseSampler());
-                        PalettedContainerUtil.writeArray(chunkSection.method_38294(), biomes);
+                        final Biome[][][] biomes = source.preloadBiomes(chunkSectionPos, chunk.getStatus().isAtLeast(ChunkStatus.FEATURES) ? null : PalettedContainerUtil.toArray(chunkSection.getBiomeContainer(), 4, 4, 4), chunkGenerator.getMultiNoiseSampler());
+                        PalettedContainerUtil.writeArray(chunkSection.getBiomeContainer(), biomes);
                     }
                 });
                 return either;

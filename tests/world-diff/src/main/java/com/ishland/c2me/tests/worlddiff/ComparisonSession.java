@@ -63,7 +63,7 @@ import java.util.stream.Stream;
 public class ComparisonSession implements Closeable {
 
     // From ChunkSerializer
-    private static final Codec<PalettedContainer<BlockState>> field_34576 = PalettedContainer.createCodec(Block.STATE_IDS, BlockState.CODEC, PalettedContainer.PaletteProvider.BLOCK_STATE);
+    private static final Codec<PalettedContainer<BlockState>> CODEC = PalettedContainer.createCodec(Block.STATE_IDS, BlockState.CODEC, PalettedContainer.PaletteProvider.BLOCK_STATE, Blocks.AIR.getDefaultState());
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -169,7 +169,7 @@ public class ComparisonSession implements Closeable {
 
     private static Map<ChunkSectionPos, ChunkSection> readSections(ChunkPos pos, NbtCompound chunkData, Registry<Biome> registry) {
         NbtList nbtList = chunkData.getCompound("Level").getList("Sections", 10);
-        Codec<PalettedContainer<Biome>> codec = PalettedContainer.createCodec(registry, registry, PalettedContainer.PaletteProvider.BIOME);
+        Codec<PalettedContainer<Biome>> codec = PalettedContainer.createCodec(registry, registry, PalettedContainer.PaletteProvider.BIOME, registry.getOrThrow(BiomeKeys.PLAINS));;
         HashMap<ChunkSectionPos, ChunkSection> result = new HashMap<>();
         for (int i = 0; i < nbtList.size(); i++) {
             final NbtCompound sectionData = nbtList.getCompound(i);
@@ -177,7 +177,7 @@ public class ComparisonSession implements Closeable {
             if (sectionData.contains("Palette", 9) && sectionData.contains("BlockStates", 12)) {
                 PalettedContainer<BlockState> palettedContainer;
                 if (chunkData.contains("block_states", 10)) {
-                    palettedContainer = field_34576.parse(NbtOps.INSTANCE, chunkData.getCompound("block_states")).getOrThrow(false, LOGGER::error);
+                    palettedContainer = CODEC.parse(NbtOps.INSTANCE, chunkData.getCompound("block_states")).getOrThrow(false, LOGGER::error);
                 } else {
                     palettedContainer = new PalettedContainer<>(Block.STATE_IDS, Blocks.AIR.getDefaultState(), PalettedContainer.PaletteProvider.BLOCK_STATE);
                 }
