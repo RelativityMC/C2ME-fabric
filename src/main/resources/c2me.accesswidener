@@ -50,4 +50,5 @@ accessible    field    net/minecraft/server/world/ServerWorld    serverChunkMana
 accessible    field    net/minecraft/server/world/ServerChunkManager    mainThreadExecutor    Lnet/minecraft/server/world/ServerChunkManager$MainThreadExecutor;
 accessible    field    net/minecraft/world/biome/layer/util/CachingLayerSampler    operator    Lnet/minecraft/world/biome/layer/util/LayerOperator;
 accessible    field    net/minecraft/server/world/ServerWorld    chunkManager    Lnet/minecraft/server/world/ServerChunkManager;
+accessible    field    net/minecraft/world/gen/random/AtomicSimpleRandom    gaussianGenerator    Lnet/minecraft/world/gen/random/GaussianGenerator;
 
