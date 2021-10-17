@@ -51,6 +51,8 @@ public class C2MEMixinPlugin implements IMixinConfigPlugin {
             return C2MEConfig.generalOptimizationsConfig.chunkStreamVersion != -1;
         if (mixinClassName.startsWith("com.ishland.c2me.mixin.optimization.vectorizations."))
             return ModuleUtil.isModuleLoaded;
+        if (mixinClassName.startsWith("com.ishland.c2me.mixin.threading.async_scheduling."))
+            return C2MEConfig.asyncSchedulingConfig.enabled;
         return true;
     }
 
