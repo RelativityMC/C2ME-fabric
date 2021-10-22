@@ -42,11 +42,6 @@ public abstract class MixinThreadedAnvilChunkStorage {
 
     @Shadow protected abstract void sendWatchPackets(ServerPlayerEntity player, ChunkPos pos, MutableObject<ChunkDataS2CPacket> mutableObject, boolean withinMaxWatchDistance, boolean withinViewDistance);
 
-    @Shadow
-    private static boolean method_37901(ChunkPos chunkPos, ServerPlayerEntity serverPlayerEntity, boolean bl, int i) {
-        throw new UnsupportedOperationException();
-    }
-
     @Shadow protected abstract void sendChunkDataPackets(ServerPlayerEntity player, MutableObject<ChunkDataS2CPacket> mutableObject, WorldChunk chunk);
 
     @Shadow public abstract List<ServerPlayerEntity> getPlayersWatchingChunk(ChunkPos chunkPos, boolean onlyOnWatchDistanceEdge);

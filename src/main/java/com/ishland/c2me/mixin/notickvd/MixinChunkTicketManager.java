@@ -33,7 +33,7 @@ public class MixinChunkTicketManager implements IChunkTicketManager {
 
     @Shadow private long age;
     @Mutable
-    @Shadow @Final private SimulationDistanceLevelPropagator field_34886;
+    @Shadow @Final private SimulationDistanceLevelPropagator simulationDistanceTracker;
     @Shadow @Final private ChunkTicketManager.NearbyChunkTicketUpdater nearbyChunkTicketUpdater;
     private PlayerNoTickDistanceMap playerNoTickDistanceMap;
     private NormalTicketDistanceMap normalTicketDistanceMap;
@@ -44,7 +44,7 @@ public class MixinChunkTicketManager implements IChunkTicketManager {
     private void onInit(CallbackInfo ci) {
         playerNoTickDistanceMap = new PlayerNoTickDistanceMap((ChunkTicketManager) (Object) this);
         normalTicketDistanceMap = new NormalTicketDistanceMap((ChunkTicketManager) (Object) this);
-        this.field_34886 = new NoOPTickingMap();
+        this.simulationDistanceTracker = new NoOPTickingMap();
     }
 
     @Inject(method = "handleChunkEnter", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ChunkTicketManager$DistanceFromNearestPlayerTracker;updateLevel(JIZ)V", ordinal = 0, shift = At.Shift.AFTER))

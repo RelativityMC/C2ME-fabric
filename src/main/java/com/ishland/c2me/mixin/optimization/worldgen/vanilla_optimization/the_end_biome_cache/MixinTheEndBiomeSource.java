@@ -57,7 +57,7 @@ public abstract class MixinTheEndBiomeSource {
      * @reason the end biome cache
      */
     @Overwrite
-    public Biome method_38109(int biomeX, int biomeY, int biomeZ, MultiNoiseUtil.MultiNoiseSampler multiNoiseSampler) {
+    public Biome getBiome(int biomeX, int biomeY, int biomeZ, MultiNoiseUtil.MultiNoiseSampler multiNoiseSampler) {
         final long key = ChunkPos.toLong(biomeX, biomeZ);
         final Long2ObjectLinkedOpenHashMap<Biome> cacheThreadLocal = cache.get();
         final Biome biome = cacheThreadLocal.get(key);

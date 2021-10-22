@@ -23,7 +23,7 @@ public abstract class MixinNoiseChunkGenerator extends ChunkGenerator {
 //        return new ThreadLocalStructureWeightSampler(structureAccessor, chunk);
 //    }
 
-    @Inject(method = "<init>(Lnet/minecraft/world/biome/source/BiomeSource;Lnet/minecraft/world/biome/source/BiomeSource;JLjava/util/function/Supplier;)V", at = @At(value = "RETURN"))
+    @Inject(method = "<init>(Lnet/minecraft/util/registry/Registry;Lnet/minecraft/world/biome/source/BiomeSource;Lnet/minecraft/world/biome/source/BiomeSource;JLjava/util/function/Supplier;)V", at = @At(value = "RETURN"))
     private void onInit(CallbackInfo info) {
         ((IChunkGenerator) this).invokeGenerateStrongholdPositions();
         System.out.println("Stronghold positions initialized");

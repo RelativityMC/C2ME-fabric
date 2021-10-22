@@ -22,12 +22,12 @@ public abstract class MixinChunkGenerator {
 
     @Shadow protected abstract void generateStrongholdPositions();
 
-    @Shadow public abstract MultiNoiseUtil.MultiNoiseSampler method_38276();
+    @Shadow public abstract MultiNoiseUtil.MultiNoiseSampler getMultiNoiseSampler();
 
     @Inject(method = "<init>(Lnet/minecraft/world/biome/source/BiomeSource;Lnet/minecraft/world/biome/source/BiomeSource;Lnet/minecraft/world/gen/chunk/StructuresConfig;J)V", at = @At("RETURN"))
     private void onInit(CallbackInfo info) {
         this.strongholds = Collections.synchronizedList(strongholds);
-        if (this.method_38276() != null) {
+        if (this.getMultiNoiseSampler() != null) {
             generateStrongholdPositions(); // early init
         } else {
             System.out.println("Delaying init for stronghold positions");

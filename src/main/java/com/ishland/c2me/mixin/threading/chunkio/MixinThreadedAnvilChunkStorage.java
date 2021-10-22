@@ -64,14 +64,14 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
     private PointOfInterestStorage pointOfInterestStorage;
 
     @Shadow
-    protected abstract byte method_27053(ChunkPos chunkPos, ChunkStatus.ChunkType chunkType);
+    protected abstract byte mark(ChunkPos chunkPos, ChunkStatus.ChunkType chunkType);
 
     @Shadow
     @Final
     private static Logger LOGGER;
 
     @Shadow
-    protected abstract void method_27054(ChunkPos chunkPos);
+    protected abstract void markAsProtoChunk(ChunkPos chunkPos);
 
     @Shadow
     @Final
@@ -82,7 +82,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
     private ThreadExecutor<Runnable> mainThreadExecutor;
 
     @Shadow
-    protected abstract boolean method_27055(ChunkPos chunkPos);
+    protected abstract boolean isLevelChunk(ChunkPos chunkPos);
 
     private AsyncNamedLock<ChunkPos> chunkLock = AsyncNamedLock.createFair();
 
@@ -129,10 +129,10 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
             ((ISerializingRegionBasedStorage) this.pointOfInterestStorage).update(pos, poiData.join());
             ChunkIoMainThreadTaskUtils.drainQueue();
             if (protoChunk != null) {
-                this.method_27053(pos, protoChunk.getStatus().getChunkType());
+                this.mark(pos, protoChunk.getStatus().getChunkType());
                 return Either.left(protoChunk);
             } else {
-                this.method_27054(pos);
+                this.markAsProtoChunk(pos);
                 return Either.left(new ProtoChunk(pos, UpgradeData.NO_UPGRADE_DATA, this.world, this.world.getRegistryManager().get(Registry.BIOME_KEY)));
             }
         }, this.mainThreadExecutor);
@@ -207,7 +207,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
             try {
                 ChunkStatus chunkStatus = chunk.getStatus();
                 if (chunkStatus.getChunkType() != ChunkStatus.ChunkType.LEVELCHUNK) {
-                    if (this.method_27055(chunkPos)) {
+                    if (this.isLevelChunk(chunkPos)) {
                         return false;
                     }
 
@@ -238,7 +238,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
                                         LOGGER.error("Failed to save chunk {},{}", chunkPos.x, chunkPos.z, throwable);
                                     return unused;
                                 })));
-                this.method_27053(chunkPos, chunkStatus.getChunkType());
+                this.mark(chunkPos, chunkStatus.getChunkType());
                 // C2ME end
                 return true;
             } catch (Exception var5) {
