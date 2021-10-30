@@ -71,6 +71,8 @@
     "optimization.reduce_allocs.MixinNbtList",
     "optimization.reduce_allocs.MixinNbtList1",
     "optimization.reduce_allocs.MixinUtil",
+    "optimization.reduce_allocs.object_pooling_caching.MixinConfiguredFeature",
+    "optimization.reduce_allocs.object_pooling_caching.MixinOreFeature",
     "optimization.vectorizations.vectorize_noise.MixinPerlinNoiseSampler",
     "optimization.worldgen.global_biome_cache.MixinBiomeSource",
     "optimization.worldgen.global_biome_cache.MixinChunkGenerator",
