@@ -3,10 +3,10 @@ package com.ishland.c2me.tests.testmod.mixin;
 import net.minecraft.block.Block;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.profiler.Profiler;
 import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.MutableWorldProperties;
-import net.minecraft.world.ScheduledTick;
 import net.minecraft.world.StructureWorldAccess;
 import net.minecraft.world.World;
 import net.minecraft.world.dimension.DimensionType;
@@ -27,7 +27,7 @@ public abstract class MixinServerWorld extends World implements StructureWorldAc
      * @reason no ticking
      */
     @Overwrite
-    private void tickFluid(ScheduledTick<Fluid> tick) {
+    private void tickFluid(BlockPos blockPos, Fluid fluid) {
         // nope
     }
 
@@ -36,7 +36,7 @@ public abstract class MixinServerWorld extends World implements StructureWorldAc
      * @reason no ticking
      */
     @Overwrite
-    private void tickBlock(ScheduledTick<Block> tick) {
+    private void tickBlock(BlockPos blockPos, Block fluid) {
         // nope
     }
 

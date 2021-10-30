@@ -22,7 +22,7 @@ public class SimplifiedAtomicSimpleRandom extends AtomicSimpleRandom { // TODO [
     }
 
     @Override
-    public net.minecraft.world.gen.random.RandomDeriver createBlockPosRandomDeriver() {
+    public net.minecraft.world.gen.random.RandomDeriver createRandomDeriver() {
         return new AtomicSimpleRandom.RandomDeriver(this.nextLong());
     }
 

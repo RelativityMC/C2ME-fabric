@@ -12,7 +12,6 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.SystemDetails;
 import net.minecraft.util.crash.CrashMemoryReserve;
 import net.minecraft.util.registry.RegistryKey;
-import net.minecraft.util.snooper.SnooperListener;
 import net.minecraft.util.thread.ReentrantThreadExecutor;
 import net.minecraft.world.World;
 import org.apache.logging.log4j.Logger;
@@ -35,7 +34,7 @@ import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 
 @Mixin(MinecraftServer.class)
-public abstract class MixinMinecraftServer extends ReentrantThreadExecutor<ServerTask> implements SnooperListener, CommandOutput, AutoCloseable, IMinecraftServer {
+public abstract class MixinMinecraftServer extends ReentrantThreadExecutor<ServerTask> implements CommandOutput, AutoCloseable, IMinecraftServer {
 
     @Shadow
     @Final
@@ -141,8 +140,8 @@ public abstract class MixinMinecraftServer extends ReentrantThreadExecutor<Serve
         if (System.currentTimeMillis() - lastTick > 50) {
             for (ServerWorld world : this.worlds.values()) {
                 world.getChunkManager().tick(() -> true);
-                world.getBlockTickScheduler().tick();
-                world.getFluidTickScheduler().tick();
+                world.getBlockTickScheduler().method_39377(world.getTime(), 65536, (blockPos, block) -> {});
+                world.getFluidTickScheduler().method_39377(world.getTime(), 65536, (blockPos, fluid) -> {});
             }
             lastTick += 50;
             hasTask = true;

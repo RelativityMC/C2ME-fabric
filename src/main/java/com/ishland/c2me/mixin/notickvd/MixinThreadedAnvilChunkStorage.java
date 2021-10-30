@@ -4,7 +4,6 @@ import com.ishland.c2me.common.config.C2MEConfig;
 import com.ishland.c2me.common.notickvd.IChunkHolder;
 import com.ishland.c2me.mixin.access.IServerChunkManager;
 import com.mojang.datafixers.util.Either;
-import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ChunkHolder;
@@ -30,17 +29,6 @@ import java.util.concurrent.CompletableFuture;
 
 @Mixin(ThreadedAnvilChunkStorage.class)
 public abstract class MixinThreadedAnvilChunkStorage {
-
-    @Shadow
-    int watchDistance;
-
-    @Shadow @Final private ThreadedAnvilChunkStorage.TicketManager ticketManager;
-
-    @Shadow @Final private Long2ObjectLinkedOpenHashMap<ChunkHolder> currentChunkHolders;
-
-    @Shadow @Final private ServerWorld world;
-
-    @Shadow protected abstract void sendWatchPackets(ServerPlayerEntity player, ChunkPos pos, MutableObject<ChunkDataS2CPacket> mutableObject, boolean withinMaxWatchDistance, boolean withinViewDistance);
 
     @Shadow protected abstract void sendChunkDataPackets(ServerPlayerEntity player, MutableObject<ChunkDataS2CPacket> mutableObject, WorldChunk chunk);
 
@@ -70,25 +58,6 @@ public abstract class MixinThreadedAnvilChunkStorage {
                 }
             });
         }));
-    }
-
-    /**
-     * move tick scheduler to ticking
-     */
-    @Dynamic
-    @Redirect(method = "method_31416", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/WorldChunk;disableTickSchedulers()V")) // TODO lambda expression in method_31417
-    private static void redirectDisableTickScheduler(WorldChunk worldChunk) {
-        // no-op
-    }
-
-    /**
-     * move tick scheduler to ticking
-     */
-    @Dynamic
-    @Inject(method = "method_18711", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/WorldChunk;runPostProcessing()V")) // TODO lambda expression in makeChunkTickable
-    private static void onMakeChunkTickable(List<WorldChunk> list, CallbackInfoReturnable<CompletableFuture<Either<WorldChunk, ChunkHolder.Unloaded>>> cir) {
-        final WorldChunk worldChunk = list.get(list.size() / 2);
-        worldChunk.disableTickSchedulers();
     }
 
     // private static synthetic method_20582(Lnet/minecraft/world/chunk/Chunk;)Z

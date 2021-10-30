@@ -2,6 +2,7 @@ package com.ishland.c2me.mixin.threading.chunkio;
 
 import com.ibm.asyncutil.locks.AsyncLock;
 import com.mojang.datafixers.DataFixer;
+import com.mojang.serialization.Codec;
 import net.minecraft.SharedConstants;
 import net.minecraft.datafixer.DataFixTypes;
 import net.minecraft.nbt.NbtCompound;
@@ -10,6 +11,7 @@ import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.FeatureUpdater;
 import net.minecraft.world.PersistentStateManager;
 import net.minecraft.world.World;
+import net.minecraft.world.gen.chunk.ChunkGenerator;
 import net.minecraft.world.storage.VersionedChunkStorage;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
@@ -21,6 +23,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.Optional;
 import java.util.function.Supplier;
 
 @Mixin(VersionedChunkStorage.class)
@@ -29,6 +32,11 @@ public abstract class MixinVersionedChunkStorage {
     @Shadow @Final protected DataFixer dataFixer;
 
     @Shadow @Nullable private FeatureUpdater featureUpdater;
+
+    @Shadow
+    public static int getDataVersion(NbtCompound nbt) {
+        throw new AbstractMethodError();
+    }
 
     private AsyncLock featureUpdaterLock = AsyncLock.createFair();
 
@@ -42,29 +50,35 @@ public abstract class MixinVersionedChunkStorage {
      * @reason async loading
      */
     @Overwrite
-    public NbtCompound updateChunkNbt(RegistryKey<World> worldKey, Supplier<PersistentStateManager> persistentStateManagerFactory, NbtCompound nbt) {
-        // TODO [VanillaCopy] - check when updating minecraft version
-        int i = VersionedChunkStorage.getDataVersion(nbt);
+    public NbtCompound updateChunkNbt(RegistryKey<World> worldKey, Supplier<PersistentStateManager> persistentStateManagerFactory, NbtCompound nbt, Optional<RegistryKey<Codec<? extends ChunkGenerator>>> optional) {
+        int i = getDataVersion(nbt);
+        int j = 1493;
         if (i < 1493) {
-            try (final AsyncLock.LockToken ignored = featureUpdaterLock.acquireLock().toCompletableFuture().join()) { // C2ME - async chunk loading
-                nbt = NbtHelper.update(this.dataFixer, DataFixTypes.CHUNK, nbt, i, 1493);
-                if (nbt.getCompound("Level").getBoolean("hasLegacyStructureData")) {
+            nbt = NbtHelper.update(this.dataFixer, DataFixTypes.CHUNK, nbt, i, 1493);
+            if (nbt.getCompound("Level").getBoolean("hasLegacyStructureData")) {
+                try (AsyncLock.LockToken ignored = this.featureUpdaterLock.acquireLock().toCompletableFuture().join()) {
                     if (this.featureUpdater == null) {
-                        this.featureUpdater = FeatureUpdater.create(worldKey, (PersistentStateManager)persistentStateManagerFactory.get());
+                        this.featureUpdater = FeatureUpdater.create(worldKey, persistentStateManagerFactory.get());
                     }
 
                     nbt = this.featureUpdater.getUpdatedReferences(nbt);
                 }
-            } // C2ME - async chunk loading
+            }
         }
 
-        nbt.getCompound("Level").putString("__dimension", worldKey.getValue().toString());
+        NbtCompound nbtCompound = new NbtCompound();
+        nbtCompound.putString("dimension", worldKey.getValue().toString());
+        if (optional.isPresent()) {
+            nbtCompound.putString("generator", ((RegistryKey)optional.get()).getValue().toString());
+        }
+
+        nbt.put("__context", nbtCompound);
         nbt = NbtHelper.update(this.dataFixer, DataFixTypes.CHUNK, nbt, Math.max(1493, i));
         if (i < SharedConstants.getGameVersion().getWorldVersion()) {
             nbt.putInt("DataVersion", SharedConstants.getGameVersion().getWorldVersion());
         }
-        nbt.getCompound("Level").remove("__dimension");
 
+        nbt.remove("__context");
         return nbt;
     }
 

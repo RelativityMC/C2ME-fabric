@@ -11,7 +11,7 @@ import java.util.concurrent.ExecutorService;
 @Mixin(NoiseChunkGenerator.class)
 public class MixinNoiseChunkGenerator {
 
-    @Redirect(method = "populateNoise(Ljava/util/concurrent/Executor;Lnet/minecraft/world/gen/StructureAccessor;Lnet/minecraft/world/chunk/Chunk;)Ljava/util/concurrent/CompletableFuture;", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/Util;getMainWorkerExecutor()Ljava/util/concurrent/ExecutorService;"))
+    @Redirect(method = "populateNoise(Ljava/util/concurrent/Executor;Lnet/minecraft/class_6748;Lnet/minecraft/world/gen/StructureAccessor;Lnet/minecraft/world/chunk/Chunk;)Ljava/util/concurrent/CompletableFuture;", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/Util;getMainWorkerExecutor()Ljava/util/concurrent/ExecutorService;"))
     private ExecutorService redirectPopulateNoiseExecutor() {
         return InvokingExecutorService.INSTANCE;
     }

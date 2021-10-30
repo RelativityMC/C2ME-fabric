@@ -1,20 +1,13 @@
 package com.ishland.c2me.common.threading.chunkio;
 
-import com.ishland.c2me.common.util.DeepCloneable;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import net.minecraft.block.Block;
 import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.fluid.Fluid;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.server.world.ServerTickScheduler;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.server.world.SimpleTickScheduler;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.ChunkSectionPos;
-import net.minecraft.util.registry.Registry;
 import net.minecraft.world.LightType;
-import net.minecraft.world.TickScheduler;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkNibbleArray;
 import net.minecraft.world.chunk.light.ChunkLightingView;
@@ -62,8 +55,6 @@ public class AsyncSerializationManager {
     public static class Scope {
         public final ChunkPos pos;
         public final Map<LightType, ChunkLightingView> lighting;
-        public final TickScheduler<Block> blockTickScheduler;
-        public final TickScheduler<Fluid> fluidTickScheduler;
         public final Set<BlockPos> blockEntityPositions;
         public final Map<BlockPos, BlockEntity> blockEntities;
         public final Map<BlockPos, NbtCompound> pendingBlockEntityNbtsPacked;
@@ -73,20 +64,6 @@ public class AsyncSerializationManager {
         public Scope(Chunk chunk, ServerWorld world) {
             this.pos = chunk.getPos();
             this.lighting = Arrays.stream(LightType.values()).map(type -> new CachedLightingView(world.getLightingProvider(), chunk.getPos(), type)).collect(Collectors.toMap(CachedLightingView::getLightType, Function.identity()));
-            final TickScheduler<Block> blockTickScheduler = chunk.getBlockTickScheduler();
-            if (blockTickScheduler instanceof DeepCloneable cloneable) {
-                this.blockTickScheduler = (TickScheduler<Block>) cloneable.deepClone();
-            } else {
-                final ServerTickScheduler<Block> worldBlockTickScheduler = world.getBlockTickScheduler();
-                this.blockTickScheduler = new SimpleTickScheduler<>(Registry.BLOCK::getId, worldBlockTickScheduler.getScheduledTicksInChunk(chunk.getPos(), false, true), world.getTime());
-            }
-            final TickScheduler<Fluid> fluidTickScheduler = chunk.getFluidTickScheduler();
-            if (fluidTickScheduler instanceof DeepCloneable cloneable) {
-                this.fluidTickScheduler = (TickScheduler<Fluid>) cloneable.deepClone();
-            } else {
-                final ServerTickScheduler<Fluid> worldFluidTickScheduler = world.getFluidTickScheduler();
-                this.fluidTickScheduler = new SimpleTickScheduler<>(Registry.FLUID::getId, worldFluidTickScheduler.getScheduledTicksInChunk(chunk.getPos(), false, true), world.getTime());
-            }
             this.blockEntityPositions = chunk.getBlockEntityPositions();
             this.blockEntities = this.blockEntityPositions.stream().map(chunk::getBlockEntity).filter(Objects::nonNull).filter(blockEntity -> !blockEntity.isRemoved()).collect(Collectors.toMap(BlockEntity::getPos, Function.identity()));
             {

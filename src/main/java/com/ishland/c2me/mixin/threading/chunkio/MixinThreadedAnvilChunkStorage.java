@@ -24,6 +24,7 @@ import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.ProtoChunk;
 import net.minecraft.world.chunk.UpgradeData;
+import net.minecraft.world.gen.chunk.ChunkGenerator;
 import net.minecraft.world.poi.PointOfInterestStorage;
 import net.minecraft.world.storage.VersionedChunkStorage;
 import org.apache.logging.log4j.Logger;
@@ -84,6 +85,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
     @Shadow
     protected abstract boolean isLevelChunk(ChunkPos chunkPos);
 
+    @Shadow private ChunkGenerator chunkGenerator;
     private AsyncNamedLock<ChunkPos> chunkLock = AsyncNamedLock.createFair();
 
     @Inject(method = "<init>", at = @At("RETURN"))
@@ -110,7 +112,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
         final CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> future = getUpdatedChunkNbtAtAsync(pos).thenApplyAsync(compoundTag -> {
             if (compoundTag != null) {
                 try {
-                    if (compoundTag.contains("Level", 10) && compoundTag.getCompound("Level").contains("Status", 8)) {
+                    if (compoundTag.contains("Status", 8)) {
                         ChunkIoMainThreadTaskUtils.push();
                         try {
                             return ChunkSerializer.deserialize(this.world, this.pointOfInterestStorage, pos, compoundTag);
@@ -133,7 +135,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
                 return Either.left(protoChunk);
             } else {
                 this.markAsProtoChunk(pos);
-                return Either.left(new ProtoChunk(pos, UpgradeData.NO_UPGRADE_DATA, this.world, this.world.getRegistryManager().get(Registry.BIOME_KEY)));
+                return Either.left(new ProtoChunk(pos, UpgradeData.NO_UPGRADE_DATA, this.world, this.world.getRegistryManager().get(Registry.BIOME_KEY), null));
             }
         }, this.mainThreadExecutor);
         future.exceptionally(throwable -> null).thenRun(() -> {
@@ -180,7 +182,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
     private CompletableFuture<NbtCompound> getUpdatedChunkNbtAtAsync(ChunkPos pos) {
         return chunkLock.acquireLock(pos).toCompletableFuture().thenCompose(lockToken -> ((IAsyncChunkStorage) this.worker).getNbtAtAsync(pos).thenApply(compoundTag -> {
             if (compoundTag != null)
-                return this.updateChunkNbt(this.world.getRegistryKey(), this.persistentStateManagerFactory, compoundTag);
+                return this.updateChunkNbt(this.world.getRegistryKey(), this.persistentStateManagerFactory, compoundTag, this.chunkGenerator.method_39301());
             else return null;
         }).handle((tag, throwable) -> {
             lockToken.releaseLock();
@@ -216,7 +218,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
                     }
                 }
 
-                this.world.getProfiler().visit("chunkSave");
+                this.world.getProfiler().method_39278("chunkSave");
                 // C2ME start - async serialization
                 if (saveFutures == null) saveFutures = new ConcurrentLinkedQueue<>();
                 AsyncSerializationManager.Scope scope = new AsyncSerializationManager.Scope(chunk, world);

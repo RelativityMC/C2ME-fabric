@@ -219,7 +219,7 @@ public class ComparisonSession implements Closeable {
             throw new FileNotFoundException();
         }
         final ImmutableSet<RegistryKey<World>> worldKeys = saveProperties.getGeneratorOptions().getWorlds();
-        final WorldUpdater worldUpdater = new WorldUpdater(session, Schemas.getFixer(), worldKeys, false);
+        final WorldUpdater worldUpdater = new WorldUpdater(session, Schemas.getFixer(), saveProperties.getGeneratorOptions(), false);
         final HashMap<RegistryKey<World>, List<ChunkPos>> chunkPosesMap = new HashMap<>();
         for (RegistryKey<World> world : worldKeys) {
             System.out.printf("%s: Counting chunks for world %s\n", description, world);

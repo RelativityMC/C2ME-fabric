@@ -2,17 +2,12 @@ package com.ishland.c2me.mixin.threading.chunkio;
 
 import com.ishland.c2me.common.threading.chunkio.AsyncSerializationManager;
 import com.ishland.c2me.common.threading.chunkio.ChunkIoMainThreadTaskUtils;
-import net.minecraft.block.Block;
 import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.fluid.Fluid;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.server.world.ServerTickScheduler;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.ChunkSerializer;
 import net.minecraft.world.LightType;
-import net.minecraft.world.TickScheduler;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.WorldChunk;
@@ -27,7 +22,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 
 @Mixin(ChunkSerializer.class)
 public class MixinChunkSerializer {
@@ -60,24 +54,6 @@ public class MixinChunkSerializer {
             if (nbtCompound == null) LOGGER.warn("Block Entity at {} for block {} doesn't exist", pos, chunk.getBlockState(pos).getBlock());
             return nbtCompound;
         }
-    }
-
-    @Redirect(method = "serialize", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/Chunk;getBlockTickScheduler()Lnet/minecraft/world/TickScheduler;"))
-    private static TickScheduler<Block> onChunkGetBlockTickScheduler(Chunk chunk) {
-        final AsyncSerializationManager.Scope scope = AsyncSerializationManager.getScope(chunk.getPos());
-        return scope != null ? scope.blockTickScheduler : chunk.getBlockTickScheduler();
-    }
-
-    @Redirect(method = "serialize", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/Chunk;getFluidTickScheduler()Lnet/minecraft/world/TickScheduler;"))
-    private static TickScheduler<Fluid> onChunkGetFluidTickScheduler(Chunk chunk) {
-        final AsyncSerializationManager.Scope scope = AsyncSerializationManager.getScope(chunk.getPos());
-        return scope != null ? scope.fluidTickScheduler : chunk.getFluidTickScheduler();
-    }
-
-    @Redirect(method = "serialize", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerTickScheduler;toNbt(Lnet/minecraft/util/math/ChunkPos;)Lnet/minecraft/nbt/NbtList;"))
-    private static NbtList onServerTickSchedulerToNbt(@SuppressWarnings("rawtypes") ServerTickScheduler serverTickScheduler, ChunkPos chunkPos) {
-        final AsyncSerializationManager.Scope scope = AsyncSerializationManager.getScope(chunkPos);
-        return scope != null ? CompletableFuture.supplyAsync(() -> serverTickScheduler.toNbt(chunkPos), serverTickScheduler.world.chunkManager.mainThreadExecutor).join() : serverTickScheduler.toNbt(chunkPos);
     }
 
     @Redirect(method = "serialize", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/light/LightingProvider;get(Lnet/minecraft/world/LightType;)Lnet/minecraft/world/chunk/light/ChunkLightingView;"))
