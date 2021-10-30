@@ -1,4 +1,4 @@
-package com.ishland.c2me.tests.testmod.mixin;
+package com.ishland.c2me.tests.testmod.mixin.pregen;
 
 import com.ishland.c2me.tests.testmod.IMinecraftServer;
 import com.ishland.c2me.tests.testmod.PreGenTask;

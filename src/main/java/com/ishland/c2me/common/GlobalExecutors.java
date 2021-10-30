@@ -1,5 +1,6 @@
 package com.ishland.c2me.common;
 
+import com.ibm.asyncutil.locks.AsyncLock;
 import com.ishland.c2me.common.config.C2MEConfig;
 import com.ishland.c2me.common.util.C2MEForkJoinWorkerThreadFactory;
 
@@ -22,5 +23,7 @@ public class GlobalExecutors {
             executor.execute(r);
         }
     };
+
+    public static final AsyncLock schedulingLock = AsyncLock.createFair();
 
 }

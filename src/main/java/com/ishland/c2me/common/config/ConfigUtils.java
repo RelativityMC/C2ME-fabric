@@ -22,25 +22,39 @@ public class ConfigUtils {
 
     private static final boolean IGNORE_INCOMPATIBILITY = Boolean.parseBoolean(System.getProperty("com.ishland.c2me.common.config.ignoreIncompatibility", "false"));
 
-    public static <T> T getValue(ConfigScope config, String key, Supplier<T> deff, String comment, List<String> incompatibleMods, T incompatibleDefault, CheckType... checks) {
+    public static <T> T getValue(ConfigScope config, String key, Supplier<T> def, String comment, List<String> incompatibleMods, T incompatibleDefault, CheckType... checks) {
+        return getValue0(config, key, Suppliers.memoize(def::get), comment, incompatibleMods, incompatibleDefault, checks);
+    }
+
+    private static <T> T getValue0(ConfigScope config, String key, Supplier<T> def, String comment, List<String> incompatibleMods, T incompatibleDefault, CheckType... checks) {
         if (IGNORE_INCOMPATIBILITY) C2MEConfig.LOGGER.fatal("Ignoring incompatibility check. You will get NO support if you do this unless explicitly stated. ");
         Preconditions.checkNotNull(config);
         Preconditions.checkNotNull(key);
         Preconditions.checkArgument(!key.isEmpty());
-        Preconditions.checkNotNull(deff);
+        Preconditions.checkNotNull(def);
         Preconditions.checkNotNull(incompatibleMods);
         final Set<ModContainer> foundIncompatibleMods = IGNORE_INCOMPATIBILITY ? Collections.emptySet() : incompatibleMods.stream().flatMap(modId -> FabricLoader.getInstance().getModContainer(modId).stream()).collect(Collectors.toSet());
-        Supplier<T> def = Suppliers.memoize(deff::get);
         if (!foundIncompatibleMods.isEmpty()) {
             comment = comment + " \n INCOMPATIBILITY: Set to " + incompatibleDefault + " forcefully by: " + String.join(", ", foundIncompatibleMods.stream().map(modContainer -> modContainer.getMetadata().getId()).collect(Collectors.toSet()));
-
         }
         config.processedKeys.add(key);
-        if (!config.config.contains(key) || (checks.length != 0 && Arrays.stream(checks).anyMatch(checkType -> !checkType.check(config.config.get(key)))))
-            config.config.set(key, def.get());
+        Object originalValue = config.config.get(key);
+        if (!config.config.contains(key) || (!originalValue.equals("default") && checks.length != 0 && Arrays.stream(checks).anyMatch(checkType -> !checkType.check(originalValue))))
+            config.config.set(key, def.get() instanceof Config ? def.get() : "default");
         if (def.get() instanceof Config) config.config.setComment(key, String.format(" %s", comment));
         else config.config.setComment(key, String.format(" (Default: %s) %s", def.get(), comment));
-        return foundIncompatibleMods.isEmpty() ? Objects.requireNonNull(config.config.get(key)) : incompatibleDefault;
+        final Object configuredValue = getConfiguredValue(config.config.get(key), def);
+        return foundIncompatibleMods.isEmpty() ? Objects.requireNonNull((configuredValue.equals("default")) ? def.get() : (T) configuredValue) : incompatibleDefault;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T> T getConfiguredValue(Object o, Supplier<T> def) {
+        if (o.equals("default")) return def.get();
+        try {
+            return (T) o;
+        } catch (ClassCastException e) {
+            return def.get();
+        }
     }
 
     public static CommentedConfig config() {

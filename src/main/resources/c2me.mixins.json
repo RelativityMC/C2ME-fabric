@@ -58,6 +58,7 @@
     "optimization.chunkio.compression.increase_buffer_size.MixinChunkStreamVersion",
     "optimization.chunkio.compression.modify_default_chunk_compression.MixinRegionFile",
     "optimization.chunkio.hide_sync_disk_writes_behind_flag.MixinRegionBasedStorage",
+    "threading.async_scheduling.MixinThreadedAnvilChunkStorage",
     "optimization.chunkscheduling.fix_unload.MixinThreadedAnvilChunkStorage",
     "optimization.chunkscheduling.general_overheads.MixinThreadedAnvilChunkStorage",
     "optimization.chunkscheduling.mid_tick_chunk_tasks.MixinMinecraftServer",

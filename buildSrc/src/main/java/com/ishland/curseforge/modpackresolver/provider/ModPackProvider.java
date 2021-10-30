@@ -229,7 +229,8 @@ public class ModPackProvider {
         try (final FileSystem fileSystem = FileSystems.newFileSystem(jarPath)) {
             for (Path rootDirectory : fileSystem.getRootDirectories()) {
                 for (Path path : Files.walk(rootDirectory).sorted(Comparator.reverseOrder()).toList()) {
-                    if (path.startsWith("/META-INF")) {
+                    if (path.startsWith("/META-INF") && !path.toString().startsWith("/META-INF/services") && !path.getFileName().toString().endsWith(".accesswidener")) {
+                        if (Files.isDirectory(path)) continue;
                         Files.delete(path);
                     }
                 }
@@ -263,7 +264,7 @@ public class ModPackProvider {
     private static Dependency getModDependency(ModPackManifest.FilesItem file, DependencyHandler dependencies) {
         if (file.getProjectID() == 413596 && file.getFileID() == 3421221) { // 0.11.0-pre
             // this fixes BetterEnd breaking yarn dev environment
-            return dependencies.create("com.github.ishland:BetterEnd:2cce1d2");
+            return dependencies.create("com.github.ishland:BetterEnd:7a3338b6");
         }
         if (file.getProjectID() == 413596 && file.getFileID() == 3390721) { // 0.10.5-pre
             // this fixes BetterEnd breaking yarn dev environment

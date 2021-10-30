@@ -33,7 +33,7 @@ jobs:
           ./.gradle/loom-cache
         key: ${{ runner.os }}-gradle3-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
         restore-keys: |
-          ${{ runner.os }}-gradle3-
+          ${{ runner.os }}-gradle3-test-
         
     - name: Test C2ME
       run: |

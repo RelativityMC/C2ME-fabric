@@ -3,6 +3,7 @@ package com.ishland.c2me.common.config;
 import com.electronwill.nightconfig.core.CommentedConfig;
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import com.google.common.base.Preconditions;
+import com.ishland.c2me.common.config.updater.Updaters;
 import io.netty.util.internal.PlatformDependent;
 import net.fabricmc.loader.api.FabricLoader;
 import org.apache.logging.log4j.LogManager;
@@ -14,8 +15,11 @@ public class C2MEConfig {
 
     static final Logger LOGGER = LogManager.getLogger("C2ME Config");
 
+    private static final long CURRENT_CONFIG_VERSION = 1;
+
     public static final AsyncIoConfig asyncIoConfig;
     public static final ThreadedWorldGenConfig threadedWorldGenConfig;
+    public static final AsyncSchedulingConfig asyncSchedulingConfig;
     public static final VanillaWorldGenOptimizationsConfig vanillaWorldGenOptimizationsConfig;
     public static final GeneralOptimizationsConfig generalOptimizationsConfig;
     public static final NoTickViewDistanceConfig noTickViewDistanceConfig;
@@ -32,9 +36,14 @@ public class C2MEConfig {
         config.load();
 
         final ConfigUtils.ConfigScope configScope = new ConfigUtils.ConfigScope(config);
+        configScope.processedKeys.add("version");
+        Updaters.update(config);
+        final long version = config.getLongOrElse("version", 0);
+        Preconditions.checkState(CURRENT_CONFIG_VERSION == version, "Config version mismatch");
         globalExecutorParallelism = ConfigUtils.getValue(configScope, "globalExecutorParallelism", C2MEConfig::getDefaultGlobalExecutorParallelism, "Configures the parallelism of global executor", List.of(), null, ConfigUtils.CheckType.THREAD_COUNT);
         asyncIoConfig = new AsyncIoConfig(ConfigUtils.getValue(configScope, "asyncIO", ConfigUtils::config, "Configuration for async io system", List.of(), null));
         threadedWorldGenConfig = new ThreadedWorldGenConfig(ConfigUtils.getValue(configScope, "threadedWorldGen", ConfigUtils::config, "Configuration for threaded world generation", List.of(), null));
+        asyncSchedulingConfig = new AsyncSchedulingConfig(ConfigUtils.getValue(configScope, "asyncScheduling", ConfigUtils::config, "Configuration for async scheduling system", List.of(), null));
         vanillaWorldGenOptimizationsConfig = new VanillaWorldGenOptimizationsConfig(ConfigUtils.getValue(configScope, "vanillaWorldGenOptimizations", ConfigUtils::config, "Configuration for vanilla worldgen optimizations", List.of(), null));
         generalOptimizationsConfig = new GeneralOptimizationsConfig(ConfigUtils.getValue(configScope, "generalOptimizations", ConfigUtils::config, "Configuration for general optimizations", List.of(), null));
         noTickViewDistanceConfig = new NoTickViewDistanceConfig(ConfigUtils.getValue(configScope, "noTickViewDistance", ConfigUtils::config, "Configuration for no-tick view distance", List.of(), null));
@@ -84,6 +93,17 @@ public class C2MEConfig {
             this.allowThreadedFeatures = ConfigUtils.getValue(configScope, "allowThreadedFeatures", () -> true || global_allowThreadedFeatures, "Whether to allow feature generation (world decorations like trees, ores and etc.) run in parallel \n (may cause incompatibility with other mods)", List.of(), null);
             this.reduceLockRadius = ConfigUtils.getValue(configScope, "reduceLockRadius", () -> false || global_reduceLockRadius, "Whether to allow reducing lock radius \n (may cause incompatibility with other mods)", List.of(), null);
             this.useGlobalBiomeCache = ConfigUtils.getValue(configScope, "useGlobalBiomeCache", () -> false || global_useGlobalBiomeCache, "(Experimental in 1.18 snapshots) \n Whether to enable global MultiBiomeCache to accelerate worldgen \n This increases memory allocation ", List.of(), false);
+            configScope.removeUnusedKeys();
+        }
+    }
+
+    public static class AsyncSchedulingConfig {
+        public final boolean enabled;
+
+        public AsyncSchedulingConfig(CommentedConfig config) {
+            Preconditions.checkNotNull(config, "asyncSchedulingConfig config is not present");
+            final ConfigUtils.ConfigScope configScope = new ConfigUtils.ConfigScope(config);
+            this.enabled = ConfigUtils.getValue(configScope, "enabled", () -> false, "(Experimental) Whether to enable this feature \n (may cause incompatibility with other mods)", List.of(), false);
             configScope.removeUnusedKeys();
         }
     }

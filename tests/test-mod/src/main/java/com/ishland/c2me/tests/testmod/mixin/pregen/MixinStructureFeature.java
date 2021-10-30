@@ -1,4 +1,4 @@
-package com.ishland.c2me.tests.testmod.mixin;
+package com.ishland.c2me.tests.testmod.mixin.pregen;
 
 import net.minecraft.world.gen.feature.StructureFeature;
 import org.spongepowered.asm.mixin.Mixin;

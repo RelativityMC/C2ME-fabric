@@ -1,5 +1,3 @@
-import com.ishland.c2me.gradle.RedirectingOutputStream
-
 evaluationDependsOn(":tests")
 evaluationDependsOn(":tests:test-mod")
 
@@ -12,32 +10,27 @@ sourceSets {
 
 loom {
     runs {
-        testC2MEAOFServer {
+        devlaunchC2MEAOFServer {
             server()
-            runDir getRootProject().getProjectDir().toPath().relativize(project.getBuildDir().toPath()).resolve("testServer").toString()
+            runDir getRootProject().getProjectDir().toPath().relativize(project.getProjectDir().toPath()).resolve("run-${project.minecraft_version}-server").toString()
             source sourceSets.testmod
             vmArgs "-Dcom.ishland.c2me.common.config.threadedWorldGen.allowThreadedFeatures=true",
                     "-Dcom.ishland.c2me.common.config.threadedWorldGen.reduceLockRadius=true",
                     "-Dcom.ishland.c2me.common.config.threadedWorldGen.enabled=true",
                     "--add-modules jdk.incubator.vector",
-                    "-Dmixin.debug.export=true"
-            if (System.getenv("GITHUB_WORKFLOW") != null) {
-                if (System.getenv("RUNNER_OS").equals("macOS")) {
-                    vmArgs "-Xmx11G"
-                } else if (System.getenv("RUNNER_OS").equals("Linux")) {
-                    vmArgs "-Xmx5G"
-                }
-            }
+                    "-Dcom.ishland.c2me.tests.testmod.disablePreGen=true"
         }
-    }
-}
-
-runTestC2MEAOFServer.configure {
-    doFirst {
-        standardOutput = new RedirectingOutputStream(project, getName())
-    }
-    onlyIf {
-        !getRootProject().getProjectDir().toPath().relativize(project.getBuildDir().toPath()).resolve("testServer").toFile().isDirectory()
+        devlaunchC2MEAOFClient {
+            client()
+            runDir getRootProject().getProjectDir().toPath().relativize(project.getProjectDir().toPath()).resolve("run-${project.minecraft_version}").toString()
+            source sourceSets.testmod
+            vmArgs "-Dcom.ishland.c2me.common.config.threadedWorldGen.allowThreadedFeatures=true",
+                    "-Dcom.ishland.c2me.common.config.threadedWorldGen.reduceLockRadius=true",
+                    "-Dcom.ishland.c2me.common.config.threadedWorldGen.enabled=true",
+                    "--add-modules jdk.incubator.vector",
+                    "-Dmixin.debug.export=true",
+                    "-Dcom.ishland.c2me.tests.testmod.disablePreGen=true"
+        }
     }
 }
 
