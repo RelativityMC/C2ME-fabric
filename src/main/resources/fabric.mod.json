@@ -9,7 +9,10 @@
     "ishland"
   ],
   "contact": {
-    "repo": "https://github.com/ishlandbukkit/C2ME-fabric"
+    "sources": "https://github.com/ishlandbukkit/C2ME-fabric",
+    "issues": "https://github.com/ishlandbukkit/C2ME-fabric/issues",
+    "discord": "https://discord.io/ishlandbukkit",
+    "homepage": "https://modrinth.com/mod/c2me-fabric"
   },
   "license": "MIT",
   "icon": "assets/c2me/icon.png",
