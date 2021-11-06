@@ -1,6 +1,5 @@
 package com.ishland.c2me.mixin.fixes.general.threading;
 
-import com.ishland.c2me.common.fixes.general.threading.IChunkTicketManager;
 import com.ishland.c2me.mixin.access.IServerChunkManager;
 import com.ishland.c2me.mixin.access.IThreadedAnvilChunkStorage;
 import com.mojang.datafixers.util.Either;
@@ -24,7 +23,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 @Mixin(ChunkHolder.class)
 public abstract class MixinChunkHolder {
@@ -64,8 +62,6 @@ public abstract class MixinChunkHolder {
         // TODO [VanillaCopy]
         final ServerChunkManager chunkManager = ((IThreadedAnvilChunkStorage) chunkStorage).getWorld().getChunkManager();
         final ChunkTicketManager ticketManager = ((IServerChunkManager) chunkManager).getTicketManager();
-        final ReentrantReadWriteLock ticketLock = ((IChunkTicketManager) ticketManager).getTicketLock();
-        ticketLock.readLock().lock();
         schedulingLock.lock();
         try {
             int i = targetStatus.getIndex();
@@ -91,7 +87,6 @@ public abstract class MixinChunkHolder {
             }
         } finally {
             schedulingLock.unlock();
-            ticketLock.readLock().unlock();
         }
     }
 

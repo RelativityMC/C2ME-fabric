@@ -1,10 +1,12 @@
 package com.ishland.c2me.common;
 
-import com.ibm.asyncutil.locks.AsyncLock;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.ishland.c2me.common.config.C2MEConfig;
 import com.ishland.c2me.common.util.C2MEForkJoinWorkerThreadFactory;
 
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ForkJoinPool;
 
 public class GlobalExecutors {
@@ -24,6 +26,6 @@ public class GlobalExecutors {
         }
     };
 
-    public static final AsyncLock schedulingLock = AsyncLock.createFair();
+    public static final ExecutorService asyncScheduler = Executors.newSingleThreadExecutor(new ThreadFactoryBuilder().setDaemon(true).setNameFormat("C2ME scheduler").build());
 
 }

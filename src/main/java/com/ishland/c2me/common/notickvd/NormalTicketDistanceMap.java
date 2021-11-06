@@ -2,7 +2,6 @@ package com.ishland.c2me.common.notickvd;
 
 import com.ishland.c2me.mixin.access.IChunkTicket;
 import com.ishland.c2me.mixin.access.IChunkTicketManager;
-import com.ishland.c2me.mixin.access.IThreadedAnvilChunkStorage;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
@@ -10,18 +9,13 @@ import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
 import net.minecraft.server.world.ChunkTicket;
 import net.minecraft.server.world.ChunkTicketManager;
-import net.minecraft.server.world.ThreadedAnvilChunkStorage;
 import net.minecraft.util.collection.SortedArraySet;
 import net.minecraft.world.ChunkPosDistanceLevelPropagator;
-
-import java.util.concurrent.atomic.AtomicLong;
 
 public class NormalTicketDistanceMap extends ChunkPosDistanceLevelPropagator {
     private final ChunkTicketManager chunkTicketManager;
     private final Long2IntOpenHashMap distanceMap = new Long2IntOpenHashMap();
     private final Long2ObjectOpenHashMap<SortedArraySet<ChunkTicket<?>>> ticketsByPosition = new Long2ObjectOpenHashMap<>();
-
-    private final AtomicLong lastTickNumber = new AtomicLong(0L);
 
     public NormalTicketDistanceMap(ChunkTicketManager chunkTicketManager) {
         super(33 + 2, 16, 256);
@@ -101,9 +95,7 @@ public class NormalTicketDistanceMap extends ChunkPosDistanceLevelPropagator {
         return this.ticketsByPosition.computeIfAbsent(pos, (l) -> SortedArraySet.create(4));
     }
 
-    public boolean update(ThreadedAnvilChunkStorage threadedAnvilChunkStorage) {
-        if (((IThreadedAnvilChunkStorage) threadedAnvilChunkStorage).getWorld().getServer().getTicks() == lastTickNumber.get()) return false;
-        lastTickNumber.addAndGet(1);
+    public boolean update() {
         return Integer.MAX_VALUE - this.applyPendingUpdates(Integer.MAX_VALUE) != 0;
     }
 
