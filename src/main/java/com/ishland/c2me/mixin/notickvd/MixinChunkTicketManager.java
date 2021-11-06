@@ -7,7 +7,6 @@ import it.unimi.dsi.fastutil.longs.LongSet;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ChunkTicket;
 import net.minecraft.server.world.ChunkTicketManager;
-import net.minecraft.server.world.ThreadedAnvilChunkStorage;
 import net.minecraft.util.math.ChunkSectionPos;
 import net.minecraft.util.math.MathHelper;
 import org.spongepowered.asm.mixin.Final;
@@ -19,7 +18,6 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(ChunkTicketManager.class)
 public class MixinChunkTicketManager implements IChunkTicketManager {
@@ -46,14 +44,10 @@ public class MixinChunkTicketManager implements IChunkTicketManager {
         this.noTickSystem.removePlayerSource(pos.toChunkPos());
     }
 
-    @Inject(method = "tick", at = @At("RETURN"))
-    private void onTick(ThreadedAnvilChunkStorage threadedAnvilChunkStorage, CallbackInfoReturnable<Boolean> info) {
-        this.noTickSystem.tick();
-    }
-
     @Inject(method = "purge", at = @At("RETURN"))
     private void onPurge(CallbackInfo ci) {
         this.noTickSystem.runPurge(this.age);
+        this.noTickSystem.tick();
     }
 
     @Inject(method = "addTicket(JLnet/minecraft/server/world/ChunkTicket;)V", at = @At("RETURN"))
