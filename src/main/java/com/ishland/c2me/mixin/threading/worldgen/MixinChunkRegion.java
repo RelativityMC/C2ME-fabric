@@ -25,7 +25,7 @@ public class MixinChunkRegion {
 
     @Shadow
     @Final
-    private ChunkPos centerPos;
+    private Chunk centerPos;
     @Shadow
     @Final
     private ChunkPos lowerCorner;
@@ -42,8 +42,8 @@ public class MixinChunkRegion {
     private void onInit(ServerWorld world, List<Chunk> list, ChunkStatus chunkStatus, int placementRadius, CallbackInfo ci) {
         if (C2MEConfig.threadedWorldGenConfig.reduceLockRadius) {
             final int reducedTaskRadius = ((IChunkStatus) chunkStatus).getReducedTaskRadius();
-            lowerReducedCorner = new ChunkPos(centerPos.x - reducedTaskRadius, centerPos.z - reducedTaskRadius);
-            upperReducedCorner = new ChunkPos(centerPos.x + reducedTaskRadius, centerPos.z + reducedTaskRadius);
+            lowerReducedCorner = new ChunkPos(centerPos.getPos().x - reducedTaskRadius, centerPos.getPos().z - reducedTaskRadius);
+            upperReducedCorner = new ChunkPos(centerPos.getPos().x + reducedTaskRadius, centerPos.getPos().z + reducedTaskRadius);
         } else {
             lowerReducedCorner = lowerCorner;
             upperReducedCorner = upperCorner;

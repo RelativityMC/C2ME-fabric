@@ -218,7 +218,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
                     }
                 }
 
-                this.world.getProfiler().method_39278("chunkSave");
+                this.world.getProfiler().visit("chunkSave");
                 // C2ME start - async serialization
                 if (saveFutures == null) saveFutures = new ConcurrentLinkedQueue<>();
                 AsyncSerializationManager.Scope scope = new AsyncSerializationManager.Scope(chunk, world);
