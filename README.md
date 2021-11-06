@@ -48,7 +48,7 @@ You can find development builds here: https://ci.codemc.io/job/ishlandbukkit/job
 - [Traverse v4.0.0-beta.2 for 1.17.1](https://github.com/TerraformersMC/Traverse/releases/tag/v4.0.0-beta.2)
 - [YUNG's Better Mineshafts (Fabric) v1.0.1](https://www.curseforge.com/minecraft/mc-mods/yungs-better-mineshafts-fabric/files/3414789)
 - [YUNG's Better Strongholds (Fabric) v1.1.1](https://www.curseforge.com/minecraft/mc-mods/yungs-better-strongholds-fabric/files/3412649)
-- [YUNG's Better Dongeons (Fabric) v1.0.2](https://www.curseforge.com/minecraft/mc-mods/yungs-better-dungeons-fabric/files/3476131)
+- [YUNG's Better Dungeons (Fabric) v1.0.2](https://www.curseforge.com/minecraft/mc-mods/yungs-better-dungeons-fabric/files/3476131)
 - [Charm 3.3.2](https://www.curseforge.com/minecraft/mc-mods/charm/files/3393290)
 - [The Graveyard 1.4 (FABRIC) for 1.17-1.17.1](https://www.curseforge.com/minecraft/mc-mods/the-graveyard-fabric/files/3457664)
 
