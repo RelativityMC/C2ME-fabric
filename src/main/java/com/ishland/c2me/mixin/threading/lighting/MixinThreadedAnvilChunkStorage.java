@@ -33,7 +33,7 @@ public class MixinThreadedAnvilChunkStorage {
                 1, 1,
                 0, TimeUnit.SECONDS,
                 new LinkedBlockingQueue<>(),
-                new ThreadFactoryBuilder().setPriority(Thread.NORM_PRIORITY - 1).setDaemon(true).setNameFormat(String.format("%s - Light", world.toString())).build()
+                new ThreadFactoryBuilder().setPriority(Thread.NORM_PRIORITY - 1).setDaemon(true).setNameFormat(String.format("%s - Light", world.getRegistryKey().getValue().toUnderscoreSeparatedString())).build()
         );
         return TaskExecutor.create(lightThread, name);
     }

@@ -10,6 +10,7 @@ import net.minecraft.server.world.ChunkTicketManager;
 import net.minecraft.util.math.ChunkPos;
 import org.threadly.concurrent.NoThreadScheduler;
 
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class NoTickSystem {
@@ -17,6 +18,8 @@ public class NoTickSystem {
     private final PlayerNoTickDistanceMap playerNoTickDistanceMap;
     private final NormalTicketDistanceMap normalTicketDistanceMap;
     private final ChunkTicketManager chunkTicketManager;
+
+    private final ConcurrentLinkedQueue<Runnable> pendingActions = new ConcurrentLinkedQueue<>();
 
     final NoThreadScheduler noThreadScheduler = new NoThreadScheduler();
 
@@ -30,23 +33,23 @@ public class NoTickSystem {
     }
 
     public void onTicketAdded(long position, ChunkTicket<?> ticket) {
-        GlobalExecutors.asyncScheduler.execute(() -> this.normalTicketDistanceMap.addTicket(position, ticket));
+        this.pendingActions.add(() -> this.normalTicketDistanceMap.addTicket(position, ticket));
     }
 
     public void onTicketRemoved(long position, ChunkTicket<?> ticket) {
-        GlobalExecutors.asyncScheduler.execute(() -> this.normalTicketDistanceMap.removeTicket(position, ticket));
+        this.pendingActions.add(() -> this.normalTicketDistanceMap.removeTicket(position, ticket));
     }
 
     public void addPlayerSource(ChunkPos chunkPos) {
-        GlobalExecutors.asyncScheduler.execute(() -> this.playerNoTickDistanceMap.addSource(chunkPos));
+        this.pendingActions.add(() -> this.playerNoTickDistanceMap.addSource(chunkPos));
     }
 
     public void removePlayerSource(ChunkPos chunkPos) {
-        GlobalExecutors.asyncScheduler.execute(() -> this.playerNoTickDistanceMap.removeSource(chunkPos));
+        this.pendingActions.add(() -> this.playerNoTickDistanceMap.removeSource(chunkPos));
     }
 
     public void setNoTickViewDistance(int viewDistance) {
-        GlobalExecutors.asyncScheduler.execute(() -> this.playerNoTickDistanceMap.setViewDistance(viewDistance));
+        this.pendingActions.add(() -> this.playerNoTickDistanceMap.setViewDistance(viewDistance));
     }
 
     public void tick() {
@@ -57,6 +60,15 @@ public class NoTickSystem {
     private void scheduleTick() {
         if (this.isTicking.compareAndSet(false, true))
             GlobalExecutors.asyncScheduler.execute(() -> {
+                Runnable runnable;
+                while ((runnable = this.pendingActions.poll()) != null) {
+                    try {
+                        runnable.run();
+                    } catch (Throwable t) {
+                        t.printStackTrace();
+                    }
+                }
+
                 final boolean hasNormalTicketUpdates = this.normalTicketDistanceMap.update();
                 final boolean hasNoTickUpdates = this.playerNoTickDistanceMap.update();
                 if (hasNormalTicketUpdates || hasNoTickUpdates) {
@@ -77,7 +89,7 @@ public class NoTickSystem {
     }
 
     public void runPurge(long age) {
-        GlobalExecutors.asyncScheduler.execute(() -> {
+        this.pendingActions.add(() -> {
             this.normalTicketDistanceMap.purge(age);
             this.playerNoTickDistanceMap.runPendingTicketUpdates();
         });

@@ -3,6 +3,7 @@ package com.ishland.c2me.tests.testmod;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.Sets;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.ibm.asyncutil.locks.AsyncSemaphore;
 import com.ibm.asyncutil.locks.FairAsyncSemaphore;
 import com.ishland.c2me.tests.testmod.mixin.IServerChunkManager;
@@ -31,6 +32,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.LockSupport;
@@ -42,6 +45,10 @@ import java.util.stream.Collectors;
 public class PreGenTask {
 
     private static final Logger LOGGER = LogManager.getLogger("C2ME Test");
+    private static final ExecutorService EXECUTOR = Executors.newFixedThreadPool(
+            Math.max(1,Runtime.getRuntime().availableProcessors() - 1),
+            new ThreadFactoryBuilder().setDaemon(true).setPriority(Thread.NORM_PRIORITY - 2).setNameFormat("locator-%d").build()
+    );
     private static final ChunkTicketType<Unit> TICKET = ChunkTicketType.create("c2metest", (unit, unit2) -> 0);
 
     private static final int SEARCH_RADIUS = 512 * 16;
@@ -75,7 +82,7 @@ public class PreGenTask {
                         return;
                     }
                     LOGGER.info("Unable to locate biome {}", biomeRegistry.getId(biome));
-                })).distinct().toArray(CompletableFuture[]::new));
+                }, EXECUTOR)).distinct().toArray(CompletableFuture[]::new));
         final CompletableFuture<Void> structureFuture = CompletableFuture.allOf(structureFeatures.stream()
                 .map(structureFeature -> CompletableFuture.runAsync(() -> {
                     final BlockPos blockPos = world.locateStructure(structureFeature, spawnPos, SEARCH_RADIUS / 16, false);
@@ -86,7 +93,7 @@ public class PreGenTask {
                         return;
                     }
                     LOGGER.info("Unable to locate structure {}", structureFeature.getName());
-                })).distinct().toArray(CompletableFuture[]::new));
+                }, EXECUTOR)).distinct().toArray(CompletableFuture[]::new));
         final CompletableFuture<Void> locateFuture = CompletableFuture.allOf(biomeFuture, structureFuture);
         long lastProgress = System.currentTimeMillis();
         int printCounter = 0;
