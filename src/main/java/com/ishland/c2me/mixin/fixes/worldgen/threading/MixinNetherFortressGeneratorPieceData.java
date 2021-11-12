@@ -21,6 +21,7 @@ public class MixinNetherFortressGeneratorPieceData implements INetherFortressGen
         return this.generatedCountAtomic.get();
     }
 
+    @SuppressWarnings("MixinAnnotationTarget")
     @Dynamic
     @Redirect(method = "*", at = @At(value = "FIELD", target = "Lnet/minecraft/structure/NetherFortressGenerator$PieceData;generatedCount:I", opcode = Opcodes.PUTFIELD), require = 0)
     private void redirectSetGeneratedCount(NetherFortressGenerator.PieceData pieceData, int value) {

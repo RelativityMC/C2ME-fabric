@@ -13,7 +13,7 @@ import java.util.Properties;
 @Mixin(ServerPropertiesHandler.class)
 public class MixinServerPropertiesHandler {
 
-    @Redirect(method = "method_37371", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/gen/GeneratorOptions;fromProperties(Lnet/minecraft/util/registry/DynamicRegistryManager;Ljava/util/Properties;)Lnet/minecraft/world/gen/GeneratorOptions;"))
+    @Redirect(method = "getGeneratorOptions", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/gen/GeneratorOptions;fromProperties(Lnet/minecraft/util/registry/DynamicRegistryManager;Ljava/util/Properties;)Lnet/minecraft/world/gen/GeneratorOptions;"))
     private GeneratorOptions redirectGeneratorOptions(DynamicRegistryManager registryManager, Properties properties) throws IOException {
         final Properties properties1 = new Properties();
         properties1.put("level-seed", "c2metest");

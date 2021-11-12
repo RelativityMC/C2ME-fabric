@@ -29,27 +29,11 @@ public class MixinConfiguredFeature<FC extends FeatureConfig, F extends Feature<
      */
     @Overwrite
     public boolean generate(StructureWorldAccess world, ChunkGenerator chunkGenerator, Random random, BlockPos origin) {
+        if (!world.isValidForSetBlock(origin)) return false;
         final SimpleObjectPool<PooledFeatureContext<?>> pool = PooledFeatureContext.POOL.get();
         final PooledFeatureContext<FC> context = (PooledFeatureContext<FC>) pool.alloc();
         try {
             context.reInit(Optional.empty(), world, chunkGenerator, random, origin, this.config);
-            return this.feature.generate(context);
-        } finally {
-            context.reInit();
-            pool.release(context);
-        }
-    }
-
-    /**
-     * @author ishland
-     * @reason pool FeatureContext
-     */
-    @Overwrite
-    public boolean generate(Optional<ConfiguredFeature<?, ?>> feature, StructureWorldAccess world, ChunkGenerator chunkGenerator, Random random, BlockPos origin) {
-        final SimpleObjectPool<PooledFeatureContext<?>> pool = PooledFeatureContext.POOL.get();
-        final PooledFeatureContext<FC> context = (PooledFeatureContext<FC>) pool.alloc();
-        try {
-            context.reInit(feature, world, chunkGenerator, random, origin, this.config);
             return this.feature.generate(context);
         } finally {
             context.reInit();

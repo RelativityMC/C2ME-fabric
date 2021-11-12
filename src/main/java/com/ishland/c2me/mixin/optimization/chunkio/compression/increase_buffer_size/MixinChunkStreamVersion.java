@@ -17,9 +17,11 @@ import java.util.zip.GZIPOutputStream;
 import java.util.zip.Inflater;
 import java.util.zip.InflaterInputStream;
 
+@SuppressWarnings("InvalidInjectorMethodSignature")
 @Mixin(ChunkStreamVersion.class)
 public class MixinChunkStreamVersion {
 
+    @SuppressWarnings({"InvalidMemberReference", "MixinAnnotationTarget"})
     @Dynamic
     @Redirect(method = "<clinit>", at = @At(value = "NEW", target = "(ILnet/minecraft/world/storage/ChunkStreamVersion$Wrapper;Lnet/minecraft/world/storage/ChunkStreamVersion$Wrapper;)Lnet/minecraft/world/storage/ChunkStreamVersion;"))
     private static ChunkStreamVersion redirectChunkStreamVersionConstructor(int id, ChunkStreamVersion.Wrapper<InputStream> inputStreamWrapper, ChunkStreamVersion.Wrapper<OutputStream> outputStreamWrapper) {

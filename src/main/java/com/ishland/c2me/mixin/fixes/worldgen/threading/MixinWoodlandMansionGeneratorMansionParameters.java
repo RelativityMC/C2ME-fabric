@@ -6,6 +6,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+@SuppressWarnings({"InvalidInjectorMethodSignature", "MixinAnnotationTarget"})
 @Mixin(WoodlandMansionGenerator.MansionParameters.class)
 public class MixinWoodlandMansionGeneratorMansionParameters {
 

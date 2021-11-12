@@ -182,7 +182,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
     private CompletableFuture<NbtCompound> getUpdatedChunkNbtAtAsync(ChunkPos pos) {
         return chunkLock.acquireLock(pos).toCompletableFuture().thenCompose(lockToken -> ((IAsyncChunkStorage) this.worker).getNbtAtAsync(pos).thenApply(compoundTag -> {
             if (compoundTag != null)
-                return this.updateChunkNbt(this.world.getRegistryKey(), this.persistentStateManagerFactory, compoundTag, this.chunkGenerator.method_39301());
+                return this.updateChunkNbt(this.world.getRegistryKey(), this.persistentStateManagerFactory, compoundTag, this.chunkGenerator.getCodecKey());
             else return null;
         }).handle((tag, throwable) -> {
             lockToken.releaseLock();

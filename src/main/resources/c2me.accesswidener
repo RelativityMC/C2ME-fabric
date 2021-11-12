@@ -18,6 +18,7 @@ accessible    class    net/minecraft/server/world/ThreadedAnvilChunkStorage$Enti
 accessible    class    net/minecraft/nbt/NbtOps$MapBuilder
 accessible    class    net/minecraft/world/storage/ChunkStreamVersion$Wrapper
 accessible    class    net/minecraft/server/world/ChunkTicketManager$NearbyChunkTicketUpdater
+accessible    class    net/minecraft/world/biome/source/MultiNoiseBiomeSource$Instance
 
 accessible    method    net/minecraft/world/storage/RegionBasedStorage                      <init>              (Ljava/io/File;Z)V
 accessible    method    net/minecraft/world/storage/RegionBasedStorage                      getRegionFile       (Lnet/minecraft/util/math/ChunkPos;)Lnet/minecraft/world/storage/RegionFile;

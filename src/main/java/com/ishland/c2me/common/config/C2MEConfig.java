@@ -92,7 +92,7 @@ public class C2MEConfig {
             this.enabled = ConfigUtils.getValue(configScope, "enabled", () -> getDefaultGlobalExecutorParallelism() >= 3 || global_enabled, "Whether to enable this feature", List.of(), false);
             this.allowThreadedFeatures = ConfigUtils.getValue(configScope, "allowThreadedFeatures", () -> true || global_allowThreadedFeatures, "Whether to allow feature generation (world decorations like trees, ores and etc.) run in parallel \n (may cause incompatibility with other mods)", List.of(), null);
             this.reduceLockRadius = ConfigUtils.getValue(configScope, "reduceLockRadius", () -> false || global_reduceLockRadius, "Whether to allow reducing lock radius \n (may cause incompatibility with other mods)", List.of(), null);
-            this.useGlobalBiomeCache = ConfigUtils.getValue(configScope, "useGlobalBiomeCache", () -> false || global_useGlobalBiomeCache, "(Experimental in 1.18 snapshots) \n Whether to enable global MultiBiomeCache to accelerate worldgen \n This increases memory allocation ", List.of(), false);
+            this.useGlobalBiomeCache = ConfigUtils.getValue(configScope, "useGlobalBiomeCache", () -> false || global_useGlobalBiomeCache, "(DO NOT USE in 1.18) \n Whether to enable global MultiBiomeCache to accelerate worldgen \n This increases memory allocation ", List.of(), false);
             configScope.removeUnusedKeys();
         }
     }
