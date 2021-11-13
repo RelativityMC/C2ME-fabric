@@ -18,11 +18,11 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: Set up JDK 16
+    - name: Set up JDK 17
       uses: actions/setup-java@v2
       with:
         distribution: 'zulu'
-        java-version: 16
+        java-version: 17
         java-package: jdk
         
     - uses: actions/cache@v2
@@ -31,9 +31,9 @@ jobs:
           ~/.gradle/caches
           ~/.gradle/wrapper
           ./.gradle/loom-cache
-        key: ${{ runner.os }}-gradle3-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        key: ${{ runner.os }}-gradle4-test-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
         restore-keys: |
-          ${{ runner.os }}-gradle3-test-
+          ${{ runner.os }}-gradle4-test-
         
     - name: Test C2ME
       run: |

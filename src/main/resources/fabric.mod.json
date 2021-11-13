@@ -33,7 +33,7 @@
     "c2me.client.mixins.json"
   ],
   "depends": {
-    "fabricloader": ">=0.11.3",
+    "fabricloader": ">=0.12.5",
     "java": ">=16",
     "minecraft": ">=1.17-rc.2"
   },

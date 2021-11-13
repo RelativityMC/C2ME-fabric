@@ -186,7 +186,7 @@ public class ComparisonSession implements Closeable {
             resourcePackManager.close();
             throw new RuntimeException("Cannot load data packs", t);
         }
-        final RegistryOps<NbtElement> dynamicOps = RegistryOps.method_36574(NbtOps.INSTANCE, serverResourceManager2.getResourceManager(), impl);
+        final RegistryOps<NbtElement> dynamicOps = RegistryOps.ofLoaded(NbtOps.INSTANCE, serverResourceManager2.getResourceManager(), impl);
         SaveProperties saveProperties = session.readLevelProperties(dynamicOps, dataPackSettings2);
         if (saveProperties == null) {
             resourcePackManager.close();

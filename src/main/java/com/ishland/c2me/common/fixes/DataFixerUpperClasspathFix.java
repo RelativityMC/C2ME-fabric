@@ -1,6 +1,6 @@
 package com.ishland.c2me.common.fixes;
 
-import net.fabricmc.loader.util.UrlUtil;
+import com.ishland.c2me.common.util.UrlUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

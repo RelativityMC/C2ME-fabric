@@ -5,13 +5,14 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.ishland.c2me.common.config.ConfigUtils;
+import com.ishland.c2me.common.util.UrlUtil;
 import com.ishland.c2me.compatibility.common.asm.ASMTransformer;
 import com.ishland.c2me.compatibility.common.asm.woodsandmires.ASMLakeFeature;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
-import net.fabricmc.loader.util.UrlUtil;
-import net.fabricmc.loader.util.version.SemanticVersionImpl;
-import net.fabricmc.loader.util.version.SemanticVersionPredicateParser;
+import net.fabricmc.loader.api.Version;
+import net.fabricmc.loader.impl.util.version.VersionParser;
+import net.fabricmc.loader.impl.util.version.VersionPredicateParser;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.objectweb.asm.tree.ClassNode;
@@ -149,8 +150,8 @@ public class C2MECompatibilityModule implements IMixinConfigPlugin {
     private void addMixins(String modid, String versionRange, String subPackage, ConfigUtils.ConfigScope configScope) {
         FabricLoader.getInstance().getModContainer(modid).ifPresent(modContainer -> {
             try {
-                final SemanticVersionImpl modVersion = new SemanticVersionImpl(modContainer.getMetadata().getVersion().getFriendlyString(), false);
-                final Predicate<SemanticVersionImpl> versionPredicate = SemanticVersionPredicateParser.create(versionRange);
+                final Version modVersion = VersionParser.parse(modContainer.getMetadata().getVersion().getFriendlyString(), false);
+                final Predicate<Version> versionPredicate = VersionPredicateParser.parse(versionRange);
                 if (versionPredicate.test(modVersion)) {
                     if (ConfigUtils.getValue(
                             configScope,
