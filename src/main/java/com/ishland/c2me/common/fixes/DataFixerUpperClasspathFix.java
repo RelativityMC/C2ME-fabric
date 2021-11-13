@@ -20,9 +20,9 @@ public class DataFixerUpperClasspathFix {
         try {
             // extra checks for dev env
             final ClassLoader classLoader = DataFixerUpperClasspathFix.class.getClassLoader();
-            final Class<?> classLoaderInterface = Class.forName("net.fabricmc.loader.launch.knot.KnotClassLoaderInterface");
+            final Class<?> classLoaderInterface = Class.forName("net.fabricmc.loader.impl.launch.knot.KnotClassLoaderInterface");
             if (classLoaderInterface.isInstance(classLoader)) {
-                final InputStream stream = (InputStream) accessible(classLoaderInterface.getMethod("getResourceAsStream", String.class, boolean.class)).invoke(classLoader, NAME, true);
+                final InputStream stream = (InputStream) accessible(classLoaderInterface.getMethod("getResourceAsStream", String.class, boolean.class)).invoke(classLoader, NAME, false);
                 if (stream != null) {
                     stream.close();
                     return;

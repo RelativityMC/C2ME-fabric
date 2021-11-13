@@ -108,9 +108,9 @@ public class C2MECompatibilityModule implements IMixinConfigPlugin {
 
                 // extra checks for dev env
                 final ClassLoader classLoader = C2MECompatibilityModule.class.getClassLoader();
-                final Class<?> classLoaderInterface = Class.forName("net.fabricmc.loader.launch.knot.KnotClassLoaderInterface");
+                final Class<?> classLoaderInterface = Class.forName("net.fabricmc.loader.impl.launch.knot.KnotClassLoaderInterface");
                 if (classLoaderInterface.isInstance(classLoader)) {
-                    final InputStream stream = (InputStream) accessible(classLoaderInterface.getMethod("getResourceAsStream", String.class, boolean.class)).invoke(classLoader, name, true);
+                    final InputStream stream = (InputStream) accessible(classLoaderInterface.getMethod("getResourceAsStream", String.class, boolean.class)).invoke(classLoader, name, false);
                     if (stream != null) {
                         stream.close();
                         continue;
