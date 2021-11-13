@@ -10,6 +10,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.List;
+import java.util.function.Supplier;
 
 public class C2MEConfig {
 
@@ -28,26 +29,34 @@ public class C2MEConfig {
 
     static {
         long startTime = System.nanoTime();
-        CommentedFileConfig config = CommentedFileConfig.builder(FabricLoader.getInstance().getConfigDir().resolve("c2me.toml"))
+        final Supplier<CommentedFileConfig> configSupplier = () -> CommentedFileConfig.builder(FabricLoader.getInstance().getConfigDir().resolve("c2me.toml"))
                 .autosave()
                 .preserveInsertionOrder()
                 .sync()
                 .build();
-        config.load();
+        CommentedFileConfig config;
+        try {
+            config = configSupplier.get();
+            config.load();
+        } catch (Throwable t) {
+            t.printStackTrace();
+            config = configSupplier.get();
+            config.save();
+        }
 
         final ConfigUtils.ConfigScope configScope = new ConfigUtils.ConfigScope(config);
         configScope.processedKeys.add("version");
         Updaters.update(config);
         final long version = config.getLongOrElse("version", 0);
         Preconditions.checkState(CURRENT_CONFIG_VERSION == version, "Config version mismatch");
-        globalExecutorParallelism = ConfigUtils.getValue(configScope, "globalExecutorParallelism", C2MEConfig::getDefaultGlobalExecutorParallelism, "Configures the parallelism of global executor", List.of(), null, ConfigUtils.CheckType.THREAD_COUNT);
-        asyncIoConfig = new AsyncIoConfig(ConfigUtils.getValue(configScope, "asyncIO", ConfigUtils::config, "Configuration for async io system", List.of(), null));
-        threadedWorldGenConfig = new ThreadedWorldGenConfig(ConfigUtils.getValue(configScope, "threadedWorldGen", ConfigUtils::config, "Configuration for threaded world generation", List.of(), null));
-        asyncSchedulingConfig = new AsyncSchedulingConfig(ConfigUtils.getValue(configScope, "asyncScheduling", ConfigUtils::config, "Configuration for async scheduling system", List.of(), null));
-        vanillaWorldGenOptimizationsConfig = new VanillaWorldGenOptimizationsConfig(ConfigUtils.getValue(configScope, "vanillaWorldGenOptimizations", ConfigUtils::config, "Configuration for vanilla worldgen optimizations", List.of(), null));
-        generalOptimizationsConfig = new GeneralOptimizationsConfig(ConfigUtils.getValue(configScope, "generalOptimizations", ConfigUtils::config, "Configuration for general optimizations", List.of(), null));
-        noTickViewDistanceConfig = new NoTickViewDistanceConfig(ConfigUtils.getValue(configScope, "noTickViewDistance", ConfigUtils::config, "Configuration for no-tick view distance", List.of(), null));
-        clientSideConfig = new ClientSideConfig(ConfigUtils.getValue(configScope, "clientSide", ConfigUtils::config, "Configuration for clientside functions", List.of(), null));
+        globalExecutorParallelism = ConfigUtils.getValue(configScope, "globalExecutorParallelism", C2MEConfig::getDefaultGlobalExecutorParallelism, "Configures the parallelism of global executor", List.of(), null, true);
+        asyncIoConfig = new AsyncIoConfig(ConfigUtils.getValue(configScope, "asyncIO", ConfigUtils::config, "Configuration for async io system", List.of(), null, true));
+        threadedWorldGenConfig = new ThreadedWorldGenConfig(ConfigUtils.getValue(configScope, "threadedWorldGen", ConfigUtils::config, "Configuration for threaded world generation", List.of(), null, true));
+        asyncSchedulingConfig = new AsyncSchedulingConfig(ConfigUtils.getValue(configScope, "asyncScheduling", ConfigUtils::config, "Configuration for async scheduling system", List.of(), null, true));
+        vanillaWorldGenOptimizationsConfig = new VanillaWorldGenOptimizationsConfig(ConfigUtils.getValue(configScope, "vanillaWorldGenOptimizations", ConfigUtils::config, "Configuration for vanilla worldgen optimizations", List.of(), null, true));
+        generalOptimizationsConfig = new GeneralOptimizationsConfig(ConfigUtils.getValue(configScope, "generalOptimizations", ConfigUtils::config, "Configuration for general optimizations", List.of(), null, true));
+        noTickViewDistanceConfig = new NoTickViewDistanceConfig(ConfigUtils.getValue(configScope, "noTickViewDistance", ConfigUtils::config, "Configuration for no-tick view distance", List.of(), null, true));
+        clientSideConfig = new ClientSideConfig(ConfigUtils.getValue(configScope, "clientSide", ConfigUtils::config, "Configuration for clientside functions", List.of(), null, true));
         configScope.removeUnusedKeys();
         config.save();
         config.close();
@@ -68,7 +77,7 @@ public class C2MEConfig {
         public AsyncIoConfig(CommentedConfig config) {
             Preconditions.checkNotNull(config, "asyncIo config is not present");
             final ConfigUtils.ConfigScope configScope = new ConfigUtils.ConfigScope(config);
-            this.enabled = ConfigUtils.getValue(configScope, "enabled", () -> true, "Whether to enable this feature", List.of("radon"), false);
+            this.enabled = ConfigUtils.getValue(configScope, "enabled", () -> true, "Whether to enable this feature", List.of("radon"), false, true);
             configScope.removeUnusedKeys();
         }
     }
@@ -88,10 +97,10 @@ public class C2MEConfig {
         public ThreadedWorldGenConfig(CommentedConfig config) {
             Preconditions.checkNotNull(config, "threadedWorldGen config is not present");
             final ConfigUtils.ConfigScope configScope = new ConfigUtils.ConfigScope(config);
-            this.enabled = ConfigUtils.getValue(configScope, "enabled", () -> getDefaultGlobalExecutorParallelism() >= 3 || global_enabled, "Whether to enable this feature", List.of(), false);
-            this.allowThreadedFeatures = ConfigUtils.getValue(configScope, "allowThreadedFeatures", () -> true, "Whether to allow feature generation (world decorations like trees, ores and etc.) run in parallel \n (may cause incompatibility with other mods)", List.of(), null);
-            this.reduceLockRadius = ConfigUtils.getValue(configScope, "reduceLockRadius", () -> false || global_reduceLockRadius, "Whether to allow reducing lock radius \n (may cause incompatibility with other mods)", List.of(), null);
-            this.useGlobalBiomeCache = ConfigUtils.getValue(configScope, "useGlobalBiomeCache", () -> false || global_useGlobalBiomeCache, "Whether to enable global BiomeCache to accelerate worldgen \n This increases memory allocation ", List.of(), false);
+            this.enabled = ConfigUtils.getValue(configScope, "enabled", () -> getDefaultGlobalExecutorParallelism() >= 3 || global_enabled, "Whether to enable this feature", List.of(), false, true);
+            this.allowThreadedFeatures = ConfigUtils.getValue(configScope, "allowThreadedFeatures", () -> true, "Whether to allow feature generation (world decorations like trees, ores and etc.) run in parallel \n (may cause incompatibility with other mods)", List.of(), null, true);
+            this.reduceLockRadius = ConfigUtils.getValue(configScope, "reduceLockRadius", () -> false || global_reduceLockRadius, "Whether to allow reducing lock radius \n (may cause incompatibility with other mods)", List.of(), null, true);
+            this.useGlobalBiomeCache = ConfigUtils.getValue(configScope, "useGlobalBiomeCache", () -> false || global_useGlobalBiomeCache, "Whether to enable global BiomeCache to accelerate worldgen \n This increases memory allocation ", List.of(), false, true);
             configScope.removeUnusedKeys();
         }
     }
@@ -104,7 +113,7 @@ public class C2MEConfig {
         public AsyncSchedulingConfig(CommentedConfig config) {
             Preconditions.checkNotNull(config, "asyncSchedulingConfig config is not present");
             final ConfigUtils.ConfigScope configScope = new ConfigUtils.ConfigScope(config);
-            this.enabled = ConfigUtils.getValue(configScope, "enabled", () -> false || global_enabled, "(Experimental) Whether to enable this feature \n (may cause incompatibility with other mods)", List.of(), false);
+            this.enabled = ConfigUtils.getValue(configScope, "enabled", () -> false || global_enabled, "(Experimental) Whether to enable this feature \n (may cause incompatibility with other mods)", List.of(), false, true);
             configScope.removeUnusedKeys();
         }
     }
@@ -116,8 +125,8 @@ public class C2MEConfig {
         public VanillaWorldGenOptimizationsConfig(CommentedConfig config) {
             Preconditions.checkNotNull(config, "vanillaWorldGenOptimizationsConfig config is not present");
             final ConfigUtils.ConfigScope configScope = new ConfigUtils.ConfigScope(config);
-            this.enabled = ConfigUtils.getValue(configScope, "enabled", () -> true, "Whether to enable this feature \n (may cause incompatibility with other mods)", List.of(), false);
-            this.useEndBiomeCache = ConfigUtils.getValue(configScope, "useEndBiomeCache", () -> true, "Whether to enable End BiomeCache to accelerate The End worldgen \n This is included in lithium-fabric \n (may cause incompatibility with other mods) ", List.of("lithium"), false);
+            this.enabled = ConfigUtils.getValue(configScope, "enabled", () -> true, "Whether to enable this feature \n (may cause incompatibility with other mods)", List.of(), false, true);
+            this.useEndBiomeCache = ConfigUtils.getValue(configScope, "useEndBiomeCache", () -> true, "Whether to enable End BiomeCache to accelerate The End worldgen \n This is included in lithium-fabric \n (may cause incompatibility with other mods) ", List.of("lithium"), false, true);
             configScope.removeUnusedKeys();
         }
     }
@@ -129,7 +138,7 @@ public class C2MEConfig {
         public GeneralOptimizationsConfig(CommentedConfig config) {
             Preconditions.checkNotNull(config, "generalOptimizationsConfig config is not present");
             final ConfigUtils.ConfigScope configScope = new ConfigUtils.ConfigScope(config);
-            this.optimizeAsyncChunkRequest = ConfigUtils.getValue(configScope, "optimizeAsyncChunkRequest", () -> true, "Whether to let async chunk request no longer block server thread \n (may cause incompatibility with other mods) ", List.of(), false);
+            this.optimizeAsyncChunkRequest = ConfigUtils.getValue(configScope, "optimizeAsyncChunkRequest", () -> true, "Whether to let async chunk request no longer block server thread \n (may cause incompatibility with other mods) ", List.of(), false, true);
             this.chunkStreamVersion = ConfigUtils.getValue(configScope, "chunkStreamVersion", () -> -1,
                     """
                             Defines which chunk compression should be used\s
@@ -144,8 +153,8 @@ public class C2MEConfig {
                              Other values can result in crashes when starting minecraft \s
                              to prevent further damage
                              """,
-                    List.of(), -1
-            );
+                    List.of(), -1,
+                    true);
             configScope.removeUnusedKeys();
         }
     }
@@ -161,10 +170,10 @@ public class C2MEConfig {
         public NoTickViewDistanceConfig(CommentedConfig config) {
             Preconditions.checkNotNull(config, "noTickViewDistanceConfig config is not present");
             final ConfigUtils.ConfigScope configScope = new ConfigUtils.ConfigScope(config);
-            this.enabled = ConfigUtils.getValue(configScope, "enabled", () -> false, "Weather to enable no-tick view distance", List.of(), false);
-            this.viewDistance = ConfigUtils.getValue(configScope, "viewDistance", () -> 12, "Minimum no-tick view distance value", List.of(), 12, ConfigUtils.CheckType.NO_TICK_VIEW_DISTANCE);
-            this.updatesPerTick = ConfigUtils.getValue(configScope, "updatesPerTick", () -> 6, "No-tick view distance updates per tick \n Lower this for a better latency and higher this for a faster loading", List.of(), 6, ConfigUtils.CheckType.POSITIVE_VALUE_ONLY);
-            this.compatibilityMode = ConfigUtils.getValue(configScope, "compatibilityMode", () -> false, "Whether to use compatibility mode to send chunks \n This may fix some mod compatibility issues", List.of("antixray"), true);
+            this.enabled = ConfigUtils.getValue(configScope, "enabled", () -> false, "Weather to enable no-tick view distance", List.of(), false, true);
+            this.viewDistance = ConfigUtils.getValue(configScope, "viewDistance", () -> 12, "Minimum no-tick view distance value", List.of(), 12, true);
+            this.updatesPerTick = ConfigUtils.getValue(configScope, "updatesPerTick", () -> 6, "No-tick view distance updates per tick \n Lower this for a better latency and higher this for a faster loading", List.of(), 6, true);
+            this.compatibilityMode = ConfigUtils.getValue(configScope, "compatibilityMode", () -> false, "Whether to use compatibility mode to send chunks \n This may fix some mod compatibility issues", List.of("antixray"), true, true);
             configScope.removeUnusedKeys();
         }
     }
@@ -175,7 +184,7 @@ public class C2MEConfig {
         public ClientSideConfig(CommentedConfig config) {
             Preconditions.checkNotNull(config, "clientSideConfig config is not present");
             final ConfigUtils.ConfigScope configScope = new ConfigUtils.ConfigScope(config);
-            this.modifyMaxVDConfig = new ModifyMaxVDConfig(ConfigUtils.getValue(configScope, "modifyMaxVDConfig", ConfigUtils::config, "Configuration for modifying clientside max view distance", List.of(), null));
+            this.modifyMaxVDConfig = new ModifyMaxVDConfig(ConfigUtils.getValue(configScope, "modifyMaxVDConfig", ConfigUtils::config, "Configuration for modifying clientside max view distance", List.of(), null, true));
             configScope.removeUnusedKeys();
         }
 
@@ -186,8 +195,8 @@ public class C2MEConfig {
             public ModifyMaxVDConfig(CommentedConfig config) {
                 Preconditions.checkNotNull(config, "clientSideConfig config is not present");
                 final ConfigUtils.ConfigScope configScope = new ConfigUtils.ConfigScope(config);
-                this.enabled = ConfigUtils.getValue(configScope, "enabled", () -> true, "Weather to enable c2me clientside features", List.of("bobby"), false);
-                this.maxViewDistance = ConfigUtils.getValue(configScope, "maxViewDistance", () -> 64, "Max render distance allowed in game options", List.of(), 64, ConfigUtils.CheckType.NO_TICK_VIEW_DISTANCE);
+                this.enabled = ConfigUtils.getValue(configScope, "enabled", () -> true, "Weather to enable c2me clientside features", List.of("bobby"), false, true);
+                this.maxViewDistance = ConfigUtils.getValue(configScope, "maxViewDistance", () -> 64, "Max render distance allowed in game options", List.of(), 64, true);
                 configScope.removeUnusedKeys();
             }
         }

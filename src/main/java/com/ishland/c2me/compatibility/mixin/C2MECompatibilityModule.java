@@ -159,7 +159,7 @@ public class C2MECompatibilityModule implements IMixinConfigPlugin {
                             () -> true,
                             String.format("Compatibility module for %s@%s(%s)", modid, modVersion.getFriendlyString(), versionRange),
                             List.of(),
-                            false)) {
+                            false, false)) {
                         LOGGER.info("Adding compatibility module for {}@{}({})", modid, modVersion.getFriendlyString(), versionRange);
                         enabledSubPackages.add(subPackage);
                         enabledMods.add(modContainer);

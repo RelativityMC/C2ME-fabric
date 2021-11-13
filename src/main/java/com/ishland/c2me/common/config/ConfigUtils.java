@@ -22,11 +22,11 @@ public class ConfigUtils {
 
     private static final boolean IGNORE_INCOMPATIBILITY = Boolean.parseBoolean(System.getProperty("com.ishland.c2me.common.config.ignoreIncompatibility", "false"));
 
-    public static <T> T getValue(ConfigScope config, String key, Supplier<T> def, String comment, List<String> incompatibleMods, T incompatibleDefault, CheckType... checks) {
-        return getValue0(config, key, Suppliers.memoize(def::get), comment, incompatibleMods, incompatibleDefault, checks);
+    public static <T> T getValue(ConfigScope config, String key, Supplier<T> def, String comment, List<String> incompatibleMods, T incompatibleDefault, boolean usePlaceholder, CheckType... checks) {
+        return getValue0(config, key, Suppliers.memoize(def::get), comment, incompatibleMods, incompatibleDefault, usePlaceholder, checks);
     }
 
-    private static <T> T getValue0(ConfigScope config, String key, Supplier<T> def, String comment, List<String> incompatibleMods, T incompatibleDefault, CheckType... checks) {
+    private static <T> T getValue0(ConfigScope config, String key, Supplier<T> def, String comment, List<String> incompatibleMods, T incompatibleDefault, boolean usePlaceholder, CheckType... checks) {
         if (IGNORE_INCOMPATIBILITY) C2MEConfig.LOGGER.fatal("Ignoring incompatibility check. You will get NO support if you do this unless explicitly stated. ");
         Preconditions.checkNotNull(config);
         Preconditions.checkNotNull(key);
@@ -39,8 +39,9 @@ public class ConfigUtils {
         }
         config.processedKeys.add(key);
         Object originalValue = config.config.get(key);
-        if (!config.config.contains(key) || (!originalValue.equals("default") && checks.length != 0 && Arrays.stream(checks).anyMatch(checkType -> !checkType.check(originalValue))))
-            config.config.set(key, def.get() instanceof Config ? def.get() : "default");
+        //noinspection SimplifiableConditionalExpression
+        if (!config.config.contains(key) || ((usePlaceholder ? !originalValue.equals("default") : true) && checks.length != 0 && Arrays.stream(checks).anyMatch(checkType -> !checkType.check(originalValue))))
+            config.config.set(key, def.get() instanceof Config || !usePlaceholder ? def.get() : "default");
         if (def.get() instanceof Config) config.config.setComment(key, String.format(" %s", comment));
         else config.config.setComment(key, String.format(" (Default: %s) %s", def.get(), comment));
         final Object configuredValue = getConfiguredValue(config.config.get(key), def);
