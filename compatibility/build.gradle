@@ -3,6 +3,9 @@ subprojects {
     apply plugin: 'java-library'
     apply plugin: 'maven-publish'
 
+    sourceCompatibility = JavaVersion.VERSION_16
+    targetCompatibility = JavaVersion.VERSION_16
+
     archivesBaseName = "c2me-compat-" + project.getName()
 
     loom {

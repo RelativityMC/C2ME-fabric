@@ -14,10 +14,12 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: Set up JDK 16
-      uses: actions/setup-java@v1
+    - name: Set up JDK 17
+      uses: actions/setup-java@v2
       with:
-        java-version: 16
+        distribution: 'zulu'
+        java-version: 17
+        java-package: jdk
         
     - uses: actions/cache@v2
       with:
@@ -25,18 +27,18 @@ jobs:
           ~/.gradle/caches
           ~/.gradle/wrapper
           ./.gradle/loom-cache
-        key: ${{ runner.os }}-gradle3-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        key: ${{ runner.os }}-gradle4-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
         restore-keys: |
-          ${{ runner.os }}-gradle3-
+          ${{ runner.os }}-gradle4-
         
     - name: Build C2ME
       run: |
         ./gradlew clean build --stacktrace
 
-    - name: Run FOSSA
-      uses: fossa-contrib/fossa-action@v1
-      with:
-        fossa-api-key: 46711dc8ef0a8d57d06010c8148bb6ea
+#    - name: Run FOSSA
+#      uses: fossa-contrib/fossa-action@v1
+#      with:
+#        fossa-api-key: 46711dc8ef0a8d57d06010c8148bb6ea
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v2
