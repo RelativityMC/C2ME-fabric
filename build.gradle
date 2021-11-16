@@ -1,17 +1,17 @@
 plugins {
     id 'java-library'
     id 'fabric-loom' version '0.10-SNAPSHOT'
-    id 'io.github.juuxel.loom-quiltflower-mini' version '1.0.0'
+    id 'io.github.juuxel.loom-quiltflower-mini' version '1.1.0'
     id 'maven-publish'
-    id 'com.github.johnrengelman.shadow' version '7.0.0'
+    id 'com.github.johnrengelman.shadow' version '7.1.0'
 }
 
 archivesBaseName = "${project.archives_base_name}-mc${project.minecraft_version}"
 group = project.maven_group
 
 allprojects {
-    sourceCompatibility = JavaVersion.VERSION_16
-    targetCompatibility = JavaVersion.VERSION_16
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
     version = project.mod_version + "." + getVersionSuffix()
 
     repositories {
@@ -147,4 +147,8 @@ String getVersionSuffix() {
     }
     def split = stdout.split('-')
     return split[split.length - 2] + suffix
+}
+
+shadowJar {
+    minimize()
 }

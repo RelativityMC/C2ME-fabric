@@ -62,7 +62,7 @@ Our discord server: [link](https://discord.io/ishlandbukkit)
 
 
 ## Building and setting up
-JDK 16+ is required to build and use C2ME  
+JDK 17+ is required to build and use C2ME  
 Run the following commands in the root directory:
 
 ```shell

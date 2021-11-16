@@ -16,7 +16,7 @@ public class MixinCrashReport {
             stringBuilder.append("\n");
             stringBuilder.append("-".repeat(16)).append("\n");
             stringBuilder.append("C2ME Compatibility Module Notice: \n");
-            stringBuilder.append("Do NOT report to mod authors if you encountered issues with the following mods: \n");
+            stringBuilder.append("Contact C2ME before reporting to mod authors if you encountered issues with the following mods: \n");
             for (ModContainer mod : C2MECompatibilityModule.getEnabledMods()) {
                 stringBuilder.append(String.format("- %s@%s\n", mod.getMetadata().getId(), mod.getMetadata().getVersion().getFriendlyString()));
             }
