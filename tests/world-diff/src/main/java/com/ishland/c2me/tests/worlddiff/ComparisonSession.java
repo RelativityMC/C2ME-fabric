@@ -229,9 +229,9 @@ public class ComparisonSession implements Closeable {
         final HashMap<RegistryKey<World>, StorageIoWorker> regionIoWorkers = new HashMap<>();
         final HashMap<RegistryKey<World>, StorageIoWorker> poiIoWorkers = new HashMap<>();
         for (RegistryKey<World> world : worldKeys) {
-            regionIoWorkers.put(world, new StorageIoWorker(new File(session.getWorldDirectory(world), "region"), true, "chunk") {
+            regionIoWorkers.put(world, new StorageIoWorker(session.getWorldDirectory(world).resolve("region"), true, "chunk") {
             });
-            poiIoWorkers.put(world, new StorageIoWorker(new File(session.getWorldDirectory(world), "poi"), true, "poi") {
+            poiIoWorkers.put(world, new StorageIoWorker(session.getWorldDirectory(world).resolve("poi"), true, "poi") {
             });
         }
         return new WorldHandle(chunkPosesMap, regionIoWorkers, poiIoWorkers, impl, () -> {

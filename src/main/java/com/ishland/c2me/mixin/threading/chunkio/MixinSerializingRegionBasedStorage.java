@@ -1,5 +1,6 @@
 package com.ishland.c2me.mixin.threading.chunkio;
 
+import com.ishland.c2me.common.threading.chunkio.ISerializingRegionBasedStorage;
 import com.mojang.serialization.DynamicOps;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtOps;
@@ -8,7 +9,6 @@ import net.minecraft.world.storage.SerializingRegionBasedStorage;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import com.ishland.c2me.common.threading.chunkio.ISerializingRegionBasedStorage;
 
 @Mixin(SerializingRegionBasedStorage.class)
 public abstract class MixinSerializingRegionBasedStorage implements ISerializingRegionBasedStorage {

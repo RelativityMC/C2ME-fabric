@@ -1,5 +1,6 @@
 package com.ishland.c2me.mixin.optimization.chunkscheduling.mid_tick_chunk_tasks;
 
+import com.ishland.c2me.common.optimization.chunkscheduling.ServerMidTickTask;
 import net.minecraft.server.world.ServerChunkManager;
 import net.minecraft.server.world.ServerWorld;
 import org.spongepowered.asm.mixin.Dynamic;
@@ -9,7 +10,6 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import com.ishland.c2me.common.optimization.chunkscheduling.ServerMidTickTask;
 
 @Mixin(ServerChunkManager.class)
 public class MixinServerChunkManager {

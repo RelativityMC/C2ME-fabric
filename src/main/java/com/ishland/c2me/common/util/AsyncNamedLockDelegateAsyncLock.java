@@ -4,7 +4,6 @@ import com.google.common.base.Preconditions;
 import com.ibm.asyncutil.locks.AsyncLock;
 import com.ibm.asyncutil.locks.AsyncNamedLock;
 
-import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletionStage;
 

@@ -1,5 +1,6 @@
 package com.ishland.c2me.mixin;
 
+import com.ishland.c2me.common.config.C2MEConfig;
 import com.ishland.c2me.common.fixes.DataFixerUpperClasspathFix;
 import com.ishland.c2me.common.util.ModuleUtil;
 import net.fabricmc.loader.api.FabricLoader;
@@ -8,7 +9,6 @@ import org.apache.logging.log4j.Logger;
 import org.objectweb.asm.tree.ClassNode;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
-import com.ishland.c2me.common.config.C2MEConfig;
 
 import java.util.List;
 import java.util.Set;

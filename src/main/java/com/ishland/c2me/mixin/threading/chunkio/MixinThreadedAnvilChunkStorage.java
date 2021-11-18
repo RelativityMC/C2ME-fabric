@@ -48,8 +48,8 @@ import java.util.function.Supplier;
 @Mixin(ThreadedAnvilChunkStorage.class)
 public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStorage implements ChunkHolder.PlayersWatchingChunkProvider {
 
-    public MixinThreadedAnvilChunkStorage(File file, DataFixer dataFixer, boolean bl) {
-        super(file, dataFixer, bl);
+    public MixinThreadedAnvilChunkStorage(Path path, DataFixer dataFixer, boolean bl) {
+        super(path, dataFixer, bl);
     }
 
     @Shadow

@@ -20,7 +20,6 @@ accessible    class    net/minecraft/world/storage/ChunkStreamVersion$Wrapper
 accessible    class    net/minecraft/server/world/ChunkTicketManager$NearbyChunkTicketUpdater
 accessible    class    net/minecraft/world/biome/source/MultiNoiseBiomeSource$Instance
 
-accessible    method    net/minecraft/world/storage/RegionBasedStorage                      <init>              (Ljava/io/File;Z)V
 accessible    method    net/minecraft/world/storage/RegionBasedStorage                      getRegionFile       (Lnet/minecraft/util/math/ChunkPos;)Lnet/minecraft/world/storage/RegionFile;
 accessible    method    net/minecraft/util/collection/WeightedList                          <init>              (Ljava/util/List;)V
 accessible    method    net/minecraft/util/collection/WeightedList$Entry                    setShuffledOrder    (F)V

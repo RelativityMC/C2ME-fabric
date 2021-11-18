@@ -4,6 +4,7 @@ import net.minecraft.server.world.ChunkTicket;
 import net.minecraft.server.world.ChunkTicketType;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.SimulationDistanceLevelPropagator;
+
 import java.util.function.LongPredicate;
 
 public class NoOPTickingMap extends SimulationDistanceLevelPropagator {
