@@ -26,7 +26,7 @@ public class MixinThreadedAnvilChunkStorage {
     @Shadow @Final private static Logger LOGGER;
 
     @Dynamic
-    @Inject(method = "method_17227", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/WorldChunk;loadToWorld()V"), cancellable = false)
+    @Inject(method = "method_17227", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/WorldChunk;loadEntities()V"), cancellable = false)
     // lambda expression in convertToFullChunk
     private void afterLoadToWorld(ChunkHolder chunkHolder, Chunk protoChunk, CallbackInfoReturnable<CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>>> cir) {
         if (this.loadedChunks.contains(chunkHolder.getPos().toLong()))

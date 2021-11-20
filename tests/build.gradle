@@ -4,8 +4,8 @@ allprojects {
     apply plugin: 'io.github.juuxel.loom-quiltflower-mini'
     apply plugin: 'java-library'
 
-    sourceCompatibility = JavaVersion.VERSION_16
-    targetCompatibility = JavaVersion.VERSION_16
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 
     group = project.maven_group + ".tests"
     repositories {
@@ -41,7 +41,7 @@ allprojects {
         mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
         modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
         modApi 'com.github.astei:lazydfu:0.1.2'
-        modApi 'com.github.ishlandbukkit:Starlight:3be3de5'
+        modApi 'com.github.ishlandbukkit:Starlight:2c11692'
         implementation "com.ibm.async:asyncutil:${async_util_version}"
     }
     processResources {

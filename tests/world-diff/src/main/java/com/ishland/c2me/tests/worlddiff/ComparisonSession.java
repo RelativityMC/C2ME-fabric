@@ -169,7 +169,7 @@ public class ComparisonSession implements Closeable {
 
     private static Map<ChunkSectionPos, ChunkSection> readSections(ChunkPos pos, NbtCompound chunkData, Registry<Biome> registry) {
         NbtList nbtList = chunkData.getCompound("Level").getList("Sections", 10);
-        Codec<PalettedContainer<Biome>> codec = PalettedContainer.createCodec(registry, registry.method_39673(), PalettedContainer.PaletteProvider.BIOME, registry.getOrThrow(BiomeKeys.PLAINS));;
+        Codec<PalettedContainer<Biome>> codec = PalettedContainer.createCodec(registry, registry.getCodec(), PalettedContainer.PaletteProvider.BIOME, registry.getOrThrow(BiomeKeys.PLAINS));;
         HashMap<ChunkSectionPos, ChunkSection> result = new HashMap<>();
         for (int i = 0; i < nbtList.size(); i++) {
             final NbtCompound sectionData = nbtList.getCompound(i);

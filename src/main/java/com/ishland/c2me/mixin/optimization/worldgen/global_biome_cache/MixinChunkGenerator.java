@@ -1,9 +1,9 @@
 package com.ishland.c2me.mixin.optimization.worldgen.global_biome_cache;
 
-import net.minecraft.class_6748;
 import net.minecraft.world.biome.source.BiomeSource;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.gen.StructureAccessor;
+import net.minecraft.world.gen.chunk.Blender;
 import net.minecraft.world.gen.chunk.ChunkGenerator;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -21,7 +21,7 @@ public class MixinChunkGenerator {
     @Shadow @Final protected BiomeSource biomeSource;
 
     @Inject(method = "populateBiomes", at = @At("HEAD"), cancellable = true)
-    private void onPopulateBiomes(Executor executor, class_6748 arg, StructureAccessor structureAccessor, Chunk chunk, CallbackInfoReturnable<CompletableFuture<Chunk>> cir) {
+    private void onPopulateBiomes(Executor executor, Blender arg, StructureAccessor structureAccessor, Chunk chunk, CallbackInfoReturnable<CompletableFuture<Chunk>> cir) {
 //        if (biomeSource instanceof IGlobalBiomeCache biomeSource1) {
 ////            ((ProtoChunk) chunk).setBiomes(biomeSource1.preloadBiomes(chunk.getPos(), chunk.getBiomeArray()));
 //            cir.setReturnValue(CompletableFuture.completedFuture(chunk));
