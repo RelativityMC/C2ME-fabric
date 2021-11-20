@@ -68,7 +68,7 @@
     "optimization.math.MixinOctavePerlinNoiseSampler",
     "optimization.math.MixinPerlinNoiseSampler",
     "optimization.reduce_allocs.MixinIdentifier",
-    "optimization.reduce_allocs.MixinMaterialRuleContext",
+    "optimization.reduce_allocs.surfacebuilder.MixinMaterialRuleContext",
     "optimization.reduce_allocs.MixinNbtCompound",
     "optimization.reduce_allocs.MixinNbtCompound1",
     "optimization.reduce_allocs.MixinNbtList",

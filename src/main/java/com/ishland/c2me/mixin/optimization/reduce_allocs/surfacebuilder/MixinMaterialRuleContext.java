@@ -1,4 +1,4 @@
-package com.ishland.c2me.mixin.optimization.reduce_allocs;
+package com.ishland.c2me.mixin.optimization.reduce_allocs.surfacebuilder;
 
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.registry.Registry;
