@@ -39,6 +39,7 @@
     "fixes.worldgen.threading.MixinStrongholdGeneratorSpiralStaircase",
     "fixes.worldgen.threading.MixinStrongholdGeneratorStart",
     "fixes.worldgen.threading.MixinStructure",
+    "fixes.worldgen.threading.MixinStructureChecker",
     "fixes.worldgen.threading.MixinStructurePalettedBlockInfoList",
     "fixes.worldgen.threading.MixinStructurePlacementData",
     "fixes.worldgen.threading.MixinStructureStart",
