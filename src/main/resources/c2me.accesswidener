@@ -19,6 +19,9 @@ accessible    class    net/minecraft/nbt/NbtOps$MapBuilder
 accessible    class    net/minecraft/world/storage/ChunkStreamVersion$Wrapper
 accessible    class    net/minecraft/server/world/ChunkTicketManager$NearbyChunkTicketUpdater
 accessible    class    net/minecraft/world/biome/source/MultiNoiseBiomeSource$Instance
+accessible    class    net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext
+
+extendable    class    net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext
 
 accessible    method    net/minecraft/world/storage/RegionBasedStorage                      getRegionFile       (Lnet/minecraft/util/math/ChunkPos;)Lnet/minecraft/world/storage/RegionFile;
 accessible    method    net/minecraft/util/collection/WeightedList                          <init>              (Ljava/util/List;)V
