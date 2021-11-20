@@ -194,7 +194,7 @@ public class C2MEConfig {
                 Preconditions.checkNotNull(config, "clientSideConfig config is not present");
                 final ConfigUtils.ConfigScope configScope = new ConfigUtils.ConfigScope(config);
                 this.enabled = ConfigUtils.getValue(configScope, "enabled", () -> true, "Weather to enable c2me clientside features", List.of("bobby"), false, true);
-                this.maxViewDistance = ConfigUtils.getValue(configScope, "maxViewDistance", () -> 64, "Max render distance allowed in game options", List.of(), 64, true);
+                this.maxViewDistance = ConfigUtils.getValue(configScope, "maxViewDistance", () -> 128, "Max render distance allowed in game options", List.of(), 128, true);
                 configScope.removeUnusedKeys();
             }
         }
