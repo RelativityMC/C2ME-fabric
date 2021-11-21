@@ -2,7 +2,7 @@
   "required": true,
   "minVersion": "0.8",
   "package": "com.ishland.c2me.asm.targets",
-  "compatibilityLevel": "JAVA_17",
+  "compatibilityLevel": "JAVA_16",
   "mixins": [
     "ASMMixinTargets"
   ],

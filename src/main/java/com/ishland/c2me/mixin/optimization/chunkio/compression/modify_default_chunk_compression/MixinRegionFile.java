@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(RegionFile.class)
 public class MixinRegionFile {
 
-    @Redirect(method = "<init>(Ljava/io/File;Ljava/io/File;Z)V", at = @At(value = "FIELD", target = "Lnet/minecraft/world/storage/ChunkStreamVersion;DEFLATE:Lnet/minecraft/world/storage/ChunkStreamVersion;", opcode = Opcodes.GETSTATIC))
+    @Redirect(method = "<init>(Ljava/nio/file/Path;Ljava/nio/file/Path;Z)V", at = @At(value = "FIELD", target = "Lnet/minecraft/world/storage/ChunkStreamVersion;DEFLATE:Lnet/minecraft/world/storage/ChunkStreamVersion;", opcode = Opcodes.GETSTATIC))
     private static ChunkStreamVersion redirectDefaultChunkStreamVersion() {
         final ChunkStreamVersion chunkStreamVersion = ChunkStreamVersion.get(C2MEConfig.generalOptimizationsConfig.chunkStreamVersion);
         if (chunkStreamVersion == null) {
