@@ -1,9 +1,9 @@
-<img width="200" src="https://github.com/ishlandbukkit/C2ME-fabric/raw/ver/1.17/src/main/resources/assets/c2me/icon.png" alt="C2ME icon" align="right">
+<img width="200" src="https://github.com/RelativityMC/C2ME-fabric/raw/ver/1.17/src/main/resources/assets/c2me/icon.png" alt="C2ME icon" align="right">
 <div align="left">
 <h1>C^2M-Engine</h1>
 
-[![Github-CI](https://github.com/ishlandbukkit/C2ME-fabric/workflows/C2ME%20Build%20Script/badge.svg)](https://github.com/YatopiaMC/C2ME-fabric/actions?query=workflow%3ACI)
-[![Build Status](https://ci.codemc.io/job/ishlandbukkit/job/C2ME-fabric/job/ver%252F1.17/badge/icon)](https://ci.codemc.io/job/ishlandbukkit/job/C2ME-fabric/job/ver%252F1.17/)
+[![Github-CI](https://github.com/RelativityMC/C2ME-fabric/workflows/C2ME%20Build%20Script/badge.svg)](https://github.com/YatopiaMC/C2ME-fabric/actions?query=workflow%3ACI)
+[![Build Status](https://ci.codemc.io/job/RelativityMC/job/C2ME-fabric/job/ver%252F1.17/badge/icon)](https://ci.codemc.io/job/RelativityMC/job/C2ME-fabric/job/ver%252F1.17/)
 [![Discord](https://img.shields.io/discord/756715786747248641?logo=discord&logoColor=white)](https://discord.io/ishlandbukkit)
 <h3>A Fabric mod designed to improve the chunk performance of Minecraft.</h3>
 </div>
@@ -30,8 +30,8 @@ So backup your worlds and practice good game modding skills.
 [^forgePartial116]: Forge doesn't appear to support Java 16 on 1.16.5, so these versions uses Java 11 and may not contain some features which is present in the fabric versions.
 
 ## Downloads
-You can find semi-stable releases here: https://github.com/ishlandbukkit/C2ME-fabric/releases  
-You can find development builds here: https://ci.codemc.io/job/ishlandbukkit/job/C2ME-fabric
+You can find semi-stable releases here: https://github.com/RelativityMC/C2ME-fabric/releases  
+You can find development builds here: https://ci.codemc.io/job/RelativityMC/job/C2ME-fabric
 
 ## Mod compatibility
 <!-- Update this accordingly when updating ModpackConfig.groovy -->
@@ -57,7 +57,7 @@ You can find development builds here: https://ci.codemc.io/job/ishlandbukkit/job
 [^compatible]: Working with `chunkio` and `threadedWorldGen` with `allowThreadedFeatures` `reduceLockRadius` enabled
 
 ## Support
-Our issue tracker: [link](https://github.com/ishlandbukkit/C2ME-fabric/issues)  
+Our issue tracker: [link](https://github.com/RelativityMC/C2ME-fabric/issues)  
 Our discord server: [link](https://discord.io/ishlandbukkit)
 
 
