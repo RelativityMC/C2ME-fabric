@@ -45,6 +45,7 @@ public abstract class MixinChunkHolder {
     @Shadow
     @Final
     private AtomicReferenceArray<CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>>> futuresByStatus;
+    @Shadow private CompletableFuture<Chunk> savingFuture;
     @Unique
     private ReentrantLock schedulingLock = new ReentrantLock();
 
@@ -95,6 +96,17 @@ public abstract class MixinChunkHolder {
     private void synchronizeCombineSavingFuture(ChunkHolder holder, CompletableFuture<? extends Either<? extends Chunk, ChunkHolder.Unloaded>> then, String thenDesc) {
         synchronized (this) {
             this.combineSavingFuture(then, thenDesc);
+        }
+    }
+
+    /**
+     * @author ishland
+     * @reason synchronize
+     */
+    @Overwrite
+    protected void method_39967(String string, CompletableFuture<?> completableFuture) {
+        synchronized (this) {
+            this.savingFuture = this.savingFuture.thenCombine(completableFuture, (chunk, object) -> chunk);
         }
     }
 
