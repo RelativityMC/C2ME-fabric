@@ -104,7 +104,7 @@ public abstract class MixinChunkHolder {
      * @reason synchronize
      */
     @Overwrite
-    protected void method_39967(String string, CompletableFuture<?> completableFuture) {
+    public void method_39967(String string, CompletableFuture<?> completableFuture) {
         synchronized (this) {
             this.savingFuture = this.savingFuture.thenCombine(completableFuture, (chunk, object) -> chunk);
         }
