@@ -1,23 +1,19 @@
 package com.ishland.c2me.mixin.optimization.worldgen.random_instances;
 
 import com.ishland.c2me.common.optimization.worldgen.random_instances.SimplifiedAtomicSimpleRandom;
-import net.minecraft.world.gen.chunk.NoiseChunkGenerator;
-import net.minecraft.world.gen.feature.GeodeFeature;
-import net.minecraft.world.gen.feature.StructureFeature;
+import net.minecraft.structure.pool.StructurePoolBasedGenerator;
 import net.minecraft.world.gen.random.AtomicSimpleRandom;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
 @Mixin(value = {
-        NoiseChunkGenerator.class,
-        GeodeFeature.class,
-        StructureFeature.class,
+        StructurePoolBasedGenerator.class
 })
-public class MixinRedirectAtomicSimpleRandom {
+public class MixinRedirectAtomicSimpleRandomStatic {
 
     @Redirect(method = "*", at = @At(value = "NEW", target = "net/minecraft/world/gen/random/AtomicSimpleRandom"))
-    private AtomicSimpleRandom redirectAtomicSimpleRandom(long l) {
+    private static AtomicSimpleRandom redirectAtomicSimpleRandom(long l) {
         return new SimplifiedAtomicSimpleRandom(l);
     }
 

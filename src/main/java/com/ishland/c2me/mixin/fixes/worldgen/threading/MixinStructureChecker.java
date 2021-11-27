@@ -6,7 +6,7 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectMaps;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import net.minecraft.class_6832;
+import net.minecraft.world.StructureLocator;
 import net.minecraft.world.gen.feature.StructureFeature;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -23,14 +23,14 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.function.Consumer;
 
-@Mixin(class_6832.class)
+@Mixin(StructureLocator.class)
 public class MixinStructureChecker {
 
     @Mutable
-    @Shadow @Final private Long2ObjectMap<Object2IntMap<StructureFeature<?>>> field_36237;
+    @Shadow @Final private Long2ObjectMap<Object2IntMap<StructureFeature<?>>> cachedFeaturesByChunkPos;
 
     @Mutable
-    @Shadow @Final private Map<StructureFeature<?>, Long2BooleanMap> field_36238;
+    @Shadow @Final private Map<StructureFeature<?>, Long2BooleanMap> generationPossibilityByFeature;
 
     @Unique
     private Object mapMutex = new Object();
@@ -38,11 +38,11 @@ public class MixinStructureChecker {
     @Inject(method = "<init>", at = @At(value = "RETURN"))
     private void onInit(CallbackInfo info) {
         this.mapMutex = new Object();
-        this.field_36237 = Long2ObjectMaps.synchronize(this.field_36237);
-        this.field_36238 = Object2ObjectMaps.synchronize(new Object2ObjectOpenHashMap<>(), this.mapMutex);
+        this.cachedFeaturesByChunkPos = Long2ObjectMaps.synchronize(this.cachedFeaturesByChunkPos);
+        this.generationPossibilityByFeature = Object2ObjectMaps.synchronize(new Object2ObjectOpenHashMap<>(), this.mapMutex);
     }
 
-    @Redirect(method = "method_39828", at = @At(value = "INVOKE", target = "Ljava/util/Collection;forEach(Ljava/util/function/Consumer;)V"))
+    @Redirect(method = "cache(JLit/unimi/dsi/fastutil/objects/Object2IntMap;)V", at = @At(value = "INVOKE", target = "Ljava/util/Collection;forEach(Ljava/util/function/Consumer;)V"))
     private void redirectForEach(Collection<Long2BooleanMap> instance, Consumer<Long2BooleanMap> consumer) {
         //noinspection SynchronizeOnNonFinalField
         synchronized (this.mapMutex) {

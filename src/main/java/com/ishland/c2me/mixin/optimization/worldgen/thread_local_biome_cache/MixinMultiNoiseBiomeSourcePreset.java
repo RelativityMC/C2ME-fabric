@@ -16,7 +16,7 @@ import java.util.function.Supplier;
 public class MixinMultiNoiseBiomeSourcePreset {
 
     @Dynamic
-    @Redirect(method = "method_39531", at = @At(value = "NEW", target = "net/minecraft/world/biome/source/MultiNoiseBiomeSource"))
+    @Redirect(method = "getBiomeSource(Lnet/minecraft/world/biome/source/MultiNoiseBiomeSource$Instance;Z)Lnet/minecraft/world/biome/source/MultiNoiseBiomeSource;", at = @At(value = "NEW", target = "net/minecraft/world/biome/source/MultiNoiseBiomeSource"))
     private static MultiNoiseBiomeSource redirectConstruct(MultiNoiseUtil.Entries<Supplier<Biome>> entries, @SuppressWarnings("OptionalUsedAsFieldOrParameterType") Optional<MultiNoiseBiomeSource.Instance> optional) {
         return new ThreadLocalCachingMultiNoiseBiomeSource(entries, optional);
     }
