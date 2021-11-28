@@ -24,6 +24,7 @@
     "fixes.general.threading.MixinThreadedAnvilChunkStorage",
     "fixes.vanilla_bugs.incorrect_required_status_for_generation_in_structure_references_status.MixinChunkStatus",
     "fixes.worldgen.deadlocks.MixinDataFixerType",
+    "fixes.worldgen.graal.MixinPlacedFeature",
     "fixes.worldgen.threading.MixinChunk",
     "fixes.worldgen.threading.MixinChunkGenerator",
     "fixes.worldgen.threading.MixinDesertTempleGenerator",
