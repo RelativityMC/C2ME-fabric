@@ -35,7 +35,7 @@
   "depends": {
     "fabricloader": ">=0.12.5",
     "java": ">=17",
-    "minecraft": ">=1.18-beta.2"
+    "minecraft": ">=1.18"
   },
   "conflicts": {
     "optifabric": "*",
