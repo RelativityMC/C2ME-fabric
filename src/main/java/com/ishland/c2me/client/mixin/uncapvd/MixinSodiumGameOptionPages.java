@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.ModifyConstant;
 public class MixinSodiumGameOptionPages {
 
     @Dynamic
-    @ModifyConstant(method = "*", constant = @Constant(intValue = 32), remap = false)
+    @ModifyConstant(method = "lambda$general$0", constant = @Constant(intValue = 32), remap = false)
     private static int modifyMaxViewDistance(int value) {
         return C2MEConfig.clientSideConfig.modifyMaxVDConfig.maxViewDistance;
     }
