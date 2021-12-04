@@ -3,7 +3,7 @@
 <h1>C^2M-Engine</h1>
 
 [![Github-CI](https://github.com/RelativityMC/C2ME-fabric/workflows/C2ME%20Build%20Script/badge.svg)](https://github.com/RelativityMC/C2ME-fabric/actions?query=workflow%3ACI)
-[![Build Status](https://ci.codemc.io/job/RelativityMC/job/C2ME-fabric/job/ver%252F1.18/badge/icon)](https://ci.codemc.io/job/RelativityMC/job/C2ME-fabric/job/ver%252F1.17/)
+[![Build Status](https://ci.codemc.io/job/RelativityMC/job/C2ME-fabric/job/ver%252F1.18/badge/icon)](https://ci.codemc.io/job/RelativityMC/job/C2ME-fabric/job/ver%252F1.18/)
 [![Discord](https://img.shields.io/discord/756715786747248641?logo=discord&logoColor=white)](https://discord.io/ishlandbukkit)
 <h3>A Fabric mod designed to improve the chunk performance of Minecraft.</h3>
 </div>
@@ -36,25 +36,7 @@ You can find development builds here: https://ci.codemc.io/job/RelativityMC/job/
 ## Mod compatibility
 <!-- Update this accordingly when updating ModpackConfig.groovy -->
 
-**Fabric known compatible<sup>[^compatible]</sup> content mods:**  
-- [Terra 5.4.1-BETA+efd1665](https://modrinth.com/mod/terra/version/i38N6tkR)
-- [BetterEnd 0.10.5-pre](https://github.com/paulevsGitch/BetterEnd/releases/tag/0.10.5-pre)
-- [BetterNether 5.1.3](https://www.curseforge.com/minecraft/mc-mods/betternether/files/3379682)
-- [RepurposedStructures-Fabric 2.2.0+1.17.1](https://modrinth.com/mod/repurposed-structures-fabric/version/Hp3zNCHi)
-- [Bumblezone-Fabric 3.0.9+1.17.1](https://modrinth.com/mod/the-bumblezone-fabric/version/VK0znAOW)
-- [Vanilla+ Biomes 0.3.2 for 1.17](https://www.curseforge.com/minecraft/mc-mods/vanilla-biomes/files/3355670)
-- [River Redux 0.2.0 for 1.17](https://www.curseforge.com/minecraft/mc-mods/river-redux/files/3344516)
-- [Cave Biomes 0.6.3 for 1.17](https://www.curseforge.com/minecraft/mc-mods/cave-biomes/files/3344491)
-- [Traverse v4.0.0-beta.2 for 1.17.1](https://github.com/TerraformersMC/Traverse/releases/tag/v4.0.0-beta.2)
-- [YUNG's Better Mineshafts (Fabric) v1.0.1](https://www.curseforge.com/minecraft/mc-mods/yungs-better-mineshafts-fabric/files/3414789)
-- [YUNG's Better Strongholds (Fabric) v1.1.1](https://www.curseforge.com/minecraft/mc-mods/yungs-better-strongholds-fabric/files/3412649)
-- [YUNG's Better Dungeons (Fabric) v1.0.2](https://www.curseforge.com/minecraft/mc-mods/yungs-better-dungeons-fabric/files/3476131)
-- [Charm 3.3.2](https://www.curseforge.com/minecraft/mc-mods/charm/files/3393290)
-- [The Graveyard 1.4 (FABRIC) for 1.17-1.17.1](https://www.curseforge.com/minecraft/mc-mods/the-graveyard-fabric/files/3457664)
-
-[All of Fabric 4 - 0.0.9](https://www.curseforge.com/minecraft/modpacks/all-of-fabric-4/files/3420600) should work without crashes now. 
-
-[^compatible]: Working with `chunkio` and `threadedWorldGen` with `allowThreadedFeatures` `reduceLockRadius` enabled
+TODO for 1.18
 
 ## Support
 Our issue tracker: [link](https://github.com/RelativityMC/C2ME-fabric/issues)  
