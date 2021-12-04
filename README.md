@@ -2,7 +2,7 @@
 <div align="left">
 <h1>C^2M-Engine</h1>
 
-[![Github-CI](https://github.com/RelativityMC/C2ME-fabric/workflows/C2ME%20Build%20Script/badge.svg)](https://github.com/YatopiaMC/C2ME-fabric/actions?query=workflow%3ACI)
+[![Github-CI](https://github.com/RelativityMC/C2ME-fabric/workflows/C2ME%20Build%20Script/badge.svg)](https://github.com/RelativityMC/C2ME-fabric/actions?query=workflow%3ACI)
 [![Build Status](https://ci.codemc.io/job/RelativityMC/job/C2ME-fabric/job/ver%252F1.17/badge/icon)](https://ci.codemc.io/job/RelativityMC/job/C2ME-fabric/job/ver%252F1.17/)
 [![Discord](https://img.shields.io/discord/756715786747248641?logo=discord&logoColor=white)](https://discord.io/ishlandbukkit)
 <h3>A Fabric mod designed to improve the chunk performance of Minecraft.</h3>
@@ -20,14 +20,14 @@ Although it is usable in most cases and tested during build time, it doesn't mea
 So backup your worlds and practice good game modding skills.
 
 ## Branch development status
-| Branch | Status |
-| ------ | ------ |
-| fabric/ver/1.16.5 | Inactive |
-| fabric/ver/1.17 | Active |
-| forge/ver/1.16.5 | Partial[^forgePartial116], Inactive |
-| forge/ver/1.17 | Waiting for forge |
+| Branch            | Status                               |
+|-------------------|--------------------------------------|
+| fabric/ver/1.18   | Active, Mainline                     |
+| fabric/ver/1.17   | Active                               |
+| fabric/ver/1.16.5 | Inactive                             |
+| forge/ver/1.16.5  | Partial[^forge_partial116], Inactive |
 
-[^forgePartial116]: Forge doesn't appear to support Java 16 on 1.16.5, so these versions uses Java 11 and may not contain some features which is present in the fabric versions.
+[^forge_partial116]: Forge doesn't appear to support Java 16 on 1.16.5, so these versions uses Java 11 and may not contain some features which is present in the fabric versions.
 
 ## Downloads
 You can find semi-stable releases here: https://github.com/RelativityMC/C2ME-fabric/releases  
