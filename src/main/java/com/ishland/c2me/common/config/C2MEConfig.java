@@ -64,10 +64,17 @@ public class C2MEConfig {
     }
 
     private static int getDefaultGlobalExecutorParallelism() {
+        int maxMemThreads;
+        try {
+            com.sun.management.OperatingSystemMXBean os = (com.sun.management.OperatingSystemMXBean) java.lang.management.ManagementFactory.getOperatingSystemMXBean();
+            maxMemThreads = (int) (os.getTotalMemorySize() / 1024L / 1024L / 1024L);
+        } catch (Exception e) {
+            maxMemThreads = Integer.MAX_VALUE;
+        }
         if (PlatformDependent.isWindows()) {
-            return Math.max(1, (int) (Runtime.getRuntime().availableProcessors() / 1.6 - 2));
+            return Math.min(Math.max(1, (int) (Runtime.getRuntime().availableProcessors() / 1.6 - 2)), maxMemThreads);
         } else {
-            return Math.max(1, (int) (Runtime.getRuntime().availableProcessors() / 1.2 - 2));
+            return Math.min(Math.max(1, (int) (Runtime.getRuntime().availableProcessors() / 1.2 - 2)), maxMemThreads);
         }
     }
 

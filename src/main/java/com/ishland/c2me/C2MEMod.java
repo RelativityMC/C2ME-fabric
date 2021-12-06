@@ -27,6 +27,11 @@ public class C2MEMod implements ModInitializer {
 
     @Override
     public void onInitialize() {
+        System.out.println(Runtime.getRuntime().maxMemory() / 1024L / 1024L);
+        System.out.println(C2MEConfig.globalExecutorParallelism);
+        if (Runtime.getRuntime().maxMemory() / 1024L / 1024L < (C2MEConfig.globalExecutorParallelism * 1000L) - 100L) {
+            LOGGER.error("Not enough memory to run C2ME with {} threads. Please increase the JVM heap size to at least {}.", C2MEConfig.globalExecutorParallelism, C2MEConfig.globalExecutorParallelism * 1024);
+        }
         if (Boolean.getBoolean("com.ishland.c2me.mixin.doAudit")) {
             MixinEnvironment.getCurrentEnvironment().audit();
         }
