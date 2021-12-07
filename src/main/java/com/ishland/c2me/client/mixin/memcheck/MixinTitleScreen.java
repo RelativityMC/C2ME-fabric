@@ -15,6 +15,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinTitleScreen {
     @Inject(at = @At("RETURN"), method = "init()V")
     private void init(CallbackInfo info) {
-        MinecraftClient.getInstance().setScreen(new NoticeScreen(() -> MinecraftClient.getInstance().scheduleStop(), new LiteralText("Not enough memory to run C2ME with " + C2MEConfig.globalExecutorParallelism + " threads. Please increase the JVM heap size to at least " + C2MEConfig.globalExecutorParallelism * 1024 + ".").formatted(Formatting.RED), new LiteralText("C2ME has detected that you do not have enough memory to run C2ME properly. Without enough memory you will experience stutters and errors. Please increase the JVM heap size and restart the game.")));
+        if (Runtime.getRuntime().maxMemory() / 1024L / 1024L < (C2MEConfig.globalExecutorParallelism * 1000L) - 100L) {
+            MinecraftClient.getInstance().setScreen(new NoticeScreen(() -> MinecraftClient.getInstance().scheduleStop(), new LiteralText("Not enough memory to run C2ME with " + C2MEConfig.globalExecutorParallelism + " threads. Please increase the JVM heap size to at least " + C2MEConfig.globalExecutorParallelism * 1024 + ".").formatted(Formatting.RED), new LiteralText("C2ME has detected that you do not have enough memory to run C2ME properly. Without enough memory you will experience stutters and errors. Please increase the JVM heap size and restart the game.")));
+        }
     }
 }
