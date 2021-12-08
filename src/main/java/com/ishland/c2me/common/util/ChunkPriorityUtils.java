@@ -31,7 +31,7 @@ public class ChunkPriorityUtils {
                 }
             }
             if (closestPlayerDistance == null) {
-                closestPlayerDistance = Integer.MAX_VALUE;
+                closestPlayerDistance = Integer.MAX_VALUE - 1;
             }
         }
 
@@ -42,6 +42,6 @@ public class ChunkPriorityUtils {
             playerDistanceCache.invalidate(chunkPos);
         }
 
-        return (viewDistance / closestPlayerDistance) - distance;
+        return (viewDistance / closestPlayerDistance + 1) - distance;
     }
 }

@@ -22,7 +22,7 @@ public class GlobalExecutors {
     };
     static PriorityBlockingQueue<Runnable> queue = new PriorityBlockingQueue<>(C2MEConfig.globalExecutorParallelism, compare);
     public static ThreadFactory threadFactory = new ThreadFactoryBuilder().setNameFormat("C2ME worker #%d").setDaemon(true).setPriority(Thread.NORM_PRIORITY - 1).build();
-    public static final ThreadPoolExecutor executor = new ThreadPoolExecutor(C2MEConfig.globalExecutorParallelism, Runtime.getRuntime().availableProcessors(),  60L, TimeUnit.MILLISECONDS, queue, threadFactory);
+    public static final ThreadPoolExecutor executor = new ThreadPoolExecutor(C2MEConfig.globalExecutorParallelism, C2MEConfig.globalExecutorParallelism,  0, TimeUnit.MILLISECONDS, queue, threadFactory);
 
     public static final Executor invokingExecutor = r -> {
         if (Thread.currentThread().getName().startsWith("C2ME worker #")) {
