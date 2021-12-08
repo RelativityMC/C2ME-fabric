@@ -42,6 +42,6 @@ public class ChunkPriorityUtils {
             playerDistanceCache.invalidate(chunkPos);
         }
 
-        return (viewDistance / closestPlayerDistance + 1) - distance;
+        return (viewDistance / (closestPlayerDistance + 1)) - distance;
     }
 }
