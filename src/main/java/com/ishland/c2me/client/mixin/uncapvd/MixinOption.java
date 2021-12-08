@@ -18,7 +18,10 @@ public class MixinOption {
 
     @ModifyArg(method = "<clinit>", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/option/DoubleOption;<init>(Ljava/lang/String;DDFLjava/util/function/Function;Ljava/util/function/BiConsumer;Ljava/util/function/BiFunction;)V"), index = 2)
     private static double modifyMaxViewDistance(String key, double min, double max, float step, Function<GameOptions, Double> getter, BiConsumer<GameOptions, Double> setter, BiFunction<GameOptions, DoubleOption, Text> displayStringGetter) {
-        return C2MEConfig.clientSideConfig.modifyMaxVDConfig.maxViewDistance;
+        if (key == "options.renderDistance") {
+            return C2MEConfig.clientSideConfig.modifyMaxVDConfig.maxViewDistance;
+        }
+        return max;
     }
 
 }
