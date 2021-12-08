@@ -7,6 +7,7 @@ import com.ibm.asyncutil.util.StageSupport;
 import com.ishland.c2me.common.GlobalExecutors;
 import com.ishland.c2me.common.config.C2MEConfig;
 import com.ishland.c2me.common.util.AsyncCombinedLock;
+import com.ishland.c2me.common.util.PriorityCompletableFuture;
 import com.mojang.datafixers.util.Either;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.util.math.ChunkPos;
@@ -16,6 +17,7 @@ import net.minecraft.world.chunk.ChunkStatus;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -63,13 +65,13 @@ public class ChunkStatusUtils {
 
         PARALLELIZED() {
             @Override
-            public CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> runTask(AsyncLock lock, Supplier<CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>>> completableFuture) {
-                return CompletableFuture.supplyAsync(completableFuture, GlobalExecutors.executor).thenCompose(Function.identity());
+            public CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> runTask(AsyncLock lock, Supplier<CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>>> completableFuture, int priority) {
+                return runAsync(completableFuture.get(), priority, GlobalExecutors.executor);
             }
         },
         SINGLE_THREADED() {
             @Override
-            public CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> runTask(AsyncLock lock, Supplier<CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>>> completableFuture) {
+            public CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> runTask(AsyncLock lock, Supplier<CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>>> completableFuture, int priority) {
                 Preconditions.checkNotNull(lock);
                 return lock.acquireLock().toCompletableFuture().thenComposeAsync(lockToken -> {
                     try {
@@ -82,12 +84,19 @@ public class ChunkStatusUtils {
         },
         AS_IS() {
             @Override
-            public CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> runTask(AsyncLock lock, Supplier<CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>>> completableFuture) {
+            public CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> runTask(AsyncLock lock, Supplier<CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>>> completableFuture, int priority) {
                 return completableFuture.get();
             }
         };
 
-        public abstract CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> runTask(AsyncLock lock, Supplier<CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>>> completableFuture);
+        public abstract CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> runTask(AsyncLock lock, Supplier<CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>>> completableFuture, int priority);
 
+    }
+
+    public static <V> CompletableFuture<V> runAsync(CompletableFuture<V> future, int priority, Executor executor) {
+        CompletableFuture<V> result = new CompletableFuture<>();
+
+        executor.execute(new PriorityCompletableFuture<>(future, priority, result));
+        return result;
     }
 }

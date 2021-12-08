@@ -2,26 +2,30 @@ package com.ishland.c2me.common;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.ishland.c2me.common.config.C2MEConfig;
-import com.ishland.c2me.common.util.C2MEForkJoinWorkerThreadFactory;
+import com.ishland.c2me.common.util.PriorityInterface;
+import com.ishland.c2me.common.util.PriorityRunnable;
 
-import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.Comparator;
+import java.util.concurrent.*;
 
 public class GlobalExecutors {
 
-    private static final C2MEForkJoinWorkerThreadFactory factory = new C2MEForkJoinWorkerThreadFactory("c2me", "C2ME worker #%d", Thread.NORM_PRIORITY - 1);
-    public static final ForkJoinPool executor = new ForkJoinPool(
-            C2MEConfig.globalExecutorParallelism,
-            factory,
-            null,
-            true
-    );
+    private static final Comparator<Runnable> compare = (o1, o2) -> {
+        if (o1 instanceof PriorityRunnable && o2 instanceof PriorityRunnable) {
+            return ((PriorityInterface) o1).getPriority() - ((PriorityInterface) o2).getPriority();
+        } else if (o1 instanceof PriorityRunnable) {
+            return 1;
+        } else if (o2 instanceof PriorityRunnable) {
+            return -1;
+        }
+        return 0;
+    };
+    static PriorityBlockingQueue<Runnable> queue = new PriorityBlockingQueue<>(C2MEConfig.globalExecutorParallelism, compare);
+    public static ThreadFactory threadFactory = new ThreadFactoryBuilder().setNameFormat("C2ME worker #%d").setDaemon(true).setPriority(Thread.NORM_PRIORITY - 1).build();
+    public static final ThreadPoolExecutor executor = new ThreadPoolExecutor(C2MEConfig.globalExecutorParallelism, Runtime.getRuntime().availableProcessors(),  60L, TimeUnit.MILLISECONDS, queue, threadFactory);
+
     public static final Executor invokingExecutor = r -> {
-        if (Thread.currentThread().getThreadGroup() == factory.getThreadGroup()) {
+        if (Thread.currentThread().getName().startsWith("C2ME worker #")) {
             r.run();
         } else {
             executor.execute(r);

@@ -49,7 +49,7 @@ public class AsyncCombinedLock {
                 if (!triedRelock && entry.lockToken.isEmpty()) {
                     this.lock.acquireLock(entry.name).thenCompose(lockToken -> {
                         lockToken.releaseLock();
-                        return CompletableFuture.runAsync(this::tryAcquire, GlobalExecutors.executor);
+                        return CompletableFuture.runAsync(new PriorityRunnable<>(this::tryAcquire, Integer.MAX_VALUE), GlobalExecutors.executor);
                     });
                     triedRelock = true;
                 }
