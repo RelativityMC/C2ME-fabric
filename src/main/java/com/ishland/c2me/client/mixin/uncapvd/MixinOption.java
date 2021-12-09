@@ -15,9 +15,12 @@ public class MixinOption {
 
     @Shadow @Final public static DoubleOption RENDER_DISTANCE;
 
+    private static final int C2MERenderDistance = C2MEConfig.clientSideConfig.modifyMaxVDConfig.maxViewDistance;
+
     @Inject(method = "<clinit>", at = @At(value = "TAIL"))
     private static void modifyMaxViewDistance(CallbackInfo ci) {
-        RENDER_DISTANCE.setMax(C2MEConfig.clientSideConfig.modifyMaxVDConfig.maxViewDistance);
+        if (RENDER_DISTANCE.getMax() < C2MERenderDistance) {
+            RENDER_DISTANCE.setMax(C2MERenderDistance);
+        }
     }
-
 }
