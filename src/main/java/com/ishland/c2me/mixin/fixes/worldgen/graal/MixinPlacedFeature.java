@@ -56,6 +56,10 @@ public class MixinPlacedFeature {
         }
 
         ConfiguredFeature<?, ?> configuredFeature = this.feature.get();
+        if (configuredFeature == null) {
+            LOGGER.error("NULL configuredFeature in PlacedFeature {}", this, new Throwable());
+            return false;
+        }
         MutableBoolean placementModifier = new MutableBoolean();
         stream.forEach(blockPos -> {
             if (configuredFeature.generate(context.getWorld(), context.getChunkGenerator(), random, blockPos)) {
