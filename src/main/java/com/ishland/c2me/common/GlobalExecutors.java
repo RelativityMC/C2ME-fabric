@@ -1,15 +1,10 @@
 package com.ishland.c2me.common;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.ishland.c2me.common.config.C2MEConfig;
 import com.ishland.c2me.common.util.C2MEForkJoinWorkerThreadFactory;
 
 import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 public class GlobalExecutors {
 
@@ -28,9 +23,9 @@ public class GlobalExecutors {
         }
     };
 
-    public static final ExecutorService asyncScheduler = new ThreadPoolExecutor(1, 1,
-            0L, TimeUnit.MILLISECONDS,
-            new LinkedBlockingQueue<>(),
-            new ThreadFactoryBuilder().setDaemon(true).setNameFormat("C2ME scheduler").build());
+//    public static final ExecutorService asyncScheduler = new ThreadPoolExecutor(1, 1,
+//            0L, TimeUnit.MILLISECONDS,
+//            new LinkedBlockingQueue<>(),
+//            new ThreadFactoryBuilder().setDaemon(true).setNameFormat("C2ME scheduler").build());
 
 }

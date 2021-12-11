@@ -1,6 +1,6 @@
 package com.ishland.c2me.common.notickvd;
 
-import com.ishland.c2me.common.GlobalExecutors;
+import com.ishland.c2me.common.threading.scheduler.SchedulerThread;
 import it.unimi.dsi.fastutil.longs.LongIterator;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
@@ -59,7 +59,7 @@ public class NoTickSystem {
 
     private void scheduleTick() {
         if (this.isTicking.compareAndSet(false, true))
-            GlobalExecutors.asyncScheduler.execute(() -> {
+            SchedulerThread.INSTANCE.execute(() -> {
                 Runnable runnable;
                 while ((runnable = this.pendingActions.poll()) != null) {
                     try {

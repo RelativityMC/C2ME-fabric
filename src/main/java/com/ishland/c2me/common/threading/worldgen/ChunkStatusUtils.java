@@ -3,10 +3,10 @@ package com.ishland.c2me.common.threading.worldgen;
 import com.google.common.base.Preconditions;
 import com.ibm.asyncutil.locks.AsyncLock;
 import com.ibm.asyncutil.locks.AsyncNamedLock;
-import com.ibm.asyncutil.util.StageSupport;
 import com.ishland.c2me.common.GlobalExecutors;
 import com.ishland.c2me.common.config.C2MEConfig;
-import com.ishland.c2me.common.util.AsyncCombinedLock;
+import com.ishland.c2me.common.threading.scheduler.SchedulerThread;
+import com.ishland.c2me.common.threading.scheduler.SchedulingAsyncCombinedLock;
 import com.mojang.datafixers.util.Either;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.util.math.ChunkPos;
@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
+import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
 import static com.ishland.c2me.common.threading.worldgen.ChunkStatusUtils.ChunkStatusThreadingType.AS_IS;
@@ -43,20 +44,19 @@ public class ChunkStatusUtils {
         return AS_IS;
     }
 
-    public static <T> CompletableFuture<T> runChunkGenWithLock(ChunkPos target, int radius, AsyncNamedLock<ChunkPos> chunkLock, Supplier<CompletableFuture<T>> action) {
-        if (radius == 0)
-            return StageSupport.tryWith(chunkLock.acquireLock(target), unused -> action.get()).toCompletableFuture().thenCompose(Function.identity());
+    public static <T> CompletableFuture<T> runChunkGenWithLock(ChunkPos target, int radius, IntSupplier priority, AsyncNamedLock<ChunkPos> chunkLock, Supplier<CompletableFuture<T>> action) {
+        Preconditions.checkNotNull(priority);
+//        if (radius == 0)
+//            return StageSupport.tryWith(chunkLock.acquireLock(target), unused -> action.get()).toCompletableFuture().thenCompose(Function.identity());
 
         ArrayList<ChunkPos> fetchedLocks = new ArrayList<>((2 * radius + 1) * (2 * radius + 1));
         for (int x = target.x - radius; x <= target.x + radius; x++)
             for (int z = target.z - radius; z <= target.z + radius; z++)
                 fetchedLocks.add(new ChunkPos(x, z));
 
-        return new AsyncCombinedLock(chunkLock, new HashSet<>(fetchedLocks)).getFuture().thenCompose(lockToken -> {
-            final CompletableFuture<T> future = action.get();
-            future.thenRun(lockToken::releaseLock);
-            return future;
-        });
+        final SchedulingAsyncCombinedLock<T> lock = new SchedulingAsyncCombinedLock<>(chunkLock, new HashSet<>(fetchedLocks), priority, SchedulerThread.INSTANCE, action);
+        SchedulerThread.INSTANCE.addPendingLock(lock);
+        return lock.getFuture();
     }
 
     public enum ChunkStatusThreadingType {

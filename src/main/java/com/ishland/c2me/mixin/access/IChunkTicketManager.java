@@ -23,4 +23,7 @@ public interface IChunkTicketManager {
     @Accessor
     Long2ObjectOpenHashMap<SortedArraySet<ChunkTicket<?>>> getTicketsByPosition();
 
+    @Accessor
+    ChunkTicketManager.NearbyChunkTicketUpdater getNearbyChunkTicketUpdater();
+
 }

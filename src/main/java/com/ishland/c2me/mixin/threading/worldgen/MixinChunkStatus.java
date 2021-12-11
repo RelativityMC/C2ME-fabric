@@ -1,6 +1,7 @@
 package com.ishland.c2me.mixin.threading.worldgen;
 
 import com.ishland.c2me.common.config.C2MEConfig;
+import com.ishland.c2me.common.threading.scheduler.PriorityUtils;
 import com.ishland.c2me.common.threading.worldgen.ChunkStatusUtils;
 import com.ishland.c2me.common.threading.worldgen.IChunkStatus;
 import com.ishland.c2me.common.threading.worldgen.IWorldGenLockable;
@@ -91,11 +92,11 @@ public abstract class MixinChunkStatus implements IChunkStatus {
 
         final CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> completableFuture;
         if (targetChunk.getStatus().isAtLeast((ChunkStatus) (Object) this)) {
-            completableFuture =  generationTask.get();
+            completableFuture = generationTask.get();
         } else {
             int lockRadius = C2MEConfig.threadedWorldGenConfig.reduceLockRadius && this.reducedTaskRadius != -1 ? this.reducedTaskRadius : this.taskMargin;
             //noinspection ConstantConditions
-            completableFuture = ChunkStatusUtils.runChunkGenWithLock(targetChunk.getPos(), lockRadius, ((IWorldGenLockable) world).getWorldGenChunkLock(), () ->
+            completableFuture = ChunkStatusUtils.runChunkGenWithLock(targetChunk.getPos(), lockRadius, PriorityUtils.getChunkPriority(world, targetChunk), ((IWorldGenLockable) world).getWorldGenChunkLock(), () ->
                     ChunkStatusUtils.getThreadingType((ChunkStatus) (Object) this).runTask(((IWorldGenLockable) world).getWorldGenSingleThreadedLock(), generationTask));
         }
 

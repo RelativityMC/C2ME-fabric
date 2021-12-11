@@ -1,6 +1,6 @@
 package com.ishland.c2me.mixin.threading.async_scheduling;
 
-import com.ishland.c2me.common.GlobalExecutors;
+import com.ishland.c2me.common.threading.scheduler.SchedulerThread;
 import com.mojang.datafixers.util.Either;
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 import net.minecraft.server.world.ChunkHolder;
@@ -32,7 +32,7 @@ public abstract class MixinThreadedAnvilChunkStorage {
     private void beforeUpgradeChunk(ChunkHolder holder, ChunkStatus requiredStatus, CallbackInfoReturnable<CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>>> cir) {
         if (this.world.getServer().getThread() == Thread.currentThread()) {
             cir.setReturnValue(
-                    CompletableFuture.supplyAsync(() -> this.upgradeChunk(holder, requiredStatus), GlobalExecutors.asyncScheduler).thenCompose(Function.identity())
+                    CompletableFuture.supplyAsync(() -> this.upgradeChunk(holder, requiredStatus), SchedulerThread.INSTANCE).thenCompose(Function.identity())
             );
         }
     }
