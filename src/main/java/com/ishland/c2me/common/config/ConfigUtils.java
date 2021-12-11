@@ -44,7 +44,37 @@ public class ConfigUtils {
             config.config.set(key, def.get() instanceof Config || !usePlaceholder ? def.get() : "default");
         if (def.get() instanceof Config) config.config.setComment(key, String.format(" %s", comment));
         else config.config.setComment(key, String.format(" (Default: %s) %s", def.get(), comment));
-        final Object configuredValue = getConfiguredValue(config.config.get(key), def);
+        Object configuredValue = getConfiguredValue(config.config.get(key), def);
+        if (!(configuredValue.getClass().isAssignableFrom(def.get().getClass()))) {
+            C2MEConfig.LOGGER.warn("Configured value for {} is of type {} but expected type is {}", key, configuredValue.getClass(), def.get().getClass());
+            boolean dataFixed = false;
+            if (Boolean.class.isAssignableFrom(def.get().getClass())) {
+                Boolean bool = Boolean.parseBoolean(configuredValue.toString());
+                if (bool != null) {
+                    configuredValue = bool;
+                    dataFixed = true;
+                }
+            }
+            else if (Integer.class.isAssignableFrom(def.get().getClass())) {
+                Integer integer = Integer.parseInt(configuredValue.toString());
+                if (integer != null) {
+                    configuredValue = integer;
+                    dataFixed = true;
+                }
+            }
+            if (!dataFixed) {
+                C2MEConfig.LOGGER.warn("No fix could be applied to the configured value for {}. Resetting value to the default: {}", key, def.get());
+                configuredValue = def.get();
+                config.config.set(key, def.get() instanceof Config || !usePlaceholder ? def.get() : "default");
+            } else {
+                C2MEConfig.LOGGER.warn("Fixed the configured value for {} by converting it to type {}", key, configuredValue.getClass());
+                if (configuredValue == def.get()) {
+                    config.config.set(key, def.get() instanceof Config || !usePlaceholder ? def.get() : "default");
+                } else {
+                    config.config.set(key, configuredValue);
+                }
+            }
+        }
         return foundIncompatibleMods.isEmpty() ? Objects.requireNonNull((configuredValue.equals("default")) ? def.get() : (T) configuredValue) : incompatibleDefault;
     }
 
