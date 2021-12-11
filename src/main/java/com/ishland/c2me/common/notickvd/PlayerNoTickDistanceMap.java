@@ -91,7 +91,7 @@ public class PlayerNoTickDistanceMap extends ChunkPosDistanceLevelPropagator {
             final ArrayList<Long2BooleanMap.Entry> entries = new ArrayList<>(this.pendingTicketUpdates.long2BooleanEntrySet());
             entries.sort(Comparator.comparingInt(o -> this.distanceFromNearestPlayer.get(o.getLongKey())));
             for (Long2BooleanMap.Entry entry : entries) {
-                this.pendingTicketUpdates.getAndMoveToFirst(entry.getLongKey());
+                this.pendingTicketUpdates.getAndMoveToLast(entry.getLongKey());
             }
         }
         this.pendingTicketUpdatesCount = this.pendingTicketUpdates.size();
