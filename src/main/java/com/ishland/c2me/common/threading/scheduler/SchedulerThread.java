@@ -78,7 +78,7 @@ public class SchedulerThread extends Thread implements Executor {
                 // re-add locks to reflect priority changes
                 this.pendingLocks.drainTo(tmp);
                 this.pendingLocks.addAll(tmp);
-                System.out.printf("Did priority changes for %d entries in %.2fms\n", size, (System.nanoTime() - startTime) / 1_000_000.0);
+//                System.out.printf("Did priority changes for %d entries in %.2fms\n", size, (System.nanoTime() - startTime) / 1_000_000.0);
                 return true;
             }
         }
