@@ -48,20 +48,22 @@ public class ConfigUtils {
         if (!(configuredValue.getClass().isAssignableFrom(def.get().getClass()))) {
             C2MEConfig.LOGGER.warn("Configured value for {} is of type {} but expected type is {}", key, configuredValue.getClass(), def.get().getClass());
             boolean dataFixed = false;
-            if (Boolean.class.isAssignableFrom(def.get().getClass())) {
-                Boolean bool = Boolean.parseBoolean(configuredValue.toString());
-                if (bool != null) {
-                    configuredValue = bool;
-                    dataFixed = true;
+            try {
+                if (Boolean.class.isAssignableFrom(def.get().getClass())) {
+                    Boolean bool = Boolean.parseBoolean(configuredValue.toString());
+                    if (bool != null) {
+                        configuredValue = bool;
+                        dataFixed = true;
+                    }
+                } else if (Integer.class.isAssignableFrom(def.get().getClass())) {
+                    Integer integer = Integer.parseInt(configuredValue.toString());
+                    if (integer != null) {
+                        configuredValue = integer;
+                        dataFixed = true;
+                    }
                 }
-            }
-            else if (Integer.class.isAssignableFrom(def.get().getClass())) {
-                Integer integer = Integer.parseInt(configuredValue.toString());
-                if (integer != null) {
-                    configuredValue = integer;
-                    dataFixed = true;
-                }
-            }
+            } catch (Exception ignored) {}
+
             if (!dataFixed) {
                 C2MEConfig.LOGGER.warn("No fix could be applied to the configured value for {}. Resetting value to the default: {}", key, def.get());
                 configuredValue = def.get();
