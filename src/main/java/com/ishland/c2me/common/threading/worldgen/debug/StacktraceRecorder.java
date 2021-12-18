@@ -60,10 +60,6 @@ public class StacktraceRecorder {
         private static final String StructureAccessor$getStructureStarts = FabricLoader.getInstance().getMappingResolver()
                 .mapMethodName("intermediary", "net.minecraft.class_5138", "method_38853", "(Lnet/minecraft/class_4076;Lnet/minecraft/class_3195;)Ljava/util/List;");
 
-        static {
-            System.err.println(StructureAccessor$getStructureStarts);
-        }
-
         @NotNull
         private final StackTraceElement[] stackTrace;
         private final Throwable throwable;
