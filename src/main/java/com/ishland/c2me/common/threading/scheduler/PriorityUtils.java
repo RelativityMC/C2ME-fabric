@@ -24,9 +24,9 @@ public class PriorityUtils {
         final Long2IntMap distanceFromPlayers = ((IChunkTicketManagerNearbyChunkTicketUpdater) nearbyChunkTicketUpdater).getDistances();
         final long pos = chunkPos.toLong();
         if (holder == null) {
-            SchedulerThread.LOGGER.warn("Failed to retrieve ChunkHolder for chunk {}, assuming load level to 0x7F", chunkPos);
+            SchedulerThread.LOGGER.warn("Failed to retrieve ChunkHolder for chunk {}, assuming load level to 0", chunkPos);
         }
-        return () -> (((holder != null ? holder.getLevel() : 0x7F) & BITS_8) << 8)
+        return () -> (((holder != null ? holder.getLevel() : 0) & BITS_8) << 8)
                 | (distanceFromPlayers.get(pos) & BITS_8);
     }
 
