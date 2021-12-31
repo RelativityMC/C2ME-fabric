@@ -17,6 +17,7 @@ import org.apache.commons.lang3.mutable.MutableObject;
 import org.spongepowered.asm.mixin.Dynamic;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -58,6 +59,17 @@ public abstract class MixinThreadedAnvilChunkStorage {
                 }
             });
         }));
+    }
+
+    // private synthetic method_17243(Lorg/apache/commons/lang3/mutable/MutableObject;Lnet/minecraft/world/chunk/WorldChunk;Lnet/minecraft/server/network/ServerPlayerEntity;)V
+    /**
+     * @author ishland
+     * @reason dont send chunks twice
+     */
+    @Overwrite
+    private void method_17243(MutableObject<ChunkDataS2CPacket> mutableObject, WorldChunk worldChunk, ServerPlayerEntity player) {
+        if (C2MEConfig.noTickViewDistanceConfig.ensureChunkCorrectness)
+            this.sendChunkDataPackets(player, mutableObject, worldChunk);
     }
 
     // private static synthetic method_20582(Lnet/minecraft/world/chunk/Chunk;)Z

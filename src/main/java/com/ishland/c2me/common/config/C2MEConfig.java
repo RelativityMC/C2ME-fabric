@@ -165,6 +165,7 @@ public class C2MEConfig {
         public final boolean enabled;
         public final int updatesPerTick;
         public final boolean compatibilityMode;
+        public final boolean ensureChunkCorrectness;
 
         public NoTickViewDistanceConfig(CommentedConfig config) {
             Preconditions.checkNotNull(config, "noTickViewDistanceConfig config is not present");
@@ -172,6 +173,7 @@ public class C2MEConfig {
             this.enabled = ConfigUtils.getValue(configScope, "enabled", () -> true, "Weather to enable no-tick view distance", List.of(), false, true);
             this.updatesPerTick = ConfigUtils.getValue(configScope, "updatesPerTick", () -> 6, "No-tick view distance updates per tick \n Lower this for a better latency and higher this for a faster loading", List.of(), 6, true);
             this.compatibilityMode = ConfigUtils.getValue(configScope, "compatibilityMode", () -> false, "Whether to use compatibility mode to send chunks \n This may fix some mod compatibility issues", List.of("antixray"), true, true);
+            this.ensureChunkCorrectness = ConfigUtils.getValue(configScope, "ensureChunkCorrectness", () -> false, "Whether to ensure correct chunks within normal render distance \n This will send chunks twice increasing network load", List.of(), false, true);
             configScope.removeUnusedKeys();
         }
     }
