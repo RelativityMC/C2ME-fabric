@@ -38,7 +38,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.io.File;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
@@ -87,6 +86,9 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
     protected abstract boolean isLevelChunk(ChunkPos chunkPos);
 
     @Shadow private ChunkGenerator chunkGenerator;
+
+    @Shadow protected abstract boolean save(Chunk chunk);
+
     private AsyncNamedLock<ChunkPos> chunkLock = AsyncNamedLock.createFair();
 
     @Inject(method = "<init>", at = @At("RETURN"))
@@ -237,8 +239,10 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
                                 .thenAccept(compoundTag -> this.setNbt(chunkPos, compoundTag))
                                 .handle((unused, throwable) -> {
                                     lockToken.releaseLock();
-                                    if (throwable != null)
-                                        LOGGER.error("Failed to save chunk {},{}", chunkPos.x, chunkPos.z, throwable);
+                                    if (throwable != null) {
+                                        LOGGER.error("Failed to save chunk {},{} asynchronously, falling back to sync saving", chunkPos.x, chunkPos.z, throwable);
+                                        this.mainThreadExecutor.execute(() -> this.save(chunk));
+                                    }
                                     return unused;
                                 })));
                 this.mark(chunkPos, chunkStatus.getChunkType());
