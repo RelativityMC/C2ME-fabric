@@ -6,6 +6,7 @@ import com.ishland.c2me.common.threading.chunkio.AsyncSerializationManager;
 import com.ishland.c2me.common.threading.chunkio.ChunkIoMainThreadTaskUtils;
 import com.ishland.c2me.common.threading.chunkio.IAsyncChunkStorage;
 import com.ishland.c2me.common.threading.chunkio.ISerializingRegionBasedStorage;
+import com.ishland.c2me.common.threading.chunkio.TaskCancellationException;
 import com.ishland.c2me.common.util.SneakyThrow;
 import com.mojang.datafixers.DataFixer;
 import com.mojang.datafixers.util.Either;
@@ -88,6 +89,8 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
     @Shadow private ChunkGenerator chunkGenerator;
 
     @Shadow protected abstract boolean save(Chunk chunk);
+
+    @Shadow protected abstract void save(boolean flush);
 
     private AsyncNamedLock<ChunkPos> chunkLock = AsyncNamedLock.createFair();
 
@@ -200,7 +203,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
     @Dynamic
     @Redirect(method = "method_18843", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ThreadedAnvilChunkStorage;save(Lnet/minecraft/world/chunk/Chunk;)Z"))
     // method: consumer in tryUnloadChunk
-    private boolean asyncSave(ThreadedAnvilChunkStorage tacs, Chunk chunk) {
+    private boolean asyncSave(ThreadedAnvilChunkStorage tacs, Chunk chunk, ChunkHolder holder) {
         // TODO [VanillaCopy] - check when updating minecraft version
         this.pointOfInterestStorage.saveChunk(chunk.getPos());
         if (!chunk.needsSaving()) {
@@ -221,6 +224,12 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
                     }
                 }
 
+                final CompletableFuture<Chunk> originalSavingFuture = holder.getSavingFuture();
+                if (!originalSavingFuture.isDone()) {
+                    originalSavingFuture.handleAsync((_unused, __unused) -> asyncSave(tacs, chunk, holder), this.mainThreadExecutor);
+                    return false;
+                }
+
                 this.world.getProfiler().visit("chunkSave");
                 // C2ME start - async serialization
                 if (saveFutures == null) saveFutures = new ConcurrentLinkedQueue<>();
@@ -229,6 +238,10 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
                 saveFutures.add(chunkLock.acquireLock(chunk.getPos()).toCompletableFuture().thenCompose(lockToken ->
                         CompletableFuture.supplyAsync(() -> {
                                     scope.open();
+                                    if (holder.getSavingFuture() != originalSavingFuture) {
+                                        this.mainThreadExecutor.execute(() -> asyncSave(tacs, chunk, holder));
+                                        throw new TaskCancellationException();
+                                    }
                                     AsyncSerializationManager.push(scope);
                                     try {
                                         return ChunkSerializer.serialize(this.world, chunk);
@@ -240,11 +253,19 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
                                 .handle((unused, throwable) -> {
                                     lockToken.releaseLock();
                                     if (throwable != null) {
-                                        LOGGER.error("Failed to save chunk {},{} asynchronously, falling back to sync saving", chunkPos.x, chunkPos.z, throwable);
-                                        this.mainThreadExecutor.execute(() -> this.save(chunk));
+                                        if (!(throwable instanceof TaskCancellationException)) {
+                                            LOGGER.error("Failed to save chunk {},{} asynchronously, falling back to sync saving", chunkPos.x, chunkPos.z, throwable);
+                                            final CompletableFuture<Chunk> savingFuture = holder.getSavingFuture();
+                                            if (savingFuture != originalSavingFuture) {
+                                                savingFuture.handleAsync((_unused, __unused) -> save(chunk), this.mainThreadExecutor);
+                                            } else {
+                                                this.mainThreadExecutor.execute(() -> this.save(chunk));
+                                            }
+                                        }
                                     }
                                     return unused;
-                                })));
+                                })
+                ));
                 this.mark(chunkPos, chunkStatus.getChunkType());
                 // C2ME end
                 return true;
