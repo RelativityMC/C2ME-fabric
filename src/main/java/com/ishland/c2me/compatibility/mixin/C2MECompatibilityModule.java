@@ -7,7 +7,6 @@ import com.google.gson.JsonObject;
 import com.ishland.c2me.common.config.ConfigUtils;
 import com.ishland.c2me.common.util.UrlUtil;
 import com.ishland.c2me.compatibility.common.asm.ASMTransformer;
-import com.ishland.c2me.compatibility.common.asm.woodsandmires.ASMLakeFeature;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 import net.fabricmc.loader.api.Version;
@@ -144,7 +143,6 @@ public class C2MECompatibilityModule implements IMixinConfigPlugin {
     @Override
     public void postApply(String targetClassName, ClassNode targetClass, String mixinClassName, IMixinInfo mixinInfo) {
         ASMTransformer.transform(targetClass);
-        ASMLakeFeature.transform(targetClass);
     }
 
     private void addMixins(String modid, String versionRange, String subPackage, ConfigUtils.ConfigScope configScope) {

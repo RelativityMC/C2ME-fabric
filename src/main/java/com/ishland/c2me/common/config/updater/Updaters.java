@@ -1,5 +1,6 @@
 package com.ishland.c2me.common.config.updater;
 
+import com.electronwill.nightconfig.core.CommentedConfig;
 import com.electronwill.nightconfig.core.Config;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import org.apache.logging.log4j.LogManager;
@@ -27,6 +28,21 @@ public class Updaters {
                 }
             }
             pendingActions.forEach(Runnable::run);
+        });
+        updaters.put(1, source -> {
+            final Object _ioSystem = source.get("asyncIO");
+            if (_ioSystem instanceof CommentedConfig ioSystem) {
+                // rename asyncIO to ioSystem
+                source.remove("asyncIO");
+                source.add("ioSystem", ioSystem);
+
+                final Object _async = ioSystem.get("enabled");
+                if (_async instanceof Boolean async) {
+                    // rename enabled to async
+                    ioSystem.remove("enabled");
+                    ioSystem.add("async", async);
+                }
+            }
         });
     }
 

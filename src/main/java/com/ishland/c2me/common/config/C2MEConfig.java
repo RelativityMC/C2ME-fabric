@@ -16,9 +16,9 @@ public class C2MEConfig {
 
     static final Logger LOGGER = LogManager.getLogger("C2ME Config");
 
-    private static final long CURRENT_CONFIG_VERSION = 1;
+    private static final long CURRENT_CONFIG_VERSION = 2;
 
-    public static final AsyncIoConfig asyncIoConfig;
+    public static final IoSystemConfig ioSystemConfig;
     public static final ThreadedWorldGenConfig threadedWorldGenConfig;
     public static final AsyncSchedulingConfig asyncSchedulingConfig;
     public static final VanillaWorldGenOptimizationsConfig vanillaWorldGenOptimizationsConfig;
@@ -50,7 +50,7 @@ public class C2MEConfig {
         final long version = config.getLongOrElse("version", 0);
         Preconditions.checkState(CURRENT_CONFIG_VERSION == version, "Config version mismatch");
         globalExecutorParallelism = ConfigUtils.getValue(configScope, "globalExecutorParallelism", C2MEConfig::getDefaultGlobalExecutorParallelism, "Configures the parallelism of global executor", List.of(), null, true);
-        asyncIoConfig = new AsyncIoConfig(ConfigUtils.getValue(configScope, "asyncIO", ConfigUtils::config, "Configuration for async io system", List.of(), null, true));
+        ioSystemConfig = new IoSystemConfig(ConfigUtils.getValue(configScope, "ioSystem", ConfigUtils::config, "Configuration for io system", List.of(), null, true));
         threadedWorldGenConfig = new ThreadedWorldGenConfig(ConfigUtils.getValue(configScope, "threadedWorldGen", ConfigUtils::config, "Configuration for threaded world generation", List.of(), null, true));
         asyncSchedulingConfig = new AsyncSchedulingConfig(ConfigUtils.getValue(configScope, "asyncScheduling", ConfigUtils::config, "Configuration for async scheduling system", List.of(), null, true));
         vanillaWorldGenOptimizationsConfig = new VanillaWorldGenOptimizationsConfig(ConfigUtils.getValue(configScope, "vanillaWorldGenOptimizations", ConfigUtils::config, "Configuration for vanilla worldgen optimizations", List.of(), null, true));
@@ -71,13 +71,13 @@ public class C2MEConfig {
         }
     }
 
-    public static class AsyncIoConfig {
-        public final boolean enabled;
+    public static class IoSystemConfig {
+        public final boolean async;
 
-        public AsyncIoConfig(CommentedConfig config) {
-            Preconditions.checkNotNull(config, "asyncIo config is not present");
+        public IoSystemConfig(CommentedConfig config) {
+            Preconditions.checkNotNull(config, "ioSystem config is not present");
             final ConfigUtils.ConfigScope configScope = new ConfigUtils.ConfigScope(config);
-            this.enabled = ConfigUtils.getValue(configScope, "enabled", () -> true, "Whether to enable this feature", List.of("radon"), false, true);
+            this.async = ConfigUtils.getValue(configScope, "async", () -> true, "Whether to use async chunk loading & unloading", List.of("radon"), false, true);
             configScope.removeUnusedKeys();
         }
     }
