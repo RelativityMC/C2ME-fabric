@@ -1,4 +1,4 @@
-package com.ishland.c2me.mixin.threading.async_scheduling;
+package com.ishland.c2me.mixin.fixes.chunkio.threading;
 
 import com.ishland.c2me.mixin.access.IThreadedAnvilChunkStorage;
 import net.minecraft.server.world.ChunkHolder;

@@ -90,7 +90,7 @@
     "optimization.worldgen.random_instances.MixinRedirectAtomicSimpleRandomStatic",
     "optimization.worldgen.thread_local_biome_cache.MixinMultiNoiseBiomeSourcePreset",
     "optimization.worldgen.vanilla_optimization.the_end_biome_cache.MixinTheEndBiomeSource",
-    "threading.async_scheduling.MixinChunkHolder",
+    "fixes.chunkio.threading.MixinChunkHolder",
     "threading.async_scheduling.MixinThreadedAnvilChunkStorage",
     "threading.chunkio.MixinChunkSerializer",
     "threading.chunkio.MixinSerializingRegionBasedStorage",
