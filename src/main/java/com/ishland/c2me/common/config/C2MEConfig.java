@@ -138,6 +138,7 @@ public class C2MEConfig {
     public static class GeneralOptimizationsConfig {
         public final boolean optimizeAsyncChunkRequest;
         public final int chunkStreamVersion;
+        public final boolean doMidTickChunkTasks;
 
         public GeneralOptimizationsConfig(CommentedConfig config) {
             Preconditions.checkNotNull(config, "generalOptimizationsConfig config is not present");
@@ -159,6 +160,17 @@ public class C2MEConfig {
                              """,
                     List.of(), -1,
                     true);
+            this.doMidTickChunkTasks = ConfigUtils.getValue(configScope, "doMidTickChunkTasks", () -> true,
+                    """
+                            Whether to enable mid-tick chunk tasks \s
+                             Mid-tick chunk tasks is to execute chunk tasks during server tick loop \s
+                             to speed up chunk loading and generation \s
+                             This helps chunks loading and generating under high MSPT but may raise \s
+                             MSPT when chunks are loading or generating \s
+                             \s
+                             Incompatible with Dimensional Threading (dimthread)
+                            """,
+                    List.of("dimthread"), false, true);
             configScope.removeUnusedKeys();
         }
     }

@@ -56,6 +56,8 @@ public class C2MEMixinPlugin implements IMixinConfigPlugin {
             return C2MEConfig.asyncSchedulingConfig.enabled;
         if (mixinClassName.startsWith("com.ishland.c2me.mixin.threading.lighting."))
             return !FabricLoader.getInstance().isModLoaded("lightbench");
+        if (mixinClassName.startsWith("com.ishland.c2me.mixin.optimization.chunkscheduling.mid_tick_chunk_tasks."))
+            return C2MEConfig.generalOptimizationsConfig.doMidTickChunkTasks;
         return true;
     }
 
