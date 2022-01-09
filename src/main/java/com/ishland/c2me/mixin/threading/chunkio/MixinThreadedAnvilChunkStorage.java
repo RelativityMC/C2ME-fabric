@@ -2,15 +2,16 @@ package com.ishland.c2me.mixin.threading.chunkio;
 
 import com.ibm.asyncutil.locks.AsyncNamedLock;
 import com.ishland.c2me.common.GlobalExecutors;
-import com.ishland.c2me.common.threading.chunkio.AsyncSerializationManager;
-import com.ishland.c2me.common.threading.chunkio.ChunkIoMainThreadTaskUtils;
-import com.ishland.c2me.common.threading.chunkio.IAsyncChunkStorage;
-import com.ishland.c2me.common.threading.chunkio.ISerializingRegionBasedStorage;
-import com.ishland.c2me.common.threading.chunkio.TaskCancellationException;
+import com.ishland.c2me.common.optimization.chunkserialization.ChunkDataSerializer;
+import com.ishland.c2me.common.optimization.chunkserialization.NbtWriter;
+import com.ishland.c2me.common.threading.chunkio.*;
 import com.ishland.c2me.common.util.SneakyThrow;
+import com.ishland.c2me.mixin.optimization.reduce_allocs.chunkserialization.StorageIoWorkerAccessor;
+import com.ishland.c2me.mixin.optimization.reduce_allocs.chunkserialization.VersionedChunkStorageAccessor;
 import com.mojang.datafixers.DataFixer;
 import com.mojang.datafixers.util.Either;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtElement;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;
@@ -29,16 +30,13 @@ import net.minecraft.world.gen.chunk.ChunkGenerator;
 import net.minecraft.world.poi.PointOfInterestStorage;
 import net.minecraft.world.storage.VersionedChunkStorage;
 import org.apache.logging.log4j.Logger;
-import org.spongepowered.asm.mixin.Dynamic;
-import org.spongepowered.asm.mixin.Final;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
-import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.io.DataOutputStream;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
@@ -47,7 +45,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Supplier;
 
 @Mixin(ThreadedAnvilChunkStorage.class)
-public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStorage implements ChunkHolder.PlayersWatchingChunkProvider {
+public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStorage implements ChunkHolder.PlayersWatchingChunkProvider, VersionedChunkStorageAccessor {
 
     public MixinThreadedAnvilChunkStorage(Path path, DataFixer dataFixer, boolean bl) {
         super(path, dataFixer, bl);
@@ -86,11 +84,14 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
     @Shadow
     protected abstract boolean isLevelChunk(ChunkPos chunkPos);
 
-    @Shadow private ChunkGenerator chunkGenerator;
+    @Shadow
+    private ChunkGenerator chunkGenerator;
 
-    @Shadow protected abstract boolean save(Chunk chunk);
+    @Shadow
+    protected abstract boolean save(Chunk chunk);
 
-    @Shadow protected abstract void save(boolean flush);
+    @Shadow
+    protected abstract void save(boolean flush);
 
     private AsyncNamedLock<ChunkPos> chunkLock = AsyncNamedLock.createFair();
 
@@ -244,12 +245,34 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
                                     }
                                     AsyncSerializationManager.push(scope);
                                     try {
-                                        return ChunkSerializer.serialize(this.world, chunk);
+                                        NbtWriter nbtWriter = new NbtWriter();
+                                        nbtWriter.start(NbtElement.COMPOUND_TYPE);
+                                        ChunkDataSerializer.write(this.world, chunk, nbtWriter);
+                                        nbtWriter.finishCompound();
+                                        return nbtWriter;
+                                    } catch (Throwable e) {
+                                        e.printStackTrace();
+                                        throw e;
                                     } finally {
                                         AsyncSerializationManager.pop(scope);
                                     }
                                 }, GlobalExecutors.executor)
-                                .thenAccept(compoundTag -> this.setNbt(chunkPos, compoundTag))
+                                .thenAccept(compoundTag -> {
+                                    // this.setNbt(chunkPos, compoundTag);
+                                    // temp fix, idk,
+                                    var storageWorker = ((StorageIoWorkerAccessor) this.getIoWorker());
+                                    var storage = storageWorker.getStorage();
+                                    storageWorker.invokeRun(() -> {
+                                        try {
+                                            DataOutputStream chunkOutputStream = storage.getRegionFile(chunkPos).getChunkOutputStream(chunkPos);
+                                            chunkOutputStream.write(compoundTag.toByteArray());
+                                            chunkOutputStream.close();
+                                            return Either.left((Void) null);
+                                        } catch (Exception t) {
+                                            return Either.right(t);
+                                        }
+                                    });
+                                })
                                 .handle((unused, throwable) -> {
                                     lockToken.releaseLock();
                                     if (throwable != null) {
