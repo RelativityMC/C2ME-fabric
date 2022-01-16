@@ -63,12 +63,13 @@ public class SchedulerThread extends Thread implements Executor {
                 }
             }
 
-            if (!didWork) LockSupport.parkNanos("Waiting for tasks", 100_000);
+            if (!didWork) LockSupport.parkNanos("Waiting for tasks", 10_000_000);
         }
     }
 
     public void addPendingLock(SchedulingAsyncCombinedLock<?> lock) {
         this.pendingLocks.add(lock);
+        LockSupport.unpark(this);
     }
 
     private boolean doPriorityChanges() {
@@ -96,5 +97,6 @@ public class SchedulerThread extends Thread implements Executor {
     @Override
     public void execute(@NotNull Runnable command) {
         this.rawTasks.add(command);
+        LockSupport.unpark(this);
     }
 }
