@@ -16,13 +16,15 @@ import java.util.Set;
 public class C2MEMixinPlugin implements IMixinConfigPlugin {
     private static final Logger LOGGER = LogManager.getLogger("C2ME Mixin");
 
+    private static final boolean I_REALLY_NEED_VECTORIZATION = Boolean.getBoolean("com.ishland.c2me.mixin.IReallyNeedVectorizationAndIKnowWhatIAmDoing");
+
     @Override
     public void onLoad(String mixinPackage) {
         //noinspection ResultOfMethodCallIgnored
         C2MEConfig.threadedWorldGenConfig.getClass().getName(); // Load configuration
         LOGGER.info("Successfully loaded configuration for C2ME");
         DataFixerUpperClasspathFix.fix();
-        if (ModuleUtil.isModuleLoaded) {
+        if (I_REALLY_NEED_VECTORIZATION && ModuleUtil.isModuleLoaded) {
             LOGGER.info("Successfully loaded submodule for additional acceleration");
         }
     }
@@ -51,7 +53,7 @@ public class C2MEMixinPlugin implements IMixinConfigPlugin {
         if (mixinClassName.startsWith("com.ishland.c2me.mixin.optimization.chunkio.compression.modify_default_chunk_compression."))
             return C2MEConfig.generalOptimizationsConfig.chunkStreamVersion != -1;
         if (mixinClassName.startsWith("com.ishland.c2me.mixin.optimization.vectorizations."))
-            return ModuleUtil.isModuleLoaded;
+            return I_REALLY_NEED_VECTORIZATION && ModuleUtil.isModuleLoaded;
         if (mixinClassName.startsWith("com.ishland.c2me.mixin.threading.async_scheduling."))
             return C2MEConfig.asyncSchedulingConfig.enabled;
         if (mixinClassName.startsWith("com.ishland.c2me.mixin.threading.lighting."))
