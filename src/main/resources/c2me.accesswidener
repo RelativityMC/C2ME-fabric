@@ -38,6 +38,8 @@ accessible    method    net/minecraft/world/biome/source/MultiNoiseBiomeSource  
 accessible    method    net/minecraft/world/biome/source/MultiNoiseBiomeSource              <init>              (Lnet/minecraft/world/biome/source/util/MultiNoiseUtil$Entries;)V
 accessible    method    net/minecraft/world/gen/StructureWeightSampler                      <init>              (Lnet/minecraft/world/gen/StructureAccessor;Lnet/minecraft/world/chunk/Chunk;)V
 
+accessible    field    net/minecraft/util/math/noise/SimplexNoiseSampler                    GRADIENTS           [[I
+
 accessible    field    net/minecraft/world/storage/StorageIoWorker$Result    nbt    Lnet/minecraft/nbt/NbtCompound;
 accessible    field    net/minecraft/world/storage/StorageIoWorker$Result    future    Ljava/util/concurrent/CompletableFuture;
 accessible    field    net/minecraft/world/storage/VersionedChunkStorage    worker    Lnet/minecraft/world/storage/StorageIoWorker;
