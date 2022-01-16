@@ -36,9 +36,11 @@ public abstract class MixinMinecraftServer extends ReentrantThreadExecutor<Serve
                 }
             }
 
-            for (ServerWorld serverWorld : this.getWorlds()) {
-                if (this.shouldKeepTicking()) {
-                    hasWork = ((IThreadedAnvilChunkStorage) serverWorld.getChunkManager().threadedAnvilChunkStorage).runOneChunkAutoSave();
+            if (!hasWork && this.shouldKeepTicking()) {
+                for (ServerWorld serverWorld : this.getWorlds()) {
+                    if (this.shouldKeepTicking()) {
+                        hasWork = ((IThreadedAnvilChunkStorage) serverWorld.getChunkManager().threadedAnvilChunkStorage).runOneChunkAutoSave();
+                    }
                 }
             }
 
