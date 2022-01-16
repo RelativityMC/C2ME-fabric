@@ -13,9 +13,11 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
@@ -35,6 +37,18 @@ public abstract class MixinThreadedAnvilChunkStorage {
                     CompletableFuture.supplyAsync(() -> this.upgradeChunk(holder, requiredStatus), SchedulerThread.INSTANCE).thenCompose(Function.identity())
             );
         }
+    }
+
+    @SuppressWarnings("InvalidInjectorMethodSignature")
+    @ModifyVariable(method = "upgradeChunk", at = @At(value = "INVOKE_ASSIGN", target = "Lnet/minecraft/server/world/ThreadedAnvilChunkStorage;getRegion(Lnet/minecraft/util/math/ChunkPos;ILjava/util/function/IntFunction;)Ljava/util/concurrent/CompletableFuture;"))
+    private CompletableFuture<Either<List<Chunk>, ChunkHolder.Unloaded>> asyncUpgradeChunkTask(CompletableFuture<Either<List<Chunk>, ChunkHolder.Unloaded>> value) {
+        return value.thenApplyAsync(Function.identity(), runnable -> {
+            if (this.world.getServer().getThread() == Thread.currentThread()) {
+                SchedulerThread.INSTANCE.execute(runnable);
+            } else {
+                runnable.run();
+            }
+        });
     }
 
     @Redirect(method = "getRegion", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ThreadedAnvilChunkStorage;getCurrentChunkHolder(J)Lnet/minecraft/server/world/ChunkHolder;"))
