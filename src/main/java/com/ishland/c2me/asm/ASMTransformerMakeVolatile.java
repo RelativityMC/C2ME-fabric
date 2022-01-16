@@ -157,11 +157,11 @@ public class ASMTransformerMakeVolatile {
     public static void transform(ClassNode classNode) {
         final List<String> pendingFields = makeVolatileFieldsMapped.get(classNode.name);
         if (pendingFields != null) {
-            ASMMixinPlugin.LOGGER.info("Transforming class {}", classNode.name.replace('/', '.'));
+            ASMMixinPlugin.LOGGER.debug("Transforming class {}", classNode.name.replace('/', '.'));
             classNode.fields.stream()
                     .filter(fieldNode -> pendingFields.contains(fieldNode.name + ":" + fieldNode.desc))
                     .forEach(fieldNode -> {
-                        ASMMixinPlugin.LOGGER.info("Making field L{};{}:{} volatile", classNode.name, fieldNode.name, fieldNode.desc);
+                        ASMMixinPlugin.LOGGER.debug("Making field L{};{}:{} volatile", classNode.name, fieldNode.name, fieldNode.desc);
                         fieldNode.access |= Opcodes.ACC_VOLATILE;
                     });
         }

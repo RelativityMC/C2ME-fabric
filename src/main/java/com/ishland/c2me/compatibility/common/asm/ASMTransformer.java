@@ -27,14 +27,14 @@ public class ASMTransformer {
 
     public static void transform(ClassNode classNode) {
         final Consumer<MethodNode> transformer = methodNode -> {
-            LOGGER.info("Transforming L{};{}{}", classNode.name, methodNode.name, methodNode.desc);
+            LOGGER.debug("Transforming L{};{}{}", classNode.name, methodNode.name, methodNode.desc);
             final ListIterator<AbstractInsnNode> iterator = methodNode.instructions.iterator();
             while (iterator.hasNext()) {
                 final AbstractInsnNode insnNode = iterator.next();
                 if (insnNode instanceof TypeInsnNode typeInsnNode) {
                     if (typeInsnNode.getOpcode() == Opcodes.NEW) {
                         if (BlockPosMutableName.equals(typeInsnNode.desc)) {
-                            LOGGER.info("Replacing NEW {} with NEW {}", typeInsnNode.desc, Type.getInternalName(ThreadLocalMutableBlockPos.class));
+                            LOGGER.debug("Replacing NEW {} with NEW {}", typeInsnNode.desc, Type.getInternalName(ThreadLocalMutableBlockPos.class));
                             iterator.set(new TypeInsnNode(Opcodes.NEW, Type.getInternalName(ThreadLocalMutableBlockPos.class)));
                         }
 //                        else if (ChunkRandomName.equals(typeInsnNode.desc) || "java/util/Random".equals(typeInsnNode.desc)) {
@@ -45,7 +45,7 @@ public class ASMTransformer {
                 } else if (insnNode instanceof MethodInsnNode methodInsnNode) {
                     if (methodInsnNode.getOpcode() == Opcodes.INVOKESPECIAL && methodInsnNode.name.equals("<init>")) {
                         if (BlockPosMutableName.equals(methodInsnNode.owner)) {
-                            LOGGER.info("Replacing initializer call of {} with {}", methodInsnNode.owner, Type.getInternalName(ThreadLocalMutableBlockPos.class));
+                            LOGGER.debug("Replacing initializer call of {} with {}", methodInsnNode.owner, Type.getInternalName(ThreadLocalMutableBlockPos.class));
                             iterator.set(new MethodInsnNode(Opcodes.INVOKESPECIAL, Type.getInternalName(ThreadLocalMutableBlockPos.class), "<init>", methodInsnNode.desc));
                         }
 //                        else if (ChunkRandomName.equals(methodInsnNode.owner) || "java/util/Random".equals(methodInsnNode.owner)) {

@@ -26,7 +26,7 @@ public class ASMTransformerLithiumChunkAccessWorkaround {
             if (classNode.name.equals(ServerChunkManager) && FabricLoader.getInstance().isModLoaded("lithium")) {
                 for (MethodNode method : classNode.methods) {
                     if (method.name.equals("c2me$getChunkOffThread") && method.desc.equals(ASMTransformerMakeVolatile.remapMethodDescriptor("(IILnet/minecraft/class_2806;Z)Lnet/minecraft/class_2791;"))) {
-                        ASMMixinPlugin.LOGGER.info("Replacing lithium chunk_access method getChunkOffThread to apply non-blocking async chunk request");
+                        ASMMixinPlugin.LOGGER.debug("Replacing lithium chunk_access method getChunkOffThread to apply non-blocking async chunk request");
                         final Optional<MethodNode> getChunkOffThread = classNode.methods.stream().filter(methodNode -> methodNode.name.equals("getChunkOffThread")).findAny();
                         getChunkOffThread.ifPresentOrElse(oldMethodNode -> {
                             final MethodNode newMethodNode = new MethodNode();

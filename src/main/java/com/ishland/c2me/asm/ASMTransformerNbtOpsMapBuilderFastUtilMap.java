@@ -37,7 +37,7 @@ public class ASMTransformerNbtOpsMapBuilderFastUtilMap {
             if (classNode.name.equals(NbtOps$MapBuilderMapped)) {
                 for (MethodNode method : classNode.methods) {
                     if (method.name.equals(build) && method.desc.equals(buildDescMapped)) {
-                        ASMMixinPlugin.LOGGER.info("Replacing NbtOps$MapBuilder build method newHashMap to fastutil map");
+                        ASMMixinPlugin.LOGGER.debug("Replacing NbtOps$MapBuilder build method newHashMap to fastutil map");
                         final ListIterator<AbstractInsnNode> iterator = method.instructions.iterator();
                         boolean patched = false;
                         while (iterator.hasNext()) {
@@ -57,7 +57,7 @@ public class ASMTransformerNbtOpsMapBuilderFastUtilMap {
                                 }
                             }
                         }
-                        if (!patched) ASMMixinPlugin.LOGGER.warn("Unable to find target opcode");
+                        if (!patched) ASMMixinPlugin.LOGGER.warn("Unable to find target opcode in NbtOps$MapBuilder");
                     }
                 }
             }
