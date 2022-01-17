@@ -1,24 +1,26 @@
-package com.ishland.c2me.mixin.optimization.math;
+package noise;
 
 import net.minecraft.util.math.noise.PerlinNoiseSampler;
-import org.spongepowered.asm.mixin.Final;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
-import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Unique;
+import net.minecraft.world.gen.random.SimpleRandom;
+import org.openjdk.jmh.annotations.Benchmark;
+import org.openjdk.jmh.annotations.BenchmarkMode;
+import org.openjdk.jmh.annotations.Mode;
+import org.openjdk.jmh.annotations.OutputTimeUnit;
+import org.openjdk.jmh.annotations.Param;
+import org.openjdk.jmh.annotations.Scope;
+import org.openjdk.jmh.annotations.State;
 
-@Mixin(value = PerlinNoiseSampler.class, priority = 1090)
-public abstract class MixinPerlinNoiseSampler {
+import java.lang.reflect.Field;
+import java.util.concurrent.TimeUnit;
 
-    @Shadow @Final public double originY;
+@State(Scope.Benchmark)
+@BenchmarkMode({Mode.Throughput, Mode.AverageTime})
+@OutputTimeUnit(TimeUnit.NANOSECONDS)
+public class PerlinNoiseBenchmark {
 
-    @Shadow @Final public double originX;
+    private final PerlinNoiseSampler vanillaSampler = new PerlinNoiseSampler(new SimpleRandom(0xFF));
 
-    @Shadow @Final public double originZ;
-
-    @Shadow @Final private byte[] permutations;
-
-    @Unique
+    private final byte[] permutations;
     private static final double[][] SIMPLEX_NOISE_GRADIENTS = new double[][]{
             {1, 1, 0},
             {-1, 1, 0},
@@ -37,14 +39,11 @@ public abstract class MixinPerlinNoiseSampler {
             {-1, 1, 0},
             {0, -1, -1}
     };
+    private final double originX = vanillaSampler.originX;
+    private final double originY = vanillaSampler.originY;
+    private final double originZ = vanillaSampler.originZ;
 
-    /**
-     * @author ishland
-     * @reason optimize: remove frequent type conversions
-     */
-    @Deprecated
-    @Overwrite
-    public double sample(double x, double y, double z, double yScale, double yMax) {
+    private double optimizedSample(double x, double y, double z, double yScale, double yMax) {
         double d = x + this.originX;
         double e = y + this.originY;
         double f = z + this.originZ;
@@ -66,16 +65,10 @@ public abstract class MixinPerlinNoiseSampler {
             o = Math.floor(m / yScale + 1.0E-7F) * yScale;
         }
 
-        return this.sample((int) i, (int) j, (int) k, g, h - o, l, h);
+        return this.optimizedSample0((int) i, (int) j, (int) k, g, h - o, l, h);
     }
 
-    /**
-     * @author ishland
-     * @reason inline math & small optimization: remove frequent type conversions and redundant ops
-     */
-    @Overwrite
-    private double sample(int sectionX, int sectionY, int sectionZ, double localX, double localY, double localZ, double fadeLocalX) {
-        // TODO [VanillaCopy] but inlined
+    private double optimizedSample0(int sectionX, int sectionY, int sectionZ, double localX, double localY, double localZ, double fadeLocalX) {
         int i = this.permutations[sectionX & 0xFF];
         int j = this.permutations[sectionX + 1 & 0xFF];
         int k = this.permutations[i + sectionY & 0xFF];
@@ -107,6 +100,32 @@ public abstract class MixinPerlinNoiseSampler {
         double v0 = d + r * (e - d) + s * (f + r * (g - f) - (d + r * (e - d)));
         double v1 = h + r * (o - h) + s * (p + r * (q - p) - (h + r * (o - h)));
         return v0 + (t * (v1 - v0));
+    }
+
+    {
+        try {
+            final Field permutationsField = PerlinNoiseSampler.class.getDeclaredField("permutations");
+            permutationsField.setAccessible(true);
+            permutations = (byte[]) permutationsField.get(vanillaSampler);
+        } catch (Throwable t) {
+            throw new RuntimeException(t);
+        }
+    }
+
+    @Param({"0.0", "0.5", "1.0", "8.0"})
+    private double yScale;
+    @Param({"-1.0", "0.0", "1.0", "2.0", "16.0"})
+    private double yMax;
+
+    @SuppressWarnings("deprecation")
+    @Benchmark
+    public double vanillaSampler() {
+        return vanillaSampler.sample(4096, 128, 4096, yScale, yMax);
+    }
+
+    @Benchmark
+    public double optimizedSampler() {
+        return optimizedSample(4096, 128, 4096, yScale, yMax);
     }
 
 }
