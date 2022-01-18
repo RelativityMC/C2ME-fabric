@@ -71,16 +71,16 @@ public class PerlinNoiseBenchmark {
     private double optimizedSample0(int sectionX, int sectionY, int sectionZ, double localX, double localY, double localZ, double fadeLocalX) {
         final int var0 = sectionX & 0xFF;
         final int var1 = (sectionX + 1) & 0xFF;
-        final int var2 = this.permutations[var0];
-        final int var3 = this.permutations[var1];
+        final int var2 = this.permutations[var0] & 0xFF;
+        final int var3 = this.permutations[var1] & 0xFF;
         final int var4 = (var2 + sectionY) & 0xFF;
         final int var5 = (var2 + sectionY + 1) & 0xFF;
         final int var6 = (var3 + sectionY) & 0xFF;
         final int var7 = (var3 + sectionY + 1) & 0xFF;
-        final int var8 = this.permutations[var4];
-        final int var9 = this.permutations[var5];
-        final int var10 = this.permutations[var6];
-        final int var11 = this.permutations[var7];
+        final int var8 = this.permutations[var4] & 0xFF;
+        final int var9 = this.permutations[var5] & 0xFF;
+        final int var10 = this.permutations[var6] & 0xFF;
+        final int var11 = this.permutations[var7] & 0xFF;
 
         final int var12 = (var8 + sectionZ) & 0xFF;
         final int var13 = (var10 + sectionZ) & 0xFF;
