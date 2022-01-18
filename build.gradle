@@ -178,7 +178,7 @@ jmh {
 //    operationsPerInvocation = 10 // Operations per invocation.
 //    benchmarkParameters =  [:] // Benchmark parameters.
     profilers = ['perf'] // Use profilers to collect additional data. Supported profilers: [cl, comp, gc, stack, perf, perfnorm, perfasm, xperf, xperfasm, hs_cl, hs_comp, hs_gc, hs_rt, hs_thr, async]
-    timeOnIteration = '1s' // Time to spend at each measurement iteration.
+    timeOnIteration = '2s' // Time to spend at each measurement iteration.
     resultFormat = 'CSV' // Result format type (one of CSV, JSON, NONE, SCSV, TEXT)
     synchronizeIterations = false // Synchronize iterations?
     threads = Math.max(1, (int) (Runtime.getRuntime().availableProcessors() / 2)) // Number of worker threads to run with.
@@ -189,7 +189,7 @@ jmh {
     warmup = '1s' // Time to spend at each warmup iteration.
     warmupBatchSize = 1 // Warmup batch size: number of benchmark method calls per operation.
 //    warmupForks = 0 // How many warmup forks to make for a single benchmark. 0 to disable warmup forks.
-    warmupIterations = 8 // Number of warmup iterations to do.
+    warmupIterations = 16 // Number of warmup iterations to do.
     warmupMode = 'INDI' // Warmup mode for warming up selected benchmarks. Warmup modes are: [INDI, BULK, BULK_INDI].
     warmupBenchmarks = ['.*Warmup'] // Warmup benchmarks to include in the run in addition to already selected. JMH will not measure these benchmarks, but only use them for the warmup.
 
