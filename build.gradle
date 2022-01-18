@@ -180,7 +180,7 @@ jmh {
     profilers = ['perf'] // Use profilers to collect additional data. Supported profilers: [cl, comp, gc, stack, perf, perfnorm, perfasm, xperf, xperfasm, hs_cl, hs_comp, hs_gc, hs_rt, hs_thr, async]
     timeOnIteration = '2s' // Time to spend at each measurement iteration.
     resultFormat = 'CSV' // Result format type (one of CSV, JSON, NONE, SCSV, TEXT)
-    synchronizeIterations = false // Synchronize iterations?
+//    synchronizeIterations = true // Synchronize iterations?
     threads = Math.max(1, (int) (Runtime.getRuntime().availableProcessors() / 2)) // Number of worker threads to run with.
 //    threadGroups = [2,3,4] //Override thread group distribution for asymmetric benchmarks.
 //    timeout = '1s' // Timeout for benchmark iteration.
