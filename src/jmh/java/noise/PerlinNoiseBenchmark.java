@@ -39,6 +39,10 @@ public class PerlinNoiseBenchmark {
             {-1, 1, 0},
             {0, -1, -1}
     };
+
+    private final int[] permutationsInt;
+    private final int[] permutationsIntAnd15;
+
     private final double originX = vanillaSampler.originX;
     private final double originY = vanillaSampler.originY;
     private final double originZ = vanillaSampler.originZ;
@@ -71,16 +75,16 @@ public class PerlinNoiseBenchmark {
     private double optimizedSample0(int sectionX, int sectionY, int sectionZ, double localX, double localY, double localZ, double fadeLocalX) {
         final int var0 = sectionX & 0xFF;
         final int var1 = (sectionX + 1) & 0xFF;
-        final int var2 = this.permutations[var0] & 0xFF;
-        final int var3 = this.permutations[var1] & 0xFF;
+        final int var2 = this.permutationsInt[var0];
+        final int var3 = this.permutationsInt[var1];
         final int var4 = (var2 + sectionY) & 0xFF;
         final int var5 = (var2 + sectionY + 1) & 0xFF;
         final int var6 = (var3 + sectionY) & 0xFF;
         final int var7 = (var3 + sectionY + 1) & 0xFF;
-        final int var8 = this.permutations[var4] & 0xFF;
-        final int var9 = this.permutations[var5] & 0xFF;
-        final int var10 = this.permutations[var6] & 0xFF;
-        final int var11 = this.permutations[var7] & 0xFF;
+        final int var8 = this.permutationsInt[var4];
+        final int var9 = this.permutationsInt[var5];
+        final int var10 = this.permutationsInt[var6];
+        final int var11 = this.permutationsInt[var7];
 
         final int var12 = (var8 + sectionZ) & 0xFF;
         final int var13 = (var10 + sectionZ) & 0xFF;
@@ -90,14 +94,14 @@ public class PerlinNoiseBenchmark {
         final int var17 = (var10 + sectionZ + 1) & 0xFF;
         final int var18 = (var9 + sectionZ + 1) & 0xFF;
         final int var19 = (var11 + sectionZ + 1) & 0xFF;
-        final int var20 = this.permutations[var12] & 15;
-        final int var21 = this.permutations[var13] & 15;
-        final int var22 = this.permutations[var14] & 15;
-        final int var23 = this.permutations[var15] & 15;
-        final int var24 = this.permutations[var16] & 15;
-        final int var25 = this.permutations[var17] & 15;
-        final int var26 = this.permutations[var18] & 15;
-        final int var27 = this.permutations[var19] & 15;
+        final int var20 = this.permutationsIntAnd15[var12];
+        final int var21 = this.permutationsIntAnd15[var13];
+        final int var22 = this.permutationsIntAnd15[var14];
+        final int var23 = this.permutationsIntAnd15[var15];
+        final int var24 = this.permutationsIntAnd15[var16];
+        final int var25 = this.permutationsIntAnd15[var17];
+        final int var26 = this.permutationsIntAnd15[var18];
+        final int var27 = this.permutationsIntAnd15[var19];
         final double[] var28 = SIMPLEX_NOISE_GRADIENTS[var20];
         final double[] var29 = SIMPLEX_NOISE_GRADIENTS[var21];
         final double[] var30 = SIMPLEX_NOISE_GRADIENTS[var22];
@@ -204,6 +208,12 @@ public class PerlinNoiseBenchmark {
             permutations = (byte[]) permutationsField.get(vanillaSampler);
         } catch (Throwable t) {
             throw new RuntimeException(t);
+        }
+        this.permutationsInt = new int[this.permutations.length];
+        this.permutationsIntAnd15 = new int[this.permutations.length];
+        for (int i = 0; i < this.permutations.length; i++) {
+            this.permutationsInt[i] = this.permutations[i] & 0xFF;
+            this.permutationsIntAnd15[i] = this.permutations[i] & 15;
         }
     }
 
