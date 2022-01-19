@@ -1,6 +1,5 @@
 package com.ishland.c2me.mixin.fixes.worldgen.threading;
 
-import com.ishland.c2me.mixin.access.IChunkGenerator;
 import net.minecraft.world.biome.source.BiomeSource;
 import net.minecraft.world.gen.chunk.ChunkGenerator;
 import net.minecraft.world.gen.chunk.NoiseChunkGenerator;
@@ -25,8 +24,8 @@ public abstract class MixinNoiseChunkGenerator extends ChunkGenerator {
 
     @Inject(method = "<init>(Lnet/minecraft/util/registry/Registry;Lnet/minecraft/world/biome/source/BiomeSource;Lnet/minecraft/world/biome/source/BiomeSource;JLjava/util/function/Supplier;)V", at = @At(value = "RETURN"))
     private void onInit(CallbackInfo info) {
-        ((IChunkGenerator) this).invokeGenerateStrongholdPositions();
-        System.out.println("Stronghold positions initialized");
+//        ((IChunkGenerator) this).invokeGenerateStrongholdPositions();
+//        System.out.println("Stronghold positions initialized");
     }
 
 }

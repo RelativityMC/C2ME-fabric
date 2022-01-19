@@ -46,6 +46,7 @@
     "fixes.worldgen.threading.MixinStructurePalettedBlockInfoList",
     "fixes.worldgen.threading.MixinStructurePlacementData",
     "fixes.worldgen.threading.MixinStructureStart",
+    "fixes.worldgen.threading.MixinThreadedAnvilChunkStorage",
     "fixes.worldgen.threading.MixinWeightedList",
     "fixes.worldgen.threading.MixinWoodlandMansionGeneratorMansionParameters",
     "fixes.worldgen.threading.math.MixinAffineTransformation",
