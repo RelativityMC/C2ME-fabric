@@ -1,13 +1,13 @@
 package com.ishland.c2me.mixin.fixes.worldgen.graal;
 
+import com.mojang.logging.LogUtils;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.gen.decorator.DecoratorContext;
 import net.minecraft.world.gen.decorator.PlacementModifier;
 import net.minecraft.world.gen.feature.ConfiguredFeature;
 import net.minecraft.world.gen.feature.PlacedFeature;
 import org.apache.commons.lang3.mutable.MutableBoolean;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -21,7 +21,7 @@ import java.util.stream.Stream;
 @Mixin(PlacedFeature.class)
 public class MixinPlacedFeature {
 
-    private static final Logger LOGGER = LogManager.getLogger();
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     @Shadow @Final private List<PlacementModifier> placementModifiers;
 

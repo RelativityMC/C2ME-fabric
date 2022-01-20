@@ -3,8 +3,6 @@ package com.ishland.c2me.compatibility.common.asm;
 import com.ishland.c2me.compatibility.common.ThreadLocalMutableBlockPos;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.MappingResolver;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AbstractInsnNode;
@@ -12,13 +10,15 @@ import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.TypeInsnNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ListIterator;
 import java.util.function.Consumer;
 
 public class ASMTransformer {
 
-    private static final Logger LOGGER = LogManager.getLogger("C2ME Compatibility Module ASM Transformer");
+    private static final Logger LOGGER = LoggerFactory.getLogger("C2ME Compatibility Module ASM Transformer");
     private static final MappingResolver mappingResolver = FabricLoader.getInstance().getMappingResolver();
     private static final String INTERMEDIARY = "intermediary";
 

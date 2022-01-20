@@ -13,8 +13,8 @@ import net.minecraft.util.registry.Registry;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.source.BiomeCoords;
 import net.minecraft.world.biome.source.util.MultiNoiseUtil;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.threadly.concurrent.UnfairExecutor;
 
 import java.util.WeakHashMap;
@@ -23,7 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class MultiBiomeCache {
 
     public static final UnfairExecutor EXECUTOR = new UnfairExecutor(2, new ThreadFactoryBuilder().setNameFormat("C2ME biomes #%d").setDaemon(true).setPriority(Thread.NORM_PRIORITY - 1).build());
-    private static final Logger LOGGER = LogManager.getLogger("C2ME Biome Cache");
+    private static final Logger LOGGER = LoggerFactory.getLogger("C2ME Biome Cache");
 
     private final IndexedIterable<Biome> registry;
 

@@ -3,6 +3,7 @@ package com.ishland.c2me.common.threading.worldgen.debug;
 
 import com.google.common.collect.Sets;
 import com.ishland.c2me.common.config.C2MEConfig;
+import com.mojang.logging.LogUtils;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.structure.processor.RuleStructureProcessor;
 import net.minecraft.util.math.MathHelper;
@@ -11,9 +12,8 @@ import net.minecraft.world.WorldView;
 import net.minecraft.world.gen.StructureAccessor;
 import net.minecraft.world.gen.chunk.BlendingData;
 import net.minecraft.world.gen.chunk.NoiseChunkGenerator;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
 
 import java.util.Arrays;
 import java.util.Set;
@@ -22,7 +22,7 @@ import java.util.concurrent.atomic.AtomicLong;
 // Used to examine getChunk calls with reduced lock radius
 public class StacktraceRecorder {
 
-    private static final Logger LOGGER = LogManager.getLogger();
+    private static final Logger LOGGER = LogUtils.getLogger();
     private static final boolean doRecord = !Boolean.getBoolean("com.ishland.c2me.common.threading.worldgen.debug.NoDebugReducedLockRadius") && C2MEConfig.threadedWorldGenConfig.reduceLockRadius;
     private static final boolean warnAtWarningLevel = !Boolean.getBoolean("com.ishland.c2me.common.threading.worldgen.debug.DebugReducedLockRadiusAtWarningLevel");
     private static final int recordFrequency = MathHelper.clamp(Integer.getInteger("com.ishland.c2me.common.threading.worldgen.debug.DebugReducedLockRadiusFrequency", 4), 1, 16);

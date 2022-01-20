@@ -2,6 +2,7 @@ package com.ishland.c2me.common.notickvd;
 
 import com.ishland.c2me.common.config.C2MEConfig;
 import com.ishland.c2me.mixin.access.IChunkTicketManager;
+import com.mojang.logging.LogUtils;
 import it.unimi.dsi.fastutil.longs.Long2BooleanLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2BooleanMap;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
@@ -15,15 +16,14 @@ import net.minecraft.server.world.ChunkTicketType;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.ChunkPosDistanceLevelPropagator;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 
 public class PlayerNoTickDistanceMap extends ChunkPosDistanceLevelPropagator {
 
-    private static final Logger LOGGER = LogManager.getLogger();
+    private static final Logger LOGGER = LogUtils.getLogger();
     public static final ChunkTicketType<ChunkPos> TICKET_TYPE = ChunkTicketType.create("c2me_no_tick_vd", Comparator.comparingLong(ChunkPos::toLong));
 
     private static final int MAX_TICKET_UPDATES_PER_TICK = C2MEConfig.noTickViewDistanceConfig.updatesPerTick;

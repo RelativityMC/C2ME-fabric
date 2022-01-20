@@ -27,7 +27,7 @@ public class ConfigUtils {
     }
 
     private static <T> T getValue0(ConfigScope config, String key, Supplier<T> def, String comment, List<String> incompatibleMods, T incompatibleDefault, boolean usePlaceholder, CheckType... checks) {
-        if (IGNORE_INCOMPATIBILITY) C2MEConfig.LOGGER.fatal("Ignoring incompatibility check. You will get NO support if you do this unless explicitly stated. ");
+        if (IGNORE_INCOMPATIBILITY) C2MEConfig.LOGGER.error("Ignoring incompatibility check. You will get NO support if you do this unless explicitly stated. ");
         Preconditions.checkNotNull(config);
         Preconditions.checkNotNull(key);
         Preconditions.checkArgument(!key.isEmpty());

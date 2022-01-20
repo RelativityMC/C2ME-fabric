@@ -5,16 +5,17 @@ import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import com.google.common.base.Preconditions;
 import com.ishland.c2me.common.config.updater.Updaters;
 import io.netty.util.internal.PlatformDependent;
+import net.fabricmc.api.EnvType;
 import net.fabricmc.loader.api.FabricLoader;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.function.Supplier;
 
 public class C2MEConfig {
 
-    static final Logger LOGGER = LogManager.getLogger("C2ME Config");
+    static final Logger LOGGER = LoggerFactory.getLogger("C2ME Config");
 
     private static final long CURRENT_CONFIG_VERSION = 2;
 
@@ -64,11 +65,35 @@ public class C2MEConfig {
     }
 
     private static int getDefaultGlobalExecutorParallelism() {
+        return Math.max(1, Math.min(getDefaultParallelismCPU(), getDefaultParallelismHeap()));
+    }
+
+    private static int getDefaultParallelismCPU() {
         if (PlatformDependent.isWindows()) {
-            return Math.max(1, (int) (Runtime.getRuntime().availableProcessors() / 1.6 - 2));
+            return Math.max(1, (int) (Runtime.getRuntime().availableProcessors() / 1.6 - 2)) + defaultParallelismEnvTypeOffset();
         } else {
-            return Math.max(1, (int) (Runtime.getRuntime().availableProcessors() / 1.2 - 2));
+            return Math.max(1, (int) (Runtime.getRuntime().availableProcessors() / 1.2 - 2)) + defaultParallelismEnvTypeOffset();
         }
+    }
+
+    private static int defaultParallelismEnvTypeOffset() {
+        return isClientSide() ? -2 : 0;
+    }
+
+    private static boolean isClientSide() {
+        return FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT;
+    }
+
+    private static int getDefaultParallelismHeap() {
+        if (PlatformDependent.isJ9Jvm()) {
+            return (int) ((memoryInGiB() + (isClientSide() ? -0.6 : -0.2)) / 0.5) + defaultParallelismEnvTypeOffset();
+        } else {
+            return (int) ((memoryInGiB() + (isClientSide() ? -1.8 : -0.6)) / 1.4) + defaultParallelismEnvTypeOffset();
+        }
+    }
+
+    private static double memoryInGiB() {
+        return Runtime.getRuntime().maxMemory() / 1024.0 / 1024.0 / 1024.0;
     }
 
     public static class IoSystemConfig {

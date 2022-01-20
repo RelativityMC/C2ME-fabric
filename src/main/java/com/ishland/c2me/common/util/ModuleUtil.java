@@ -3,8 +3,8 @@ package com.ishland.c2me.common.util;
 import com.google.common.base.Preconditions;
 import com.ishland.c2me.C2MEMod;
 import net.fabricmc.loader.api.FabricLoader;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.module.Configuration;
 import java.lang.module.ModuleDescriptor;
@@ -17,7 +17,7 @@ import java.util.List;
 
 public class ModuleUtil {
 
-    public static final Logger LOGGER = LogManager.getLogger("C2ME ModuleManager");
+    public static final Logger LOGGER = LoggerFactory.getLogger("C2ME ModuleManager");
 
     public static final boolean isModuleLoaded;
 

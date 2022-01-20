@@ -12,9 +12,9 @@ import net.fabricmc.loader.api.ModContainer;
 import net.fabricmc.loader.api.Version;
 import net.fabricmc.loader.impl.util.version.VersionParser;
 import net.fabricmc.loader.impl.util.version.VersionPredicateParser;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.objectweb.asm.tree.ClassNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spongepowered.asm.mixin.MixinEnvironment;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfig;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
@@ -43,7 +43,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class C2MECompatibilityModule implements IMixinConfigPlugin {
-    private static final Logger LOGGER = LogManager.getLogger("C2ME Compatibility Module");
+    private static final Logger LOGGER = LoggerFactory.getLogger("C2ME Compatibility Module");
     private static final String mixinPackage = "com.ishland.c2me.compatibility.mixin.";
     private static final HashSet<String> enabledSubPackages = new HashSet<>();
     private static final HashSet<ModContainer> enabledMods = new HashSet<>();

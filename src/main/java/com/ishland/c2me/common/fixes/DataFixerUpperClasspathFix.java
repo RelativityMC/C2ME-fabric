@@ -1,8 +1,8 @@
 package com.ishland.c2me.common.fixes;
 
 import com.ishland.c2me.common.util.UrlUtil;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
 import java.lang.reflect.Field;
@@ -14,7 +14,7 @@ public class DataFixerUpperClasspathFix {
 
     private static final String NAME = "com/mojang/datafixers/util/Either.class";
 
-    public static final Logger LOGGER = LogManager.getLogger("DataFixerUpperClasspathFix");
+    public static final Logger LOGGER = LoggerFactory.getLogger("DataFixerUpperClasspathFix");
 
     public static void fix() {
         try {

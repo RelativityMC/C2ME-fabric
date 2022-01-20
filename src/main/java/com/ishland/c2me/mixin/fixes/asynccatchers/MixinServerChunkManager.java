@@ -8,15 +8,13 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.function.BooleanSupplier;
-
 @Mixin(ServerChunkManager.class)
 public class MixinServerChunkManager {
 
     @Shadow @Final private Thread serverThread;
 
-    @Inject(method = "tick(Ljava/util/function/BooleanSupplier;)V", at = @At("HEAD"))
-    private void onTick(BooleanSupplier booleanSupplier, CallbackInfo ci) {
+    @Inject(method = "tick(Ljava/util/function/BooleanSupplier;Z)V", at = @At("HEAD"))
+    private void onTick(CallbackInfo ci) {
         if (Thread.currentThread() != this.serverThread) throw new IllegalStateException("Async ticking server chunk manager");
     }
 

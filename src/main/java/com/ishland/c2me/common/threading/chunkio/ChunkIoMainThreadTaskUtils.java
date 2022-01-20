@@ -1,14 +1,14 @@
 package com.ishland.c2me.common.threading.chunkio;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
 
 import java.util.ArrayDeque;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class ChunkIoMainThreadTaskUtils {
 
-    private static final Logger LOGGER = LogManager.getLogger();
+    private static final Logger LOGGER = LogUtils.getLogger();
     private static final ThreadLocal<ArrayDeque<Object>> deserializeStack = ThreadLocal.withInitial(ArrayDeque::new);
     private static final LinkedBlockingQueue<Runnable> mainThreadQueue = new LinkedBlockingQueue<>();
 

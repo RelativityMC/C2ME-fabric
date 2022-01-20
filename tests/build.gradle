@@ -41,7 +41,7 @@ allprojects {
         mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
         modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
         modApi 'com.github.astei:lazydfu:0.1.2'
-        modApi 'com.github.ishlandbukkit:Starlight:7ba6c5c'
+        modApi 'com.github.RelativityMC:Starlight:c13be1c'
         implementation "com.ibm.async:asyncutil:${async_util_version}"
     }
     processResources {
