@@ -1,8 +1,8 @@
 package com.ishland.c2me.mixin.fixes.worldgen.threading;
 
 import com.ishland.c2me.common.GlobalExecutors;
-import com.ishland.c2me.mixin.access.IChunkGenerator;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.gen.chunk.ChunkGenerator;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -17,7 +17,7 @@ public class MixinThreadedAnvilChunkStorage {
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(CallbackInfo info) {
-        GlobalExecutors.executor.execute(() -> ((IChunkGenerator) this.chunkGenerator).invokeGenerateStrongholdPositions());
+        GlobalExecutors.executor.execute(() -> this.chunkGenerator.isStrongholdStartingChunk(new ChunkPos(0, 0)));
     }
 
 }
