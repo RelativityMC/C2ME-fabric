@@ -21,6 +21,7 @@ accessible    class    net/minecraft/server/world/ChunkTicketManager$NearbyChunk
 accessible    class    net/minecraft/world/biome/source/MultiNoiseBiomeSource$Instance
 accessible    class    net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext
 accessible    class    net/minecraft/server/world/ChunkTicketManager$DistanceFromNearestPlayerTracker
+accessible    class    net/minecraft/world/storage/RegionFile$ChunkBuffer
 
 extendable    class    net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext
 
@@ -37,6 +38,7 @@ accessible    method    net/minecraft/nbt/NbtList                               
 accessible    method    net/minecraft/world/biome/source/MultiNoiseBiomeSource              <init>              (Lnet/minecraft/world/biome/source/util/MultiNoiseUtil$Entries;Ljava/util/Optional;)V
 accessible    method    net/minecraft/world/biome/source/MultiNoiseBiomeSource              <init>              (Lnet/minecraft/world/biome/source/util/MultiNoiseUtil$Entries;)V
 accessible    method    net/minecraft/world/gen/StructureWeightSampler                      <init>              (Lnet/minecraft/world/gen/StructureAccessor;Lnet/minecraft/world/chunk/Chunk;)V
+accessible    method    net/minecraft/world/storage/RegionBasedStorage                      <init>              (Ljava/nio/file/Path;Z)V
 
 accessible    field    net/minecraft/util/math/noise/SimplexNoiseSampler                    GRADIENTS           [[I
 

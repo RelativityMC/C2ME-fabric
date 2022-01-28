@@ -98,6 +98,7 @@ public class C2MEConfig {
 
     public static class IoSystemConfig {
         public final boolean async;
+        public final boolean replaceImpl;
         public final int chunkDataCacheSoftLimit;
         public final int chunkDataCacheLimit;
 
@@ -105,6 +106,7 @@ public class C2MEConfig {
             Preconditions.checkNotNull(config, "ioSystem config is not present");
             final ConfigUtils.ConfigScope configScope = new ConfigUtils.ConfigScope(config);
             this.async = ConfigUtils.getValue(configScope, "async", () -> true, "Whether to use async chunk loading & unloading", List.of("radon"), false, true);
+            this.replaceImpl = ConfigUtils.getValue(configScope, "replaceImpl", () -> false, "(WIP) Whether to use optimized implementation of IO system", List.of("radon"), false, true);
             this.chunkDataCacheSoftLimit = ConfigUtils.getValue(configScope, "chunkDataCacheSoftLimit", () -> 1536, "Soft limit for io worker nbt cache", List.of(), 4096, true);
             this.chunkDataCacheLimit = ConfigUtils.getValue(configScope, "chunkDataCacheLimit", () -> 6144, "Hard limit for io worker nbt cache", List.of(), 8192, true);
             configScope.removeUnusedKeys();
