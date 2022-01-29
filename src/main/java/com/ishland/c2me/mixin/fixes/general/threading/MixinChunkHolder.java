@@ -1,11 +1,7 @@
 package com.ishland.c2me.mixin.fixes.general.threading;
 
-import com.ishland.c2me.mixin.access.IServerChunkManager;
-import com.ishland.c2me.mixin.access.IThreadedAnvilChunkStorage;
 import com.mojang.datafixers.util.Either;
 import net.minecraft.server.world.ChunkHolder;
-import net.minecraft.server.world.ChunkTicketManager;
-import net.minecraft.server.world.ServerChunkManager;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
@@ -22,7 +18,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReferenceArray;
-import java.util.concurrent.locks.ReentrantLock;
 
 @Mixin(ChunkHolder.class)
 public abstract class MixinChunkHolder {
@@ -47,11 +42,11 @@ public abstract class MixinChunkHolder {
     private AtomicReferenceArray<CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>>> futuresByStatus;
     @Shadow private CompletableFuture<Chunk> savingFuture;
     @Unique
-    private ReentrantLock schedulingLock = new ReentrantLock();
+    private Object schedulingMutex = new Object();
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(CallbackInfo info) {
-        this.schedulingLock = new ReentrantLock();
+        this.schedulingMutex = new Object();
     }
 
     /**
@@ -61,12 +56,19 @@ public abstract class MixinChunkHolder {
     @Overwrite
     public CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> getChunkAt(ChunkStatus targetStatus, ThreadedAnvilChunkStorage chunkStorage) {
         // TODO [VanillaCopy]
-        final ServerChunkManager chunkManager = ((IThreadedAnvilChunkStorage) chunkStorage).getWorld().getChunkManager();
-        final ChunkTicketManager ticketManager = ((IServerChunkManager) chunkManager).getTicketManager();
-        schedulingLock.lock();
-        try {
-            int i = targetStatus.getIndex();
-            CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> completableFuture = this.futuresByStatus.get(i);
+        int i = targetStatus.getIndex();
+        CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> completableFuture = this.futuresByStatus.get(i);
+        if (completableFuture != null) {
+            Either<Chunk, ChunkHolder.Unloaded> either = completableFuture.getNow(null);
+            boolean bl = either != null && either.right().isPresent();
+            if (!bl) {
+                return completableFuture;
+            }
+        }
+
+        synchronized (this.schedulingMutex) {
+            // copied from above
+            completableFuture = this.futuresByStatus.get(i);
             if (completableFuture != null) {
                 Either<Chunk, ChunkHolder.Unloaded> either = completableFuture.getNow(null);
                 boolean bl = either != null && either.right().isPresent();
@@ -74,7 +76,6 @@ public abstract class MixinChunkHolder {
                     return completableFuture;
                 }
             }
-
             if (getTargetStatusForLevel(this.level).isAtLeast(targetStatus)) {
                 CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> completableFuture2 = chunkStorage.getChunk((ChunkHolder) (Object) this, targetStatus);
                 // synchronization: see below
@@ -86,8 +87,6 @@ public abstract class MixinChunkHolder {
             } else {
                 return completableFuture == null ? UNLOADED_CHUNK_FUTURE : completableFuture;
             }
-        } finally {
-            schedulingLock.unlock();
         }
     }
 
