@@ -58,7 +58,7 @@ public class C2MEStorageThread extends Thread {
         this.storage = new RegionBasedStorage(directory, dsync);
         this.setName("C2ME Storage #%d".formatted(SERIAL.incrementAndGet()));
         this.setDaemon(true);
-        this.setUncaughtExceptionHandler(new net.minecraft.util.logging.UncaughtExceptionHandler(LOGGER));
+        this.setUncaughtExceptionHandler((t, e) -> LOGGER.error("Thread %s died".formatted(t), e));
         this.start();
     }
 
@@ -69,22 +69,22 @@ public class C2MEStorageThread extends Thread {
             hasWork = handleTasks() || hasWork;
             hasWork = handlePendingWrites() || hasWork;
             hasWork = handlePendingReads() || hasWork;
+            hasWork = writeBacklog() || hasWork;
 
-            if (!hasWork) {
-                hasWork = this.writeBacklog() || hasWork;
-            }
+            runWriteFutureGC();
 
             if (!hasWork) {
                 if (this.closing.get()) {
-                    flush0();
+                    flush0(true);
                     try {
                         this.storage.close();
                     } catch (Throwable t) {
                         LOGGER.error("Error closing storage", t);
                     }
+                    this.closeFuture.complete(null);
                     break;
                 } else {
-                    LockSupport.parkNanos("Waiting for tasks", 1_000_000);
+                    LockSupport.parkNanos("Waiting for tasks", 10_000_000);
                 }
             }
         }
@@ -99,7 +99,7 @@ public class C2MEStorageThread extends Thread {
      */
     public CompletableFuture<NbtCompound> getChunkData(long pos, NbtScanner scanner) {
         final CompletableFuture<NbtCompound> future = new CompletableFuture<>();
-        this.pendingReadRequests.add(new ReadRequest(pos, future, null));
+        this.pendingReadRequests.add(new ReadRequest(pos, future, scanner));
         LockSupport.unpark(this);
         return future.thenApply(Function.identity());
     }
@@ -109,13 +109,14 @@ public class C2MEStorageThread extends Thread {
         LockSupport.unpark(this);
     }
 
-    public CompletableFuture<Void> flush() {
-        return CompletableFuture.runAsync(this::flush0, this.executor);
+    public CompletableFuture<Void> flush(boolean sync) {
+        return CompletableFuture.runAsync(() -> flush0(sync), this.executor);
     }
 
-    private void flush0() {
+    private void flush0(boolean sync) {
         try {
             while (true) {
+                runWriteFutureGC();
                 if (handleTasks()) continue;
                 if (handlePendingReads()) continue;
                 if (handlePendingWrites()) continue;
@@ -123,7 +124,8 @@ public class C2MEStorageThread extends Thread {
 
                 break;
             }
-            this.storage.sync();
+            flushBacklog();
+            if (sync) this.storage.sync();
         } catch (Throwable t) {
             LOGGER.error("Error flushing storage", t);
         }
@@ -186,6 +188,25 @@ public class C2MEStorageThread extends Thread {
             return true;
         }
         return false;
+    }
+
+    private void runWriteFutureGC() {
+        this.writeFutures.removeIf(CompletableFuture::isDone);
+    }
+
+    private void flushBacklog() {
+        while (!this.writeFutures.isEmpty()) {
+            while (writeBacklog()) ;
+            runWriteFutureGC();
+            final CompletableFuture<Void> allFuture = CompletableFuture.allOf(this.writeFutures.stream()
+                    .map(future -> future.exceptionally(unused -> null))
+                    .distinct()
+                    .toArray(CompletableFuture[]::new));
+            while (!allFuture.isDone()) {
+                handleTasks();
+            }
+            runWriteFutureGC();
+        }
     }
 
     private void scheduleChunkRead(long pos, CompletableFuture<NbtCompound> future, NbtScanner scanner) {

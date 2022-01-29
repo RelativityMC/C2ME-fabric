@@ -38,7 +38,7 @@ public class C2MEStorageVanillaInterface extends StorageIoWorker {
 
     @Override
     public CompletableFuture<Void> completeAll(boolean sync) {
-        return this.backend.flush();
+        return this.backend.flush(true);
     }
 
     @Override
