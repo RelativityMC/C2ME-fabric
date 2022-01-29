@@ -13,7 +13,6 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
-import java.util.LinkedList;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -30,9 +29,6 @@ public abstract class MixinThreadedAnvilChunkStorage implements IThreadedAnvilCh
     @Unique
     private final ConcurrentLinkedQueue<ChunkPos> dirtyChunkPosForAutoSave = new ConcurrentLinkedQueue<>();
 
-    @Unique
-    private final LinkedList<ChunkHolder> dirtyChunkHoldersForAutoSave = new LinkedList<>();
-
     @Redirect(method = "unloadChunks", at = @At(value = "FIELD", target = "Lnet/minecraft/server/world/ThreadedAnvilChunkStorage;chunkHolders:Lit/unimi/dsi/fastutil/longs/Long2ObjectLinkedOpenHashMap;"))
     private Long2ObjectLinkedOpenHashMap<ChunkHolder> stopAutoSaveInUnloading(ThreadedAnvilChunkStorage instance) {
         return anEmptyChunkHoldersMap; // prevent autosave from happening in unloading stage
@@ -45,24 +41,17 @@ public abstract class MixinThreadedAnvilChunkStorage implements IThreadedAnvilCh
 
     @Override
     public boolean runOneChunkAutoSave() {
-        {
-            ChunkPos pos;
-            while ((pos = this.dirtyChunkPosForAutoSave.poll()) != null) {
-                final ChunkHolder holder = this.currentChunkHolders.get(pos.toLong());
-                if (holder != null) this.dirtyChunkHoldersForAutoSave.add(holder);
-            }
-        }
-
-        ChunkHolder chunkHolder;
-        while ((chunkHolder = this.dirtyChunkHoldersForAutoSave.poll()) != null) {
+        ChunkPos pos;
+        while ((pos = this.dirtyChunkPosForAutoSave.poll()) != null) {
+            ChunkHolder chunkHolder = this.currentChunkHolders.get(pos.toLong());
+            if (chunkHolder == null) continue;
             final CompletableFuture<Chunk> savingFuture = chunkHolder.getSavingFuture();
             if (savingFuture.isDone()) {
                 this.save(chunkHolder);
                 return true;
             } else {
-                ChunkHolder finalChunkHolder = chunkHolder;
                 savingFuture.handle((chunk, throwable) -> {
-                    this.enqueueDirtyChunkPosForAutoSave(finalChunkHolder.getPos());
+                    this.enqueueDirtyChunkPosForAutoSave(chunkHolder.getPos());
                     return null;
                 });
             }
