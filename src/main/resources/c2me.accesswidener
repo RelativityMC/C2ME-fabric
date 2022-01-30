@@ -24,6 +24,7 @@ accessible    class    net/minecraft/server/world/ChunkTicketManager$DistanceFro
 accessible    class    net/minecraft/world/storage/RegionFile$ChunkBuffer
 
 extendable    class    net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext
+extendable    class    net/minecraft/world/gen/chunk/AquiferSampler$FluidLevel
 
 accessible    method    net/minecraft/world/storage/RegionBasedStorage                      getRegionFile       (Lnet/minecraft/util/math/ChunkPos;)Lnet/minecraft/world/storage/RegionFile;
 accessible    method    net/minecraft/util/collection/WeightedList                          <init>              (Ljava/util/List;)V
@@ -40,7 +41,17 @@ accessible    method    net/minecraft/world/biome/source/MultiNoiseBiomeSource  
 accessible    method    net/minecraft/world/gen/StructureWeightSampler                      <init>              (Lnet/minecraft/world/gen/StructureAccessor;Lnet/minecraft/world/chunk/Chunk;)V
 accessible    method    net/minecraft/world/storage/RegionBasedStorage                      <init>              (Ljava/nio/file/Path;Z)V
 
-accessible    field    net/minecraft/util/math/noise/SimplexNoiseSampler                    GRADIENTS           [[I
+accessible    field     net/minecraft/util/math/noise/SimplexNoiseSampler                   GRADIENTS           [[I
+accessible    field     net/minecraft/util/math/BlockPos                                    BIT_SHIFT_X         I
+accessible    field     net/minecraft/util/math/BlockPos                                    SIZE_BITS_X         I
+accessible    field     net/minecraft/util/math/BlockPos                                    BIT_SHIFT_Z         I
+accessible    field     net/minecraft/util/math/BlockPos                                    SIZE_BITS_Z         I
+accessible    field     net/minecraft/util/math/BlockPos                                    BITS_X              J
+accessible    field     net/minecraft/util/math/BlockPos                                    BITS_Y              J
+accessible    field     net/minecraft/util/math/BlockPos                                    BITS_Z              J
+
+accessible    field     net/minecraft/world/gen/chunk/AquiferSampler$FluidLevel             y                   I
+accessible    field     net/minecraft/world/gen/chunk/AquiferSampler$FluidLevel             state               Lnet/minecraft/block/BlockState;
 
 accessible    field    net/minecraft/world/storage/StorageIoWorker$Result    nbt    Lnet/minecraft/nbt/NbtCompound;
 accessible    field    net/minecraft/world/storage/StorageIoWorker$Result    future    Ljava/util/concurrent/CompletableFuture;
