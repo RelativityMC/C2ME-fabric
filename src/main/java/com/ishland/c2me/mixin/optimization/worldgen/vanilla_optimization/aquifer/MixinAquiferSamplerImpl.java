@@ -183,12 +183,11 @@ public class MixinAquiferSamplerImpl {
         } else {
             if (e <= 0.0) {
                 AquiferSampler.FluidLevel fluidLevel = this.fluidLevelSampler.getFluidLevel(x, y, z);
-                double f;
+                double f = 0.0;
                 BlockState blockState;
                 boolean bl;
                 if (fluidLevel.getBlockState(y).isOf(Blocks.LAVA)) {
                     blockState = Blocks.LAVA.getDefaultState();
-                    f = 0.0;
                     bl = false;
                 } else {
                     int i = Math.floorDiv(x - 5, 16);
@@ -207,7 +206,7 @@ public class MixinAquiferSamplerImpl {
                                 int u = i + r;
                                 int v = j + s;
                                 int w = k + t;
-                                int aa = ((v - this.startY) * this.sizeZ + w - this.startZ) * this.sizeX + u - this.startX; // C2ME - inline
+                                int aa = ((v - this.startY) * this.sizeZ + (w - this.startZ)) * this.sizeX + u - this.startX; // C2ME - inline modified
                                 long ab = this.blockPositions[aa];
                                 long ac;
                                 if (ab != Long.MAX_VALUE) {
@@ -215,12 +214,13 @@ public class MixinAquiferSamplerImpl {
                                 } else {
                                     AbstractRandom abstractRandom = this.randomDeriver.createRandom(u, v, w);
                                     long l1 = 0L;
-                                    final int i1 = abstractRandom.nextInt(10);
-                                    final int i2 = abstractRandom.nextInt(9);
-                                    final int i3 = abstractRandom.nextInt(10);
-                                    l1 |= ((u * 16L + i1) & BlockPos.BITS_X) << BlockPos.BIT_SHIFT_X;
-                                    l1 |= ((v * 12L + i2) & BlockPos.BITS_Y);
-                                    ac = l1 | ((w * 16L + i3) & BlockPos.BITS_Z) << BlockPos.BIT_SHIFT_Z;
+                                    // C2ME - inlined reordered
+                                    final int rnd0 = abstractRandom.nextInt(10);
+                                    final int rnd1 = abstractRandom.nextInt(9);
+                                    final int rnd2 = abstractRandom.nextInt(10);
+                                    l1 |= ((u * 16L + rnd0) & BlockPos.BITS_X) << BlockPos.BIT_SHIFT_X;
+                                    l1 |= ((v * 12L + rnd1) & BlockPos.BITS_Y);
+                                    ac = l1 | ((w * 16L + rnd2) & BlockPos.BITS_Z) << BlockPos.BIT_SHIFT_Z;
                                     this.blockPositions[aa] = ac;
                                 }
 
@@ -255,23 +255,40 @@ public class MixinAquiferSamplerImpl {
                     double w = 1.0 - (double) Math.abs(n - l) / 25.0; // C2ME - inline
                     double ac = 1.0 - (double) Math.abs(n - m) / 25.0; // C2ME - inline
                     bl = u >= field_36221;
-                    if (r.getBlockState(y).isOf(Blocks.WATER) && this.fluidLevelSampler.getFluidLevel(x, y - 1, z).getBlockState(y - 1).isOf(Blocks.LAVA)) {
+                    final BlockState rBlockStateY = r.getBlockState(y);
+                    final boolean rBlockStateYIsWater = rBlockStateY.isOf(Blocks.WATER);
+                    if (rBlockStateYIsWater && this.fluidLevelSampler.getFluidLevel(x, y - 1, z).getBlockState(y - 1).isOf(Blocks.LAVA)) {
                         f = 1.0;
                     } else if (u > -1.0) {
                         MutableDouble ab = new MutableDouble(Double.NaN);
-                        double g = this.calculateDensity(x, y, z, ab, r, s);
-                        double ad = this.calculateDensity(x, y, z, ab, r, t);
-                        double af = this.calculateDensity(x, y, z, ab, s, t);
+                        // C2ME - reduce branching & isOf calls
+                        final boolean rBlockStateYNotLava = !rBlockStateY.isOf(Blocks.LAVA);
+                        final BlockState sBlockStateY = s.getBlockState(y);
+                        final boolean sBlockStateYNotWater = !sBlockStateY.isOf(Blocks.WATER);
+                        final boolean sBlockStateYNotLava = !sBlockStateY.isOf(Blocks.LAVA);
+                        double g = 1.0;
+                        if ((rBlockStateYNotLava || sBlockStateYNotWater) && (!rBlockStateYIsWater || sBlockStateYNotLava)) {
+                            g = calculateDensitySimplfied(r, s, y, ab, x, z);
+                        }
+                        double ad = 1.0;
+                        final BlockState tBlockStateY = t.getBlockState(y);
+                        final boolean tBlockStateYNotWater = !tBlockStateY.isOf(Blocks.WATER);
+                        final boolean tBlockStateYNotLava = !tBlockStateY.isOf(Blocks.LAVA);
+                        if ((rBlockStateYNotLava || tBlockStateYNotWater) && (!rBlockStateYIsWater || tBlockStateYNotLava)) {
+                            ad = calculateDensitySimplfied(r, t, y, ab, x, z);
+                        }
+                        double af = 1.0;
+                        if ((sBlockStateYNotLava || tBlockStateYNotWater) && (sBlockStateYNotWater || tBlockStateYNotLava)) {
+                            af = calculateDensitySimplfied(s, t, y, ab, x, z);
+                        }
                         double h = Math.max(0.0, u);
                         double ag = Math.max(0.0, w);
                         double ah = Math.max(0.0, ac);
                         double ai = 2.0 * h * Math.max(g, Math.max(ad * ag, af * ah));
                         f = Math.max(0.0, ai);
-                    } else {
-                        f = 0.0;
                     }
 
-                    blockState = r.getBlockState(y);
+                    blockState = rBlockStateY;
                 }
 
                 if (e + f <= 0.0) {
@@ -285,58 +302,45 @@ public class MixinAquiferSamplerImpl {
         }
     }
 
-    /**
-     * @author ishland
-     * @reason optimize
-     */
-    @Overwrite
-    private double calculateDensity(
-            int i, int j, int k, MutableDouble mutableDouble, AquiferSampler.FluidLevel fluidLevel, AquiferSampler.FluidLevel fluidLevel2
-    ) {
-        BlockState blockState = fluidLevel.getBlockState(j);
-        BlockState blockState2 = fluidLevel2.getBlockState(j);
-        if ((!blockState.isOf(Blocks.LAVA) || !blockState2.isOf(Blocks.WATER)) && (!blockState.isOf(Blocks.WATER) || !blockState2.isOf(Blocks.LAVA))) {
-            int l = Math.abs(fluidLevel.y - fluidLevel2.y);
-            if (l == 0) {
-                return 0.0;
-            } else {
-                double d = 0.5 * (double)(fluidLevel.y + fluidLevel2.y);
-                double e = (double)j + 0.5 - d;
-                double f = (double)l / 2.0;
-                double q = f - Math.abs(e);
-                double s;
-                if (e > 0.0) {
-                    double r = 0.0 + q;
-                    if (r > 0.0) {
-                        s = r / 1.5;
-                    } else {
-                        s = r / 2.5;
-                    }
+    private double calculateDensitySimplfied(AquiferSampler.FluidLevel r, AquiferSampler.FluidLevel s, int y, MutableDouble ab, int x, int z) {
+        double g = 0.0;
+        int l3 = Math.abs(r.y - s.y);
+        if (l3 != 0) {
+            double f3 = l3 / 2.0;
+            double d3 = 0.5 * (double)(r.y + s.y);
+            double e3 = y + 0.5 - d3;
+            double q3 = f3 - Math.abs(e3);
+            double s3;
+            if (e3 > 0.0) {
+                double r3 = 0.0 + q3;
+                if (r3 > 0.0) {
+                    s3 = r3 / 1.5;
                 } else {
-                    double r = 3.0 + q;
-                    if (r > 0.0) {
-                        s = r / 3.0;
-                    } else {
-                        s = r / 10.0;
-                    }
+                    s3 = r3 / 2.5;
                 }
-
-                if (!(s < -2.0) && !(s > 2.0)) {
-                    double r = mutableDouble.getValue();
-                    if (Double.isNaN(r)) {
-                        double u = this.barrierNoise.sample(i, j * 0.5, k);
-                        mutableDouble.setValue(u);
-                        return u + s;
-                    } else {
-                        return r + s;
-                    }
+            } else {
+                double r3 = 3.0 + q3;
+                if (r3 > 0.0) {
+                    s3 = r3 / 3.0;
                 } else {
-                    return s;
+                    s3 = r3 / 10.0;
                 }
             }
-        } else {
-            return 1.0;
+
+            if (!(s3 < -2.0) && !(s3 > 2.0)) {
+                double r3 = ab.getValue();
+                if (Double.isNaN(r3)) {
+                    double u3 = this.barrierNoise.sample(x, y * 0.5, z);
+                    ab.setValue(u3);
+                    g = u3 + s3;
+                } else {
+                    g = r3 + s3;
+                }
+            } else {
+                g = s3;
+            }
         }
+        return g;
     }
 
     private static double clampedLerpFromProgressInlined(double lerpValue) {
