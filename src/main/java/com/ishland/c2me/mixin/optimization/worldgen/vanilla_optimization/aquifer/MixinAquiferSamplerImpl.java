@@ -1,5 +1,6 @@
 package com.ishland.c2me.mixin.optimization.worldgen.vanilla_optimization.aquifer;
 
+import com.ishland.c2me.common.optimization.worldgen.random_instances.RandomUtils;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.util.math.BlockPos;
@@ -16,6 +17,10 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(AquiferSampler.Impl.class)
 public class MixinAquiferSamplerImpl {
@@ -54,6 +59,14 @@ public class MixinAquiferSamplerImpl {
 
     @Shadow @Final private DoublePerlinNoiseSampler barrierNoise;
 
+    @Unique
+    private AbstractRandom randomInstance;
+
+    @Inject(method = "<init>", at = @At("RETURN"))
+    private void onInit(CallbackInfo info) {
+        this.randomInstance = RandomUtils.getRandom(this.randomDeriver);
+    }
+
     /**
      * @author ishland
      * @reason optimize
@@ -71,9 +84,9 @@ public class MixinAquiferSamplerImpl {
         int i = (int) ((pos << var5) >> var1);
         int j = (int) ((pos << var2) >> var2);
         int k = (int) ((pos << var6) >> var4);
-        int l = Math.floorDiv(i, 16);
-        int m = Math.floorDiv(j, 12);
-        int n = Math.floorDiv(k, 16);
+        int l = floorDiv(i, 16D);
+        int m = floorDiv(j, 12D);
+        int n = floorDiv(k, 16D);
         int o = ((((((m - this.startY) * this.sizeZ) + n) - this.startZ) * this.sizeX) + l) - this.startX;
         AquiferSampler.FluidLevel fluidLevel = this.waterLevels[o];
         if (fluidLevel != null) {
@@ -136,9 +149,10 @@ public class MixinAquiferSamplerImpl {
             if (n <= fluidLevel2) {
                 return new AquiferSampler.FluidLevel(DimensionType.field_35479, fluidLevel.state);
             } else {
-                int t = Math.floorDiv(x, 16);
-                int u = Math.floorDiv(y, 40);
-                int v = Math.floorDiv(z, 16);
+                int t = floorDiv(x, 16D);
+                //noinspection SuspiciousNameCombination
+                int u = floorDiv(y, 40D);
+                int v = floorDiv(z, 16D);
                 int w = u * 40 + 20;
                 double e = this.fluidLevelSpreadNoise.sample(t, u / 1.4, v) * 10.0;
                 int ab = (int) (Math.floor(e / 3D) * 3); // C2ME - inline
@@ -158,9 +172,9 @@ public class MixinAquiferSamplerImpl {
     private BlockState method_38993(int i, int j, int k, AquiferSampler.FluidLevel fluidLevel, int l) {
         // TODO [VanillaCopy]
         if (l <= -10) {
-            int o = Math.floorDiv(i, 64);
-            int p = Math.floorDiv(j, 40);
-            int q = Math.floorDiv(k, 64);
+            int o = floorDiv(i, 64D);
+            int p = floorDiv(j, 40D);
+            int q = floorDiv(k, 64D);
             double d = this.fluidTypeNoise.sample(o, p, q);
             if (Math.abs(d) > 0.3) {
                 return Blocks.LAVA.getDefaultState();
@@ -190,9 +204,9 @@ public class MixinAquiferSamplerImpl {
                     blockState = Blocks.LAVA.getDefaultState();
                     bl = false;
                 } else {
-                    int i = Math.floorDiv(x - 5, 16);
-                    int j = Math.floorDiv(y + 1, 12);
-                    int k = Math.floorDiv(z - 5, 16);
+                    int i = floorDiv(x - 5, 16);
+                    int j = floorDiv(y + 1, 12);
+                    int k = floorDiv(z - 5, 16);
                     int l = Integer.MAX_VALUE;
                     int m = Integer.MAX_VALUE;
                     int n = Integer.MAX_VALUE;
@@ -212,22 +226,22 @@ public class MixinAquiferSamplerImpl {
                                 if (ab != Long.MAX_VALUE) {
                                     ac = ab;
                                 } else {
-                                    AbstractRandom abstractRandom = this.randomDeriver.createRandom(u, v, w);
+                                    RandomUtils.derive(this.randomDeriver, randomInstance, u, v, w);
                                     long l1 = 0L;
                                     // C2ME - inlined reordered
-                                    final int rnd0 = abstractRandom.nextInt(10);
-                                    final int rnd1 = abstractRandom.nextInt(9);
-                                    final int rnd2 = abstractRandom.nextInt(10);
+                                    final int rnd0 = randomInstance.nextInt(10);
+                                    final int rnd1 = randomInstance.nextInt(9);
+                                    final int rnd2 = randomInstance.nextInt(10);
                                     l1 |= ((u * 16L + rnd0) & BlockPos.BITS_X) << BlockPos.BIT_SHIFT_X;
                                     l1 |= ((v * 12L + rnd1) & BlockPos.BITS_Y);
                                     ac = l1 | ((w * 16L + rnd2) & BlockPos.BITS_Z) << BlockPos.BIT_SHIFT_Z;
                                     this.blockPositions[aa] = ac;
                                 }
 
-                                int abstractRandom = (int) (ac << 64 - BlockPos.BIT_SHIFT_X - BlockPos.SIZE_BITS_X >> 64 - BlockPos.SIZE_BITS_X) - x; // C2ME - inline
-                                int ad = (int) (ac << 64 - BlockPos.SIZE_BITS_Y >> 64 - BlockPos.SIZE_BITS_Y) - y; // C2ME - inline
-                                int ae = (int) (ac << 64 - BlockPos.BIT_SHIFT_Z - BlockPos.SIZE_BITS_Z >> 64 - BlockPos.SIZE_BITS_Z) - z; // C2ME - inline
-                                int af = abstractRandom * abstractRandom + ad * ad + ae * ae;
+                                int somevar = (int) ((ac << (64 - BlockPos.BIT_SHIFT_X - BlockPos.SIZE_BITS_X)) >> (64 - BlockPos.SIZE_BITS_X)) - x; // C2ME - inline
+                                int ad = (int) ((ac << (64 - BlockPos.SIZE_BITS_Y)) >> (64 - BlockPos.SIZE_BITS_Y)) - y; // C2ME - inline
+                                int ae = (int) ((ac << (64 - BlockPos.BIT_SHIFT_Z - BlockPos.SIZE_BITS_Z)) >> (64 - BlockPos.SIZE_BITS_Z)) - z; // C2ME - inline
+                                int af = somevar * somevar + ad * ad + ae * ae;
                                 if (l >= af) {
                                     q = p;
                                     p = o;
@@ -352,11 +366,8 @@ public class MixinAquiferSamplerImpl {
         }
     }
 
-    private static double lerpFromProgress(double lerpValue, double lerpStart, double lerpEnd, double start, double end) {
-        final double var0 = lerpValue - lerpStart;
-        final double var1 = lerpEnd - lerpStart;
-        final double delta = var0 / var1;
-        return start + delta * (end - start);
+    private static int floorDiv(int x, double y) {
+        return (int) Math.floor(x / y);
     }
 
 }
