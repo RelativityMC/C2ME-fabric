@@ -66,6 +66,8 @@ public abstract class MixinChunkHolder {
             }
         }
 
+        CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> future;
+
         synchronized (this.schedulingMutex) {
             // copied from above
             completableFuture = this.futuresByStatus.get(i);
@@ -77,17 +79,28 @@ public abstract class MixinChunkHolder {
                 }
             }
             if (getTargetStatusForLevel(this.level).isAtLeast(targetStatus)) {
-                CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> completableFuture2 = chunkStorage.getChunk((ChunkHolder) (Object) this, targetStatus);
-                // synchronization: see below
-                synchronized (this) {
-                    this.combineSavingFuture(completableFuture2, "schedule " + targetStatus);
-                }
-                this.futuresByStatus.set(i, completableFuture2);
-                return completableFuture2;
+                future = new CompletableFuture<>();
+                this.futuresByStatus.set(i, future);
+                // C2ME - moved down to prevent deadlock
             } else {
                 return completableFuture == null ? UNLOADED_CHUNK_FUTURE : completableFuture;
             }
         }
+
+        CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> completableFuture2 = chunkStorage.getChunk((ChunkHolder) (Object) this, targetStatus);
+        // synchronization: see below
+        synchronized (this) {
+            this.combineSavingFuture(completableFuture2, "schedule " + targetStatus);
+        }
+        completableFuture2.whenComplete((either, throwable) -> {
+            if (throwable != null) {
+                future.completeExceptionally(throwable);
+                return;
+            }
+            future.complete(either);
+        });
+        this.futuresByStatus.set(i, completableFuture2);
+        return completableFuture2;
     }
 
     @Dynamic
