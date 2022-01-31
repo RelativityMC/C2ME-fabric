@@ -140,12 +140,12 @@ public class MixinAquiferSamplerImpl {
 
         int p = i + 8 - y;
         double d = bl ? clampedLerpFromProgressInlined(p) : 0.0; // C2ME - inline values
-        double bl2 = MathHelper.lerpFromProgress(d, 1.0, 0.0, -0.3, 0.8);
+        double bl2 = lerpFromProgressInlined(d, -0.3, 0.8); // C2ME - inline values
         double n = MathHelper.clamp(this.fluidLevelFloodednessNoise.sample(x, y * 0.67, z), -1.0, 1.0);
         if (n > bl2) {
             return fluidLevel;
         } else {
-            double fluidLevel2 = MathHelper.lerpFromProgress(d, 1.0, 0.0, -0.8, 0.4);
+            double fluidLevel2 = lerpFromProgressInlined(d, -0.8, 0.4); // C2ME - inline values
             if (n <= fluidLevel2) {
                 return new AquiferSampler.FluidLevel(DimensionType.field_35479, fluidLevel.state);
             } else {
@@ -368,6 +368,12 @@ public class MixinAquiferSamplerImpl {
 
     private static int floorDiv(int x, double y) {
         return (int) Math.floor(x / y);
+    }
+
+    private static double lerpFromProgressInlined(double lerpValue, double start, double end) {
+        final double var0 = lerpValue - 1.0;
+        final double var1 = end - start;
+        return start - var0 * var1;
     }
 
 }
