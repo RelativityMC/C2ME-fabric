@@ -170,7 +170,7 @@ jmh {
     failOnError = false // Should JMH fail immediately if any benchmark had experienced the unrecoverable error?
 //    forceGC = false // Should JMH force GC between iterations?
 //    jvm = 'myjvm' // Custom JVM to use when forking.
-//    jvmArgs = ['Custom JVM args to use when forking.']
+//    jvmArgs = ['-XX:+UnlockDiagnosticVMOptions', '-XX:+LogCompilation', '-XX:+PrintAssembly', '-XX:+DebugNonSafepoints']
 //    jvmArgsAppend = ['Custom JVM args to use when forking (append these)']
 //    jvmArgsPrepend =[ 'Custom JVM args to use when forking (prepend these)']
 //    humanOutputFile = project.file("${project.buildDir}/reports/jmh/human.txt") // human-readable output file
@@ -181,7 +181,7 @@ jmh {
     timeOnIteration = '2s' // Time to spend at each measurement iteration.
     resultFormat = 'CSV' // Result format type (one of CSV, JSON, NONE, SCSV, TEXT)
 //    synchronizeIterations = true // Synchronize iterations?
-    threads = Math.max(1, (int) (Runtime.getRuntime().availableProcessors() / 2)) // Number of worker threads to run with.
+    threads = 1 // Number of worker threads to run with.
 //    threadGroups = [2,3,4] //Override thread group distribution for asymmetric benchmarks.
 //    timeout = '1s' // Timeout for benchmark iteration.
     timeUnit = 'ns' // Output time unit. Available time units are: [m, s, ms, us, ns].
