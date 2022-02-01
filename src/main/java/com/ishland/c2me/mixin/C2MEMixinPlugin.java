@@ -62,6 +62,9 @@ public class C2MEMixinPlugin implements IMixinConfigPlugin {
             return C2MEConfig.generalOptimizationsConfig.doMidTickChunkTasks;
         if (mixinClassName.startsWith("com.ishland.c2me.mixin.chunkio."))
             return C2MEConfig.ioSystemConfig.replaceImpl;
+        if (mixinClassName.equals("com.ishland.c2me.mixin.optimization.reduce_allocs.MixinNbtCompound") ||
+                mixinClassName.equals("com.ishland.c2me.mixin.optimization.reduce_allocs.MixinNbtCompound1"))
+            return !FabricLoader.getInstance().isModLoaded("lithium");
         return true;
     }
 
