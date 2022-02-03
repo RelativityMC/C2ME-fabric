@@ -47,7 +47,7 @@ public abstract class MixinThreadedAnvilChunkStorage {
         return ((IChunkHolder) chunkHolder).getAccessibleChunk();
     }
 
-    @Inject(method = "makeChunkAccessible", at = @At("RETURN"))
+    @Inject(method = "method_31417", at = @At("RETURN"))
     private void onMakeChunkAccessible(ChunkHolder chunkHolder, CallbackInfoReturnable<CompletableFuture<Either<WorldChunk, ChunkHolder.Unloaded>>> cir) {
         cir.getReturnValue().thenAccept(either -> either.left().ifPresent(worldChunk -> {
             MutableObject<ChunkDataS2CPacket> mutableObject = new MutableObject<>();

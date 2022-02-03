@@ -3,8 +3,8 @@ package com.ishland.c2me.common.config.updater;
 import com.electronwill.nightconfig.core.CommentedConfig;
 import com.electronwill.nightconfig.core.Config;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.LinkedList;
 import java.util.Queue;
@@ -12,7 +12,7 @@ import java.util.function.Consumer;
 
 public class Updaters {
 
-    static final Logger LOGGER = LoggerFactory.getLogger("C2ME Config Updater");
+    static final Logger LOGGER = LogManager.getLogger("C2ME Config Updater");
     private static final Long2ObjectOpenHashMap<Consumer<Config>> updaters = new Long2ObjectOpenHashMap<>();
 
     static {

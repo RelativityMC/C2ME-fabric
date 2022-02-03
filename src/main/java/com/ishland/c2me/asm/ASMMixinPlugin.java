@@ -1,8 +1,8 @@
 package com.ishland.c2me.asm;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.objectweb.asm.tree.ClassNode;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
 
@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Set;
 
 public class ASMMixinPlugin implements IMixinConfigPlugin {
-    static final Logger LOGGER = LoggerFactory.getLogger("C2ME ASM Transformer");
+    static final Logger LOGGER = LogManager.getLogger("C2ME ASM Transformer");
 
     @Override
     public void onLoad(String mixinPackage) {

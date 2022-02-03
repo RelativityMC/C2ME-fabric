@@ -6,8 +6,8 @@ import net.fabricmc.api.ModInitializer;
 import net.minecraft.world.gen.random.ChunkRandom;
 import net.minecraft.world.gen.random.SimpleRandom;
 import net.minecraft.world.storage.ChunkStreamVersion;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.mixin.MixinEnvironment;
 
 import java.io.ByteArrayInputStream;
@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class C2MEMod implements ModInitializer {
-    public static final Logger LOGGER = LoggerFactory.getLogger("C2ME");
+    public static final Logger LOGGER = LogManager.getLogger("C2ME");
 
     @Override
     public void onInitialize() {

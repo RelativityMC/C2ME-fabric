@@ -4,9 +4,9 @@ import com.ishland.c2me.common.config.C2MEConfig;
 import com.ishland.c2me.common.fixes.DataFixerUpperClasspathFix;
 import com.ishland.c2me.common.util.ModuleUtil;
 import net.fabricmc.loader.api.FabricLoader;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.objectweb.asm.tree.ClassNode;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
 
@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Set;
 
 public class C2MEMixinPlugin implements IMixinConfigPlugin {
-    private static final Logger LOGGER = LoggerFactory.getLogger("C2ME Mixin");
+    private static final Logger LOGGER = LogManager.getLogger("C2ME Mixin");
 
     private static final boolean I_REALLY_NEED_VECTORIZATION = Boolean.getBoolean("com.ishland.c2me.mixin.IReallyNeedVectorizationAndIKnowWhatIAmDoing");
 

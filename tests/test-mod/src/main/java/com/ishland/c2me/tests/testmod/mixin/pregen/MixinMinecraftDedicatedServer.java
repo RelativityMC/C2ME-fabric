@@ -2,7 +2,7 @@ package com.ishland.c2me.tests.testmod.mixin.pregen;
 
 import net.minecraft.server.ServerNetworkIo;
 import net.minecraft.server.dedicated.MinecraftDedicatedServer;
-import org.slf4j.Logger;
+import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;

@@ -5,7 +5,7 @@ import it.unimi.dsi.fastutil.longs.LongSet;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;
 import net.minecraft.world.chunk.Chunk;
-import org.slf4j.Logger;
+import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.mixin.Dynamic;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;

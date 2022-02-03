@@ -28,7 +28,7 @@ import net.minecraft.world.chunk.UpgradeData;
 import net.minecraft.world.gen.chunk.ChunkGenerator;
 import net.minecraft.world.poi.PointOfInterestStorage;
 import net.minecraft.world.storage.VersionedChunkStorage;
-import org.slf4j.Logger;
+import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.mixin.Dynamic;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;

@@ -3,7 +3,7 @@ package com.ishland.c2me.mixin.optimization.chunkio.limit_nbt_cache;
 import com.ishland.c2me.common.config.C2MEConfig;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.storage.StorageIoWorker;
-import org.slf4j.Logger;
+import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;

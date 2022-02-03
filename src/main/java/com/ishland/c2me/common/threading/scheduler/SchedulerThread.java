@@ -1,9 +1,9 @@
 package com.ishland.c2me.common.threading.scheduler;
 
 import com.ishland.c2me.common.config.C2MEConfig;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -15,7 +15,7 @@ import java.util.concurrent.locks.LockSupport;
 
 public class SchedulerThread extends Thread implements Executor {
 
-    static final Logger LOGGER = LoggerFactory.getLogger("C2ME Scheduler");
+    static final Logger LOGGER = LogManager.getLogger("C2ME Scheduler");
 
     public static final SchedulerThread INSTANCE = new SchedulerThread();
 

@@ -12,9 +12,9 @@ import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkNibbleArray;
 import net.minecraft.world.chunk.light.ChunkLightingView;
 import net.minecraft.world.chunk.light.LightingProvider;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayDeque;
 import java.util.Arrays;
@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 
 public class AsyncSerializationManager {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger("C2ME Async Serialization Manager");
+    private static final Logger LOGGER = LogManager.getLogger("C2ME Async Serialization Manager");
 
     private static final ThreadLocal<ArrayDeque<Scope>> scopeHolder = ThreadLocal.withInitial(ArrayDeque::new);
 
