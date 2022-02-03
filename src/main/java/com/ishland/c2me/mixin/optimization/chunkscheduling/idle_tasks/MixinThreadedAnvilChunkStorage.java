@@ -38,6 +38,9 @@ public abstract class MixinThreadedAnvilChunkStorage implements IThreadedAnvilCh
 
     @Override
     public void enqueueDirtyChunkPosForAutoSave(ChunkPos chunkPos) {
+        if (chunkPos == null) {
+            return;
+        }
         synchronized (this.dirtyChunkPosForAutoSave) {
             this.dirtyChunkPosForAutoSave.putAndMoveToLast(chunkPos, System.currentTimeMillis());
         }
@@ -51,6 +54,7 @@ public abstract class MixinThreadedAnvilChunkStorage implements IThreadedAnvilCh
                 final Object2LongMap.Entry<ChunkPos> entry = iterator.next();
                 if (System.currentTimeMillis() - entry.getLongValue() < 10000L) break;
                 iterator.remove();
+                if (entry.getKey() == null) continue;
                 ChunkHolder chunkHolder = this.currentChunkHolders.get(entry.getKey().toLong());
                 if (chunkHolder == null) continue;
                 final CompletableFuture<Chunk> savingFuture = chunkHolder.getSavingFuture();
