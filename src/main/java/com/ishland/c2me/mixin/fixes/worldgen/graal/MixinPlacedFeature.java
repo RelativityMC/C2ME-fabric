@@ -2,10 +2,10 @@ package com.ishland.c2me.mixin.fixes.worldgen.graal;
 
 import com.mojang.logging.LogUtils;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.gen.decorator.DecoratorContext;
-import net.minecraft.world.gen.decorator.PlacementModifier;
 import net.minecraft.world.gen.feature.ConfiguredFeature;
+import net.minecraft.world.gen.feature.FeaturePlacementContext;
 import net.minecraft.world.gen.feature.PlacedFeature;
+import net.minecraft.world.gen.placementmodifier.PlacementModifier;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.slf4j.Logger;
 import org.spongepowered.asm.mixin.Final;
@@ -32,7 +32,7 @@ public class MixinPlacedFeature {
      * @reason retry when stream fails
      */
     @Overwrite
-    private boolean generate(DecoratorContext context, Random random, BlockPos pos) {
+    private boolean generate(FeaturePlacementContext context, Random random, BlockPos pos) {
         Stream<BlockPos> stream;
         for (int retries = 1; ; retries ++) {
             try {
