@@ -7,10 +7,9 @@ plugins {
     id "me.champeau.jmh" version "0.6.6"
 }
 
-archivesBaseName = "${project.archives_base_name}-mc${project.minecraft_version}"
-group = project.maven_group
-
 allprojects {
+    archivesBaseName = "${project.archives_base_name}-mc${project.minecraft_version}"
+    group = project.maven_group
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
     version = project.mod_version + "." + getVersionSuffix()
