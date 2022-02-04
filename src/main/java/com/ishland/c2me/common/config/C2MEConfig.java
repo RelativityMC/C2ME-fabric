@@ -215,7 +215,9 @@ public class C2MEConfig {
                                 Defines how auto save should be handled \s
                                  VANILLA: Use vanilla auto-save behavior (auto-save performed every tick during ticking) \s
                                  ENHANCED: Use C2ME enhanced auto-save (auto-save performed when the server have spare time after ticking) \s
-                                 PERIODIC: Use pre-1.18 vanilla auto-save behavior (auto-save performed every 6000 ticks during ticking)
+                                 PERIODIC: Use pre-1.18 vanilla auto-save behavior (auto-save performed every 6000 ticks during ticking) \s
+                                 \s
+                                 Please preserve quotes so this config don't break
                                 """,
                         List.of(), Mode.VANILLA, true);
                 this.delay = ConfigUtils.getValue(configScope, "delay", () -> 20000L,
