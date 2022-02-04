@@ -132,7 +132,7 @@ public class C2MEConfig {
             Preconditions.checkNotNull(config, "vanillaWorldGenOptimizationsConfig config is not present");
             final ConfigUtils.ConfigScope configScope = new ConfigUtils.ConfigScope(config);
             this.enabled = ConfigUtils.getValue(configScope, "enabled", () -> true, "Whether to enable this feature \n (may cause incompatibility with other mods)", List.of(), false, true);
-            this.useEndBiomeCache = ConfigUtils.getValue(configScope, "useEndBiomeCache", () -> true, "Whether to enable End Biome Cache to accelerate The End worldgen \n This is included in lithium-fabric \n (may cause incompatibility with other mods) ", List.of("lithium"), false, true);
+            this.useEndBiomeCache = ConfigUtils.getValue(configScope, "useEndBiomeCache", () -> true, "Whether to enable End Biome Cache to accelerate The End worldgen \n This is no longer included in lithium-fabric \n (may cause incompatibility with other mods) ", List.of(), false, true);
             configScope.removeUnusedKeys();
         }
     }
