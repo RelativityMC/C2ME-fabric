@@ -54,8 +54,8 @@ dependencies {
     api "net.fabricmc:yarn:${project.yarn_mappings}:v2" // loom bug?
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
-//    includeApi project(":libs")
-//    include project(":libs")
+    includeApi project(":libs")
+    include project(":libs")
     shadowImpl "com.ibm.async:asyncutil:${async_util_version}"
     shadowImpl "com.electronwill.night-config:toml:${night_config_version}"
     shadowImpl "org.threadly:threadly:${threadly_version}"
@@ -108,9 +108,9 @@ task("remapShadowJar", type: net.fabricmc.loom.task.RemapJarTask, dependsOn: sha
     archiveFileName = shadowJar.archiveFileName.get().replaceAll("-dev\\.jar\$", ".jar")
     addNestedDependencies = true
     remapAccessWidener = true
-//    project(":libs").afterEvaluate {
-//        dependsOn(project(":libs").assemble)
-//    }
+    project(":libs").afterEvaluate {
+        dependsOn(project(":libs").assemble)
+    }
 }
 
 assemble.dependsOn(remapShadowJar)
