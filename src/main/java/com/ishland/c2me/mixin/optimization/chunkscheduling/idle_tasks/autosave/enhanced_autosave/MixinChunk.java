@@ -1,4 +1,4 @@
-package com.ishland.c2me.mixin.optimization.chunkscheduling.idle_tasks;
+package com.ishland.c2me.mixin.optimization.chunkscheduling.idle_tasks.autosave.enhanced_autosave;
 
 import com.ishland.c2me.common.optimization.chunkscheduling.idle_tasks.IThreadedAnvilChunkStorage;
 import net.minecraft.server.world.ServerWorld;
