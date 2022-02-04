@@ -45,6 +45,20 @@ public class ConfigUtils {
         if (def.get() instanceof Config) config.config.setComment(key, String.format(" %s", comment));
         else config.config.setComment(key, String.format(" (Default: %s) %s", def.get(), comment));
         Object configuredValue = getConfiguredValue(config.config.get(key), def);
+
+        // handling for enums
+        if (def.get() instanceof Enum<?> enumInstance) {
+            if (configuredValue instanceof String str) {
+                final Enum<?>[] enumConstants = enumInstance.getDeclaringClass().getEnumConstants();
+                for (Enum<?> enumConstant : enumConstants) {
+                    if (enumConstant.name().equals(str)) {
+                        configuredValue = enumConstant;
+                        break;
+                    }
+                }
+            }
+        }
+
         if (!(configuredValue.getClass().isAssignableFrom(def.get().getClass()))) {
             C2MEConfig.LOGGER.warn("Configured value for {} is of type {} but expected type is {}", key, configuredValue.getClass(), def.get().getClass());
             boolean dataFixed = false;
