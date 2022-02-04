@@ -65,6 +65,10 @@ public class C2MEMixinPlugin implements IMixinConfigPlugin {
         if (mixinClassName.equals("com.ishland.c2me.mixin.optimization.reduce_allocs.MixinNbtCompound") ||
                 mixinClassName.equals("com.ishland.c2me.mixin.optimization.reduce_allocs.MixinNbtCompound1"))
             return !FabricLoader.getInstance().isModLoaded("lithium");
+        if (mixinClassName.startsWith("com.ishland.c2me.mixin.optimization.chunkscheduling.idle_tasks.autosave.disable_vanilla_mid_tick_autosave."))
+            return C2MEConfig.generalOptimizationsConfig.autoSaveConfig.mode != C2MEConfig.GeneralOptimizationsConfig.AutoSaveConfig.Mode.VANILLA;
+        if (mixinClassName.startsWith("com.ishland.c2me.mixin.optimization.chunkscheduling.idle_tasks.autosave.enhanced_autosave."))
+            return C2MEConfig.generalOptimizationsConfig.autoSaveConfig.mode == C2MEConfig.GeneralOptimizationsConfig.AutoSaveConfig.Mode.ENHANCED;
         return true;
     }
 

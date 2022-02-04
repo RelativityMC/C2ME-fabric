@@ -81,7 +81,7 @@ public class C2MEConfig {
             Preconditions.checkNotNull(config, "ioSystem config is not present");
             final ConfigUtils.ConfigScope configScope = new ConfigUtils.ConfigScope(config);
             this.async = ConfigUtils.getValue(configScope, "async", () -> true, "Whether to use async chunk loading & unloading", List.of("radon"), false, true);
-            this.replaceImpl = ConfigUtils.getValue(configScope, "replaceImpl", () -> false, "(WIP) Whether to use optimized implementation of IO system", List.of("radon"), false, true);
+            this.replaceImpl = ConfigUtils.getValue(configScope, "replaceImpl", () -> false, "Whether to use optimized implementation of IO system", List.of("radon"), false, true);
             this.chunkDataCacheSoftLimit = ConfigUtils.getValue(configScope, "chunkDataCacheSoftLimit", () -> 1536, "Soft limit for io worker nbt cache", List.of(), 4096, true);
             this.chunkDataCacheLimit = ConfigUtils.getValue(configScope, "chunkDataCacheLimit", () -> 6144, "Hard limit for io worker nbt cache", List.of(), 8192, true);
             configScope.removeUnusedKeys();
@@ -141,6 +141,7 @@ public class C2MEConfig {
         public final boolean optimizeAsyncChunkRequest;
         public final int chunkStreamVersion;
         public final boolean doMidTickChunkTasks;
+        public final AutoSaveConfig autoSaveConfig;
 
         public GeneralOptimizationsConfig(CommentedConfig config) {
             Preconditions.checkNotNull(config, "generalOptimizationsConfig config is not present");
@@ -173,8 +174,39 @@ public class C2MEConfig {
                              Incompatible with Dimensional Threading (dimthread)
                             """,
                     List.of("dimthread"), false, true);
+            this.autoSaveConfig = new AutoSaveConfig(ConfigUtils.getValue(configScope, "autoSave", ConfigUtils::config, "Configuration for auto-save", List.of(), null, true));
             configScope.removeUnusedKeys();
         }
+
+        public static class AutoSaveConfig {
+            public final Mode mode;
+            public final long delay;
+
+            public AutoSaveConfig(CommentedConfig config) {
+                Preconditions.checkNotNull(config, "autoSaveConfig config is not present");
+                final ConfigUtils.ConfigScope configScope = new ConfigUtils.ConfigScope(config);
+                this.mode = ConfigUtils.getValue(configScope, "mode", () -> Mode.ENHANCED,
+                        """
+                                Defines how auto save should be handled \s
+                                 VANILLA: Use vanilla auto-save behavior (auto-save performed every tick during ticking) \s
+                                 ENHANCED: Use C2ME enhanced auto-save (auto-save performed when the server have spare time after ticking) \s
+                                 PERIODIC: Use pre-1.18 vanilla auto-save behavior (auto-save performed every 6000 ticks during ticking)
+                                """,
+                        List.of(), Mode.VANILLA, true);
+                this.delay = ConfigUtils.getValue(configScope, "delay", () -> 20000L,
+                        """
+                                Defines the delay in milliseconds between performing auto-save for a chunk \s
+                                 This is only used when mode is set to ENHANCED
+                                """,
+                        List.of(), 20000L, true);
+                configScope.removeUnusedKeys();
+            }
+
+            public enum Mode {
+                VANILLA, ENHANCED, PERIODIC;
+            }
+        }
+
     }
 
     public static class NoTickViewDistanceConfig {
@@ -213,7 +245,7 @@ public class C2MEConfig {
             public ModifyMaxVDConfig(CommentedConfig config) {
                 Preconditions.checkNotNull(config, "clientSideConfig config is not present");
                 final ConfigUtils.ConfigScope configScope = new ConfigUtils.ConfigScope(config);
-                this.enabled = ConfigUtils.getValue(configScope, "enabled", () -> true, "Weather to enable c2me clientside features", List.of("bobby"), false, true);
+                this.enabled = ConfigUtils.getValue(configScope, "enabled", () -> true, "Weather to enable this feature", List.of("bobby"), false, true);
                 this.maxViewDistance = ConfigUtils.getValue(configScope, "maxViewDistance", () -> 128, "Max render distance allowed in game options", List.of(), 128, true);
                 configScope.removeUnusedKeys();
             }
