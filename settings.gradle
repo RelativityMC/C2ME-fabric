@@ -11,6 +11,9 @@ pluginManagement {
         gradlePluginPortal()
     }
 }
+
+rootProject.name = "C2ME-fabric" // avoid weirdness when building the project using another directory name
+
 include 'tests'
 include 'tests:test-mod'
 include 'tests:vanilla-test'
