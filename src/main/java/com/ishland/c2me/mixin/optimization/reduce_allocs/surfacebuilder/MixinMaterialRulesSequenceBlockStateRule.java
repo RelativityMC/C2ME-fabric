@@ -2,6 +2,7 @@ package com.ishland.c2me.mixin.optimization.reduce_allocs.surfacebuilder;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -30,7 +31,7 @@ public class MixinMaterialRulesSequenceBlockStateRule {
      * @reason use array for iteration
      */
     @Overwrite
-    public BlockState tryApply(int i, int j, int k) {
+    public @Nullable BlockState tryApply(int i, int j, int k) {
         // TODO [VanillaCopy]
         for(MaterialRules.BlockStateRule blockStateRule : this.rulesArray) {
             BlockState blockState = blockStateRule.tryApply(i, j, k);

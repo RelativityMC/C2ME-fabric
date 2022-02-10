@@ -5,10 +5,15 @@ import com.ibm.asyncutil.locks.AsyncSemaphore;
 import com.ibm.asyncutil.locks.FairAsyncSemaphore;
 import com.ishland.c2me.tests.worlddiff.mixin.IStorageIoWorker;
 import com.ishland.c2me.tests.worlddiff.mixin.IWorldUpdater;
+import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.DynamicOps;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.class_6880;
+import net.minecraft.class_6903;
+import net.minecraft.class_6904;
 import net.minecraft.datafixer.Schemas;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
@@ -19,15 +24,12 @@ import net.minecraft.resource.FileResourcePackProvider;
 import net.minecraft.resource.ResourcePackManager;
 import net.minecraft.resource.ResourcePackSource;
 import net.minecraft.resource.ResourceType;
-import net.minecraft.resource.ServerResourceManager;
 import net.minecraft.resource.VanillaDataPackProvider;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.state.property.Property;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 import net.minecraft.util.WorldSavePath;
-import net.minecraft.util.dynamic.RegistryOps;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.ChunkSectionPos;
 import net.minecraft.util.registry.DynamicRegistryManager;
@@ -169,7 +171,7 @@ public class ComparisonSession implements Closeable {
 
     private static Map<ChunkSectionPos, ChunkSection> readSections(ChunkPos pos, NbtCompound chunkData, Registry<Biome> registry) {
         NbtList nbtList = chunkData.getCompound("Level").getList("Sections", 10);
-        Codec<PalettedContainer<Biome>> codec = PalettedContainer.createCodec(registry, registry.getCodec(), PalettedContainer.PaletteProvider.BIOME, registry.getOrThrow(BiomeKeys.PLAINS));;
+        Codec<PalettedContainer<class_6880<Biome>>> codec = PalettedContainer.createCodec(registry.method_40295(), registry.method_40294(), PalettedContainer.PaletteProvider.BIOME, registry.method_40290(BiomeKeys.PLAINS));
         HashMap<ChunkSectionPos, ChunkSection> result = new HashMap<>();
         for (int i = 0; i < nbtList.size(); i++) {
             final NbtCompound sectionData = nbtList.getCompound(i);
@@ -182,11 +184,11 @@ public class ComparisonSession implements Closeable {
                     palettedContainer = new PalettedContainer<>(Block.STATE_IDS, Blocks.AIR.getDefaultState(), PalettedContainer.PaletteProvider.BLOCK_STATE);
                 }
 
-                PalettedContainer<Biome> palettedContainer3;
+                PalettedContainer<class_6880<Biome>> palettedContainer3;
                 if (chunkData.contains("biomes", 10)) {
                     palettedContainer3 = codec.parse(NbtOps.INSTANCE, chunkData.getCompound("biomes")).getOrThrow(false, LOGGER::error);
                 } else {
-                    palettedContainer3 = new PalettedContainer<>(registry, registry.getOrThrow(BiomeKeys.PLAINS), PalettedContainer.PaletteProvider.BIOME);
+                    palettedContainer3 = new PalettedContainer<>(registry.method_40295(), registry.method_40290(BiomeKeys.PLAINS), PalettedContainer.PaletteProvider.BIOME);
                 }
                 ChunkSection chunkSection = new ChunkSection(y, palettedContainer, palettedContainer3);
                 chunkSection.calculateCounts();
@@ -201,19 +203,52 @@ public class ComparisonSession implements Closeable {
         final LevelStorage.Session session = levelStorage.createSession(worldFolder.getAbsolutePath());
 
         System.out.printf("Reading world data for %s\n", description);
-        DynamicRegistryManager.Impl impl = DynamicRegistryManager.create();
-        DataPackSettings dataPackSettings = session.getDataPackSettings();
-        ResourcePackManager resourcePackManager = new ResourcePackManager(ResourceType.SERVER_DATA, new VanillaDataPackProvider(), new FileResourcePackProvider(session.getDirectory(WorldSavePath.DATAPACKS).toFile(), ResourcePackSource.PACK_SOURCE_WORLD));
-        DataPackSettings dataPackSettings2 = MinecraftServer.loadDataPacks(resourcePackManager, dataPackSettings == null ? DataPackSettings.SAFE_MODE : dataPackSettings, false);
-        ServerResourceManager serverResourceManager2;
+        ResourcePackManager resourcePackManager = new ResourcePackManager(
+                ResourceType.SERVER_DATA,
+                new VanillaDataPackProvider(),
+                new FileResourcePackProvider(session.getDirectory(WorldSavePath.DATAPACKS).toFile(), ResourcePackSource.PACK_SOURCE_WORLD)
+        );
+
+        class_6904 lv2;
         try {
-            serverResourceManager2 = ServerResourceManager.reload(resourcePackManager.createResourcePacks(), impl, CommandManager.RegistrationEnvironment.DEDICATED, 2, Util.getMainWorkerExecutor(), Runnable::run).get();
-        } catch (Throwable t) {
+            class_6904.class_6906 lv = new class_6904.class_6906(
+                    resourcePackManager,
+                    CommandManager.RegistrationEnvironment.DEDICATED,
+                    2,
+                    false
+            );
+            lv2 = class_6904.method_40431(
+                            lv,
+                            () -> {
+                                DataPackSettings dataPackSettings = session.getDataPackSettings();
+                                return dataPackSettings == null ? DataPackSettings.SAFE_MODE : dataPackSettings;
+                            },
+                            (resourceManager, dataPackSettings) -> {
+                                DynamicRegistryManager.class_6893 lvx = DynamicRegistryManager.method_40314();
+                                DynamicOps<NbtElement> dynamicOps = class_6903.method_40412(NbtOps.INSTANCE, lvx, resourceManager);
+                                SaveProperties savePropertiesx = session.readLevelProperties(dynamicOps, dataPackSettings);
+                                if (savePropertiesx != null) {
+                                    return Pair.of(savePropertiesx, lvx.method_40316());
+                                } else {
+                                    throw new RuntimeException("Failed to load level properties");
+                                }
+                            },
+                            Util.getMainWorkerExecutor(),
+                            Runnable::run
+                    )
+                    .get();
+        } catch (Exception var38) {
+            LOGGER.warn(
+                    "Failed to load datapacks, can't proceed with server load. You can either fix your datapacks or reset to vanilla with --safeMode", var38
+            );
             resourcePackManager.close();
-            throw new RuntimeException("Cannot load data packs", t);
+            throw new RuntimeException(var38);
         }
-        final RegistryOps<NbtElement> dynamicOps = RegistryOps.ofLoaded(NbtOps.INSTANCE, serverResourceManager2.getResourceManager(), impl);
-        SaveProperties saveProperties = session.readLevelProperties(dynamicOps, dataPackSettings2);
+
+        lv2.method_40428();
+        DynamicRegistryManager.class_6890 lv = lv2.registryAccess();
+//        serverPropertiesLoader.getPropertiesHandler().getGeneratorOptions(lv);
+        SaveProperties saveProperties = lv2.worldData();
         if (saveProperties == null) {
             resourcePackManager.close();
             throw new FileNotFoundException();
@@ -234,7 +269,7 @@ public class ComparisonSession implements Closeable {
             poiIoWorkers.put(world, new StorageIoWorker(session.getWorldDirectory(world).resolve("poi"), true, "poi") {
             });
         }
-        return new WorldHandle(chunkPosesMap, regionIoWorkers, poiIoWorkers, impl, () -> {
+        return new WorldHandle(chunkPosesMap, regionIoWorkers, poiIoWorkers, lv, () -> {
             System.out.println("Shutting down IOWorkers...");
             Stream.concat(regionIoWorkers.values().stream(), poiIoWorkers.values().stream()).forEach(storageIoWorker -> {
                 storageIoWorker.completeAll(true).join();
@@ -254,7 +289,7 @@ public class ComparisonSession implements Closeable {
     public record WorldHandle(HashMap<RegistryKey<World>, List<ChunkPos>> chunkPosesMap,
                               HashMap<RegistryKey<World>, StorageIoWorker> regionIoWorkers,
                               HashMap<RegistryKey<World>, StorageIoWorker> poiIoWorkers,
-                              DynamicRegistryManager.Impl dynamicRegistryManager,
+                              DynamicRegistryManager dynamicRegistryManager,
                               Closeable handle) {
     }
 

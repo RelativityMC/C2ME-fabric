@@ -1,6 +1,7 @@
 package com.ishland.c2me.mixin.fixes.worldgen.graal;
 
 import com.mojang.logging.LogUtils;
+import net.minecraft.class_6880;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.gen.feature.ConfiguredFeature;
 import net.minecraft.world.gen.feature.FeaturePlacementContext;
@@ -15,7 +16,6 @@ import org.spongepowered.asm.mixin.Shadow;
 
 import java.util.List;
 import java.util.Random;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 @Mixin(PlacedFeature.class)
@@ -25,7 +25,7 @@ public class MixinPlacedFeature {
 
     @Shadow @Final private List<PlacementModifier> placementModifiers;
 
-    @Shadow @Final private Supplier<ConfiguredFeature<?, ?>> feature;
+    @Shadow @Final private class_6880<ConfiguredFeature<?, ?>> feature;
 
     /**
      * @author ishland
@@ -55,7 +55,7 @@ public class MixinPlacedFeature {
             }
         }
 
-        ConfiguredFeature<?, ?> configuredFeature = this.feature.get();
+        ConfiguredFeature<?, ?> configuredFeature = this.feature.value();
         if (configuredFeature == null) {
             LOGGER.error("NULL configuredFeature in PlacedFeature {}", this, new Throwable());
             return false;

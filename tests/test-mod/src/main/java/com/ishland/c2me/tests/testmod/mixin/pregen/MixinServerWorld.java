@@ -1,6 +1,7 @@
 package com.ishland.c2me.tests.testmod.mixin.pregen;
 
 import net.minecraft.block.Block;
+import net.minecraft.class_6880;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
@@ -18,8 +19,8 @@ import java.util.function.Supplier;
 @Mixin(ServerWorld.class)
 public abstract class MixinServerWorld extends World implements StructureWorldAccess {
 
-    protected MixinServerWorld(MutableWorldProperties properties, RegistryKey<World> registryRef, DimensionType dimensionType, Supplier<Profiler> profiler, boolean isClient, boolean debugWorld, long seed) {
-        super(properties, registryRef, dimensionType, profiler, isClient, debugWorld, seed);
+    protected MixinServerWorld(MutableWorldProperties properties, RegistryKey<World> registryRef, class_6880<DimensionType> arg, Supplier<Profiler> profiler, boolean isClient, boolean debugWorld, long seed) {
+        super(properties, registryRef, arg, profiler, isClient, debugWorld, seed);
     }
 
     /**

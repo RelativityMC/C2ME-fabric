@@ -272,13 +272,13 @@ public class ThreadLocalMutableBlockPos extends BlockPos.Mutable {
     }
 
     @Override
-    public double getSquaredDistance(double x, double y, double z) {
-        return delegate.get().getSquaredDistance(x, y, z);
+    public double getSquaredDistanceFromCenter(double x, double y, double z) {
+        return delegate.get().getSquaredDistanceFromCenter(x, y, z);
     }
 
     @Override
-    public double method_40081(double d, double e, double f) {
-        return delegate.get().method_40081(d, e, f);
+    public double getSquaredDistance(double d, double e, double f) {
+        return delegate.get().getSquaredDistance(d, e, f);
     }
 
     @Override

@@ -8,6 +8,7 @@ import com.ibm.asyncutil.locks.AsyncSemaphore;
 import com.ibm.asyncutil.locks.FairAsyncSemaphore;
 import com.ishland.c2me.tests.testmod.mixin.IServerChunkManager;
 import com.ishland.c2me.tests.testmod.mixin.IThreadedAnvilChunkStorage;
+import net.minecraft.class_6880;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ChunkTicketType;
 import net.minecraft.server.world.ServerWorld;
@@ -63,25 +64,29 @@ public class PreGenTask {
         final AtomicInteger locatedBiomes = new AtomicInteger();
         final AtomicInteger locatedStructures = new AtomicInteger();
         System.err.printf("Fetching structure and biome list\n");
-        final Set<Biome> biomes = new HashSet<>(world.getChunkManager().getChunkGenerator().getBiomeSource().getBiomes());
+        final Registry<Biome> biomeRegistry = world.getRegistryManager().get(Registry.BIOME_KEY);
+        final Set<class_6880<Biome>> biomes =
+                world.getChunkManager().getChunkGenerator().getBiomeSource().getBiomes()
+                        .filter(biomeclass_6880 -> biomeRegistry.getKey(biomeclass_6880.value()).isPresent())
+                        .collect(Collectors.toCollection(HashSet::new));
         final Set<StructureFeature<?>> structureFeatures = StructureFeature.STRUCTURES.values().stream()
                 .filter(structureFeature -> {
                     final StructuresConfig structuresConfig = world.getChunkManager().getChunkGenerator().getStructuresConfig();
                     return structuresConfig.getForType(structureFeature) != null && !structuresConfig.getConfiguredStructureFeature(structureFeature).isEmpty();
                 })
                 .collect(Collectors.toSet());
-        final Registry<Biome> biomeRegistry = world.getRegistryManager().get(Registry.BIOME_KEY);
         System.err.printf("Submitting tasks\n");
         final CompletableFuture<Void> biomeFuture = CompletableFuture.allOf(biomes.stream()
                 .map(biome -> CompletableFuture.runAsync(() -> {
-                    final BlockPos blockPos = world.locateBiome(biome, spawnPos, SEARCH_RADIUS, 8);
+                    //noinspection OptionalGetWithoutIsPresent
+                    final BlockPos blockPos = world.locateBiome(biomeRegistry.getKey(biome.value()).get(), spawnPos, SEARCH_RADIUS, 8);
                     locatedBiomes.incrementAndGet();
                     if (blockPos != null) {
                         final ChunkPos chunkPos = new ChunkPos(blockPos);
                         chunks.addAll(createPreGenChunks25(chunkPos, chunksHashed::add));
                         return;
                     }
-                    LOGGER.info("Unable to locate biome {}", biomeRegistry.getId(biome));
+                    LOGGER.info("Unable to locate biome {}", biomeRegistry.getId(biome.value()));
                 }, EXECUTOR)).distinct().toArray(CompletableFuture[]::new));
         final CompletableFuture<Void> structureFuture = CompletableFuture.allOf(structureFeatures.stream()
                 .map(structureFeature -> CompletableFuture.runAsync(() -> {

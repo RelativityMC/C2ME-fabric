@@ -21,6 +21,7 @@ loom {
                     "-Dcom.ishland.c2me.common.config.threadedWorldGen.useGlobalBiomeCache=true",
                     "-Dcom.ishland.c2me.common.config.asyncScheduling.enabled=true",
                     "-Dcom.ishland.c2me.common.config.noTickViewDistance.enabled=true",
+                    "-Dcom.ishland.c2me.common.config.ioSystemConfig.replaceImpl=true",
                     "--add-modules",
                     "jdk.incubator.vector"
             if (System.getenv("GITHUB_WORKFLOW") != null) {

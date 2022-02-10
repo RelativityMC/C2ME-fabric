@@ -38,6 +38,11 @@ public abstract class MixinVersionedChunkStorage {
         throw new AbstractMethodError();
     }
 
+    @Shadow
+    public static void saveContextToNbt(NbtCompound nbt, RegistryKey<World> worldKey, Optional<RegistryKey<Codec<? extends ChunkGenerator>>> generatorCodecKey) {
+        throw new AbstractMethodError();
+    }
+
     private AsyncLock featureUpdaterLock = AsyncLock.createFair();
 
     @Inject(method = "<init>", at = @At("RETURN"))
@@ -66,13 +71,7 @@ public abstract class MixinVersionedChunkStorage {
             }
         }
 
-        NbtCompound nbtCompound = new NbtCompound();
-        nbtCompound.putString("dimension", worldKey.getValue().toString());
-        if (optional.isPresent()) {
-            nbtCompound.putString("generator", ((RegistryKey)optional.get()).getValue().toString());
-        }
-
-        nbt.put("__context", nbtCompound);
+        saveContextToNbt(nbt, worldKey, optional);
         nbt = NbtHelper.update(this.dataFixer, DataFixTypes.CHUNK, nbt, Math.max(1493, i));
         if (i < SharedConstants.getGameVersion().getWorldVersion()) {
             nbt.putInt("DataVersion", SharedConstants.getGameVersion().getWorldVersion());

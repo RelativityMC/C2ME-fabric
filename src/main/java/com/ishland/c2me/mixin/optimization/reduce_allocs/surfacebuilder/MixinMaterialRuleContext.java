@@ -1,7 +1,7 @@
 package com.ishland.c2me.mixin.optimization.reduce_allocs.surfacebuilder;
 
+import net.minecraft.class_6880;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules;
@@ -22,7 +22,7 @@ public class MixinMaterialRuleContext {
 
     @Shadow
     @Final
-    private Function<BlockPos, Biome> posToBiome;
+    private Function<BlockPos, class_6880<Biome>> posToBiome;
 
     @Shadow
     @Final
@@ -32,20 +32,13 @@ public class MixinMaterialRuleContext {
     private long uniquePosValue;
 
     @Shadow
-    private Supplier<Biome> biomeSupplier;
-
-    @Shadow
-    private Supplier<RegistryKey<Biome>> biomeKeySupplier;
+    private Supplier<class_6880<Biome>> biomeSupplier;
 
     @Shadow
     private int y;
 
     @Shadow
     private int fluidHeight;
-
-    @Shadow
-    @Final
-    private Registry<Biome> biomeRegistry;
 
     @Shadow
     private int stoneDepthBelow;
@@ -60,7 +53,7 @@ public class MixinMaterialRuleContext {
     @Unique
     private int lazyPosZ;
     @Unique
-    private Biome lastBiome = null;
+    private class_6880<Biome> lastBiome = null;
     @Unique
     private RegistryKey<Biome> lastBiomeKey = null;
 
@@ -70,11 +63,6 @@ public class MixinMaterialRuleContext {
             if (this.lastBiome == null)
                 return this.lastBiome = this.posToBiome.apply(this.pos.set(this.lazyPosX, this.lazyPosY, this.lazyPosZ));
             return this.lastBiome;
-        };
-        this.biomeKeySupplier = () -> {
-            if (this.lastBiomeKey == null)
-                return this.lastBiomeKey = this.biomeRegistry.getKey(this.biomeSupplier.get()).orElseThrow(() -> new IllegalStateException("Unregistered biome: " + this.lastBiome));
-            return this.lastBiomeKey;
         };
     }
 

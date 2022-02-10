@@ -234,7 +234,7 @@ public class C2MEStorageThread extends Thread {
                 try {
                     try (DataInputStream inputStream = chunkInputStream) {
                         if (scanner != null) {
-                            NbtIo.read(inputStream, scanner);
+                            NbtIo.scan(inputStream, scanner);
                             return null;
                         } else {
                             return NbtIo.read(inputStream);

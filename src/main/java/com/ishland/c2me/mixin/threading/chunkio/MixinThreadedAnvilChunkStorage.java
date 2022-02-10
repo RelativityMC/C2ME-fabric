@@ -209,7 +209,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
         if (!chunk.needsSaving()) {
             return false;
         } else {
-            chunk.setShouldSave(false);
+            chunk.setNeedsSaving(false);
             ChunkPos chunkPos = chunk.getPos();
 
             try {

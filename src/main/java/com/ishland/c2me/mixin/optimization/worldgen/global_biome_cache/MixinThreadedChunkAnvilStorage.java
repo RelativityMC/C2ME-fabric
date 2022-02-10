@@ -4,6 +4,7 @@ import com.ishland.c2me.common.GlobalExecutors;
 import com.ishland.c2me.common.optimization.worldgen.global_biome_cache.IGlobalBiomeCache;
 import com.ishland.c2me.common.util.PalettedContainerUtil;
 import com.mojang.datafixers.util.Either;
+import net.minecraft.class_6880;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;
 import net.minecraft.util.math.ChunkPos;
@@ -38,7 +39,7 @@ public abstract class MixinThreadedChunkAnvilStorage {
                 either.left().ifPresent(chunk -> {
                     for (ChunkSection chunkSection : chunk.getSectionArray()) {
                         final ChunkSectionPos chunkSectionPos = ChunkSectionPos.from(chunk.getPos(), chunkSection.getYOffset());
-                        final Biome[][][] biomes = source.preloadBiomes(chunkSectionPos, chunk.getStatus().isAtLeast(ChunkStatus.FEATURES) ? null : PalettedContainerUtil.toArray(chunkSection.getBiomeContainer(), 4, 4, 4), chunkGenerator.getMultiNoiseSampler());
+                        final class_6880<Biome>[][][] biomes = source.preloadBiomes(chunkSectionPos, chunk.getStatus().isAtLeast(ChunkStatus.FEATURES) ? null : PalettedContainerUtil.toArray(chunkSection.getBiomeContainer(), 4, 4, 4), chunkGenerator.getMultiNoiseSampler());
                         PalettedContainerUtil.writeArray(chunkSection.getBiomeContainer(), biomes);
                     }
                 });

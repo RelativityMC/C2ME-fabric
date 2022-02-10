@@ -97,6 +97,10 @@ public class C2MEConfig {
     }
 
     public static class IoSystemConfig {
+
+        // For testing purposes
+        private static final boolean global_replaceImpl = Boolean.parseBoolean(System.getProperty("com.ishland.c2me.common.config.ioSystemConfig.replaceImpl", "false"));
+
         public final boolean async;
         public final boolean replaceImpl;
         public final int chunkDataCacheSoftLimit;
@@ -106,7 +110,7 @@ public class C2MEConfig {
             Preconditions.checkNotNull(config, "ioSystem config is not present");
             final ConfigUtils.ConfigScope configScope = new ConfigUtils.ConfigScope(config);
             this.async = ConfigUtils.getValue(configScope, "async", () -> true, "Whether to use async chunk loading & unloading", List.of("radon"), false, true);
-            this.replaceImpl = ConfigUtils.getValue(configScope, "replaceImpl", () -> false, "Whether to use optimized implementation of IO system", List.of("radon"), false, true);
+            this.replaceImpl = ConfigUtils.getValue(configScope, "replaceImpl", () -> false || global_replaceImpl, "Whether to use optimized implementation of IO system", List.of("radon"), false, true);
             this.chunkDataCacheSoftLimit = ConfigUtils.getValue(configScope, "chunkDataCacheSoftLimit", () -> 1536, "Soft limit for io worker nbt cache", List.of(), 4096, true);
             this.chunkDataCacheLimit = ConfigUtils.getValue(configScope, "chunkDataCacheLimit", () -> 6144, "Hard limit for io worker nbt cache", List.of(), 8192, true);
             configScope.removeUnusedKeys();

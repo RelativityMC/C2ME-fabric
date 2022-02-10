@@ -5,9 +5,6 @@ import net.minecraft.world.gen.chunk.ChunkGenerator;
 import net.minecraft.world.gen.chunk.NoiseChunkGenerator;
 import net.minecraft.world.gen.chunk.StructuresConfig;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(NoiseChunkGenerator.class)
 public abstract class MixinNoiseChunkGenerator extends ChunkGenerator {
@@ -22,10 +19,10 @@ public abstract class MixinNoiseChunkGenerator extends ChunkGenerator {
 //        return new ThreadLocalStructureWeightSampler(structureAccessor, chunk);
 //    }
 
-    @Inject(method = "<init>(Lnet/minecraft/util/registry/Registry;Lnet/minecraft/world/biome/source/BiomeSource;Lnet/minecraft/world/biome/source/BiomeSource;JLjava/util/function/Supplier;)V", at = @At(value = "RETURN"))
-    private void onInit(CallbackInfo info) {
+//    @Inject(method = "<init>(Lnet/minecraft/util/registry/Registry;Lnet/minecraft/world/biome/source/BiomeSource;Lnet/minecraft/world/biome/source/BiomeSource;JLjava/util/function/Supplier;)V", at = @At(value = "RETURN"))
+//    private void onInit(CallbackInfo info) {
 //        ((IChunkGenerator) this).invokeGenerateStrongholdPositions();
 //        System.out.println("Stronghold positions initialized");
-    }
+//    }
 
 }
