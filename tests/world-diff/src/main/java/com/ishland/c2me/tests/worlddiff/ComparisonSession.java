@@ -59,6 +59,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Stream;
 
@@ -170,23 +172,27 @@ public class ComparisonSession implements Closeable {
     }
 
     private static Map<ChunkSectionPos, ChunkSection> readSections(ChunkPos pos, NbtCompound chunkData, Registry<Biome> registry) {
-        NbtList nbtList = chunkData.getCompound("Level").getList("Sections", 10);
+        NbtList nbtList = chunkData.getList("sections", 10);
         Codec<PalettedContainer<class_6880<Biome>>> codec = PalettedContainer.createCodec(registry.method_40295(), registry.method_40294(), PalettedContainer.PaletteProvider.BIOME, registry.method_40290(BiomeKeys.PLAINS));
         HashMap<ChunkSectionPos, ChunkSection> result = new HashMap<>();
         for (int i = 0; i < nbtList.size(); i++) {
             final NbtCompound sectionData = nbtList.getCompound(i);
             int y = sectionData.getByte("Y");
-            if (sectionData.contains("Palette", 9) && sectionData.contains("BlockStates", 12)) {
+            if (sectionData.contains("block_states", 10)) {
                 PalettedContainer<BlockState> palettedContainer;
-                if (chunkData.contains("block_states", 10)) {
-                    palettedContainer = CODEC.parse(NbtOps.INSTANCE, chunkData.getCompound("block_states")).getOrThrow(false, LOGGER::error);
+                if (sectionData.contains("block_states", 10)) {
+                    palettedContainer = CODEC.parse(NbtOps.INSTANCE, sectionData.getCompound("block_states"))
+                            .promotePartial(s -> LOGGER.error("Recoverable errors when loading section [" + pos.x + ", " + y + ", " + pos.z + "]: " + s))
+                            .getOrThrow(false, LOGGER::error);
                 } else {
                     palettedContainer = new PalettedContainer<>(Block.STATE_IDS, Blocks.AIR.getDefaultState(), PalettedContainer.PaletteProvider.BLOCK_STATE);
                 }
 
                 PalettedContainer<class_6880<Biome>> palettedContainer3;
-                if (chunkData.contains("biomes", 10)) {
-                    palettedContainer3 = codec.parse(NbtOps.INSTANCE, chunkData.getCompound("biomes")).getOrThrow(false, LOGGER::error);
+                if (sectionData.contains("biomes", 10)) {
+                    palettedContainer3 = codec.parse(NbtOps.INSTANCE, sectionData.getCompound("biomes"))
+                            .promotePartial(s -> LOGGER.error("Recoverable errors when loading section [" + pos.x + ", " + y + ", " + pos.z + "]: " + s))
+                            .getOrThrow(false, LOGGER::error);
                 } else {
                     palettedContainer3 = new PalettedContainer<>(registry.method_40295(), registry.method_40290(BiomeKeys.PLAINS), PalettedContainer.PaletteProvider.BIOME);
                 }
@@ -198,7 +204,7 @@ public class ComparisonSession implements Closeable {
         return result;
     }
 
-    private static WorldHandle getWorldHandle(File worldFolder, String description) throws IOException {
+    private static WorldHandle getWorldHandle(File worldFolder, String description) throws IOException, TimeoutException {
         final LevelStorage levelStorage = LevelStorage.create(worldFolder.toPath());
         final LevelStorage.Session session = levelStorage.createSession(worldFolder.getAbsolutePath());
 
@@ -236,7 +242,9 @@ public class ComparisonSession implements Closeable {
                             Util.getMainWorkerExecutor(),
                             Runnable::run
                     )
-                    .get();
+                    .get(15, TimeUnit.SECONDS);
+        } catch (TimeoutException e) {
+            throw e;
         } catch (Exception var38) {
             LOGGER.warn(
                     "Failed to load datapacks, can't proceed with server load. You can either fix your datapacks or reset to vanilla with --safeMode", var38

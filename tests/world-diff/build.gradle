@@ -17,10 +17,12 @@ loom {
             server()
             runDir getRootProject().getProjectDir().toPath().relativize(project.getBuildDir().toPath()).resolve("testServer").toString()
             source sourceSets.testmod
+
+            def vanillaTest = project(":tests:vanilla-test").getBuildDir().toPath().resolve("testServer").resolve("world").toAbsolutePath()
+
+            def c2meTest = project(":tests:c2me-test").getBuildDir().toPath().resolve("testServer").resolve("world").toAbsolutePath()
             vmArgs String.format("-Dcom.ishland.c2me.tests.worlddiff.worlds=%s", groovy.json.StringEscapeUtils.escapeJava(
-                    project(":tests:vanilla-test").getBuildDir().toPath().resolve("testServer").resolve("world").toAbsolutePath().toString() +
-                            "," +
-                            project(":tests:c2me-test").getBuildDir().toPath().resolve("testServer").resolve("world").toAbsolutePath().toString()
+                    vanillaTest.toString() + "," + c2meTest.toString()
             ))
         }
     }
@@ -31,8 +33,8 @@ afterEvaluate {
         doFirst {
             standardOutput = new RedirectingOutputStream(project, getName())
         }
-        dependsOn project(":tests:vanilla-test").runTestVanillaServer
-        dependsOn project(":tests:c2me-test").runTestC2MEServer
+//        dependsOn project(":tests:vanilla-test").runTestVanillaServer
+//        dependsOn project(":tests:c2me-test").runTestC2MEServer
     }
 }
 
