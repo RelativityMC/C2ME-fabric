@@ -1,7 +1,7 @@
 package com.ishland.c2me.mixin.optimization.worldgen.vanilla_optimization.aquifer;
 
 import net.minecraft.block.Blocks;
-import net.minecraft.class_6880;
+import net.minecraft.util.registry.RegistryEntry;
 import net.minecraft.world.gen.chunk.AquiferSampler;
 import net.minecraft.world.gen.chunk.ChunkGeneratorSettings;
 import net.minecraft.world.gen.chunk.NoiseChunkGenerator;
@@ -16,12 +16,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(NoiseChunkGenerator.class)
 public class MixinNoiseChunkGenerator {
 
-    @Shadow @Final protected class_6880<ChunkGeneratorSettings> settings;
+    @Shadow @Final protected RegistryEntry<ChunkGeneratorSettings> settings;
 
     @Mutable
     @Shadow @Final private AquiferSampler.FluidLevelSampler fluidLevelSampler;
 
-    @Inject(method = "<init>(Lnet/minecraft/util/registry/Registry;Lnet/minecraft/world/biome/source/BiomeSource;Lnet/minecraft/world/biome/source/BiomeSource;JLnet/minecraft/class_6880;)V", at = @At("RETURN"))
+    @Inject(method = "<init>(Lnet/minecraft/util/registry/Registry;Lnet/minecraft/world/biome/source/BiomeSource;Lnet/minecraft/world/biome/source/BiomeSource;JLnet/minecraft/util/registry/RegistryEntry;)V", at = @At("RETURN"))
     private void modifyFluidLevelSampler(CallbackInfo ci) {
         // TODO [VanillaCopy]
         ChunkGeneratorSettings chunkGeneratorSettings = this.settings.value();

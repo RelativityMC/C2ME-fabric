@@ -1,8 +1,8 @@
 package com.ishland.c2me.mixin.fixes.worldgen.graal;
 
 import com.mojang.logging.LogUtils;
-import net.minecraft.class_6880;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.registry.RegistryEntry;
 import net.minecraft.world.gen.feature.ConfiguredFeature;
 import net.minecraft.world.gen.feature.FeaturePlacementContext;
 import net.minecraft.world.gen.feature.PlacedFeature;
@@ -25,7 +25,7 @@ public class MixinPlacedFeature {
 
     @Shadow @Final private List<PlacementModifier> placementModifiers;
 
-    @Shadow @Final private class_6880<ConfiguredFeature<?, ?>> feature;
+    @Shadow @Final private RegistryEntry<ConfiguredFeature<?, ?>> feature;
 
     /**
      * @author ishland

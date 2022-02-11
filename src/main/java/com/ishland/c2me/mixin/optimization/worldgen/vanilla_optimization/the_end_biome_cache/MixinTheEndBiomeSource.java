@@ -1,9 +1,9 @@
 package com.ishland.c2me.mixin.optimization.worldgen.vanilla_optimization.the_end_biome_cache;
 
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
-import net.minecraft.class_6880;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.noise.SimplexNoiseSampler;
+import net.minecraft.util.registry.RegistryEntry;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.source.TheEndBiomeSource;
 import net.minecraft.world.biome.source.util.MultiNoiseUtil;
@@ -22,17 +22,17 @@ public abstract class MixinTheEndBiomeSource {
 
     @Shadow @Final private SimplexNoiseSampler noise;
 
-    @Shadow @Final private class_6880<Biome> highlandsBiome;
+    @Shadow @Final private RegistryEntry<Biome> highlandsBiome;
 
-    @Shadow @Final private class_6880<Biome> midlandsBiome;
+    @Shadow @Final private RegistryEntry<Biome> midlandsBiome;
 
-    @Shadow @Final private class_6880<Biome> smallIslandsBiome;
+    @Shadow @Final private RegistryEntry<Biome> smallIslandsBiome;
 
-    @Shadow @Final private class_6880<Biome> barrensBiome;
+    @Shadow @Final private RegistryEntry<Biome> barrensBiome;
 
-    @Shadow @Final private class_6880<Biome> centerBiome;
+    @Shadow @Final private RegistryEntry<Biome> centerBiome;
 
-    private class_6880<Biome> getBiomeForNoiseGenVanilla(int biomeX, int biomeY, int biomeZ) {
+    private RegistryEntry<Biome> getBiomeForNoiseGenVanilla(int biomeX, int biomeY, int biomeZ) {
         // TODO [VanillaCopy]
         int i = biomeX >> 2;
         int j = biomeZ >> 2;
@@ -50,7 +50,7 @@ public abstract class MixinTheEndBiomeSource {
         }
     }
 
-    private final ThreadLocal<Long2ObjectLinkedOpenHashMap<class_6880<Biome>>> cache = ThreadLocal.withInitial(Long2ObjectLinkedOpenHashMap::new);
+    private final ThreadLocal<Long2ObjectLinkedOpenHashMap<RegistryEntry<Biome>>> cache = ThreadLocal.withInitial(Long2ObjectLinkedOpenHashMap::new);
     private final int cacheCapacity = 1024;
 
     /**
@@ -58,14 +58,14 @@ public abstract class MixinTheEndBiomeSource {
      * @reason the end biome cache
      */
     @Overwrite
-    public class_6880<Biome> getBiome(int biomeX, int biomeY, int biomeZ, MultiNoiseUtil.MultiNoiseSampler multiNoiseSampler) {
+    public RegistryEntry<Biome> getBiome(int biomeX, int biomeY, int biomeZ, MultiNoiseUtil.MultiNoiseSampler multiNoiseSampler) {
         final long key = ChunkPos.toLong(biomeX, biomeZ);
-        final Long2ObjectLinkedOpenHashMap<class_6880<Biome>> cacheThreadLocal = cache.get();
-        final class_6880<Biome> biome = cacheThreadLocal.get(key);
+        final Long2ObjectLinkedOpenHashMap<RegistryEntry<Biome>> cacheThreadLocal = cache.get();
+        final RegistryEntry<Biome> biome = cacheThreadLocal.get(key);
         if (biome != null) {
             return biome;
         } else {
-            final class_6880<Biome> gennedBiome = getBiomeForNoiseGenVanilla(biomeX, biomeY, biomeZ);
+            final RegistryEntry<Biome> gennedBiome = getBiomeForNoiseGenVanilla(biomeX, biomeY, biomeZ);
             cacheThreadLocal.put(key, gennedBiome);
             if (cacheThreadLocal.size() > cacheCapacity) {
                 for (int i = 0; i < cacheCapacity / 16; i ++) {

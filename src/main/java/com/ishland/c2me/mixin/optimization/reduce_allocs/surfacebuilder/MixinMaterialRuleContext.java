@@ -1,7 +1,7 @@
 package com.ishland.c2me.mixin.optimization.reduce_allocs.surfacebuilder;
 
-import net.minecraft.class_6880;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.registry.RegistryEntry;
 import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules;
@@ -22,7 +22,7 @@ public class MixinMaterialRuleContext {
 
     @Shadow
     @Final
-    private Function<BlockPos, class_6880<Biome>> posToBiome;
+    private Function<BlockPos, RegistryEntry<Biome>> posToBiome;
 
     @Shadow
     @Final
@@ -32,7 +32,7 @@ public class MixinMaterialRuleContext {
     private long uniquePosValue;
 
     @Shadow
-    private Supplier<class_6880<Biome>> biomeSupplier;
+    private Supplier<RegistryEntry<Biome>> biomeSupplier;
 
     @Shadow
     private int y;
@@ -53,7 +53,7 @@ public class MixinMaterialRuleContext {
     @Unique
     private int lazyPosZ;
     @Unique
-    private class_6880<Biome> lastBiome = null;
+    private RegistryEntry<Biome> lastBiome = null;
     @Unique
     private RegistryKey<Biome> lastBiomeKey = null;
 

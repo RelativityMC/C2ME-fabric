@@ -11,7 +11,6 @@ import com.mojang.serialization.DynamicOps;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
-import net.minecraft.class_6880;
 import net.minecraft.class_6903;
 import net.minecraft.class_6904;
 import net.minecraft.datafixer.Schemas;
@@ -34,6 +33,7 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.ChunkSectionPos;
 import net.minecraft.util.registry.DynamicRegistryManager;
 import net.minecraft.util.registry.Registry;
+import net.minecraft.util.registry.RegistryEntry;
 import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.ChunkSerializer;
 import net.minecraft.world.SaveProperties;
@@ -173,7 +173,7 @@ public class ComparisonSession implements Closeable {
 
     private static Map<ChunkSectionPos, ChunkSection> readSections(ChunkPos pos, NbtCompound chunkData, Registry<Biome> registry) {
         NbtList nbtList = chunkData.getList("sections", 10);
-        Codec<PalettedContainer<class_6880<Biome>>> codec = PalettedContainer.createCodec(registry.method_40295(), registry.method_40294(), PalettedContainer.PaletteProvider.BIOME, registry.method_40290(BiomeKeys.PLAINS));
+        Codec<PalettedContainer<RegistryEntry<Biome>>> codec = PalettedContainer.createCodec(registry.method_40295(), registry.method_40294(), PalettedContainer.PaletteProvider.BIOME, registry.entryOf(BiomeKeys.PLAINS));
         HashMap<ChunkSectionPos, ChunkSection> result = new HashMap<>();
         for (int i = 0; i < nbtList.size(); i++) {
             final NbtCompound sectionData = nbtList.getCompound(i);
@@ -188,13 +188,13 @@ public class ComparisonSession implements Closeable {
                     palettedContainer = new PalettedContainer<>(Block.STATE_IDS, Blocks.AIR.getDefaultState(), PalettedContainer.PaletteProvider.BLOCK_STATE);
                 }
 
-                PalettedContainer<class_6880<Biome>> palettedContainer3;
+                PalettedContainer<RegistryEntry<Biome>> palettedContainer3;
                 if (sectionData.contains("biomes", 10)) {
                     palettedContainer3 = codec.parse(NbtOps.INSTANCE, sectionData.getCompound("biomes"))
                             .promotePartial(s -> LOGGER.error("Recoverable errors when loading section [" + pos.x + ", " + y + ", " + pos.z + "]: " + s))
                             .getOrThrow(false, LOGGER::error);
                 } else {
-                    palettedContainer3 = new PalettedContainer<>(registry.method_40295(), registry.method_40290(BiomeKeys.PLAINS), PalettedContainer.PaletteProvider.BIOME);
+                    palettedContainer3 = new PalettedContainer<>(registry.method_40295(), registry.entryOf(BiomeKeys.PLAINS), PalettedContainer.PaletteProvider.BIOME);
                 }
                 ChunkSection chunkSection = new ChunkSection(y, palettedContainer, palettedContainer3);
                 chunkSection.calculateCounts();
