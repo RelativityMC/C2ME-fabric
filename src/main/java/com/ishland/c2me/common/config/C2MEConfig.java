@@ -154,14 +154,16 @@ public class C2MEConfig {
     }
 
     public static class VanillaWorldGenOptimizationsConfig {
-        public final boolean enabled;
+//        public final boolean enabled;
         public final boolean useEndBiomeCache;
+        public final boolean optimizeAquifer;
 
         public VanillaWorldGenOptimizationsConfig(CommentedConfig config) {
             Preconditions.checkNotNull(config, "vanillaWorldGenOptimizationsConfig config is not present");
             final ConfigUtils.ConfigScope configScope = new ConfigUtils.ConfigScope(config);
-            this.enabled = ConfigUtils.getValue(configScope, "enabled", () -> true, "Whether to enable this feature \n (may cause incompatibility with other mods)", List.of(), false, true);
+//            this.enabled = ConfigUtils.getValue(configScope, "enabled", () -> true, "Whether to enable this feature \n (may cause incompatibility with other mods)", List.of(), false, true);
             this.useEndBiomeCache = ConfigUtils.getValue(configScope, "useEndBiomeCache", () -> true, "Whether to enable End Biome Cache to accelerate The End worldgen \n This is no longer included in lithium-fabric \n (may cause incompatibility with other mods) ", List.of(), false, true);
+            this.optimizeAquifer = ConfigUtils.getValue(configScope, "optimizeAquifer", () -> true, "Whether to enable aquifer optimizations to accelerate overworld worldgen \n (may cause incompatibility with other mods) ", List.of("cavetweaks"), false, true);
             configScope.removeUnusedKeys();
         }
     }
