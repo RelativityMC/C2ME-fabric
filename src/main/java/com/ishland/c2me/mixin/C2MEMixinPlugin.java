@@ -69,6 +69,8 @@ public class C2MEMixinPlugin implements IMixinConfigPlugin {
             return C2MEConfig.generalOptimizationsConfig.autoSaveConfig.mode != C2MEConfig.GeneralOptimizationsConfig.AutoSaveConfig.Mode.VANILLA;
         if (mixinClassName.startsWith("com.ishland.c2me.mixin.optimization.chunkscheduling.idle_tasks.autosave.enhanced_autosave."))
             return C2MEConfig.generalOptimizationsConfig.autoSaveConfig.mode == C2MEConfig.GeneralOptimizationsConfig.AutoSaveConfig.Mode.ENHANCED;
+        if (mixinClassName.startsWith("com.ishland.c2me.mixin.optimization.worldgen.vanilla_optimization.aquifer."))
+            return C2MEConfig.vanillaWorldGenOptimizationsConfig.optimizeAquifer;
         return true;
     }
 
