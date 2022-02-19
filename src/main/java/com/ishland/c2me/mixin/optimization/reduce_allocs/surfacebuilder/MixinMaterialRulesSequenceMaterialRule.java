@@ -15,6 +15,8 @@ import java.util.List;
 @Mixin(MaterialRules.SequenceMaterialRule.class)
 public class MixinMaterialRulesSequenceMaterialRule {
 
+    private static final MaterialRules.BlockStateRule EMPTY = new MaterialRules.SequenceBlockStateRule(List.of());
+
     @Shadow
     @Final
     private List<MaterialRules.MaterialRule> sequence;
@@ -23,7 +25,7 @@ public class MixinMaterialRulesSequenceMaterialRule {
     private MaterialRules.MaterialRule[] sequenceArray;
 
     @Unique
-    private boolean isSingleElement;
+    private boolean isSingleOrNoElement;
 
     @Unique
     private MaterialRules.MaterialRule firstElement;
@@ -31,13 +33,13 @@ public class MixinMaterialRulesSequenceMaterialRule {
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(CallbackInfo info) {
         this.sequenceArray = this.sequence.toArray(MaterialRules.MaterialRule[]::new);
-        this.isSingleElement = this.sequenceArray.length == 1;
-        this.firstElement = this.sequenceArray[0];
+        this.isSingleOrNoElement = this.sequenceArray.length <= 1;
+        this.firstElement = this.sequenceArray.length == 0 ? null : this.sequenceArray[0];
     }
 
     public MaterialRules.BlockStateRule apply(MaterialRules.MaterialRuleContext materialRuleContext) {
-        if (this.isSingleElement) {
-            return this.firstElement.apply(materialRuleContext);
+        if (this.isSingleOrNoElement) {
+            return this.firstElement != null ? this.firstElement.apply(materialRuleContext) : EMPTY;
         } else {
             @SuppressWarnings("UnstableApiUsage")
             ImmutableList.Builder<MaterialRules.BlockStateRule> builder = ImmutableList.builderWithExpectedSize(this.sequenceArray.length);
