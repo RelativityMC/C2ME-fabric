@@ -14,6 +14,7 @@ import net.minecraft.world.gen.random.RandomDeriver;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -108,6 +109,11 @@ public class MixinAquiferSamplerImpl {
         this.randomInstance = RandomUtils.getRandom(this.randomDeriver);
     }
 
+    /**
+     * @author ishland
+     * @reason optimize
+     */
+    @Overwrite
     @Nullable
     public BlockState apply(class_6910.class_6912 arg, double d) {
         final int blockX = arg.blockX();
@@ -338,6 +344,11 @@ public class MixinAquiferSamplerImpl {
         }
     }
 
+    /**
+     * @author ishland
+     * @reason optimize
+     */
+    @Overwrite
     private AquiferSampler.FluidLevel getWaterLevel(long pos) {
         int i = (int) ((pos << WATER_LEVEL_MAGIC_1) >> WATER_LEVEL_MAGIC_2); // C2ME - inline
         int j = (int) ((pos << WATER_LEVEL_MAGIC_3) >> WATER_LEVEL_MAGIC_4); // C2ME - inline
@@ -356,6 +367,11 @@ public class MixinAquiferSamplerImpl {
         }
     }
 
+    /**
+     * @author ishland
+     * @reason optimize
+     */
+    @Overwrite
     private AquiferSampler.FluidLevel method_40463(int i, int j, int k) {
         AquiferSampler.FluidLevel fluidLevel = this.fluidLevelSampler.getFluidLevel(i, j, k);
         int l = Integer.MAX_VALUE;
@@ -424,6 +440,7 @@ public class MixinAquiferSamplerImpl {
         }
     }
 
+    @Unique
     private static double clampedLerpFromProgressInlined(double lerpValue) {
         final double delta = lerpValue / 64.0;
         if (delta < 0.0) {
@@ -433,6 +450,7 @@ public class MixinAquiferSamplerImpl {
         }
     }
 
+    @Unique
     private static double lerpFromProgressInlined(double lerpValue, double start, double end) {
         return start - (lerpValue - 1.0) * (end - start);
     }
