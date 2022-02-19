@@ -83,7 +83,7 @@ public abstract class MixinMinecraftServer extends ReentrantThreadExecutor<Serve
             }
             if (!isRunning()) LOGGER.error("Exiting due to server stopping");
             for (ServerWorld world : this.worlds.values()) {
-                world.getChunkManager().tick(() -> true);
+                world.getChunkManager().tick(() -> true, false);
             }
             long duration = System.nanoTime() - startTime;
             final String message = String.format("PreGen completed after %.1fs", duration / 1_000_000_000.0);
@@ -124,7 +124,7 @@ public abstract class MixinMinecraftServer extends ReentrantThreadExecutor<Serve
         if (largeOverheadGC != handledGc || Runtime.getRuntime().maxMemory() - (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) < 256 * 1024 * 1024) {
             // Too spammy I think
             // LOGGER.warn("High GC overhead / low available heap, saving worlds...");
-            this.worlds.values().forEach(world -> world.getChunkManager().tick(() -> true));
+            this.worlds.values().forEach(world -> world.getChunkManager().tick(() -> true, false));
             this.worlds.values().forEach(world -> world.getChunkManager().save(false));
             this.worlds.values().forEach(world -> world.getChunkManager().threadedAnvilChunkStorage.completeAll());
             handledGc = largeOverheadGC;
@@ -139,7 +139,7 @@ public abstract class MixinMinecraftServer extends ReentrantThreadExecutor<Serve
         boolean hasTask = false;
         if (System.currentTimeMillis() - lastTick > 50) {
             for (ServerWorld world : this.worlds.values()) {
-                world.getChunkManager().tick(() -> true);
+                world.getChunkManager().tick(() -> true, false);
                 world.getBlockTickScheduler().tick(world.getTime(), 65536, (blockPos, block) -> {});
                 world.getFluidTickScheduler().tick(world.getTime(), 65536, (blockPos, fluid) -> {});
             }

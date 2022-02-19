@@ -35,7 +35,7 @@
   "depends": {
     "fabricloader": ">=0.12.5",
     "java": ">=17",
-    "minecraft": ">=1.18"
+    "minecraft": ">=1.19-Deep.Dark.Experimental.Snapshot.1"
   },
   "conflicts": {
   },
