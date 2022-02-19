@@ -1,7 +1,7 @@
 package com.ishland.c2me.mixin.optimization.reduce_allocs.noise;
 
 import net.minecraft.block.BlockState;
-import net.minecraft.world.gen.BlockSource;
+import net.minecraft.class_6910;
 import net.minecraft.world.gen.ChainedBlockSource;
 import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
 import org.jetbrains.annotations.Nullable;
@@ -18,11 +18,11 @@ import java.util.List;
 public class MixinChainedBlockSource {
 
     @Unique
-    private BlockSource[] samplersArray;
+    private ChunkNoiseSampler.BlockStateSampler[] samplersArray;
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    private void onInit(List<BlockSource> samplers, CallbackInfo ci) {
-        this.samplersArray = samplers.toArray(BlockSource[]::new);
+    private void onInit(List<ChunkNoiseSampler.BlockStateSampler> samplers, CallbackInfo ci) {
+        this.samplersArray = samplers.toArray(ChunkNoiseSampler.BlockStateSampler[]::new);
     }
 
     /**
@@ -30,10 +30,10 @@ public class MixinChainedBlockSource {
      * @reason reduce allocs using array
      */
     @Overwrite
-    public @Nullable BlockState apply(ChunkNoiseSampler chunkNoiseSampler, int i, int j, int k) {
+    public @Nullable BlockState sample(class_6910.class_6912 arg) {
         // TODO [VanillaCopy]
-        for (BlockSource blockSource : this.samplersArray) { // iterate array
-            BlockState blockState = blockSource.apply(chunkNoiseSampler, i, j, k);
+        for (ChunkNoiseSampler.BlockStateSampler blockStateSampler : this.samplersArray) {
+            BlockState blockState = blockStateSampler.sample(arg);
             if (blockState != null) {
                 return blockState;
             }

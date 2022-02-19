@@ -21,15 +21,15 @@ public class MixinNoiseChunkGenerator {
     @Mutable
     @Shadow @Final private AquiferSampler.FluidLevelSampler fluidLevelSampler;
 
-    @Inject(method = "<init>(Lnet/minecraft/util/registry/Registry;Lnet/minecraft/world/biome/source/BiomeSource;Lnet/minecraft/world/biome/source/BiomeSource;JLnet/minecraft/util/registry/RegistryEntry;)V", at = @At("RETURN"))
+    @Inject(method = "<init>(Lnet/minecraft/util/registry/Registry;Lnet/minecraft/util/registry/Registry;Lnet/minecraft/world/biome/source/BiomeSource;Lnet/minecraft/world/biome/source/BiomeSource;JLnet/minecraft/util/registry/RegistryEntry;)V", at = @At("RETURN"))
     private void modifyFluidLevelSampler(CallbackInfo ci) {
         // TODO [VanillaCopy]
         ChunkGeneratorSettings chunkGeneratorSettings = this.settings.value();
         AquiferSampler.FluidLevel fluidLevel = new AquiferSampler.FluidLevel(-54, Blocks.LAVA.getDefaultState());
-        int i = chunkGeneratorSettings.getSeaLevel();
-        AquiferSampler.FluidLevel fluidLevel2 = new AquiferSampler.FluidLevel(i, chunkGeneratorSettings.getDefaultFluid());
+        int i = chunkGeneratorSettings.seaLevel();
+        AquiferSampler.FluidLevel fluidLevel2 = new AquiferSampler.FluidLevel(i, chunkGeneratorSettings.defaultFluid());
         final int min = Math.min(-54, i);
-        this.fluidLevelSampler = (j, k, l) -> k < min ? fluidLevel : fluidLevel2; // reduce branching
+        this.fluidLevelSampler = (j, k, lx) -> k < min ? fluidLevel : fluidLevel2;
     }
 
 }

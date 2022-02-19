@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(BiomeSource.class)
 public class MixinBiomeSource {
 
-    @Redirect(method = {"getBiomesInArea", "locateBiome(IIIIILjava/util/function/Predicate;Ljava/util/Random;ZLnet/minecraft/world/biome/source/util/MultiNoiseUtil$MultiNoiseSampler;)Lnet/minecraft/util/math/BlockPos;"}, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/biome/source/BiomeSource;getBiome(IIILnet/minecraft/world/biome/source/util/MultiNoiseUtil$MultiNoiseSampler;)Lnet/minecraft/util/registry/RegistryEntry;"))
+    @Redirect(method = {"getBiomesInArea", "locateBiome(IIIIILjava/util/function/Predicate;Ljava/util/Random;ZLnet/minecraft/world/biome/source/util/MultiNoiseUtil$MultiNoiseSampler;)Lcom/mojang/datafixers/util/Pair;"}, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/biome/source/BiomeSource;getBiome(IIILnet/minecraft/world/biome/source/util/MultiNoiseUtil$MultiNoiseSampler;)Lnet/minecraft/util/registry/RegistryEntry;"))
     private RegistryEntry<Biome> redirectGetBiomeForNoiseGen(BiomeSource biomeSource, int biomeX, int biomeY, int biomeZ, MultiNoiseUtil.MultiNoiseSampler multiNoiseSampler) {
         if (biomeSource instanceof IGlobalBiomeCache globalBiomeCache) {
             return globalBiomeCache.getBiomeForNoiseGenFast(biomeX, biomeY, biomeZ, multiNoiseSampler);

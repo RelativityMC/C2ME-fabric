@@ -7,6 +7,7 @@ import com.mojang.logging.LogUtils;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.structure.processor.RuleStructureProcessor;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.world.BlockCollisionSpliterator;
 import net.minecraft.world.SpawnHelper;
 import net.minecraft.world.WorldView;
 import net.minecraft.world.gen.StructureAccessor;
@@ -49,8 +50,6 @@ public class StacktraceRecorder {
 
         private static final String StructureProcessor$process = FabricLoader.getInstance().getMappingResolver()
                 .mapMethodName("intermediary", "net.minecraft.class_3491", "method_15110", "(Lnet/minecraft/class_4538;Lnet/minecraft/class_2338;Lnet/minecraft/class_2338;Lnet/minecraft/class_3499$class_3501;Lnet/minecraft/class_3499$class_3501;Lnet/minecraft/class_3492;)Lnet/minecraft/class_3499$class_3501;");
-        private static final String BiomeAccess$Storage$getBiomeForNoiseGen = FabricLoader.getInstance().getMappingResolver()
-                .mapMethodName("intermediary", "net.minecraft.class_4543$class_4544", "method_16359", "(III)Lnet/minecraft/class_1959;");
         private static final String BlendingData$getBlendingData = FabricLoader.getInstance().getMappingResolver()
                 .mapMethodName("intermediary", "net.minecraft.class_6749", "method_39570", "(Lnet/minecraft/class_3233;II)Lnet/minecraft/class_6749;");
         private static final String ChunkGenerator$carve = FabricLoader.getInstance().getMappingResolver()
@@ -58,7 +57,11 @@ public class StacktraceRecorder {
         private static final String SpawnHelper$populateEntities = FabricLoader.getInstance().getMappingResolver()
                 .mapMethodName("intermediary", "net.minecraft.class_1948", "method_8661", "(Lnet/minecraft/class_5425;Lnet/minecraft/class_1959;Lnet/minecraft/class_1923;Ljava/util/Random;)V");
         private static final String StructureAccessor$getStructureStarts = FabricLoader.getInstance().getMappingResolver()
-                .mapMethodName("intermediary", "net.minecraft.class_5138", "method_38853", "(Lnet/minecraft/class_4076;Lnet/minecraft/class_3195;)Ljava/util/List;");
+                .mapMethodName("intermediary", "net.minecraft.class_5138", "method_38853", "(Lnet/minecraft/class_4076;Lnet/minecraft/class_5312;)Ljava/util/List;");
+        private static final String BiomeAccess$Storage$getBiomeForNoiseGen = FabricLoader.getInstance().getMappingResolver()
+                .mapMethodName("intermediary", "net.minecraft.class_4543$class_4544", "method_16359", "(III)Lnet/minecraft/class_6880;");
+        private static final String BlockCollisionSpliterator$getChunk = FabricLoader.getInstance().getMappingResolver()
+                .mapMethodName("intermediary", "net.minecraft.class_5329", "method_29283", "(II)Lnet/minecraft/class_1922;");
 
         @NotNull
         private final StackTraceElement[] stackTrace;
@@ -76,9 +79,6 @@ public class StacktraceRecorder {
                 if (stackTraceElement.getClassName().equals(RuleStructureProcessor.class.getName()) &&
                         stackTraceElement.getMethodName().equals(StructureProcessor$process))
                     return false;
-                if (stackTraceElement.getClassName().equals(WorldView.class.getName()) &&
-                        stackTraceElement.getMethodName().equals(BiomeAccess$Storage$getBiomeForNoiseGen))
-                    return false;
                 if (stackTraceElement.getClassName().equals(BlendingData.class.getName()) &&
                         stackTraceElement.getMethodName().equals(BlendingData$getBlendingData))
                     return false;
@@ -90,6 +90,12 @@ public class StacktraceRecorder {
                     return false;
                 if (stackTraceElement.getClassName().equals(StructureAccessor.class.getName()) &&
                         stackTraceElement.getMethodName().equals(StructureAccessor$getStructureStarts))
+                    return false;
+                if (stackTraceElement.getClassName().equals(WorldView.class.getName()) &&
+                        stackTraceElement.getMethodName().equals(BiomeAccess$Storage$getBiomeForNoiseGen))
+                    return false;
+                if (stackTraceElement.getClassName().equals(BlockCollisionSpliterator.class.getName()) &&
+                        stackTraceElement.getMethodName().equals(BlockCollisionSpliterator$getChunk))
                     return false;
 
                 // lithium

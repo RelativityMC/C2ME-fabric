@@ -1,7 +1,7 @@
 plugins {
     id 'java-library'
-    id 'fabric-loom' version '0.10-SNAPSHOT'
-    id 'io.github.juuxel.loom-quiltflower-mini' version '1.2.1'
+    id 'fabric-loom' version '0.11-SNAPSHOT'
+    id 'io.github.juuxel.loom-quiltflower' version '1.6.0'
     id 'maven-publish'
     id 'com.github.johnrengelman.shadow' version '7.1.0'
     id "me.champeau.jmh" version "0.6.6"
@@ -106,7 +106,6 @@ task("remapShadowJar", type: net.fabricmc.loom.task.RemapJarTask, dependsOn: sha
     input = shadowJar.archiveFile
     archiveFileName = shadowJar.archiveFileName.get().replaceAll("-dev\\.jar\$", ".jar")
     addNestedDependencies = true
-    remapAccessWidener = true
     project(":libs").afterEvaluate {
         dependsOn(project(":libs").assemble)
     }

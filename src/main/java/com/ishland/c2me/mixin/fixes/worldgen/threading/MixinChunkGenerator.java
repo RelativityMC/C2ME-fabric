@@ -2,6 +2,8 @@ package com.ishland.c2me.mixin.fixes.worldgen.threading;
 
 import net.minecraft.world.gen.chunk.ChunkGenerator;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(ChunkGenerator.class)
 public abstract class MixinChunkGenerator {
@@ -47,5 +49,28 @@ public abstract class MixinChunkGenerator {
 //            }
 //        }
 //    }
+
+    @Shadow private boolean field_37056;
+
+    @Shadow protected abstract void method_41057();
+
+    /**
+     * @author ishland
+     * @reason synchronize stronghold position generation
+     */
+    @Overwrite
+    private void method_41058() {
+        if (!this.field_37056) {
+            synchronized (this) {
+                if (!this.field_37056) {
+                    System.out.println("Initializing stronghold positions, this may take a while");
+                    this.method_41057();
+                    this.field_37056 = true;
+                    System.out.println("Stronghold positions initialized");
+                }
+            }
+        }
+
+    }
 
 }

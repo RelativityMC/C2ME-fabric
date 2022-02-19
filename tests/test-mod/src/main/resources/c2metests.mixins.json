@@ -30,6 +30,5 @@
   ],
   "injectors": {
     "defaultRequire": 1
-  },
-  "setSourceFile": true
+  }
 }

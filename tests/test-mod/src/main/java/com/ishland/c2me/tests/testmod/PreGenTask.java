@@ -8,24 +8,28 @@ import com.ibm.asyncutil.locks.AsyncSemaphore;
 import com.ibm.asyncutil.locks.FairAsyncSemaphore;
 import com.ishland.c2me.tests.testmod.mixin.IServerChunkManager;
 import com.ishland.c2me.tests.testmod.mixin.IThreadedAnvilChunkStorage;
+import com.mojang.datafixers.util.Pair;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ChunkTicketType;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.Unit;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryEntry;
+import net.minecraft.util.registry.RegistryEntryList;
+import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.ChunkStatus;
-import net.minecraft.world.gen.chunk.StructuresConfig;
-import net.minecraft.world.gen.feature.StructureFeature;
+import net.minecraft.world.gen.feature.ConfiguredStructureFeature;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -67,22 +71,22 @@ public class PreGenTask {
         final Registry<Biome> biomeRegistry = world.getRegistryManager().get(Registry.BIOME_KEY);
         final Set<RegistryEntry<Biome>> biomes =
                 world.getChunkManager().getChunkGenerator().getBiomeSource().getBiomes()
+                        .stream()
                         .filter(biomeclass_6880 -> biomeRegistry.getKey(biomeclass_6880.value()).isPresent())
                         .collect(Collectors.toCollection(HashSet::new));
-        final Set<StructureFeature<?>> structureFeatures = StructureFeature.STRUCTURES.values().stream()
-                .filter(structureFeature -> {
-                    final StructuresConfig structuresConfig = world.getChunkManager().getChunkGenerator().getStructuresConfig();
-                    return structuresConfig.getForType(structureFeature) != null && !structuresConfig.getConfiguredStructureFeature(structureFeature).isEmpty();
-                })
+        final Registry<ConfiguredStructureFeature<?, ?>> structureFeatureRegistry = world.getRegistryManager().get(Registry.CONFIGURED_STRUCTURE_FEATURE_KEY);
+        final Set<RegistryEntryList<ConfiguredStructureFeature<?, ?>>> structureFeatures = structureFeatureRegistry.getEntrySet().stream()
+                .filter(entry -> world.getChunkManager().getChunkGenerator().getBiomeSource().getBiomes().stream().anyMatch(entry.getValue().method_40549()::contains))
+                .flatMap(entry -> structureFeatureRegistry.getEntry(entry.getKey()).map(RegistryEntryList::of).stream())
                 .collect(Collectors.toSet());
         System.err.printf("Submitting tasks\n");
         final CompletableFuture<Void> biomeFuture = CompletableFuture.allOf(biomes.stream()
                 .map(biome -> CompletableFuture.runAsync(() -> {
                     //noinspection OptionalGetWithoutIsPresent
-                    final BlockPos blockPos = world.locateBiome(biomeRegistry.getKey(biome.value()).get(), spawnPos, SEARCH_RADIUS, 8);
+                    final Pair<BlockPos, RegistryEntry<Biome>> pair = world.locateBiome(entry -> biomeRegistry.getKey(biome.value()).get() == entry.getKey().get(), spawnPos, SEARCH_RADIUS, 8);
                     locatedBiomes.incrementAndGet();
-                    if (blockPos != null) {
-                        final ChunkPos chunkPos = new ChunkPos(blockPos);
+                    if (pair != null) {
+                        final ChunkPos chunkPos = new ChunkPos(pair.getFirst());
                         chunks.addAll(createPreGenChunks25(chunkPos, chunksHashed::add));
                         return;
                     }
@@ -90,14 +94,19 @@ public class PreGenTask {
                 }, EXECUTOR)).distinct().toArray(CompletableFuture[]::new));
         final CompletableFuture<Void> structureFuture = CompletableFuture.allOf(structureFeatures.stream()
                 .map(structureFeature -> CompletableFuture.runAsync(() -> {
-                    final BlockPos blockPos = world.locateStructure(structureFeature, spawnPos, SEARCH_RADIUS / 16, false);
+                    final Pair<BlockPos, RegistryEntry<ConfiguredStructureFeature<?, ?>>> pair = world.getChunkManager().getChunkGenerator().locateStructure(world, structureFeature, spawnPos, SEARCH_RADIUS / 16, false);
                     locatedStructures.incrementAndGet();
-                    if (blockPos != null) {
-                        final ChunkPos chunkPos = new ChunkPos(blockPos);
+                    if (pair != null) {
+                        final ChunkPos chunkPos = new ChunkPos(pair.getFirst());
                         chunks.addAll(createPreGenChunks25(chunkPos, chunksHashed::add));
                         return;
                     }
-                    LOGGER.info("Unable to locate structure {}", structureFeature.getName());
+                    LOGGER.info("Unable to locate structure {}", Arrays.toString(structureFeature.stream()
+                            .flatMap(entry -> entry.getKey().stream())
+                            .map(RegistryKey::getValue)
+                            .map(Identifier::toString)
+                            .toArray(String[]::new))
+                    );
                 }, EXECUTOR)).distinct().toArray(CompletableFuture[]::new));
         final CompletableFuture<Void> locateFuture = CompletableFuture.allOf(biomeFuture, structureFuture);
         long lastProgress = System.currentTimeMillis();

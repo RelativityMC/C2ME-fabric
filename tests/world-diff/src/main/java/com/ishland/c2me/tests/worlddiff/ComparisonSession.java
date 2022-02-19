@@ -11,7 +11,6 @@ import com.mojang.serialization.DynamicOps;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
-import net.minecraft.class_6903;
 import net.minecraft.class_6904;
 import net.minecraft.datafixer.Schemas;
 import net.minecraft.nbt.NbtCompound;
@@ -29,6 +28,7 @@ import net.minecraft.state.property.Property;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 import net.minecraft.util.WorldSavePath;
+import net.minecraft.util.dynamic.RegistryOps;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.ChunkSectionPos;
 import net.minecraft.util.registry.DynamicRegistryManager;
@@ -173,7 +173,7 @@ public class ComparisonSession implements Closeable {
 
     private static Map<ChunkSectionPos, ChunkSection> readSections(ChunkPos pos, NbtCompound chunkData, Registry<Biome> registry) {
         NbtList nbtList = chunkData.getList("sections", 10);
-        Codec<PalettedContainer<RegistryEntry<Biome>>> codec = PalettedContainer.createCodec(registry.method_40295(), registry.method_40294(), PalettedContainer.PaletteProvider.BIOME, registry.entryOf(BiomeKeys.PLAINS));
+        Codec<PalettedContainer<RegistryEntry<Biome>>> codec = PalettedContainer.createCodec(registry.getIndexedEntries(), registry.createEntryCodec(), PalettedContainer.PaletteProvider.BIOME, registry.entryOf(BiomeKeys.PLAINS));
         HashMap<ChunkSectionPos, ChunkSection> result = new HashMap<>();
         for (int i = 0; i < nbtList.size(); i++) {
             final NbtCompound sectionData = nbtList.getCompound(i);
@@ -194,7 +194,7 @@ public class ComparisonSession implements Closeable {
                             .promotePartial(s -> LOGGER.error("Recoverable errors when loading section [" + pos.x + ", " + y + ", " + pos.z + "]: " + s))
                             .getOrThrow(false, LOGGER::error);
                 } else {
-                    palettedContainer3 = new PalettedContainer<>(registry.method_40295(), registry.entryOf(BiomeKeys.PLAINS), PalettedContainer.PaletteProvider.BIOME);
+                    palettedContainer3 = new PalettedContainer<>(registry.getIndexedEntries(), registry.entryOf(BiomeKeys.PLAINS), PalettedContainer.PaletteProvider.BIOME);
                 }
                 ChunkSection chunkSection = new ChunkSection(y, palettedContainer, palettedContainer3);
                 chunkSection.calculateCounts();
@@ -230,11 +230,11 @@ public class ComparisonSession implements Closeable {
                                 return dataPackSettings == null ? DataPackSettings.SAFE_MODE : dataPackSettings;
                             },
                             (resourceManager, dataPackSettings) -> {
-                                DynamicRegistryManager.class_6893 lvx = DynamicRegistryManager.method_40314();
-                                DynamicOps<NbtElement> dynamicOps = class_6903.method_40412(NbtOps.INSTANCE, lvx, resourceManager);
+                                DynamicRegistryManager.Mutable lvx = DynamicRegistryManager.createAndLoad();
+                                DynamicOps<NbtElement> dynamicOps = RegistryOps.ofLoaded(NbtOps.INSTANCE, lvx, resourceManager);
                                 SaveProperties savePropertiesx = session.readLevelProperties(dynamicOps, dataPackSettings);
                                 if (savePropertiesx != null) {
-                                    return Pair.of(savePropertiesx, lvx.method_40316());
+                                    return Pair.of(savePropertiesx, lvx.toImmutable());
                                 } else {
                                     throw new RuntimeException("Failed to load level properties");
                                 }
@@ -254,7 +254,7 @@ public class ComparisonSession implements Closeable {
         }
 
         lv2.method_40428();
-        DynamicRegistryManager.class_6890 lv = lv2.registryAccess();
+        DynamicRegistryManager.Immutable lv = lv2.registryAccess();
 //        serverPropertiesLoader.getPropertiesHandler().getGeneratorOptions(lv);
         SaveProperties saveProperties = lv2.worldData();
         if (saveProperties == null) {
