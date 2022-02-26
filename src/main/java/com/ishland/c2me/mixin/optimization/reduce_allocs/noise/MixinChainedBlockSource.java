@@ -1,9 +1,9 @@
 package com.ishland.c2me.mixin.optimization.reduce_allocs.noise;
 
 import net.minecraft.block.BlockState;
-import net.minecraft.class_6910;
 import net.minecraft.world.gen.ChainedBlockSource;
 import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
+import net.minecraft.world.gen.densityfunction.DensityFunction;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -30,7 +30,7 @@ public class MixinChainedBlockSource {
      * @reason reduce allocs using array
      */
     @Overwrite
-    public @Nullable BlockState sample(class_6910.class_6912 arg) {
+    public @Nullable BlockState sample(DensityFunction.NoisePos arg) {
         // TODO [VanillaCopy]
         for (ChunkNoiseSampler.BlockStateSampler blockStateSampler : this.samplersArray) {
             BlockState blockState = blockStateSampler.sample(arg);

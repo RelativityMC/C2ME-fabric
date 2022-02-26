@@ -76,7 +76,7 @@ public class PreGenTask {
                         .collect(Collectors.toCollection(HashSet::new));
         final Registry<ConfiguredStructureFeature<?, ?>> structureFeatureRegistry = world.getRegistryManager().get(Registry.CONFIGURED_STRUCTURE_FEATURE_KEY);
         final Set<RegistryEntryList<ConfiguredStructureFeature<?, ?>>> structureFeatures = structureFeatureRegistry.getEntrySet().stream()
-                .filter(entry -> world.getChunkManager().getChunkGenerator().getBiomeSource().getBiomes().stream().anyMatch(entry.getValue().method_40549()::contains))
+                .filter(entry -> world.getChunkManager().getChunkGenerator().getBiomeSource().getBiomes().stream().anyMatch(entry.getValue().getBiomes()::contains))
                 .flatMap(entry -> structureFeatureRegistry.getEntry(entry.getKey()).map(RegistryEntryList::of).stream())
                 .collect(Collectors.toSet());
         System.err.printf("Submitting tasks\n");

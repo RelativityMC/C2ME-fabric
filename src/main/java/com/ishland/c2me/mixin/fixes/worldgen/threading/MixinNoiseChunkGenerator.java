@@ -1,6 +1,6 @@
 package com.ishland.c2me.mixin.fixes.worldgen.threading;
 
-import net.minecraft.class_7059;
+import net.minecraft.structure.StructureSet;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryEntryList;
 import net.minecraft.world.biome.source.BiomeSource;
@@ -12,7 +12,7 @@ import java.util.Optional;
 
 @Mixin(NoiseChunkGenerator.class)
 public abstract class MixinNoiseChunkGenerator extends ChunkGenerator {
-    public MixinNoiseChunkGenerator(Registry<class_7059> registry, Optional<RegistryEntryList<class_7059>> optional, BiomeSource biomeSource) {
+    public MixinNoiseChunkGenerator(Registry<StructureSet> registry, Optional<RegistryEntryList<StructureSet>> optional, BiomeSource biomeSource) {
         super(registry, optional, biomeSource);
     }
 

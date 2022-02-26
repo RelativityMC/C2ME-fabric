@@ -17,7 +17,7 @@ public class MixinThreadedAnvilChunkStorage {
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(CallbackInfo info) {
-        GlobalExecutors.executor.execute(() -> this.chunkGenerator.getConcentricRingsStartChunks(null));
+        GlobalExecutors.executor.execute(() -> this.chunkGenerator.method_41058());
     }
 
 }

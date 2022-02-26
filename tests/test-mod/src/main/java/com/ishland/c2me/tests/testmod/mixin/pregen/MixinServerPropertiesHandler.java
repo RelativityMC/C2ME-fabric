@@ -8,14 +8,12 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
-import java.io.IOException;
-
 @Mixin(ServerPropertiesHandler.class)
 public class MixinServerPropertiesHandler {
 
-    @Redirect(method = "getGeneratorOptions", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/gen/GeneratorOptions;fromProperties(Lnet/minecraft/util/registry/DynamicRegistryManager;Lnet/minecraft/server/dedicated/ServerPropertiesHandler$class_7044;)Lnet/minecraft/world/gen/GeneratorOptions;"))
-    private GeneratorOptions redirectGeneratorOptions(DynamicRegistryManager registryManager, ServerPropertiesHandler.class_7044 arg) throws IOException {
-        final GeneratorOptions generatorOptions = GeneratorOptions.fromProperties(registryManager, new ServerPropertiesHandler.class_7044(
+    @Redirect(method = "getGeneratorOptions", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/gen/GeneratorOptions;fromProperties(Lnet/minecraft/util/registry/DynamicRegistryManager;Lnet/minecraft/server/dedicated/ServerPropertiesHandler$WorldGenProperties;)Lnet/minecraft/world/gen/GeneratorOptions;"))
+    private GeneratorOptions redirectGeneratorOptions(DynamicRegistryManager registryManager, ServerPropertiesHandler.WorldGenProperties arg) {
+        final GeneratorOptions generatorOptions = GeneratorOptions.fromProperties(registryManager, new ServerPropertiesHandler.WorldGenProperties(
                 "c2metest",
                 new JsonObject(),
                 true,

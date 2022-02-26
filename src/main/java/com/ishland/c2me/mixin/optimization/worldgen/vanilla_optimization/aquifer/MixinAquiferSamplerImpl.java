@@ -3,12 +3,12 @@ package com.ishland.c2me.mixin.optimization.worldgen.vanilla_optimization.aquife
 import com.ishland.c2me.common.optimization.worldgen.random_instances.RandomUtils;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
-import net.minecraft.class_6910;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.gen.chunk.AquiferSampler;
 import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
+import net.minecraft.world.gen.densityfunction.DensityFunction;
 import net.minecraft.world.gen.random.AbstractRandom;
 import net.minecraft.world.gen.random.RandomDeriver;
 import org.jetbrains.annotations.Nullable;
@@ -76,19 +76,19 @@ public class MixinAquiferSamplerImpl {
 
     @Shadow
     @Final
-    private class_6910 barrierNoise;
+    private DensityFunction barrierNoise;
 
     @Shadow
     @Final
-    private class_6910 fluidLevelFloodednessNoise;
+    private DensityFunction fluidLevelFloodednessNoise;
 
     @Shadow
     @Final
-    private class_6910 fluidLevelSpreadNoise;
+    private DensityFunction fluidLevelSpreadNoise;
 
     @Shadow
     @Final
-    private class_6910 fluidTypeNoise;
+    private DensityFunction fluidTypeNoise;
 
     @Shadow
     @Final
@@ -115,7 +115,7 @@ public class MixinAquiferSamplerImpl {
      */
     @Overwrite
     @Nullable
-    public BlockState apply(class_6910.class_6912 arg, double d) {
+    public BlockState apply(DensityFunction.NoisePos arg, double d) {
         final int blockX = arg.blockX();
         final int blockY = arg.blockY();
         final int blockZ = arg.blockZ();
@@ -222,7 +222,7 @@ public class MixinAquiferSamplerImpl {
 
                                 double r2;
                                 if (!(q2 < -2.0) && !(q2 > 2.0)) {
-                                    double t2 = this.barrierNoise.method_40464(arg);
+                                    double t2 = this.barrierNoise.sample(arg);
                                     mutableDouble = t2;
                                     r2 = t2;
                                 } else {
@@ -267,7 +267,7 @@ public class MixinAquiferSamplerImpl {
                                         double r1;
                                         if (!(q1 < -2.0) && !(q1 > 2.0)) {
                                             if (Double.isNaN(mutableDouble)) {
-                                                double t1 = this.barrierNoise.method_40464(arg);
+                                                double t1 = this.barrierNoise.sample(arg);
                                                 mutableDouble = t1;
                                                 r1 = t1;
                                             } else {
@@ -313,7 +313,7 @@ public class MixinAquiferSamplerImpl {
                                         double r1;
                                         if (!(q1 < -2.0) && !(q1 > 2.0)) {
                                             if (Double.isNaN(mutableDouble)) {
-                                                double t1 = this.barrierNoise.method_40464(arg);
+                                                double t1 = this.barrierNoise.sample(arg);
                                                 mutableDouble = t1;
                                                 r1 = t1;
                                             } else {
@@ -408,7 +408,7 @@ public class MixinAquiferSamplerImpl {
 
         int s = l + 8 - j;
         double d = bl ? clampedLerpFromProgressInlined(s) : 0.0;
-        double e = MathHelper.clamp(this.fluidLevelFloodednessNoise.method_40464(new class_6910.class_6914(i, j, k)), -1.0, 1.0);
+        double e = MathHelper.clamp(this.fluidLevelFloodednessNoise.sample(new DensityFunction.UnblendedNoisePos(i, j, k)), -1.0, 1.0);
         double f = lerpFromProgressInlined(d, -0.3, 0.8);
         if (e > f) {
             return fluidLevel;
@@ -421,7 +421,7 @@ public class MixinAquiferSamplerImpl {
                 int x = Math.floorDiv(j, 40);
                 int y = Math.floorDiv(k, 16);
                 int z = x * 40 + 20;
-                double h = this.fluidLevelSpreadNoise.method_40464(new class_6910.class_6914(w, x, y)) * 10.0;
+                double h = this.fluidLevelSpreadNoise.sample(new DensityFunction.UnblendedNoisePos(w, x, y)) * 10.0;
                 int ab = MathHelper.roundDownToMultiple(h, 3);
                 int ac = z + ab;
                 int ad = Math.min(l, ac);
@@ -429,7 +429,7 @@ public class MixinAquiferSamplerImpl {
                     int ag = Math.floorDiv(i, 64);
                     int ah = Math.floorDiv(j, 40);
                     int ai = Math.floorDiv(k, 64);
-                    double aj = this.fluidTypeNoise.method_40464(new class_6910.class_6914(ag, ah, ai));
+                    double aj = this.fluidTypeNoise.sample(new DensityFunction.UnblendedNoisePos(ag, ah, ai));
                     if (Math.abs(aj) > 0.3) {
                         return new AquiferSampler.FluidLevel(ad, Blocks.LAVA.getDefaultState());
                     }

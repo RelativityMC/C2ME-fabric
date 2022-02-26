@@ -11,7 +11,6 @@ import com.mojang.serialization.DynamicOps;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
-import net.minecraft.class_6904;
 import net.minecraft.datafixer.Schemas;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
@@ -23,6 +22,7 @@ import net.minecraft.resource.ResourcePackManager;
 import net.minecraft.resource.ResourcePackSource;
 import net.minecraft.resource.ResourceType;
 import net.minecraft.resource.VanillaDataPackProvider;
+import net.minecraft.server.SaveLoader;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.state.property.Property;
 import net.minecraft.util.Identifier;
@@ -215,15 +215,15 @@ public class ComparisonSession implements Closeable {
                 new FileResourcePackProvider(session.getDirectory(WorldSavePath.DATAPACKS).toFile(), ResourcePackSource.PACK_SOURCE_WORLD)
         );
 
-        class_6904 lv2;
+        SaveLoader lv2;
         try {
-            class_6904.class_6906 lv = new class_6904.class_6906(
+            SaveLoader.FunctionLoaderConfig lv = new SaveLoader.FunctionLoaderConfig(
                     resourcePackManager,
                     CommandManager.RegistrationEnvironment.DEDICATED,
                     2,
                     false
             );
-            lv2 = class_6904.method_40431(
+            lv2 = SaveLoader.ofLoaded(
                             lv,
                             () -> {
                                 DataPackSettings dataPackSettings = session.getDataPackSettings();
@@ -232,7 +232,7 @@ public class ComparisonSession implements Closeable {
                             (resourceManager, dataPackSettings) -> {
                                 DynamicRegistryManager.Mutable lvx = DynamicRegistryManager.createAndLoad();
                                 DynamicOps<NbtElement> dynamicOps = RegistryOps.ofLoaded(NbtOps.INSTANCE, lvx, resourceManager);
-                                SaveProperties savePropertiesx = session.readLevelProperties(dynamicOps, dataPackSettings);
+                                SaveProperties savePropertiesx = session.readLevelProperties(dynamicOps, dataPackSettings, lvx.getRegistryLifecycle());
                                 if (savePropertiesx != null) {
                                     return Pair.of(savePropertiesx, lvx.toImmutable());
                                 } else {
@@ -253,10 +253,10 @@ public class ComparisonSession implements Closeable {
             throw new RuntimeException(var38);
         }
 
-        lv2.method_40428();
-        DynamicRegistryManager.Immutable lv = lv2.registryAccess();
+        lv2.refresh();
+        DynamicRegistryManager.Immutable lv = lv2.dynamicRegistryManager();
 //        serverPropertiesLoader.getPropertiesHandler().getGeneratorOptions(lv);
-        SaveProperties saveProperties = lv2.worldData();
+        SaveProperties saveProperties = lv2.saveProperties();
         if (saveProperties == null) {
             resourcePackManager.close();
             throw new FileNotFoundException();

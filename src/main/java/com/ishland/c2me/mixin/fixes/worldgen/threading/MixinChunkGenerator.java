@@ -59,7 +59,7 @@ public abstract class MixinChunkGenerator {
      * @reason synchronize stronghold position generation
      */
     @Overwrite
-    private void method_41058() {
+    public void method_41058() {
         if (!this.field_37056) {
             synchronized (this) {
                 if (!this.field_37056) {
