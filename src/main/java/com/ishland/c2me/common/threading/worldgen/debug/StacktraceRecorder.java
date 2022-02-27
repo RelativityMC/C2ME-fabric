@@ -56,8 +56,8 @@ public class StacktraceRecorder {
                 .mapMethodName("intermediary", "net.minecraft.class_2794", "method_12108", "(Lnet/minecraft/class_3233;JLnet/minecraft/class_4543;Lnet/minecraft/class_5138;Lnet/minecraft/class_2791;Lnet/minecraft/class_2893$class_2894;)V");
         private static final String SpawnHelper$populateEntities = FabricLoader.getInstance().getMappingResolver()
                 .mapMethodName("intermediary", "net.minecraft.class_1948", "method_8661", "(Lnet/minecraft/class_5425;Lnet/minecraft/class_1959;Lnet/minecraft/class_1923;Ljava/util/Random;)V");
-        private static final String StructureAccessor$getStructureStarts = FabricLoader.getInstance().getMappingResolver()
-                .mapMethodName("intermediary", "net.minecraft.class_5138", "method_38853", "(Lnet/minecraft/class_4076;Lnet/minecraft/class_5312;)Ljava/util/List;");
+        private static final String StructureAccessor$method_41032 = FabricLoader.getInstance().getMappingResolver()
+                .mapMethodName("intermediary", "net.minecraft.class_5138", "method_41032", "(Lnet/minecraft/class_4076;Lnet/minecraft/class_5312;)Ljava/util/List;");
         private static final String BiomeAccess$Storage$getBiomeForNoiseGen = FabricLoader.getInstance().getMappingResolver()
                 .mapMethodName("intermediary", "net.minecraft.class_4543$class_4544", "method_16359", "(III)Lnet/minecraft/class_6880;");
         private static final String BlockCollisionSpliterator$getChunk = FabricLoader.getInstance().getMappingResolver()
@@ -89,7 +89,7 @@ public class StacktraceRecorder {
                         stackTraceElement.getMethodName().equals(SpawnHelper$populateEntities))
                     return false;
                 if (stackTraceElement.getClassName().equals(StructureAccessor.class.getName()) &&
-                        stackTraceElement.getMethodName().equals(StructureAccessor$getStructureStarts))
+                        stackTraceElement.getMethodName().equals(StructureAccessor$method_41032))
                     return false;
                 if (stackTraceElement.getClassName().equals(WorldView.class.getName()) &&
                         stackTraceElement.getMethodName().equals(BiomeAccess$Storage$getBiomeForNoiseGen))
