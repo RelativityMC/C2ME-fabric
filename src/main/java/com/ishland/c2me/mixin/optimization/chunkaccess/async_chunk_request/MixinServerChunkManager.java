@@ -1,6 +1,6 @@
 package com.ishland.c2me.mixin.optimization.chunkaccess.async_chunk_request;
 
-import com.ishland.c2me.common.util.CFUtil;
+import com.ishland.c2me.base.common.util.CFUtil;
 import com.mojang.datafixers.util.Either;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ChunkTicketManager;

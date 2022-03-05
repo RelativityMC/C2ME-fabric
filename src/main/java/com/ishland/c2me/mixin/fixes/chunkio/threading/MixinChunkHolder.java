@@ -1,6 +1,6 @@
 package com.ishland.c2me.mixin.fixes.chunkio.threading;
 
-import com.ishland.c2me.mixin.access.IThreadedAnvilChunkStorage;
+import com.ishland.c2me.base.mixin.access.IThreadedAnvilChunkStorage;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;
 import org.spongepowered.asm.mixin.Mixin;

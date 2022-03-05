@@ -1,10 +1,10 @@
 package com.ishland.c2me.common.optimization.worldgen.random_instances;
 
-import com.ishland.c2me.mixin.access.IAtomicSimpleRandomDeriver;
-import com.ishland.c2me.mixin.access.ISimpleRandom;
-import com.ishland.c2me.mixin.access.IXoroshiro128PlusPlusRandom;
-import com.ishland.c2me.mixin.access.IXoroshiro128PlusPlusRandomDeriver;
-import com.ishland.c2me.mixin.access.IXoroshiro128PlusPlusRandomImpl;
+import com.ishland.c2me.base.mixin.access.IAtomicSimpleRandomDeriver;
+import com.ishland.c2me.base.mixin.access.ISimpleRandom;
+import com.ishland.c2me.base.mixin.access.IXoroshiro128PlusPlusRandom;
+import com.ishland.c2me.base.mixin.access.IXoroshiro128PlusPlusRandomDeriver;
+import com.ishland.c2me.base.mixin.access.IXoroshiro128PlusPlusRandomImpl;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.gen.random.AbstractRandom;
 import net.minecraft.world.gen.random.AtomicSimpleRandom;

@@ -1,6 +1,6 @@
 package com.ishland.c2me.common.notickvd;
 
-import com.ishland.c2me.common.threading.scheduler.SchedulerThread;
+import com.ishland.c2me.base.common.scheduler.SchedulerThread;
 import it.unimi.dsi.fastutil.longs.LongIterator;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;

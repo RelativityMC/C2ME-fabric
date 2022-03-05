@@ -1,6 +1,6 @@
 package com.ishland.c2me.mixin.fixes.worldgen.threading;
 
-import com.ishland.c2me.common.GlobalExecutors;
+import com.ishland.c2me.base.common.GlobalExecutors;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;
 import net.minecraft.world.gen.chunk.ChunkGenerator;
 import org.spongepowered.asm.mixin.Mixin;

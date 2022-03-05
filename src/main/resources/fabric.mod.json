@@ -5,12 +5,12 @@
   "name": "Concurrent Chunk Management Engine",
   "description": "A Fabric mod designed to improve the chunk performance of Minecraft.",
   "authors": [
-    "ishlandbukkit",
+    "RelativityMC",
     "ishland"
   ],
   "contact": {
-    "sources": "https://github.com/ishlandbukkit/C2ME-fabric",
-    "issues": "https://github.com/ishlandbukkit/C2ME-fabric/issues",
+    "sources": "https://github.com/RelativityMC/C2ME-fabric",
+    "issues": "https://github.com/RelativityMC/C2ME-fabric/issues",
     "discord": "https://discord.io/ishlandbukkit",
     "homepage": "https://modrinth.com/mod/c2me-fabric"
   },

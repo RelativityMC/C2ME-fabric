@@ -1,13 +1,13 @@
 package com.ishland.c2me.mixin.threading.chunkio;
 
 import com.ibm.asyncutil.locks.AsyncNamedLock;
-import com.ishland.c2me.common.GlobalExecutors;
+import com.ishland.c2me.base.common.GlobalExecutors;
 import com.ishland.c2me.common.threading.chunkio.AsyncSerializationManager;
 import com.ishland.c2me.common.threading.chunkio.ChunkIoMainThreadTaskUtils;
 import com.ishland.c2me.common.threading.chunkio.IAsyncChunkStorage;
 import com.ishland.c2me.common.threading.chunkio.ISerializingRegionBasedStorage;
 import com.ishland.c2me.common.threading.chunkio.TaskCancellationException;
-import com.ishland.c2me.common.util.SneakyThrow;
+import com.ishland.c2me.base.common.util.SneakyThrow;
 import com.mojang.datafixers.DataFixer;
 import com.mojang.datafixers.util.Either;
 import net.minecraft.nbt.NbtCompound;

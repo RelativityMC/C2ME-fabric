@@ -2,8 +2,8 @@ package com.ishland.c2me.common.command;
 
 import com.ishland.c2me.common.config.C2MEConfig;
 import com.ishland.c2me.common.notickvd.IChunkTicketManager;
-import com.ishland.c2me.common.util.FilteringIterable;
-import com.ishland.c2me.mixin.access.IServerChunkManager;
+import com.ishland.c2me.base.common.util.FilteringIterable;
+import com.ishland.c2me.base.mixin.access.IServerChunkManager;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.context.CommandContext;
 import it.unimi.dsi.fastutil.longs.LongSet;

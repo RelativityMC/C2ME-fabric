@@ -1,6 +1,6 @@
 package com.ishland.c2me.mixin.threading.async_scheduling;
 
-import com.ishland.c2me.common.GlobalExecutors;
+import com.ishland.c2me.base.common.GlobalExecutors;
 import com.mojang.datafixers.util.Either;
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 import net.minecraft.server.world.ChunkHolder;

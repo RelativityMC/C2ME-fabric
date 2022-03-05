@@ -1,7 +1,7 @@
 package com.ishland.c2me.common.optimization.worldgen.global_biome_cache;
 
-import com.ishland.c2me.common.util.ListIndexedIterable;
-import com.ishland.c2me.mixin.access.IMultiNoiseBiomeSource;
+import com.ishland.c2me.base.common.util.ListIndexedIterable;
+import com.ishland.c2me.base.mixin.access.IMultiNoiseBiomeSource;
 import com.mojang.datafixers.util.Pair;
 import net.minecraft.util.math.ChunkSectionPos;
 import net.minecraft.util.registry.RegistryEntry;

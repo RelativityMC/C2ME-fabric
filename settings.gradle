@@ -12,7 +12,7 @@ pluginManagement {
     }
 }
 
-rootProject.name = "C2ME-fabric" // avoid weirdness when building the project using another directory name
+rootProject.name = "c2me" // avoid weirdness when building the project using another directory name
 
 include 'tests'
 include 'tests:test-mod'
@@ -24,11 +24,28 @@ include 'tests:c2me-test'
 include 'tests:world-diff'
 // include 'tests:c2me-modpack-devlaunch'
 //include 'tests:c2me-aof-devlaunch'
-include 'compatibility'
-// include 'compatibility:terra'
-// include 'compatibility:betterend'
-// include 'compatibility:betternether'
-// include 'compatibility:thebumblezone'
-//include 'compatibility:charm'
-include 'libs'
+//include 'libs'
+
+include 'c2me-base'
+include 'c2me-threading-worldgen'
+include 'c2me-threading-chunkio'
+include 'c2me-threading-scheduling'
+include 'c2me-threading-lighting'
+include 'c2me-fixes-chunkio-threading-issues'
+include 'c2me-fixes-general-threading-issues'
+include 'c2me-fixes-worldgen-threading-issues'
+include 'c2me-fixes-worldgen-deadlocks'
+include 'c2me-fixes-worldgen-graal'
+include 'c2me-fixes-worldgen-vanilla-bugs'
+include 'c2me-opts-worldgen-vanilla'
+include 'c2me-opts-worldgen-biome-cache'
+include 'c2me-opts-worldgen-general'
+include 'c2me-opts-allocs'
+include 'c2me-opts-math'
+include 'c2me-opts-scheduling'
+include 'c2me-opts-chunkio'
+include 'c2me-opts-chunk-access'
+include 'c2me-rewrites-chunkio'
+include 'c2me-server-utils'
+include 'c2me-client-uncapvd'
 

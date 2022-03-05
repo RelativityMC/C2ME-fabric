@@ -1,8 +1,8 @@
 package com.ishland.c2me.mixin.optimization.worldgen.global_biome_cache;
 
-import com.ishland.c2me.common.GlobalExecutors;
+import com.ishland.c2me.base.common.GlobalExecutors;
 import com.ishland.c2me.common.optimization.worldgen.global_biome_cache.IGlobalBiomeCache;
-import com.ishland.c2me.common.util.PalettedContainerUtil;
+import com.ishland.c2me.base.common.util.PalettedContainerUtil;
 import com.mojang.datafixers.util.Either;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;

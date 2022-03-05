@@ -1,8 +1,0 @@
-{
-  "parent": "c2me-compat.mixins.json",
-  "package": "com.ishland.c2me.compatibility.mixin.charm",
-  "mixins": [
-    "MixinCharmDataBlockProcessor",
-    "MixinCharmStructure"
-  ]
-}

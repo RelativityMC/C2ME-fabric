@@ -5,7 +5,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.ishland.c2me.common.config.ConfigUtils;
-import com.ishland.c2me.common.util.UrlUtil;
+import com.ishland.c2me.base.common.util.UrlUtil;
 import com.ishland.c2me.compatibility.common.asm.ASMTransformer;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;

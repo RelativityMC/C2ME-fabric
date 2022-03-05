@@ -1,6 +1,6 @@
 package com.ishland.c2me.common.fixes;
 
-import com.ishland.c2me.common.util.UrlUtil;
+import com.ishland.c2me.base.common.util.UrlUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

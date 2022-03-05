@@ -1,7 +1,7 @@
 package com.ishland.c2me.common.notickvd;
 
 import com.ishland.c2me.common.config.C2MEConfig;
-import com.ishland.c2me.mixin.access.IChunkTicketManager;
+import com.ishland.c2me.base.mixin.access.IChunkTicketManager;
 import com.mojang.logging.LogUtils;
 import it.unimi.dsi.fastutil.longs.Long2BooleanLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2BooleanMap;

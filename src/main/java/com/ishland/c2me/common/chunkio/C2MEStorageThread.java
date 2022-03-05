@@ -1,9 +1,9 @@
 package com.ishland.c2me.common.chunkio;
 
-import com.ishland.c2me.common.GlobalExecutors;
+import com.ishland.c2me.base.common.GlobalExecutors;
+import com.ishland.c2me.base.common.util.SneakyThrow;
 import com.ishland.c2me.common.config.C2MEConfigConstants;
-import com.ishland.c2me.common.util.SneakyThrow;
-import com.ishland.c2me.mixin.access.IRegionFile;
+import com.ishland.c2me.base.mixin.access.IRegionFile;
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;

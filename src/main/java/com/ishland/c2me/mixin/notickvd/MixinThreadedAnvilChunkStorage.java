@@ -2,7 +2,7 @@ package com.ishland.c2me.mixin.notickvd;
 
 import com.ishland.c2me.common.config.C2MEConfig;
 import com.ishland.c2me.common.notickvd.IChunkHolder;
-import com.ishland.c2me.mixin.access.IServerChunkManager;
+import com.ishland.c2me.base.mixin.access.IServerChunkManager;
 import com.mojang.datafixers.util.Either;
 import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
 import net.minecraft.server.network.ServerPlayerEntity;

@@ -1,7 +1,7 @@
 package com.ishland.c2me.mixin.optimization.chunkscheduling.fix_unload;
 
 import com.ishland.c2me.common.structs.LongHashSet;
-import com.ishland.c2me.common.util.ShouldKeepTickingUtils;
+import com.ishland.c2me.base.common.util.ShouldKeepTickingUtils;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;
 import net.minecraft.util.thread.ThreadExecutor;

@@ -1,6 +1,6 @@
 package com.ishland.c2me.mixin.fixes.worldgen.deadlocks;
 
-import com.ishland.c2me.common.util.CFUtil;
+import com.ishland.c2me.base.common.util.CFUtil;
 import com.mojang.datafixers.types.Type;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
