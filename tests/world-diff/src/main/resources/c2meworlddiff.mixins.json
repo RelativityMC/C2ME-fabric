@@ -5,6 +5,7 @@
   "compatibilityLevel": "JAVA_16",
   "mixinPriority": 1100,
   "mixins": [
+    "IChunkSerializer",
     "IDynamicRegistryManager",
     "IStorageIoWorker",
     "IWorldUpdater",

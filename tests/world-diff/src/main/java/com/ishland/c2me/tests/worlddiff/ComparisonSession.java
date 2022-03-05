@@ -3,6 +3,7 @@ package com.ishland.c2me.tests.worlddiff;
 import com.google.common.collect.ImmutableSet;
 import com.ibm.asyncutil.locks.AsyncSemaphore;
 import com.ibm.asyncutil.locks.FairAsyncSemaphore;
+import com.ishland.c2me.tests.worlddiff.mixin.IChunkSerializer;
 import com.ishland.c2me.tests.worlddiff.mixin.IStorageIoWorker;
 import com.ishland.c2me.tests.worlddiff.mixin.IWorldUpdater;
 import com.mojang.datafixers.util.Pair;
@@ -18,6 +19,7 @@ import net.minecraft.nbt.NbtList;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.resource.DataPackSettings;
 import net.minecraft.resource.FileResourcePackProvider;
+import net.minecraft.resource.ResourceManager;
 import net.minecraft.resource.ResourcePackManager;
 import net.minecraft.resource.ResourcePackSource;
 import net.minecraft.resource.ResourceType;
@@ -25,6 +27,9 @@ import net.minecraft.resource.VanillaDataPackProvider;
 import net.minecraft.server.SaveLoader;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.state.property.Property;
+import net.minecraft.structure.StructureContext;
+import net.minecraft.structure.StructureManager;
+import net.minecraft.structure.StructureStart;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 import net.minecraft.util.WorldSavePath;
@@ -43,6 +48,7 @@ import net.minecraft.world.biome.BiomeKeys;
 import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.PalettedContainer;
+import net.minecraft.world.gen.feature.ConfiguredStructureFeature;
 import net.minecraft.world.level.storage.LevelStorage;
 import net.minecraft.world.storage.StorageIoWorker;
 import net.minecraft.world.updater.WorldUpdater;
@@ -95,6 +101,14 @@ public class ComparisonSession implements Closeable {
             final int totalChunks = chunks.size();
             final StorageIoWorker regionBaseIo = baseWorld.regionIoWorkers.get(world);
             final StorageIoWorker regionTargetIo = targetWorld.regionIoWorkers.get(world);
+            final StructureContext baseStructureContext = new StructureContext(baseWorld.resourceManager, baseWorld.dynamicRegistryManager, baseWorld.structureManager);
+            final StructureContext targetStructureContext = new StructureContext(targetWorld.resourceManager, targetWorld.dynamicRegistryManager, targetWorld.structureManager);
+//            final Function<ConfiguredStructureFeature<?, ?>, ConcurrentHashMap<ChunkPos, ArrayList<StructureStart>>> newConcurrentHashMap = k -> new ConcurrentHashMap<>();
+//            final Function<ChunkPos, ArrayList<StructureStart>> newArrayList = k -> new ArrayList<>();
+//            ConcurrentHashMap<ConfiguredStructureFeature<?, ?>, ConcurrentHashMap<ChunkPos, ArrayList<StructureStart>>> baseStructureStarts = new ConcurrentHashMap<>();
+//            ConcurrentHashMap<ConfiguredStructureFeature<?, ?>, ConcurrentHashMap<ChunkPos, ArrayList<StructureStart>>> targetStructureStarts = new ConcurrentHashMap<>();
+            final Registry<ConfiguredStructureFeature<?, ?>> baseStructureFeatureRegistry = baseWorld.dynamicRegistryManager.get(Registry.CONFIGURED_STRUCTURE_FEATURE_KEY);
+            final Registry<ConfiguredStructureFeature<?, ?>> targetStructureFeatureRegistry = targetWorld.dynamicRegistryManager.get(Registry.CONFIGURED_STRUCTURE_FEATURE_KEY);
             AtomicLong completedChunks = new AtomicLong();
             AtomicLong completedBlocks = new AtomicLong();
             AtomicLong differenceBlocks = new AtomicLong();
@@ -106,6 +120,23 @@ public class ComparisonSession implements Closeable {
                                     if (ChunkSerializer.getChunkType(chunkDataBase) == ChunkStatus.ChunkType.PROTOCHUNK
                                             || ChunkSerializer.getChunkType(chunkDataBase) == ChunkStatus.ChunkType.PROTOCHUNK)
                                         return null;
+
+                                    final Map<ConfiguredStructureFeature<?, ?>, StructureStart> baseStructures = IChunkSerializer.invokeReadStructureStarts(baseStructureContext, chunkDataBase.getCompound("structures"), baseWorld.saveProperties.getGeneratorOptions().getSeed());
+//                                            .forEach((configuredStructureFeature, structureStart) -> baseStructureStarts.computeIfAbsent(configuredStructureFeature, newConcurrentHashMap).computeIfAbsent(structureStart.getPos(), newArrayList).add(structureStart));
+                                    final Map<ConfiguredStructureFeature<?, ?>, StructureStart> targetStructures = IChunkSerializer.invokeReadStructureStarts(targetStructureContext, chunkDataTarget.getCompound("structures"), targetWorld.saveProperties.getGeneratorOptions().getSeed());
+//                                            .forEach((configuredStructureFeature, structureStart) -> targetStructureStarts.computeIfAbsent(configuredStructureFeature, newConcurrentHashMap).computeIfAbsent(structureStart.getPos(), newArrayList).add(structureStart));
+
+                                    baseStructures.forEach((configuredStructureFeature, baseStructureStart) -> {
+                                        final Identifier id = baseStructureFeatureRegistry.getId(configuredStructureFeature);
+                                        final StructureStart targetStructureStart = targetStructures.get(targetStructureFeatureRegistry.get(id));
+                                        if (targetStructureStart == null) System.out.printf("%s not found in target world in chunk %s\n", id, pos);
+                                    });
+                                    targetStructures.forEach((configuredStructureFeature, targetStructureStart) -> {
+                                        final Identifier id = targetStructureFeatureRegistry.getId(configuredStructureFeature);
+                                        final StructureStart baseStructureStart = baseStructures.get(baseStructureFeatureRegistry.get(id));
+                                        if (baseStructureStart == null) System.out.printf("%s not found in base world in chunk %s\n", id, pos);
+                                    });
+
                                     final Map<ChunkSectionPos, ChunkSection> sectionsBase = readSections(pos, chunkDataBase, baseWorld.dynamicRegistryManager.get(Registry.BIOME_KEY));
                                     final Map<ChunkSectionPos, ChunkSection> sectionsTarget = readSections(pos, chunkDataTarget, baseWorld.dynamicRegistryManager.get(Registry.BIOME_KEY));
                                     sectionsBase.forEach((chunkSectionPos, chunkSectionBase) -> {
@@ -149,6 +180,9 @@ public class ComparisonSession implements Closeable {
                 } catch (InterruptedException ignored) {
                 }
             }
+
+
+
             System.err.printf("Comparison completed for %s: block state differences: %d / %d (%.4f%%)\n",
                     world, differenceBlocks.get(), completedBlocks.get(), differenceBlocks.get() / completedBlocks.floatValue() * 100.0);
             System.err.print(blockDifference + "\n");
@@ -215,7 +249,7 @@ public class ComparisonSession implements Closeable {
                 new FileResourcePackProvider(session.getDirectory(WorldSavePath.DATAPACKS).toFile(), ResourcePackSource.PACK_SOURCE_WORLD)
         );
 
-        SaveLoader lv2;
+        SaveLoader saveLoader;
         try {
             SaveLoader.FunctionLoaderConfig lv = new SaveLoader.FunctionLoaderConfig(
                     resourcePackManager,
@@ -223,7 +257,7 @@ public class ComparisonSession implements Closeable {
                     2,
                     false
             );
-            lv2 = SaveLoader.ofLoaded(
+            saveLoader = SaveLoader.ofLoaded(
                             lv,
                             () -> {
                                 DataPackSettings dataPackSettings = session.getDataPackSettings();
@@ -253,10 +287,10 @@ public class ComparisonSession implements Closeable {
             throw new RuntimeException(var38);
         }
 
-        lv2.refresh();
-        DynamicRegistryManager.Immutable lv = lv2.dynamicRegistryManager();
-//        serverPropertiesLoader.getPropertiesHandler().getGeneratorOptions(lv);
-        SaveProperties saveProperties = lv2.saveProperties();
+        saveLoader.refresh();
+        DynamicRegistryManager.Immutable registryManager = saveLoader.dynamicRegistryManager();
+//        serverPropertiesLoader.getPropertiesHandler().getGeneratorOptions(registryManager);
+        SaveProperties saveProperties = saveLoader.saveProperties();
         if (saveProperties == null) {
             resourcePackManager.close();
             throw new FileNotFoundException();
@@ -277,26 +311,40 @@ public class ComparisonSession implements Closeable {
             poiIoWorkers.put(world, new StorageIoWorker(session.getWorldDirectory(world).resolve("poi"), true, "poi") {
             });
         }
-        return new WorldHandle(chunkPosesMap, regionIoWorkers, poiIoWorkers, lv, () -> {
-            System.out.println("Shutting down IOWorkers...");
-            Stream.concat(regionIoWorkers.values().stream(), poiIoWorkers.values().stream()).forEach(storageIoWorker -> {
-                storageIoWorker.completeAll(true).join();
-                try {
-                    storageIoWorker.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
+        return new WorldHandle(
+                chunkPosesMap,
+                regionIoWorkers,
+                poiIoWorkers,
+                saveProperties,
+                new StructureManager(saveLoader.resourceManager(), session, Schemas.getFixer()),
+                saveLoader.resourceManager(),
+                resourcePackManager,
+                registryManager,
+                () -> {
+                    System.out.println("Shutting down IOWorkers...");
+                    Stream.concat(regionIoWorkers.values().stream(), poiIoWorkers.values().stream()).forEach(storageIoWorker -> {
+                        storageIoWorker.completeAll(true).join();
+                        try {
+                            storageIoWorker.close();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    });
+                    System.out.println("Closing world");
+                    resourcePackManager.close();
+                    session.close();
+                    System.out.println("World closed");
                 }
-            });
-            System.out.println("Closing world");
-            resourcePackManager.close();
-            session.close();
-            System.out.println("World closed");
-        });
+        );
     }
 
     public record WorldHandle(HashMap<RegistryKey<World>, List<ChunkPos>> chunkPosesMap,
                               HashMap<RegistryKey<World>, StorageIoWorker> regionIoWorkers,
                               HashMap<RegistryKey<World>, StorageIoWorker> poiIoWorkers,
+                              SaveProperties saveProperties,
+                              StructureManager structureManager,
+                              ResourceManager resourceManager,
+                              ResourcePackManager resourcePackManager,
                               DynamicRegistryManager dynamicRegistryManager,
                               Closeable handle) {
     }
