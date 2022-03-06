@@ -1,19 +1,19 @@
 {
   "schemaVersion": 1,
-  "id": "c2me-rewrites-chunkio",
+  "id": "c2me-opts-chunk-access",
   "version": "${version}",
-  "name": "Concurrent Chunk Management Engine (Rewrites/Chunk IO)",
-  "description": "Optimizations for chunk IO",
+  "name": "Concurrent Chunk Management Engine (Optimizations/Chunk Access)",
+  "description": "Optimizations related to chunk access",
   "environment": "*",
   "mixins": [
-    "c2me-opts-chunkio.mixins.json"
+    "c2me-opts-chunk-access.mixins.json"
   ],
   "depends": {
     "minecraft": "*",
     "fabricloader": "*",
     "c2me-base": "*"
   },
-  "accessWidener": "c2me-opts-chunkio.accesswidener",
+  "accessWidener": "c2me-opts-chunk-access.accesswidener",
 
   "authors": [
     "RelativityMC",
