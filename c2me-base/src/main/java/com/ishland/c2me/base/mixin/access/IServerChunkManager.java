@@ -11,4 +11,7 @@ public interface IServerChunkManager {
     @Accessor
     ChunkTicketManager getTicketManager();
 
+    @Accessor
+    ServerChunkManager.MainThreadExecutor getMainThreadExecutor();
+
 }

@@ -1,6 +1,7 @@
 package com.ishland.c2me.base.common.config;
 
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
+import com.google.common.base.Preconditions;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 import net.fabricmc.loader.api.Version;
@@ -15,6 +16,8 @@ import java.util.function.Supplier;
 public class ConfigSystem {
 
     static final Logger LOGGER = LoggerFactory.getLogger("C2ME Config System");
+
+    private static final long CURRENT_CONFIG_VERSION = 3;
 
     private static final Supplier<CommentedFileConfig> configSupplier =
             () -> CommentedFileConfig.builder(FabricLoader.getInstance().getConfigDir().resolve("c2me.toml"))
@@ -32,6 +35,10 @@ public class ConfigSystem {
             config = configSupplier.get();
             config.save();
         }
+
+        Updaters.update(config);
+        Preconditions.checkArgument(config.getInt("version") == CURRENT_CONFIG_VERSION, "Config version mismatch");
+
         CONFIG = config;
     }
 

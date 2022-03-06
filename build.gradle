@@ -14,15 +14,18 @@ static def moduleDependencies(project, List<String> depNames) {
     }
 }
 
-allprojects {
-    archivesBaseName = "${project.name}-mc${project.minecraft_version}"
-    group = project.maven_group
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
-    version = project.mod_version + "." + getVersionSuffix()
+configure(allprojects) {
+    apply plugin: 'java'
+    apply plugin: 'java-library'
+
+    it.archivesBaseName = "${it.name}-mc${project.minecraft_version}"
+    it.group = project.maven_group
+    it.sourceCompatibility = JavaVersion.VERSION_17
+    it.targetCompatibility = JavaVersion.VERSION_17
+    it.version = project.mod_version + "." + getVersionSuffix()
 
     afterEvaluate {
-        if (plugins.hasPlugin("fabric-loom")) {
+        if (it.plugins.hasPlugin("fabric-loom")) {
             migrateMappings.configure {
                 outputDir = project.file("src/main/java")
             }
@@ -30,12 +33,13 @@ allprojects {
     }
 }
 
+archivesBaseName = "${project.archives_base_name}-mc${project.minecraft_version}"
+
 configure (allprojects - project(":tests")) {
-    if (project != rootProject && project.parent != rootProject) return
+    if (project != project(":") && project.parent != project(":")) return
 
     apply plugin: 'fabric-loom'
     apply plugin: 'io.github.juuxel.loom-quiltflower'
-    apply plugin: 'java-library'
     apply plugin: 'maven-publish'
 
     sourceSets {
@@ -63,7 +67,6 @@ configure (allprojects - project(":tests")) {
     loom {
         def awFile = file("src/main/resources/${project.name}.accesswidener")
         if (awFile.isFile()) {
-            project.logger.lifecycle("Adding " + awFile)
             accessWidenerPath = awFile
         }
 
@@ -146,6 +149,7 @@ dependencies {
 //    include project(":libs")
     include implementation("com.ibm.async:asyncutil:${async_util_version}")
     include implementation("com.electronwill.night-config:toml:${night_config_version}")
+    include implementation("com.electronwill.night-config:core:${night_config_version}")
     include implementation("org.threadly:threadly:${threadly_version}")
 
     // PSA: Some older mods, compiled on Loom 0.2.1, might have outdated Maven POMs.
@@ -173,7 +177,7 @@ subprojects.forEach { remapJar.dependsOn("${it.path}:remapJar") }
 dependencies {
     afterEvaluate {
         (subprojects - project(":tests")).forEach {
-            if (it.parent != rootProject) return
+            if (it.parent != project(":")) return
 
             api project(path: ":${it.name}", configuration: "namedElements")
             include project("${it.name}:")

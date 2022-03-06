@@ -1,3 +1,4 @@
 accessWidener v1 named
 
 accessible    class    net/minecraft/server/world/ChunkTicketManager$NearbyChunkTicketUpdater
+accessible    class    net/minecraft/server/world/ServerChunkManager$MainThreadExecutor

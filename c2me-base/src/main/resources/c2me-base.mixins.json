@@ -2,5 +2,10 @@
   "parent": "c2me.mixins.json",
   "required": true,
   "package": "com.ishland.c2me.base.mixin",
-  "plugin": "com.ishland.c2me.base.common.ModuleMixinPlugin"
+  "plugin": "com.ishland.c2me.base.common.ModuleMixinPlugin",
+  "mixins": [
+    "access.IRegionBasedStorage",
+    "access.ISerializingRegionBasedStorage",
+    "access.IVersionedChunkStorage"
+  ]
 }

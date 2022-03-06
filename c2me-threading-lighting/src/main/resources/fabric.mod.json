@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "id": "c2me-threading-lighting",
+  "version": "${version}",
+  "name": "Concurrent Chunk Management Engine (Threading/Lighting)",
+  "description": "Makes lighting onto its dedicated thread",
+  "environment": "*",
+  "mixins": [
+    "c2me-threading-lighting.mixins.json"
+  ],
+  "depends": {
+    "minecraft": "*",
+    "fabricloader": "*",
+    "c2me-base": "*",
+    "c2me-fixes-general-threading-issues": "*"
+  },
+
+  "authors": [
+    "RelativityMC",
+    "ishland"
+  ],
+  "contact": {
+    "sources": "https://github.com/RelativityMC/C2ME-fabric",
+    "issues": "https://github.com/RelativityMC/C2ME-fabric/issues",
+    "discord": "https://discord.io/ishlandbukkit",
+    "homepage": "https://modrinth.com/mod/c2me-fabric"
+  },
+  "license": "MIT",
+  "icon": "assets/c2me/icon.png"
+}

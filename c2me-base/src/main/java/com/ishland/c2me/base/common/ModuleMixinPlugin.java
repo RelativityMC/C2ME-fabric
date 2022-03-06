@@ -15,7 +15,7 @@ public class ModuleMixinPlugin implements IMixinConfigPlugin {
 
     static final Logger LOGGER = LoggerFactory.getLogger("C2ME Modules Manager");
 
-    private boolean isEnabled = true;
+    protected boolean isEnabled = true;
 
     @Override
     public void onLoad(String mixinPackage) {
