@@ -4,5 +4,8 @@
   "package": "com.ishland.c2me.fixes.general.threading_issues.mixin",
   "plugin": "com.ishland.c2me.base.common.ModuleMixinPlugin",
   "mixins": [
+    "MixinChunkHolder",
+    "MixinThreadedAnvilChunkStorage",
+    "asynccatchers.MixinServerChunkManager"
   ]
 }

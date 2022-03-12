@@ -4,5 +4,10 @@
   "package": "com.ishland.c2me.threading.chunkio.mixin",
   "plugin": "com.ishland.c2me.base.common.ModuleMixinPlugin",
   "mixins": [
+    "MixinChunkSerializer",
+    "MixinSerializingRegionBasedStorage",
+    "MixinStorageIoWorker",
+    "MixinThreadedAnvilChunkStorage",
+    "MixinVersionedChunkStorage"
   ]
 }

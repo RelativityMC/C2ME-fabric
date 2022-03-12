@@ -4,5 +4,7 @@
   "package": "com.ishland.c2me.opts.chunk_access.mixin",
   "plugin": "com.ishland.c2me.base.common.ModuleMixinPlugin",
   "mixins": [
+    "asm.ASMTargets",
+    "async_chunk_request.MixinServerChunkManager"
   ]
 }

@@ -4,5 +4,11 @@
   "package": "com.ishland.c2me.notickvd.mixin",
   "plugin": "com.ishland.c2me.base.common.ModuleMixinPlugin",
   "mixins": [
+    "MixinChunkHolder",
+    "MixinChunkTicketManager",
+    "MixinPlayerManager",
+    "MixinServerChunkManager",
+    "MixinThreadedAnvilChunkStorage",
+    "MixinWorld"
   ]
 }

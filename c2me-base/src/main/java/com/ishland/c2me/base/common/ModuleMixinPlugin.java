@@ -19,6 +19,7 @@ public class ModuleMixinPlugin implements IMixinConfigPlugin {
 
     @Override
     public void onLoad(String mixinPackage) {
+        LOGGER.info("Initializing {}", mixinPackage);
         final String[] split = mixinPackage.split("\\.");
         final String targetClass = String.join(".", Arrays.copyOf(split, split.length - 1)) + ".ModuleEntryPoint";
         try {
@@ -32,6 +33,9 @@ public class ModuleMixinPlugin implements IMixinConfigPlugin {
             }
         } catch (Throwable t) {
             LOGGER.warn("Error loading module entrypoint: {}", targetClass, t);
+        }
+        if (!isEnabled) {
+            LOGGER.info("Disabling {}", mixinPackage);
         }
     }
 

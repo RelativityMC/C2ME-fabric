@@ -4,5 +4,7 @@
   "package": "com.ishland.c2me.opts.math.mixin",
   "plugin": "com.ishland.c2me.base.common.ModuleMixinPlugin",
   "mixins": [
+    "MixinOctavePerlinNoiseSampler",
+    "MixinPerlinNoiseSampler"
   ]
 }

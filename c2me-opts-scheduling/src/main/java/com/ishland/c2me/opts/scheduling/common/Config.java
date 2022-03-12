@@ -38,6 +38,9 @@ public class Config {
                                 """)
             .getLong(20000,20000);
 
+    public static void init() {
+    }
+
 
     public enum AutoSaveMode {
         VANILLA(false, false),

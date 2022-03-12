@@ -1,7 +1,9 @@
 package com.ishland.c2me.base.common.config;
 
+import com.electronwill.nightconfig.core.CommentedConfig;
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import com.google.common.base.Preconditions;
+import com.ishland.c2me.base.common.util.BooleanUtils;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 import net.fabricmc.loader.api.Version;
@@ -10,6 +12,8 @@ import net.fabricmc.loader.api.metadata.version.VersionPredicate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -27,6 +31,8 @@ public class ConfigSystem {
 
     private static final CommentedFileConfig CONFIG;
 
+    private static final HashSet<String> visitedConfig = new HashSet<>();
+
     static {
         CommentedFileConfig config = configSupplier.get();
         try {
@@ -39,10 +45,36 @@ public class ConfigSystem {
         Updaters.update(config);
         Preconditions.checkArgument(config.getInt("version") == CURRENT_CONFIG_VERSION, "Config version mismatch");
 
+        visitedConfig.add("version");
+
         CONFIG = config;
     }
 
+    public static void flushConfig() {
+        purgeUnusedRecursively("", CONFIG);
+        CONFIG.save();
+    }
+
+    private static void purgeUnusedRecursively(String prefix, CommentedConfig config) {
+        for (Iterator<? extends CommentedConfig.Entry> iterator = config.entrySet().iterator(); iterator.hasNext(); ) {
+            CommentedConfig.Entry entry = iterator.next();
+            final String key = prefix + "." + entry.getKey();
+            if (entry.getValue() instanceof CommentedConfig child) {
+                purgeUnusedRecursively(key, child);
+                if (child.isEmpty()) {
+                    LOGGER.info("Removing config entry {} because it is not used", key);
+                    iterator.remove();
+                }
+            } else if (!visitedConfig.contains(key.substring(".".length()))) {
+                LOGGER.info("Removing config entry {} because it is not used", key);
+                iterator.remove();
+            }
+        }
+    }
+
     public static class ConfigAccessor {
+
+        private static final String propertyPrefix = "c2me.base.config.override.";
 
         private final StringBuilder incompatibilityReason = new StringBuilder();
 
@@ -52,6 +84,7 @@ public class ConfigSystem {
 
         public ConfigAccessor key(String key) {
             this.key = key;
+            markVisited();
             return this;
         }
 
@@ -81,7 +114,8 @@ public class ConfigSystem {
 
         public long getLong(long def, long incompatibleDef, LongChecks... checks) {
             findModDefinedIncompatibility();
-            final Object configured = CONFIG.get(this.key);
+            final String systemPropertyOverride = getSystemPropertyOverride();
+            final Object configured = systemPropertyOverride != null ? systemPropertyOverride : CONFIG.get(this.key);
             boolean isDefaultValue = false;
             if (configured != null) {
                 if (String.valueOf(configured).equals("default")) { // default placeholder
@@ -119,13 +153,19 @@ public class ConfigSystem {
 
         public boolean getBoolean(boolean def, boolean incompatibleDef) {
             findModDefinedIncompatibility();
-            final Object configured = CONFIG.get(this.key);
+            final String systemPropertyOverride = getSystemPropertyOverride();
+            final Object configured = systemPropertyOverride != null ? systemPropertyOverride : CONFIG.get(this.key);
             boolean isDefaultValue = false;
             if (configured != null) {
                 if (String.valueOf(configured).equals("default")) { // default placeholder
                     isDefaultValue = true;
                 } else if (!(configured instanceof Boolean)) { // try to fix config
-                    CONFIG.set(this.key, Boolean.valueOf(String.valueOf(configured)));
+                    try {
+                        CONFIG.set(this.key, BooleanUtils.parseBoolean(String.valueOf(configured)));
+                    } catch (BooleanUtils.BooleanFormatException e) {
+                        LOGGER.warn("Invalid configured value: {} -> {}", this.key, configured);
+                        CONFIG.remove(this.key);
+                    }
                 }
             } else {
                 isDefaultValue = true;
@@ -137,7 +177,8 @@ public class ConfigSystem {
 
         public <T extends Enum<T>> T getEnum(Class<T> enumClass, T def, T incompatibleDef) {
             findModDefinedIncompatibility();
-            final Object configured = CONFIG.get(this.key);
+            final String systemPropertyOverride = getSystemPropertyOverride();
+            final Object configured = systemPropertyOverride != null ? systemPropertyOverride : CONFIG.get(this.key);
             boolean isDefaultValue = false;
             if (configured != null) {
                 if (String.valueOf(configured).equals("default")) {
@@ -175,6 +216,12 @@ public class ConfigSystem {
 
         }
 
+        private String getSystemPropertyOverride() {
+            final String property = System.getProperty(propertyPrefix + this.key);
+            if (property != null) LOGGER.info("Setting {} to {} (defined in system property)", this.key, property);
+            return property;
+        }
+
         private void disableConfigWithReason(String reason) {
             incompatibilityReason.append("\n ").append(reason);
             LOGGER.info("Disabling config {}: {}", this.key, reason);
@@ -191,6 +238,10 @@ public class ConfigSystem {
             } else {
                 CONFIG.setComment(this.key, comment);
             }
+        }
+
+        private void markVisited() {
+            visitedConfig.add(this.key);
         }
     }
 

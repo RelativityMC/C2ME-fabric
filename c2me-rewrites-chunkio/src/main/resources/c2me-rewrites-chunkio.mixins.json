@@ -4,5 +4,9 @@
   "package": "com.ishland.c2me.rewrites.chunkio.mixin",
   "plugin": "com.ishland.c2me.base.common.ModuleMixinPlugin",
   "mixins": [
+    "MixinEntityChunkDataAccess",
+    "MixinSerializingRegionBasedStorage",
+    "MixinStorageIoWorker",
+    "MixinVersionedChunkStorage"
   ]
 }

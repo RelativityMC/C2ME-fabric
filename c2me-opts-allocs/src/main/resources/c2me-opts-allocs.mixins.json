@@ -4,5 +4,16 @@
   "package": "com.ishland.c2me.opts.allocs.mixin",
   "plugin": "com.ishland.c2me.base.common.ModuleMixinPlugin",
   "mixins": [
+    "MixinIdentifier",
+    "MixinNbtCompound",
+    "MixinNbtList",
+    "MixinUtil",
+    "asm.ASMTargets",
+    "noise.MixinChainedBlockSource",
+    "object_pooling_caching.MixinConfiguredFeature",
+    "object_pooling_caching.MixinOreFeature",
+    "surfacebuilder.MixinMaterialRuleContext",
+    "surfacebuilder.MixinMaterialRulesSequenceBlockStateRule",
+    "surfacebuilder.MixinMaterialRulesSequenceMaterialRule"
   ]
 }

@@ -58,10 +58,6 @@ configure (allprojects - project(":tests")) {
         minecraft "com.mojang:minecraft:${project.minecraft_version}"
         mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
         modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-
-        implementation "com.ibm.async:asyncutil:${async_util_version}"
-        implementation "com.electronwill.night-config:toml:${night_config_version}"
-        implementation "org.threadly:threadly:${threadly_version}"
     }
 
     loom {
@@ -128,6 +124,14 @@ configure (allprojects - project(":tests")) {
             // uncomment to publish to the local maven
             // mavenLocal()
         }
+    }
+}
+
+configure (allprojects - project(":tests")) {
+    dependencies {
+        implementation "com.ibm.async:asyncutil:${async_util_version}"
+        implementation "com.electronwill.night-config:toml:${night_config_version}"
+        implementation "org.threadly:threadly:${threadly_version}"
     }
 }
 

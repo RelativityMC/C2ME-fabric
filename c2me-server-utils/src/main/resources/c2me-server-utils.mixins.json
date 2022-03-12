@@ -4,5 +4,6 @@
   "package": "com.ishland.c2me.server.utils.mixin",
   "plugin": "com.ishland.c2me.base.common.ModuleMixinPlugin",
   "mixins": [
+    "MixinCommandManager"
   ]
 }

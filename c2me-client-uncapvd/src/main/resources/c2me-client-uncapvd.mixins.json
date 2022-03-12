@@ -4,5 +4,8 @@
   "package": "com.ishland.c2me.client.uncapvd.mixin",
   "plugin": "com.ishland.c2me.base.common.ModuleMixinPlugin",
   "mixins": [
+    "MixinGameOptions",
+    "MixinOption",
+    "MixinSodiumGameOptionPages"
   ]
 }

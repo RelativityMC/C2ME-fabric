@@ -8,6 +8,11 @@
   "mixins": [
     "c2me-base.mixins.json"
   ],
+  "entrypoints": {
+    "preLaunch": [
+      "com.ishland.c2me.base.C2MEBaseMod"
+    ]
+  },
   "depends": {
     "minecraft": "*",
     "fabricloader": "*"
