@@ -1,7 +1,7 @@
 {
   "parent": "c2me.mixins.json",
   "required": true,
-  "package": "com.ishland.c2me.opts.scheduling.mixin",
+  "package": "com.ishland.c2me.server.utils.mixin",
   "plugin": "com.ishland.c2me.base.common.ModuleMixinPlugin",
   "mixins": [
   ]

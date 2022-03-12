@@ -45,7 +45,17 @@ public class Updaters {
             }
         });
         updaters.put(2, source -> {
-
+            final Object _generalOptimizations = source.get("generalOptimizations");
+            final Object _ioSystem = source.get("ioSystem");
+            if (_generalOptimizations instanceof CommentedConfig generalOptimizations &&
+                    _ioSystem instanceof CommentedConfig ioSystem) {
+                final Object _chunkStreamVersion = generalOptimizations.get("chunkStreamVersion");
+                if (_chunkStreamVersion instanceof Number chunkStreamVersion) {
+                    // move to ioSystem
+                    generalOptimizations.remove("chunkStreamVersion");
+                    ioSystem.add("chunkStreamVersion", chunkStreamVersion);
+                }
+            }
         });
     }
 

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "id": "c2me-rewrites-chunkio",
+  "id": "c2me-opts-chunkio",
   "version": "${version}",
   "name": "Concurrent Chunk Management Engine (Rewrites/Chunk IO)",
   "description": "Optimizations for chunk IO",

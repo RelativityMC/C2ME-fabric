@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "id": "c2me-fixes-worldgen-vanilla-bugs",
+  "version": "${version}",
+  "name": "Concurrent Chunk Management Engine (Fixes/WorldGen/Vanilla Bugs)",
+  "description": "Fixes for some vanilla worldgen crashing bugs",
+  "environment": "*",
+  "mixins": [
+    "c2me-fixes-worldgen-vanilla-bugs.mixins.json"
+  ],
+  "depends": {
+    "minecraft": "*",
+    "fabricloader": "*",
+    "c2me-base": "*"
+  },
+
+  "authors": [
+    "RelativityMC",
+    "ishland"
+  ],
+  "contact": {
+    "sources": "https://github.com/RelativityMC/C2ME-fabric",
+    "issues": "https://github.com/RelativityMC/C2ME-fabric/issues",
+    "discord": "https://discord.io/ishlandbukkit",
+    "homepage": "https://modrinth.com/mod/c2me-fabric"
+  },
+  "license": "MIT",
+  "icon": "assets/c2me/icon.png"
+}

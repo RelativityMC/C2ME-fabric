@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "id": "c2me-opts-worldgen-vanilla",
+  "id": "c2me-opts-worldgen-general",
   "version": "${version}",
   "name": "Concurrent Chunk Management Engine (Optimizations/General WorldGen)",
   "description": "Optimizations for general world generation performance",

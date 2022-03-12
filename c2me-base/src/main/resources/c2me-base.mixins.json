@@ -6,6 +6,8 @@
   "mixins": [
     "access.IRegionBasedStorage",
     "access.ISerializingRegionBasedStorage",
-    "access.IVersionedChunkStorage"
+    "access.IVersionedChunkStorage",
+    "access.IWeightedList",
+    "access.IWeightedListEntry"
   ]
 }

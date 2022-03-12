@@ -1,7 +1,6 @@
 package com.ishland.c2me;
 
 import com.ibm.asyncutil.util.Combinators;
-import com.ishland.c2me.common.config.C2MEConfig;
 import net.fabricmc.api.ModInitializer;
 import net.minecraft.world.gen.random.ChunkRandom;
 import net.minecraft.world.gen.random.SimpleRandom;
@@ -41,10 +40,6 @@ public class C2MEMod implements ModInitializer {
             runBenchmark("GZIP", ChunkStreamVersion.GZIP, false);
             runBenchmark("DEFLATE", ChunkStreamVersion.DEFLATE, false);
             runBenchmark("UNCOMPRESSED", ChunkStreamVersion.UNCOMPRESSED, false);
-        }
-        if (C2MEConfig.generalOptimizationsConfig.chunkStreamVersion != -1 && !ChunkStreamVersion.exists(C2MEConfig.generalOptimizationsConfig.chunkStreamVersion)) {
-            LOGGER.error("Unknown chunk stream version in config: {}", C2MEConfig.generalOptimizationsConfig.chunkStreamVersion);
-            throw new IllegalArgumentException(String.format("Unknown chunk stream version in config: %s", C2MEConfig.generalOptimizationsConfig.chunkStreamVersion));
         }
         consistencyTest();
     }
