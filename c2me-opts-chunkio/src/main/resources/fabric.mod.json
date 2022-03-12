@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "c2me-opts-chunkio",
   "version": "${version}",
-  "name": "Concurrent Chunk Management Engine (Rewrites/Chunk IO)",
+  "name": "Concurrent Chunk Management Engine (Optimizations/Chunk IO)",
   "description": "Optimizations for chunk IO",
   "environment": "*",
   "mixins": [
@@ -26,5 +26,9 @@
     "homepage": "https://modrinth.com/mod/c2me-fabric"
   },
   "license": "MIT",
-  "icon": "assets/c2me/icon.png"
+  "custom": {
+    "modmenu": {
+      "parent": "c2me"
+    }
+  }
 }

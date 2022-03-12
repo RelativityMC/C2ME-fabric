@@ -29,5 +29,9 @@
     "homepage": "https://modrinth.com/mod/c2me-fabric"
   },
   "license": "MIT",
-  "icon": "assets/c2me/icon.png"
+  "custom": {
+    "modmenu": {
+      "parent": "c2me"
+    }
+  }
 }

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "c2me-fixes-general-threading-issues",
   "version": "${version}",
-  "name": "Concurrent Chunk Management Engine (Fixes/General/Threading Fixes)",
+  "name": "Concurrent Chunk Management Engine (Fixes/General/Threading Issues)",
   "description": "Fixes threading issues for general chunk storage",
   "environment": "*",
   "mixins": [
@@ -26,5 +26,9 @@
     "homepage": "https://modrinth.com/mod/c2me-fabric"
   },
   "license": "MIT",
-  "icon": "assets/c2me/icon.png"
+  "custom": {
+    "modmenu": {
+      "parent": "c2me"
+    }
+  }
 }
