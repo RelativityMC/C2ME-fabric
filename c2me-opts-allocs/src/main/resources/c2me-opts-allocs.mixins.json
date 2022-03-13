@@ -2,7 +2,7 @@
   "parent": "c2me.mixins.json",
   "required": true,
   "package": "com.ishland.c2me.opts.allocs.mixin",
-  "plugin": "com.ishland.c2me.base.common.ModuleMixinPlugin",
+  "plugin": "com.ishland.c2me.opts.allocs.MixinPlugin",
   "mixins": [
     "MixinIdentifier",
     "MixinNbtCompound",
