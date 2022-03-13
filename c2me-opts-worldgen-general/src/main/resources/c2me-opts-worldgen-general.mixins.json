@@ -1,0 +1,12 @@
+{
+  "parent": "c2me.mixins.json",
+  "required": true,
+  "package": "com.ishland.c2me.opts.worldgen.general.mixin",
+  "plugin": "com.ishland.c2me.base.common.ModuleMixinPlugin",
+  "mixins": [
+    "random_instances.MixinAtomicSimpleRandomFactory",
+    "random_instances.MixinRedirectAtomicSimpleRandom",
+    "random_instances.MixinRedirectAtomicSimpleRandomStatic",
+    "thread_local_biome_cache.MixinMultiNoiseBiomeSourcePreset"
+  ]
+}

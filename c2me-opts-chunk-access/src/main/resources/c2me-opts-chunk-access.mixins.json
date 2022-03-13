@@ -1,0 +1,10 @@
+{
+  "parent": "c2me.mixins.json",
+  "required": true,
+  "package": "com.ishland.c2me.opts.chunk_access.mixin",
+  "plugin": "com.ishland.c2me.opts.chunk_access.MixinPlugin",
+  "mixins": [
+    "asm.ASMTargets",
+    "async_chunk_request.MixinServerChunkManager"
+  ]
+}

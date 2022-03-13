@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "id": "c2me-server-utils",
+  "version": "${version}",
+  "name": "Concurrent Chunk Management Engine (Server Utils)",
+  "description": "Some server-side utilities",
+  "environment": "*",
+  "mixins": [
+    "c2me-server-utils.mixins.json"
+  ],
+  "depends": {
+    "minecraft": "*",
+    "fabricloader": "*",
+    "c2me-base": "*"
+  },
+  "accessWidener": "c2me-server-utils.accesswidener",
+
+  "authors": [
+    "RelativityMC",
+    "ishland"
+  ],
+  "contact": {
+    "sources": "https://github.com/RelativityMC/C2ME-fabric",
+    "issues": "https://github.com/RelativityMC/C2ME-fabric/issues",
+    "discord": "https://discord.io/ishlandbukkit",
+    "homepage": "https://modrinth.com/mod/c2me-fabric"
+  },
+  "license": "MIT",
+  "custom": {
+    "modmenu": {
+      "parent": "c2me"
+    }
+  }
+}

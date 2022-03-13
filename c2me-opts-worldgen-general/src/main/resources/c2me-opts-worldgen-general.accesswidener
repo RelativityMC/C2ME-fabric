@@ -1,0 +1,14 @@
+accessWidener v1 named
+
+accessible    class    net/minecraft/world/biome/source/MultiNoiseBiomeSource$Instance
+
+accessible    method    net/minecraft/world/biome/source/MultiNoiseBiomeSource                         <init>              (Lnet/minecraft/world/biome/source/util/MultiNoiseUtil$Entries;Ljava/util/Optional;)V
+accessible    method    net/minecraft/world/biome/source/MultiNoiseBiomeSource                         <init>              (Lnet/minecraft/world/biome/source/util/MultiNoiseUtil$Entries;)V
+
+accessible    field     net/minecraft/util/math/BlockPos                                    BIT_SHIFT_X         I
+accessible    field     net/minecraft/util/math/BlockPos                                    SIZE_BITS_X         I
+accessible    field     net/minecraft/util/math/BlockPos                                    BIT_SHIFT_Z         I
+accessible    field     net/minecraft/util/math/BlockPos                                    SIZE_BITS_Z         I
+accessible    field     net/minecraft/util/math/BlockPos                                    BITS_X              J
+accessible    field     net/minecraft/util/math/BlockPos                                    BITS_Y              J
+accessible    field     net/minecraft/util/math/BlockPos                                    BITS_Z              J

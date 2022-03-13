@@ -1,0 +1,33 @@
+{
+  "parent": "c2me.mixins.json",
+  "required": true,
+  "package": "com.ishland.c2me.base.mixin",
+  "plugin": "com.ishland.c2me.base.common.ModuleMixinPlugin",
+  "mixins": [
+    "access.IAquiferSamplerFluidLevel",
+    "access.IAtomicSimpleRandomDeriver",
+    "access.IBlockEntity",
+    "access.IChunkGenerator",
+    "access.IChunkHolder",
+    "access.IChunkTicket",
+    "access.IChunkTicketManager",
+    "access.IChunkTicketManagerNearbyChunkTicketUpdater",
+    "access.IMultiNoiseBiomeSource",
+    "access.INbtCompound",
+    "access.IRegionBasedStorage",
+    "access.IRegionFile",
+    "access.ISerializingRegionBasedStorage",
+    "access.IServerChunkManager",
+    "access.ISimpleRandom",
+    "access.IStructureWeightSampler",
+    "access.IThreadedAnvilChunkStorage",
+    "access.IVersionedChunkStorage",
+    "access.IWeightedList",
+    "access.IWeightedListEntry",
+    "access.IXoroshiro128PlusPlusRandom",
+    "access.IXoroshiro128PlusPlusRandomDeriver",
+    "access.IXoroshiro128PlusPlusRandomImpl",
+    "util.log4j2shutdownhookisnomore.MixinMain",
+    "util.log4j2shutdownhookisnomore.MixinMinecraftDedicatedServer"
+  ]
+}

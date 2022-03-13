@@ -1,0 +1,10 @@
+{
+  "parent": "c2me.mixins.json",
+  "required": true,
+  "package": "com.ishland.c2me.fixes.worldgen.vanilla_bugs.mixin",
+  "plugin": "com.ishland.c2me.base.common.ModuleMixinPlugin",
+  "mixins": [
+    "graal.MixinPlacedFeature",
+    "incorrect_required_status_for_generation_in_structure_references_status.MixinChunkStatus"
+  ]
+}

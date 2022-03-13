@@ -24,7 +24,7 @@ pipeline {
             }
             post {
                 success {
-                    archiveArtifacts "**/build/libs/*-all.jar"
+                    archiveArtifacts "build/libs/*.jar"
                 }
                 failure {
                     cleanWs()

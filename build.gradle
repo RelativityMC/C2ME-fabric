@@ -1,30 +1,31 @@
 plugins {
     id 'java-library'
-    id 'fabric-loom' version '0.11-SNAPSHOT'
-    id 'io.github.juuxel.loom-quiltflower' version '1.6.0'
-    id 'maven-publish'
-    id 'com.github.johnrengelman.shadow' version '7.1.0'
+    id 'fabric-loom' version '0.11-SNAPSHOT' apply false
+    id 'io.github.juuxel.loom-quiltflower' version '1.6.0' apply false
     id "me.champeau.jmh" version "0.6.6"
 }
 
-allprojects {
-    archivesBaseName = "${project.archives_base_name}-mc${project.minecraft_version}"
-    group = project.maven_group
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
-    version = project.mod_version + "." + getVersionSuffix()
-
-    repositories {
-        maven { url 'https://jitpack.io' }
-    }
-
-    if (plugins.hasPlugin("fabric-loom")) {
-        loom {
-            shareRemapCaches = true
+@SuppressWarnings('unused')
+static def moduleDependencies(project, List<String> depNames) {
+    project.dependencies {
+        depNames.each {
+            api project.dependencies.project(path: ":$it", configuration: 'namedElements')
         }
     }
+}
+
+configure(allprojects) {
+    apply plugin: 'java'
+    apply plugin: 'java-library'
+
+    it.archivesBaseName = "${it.name}-mc${project.minecraft_version}"
+    it.group = project.maven_group
+    it.sourceCompatibility = JavaVersion.VERSION_17
+    it.targetCompatibility = JavaVersion.VERSION_17
+    it.version = project.mod_version + "." + getVersionSuffix()
+
     afterEvaluate {
-        if (plugins.hasPlugin("fabric-loom")) {
+        if (it.plugins.hasPlugin("fabric-loom")) {
             migrateMappings.configure {
                 outputDir = project.file("src/main/java")
             }
@@ -32,40 +33,128 @@ allprojects {
     }
 }
 
+archivesBaseName = "${project.archives_base_name}-mc${project.minecraft_version}"
+
+configure (allprojects - project(":tests")) {
+    if (project != project(":") && project.parent != project(":")) return
+
+    apply plugin: 'fabric-loom'
+    apply plugin: 'io.github.juuxel.loom-quiltflower'
+    apply plugin: 'maven-publish'
+
+    sourceSets {
+        devlaunch {
+            compileClasspath += main.compileClasspath
+            runtimeClasspath += main.runtimeClasspath
+        }
+    }
+
+    repositories {
+        maven { url 'https://jitpack.io' }
+    }
+
+    dependencies {
+        //to change the versions see the gradle.properties file
+        minecraft "com.mojang:minecraft:${project.minecraft_version}"
+        mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+        modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    }
+
+    loom {
+        def awFile = file("src/main/resources/${project.name}.accesswidener")
+        if (awFile.isFile()) {
+            accessWidenerPath = awFile
+        }
+
+        runs {
+            devlaunchClient {
+                client()
+                ideConfigGenerated project.rootProject == project
+                name = "DevLaunch Client"
+                source sourceSets.devlaunch
+            }
+            devlaunchServer {
+                server()
+                ideConfigGenerated project.rootProject == project
+                name = "DevLaunch Server"
+                source sourceSets.devlaunch
+            }
+        }
+    }
+
+    processResources {
+        inputs.property "version", project.version
+
+        filesMatching("fabric.mod.json") {
+            expand "version": project.version
+        }
+    }
+
+    jar {
+        from rootProject.file("LICENSE")
+    }
+
+    java {
+        withSourcesJar()
+    }
+
+    // ensure that the encoding is set to UTF-8, no matter what the system default is
+    // this fixes some edge cases with special characters not displaying correctly
+    // see http://yodaconditions.net/blog/fix-for-java-file-encoding-problems-with-gradle.html
+    tasks.withType(JavaCompile) {
+        options.encoding = "UTF-8"
+    }
+
+    // reproducible
+    tasks.withType(AbstractArchiveTask) {
+        preserveFileTimestamps = false
+        reproducibleFileOrder = true
+    }
+
+    // configure the maven publication
+    publishing {
+        publications {
+            mavenJava(MavenPublication) {
+                from components.java
+            }
+        }
+
+        // select the repositories you want to publish to
+        repositories {
+            // uncomment to publish to the local maven
+            // mavenLocal()
+        }
+    }
+}
+
+configure (allprojects - project(":tests")) {
+    dependencies {
+        implementation "com.ibm.async:asyncutil:${async_util_version}"
+        implementation "com.electronwill.night-config:toml:${night_config_version}"
+        implementation "org.threadly:threadly:${threadly_version}"
+    }
+}
+
+subprojects {
+    afterEvaluate {
+        genSourcesWithFernFlower.enabled = false
+        genSourcesWithQuiltflower.enabled = false
+        genSourcesWithCfr.enabled = false
+        unpickJar.enabled = false
+    }
+}
+
 afterEvaluate {
     logger.lifecycle("Version String: ${version}")
 }
 
-loom {
-    accessWidenerPath = file("src/main/resources/c2me.accesswidener")
-}
-
-configurations {
-    api.extendsFrom includeApi
-    implementation.extendsFrom shadowImpl
-    runtimeOnly.extendsFrom shadowRuntime
-}
-
 dependencies {
-    //to change the versions see the gradle.properties file
-    minecraft "com.mojang:minecraft:${project.minecraft_version}"
-    mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
-    api "net.fabricmc:yarn:${project.yarn_mappings}:v2" // loom bug?
-    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-
-    includeApi project(":libs")
-    include project(":libs")
-    shadowImpl "com.ibm.async:asyncutil:${async_util_version}"
-    shadowImpl "com.electronwill.night-config:toml:${night_config_version}"
-    shadowImpl "org.threadly:threadly:${threadly_version}"
-
-    afterEvaluate {
-        project(":compatibility").subprojects.each {
-            shadowRuntime(it) {
-                transitive false
-            }
-        }
-    }
+//    includeApi project(":libs")
+//    include project(":libs")
+    include implementation("com.ibm.async:asyncutil:${async_util_version}")
+    include implementation("com.electronwill.night-config:toml:${night_config_version}")
+    include implementation("com.electronwill.night-config:core:${night_config_version}")
+    include implementation("org.threadly:threadly:${threadly_version}")
 
     // PSA: Some older mods, compiled on Loom 0.2.1, might have outdated Maven POMs.
     // You may need to force-disable transitiveness on them.
@@ -76,58 +165,29 @@ dependencies {
     }
 }
 
-processResources {
-    inputs.property "version", project.version
-
-    filesMatching("fabric.mod.json") {
-        expand "version": project.version
-    }
-}
-
-// ensure that the encoding is set to UTF-8, no matter what the system default is
-// this fixes some edge cases with special characters not displaying correctly
-// see http://yodaconditions.net/blog/fix-for-java-file-encoding-problems-with-gradle.html
-tasks.withType(JavaCompile) {
-    options.encoding = "UTF-8"
-}
-
-jar {
-    from "LICENSE"
-}
-
-shadowJar {
-    archiveClassifier = "all-dev"
-    configurations = [ project.configurations.shadowImpl, project.configurations.shadowRuntime ]
-    from "LICENSE"
-}
-
-//noinspection UnnecessaryQualifiedReference
-task("remapShadowJar", type: net.fabricmc.loom.task.RemapJarTask, dependsOn: shadowJar) {
-    input = shadowJar.archiveFile
-    archiveFileName = shadowJar.archiveFileName.get().replaceAll("-dev\\.jar\$", ".jar")
-    addNestedDependencies = true
-    project(":libs").afterEvaluate {
-        dependsOn(project(":libs").assemble)
-    }
-}
-
-assemble.dependsOn(remapShadowJar)
-
-// configure the maven publication
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            // add all the jars that should be included when publishing to maven
-            artifact(remapJar) {
-                builtBy remapJar
-            }
+loom {
+    runs {
+        server {
+            inherit devlaunchServer
+        }
+        client {
+            inherit devlaunchClient
         }
     }
+}
 
-    // select the repositories you want to publish to
-    repositories {
-        // uncomment to publish to the local maven
-        // mavenLocal()
+subprojects.forEach { remapJar.dependsOn("${it.path}:remapJar") }
+
+dependencies {
+    afterEvaluate {
+        (subprojects - project(":tests")).forEach {
+            if (it.parent != project(":")) return
+
+            api project(path: ":${it.name}", configuration: "namedElements")
+            include project("${it.name}:")
+
+            devlaunchImplementation project("${it.name}:").sourceSets.devlaunch.output
+        }
     }
 }
 
@@ -152,10 +212,6 @@ String getVersionSuffix() {
     }
     def split = stdout.split('-')
     return split[split.length - 2] + suffix
-}
-
-shadowJar {
-//    minimize()
 }
 
 jmh {

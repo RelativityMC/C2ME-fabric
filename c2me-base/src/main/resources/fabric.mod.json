@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "id": "c2me-base",
+  "version": "${version}",
+  "name": "Concurrent Chunk Management Engine (Base)",
+  "description": "Concurrent Chunk Management Engine Base",
+  "environment": "*",
+  "mixins": [
+    "c2me-base.mixins.json"
+  ],
+  "entrypoints": {
+    "preLaunch": [
+      "com.ishland.c2me.base.C2MEBaseMod"
+    ]
+  },
+  "depends": {
+    "minecraft": "*",
+    "fabricloader": "*"
+  },
+  "accessWidener": "c2me-base.accesswidener",
+
+  "authors": [
+    "RelativityMC",
+    "ishland"
+  ],
+  "contact": {
+    "sources": "https://github.com/RelativityMC/C2ME-fabric",
+    "issues": "https://github.com/RelativityMC/C2ME-fabric/issues",
+    "discord": "https://discord.io/ishlandbukkit",
+    "homepage": "https://modrinth.com/mod/c2me-fabric"
+  },
+  "license": "MIT",
+  "custom": {
+    "modmenu": {
+      "parent": "c2me"
+    }
+  }
+}
