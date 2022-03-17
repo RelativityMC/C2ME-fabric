@@ -39,7 +39,7 @@ public class MixinPlacedFeature {
                 stream = Stream.of(pos);
 
                 for(PlacementModifier placementModifier : this.placementModifiers) {
-                    stream = stream.flatMap(posx -> placementModifier.getPositions(context, random, posx));
+                    stream = stream.flatMap(posx -> placementModifier.getCount(context, random, posx));
                 }
 
                 break;
