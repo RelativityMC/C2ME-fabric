@@ -27,10 +27,10 @@ import java.util.function.Consumer;
 public class MixinStructureChecker {
 
     @Mutable
-    @Shadow @Final private Long2ObjectMap<Object2IntMap<StructureFeature<?>>> cachedFeaturesByChunkPos;
+    @Shadow @Final private Long2ObjectMap<Object2IntMap<StructureFeature>> cachedFeaturesByChunkPos;
 
     @Mutable
-    @Shadow @Final private Map<StructureFeature<?>, Long2BooleanMap> generationPossibilityByFeature;
+    @Shadow @Final private Map<StructureFeature, Long2BooleanMap> generationPossibilityByFeature;
 
     @Unique
     private Object mapMutex = new Object();

@@ -12,6 +12,7 @@ import com.mojang.serialization.DynamicOps;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.class_7237;
 import net.minecraft.datafixer.Schemas;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
@@ -63,6 +64,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -107,8 +109,8 @@ public class ComparisonSession implements Closeable {
 //            final Function<ChunkPos, ArrayList<StructureStart>> newArrayList = k -> new ArrayList<>();
 //            ConcurrentHashMap<ConfiguredStructureFeature<?, ?>, ConcurrentHashMap<ChunkPos, ArrayList<StructureStart>>> baseStructureStarts = new ConcurrentHashMap<>();
 //            ConcurrentHashMap<ConfiguredStructureFeature<?, ?>, ConcurrentHashMap<ChunkPos, ArrayList<StructureStart>>> targetStructureStarts = new ConcurrentHashMap<>();
-            final Registry<ConfiguredStructureFeature<?, ?>> baseStructureFeatureRegistry = baseWorld.dynamicRegistryManager.get(Registry.CONFIGURED_STRUCTURE_FEATURE_KEY);
-            final Registry<ConfiguredStructureFeature<?, ?>> targetStructureFeatureRegistry = targetWorld.dynamicRegistryManager.get(Registry.CONFIGURED_STRUCTURE_FEATURE_KEY);
+            final Registry<StructureFeature> baseStructureFeatureRegistry = baseWorld.dynamicRegistryManager.get(Registry.CONFIGURED_STRUCTURE_FEATURE_KEY);
+            final Registry<StructureFeature> targetStructureFeatureRegistry = targetWorld.dynamicRegistryManager.get(Registry.CONFIGURED_STRUCTURE_FEATURE_KEY);
             AtomicLong completedChunks = new AtomicLong();
             AtomicLong completedBlocks = new AtomicLong();
             AtomicLong differenceBlocks = new AtomicLong();
@@ -121,9 +123,9 @@ public class ComparisonSession implements Closeable {
                                             || ChunkSerializer.getChunkType(chunkDataBase) == ChunkStatus.ChunkType.PROTOCHUNK)
                                         return null;
 
-                                    final Map<ConfiguredStructureFeature<?, ?>, StructureStart> baseStructures = IChunkSerializer.invokeReadStructureStarts(baseStructureContext, chunkDataBase.getCompound("structures"), baseWorld.saveProperties.getGeneratorOptions().getSeed());
+                                    final Map<StructureFeature, StructureStart> baseStructures = IChunkSerializer.invokeReadStructureStarts(baseStructureContext, chunkDataBase.getCompound("structures"), baseWorld.saveProperties.getGeneratorOptions().getSeed());
 //                                            .forEach((configuredStructureFeature, structureStart) -> baseStructureStarts.computeIfAbsent(configuredStructureFeature, newConcurrentHashMap).computeIfAbsent(structureStart.getPos(), newArrayList).add(structureStart));
-                                    final Map<ConfiguredStructureFeature<?, ?>, StructureStart> targetStructures = IChunkSerializer.invokeReadStructureStarts(targetStructureContext, chunkDataTarget.getCompound("structures"), targetWorld.saveProperties.getGeneratorOptions().getSeed());
+                                    final Map<StructureFeature, StructureStart> targetStructures = IChunkSerializer.invokeReadStructureStarts(targetStructureContext, chunkDataTarget.getCompound("structures"), targetWorld.saveProperties.getGeneratorOptions().getSeed());
 //                                            .forEach((configuredStructureFeature, structureStart) -> targetStructureStarts.computeIfAbsent(configuredStructureFeature, newConcurrentHashMap).computeIfAbsent(structureStart.getPos(), newArrayList).add(structureStart));
 
                                     baseStructures.forEach((configuredStructureFeature, baseStructureStart) -> {
@@ -251,24 +253,19 @@ public class ComparisonSession implements Closeable {
 
         SaveLoader saveLoader;
         try {
-            SaveLoader.FunctionLoaderConfig lv = new SaveLoader.FunctionLoaderConfig(
-                    resourcePackManager,
-                    CommandManager.RegistrationEnvironment.DEDICATED,
-                    2,
-                    false
+            DataPackSettings dataPackSettings0 = Objects.requireNonNullElse(session.getDataPackSettings(), DataPackSettings.SAFE_MODE);
+            class_7237.class_7238 lv = new class_7237.class_7238(resourcePackManager, dataPackSettings0, false);
+            class_7237.FunctionLoaderConfig functionLoaderConfig = new class_7237.FunctionLoaderConfig(
+                    lv, CommandManager.RegistrationEnvironment.DEDICATED, 2
             );
             saveLoader = SaveLoader.ofLoaded(
-                            lv,
-                            () -> {
-                                DataPackSettings dataPackSettings = session.getDataPackSettings();
-                                return dataPackSettings == null ? DataPackSettings.SAFE_MODE : dataPackSettings;
-                            },
+                            functionLoaderConfig,
                             (resourceManager, dataPackSettings) -> {
-                                DynamicRegistryManager.Mutable lvx = DynamicRegistryManager.createAndLoad();
-                                DynamicOps<NbtElement> dynamicOps = RegistryOps.ofLoaded(NbtOps.INSTANCE, lvx, resourceManager);
-                                SaveProperties savePropertiesx = session.readLevelProperties(dynamicOps, dataPackSettings, lvx.getRegistryLifecycle());
+                                DynamicRegistryManager.Mutable mutable = DynamicRegistryManager.createAndLoad();
+                                DynamicOps<NbtElement> dynamicOps = RegistryOps.ofLoaded(NbtOps.INSTANCE, mutable, resourceManager);
+                                SaveProperties savePropertiesx = session.readLevelProperties(dynamicOps, dataPackSettings, mutable.getRegistryLifecycle());
                                 if (savePropertiesx != null) {
-                                    return Pair.of(savePropertiesx, lvx.toImmutable());
+                                    return Pair.of(savePropertiesx, mutable.toImmutable());
                                 } else {
                                     throw new RuntimeException("Failed to load level properties");
                                 }
@@ -283,16 +280,15 @@ public class ComparisonSession implements Closeable {
             LOGGER.warn(
                     "Failed to load datapacks, can't proceed with server load. You can either fix your datapacks or reset to vanilla with --safeMode", var38
             );
-            resourcePackManager.close();
             throw new RuntimeException(var38);
         }
 
-        saveLoader.refresh();
+//        saveLoader.refresh();
         DynamicRegistryManager.Immutable registryManager = saveLoader.dynamicRegistryManager();
 //        serverPropertiesLoader.getPropertiesHandler().getGeneratorOptions(registryManager);
         SaveProperties saveProperties = saveLoader.saveProperties();
         if (saveProperties == null) {
-            resourcePackManager.close();
+//            resourcePackManager.close();
             throw new FileNotFoundException();
         }
         final ImmutableSet<RegistryKey<World>> worldKeys = saveProperties.getGeneratorOptions().getWorlds();
@@ -331,7 +327,7 @@ public class ComparisonSession implements Closeable {
                         }
                     });
                     System.out.println("Closing world");
-                    resourcePackManager.close();
+//                    resourcePackManager.close();
                     session.close();
                     System.out.println("World closed");
                 }

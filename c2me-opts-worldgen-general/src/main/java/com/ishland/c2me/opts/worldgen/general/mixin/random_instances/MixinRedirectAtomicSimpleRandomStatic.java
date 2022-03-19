@@ -1,14 +1,14 @@
 package com.ishland.c2me.opts.worldgen.general.mixin.random_instances;
 
 import com.ishland.c2me.opts.worldgen.general.common.random_instances.SimplifiedAtomicSimpleRandom;
-import net.minecraft.structure.pool.StructurePoolBasedGenerator;
+import net.minecraft.world.gen.chunk.placement.StructurePlacement;
 import net.minecraft.world.gen.random.AtomicSimpleRandom;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
 @Mixin(value = {
-        StructurePoolBasedGenerator.class
+        StructurePlacement.class,
 })
 public class MixinRedirectAtomicSimpleRandomStatic {
 

@@ -43,7 +43,7 @@ public abstract class MixinNbtList extends AbstractNbtList<NbtElement> {
         return new ObjectArrayList<>();
     }
 
-    @Redirect(method = "<init>()V", at = @At(value = "INVOKE", target = "Lcom/google/common/collect/Lists;newArrayList()Ljava/util/ArrayList;"))
+    @Redirect(method = "<init>()V", at = @At(value = "INVOKE", target = "Lcom/google/common/collect/Lists;newArrayList()Ljava/util/ArrayList;", remap = false))
     private static <E> ArrayList<E> redirectNewArrayList() {
         return null; // avoid double list creation
     }

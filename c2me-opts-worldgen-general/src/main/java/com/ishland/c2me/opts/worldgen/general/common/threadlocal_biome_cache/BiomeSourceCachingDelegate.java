@@ -29,11 +29,6 @@ public class BiomeSourceCachingDelegate extends BiomeSource {
     }
 
     @Override
-    public BiomeSource withSeed(long seed) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public RegistryEntry<Biome> getBiome(int biomeX, int biomeY, int biomeZ, MultiNoiseUtil.MultiNoiseSampler multiNoiseSampler) {
         final Long2ObjectLinkedOpenHashMap<RegistryEntry<Biome>> cache = this.cache.get();
         long l = 0L;

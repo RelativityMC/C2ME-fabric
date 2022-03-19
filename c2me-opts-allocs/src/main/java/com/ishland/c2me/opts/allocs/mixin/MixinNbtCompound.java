@@ -38,7 +38,7 @@ public class MixinNbtCompound {
         return new Object2ObjectOpenHashMap<>();
     }
 
-    @Redirect(method = "<init>()V", at = @At(value = "INVOKE", target = "Lcom/google/common/collect/Maps;newHashMap()Ljava/util/HashMap;"))
+    @Redirect(method = "<init>()V", at = @At(value = "INVOKE", target = "Lcom/google/common/collect/Maps;newHashMap()Ljava/util/HashMap;", remap = false))
     private static <K, V> HashMap<K, V> redirectNewHashMap() {
         return null; // avoid double map creation
     }

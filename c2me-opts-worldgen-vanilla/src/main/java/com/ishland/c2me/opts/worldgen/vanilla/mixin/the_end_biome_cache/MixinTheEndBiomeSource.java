@@ -2,11 +2,13 @@ package com.ishland.c2me.opts.worldgen.vanilla.mixin.the_end_biome_cache;
 
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.math.noise.SimplexNoiseSampler;
+import net.minecraft.util.math.ChunkSectionPos;
 import net.minecraft.util.registry.RegistryEntry;
 import net.minecraft.world.biome.Biome;
+import net.minecraft.world.biome.source.BiomeCoords;
 import net.minecraft.world.biome.source.TheEndBiomeSource;
 import net.minecraft.world.biome.source.util.MultiNoiseUtil;
+import net.minecraft.world.gen.densityfunction.DensityFunction;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -14,13 +16,6 @@ import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(TheEndBiomeSource.class)
 public abstract class MixinTheEndBiomeSource {
-
-    @Shadow
-    public static float getNoiseAt(SimplexNoiseSampler simplexNoiseSampler, int i, int j) {
-        return 0;
-    }
-
-    @Shadow @Final private SimplexNoiseSampler noise;
 
     @Shadow @Final private RegistryEntry<Biome> highlandsBiome;
 
@@ -32,20 +27,24 @@ public abstract class MixinTheEndBiomeSource {
 
     @Shadow @Final private RegistryEntry<Biome> centerBiome;
 
-    private RegistryEntry<Biome> getBiomeForNoiseGenVanilla(int biomeX, int biomeY, int biomeZ) {
-        // TODO [VanillaCopy]
-        int i = biomeX >> 2;
-        int j = biomeZ >> 2;
-        if ((long)i * (long)i + (long)j * (long)j <= 4096L) {
+    private RegistryEntry<Biome> getBiomeForNoiseGenVanilla(int x, int y, int z, MultiNoiseUtil.MultiNoiseSampler noise) {
+        int i = BiomeCoords.toBlock(x);
+        int j = BiomeCoords.toBlock(y);
+        int k = BiomeCoords.toBlock(z);
+        int l = ChunkSectionPos.getSectionCoord(i);
+        int m = ChunkSectionPos.getSectionCoord(k);
+        if ((long)l * (long)l + (long)m * (long)m <= 4096L) {
             return this.centerBiome;
         } else {
-            float f = getNoiseAt(this.noise, i * 2 + 1, j * 2 + 1);
-            if (f > 40.0F) {
+            int n = (ChunkSectionPos.getSectionCoord(i) * 2 + 1) * 8;
+            int o = (ChunkSectionPos.getSectionCoord(k) * 2 + 1) * 8;
+            double d = noise.erosion().sample(new DensityFunction.UnblendedNoisePos(n, j, o));
+            if (d > 0.25D) {
                 return this.highlandsBiome;
-            } else if (f >= 0.0F) {
+            } else if (d >= -0.0625D) {
                 return this.midlandsBiome;
             } else {
-                return f < -20.0F ? this.smallIslandsBiome : this.barrensBiome;
+                return d < -0.21875D ? this.smallIslandsBiome : this.barrensBiome;
             }
         }
     }
@@ -65,7 +64,7 @@ public abstract class MixinTheEndBiomeSource {
         if (biome != null) {
             return biome;
         } else {
-            final RegistryEntry<Biome> gennedBiome = getBiomeForNoiseGenVanilla(biomeX, biomeY, biomeZ);
+            final RegistryEntry<Biome> gennedBiome = getBiomeForNoiseGenVanilla(biomeX, biomeY, biomeZ, multiNoiseSampler);
             cacheThreadLocal.put(key, gennedBiome);
             if (cacheThreadLocal.size() > cacheCapacity) {
                 for (int i = 0; i < cacheCapacity / 16; i ++) {
