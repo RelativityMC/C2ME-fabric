@@ -28,6 +28,7 @@ public abstract class MixinTheEndBiomeSource {
     @Shadow @Final private RegistryEntry<Biome> centerBiome;
 
     private RegistryEntry<Biome> getBiomeForNoiseGenVanilla(int x, int y, int z, MultiNoiseUtil.MultiNoiseSampler noise) {
+        // TODO [VanillaCopy]
         int i = BiomeCoords.toBlock(x);
         int j = BiomeCoords.toBlock(y);
         int k = BiomeCoords.toBlock(z);

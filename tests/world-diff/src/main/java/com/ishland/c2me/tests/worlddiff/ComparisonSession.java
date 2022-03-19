@@ -283,12 +283,10 @@ public class ComparisonSession implements Closeable {
             throw new RuntimeException(var38);
         }
 
-//        saveLoader.refresh();
         DynamicRegistryManager.Immutable registryManager = saveLoader.dynamicRegistryManager();
 //        serverPropertiesLoader.getPropertiesHandler().getGeneratorOptions(registryManager);
         SaveProperties saveProperties = saveLoader.saveProperties();
         if (saveProperties == null) {
-//            resourcePackManager.close();
             throw new FileNotFoundException();
         }
         final ImmutableSet<RegistryKey<World>> worldKeys = saveProperties.getGeneratorOptions().getWorlds();
@@ -327,7 +325,6 @@ public class ComparisonSession implements Closeable {
                         }
                     });
                     System.out.println("Closing world");
-//                    resourcePackManager.close();
                     session.close();
                     System.out.println("World closed");
                 }
