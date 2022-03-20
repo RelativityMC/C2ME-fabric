@@ -72,10 +72,8 @@ public abstract class MixinThreadedAnvilChunkStorage {
      */
     @Overwrite
     private void method_17243(MutableObject<ChunkDataS2CPacket> mutableObject, WorldChunk worldChunk, ServerPlayerEntity player) {
-        if (NoTickChunkSendingInterceptor.onChunkSending(player, worldChunk.getPos().toLong())) {
-            if (Config.ensureChunkCorrectness)
-                this.sendChunkDataPackets(player, mutableObject, worldChunk);
-        }
+        if (Config.ensureChunkCorrectness && NoTickChunkSendingInterceptor.onChunkSending(player, worldChunk.getPos().toLong()))
+            this.sendChunkDataPackets(player, mutableObject, worldChunk);
     }
 
     // private static synthetic method_20582(Lnet/minecraft/world/chunk/Chunk;)Z
