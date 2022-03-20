@@ -4,6 +4,7 @@ import com.ishland.c2me.base.mixin.access.IServerChunkManager;
 import com.ishland.c2me.notickvd.common.Config;
 import com.ishland.c2me.notickvd.common.IChunkHolder;
 import com.ishland.c2me.notickvd.common.IChunkTicketManager;
+import com.ishland.c2me.notickvd.common.NoTickChunkSendingInterceptor;
 import com.mojang.datafixers.util.Either;
 import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -53,10 +54,12 @@ public abstract class MixinThreadedAnvilChunkStorage {
         cir.getReturnValue().thenAccept(either -> either.left().ifPresent(worldChunk -> {
             MutableObject<ChunkDataS2CPacket> mutableObject = new MutableObject<>();
             this.getPlayersWatchingChunk(worldChunk.getPos(), false).forEach((serverPlayerEntity) -> {
-                if (Config.compatibilityMode) {
-                    this.mainThreadExecutor.send(() -> this.sendChunkDataPackets(serverPlayerEntity, mutableObject, worldChunk));
-                } else {
-                    this.sendChunkDataPackets(serverPlayerEntity, mutableObject, worldChunk);
+                if (NoTickChunkSendingInterceptor.onChunkSending(serverPlayerEntity, worldChunk.getPos().toLong())) {
+                    if (Config.compatibilityMode) {
+                        this.mainThreadExecutor.send(() -> this.sendChunkDataPackets(serverPlayerEntity, mutableObject, worldChunk));
+                    } else {
+                        this.sendChunkDataPackets(serverPlayerEntity, mutableObject, worldChunk);
+                    }
                 }
             });
         }));
@@ -69,8 +72,10 @@ public abstract class MixinThreadedAnvilChunkStorage {
      */
     @Overwrite
     private void method_17243(MutableObject<ChunkDataS2CPacket> mutableObject, WorldChunk worldChunk, ServerPlayerEntity player) {
-        if (Config.ensureChunkCorrectness)
-            this.sendChunkDataPackets(player, mutableObject, worldChunk);
+        if (NoTickChunkSendingInterceptor.onChunkSending(player, worldChunk.getPos().toLong())) {
+            if (Config.ensureChunkCorrectness)
+                this.sendChunkDataPackets(player, mutableObject, worldChunk);
+        }
     }
 
     // private static synthetic method_20582(Lnet/minecraft/world/chunk/Chunk;)Z
