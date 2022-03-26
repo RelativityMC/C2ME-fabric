@@ -1,7 +1,7 @@
 package com.ishland.c2me.fixes.worldgen.threading_issues.mixin.threading;
 
-import net.minecraft.class_7138;
 import net.minecraft.world.gen.chunk.ChunkGenerator;
+import net.minecraft.world.gen.noise.NoiseConfig;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
@@ -53,14 +53,14 @@ public abstract class MixinChunkGenerator {
 
     @Shadow private boolean field_37056;
 
-    @Shadow protected abstract void method_41057(class_7138 arg);
+    @Shadow protected abstract void method_41057(NoiseConfig arg);
 
     /**
      * @author ishland
      * @reason synchronize stronghold position generation
      */
     @Overwrite
-    public void method_41058(class_7138 arg) {
+    public void method_41058(NoiseConfig arg) {
         if (!this.field_37056) {
             synchronized (this) {
                 if (!this.field_37056) {

@@ -78,7 +78,7 @@ public class PreGenTask {
         final Set<RegistryEntryList<StructureFeature>> structureFeatures;
         if (!isLocateStructureSlowAF(world)) {
             structureFeatures = structureFeatureRegistry.getEntrySet().stream()
-                    .filter(entry -> world.getChunkManager().getChunkGenerator().getBiomeSource().getBiomes().stream().anyMatch(entry.getValue().method_41607()::contains))
+                    .filter(entry -> world.getChunkManager().getChunkGenerator().getBiomeSource().getBiomes().stream().anyMatch(entry.getValue().getValidBiomes()::contains))
                     .flatMap(entry -> structureFeatureRegistry.getEntry(entry.getKey()).map(RegistryEntryList::of).stream())
                     .collect(Collectors.toSet());
         } else {
@@ -89,7 +89,7 @@ public class PreGenTask {
         final CompletableFuture<Void> biomeFuture = CompletableFuture.allOf(biomes.stream()
                 .map(biome -> CompletableFuture.runAsync(() -> {
                     //noinspection OptionalGetWithoutIsPresent
-                    final Pair<BlockPos, RegistryEntry<Biome>> pair = world.locateBiome(entry -> biomeRegistry.getKey(biome.value()).get() == entry.getKey().get(), spawnPos, SEARCH_RADIUS, 8);
+                    final Pair<BlockPos, RegistryEntry<Biome>> pair = world.method_42108(entry -> biomeRegistry.getKey(biome.value()).get() == entry.getKey().get(), spawnPos, SEARCH_RADIUS, 8, 64);
                     locatedBiomes.incrementAndGet();
                     if (pair != null) {
                         final ChunkPos chunkPos = new ChunkPos(pair.getFirst());

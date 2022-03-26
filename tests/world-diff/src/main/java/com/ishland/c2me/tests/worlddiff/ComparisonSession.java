@@ -12,7 +12,6 @@ import com.mojang.serialization.DynamicOps;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
-import net.minecraft.class_7237;
 import net.minecraft.datafixer.Schemas;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
@@ -26,6 +25,7 @@ import net.minecraft.resource.ResourcePackSource;
 import net.minecraft.resource.ResourceType;
 import net.minecraft.resource.VanillaDataPackProvider;
 import net.minecraft.server.SaveLoader;
+import net.minecraft.server.SaveLoading;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.state.property.Property;
 import net.minecraft.structure.StructureContext;
@@ -254,11 +254,11 @@ public class ComparisonSession implements Closeable {
         SaveLoader saveLoader;
         try {
             DataPackSettings dataPackSettings0 = Objects.requireNonNullElse(session.getDataPackSettings(), DataPackSettings.SAFE_MODE);
-            class_7237.class_7238 lv = new class_7237.class_7238(resourcePackManager, dataPackSettings0, false);
-            class_7237.FunctionLoaderConfig functionLoaderConfig = new class_7237.FunctionLoaderConfig(
+            SaveLoading.DataPacks lv = new SaveLoading.DataPacks(resourcePackManager, dataPackSettings0, false);
+            SaveLoading.ServerConfig functionLoaderConfig = new SaveLoading.ServerConfig(
                     lv, CommandManager.RegistrationEnvironment.DEDICATED, 2
             );
-            saveLoader = SaveLoader.ofLoaded(
+            saveLoader = SaveLoader.load(
                             functionLoaderConfig,
                             (resourceManager, dataPackSettings) -> {
                                 DynamicRegistryManager.Mutable mutable = DynamicRegistryManager.createAndLoad();

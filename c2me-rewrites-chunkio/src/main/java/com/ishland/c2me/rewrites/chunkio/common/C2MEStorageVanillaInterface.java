@@ -51,4 +51,9 @@ public class C2MEStorageVanillaInterface extends StorageIoWorker {
     public void close() {
         this.backend.close().join();
     }
+
+    @Override
+    public boolean method_42330(ChunkPos chunkPos, int i) {
+        return super.method_42330(chunkPos, i);
+    }
 }
