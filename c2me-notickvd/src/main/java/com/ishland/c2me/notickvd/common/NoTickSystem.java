@@ -25,6 +25,8 @@ public class NoTickSystem {
 
     private final AtomicBoolean isTicking = new AtomicBoolean();
     private volatile LongSet noTickOnlyChunksSnapshot = LongSets.EMPTY_SET;
+    private volatile boolean pendingPurge = false;
+    private volatile long age = 0;
 
     public NoTickSystem(ChunkTicketManager chunkTicketManager) {
         this.chunkTicketManager = chunkTicketManager;
@@ -69,6 +71,11 @@ public class NoTickSystem {
                     }
                 }
 
+                if (pendingPurge) {
+                    this.normalTicketDistanceMap.purge(this.age);
+                    this.playerNoTickDistanceMap.runPendingTicketUpdates();
+                }
+
                 final boolean hasNormalTicketUpdates = this.normalTicketDistanceMap.update();
                 final boolean hasNoTickUpdates = this.playerNoTickDistanceMap.update();
                 if (hasNormalTicketUpdates || hasNoTickUpdates) {
@@ -89,10 +96,8 @@ public class NoTickSystem {
     }
 
     public void runPurge(long age) {
-        this.pendingActions.add(() -> {
-            this.normalTicketDistanceMap.purge(age);
-            this.playerNoTickDistanceMap.runPendingTicketUpdates();
-        });
+        this.age = age;
+        this.pendingPurge = true;
     }
 
     public LongSet getNoTickOnlyChunksSnapshot() {

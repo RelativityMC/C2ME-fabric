@@ -40,7 +40,8 @@ public class SchedulerThread extends Thread implements Executor {
             if (doPriorityChanges()) didWork = true;
 
             // try locks
-            while (!pendingLocks.isEmpty() && semaphore.tryAcquire()) {
+            int burst = 0;
+            while (!pendingLocks.isEmpty()  && burst ++ < 128 && semaphore.tryAcquire()) {
                 SchedulingAsyncCombinedLock<?> lock = pendingLocks.poll();
                 if (lock != null && lock.tryAcquire()) {
                     lock.doAction(semaphore::release); // locked

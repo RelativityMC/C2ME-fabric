@@ -11,6 +11,7 @@
     "MixinNoiseChunkGenerator",
     "MixinServerWorld",
     "MixinThreadedAnvilChunkStorage",
+    "priority.MixinServerChunkManager",
     "progresslogger.MixinWorldGenerationProgressLogger"
   ]
 }

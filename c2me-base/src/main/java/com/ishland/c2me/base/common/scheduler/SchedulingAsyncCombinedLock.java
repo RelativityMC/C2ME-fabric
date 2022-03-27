@@ -3,6 +3,7 @@ package com.ishland.c2me.base.common.scheduler;
 import com.google.common.base.Preconditions;
 import com.ibm.asyncutil.locks.AsyncLock;
 import com.ibm.asyncutil.locks.AsyncNamedLock;
+import com.ishland.c2me.base.common.GlobalExecutors;
 import net.minecraft.util.math.ChunkPos;
 import org.jetbrains.annotations.NotNull;
 
@@ -79,7 +80,7 @@ public class SchedulingAsyncCombinedLock<T> implements Comparable<SchedulingAsyn
         if (token == null) throw new IllegalStateException();
         final CompletableFuture<T> future = this.action.get();
         Preconditions.checkNotNull(future, "future");
-        future.handle((result, throwable) -> {
+        future.handleAsync((result, throwable) -> {
             try {
                 token.releaseLock();
             } catch (Throwable t) {
@@ -93,7 +94,7 @@ public class SchedulingAsyncCombinedLock<T> implements Comparable<SchedulingAsyn
             if (throwable != null) this.future.completeExceptionally(throwable);
             else this.future.complete(result);
             return null;
-        });
+        }, GlobalExecutors.invokingExecutor);
     }
 
     public CompletableFuture<T> getFuture() {

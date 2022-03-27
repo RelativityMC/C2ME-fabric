@@ -1,6 +1,6 @@
 package com.ishland.c2me.threading.worldgen.mixin;
 
-import com.ishland.c2me.base.common.scheduler.PriorityUtils;
+import com.ishland.c2me.threading.worldgen.common.PriorityUtils;
 import com.ishland.c2me.threading.worldgen.common.ChunkStatusUtils;
 import com.ishland.c2me.threading.worldgen.common.Config;
 import com.ishland.c2me.threading.worldgen.common.IChunkStatus;
