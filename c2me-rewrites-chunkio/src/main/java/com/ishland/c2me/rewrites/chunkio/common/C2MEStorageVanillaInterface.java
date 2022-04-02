@@ -53,7 +53,7 @@ public class C2MEStorageVanillaInterface extends StorageIoWorker {
     }
 
     @Override
-    public boolean method_42330(ChunkPos chunkPos, int i) {
-        return super.method_42330(chunkPos, i);
+    public boolean needsBlending(ChunkPos chunkPos, int i) {
+        return super.needsBlending(chunkPos, i);
     }
 }
