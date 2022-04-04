@@ -225,6 +225,7 @@ jmh {
 //    forceGC = false // Should JMH force GC between iterations?
 //    jvm = 'myjvm' // Custom JVM to use when forking.
 //    jvmArgs = ['-XX:+UnlockDiagnosticVMOptions', '-XX:+LogCompilation', '-XX:+PrintAssembly', '-XX:+DebugNonSafepoints']
+    jvmArgs = ['--enable-native-access=ALL-UNNAMED', '--add-modules', 'jdk.incubator.foreign', '-XX:-EnableJVMCI']
 //    jvmArgsAppend = ['Custom JVM args to use when forking (append these)']
 //    jvmArgsPrepend =[ 'Custom JVM args to use when forking (prepend these)']
 //    humanOutputFile = project.file("${project.buildDir}/reports/jmh/human.txt") // human-readable output file

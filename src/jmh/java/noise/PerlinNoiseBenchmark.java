@@ -1,5 +1,8 @@
 package noise;
 
+import com.ishland.c2me.natives.ModuleEntryPoint;
+import com.ishland.c2me.natives.common.NativesInterface;
+import io.netty.util.internal.PlatformDependent;
 import net.minecraft.util.math.noise.PerlinNoiseSampler;
 import net.minecraft.world.gen.random.SimpleRandom;
 import org.openjdk.jmh.annotations.Benchmark;
@@ -21,6 +24,7 @@ public class PerlinNoiseBenchmark {
     private final PerlinNoiseSampler vanillaSampler = new PerlinNoiseSampler(new SimpleRandom(0xFF));
 
     private final byte[] permutations;
+    private final long permutationsPointer;
     private static final double[] FLAT_SIMPLEX_GRAD = new double[]{
             1, 1, 0, 0,
             -1, 1, 0, 0,
@@ -136,6 +140,9 @@ public class PerlinNoiseBenchmark {
             final Field permutationsField = PerlinNoiseSampler.class.getDeclaredField("permutations");
             permutationsField.setAccessible(true);
             permutations = (byte[]) permutationsField.get(vanillaSampler);
+            ModuleEntryPoint.init();
+            permutationsPointer = PlatformDependent.allocateMemory(256);
+            PlatformDependent.copyMemory(this.permutations, 0, permutationsPointer, 256);
         } catch (Throwable t) {
             throw new RuntimeException(t);
         }
@@ -155,6 +162,11 @@ public class PerlinNoiseBenchmark {
     @Benchmark
     public double optimizedSampler() {
         return optimizedSample(4096, 128, 4096, yScale, yMax);
+    }
+
+    @Benchmark
+    public double nativeSampler() {
+        return NativesInterface.sample(this.permutationsPointer, this.originX, this.originY, this.originZ, 4096, 128, 4096, yScale, yMax);
     }
 
 }

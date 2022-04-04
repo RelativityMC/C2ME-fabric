@@ -1,0 +1,55 @@
+moduleDependencies(project, [
+        "c2me-base",
+])
+
+apply plugin: 'c'
+
+model {
+    platforms {
+        x64 {
+            architecture "x64"
+        }
+    }
+
+    components {
+        natives(NativeLibrarySpec) {
+            binaries.all {
+                cCompiler.args '-O3'
+                cCompiler.args '-march=x86-64'
+                cCompiler.args '-mtune=tigerlake'
+                if (targetPlatform.operatingSystem.macOsX) {
+                    cCompiler.args '-I', "${org.gradle.internal.jvm.Jvm.current().javaHome}/include"
+                    cCompiler.args '-I', "${org.gradle.internal.jvm.Jvm.current().javaHome}/include/darwin"
+                    cCompiler.args '-mmacosx-version-min=10.4'
+                    linker.args '-mmacosx-version-min=10.4'
+                } else if (targetPlatform.operatingSystem.linux) {
+                    cCompiler.args '-I', "${org.gradle.internal.jvm.Jvm.current().javaHome}/include"
+                    cCompiler.args '-I', "${org.gradle.internal.jvm.Jvm.current().javaHome}/include/linux"
+                    cCompiler.args '-D_FILE_OFFSET_BITS=64'
+                } else if (targetPlatform.operatingSystem.windows) {
+                    cCompiler.args "-I${org.gradle.internal.jvm.Jvm.current().javaHome}/include"
+                    cCompiler.args "-I${org.gradle.internal.jvm.Jvm.current().javaHome}/include/win32"
+                    linker.args "Shlwapi.lib", "Advapi32.lib"
+                } else if (targetPlatform.operatingSystem.freeBSD) {
+                    cCompiler.args '-I', "${org.gradle.internal.jvm.Jvm.current().javaHome}/include"
+                    cCompiler.args '-I', "${org.gradle.internal.jvm.Jvm.current().javaHome}/include/freebsd"
+                }
+            }
+        }
+    }
+}
+
+processResources {
+    with copySpec {
+        from(buildDir.toPath().resolve("libs").resolve("natives").resolve("shared")) {
+            include '/*.so'
+        }
+        rename { "libc2me-natives-opts.so" }
+    }
+
+    dependsOn "nativesSharedLibrary"
+}
+
+tasks.withType(JavaCompile).configureEach {
+    it.options.compilerArgs << "--add-modules" << "jdk.incubator.foreign"
+}
