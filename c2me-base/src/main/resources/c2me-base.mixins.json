@@ -14,6 +14,7 @@
     "access.IChunkTicketManagerNearbyChunkTicketUpdater",
     "access.IMultiNoiseBiomeSource",
     "access.INbtCompound",
+    "access.IPerlinNoiseSampler",
     "access.IRegionBasedStorage",
     "access.IRegionFile",
     "access.ISerializingRegionBasedStorage",

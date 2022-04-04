@@ -17,6 +17,8 @@ public class NativesInterface {
     private static final SymbolLookup LOOKUP = SymbolLookup.loaderLookup();
     private static final MethodHandle SAMPLE;
     private static final MethodHandle GENERATE_PERMUTATIONS;
+    private static final MethodHandle CREATE_OCTAVE_SAMPLER_DATA;
+    private static final MethodHandle OCTAVE_SAMPLE;
 
     static {
 
@@ -31,9 +33,22 @@ public class NativesInterface {
                 MethodType.methodType(long.class),
                 FunctionDescriptor.of(C_LONG_LONG));
 
+        CREATE_OCTAVE_SAMPLER_DATA = LINKER.downcallHandle(
+                LOOKUP.lookup("c2me_natives_create_octave_sampler_data").get(),
+                MethodType.methodType(long.class, double.class, double.class, long.class, long.class, long.class, long.class, long.class, long.class, long.class),
+                FunctionDescriptor.of(C_LONG_LONG, C_DOUBLE, C_DOUBLE, C_LONG_LONG, C_LONG_LONG, C_LONG_LONG, C_LONG_LONG, C_LONG_LONG, C_LONG_LONG, C_LONG_LONG)
+        );
+
+        OCTAVE_SAMPLE = LINKER.downcallHandle(
+                LOOKUP.lookup("c2me_natives_octave_sample").get(),
+                MethodType.methodType(double.class, long.class, double.class, double.class, double.class),
+                FunctionDescriptor.of(C_DOUBLE, C_LONG_LONG, C_DOUBLE, C_DOUBLE, C_DOUBLE)
+        );
+
     }
 
     public static double sample(long permutations, double originX, double originY, double originZ, double x, double y, double z, double yScale, double yMax) {
+        if (permutations == 0) throw new NullPointerException();
         try {
             return (double) SAMPLE.invoke(permutations, originX, originY, originZ, x, y, z, yScale, yMax);
         } catch (Throwable t) {
@@ -49,11 +64,29 @@ public class NativesInterface {
         }
     }
 
+    public static long createOctaveSamplerData(double lacunarity, double persistence, long size, long ptr_notNull, long ptr_sampler_permutations,
+                                               long ptr_sampler_originX, long ptr_sampler_originY, long ptr_sampler_originZ, long ptr_amplitudes) {
+        try {
+            return (long) CREATE_OCTAVE_SAMPLER_DATA.invoke(lacunarity, persistence, size, ptr_notNull, ptr_sampler_permutations, ptr_sampler_originX, ptr_sampler_originY, ptr_sampler_originZ, ptr_amplitudes);
+        } catch (Throwable t) {
+            throw new RuntimeException(t);
+        }
+    }
+
+    public static double sampleOctave(long ptr_octaveSamplerData, double x, double y, double z) {
+        if (ptr_octaveSamplerData == 0) throw new NullPointerException();
+        try {
+            return (double) OCTAVE_SAMPLE.invoke(ptr_octaveSamplerData, x, y, z);
+        } catch (Throwable t) {
+            throw new RuntimeException(t);
+        }
+    }
+
     private static void testSample() {
         final long memoryAddress = generatePermutations();
 
         long startTime = System.nanoTime();
-        final int count = 1 << 25;
+        final int count = 1 << 20;
         for (int i = 0; i < count; i++) {
             sample(memoryAddress, 0, 0, 0, 40, 140, 20, 1.5, 40);
         }

@@ -1,19 +1,19 @@
 {
   "schemaVersion": 1,
-  "id": "c2me-native-opts",
+  "id": "c2me-natives-opts",
   "version": "${version}",
   "name": "Concurrent Chunk Management Engine (Native Optimizations)",
   "description": "Optimizations using native libraries",
   "environment": "*",
   "mixins": [
-    "c2me-native-opts.mixins.json"
+    "c2me-natives-opts.mixins.json"
   ],
   "depends": {
     "minecraft": "*",
     "fabricloader": "*",
     "c2me-base": "*"
   },
-  "accessWidener": "c2me-native-opts.accesswidener",
+  "accessWidener": "c2me-natives-opts.accesswidener",
 
   "authors": [
     "RelativityMC",

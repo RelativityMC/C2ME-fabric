@@ -6,6 +6,10 @@
 #include <stdlib.h>
 #define BILLION 1000000000L
 
+typedef unsigned char bool;
+static const bool false = 0;
+static const bool true = 1;
+
 const double FLAT_SIMPLEX_GRAD[] = {
     1,
     1,
@@ -186,4 +190,77 @@ __uint8_t *c2me_natives_generatePermutations()
     }
 
     return permutations;
+}
+
+typedef struct
+{
+    double lacunarity;
+    double persistence;
+    size_t size;
+    bool *notNull;
+    __uint8_t *sampler_permutations;
+    double *sampler_originX;
+    double *sampler_originY;
+    double *sampler_originZ;
+    double *amplitudes;
+} octave_sampler_data;
+
+octave_sampler_data *c2me_natives_create_octave_sampler_data(
+    double lacunarity, double persistence, size_t size, bool *notNull, __uint8_t *sampler_permutations,
+    double *sampler_originX, double *sampler_originY, double *sampler_originZ, double *amplitudes)
+{
+    octave_sampler_data *ptr = malloc(sizeof(octave_sampler_data));
+    ptr->lacunarity = lacunarity;
+    ptr->persistence = persistence;
+    ptr->size = size;
+    ptr->notNull = notNull;
+    ptr->sampler_permutations = sampler_permutations;
+    ptr->sampler_originX = sampler_originX;
+    ptr->sampler_originY = sampler_originY;
+    ptr->sampler_originZ = sampler_originZ;
+    ptr->amplitudes = amplitudes;
+    return ptr;
+}
+
+double c2me_natives_octave_maintainPrecision(double value)
+{
+    __int64_t l = value;
+    return value - (double)(l < value ? l - 1L : l) * 3.3554432E7;
+}
+
+double c2me_natives_octave_sample_impl(octave_sampler_data *data, double x, double y, double z, double yScale, double yMax, bool useOrigin)
+{
+    double d = 0.0;
+    double e = data->lacunarity;
+    double f = data->persistence;
+
+    for (int i = 0; i < data->size; ++i)
+    {
+        __uint8_t *permutations = data->sampler_permutations + 256 * i;
+        if (data->notNull[i])
+        {
+            double g = c2me_natives_sample(
+                permutations,
+                data->sampler_originX[i],
+                data->sampler_originY[i],
+                data->sampler_originZ[i],
+                c2me_natives_octave_maintainPrecision(x * e), 
+                useOrigin ? -(data->sampler_originY[i]) : c2me_natives_octave_maintainPrecision(y * e),
+                c2me_natives_octave_maintainPrecision(z * e),
+                yScale * e,
+                yMax * e
+                );
+            d += data->amplitudes[i] * g * f;
+        }
+
+        e *= 2.0;
+        f /= 2.0;
+    }
+
+    return d;
+}
+
+double c2me_natives_octave_sample(octave_sampler_data *data, double x, double y, double z)
+{
+    return c2me_natives_octave_sample_impl(data, x, y, z, 0.0, 0.0, false);
 }

@@ -4,6 +4,6 @@
   "package": "com.ishland.c2me.natives.mixin",
   "plugin": "com.ishland.c2me.base.common.ModuleMixinPlugin",
   "mixins": [
-    "MixinPerlinNoiseSampler"
+    "MixinOctavePerlinNoiseSampler"
   ]
 }

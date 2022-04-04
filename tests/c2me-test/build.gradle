@@ -19,7 +19,10 @@ loom {
             vmArgs "-Dc2me.base.config.override.ioSystem.replaceImpl=true",
                     "-Dc2me.base.config.override.asyncScheduling.enabled=true",
                     "--add-modules",
-                    "jdk.incubator.vector"
+                    "jdk.incubator.vector",
+                    "--enable-native-access=ALL-UNNAMED",
+                    "--add-modules",
+                    "jdk.incubator.foreign"
             if (System.getenv("GITHUB_WORKFLOW") != null) {
                 if (System.getenv("RUNNER_OS").equals("macOS")) {
                     vmArgs "-Xmx11G"
