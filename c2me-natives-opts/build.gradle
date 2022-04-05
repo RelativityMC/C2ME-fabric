@@ -14,6 +14,7 @@ model {
     components {
         natives(NativeLibrarySpec) {
             binaries.all {
+//                cCompiler.args '-g'
                 cCompiler.args '-O3'
                 cCompiler.args '-march=x86-64'
                 cCompiler.args '-mtune=tigerlake'
