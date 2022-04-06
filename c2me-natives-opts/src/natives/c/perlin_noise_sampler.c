@@ -398,3 +398,14 @@ double c2me_natives_interpolated_sample(interpolated_sampler_data *data, int x, 
 
     return c2me_natives_clampedLerp(d / 512.0, e / 512.0, h) / 128.0;
 }
+
+double c2me_natives_double_sample(
+    octave_sampler_data *firstSampler, octave_sampler_data *secondSampler,
+    double x, double y, double z, double amplitude)
+{
+    double d = x * 1.0181268882175227;
+    double e = y * 1.0181268882175227;
+    double f = z * 1.0181268882175227;
+
+    return (c2me_natives_octave_sample(firstSampler, x, y, z) + c2me_natives_octave_sample(secondSampler, d, e, f)) * amplitude;
+}

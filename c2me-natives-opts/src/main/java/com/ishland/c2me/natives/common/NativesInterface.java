@@ -22,6 +22,7 @@ public class NativesInterface {
     private static final MethodHandle OCTAVE_SAMPLE;
     private static final MethodHandle CREATE_INTERPOLATED_SAMPLER_DATA;
     private static final MethodHandle INTERPOLATED_SAMPLE;
+    private static final MethodHandle DOUBLE_SAMPLE;
 
     static {
 
@@ -72,6 +73,15 @@ public class NativesInterface {
                 FunctionDescriptor.of(C_DOUBLE, C_LONG_LONG, C_INT, C_INT, C_INT)
         );
 
+        // double c2me_natives_double_sample(
+        //    octave_sampler_data *firstSampler, octave_sampler_data *secondSampler,
+        //    double x, double y, double z, double amplitude)
+
+        DOUBLE_SAMPLE = LINKER.downcallHandle(
+                LOOKUP.lookup("c2me_natives_double_sample").get(),
+                MethodType.methodType(double.class, long.class, long.class, double.class, double.class, double.class, double.class),
+                FunctionDescriptor.of(C_DOUBLE, C_LONG_LONG, C_LONG_LONG, C_DOUBLE, C_DOUBLE, C_DOUBLE, C_DOUBLE)
+        );
     }
 
     public static double sample(long permutations, double originX, double originY, double originZ, double x, double y, double z, double yScale, double yMax) {
@@ -131,6 +141,16 @@ public class NativesInterface {
         if (ptr_interpolatedSamplerData == 0) throw new NullPointerException();
         try {
             return (double) INTERPOLATED_SAMPLE.invoke(ptr_interpolatedSamplerData, x, y, z);
+        } catch (Throwable t) {
+            throw new RuntimeException(t);
+        }
+    }
+
+    public static double sampleDouble(long ptr_firstSampler, long ptr_secondSampler, double x, double y, double z, double amplitude) {
+        if (ptr_firstSampler == 0) throw new NullPointerException();
+        if (ptr_secondSampler == 0) throw new NullPointerException();
+        try {
+            return (double) DOUBLE_SAMPLE.invoke(ptr_firstSampler, ptr_secondSampler, x, y, z, amplitude);
         } catch (Throwable t) {
             throw new RuntimeException(t);
         }
