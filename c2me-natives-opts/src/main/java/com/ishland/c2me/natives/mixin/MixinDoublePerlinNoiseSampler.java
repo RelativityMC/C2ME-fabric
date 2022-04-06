@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
-@Mixin(DoublePerlinNoiseSampler.class)
+@Mixin(value = DoublePerlinNoiseSampler.class, priority = 1200)
 public class MixinDoublePerlinNoiseSampler {
 
     @Shadow
