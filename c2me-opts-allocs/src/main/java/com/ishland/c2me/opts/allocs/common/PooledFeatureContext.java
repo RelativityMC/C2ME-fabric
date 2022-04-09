@@ -1,6 +1,7 @@
 package com.ishland.c2me.opts.allocs.common;
 
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.random.AbstractRandom;
 import net.minecraft.world.StructureWorldAccess;
 import net.minecraft.world.gen.chunk.ChunkGenerator;
 import net.minecraft.world.gen.feature.ConfiguredFeature;
@@ -8,7 +9,6 @@ import net.minecraft.world.gen.feature.FeatureConfig;
 import net.minecraft.world.gen.feature.util.FeatureContext;
 
 import java.util.Optional;
-import java.util.Random;
 
 public class PooledFeatureContext<FC extends FeatureConfig> extends FeatureContext<FC> {
 
@@ -17,7 +17,7 @@ public class PooledFeatureContext<FC extends FeatureConfig> extends FeatureConte
     private Optional<ConfiguredFeature<?, ?>> feature;
     private StructureWorldAccess world;
     private ChunkGenerator generator;
-    private Random random;
+    private AbstractRandom random;
     private BlockPos origin;
     private FC config;
 
@@ -25,7 +25,7 @@ public class PooledFeatureContext<FC extends FeatureConfig> extends FeatureConte
         super(null, null, null, null, null, null);
     }
 
-    public void reInit(Optional<ConfiguredFeature<?, ?>> feature, StructureWorldAccess world, ChunkGenerator generator, Random random, BlockPos origin, FC config) {
+    public void reInit(Optional<ConfiguredFeature<?, ?>> feature, StructureWorldAccess world, ChunkGenerator generator, AbstractRandom random, BlockPos origin, FC config) {
         this.feature = feature;
         this.world = world;
         this.generator = generator;
@@ -51,7 +51,7 @@ public class PooledFeatureContext<FC extends FeatureConfig> extends FeatureConte
         return this.generator;
     }
 
-    public Random getRandom() {
+    public AbstractRandom getRandom() {
         return this.random;
     }
 

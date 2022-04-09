@@ -2,8 +2,8 @@ package com.ishland.c2me;
 
 import com.ibm.asyncutil.util.Combinators;
 import net.fabricmc.api.ModInitializer;
-import net.minecraft.world.gen.random.ChunkRandom;
-import net.minecraft.world.gen.random.SimpleRandom;
+import net.minecraft.util.math.random.ChunkRandom;
+import net.minecraft.util.math.random.SimpleRandom;
 import net.minecraft.world.storage.ChunkStreamVersion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

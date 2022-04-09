@@ -2,6 +2,7 @@ package com.ishland.c2me.fixes.worldgen.vanilla_bugs.mixin.graal;
 
 import com.mojang.logging.LogUtils;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.random.AbstractRandom;
 import net.minecraft.util.registry.RegistryEntry;
 import net.minecraft.world.gen.feature.ConfiguredFeature;
 import net.minecraft.world.gen.feature.FeaturePlacementContext;
@@ -15,7 +16,6 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
 import java.util.List;
-import java.util.Random;
 import java.util.stream.Stream;
 
 @Mixin(PlacedFeature.class)
@@ -32,7 +32,7 @@ public class MixinPlacedFeature {
      * @reason retry when stream fails
      */
     @Overwrite
-    private boolean generate(FeaturePlacementContext context, Random random, BlockPos pos) {
+    private boolean generate(FeaturePlacementContext context, AbstractRandom random, BlockPos pos) {
         Stream<BlockPos> stream;
         for (int retries = 1; ; retries ++) {
             try {

@@ -6,10 +6,10 @@ import com.ishland.c2me.base.mixin.access.IXoroshiro128PlusPlusRandom;
 import com.ishland.c2me.base.mixin.access.IXoroshiro128PlusPlusRandomDeriver;
 import com.ishland.c2me.base.mixin.access.IXoroshiro128PlusPlusRandomImpl;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.gen.random.AbstractRandom;
+import net.minecraft.util.math.random.AbstractRandom;
+import net.minecraft.util.math.random.RandomDeriver;
+import net.minecraft.util.math.random.SimpleRandom;
 import net.minecraft.world.gen.random.AtomicSimpleRandom;
-import net.minecraft.world.gen.random.RandomDeriver;
-import net.minecraft.world.gen.random.SimpleRandom;
 import net.minecraft.world.gen.random.Xoroshiro128PlusPlusRandom;
 
 public class RandomUtils {

@@ -51,9 +51,9 @@ public abstract class MixinChunkGenerator {
 //        }
 //    }
 
-    @Shadow private boolean field_37056;
+    @Shadow private boolean hasComputedStructurePlacements;
 
-    @Shadow protected abstract void method_41057(NoiseConfig arg);
+    @Shadow protected abstract void computeStructurePlacements(NoiseConfig arg);
 
     /**
      * @author ishland
@@ -61,12 +61,12 @@ public abstract class MixinChunkGenerator {
      */
     @Overwrite
     public void method_41058(NoiseConfig arg) {
-        if (!this.field_37056) {
+        if (!this.hasComputedStructurePlacements) {
             synchronized (this) {
-                if (!this.field_37056) {
+                if (!this.hasComputedStructurePlacements) {
                     System.out.println("Initializing stronghold positions, this may take a while");
-                    this.method_41057(arg);
-                    this.field_37056 = true;
+                    this.computeStructurePlacements(arg);
+                    this.hasComputedStructurePlacements = true;
                     System.out.println("Stronghold positions initialized");
                 }
             }
