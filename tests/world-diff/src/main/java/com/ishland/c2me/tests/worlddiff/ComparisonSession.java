@@ -49,7 +49,7 @@ import net.minecraft.world.biome.BiomeKeys;
 import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.PalettedContainer;
-import net.minecraft.world.gen.feature.StructureFeature;
+import net.minecraft.world.gen.structure.StructureType;
 import net.minecraft.world.level.storage.LevelStorage;
 import net.minecraft.world.storage.StorageIoWorker;
 import net.minecraft.world.updater.WorldUpdater;
@@ -109,8 +109,8 @@ public class ComparisonSession implements Closeable {
 //            final Function<ChunkPos, ArrayList<StructureStart>> newArrayList = k -> new ArrayList<>();
 //            ConcurrentHashMap<ConfiguredStructureFeature<?, ?>, ConcurrentHashMap<ChunkPos, ArrayList<StructureStart>>> baseStructureStarts = new ConcurrentHashMap<>();
 //            ConcurrentHashMap<ConfiguredStructureFeature<?, ?>, ConcurrentHashMap<ChunkPos, ArrayList<StructureStart>>> targetStructureStarts = new ConcurrentHashMap<>();
-            final Registry<StructureFeature> baseStructureFeatureRegistry = baseWorld.dynamicRegistryManager.get(Registry.CONFIGURED_STRUCTURE_FEATURE_KEY);
-            final Registry<StructureFeature> targetStructureFeatureRegistry = targetWorld.dynamicRegistryManager.get(Registry.CONFIGURED_STRUCTURE_FEATURE_KEY);
+            final Registry<StructureType> baseStructureFeatureRegistry = baseWorld.dynamicRegistryManager.get(Registry.STRUCTURE_KEY);
+            final Registry<StructureType> targetStructureFeatureRegistry = targetWorld.dynamicRegistryManager.get(Registry.STRUCTURE_KEY);
             AtomicLong completedChunks = new AtomicLong();
             AtomicLong completedBlocks = new AtomicLong();
             AtomicLong differenceBlocks = new AtomicLong();
@@ -123,9 +123,9 @@ public class ComparisonSession implements Closeable {
                                             || ChunkSerializer.getChunkType(chunkDataBase) == ChunkStatus.ChunkType.PROTOCHUNK)
                                         return null;
 
-                                    final Map<StructureFeature, StructureStart> baseStructures = IChunkSerializer.invokeReadStructureStarts(baseStructureContext, chunkDataBase.getCompound("structures"), baseWorld.saveProperties.getGeneratorOptions().getSeed());
+                                    final Map<StructureType, StructureStart> baseStructures = IChunkSerializer.invokeReadStructureStarts(baseStructureContext, chunkDataBase.getCompound("structures"), baseWorld.saveProperties.getGeneratorOptions().getSeed());
 //                                            .forEach((configuredStructureFeature, structureStart) -> baseStructureStarts.computeIfAbsent(configuredStructureFeature, newConcurrentHashMap).computeIfAbsent(structureStart.getPos(), newArrayList).add(structureStart));
-                                    final Map<StructureFeature, StructureStart> targetStructures = IChunkSerializer.invokeReadStructureStarts(targetStructureContext, chunkDataTarget.getCompound("structures"), targetWorld.saveProperties.getGeneratorOptions().getSeed());
+                                    final Map<StructureType, StructureStart> targetStructures = IChunkSerializer.invokeReadStructureStarts(targetStructureContext, chunkDataTarget.getCompound("structures"), targetWorld.saveProperties.getGeneratorOptions().getSeed());
 //                                            .forEach((configuredStructureFeature, structureStart) -> targetStructureStarts.computeIfAbsent(configuredStructureFeature, newConcurrentHashMap).computeIfAbsent(structureStart.getPos(), newArrayList).add(structureStart));
 
                                     baseStructures.forEach((configuredStructureFeature, baseStructureStart) -> {

@@ -22,7 +22,7 @@ import net.minecraft.util.registry.RegistryEntryList;
 import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.ChunkStatus;
-import net.minecraft.world.gen.feature.StructureFeature;
+import net.minecraft.world.gen.structure.StructureType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -74,8 +74,8 @@ public class PreGenTask {
                         .stream()
                         .filter(biomeclass_6880 -> biomeRegistry.getKey(biomeclass_6880.value()).isPresent())
                         .collect(Collectors.toCollection(HashSet::new));
-        final Registry<StructureFeature> structureFeatureRegistry = world.getRegistryManager().get(Registry.CONFIGURED_STRUCTURE_FEATURE_KEY);
-        final Set<RegistryEntryList<StructureFeature>> structureFeatures;
+        final Registry<StructureType> structureFeatureRegistry = world.getRegistryManager().get(Registry.STRUCTURE_KEY);
+        final Set<RegistryEntryList<StructureType>> structureFeatures;
         if (!isLocateStructureSlowAF(world)) {
             structureFeatures = structureFeatureRegistry.getEntrySet().stream()
                     .filter(entry -> world.getChunkManager().getChunkGenerator().getBiomeSource().getBiomes().stream().anyMatch(entry.getValue().getValidBiomes()::contains))
@@ -100,7 +100,7 @@ public class PreGenTask {
                 }, EXECUTOR)).distinct().toArray(CompletableFuture[]::new));
         final CompletableFuture<Void> structureFuture = CompletableFuture.allOf(structureFeatures.stream()
                 .map(structureFeature -> CompletableFuture.runAsync(() -> {
-                    final Pair<BlockPos, RegistryEntry<StructureFeature>> pair = world.getChunkManager().getChunkGenerator().locateStructure(world, structureFeature, spawnPos, SEARCH_RADIUS / 16, false);
+                    final Pair<BlockPos, RegistryEntry<StructureType>> pair = world.getChunkManager().getChunkGenerator().locateStructure(world, structureFeature, spawnPos, SEARCH_RADIUS / 16, false);
                     locatedStructures.incrementAndGet();
                     if (pair != null) {
                         final ChunkPos chunkPos = new ChunkPos(pair.getFirst());
@@ -233,11 +233,11 @@ public class PreGenTask {
     }
 
     private static boolean isLocateStructureSlowAF(ServerWorld world) {
-        final Registry<StructureFeature> structureFeatureRegistry = world.getRegistryManager().get(Registry.CONFIGURED_STRUCTURE_FEATURE_KEY);
-        final Set<RegistryEntry<StructureFeature>> entries = structureFeatureRegistry.getEntrySet().stream()
+        final Registry<StructureType> structureFeatureRegistry = world.getRegistryManager().get(Registry.STRUCTURE_KEY);
+        final Set<RegistryEntry<StructureType>> entries = structureFeatureRegistry.getEntrySet().stream()
                 .flatMap(thing -> structureFeatureRegistry.getEntry(thing.getKey()).stream())
                 .collect(Collectors.toSet());
-        for (RegistryEntry<StructureFeature> entry : entries) {
+        for (RegistryEntry<StructureType> entry : entries) {
             long startTime = System.nanoTime();
             final CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
                 world.getChunkManager().getChunkGenerator().locateStructure(
