@@ -1,5 +1,6 @@
 package com.ishland.c2me.threading.worldgen.mixin;
 
+import com.ishland.c2me.opts.chunk_access.common.CurrentWorldGenState;
 import com.ishland.c2me.threading.worldgen.common.PriorityUtils;
 import com.ishland.c2me.threading.worldgen.common.ChunkStatusUtils;
 import com.ishland.c2me.threading.worldgen.common.Config;
@@ -13,6 +14,7 @@ import net.minecraft.structure.StructureManager;
 import net.minecraft.util.profiling.jfr.Finishable;
 import net.minecraft.util.profiling.jfr.FlightProfiler;
 import net.minecraft.util.registry.Registry;
+import net.minecraft.world.ChunkRegion;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.gen.chunk.ChunkGenerator;
@@ -87,8 +89,14 @@ public abstract class MixinChunkStatus implements IChunkStatus {
 
         Finishable finishable = FlightProfiler.INSTANCE.startChunkGenerationProfiling(targetChunk.getPos(), world.getRegistryKey(), this.id);
 
-        final Supplier<CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>>> generationTask = () ->
-                this.generationTask.doWork((ChunkStatus) (Object) this, executor, world, chunkGenerator, structureManager, lightingProvider, function, list, targetChunk, bl);
+        final Supplier<CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>>> generationTask = () -> {
+            try {
+                CurrentWorldGenState.setCurrentRegion(new ChunkRegion(world, list, (ChunkStatus) (Object) this, -1));
+                return this.generationTask.doWork((ChunkStatus) (Object) this, executor, world, chunkGenerator, structureManager, lightingProvider, function, list, targetChunk, bl);
+            } finally {
+                CurrentWorldGenState.clearCurrentRegion();
+            }
+        };
 
         final CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> completableFuture;
         if (targetChunk.getStatus().isAtLeast((ChunkStatus) (Object) this)) {
