@@ -53,7 +53,7 @@ public class ChunkStatusUtils {
             for (int z = target.z - radius; z <= target.z + radius; z++)
                 fetchedLocks.add(new ChunkPos(x, z));
 
-        final SchedulingAsyncCombinedLock<T> lock = new SchedulingAsyncCombinedLock<>(chunkLock, new HashSet<>(fetchedLocks), priority, SchedulerThread.INSTANCE, action);
+        final SchedulingAsyncCombinedLock<T> lock = new SchedulingAsyncCombinedLock<>(chunkLock, new HashSet<>(fetchedLocks), priority, SchedulerThread.INSTANCE, action, target.toString());
         SchedulerThread.INSTANCE.addPendingLock(lock);
         return lock.getFuture();
     }

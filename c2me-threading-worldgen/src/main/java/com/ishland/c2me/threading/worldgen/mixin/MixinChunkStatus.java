@@ -1,11 +1,12 @@
 package com.ishland.c2me.threading.worldgen.mixin;
 
 import com.ishland.c2me.opts.chunk_access.common.CurrentWorldGenState;
-import com.ishland.c2me.threading.worldgen.common.PriorityUtils;
 import com.ishland.c2me.threading.worldgen.common.ChunkStatusUtils;
 import com.ishland.c2me.threading.worldgen.common.Config;
 import com.ishland.c2me.threading.worldgen.common.IChunkStatus;
 import com.ishland.c2me.threading.worldgen.common.IWorldGenLockable;
+import com.ishland.c2me.threading.worldgen.common.PriorityUtils;
+import com.ishland.c2me.threading.worldgen.common.ThreadLocalWorldGenSchedulingState;
 import com.mojang.datafixers.util.Either;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ServerLightingProvider;
@@ -44,7 +45,9 @@ public abstract class MixinChunkStatus implements IChunkStatus {
     @Final
     private int taskMargin;
 
-    @Shadow @Final private String id;
+    @Shadow
+    @Final
+    private String id;
     private int reducedTaskRadius = -1;
 
     public void calculateReducedTaskRadius() {
@@ -99,13 +102,21 @@ public abstract class MixinChunkStatus implements IChunkStatus {
         };
 
         final CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> completableFuture;
+
         if (targetChunk.getStatus().isAtLeast((ChunkStatus) (Object) this)) {
             completableFuture = generationTask.get();
         } else {
-            int lockRadius = Config.reduceLockRadius && this.reducedTaskRadius != -1 ? this.reducedTaskRadius : this.taskMargin;
-            //noinspection ConstantConditions
-            completableFuture = ChunkStatusUtils.runChunkGenWithLock(targetChunk.getPos(), lockRadius, PriorityUtils.getChunkPriority(world, targetChunk), ((IWorldGenLockable) world).getWorldGenChunkLock(), () ->
-                    ChunkStatusUtils.getThreadingType((ChunkStatus) (Object) this).runTask(((IWorldGenLockable) world).getWorldGenSingleThreadedLock(), generationTask));
+            final ChunkHolder holder = ThreadLocalWorldGenSchedulingState.getChunkHolder();
+            if (holder != null && holder.getFutureFor((ChunkStatus) (Object) this).isDone()) {
+                completableFuture = ChunkHolder.UNLOADED_CHUNK_FUTURE;
+//                System.out.println(String.format("%s: %s is already done or cancelled, skipping generation", this, targetChunk.getPos()));
+            } else {
+                int lockRadius = Config.reduceLockRadius && this.reducedTaskRadius != -1 ? this.reducedTaskRadius : this.taskMargin;
+                //noinspection ConstantConditions
+                completableFuture = ChunkStatusUtils.runChunkGenWithLock(targetChunk.getPos(), lockRadius, PriorityUtils.getChunkPriority(world, targetChunk), ((IWorldGenLockable) world).getWorldGenChunkLock(), () ->
+                        ChunkStatusUtils.getThreadingType((ChunkStatus) (Object) this).runTask(((IWorldGenLockable) world).getWorldGenSingleThreadedLock(), generationTask));
+
+            }
         }
 
         completableFuture.exceptionally(throwable -> {

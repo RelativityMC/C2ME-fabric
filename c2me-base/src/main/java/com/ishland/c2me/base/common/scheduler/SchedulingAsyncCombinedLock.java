@@ -10,7 +10,6 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Function;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
@@ -21,18 +20,25 @@ public class SchedulingAsyncCombinedLock<T> implements Comparable<SchedulingAsyn
     private final IntSupplier priority;
     private final SchedulerThread schedulerThread;
     private final Supplier<CompletableFuture<T>> action;
+    private final String desc;
     private final CompletableFuture<T> future = new CompletableFuture<>();
     private AsyncLock.LockToken acquiredToken;
 
-    public SchedulingAsyncCombinedLock(AsyncNamedLock<ChunkPos> lock, Set<ChunkPos> names, IntSupplier priority, SchedulerThread schedulerThread, Supplier<CompletableFuture<T>> action) {
+    public SchedulingAsyncCombinedLock(AsyncNamedLock<ChunkPos> lock, Set<ChunkPos> names, IntSupplier priority, SchedulerThread schedulerThread, Supplier<CompletableFuture<T>> action, String desc) {
         this.lock = lock;
         this.names = names.toArray(ChunkPos[]::new);
         this.priority = priority;
         this.schedulerThread = schedulerThread;
         this.action = action;
+        this.desc = desc;
     }
 
     synchronized boolean tryAcquire() {
+        if (this.future.isDone()) {
+            System.out.println(String.format("Cancelling tasks for %s", this.desc));
+            return false;
+        }
+
         final LockEntry[] tryLocks = new LockEntry[names.length];
         boolean allAcquired = true;
         for (int i = 0, namesLength = names.length; i < namesLength; i++) {
@@ -98,7 +104,7 @@ public class SchedulingAsyncCombinedLock<T> implements Comparable<SchedulingAsyn
     }
 
     public CompletableFuture<T> getFuture() {
-        return this.future.thenApply(Function.identity());
+        return this.future;
     }
 
     @Override
