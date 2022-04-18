@@ -1,5 +1,6 @@
 package com.ishland.c2me.threading.worldgen.mixin;
 
+import com.ishland.c2me.base.common.util.SneakyThrow;
 import com.ishland.c2me.opts.chunk_access.common.CurrentWorldGenState;
 import com.ishland.c2me.threading.worldgen.common.ChunkStatusUtils;
 import com.ishland.c2me.threading.worldgen.common.Config;
@@ -29,7 +30,9 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.List;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.Executor;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -113,8 +116,18 @@ public abstract class MixinChunkStatus implements IChunkStatus {
             } else {
                 int lockRadius = Config.reduceLockRadius && this.reducedTaskRadius != -1 ? this.reducedTaskRadius : this.taskMargin;
                 //noinspection ConstantConditions
-                completableFuture = ChunkStatusUtils.runChunkGenWithLock(targetChunk.getPos(), lockRadius, PriorityUtils.getChunkPriority(world, targetChunk), ((IWorldGenLockable) world).getWorldGenChunkLock(), () ->
-                        ChunkStatusUtils.getThreadingType((ChunkStatus) (Object) this).runTask(((IWorldGenLockable) world).getWorldGenSingleThreadedLock(), generationTask));
+                completableFuture = ChunkStatusUtils.runChunkGenWithLock(targetChunk.getPos(), (ChunkStatus) (Object) this, holder, lockRadius, PriorityUtils.getChunkPriority(world, targetChunk), ((IWorldGenLockable) world).getWorldGenChunkLock(), () ->
+                        ChunkStatusUtils.getThreadingType((ChunkStatus) (Object) this).runTask(((IWorldGenLockable) world).getWorldGenSingleThreadedLock(), generationTask))
+                        .exceptionally(t -> {
+                            Throwable actual = t;
+                            while (actual instanceof CompletionException) actual = t.getCause();
+                            if (actual instanceof CancellationException) {
+                                return ChunkHolder.UNLOADED_CHUNK;
+                            } else {
+                                SneakyThrow.sneaky(t);
+                                return null; // unreachable
+                            }
+                        });
 
             }
         }
