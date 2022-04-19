@@ -33,31 +33,31 @@ public class MixinOctavePerlinNoiseSampler implements NativesStruct {
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(CallbackInfo info) {
         final int size = this.octaveSamplers.length;
-        final long ptr_notNull = UnsafeUtil.getInstance().allocateMemory(size);
+        final long ptr_indexes = UnsafeUtil.getInstance().allocateMemory(size * 8L);
         final long ptr_sampler_permutations = UnsafeUtil.getInstance().allocateMemory(size * 256L);
         final long ptr_sampler_originX = UnsafeUtil.getInstance().allocateMemory(size * 8L);
         final long ptr_sampler_originY = UnsafeUtil.getInstance().allocateMemory(size * 8L);
         final long ptr_sampler_originZ = UnsafeUtil.getInstance().allocateMemory(size * 8L);
         final long ptr_amplitudes = UnsafeUtil.getInstance().allocateMemory(size * 8L);
+        int pos = 0;
         for (int i = 0; i < size; i ++) {
             final PerlinNoiseSampler sampler = this.octaveSamplers[i];
             if (sampler != null) {
-                UnsafeUtil.getInstance().putByte(ptr_notNull + i, (byte) 1);
-                PlatformDependent.copyMemory(((IPerlinNoiseSampler) sampler).getPermutations(), 0, ptr_sampler_permutations + 256L * i, 256);
-                UnsafeUtil.getInstance().putDouble(ptr_sampler_originX + i * 8L, sampler.originX);
+                UnsafeUtil.getInstance().putLong(ptr_indexes + pos * 8L, i);
+                PlatformDependent.copyMemory(((IPerlinNoiseSampler) sampler).getPermutations(), 0, ptr_sampler_permutations + 256L * pos, 256);
+                UnsafeUtil.getInstance().putDouble(ptr_sampler_originX + pos * 8L, sampler.originX);
                 //noinspection SuspiciousNameCombination
-                UnsafeUtil.getInstance().putDouble(ptr_sampler_originY + i * 8L, sampler.originY);
-                UnsafeUtil.getInstance().putDouble(ptr_sampler_originZ + i * 8L, sampler.originZ);
-                UnsafeUtil.getInstance().putDouble(ptr_amplitudes + i * 8L, this.amplitudes.getDouble(i));
-            } else {
-                UnsafeUtil.getInstance().putByte(ptr_notNull + i, (byte) 0);
+                UnsafeUtil.getInstance().putDouble(ptr_sampler_originY + pos * 8L, sampler.originY);
+                UnsafeUtil.getInstance().putDouble(ptr_sampler_originZ + pos * 8L, sampler.originZ);
+                UnsafeUtil.getInstance().putDouble(ptr_amplitudes + pos * 8L, this.amplitudes.getDouble(i));
+                pos ++;
             }
         }
         this.octaveSamplerDataPointer = NativesInterface.createOctaveSamplerData(
                 this.lacunarity,
                 this.persistence,
-                size,
-                ptr_notNull,
+                pos,
+                ptr_indexes,
                 ptr_sampler_permutations,
                 ptr_sampler_originX,
                 ptr_sampler_originY,
@@ -66,7 +66,7 @@ public class MixinOctavePerlinNoiseSampler implements NativesStruct {
         );
         Cleaners.register(this,
                 this.octaveSamplerDataPointer,
-                ptr_notNull,
+                ptr_indexes,
                 ptr_sampler_permutations,
                 ptr_sampler_originX,
                 ptr_sampler_originY,

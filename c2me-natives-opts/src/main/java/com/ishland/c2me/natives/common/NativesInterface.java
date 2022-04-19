@@ -38,7 +38,7 @@ public class NativesInterface {
                 FunctionDescriptor.of(C_LONG_LONG));
 
         // octave_sampler_data *c2me_natives_create_octave_sampler_data(
-        //    double lacunarity, double persistence, size_t size, bool *notNull, __uint8_t *sampler_permutations,
+        //    double lacunarity, double persistence, size_t length, size_t *indexes, __uint8_t *sampler_permutations,
         //    double *sampler_originX, double *sampler_originY, double *sampler_originZ, double *amplitudes)
 
         CREATE_OCTAVE_SAMPLER_DATA = LINKER.downcallHandle(
@@ -101,16 +101,16 @@ public class NativesInterface {
         }
     }
 
-    public static long createOctaveSamplerData(double lacunarity, double persistence, long size, long ptr_notNull, long ptr_sampler_permutations,
+    public static long createOctaveSamplerData(double lacunarity, double persistence, long length, long ptr_indexes, long ptr_sampler_permutations,
                                                long ptr_sampler_originX, long ptr_sampler_originY, long ptr_sampler_originZ, long ptr_amplitudes) {
-        if (ptr_notNull == 0) throw new NullPointerException();
+        if (ptr_indexes == 0) throw new NullPointerException();
         if (ptr_sampler_permutations == 0) throw new NullPointerException();
         if (ptr_sampler_originX == 0) throw new NullPointerException();
         if (ptr_sampler_originY == 0) throw new NullPointerException();
         if (ptr_sampler_originZ == 0) throw new NullPointerException();
         if (ptr_amplitudes == 0) throw new NullPointerException();
         try {
-            return (long) CREATE_OCTAVE_SAMPLER_DATA.invoke(lacunarity, persistence, size, ptr_notNull, ptr_sampler_permutations, ptr_sampler_originX, ptr_sampler_originY, ptr_sampler_originZ, ptr_amplitudes);
+            return (long) CREATE_OCTAVE_SAMPLER_DATA.invoke(lacunarity, persistence, length, ptr_indexes, ptr_sampler_permutations, ptr_sampler_originX, ptr_sampler_originY, ptr_sampler_originZ, ptr_amplitudes);
         } catch (Throwable t) {
             throw new RuntimeException(t);
         }

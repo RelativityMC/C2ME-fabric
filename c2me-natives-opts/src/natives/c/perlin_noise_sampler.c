@@ -111,7 +111,7 @@ inline double __attribute__((always_inline)) c2me_natives_clampedLerp(double sta
     }
 }
 
-double c2me_natives_sampleScalar(__uint8_t *permutations, int sectionX, int sectionY, int sectionZ, double localX, double localY, double localZ, double fadeLocalX)
+inline double __attribute__((always_inline)) c2me_natives_sampleScalar(__uint8_t *permutations, int sectionX, int sectionY, int sectionZ, double localX, double localY, double localZ, double fadeLocalX)
 {
     int var0 = sectionX & 0xFF;
     int var1 = (sectionX + 1) & 0xFF;
@@ -230,8 +230,8 @@ typedef struct
 {
     double lacunarity;
     double persistence;
-    size_t size;
-    bool *notNull;
+    size_t length;
+    size_t *indexes;
     __uint8_t *sampler_permutations;
     double *sampler_originX;
     double *sampler_originY;
@@ -240,14 +240,14 @@ typedef struct
 } octave_sampler_data;
 
 octave_sampler_data *c2me_natives_create_octave_sampler_data(
-    double lacunarity, double persistence, size_t size, bool *notNull, __uint8_t *sampler_permutations,
+    double lacunarity, double persistence, size_t length, size_t *indexes, __uint8_t *sampler_permutations,
     double *sampler_originX, double *sampler_originY, double *sampler_originZ, double *amplitudes)
 {
     octave_sampler_data *ptr = malloc(sizeof(octave_sampler_data));
     ptr->lacunarity = lacunarity;
     ptr->persistence = persistence;
-    ptr->size = size;
-    ptr->notNull = notNull;
+    ptr->length = length;
+    ptr->indexes = indexes;
     ptr->sampler_permutations = sampler_permutations;
     ptr->sampler_originX = sampler_originX;
     ptr->sampler_originY = sampler_originY;
@@ -256,32 +256,26 @@ octave_sampler_data *c2me_natives_create_octave_sampler_data(
     return ptr;
 }
 
-double c2me_natives_octave_sample_impl(octave_sampler_data *data, double x, double y, double z, double yScale, double yMax, bool useOrigin)
+inline double __attribute__((always_inline)) c2me_natives_octave_sample_impl(octave_sampler_data *data, double x, double y, double z, double yScale, double yMax, bool useOrigin)
 {
     double d = 0.0;
-    double e = data->lacunarity;
-    double f = data->persistence;
 
-    for (int i = 0; i < data->size; ++i)
+    for (int i = 0; i < data->length; ++i)
     {
+        double e = data->lacunarity * pow(2.0, data->indexes[i]);
+        double f = data->persistence / pow(2.0, data->indexes[i]);
         __uint8_t *permutations = data->sampler_permutations + 256 * i;
-        if (data->notNull[i])
-        {
-            double g = c2me_natives_sample(
-                permutations,
-                data->sampler_originX[i],
-                data->sampler_originY[i],
-                data->sampler_originZ[i],
-                c2me_natives_octave_maintainPrecision(x * e),
-                useOrigin ? -(data->sampler_originY[i]) : c2me_natives_octave_maintainPrecision(y * e),
-                c2me_natives_octave_maintainPrecision(z * e),
-                yScale * e,
-                yMax * e);
-            d += data->amplitudes[i] * g * f;
-        }
-
-        e *= 2.0;
-        f /= 2.0;
+        double g = c2me_natives_sample(
+            permutations,
+            data->sampler_originX[i],
+            data->sampler_originY[i],
+            data->sampler_originZ[i],
+            c2me_natives_octave_maintainPrecision(x * e),
+            useOrigin ? -(data->sampler_originY[i]) : c2me_natives_octave_maintainPrecision(y * e),
+            c2me_natives_octave_maintainPrecision(z * e),
+            yScale * e,
+            yMax * e);
+        d += data->amplitudes[i] * g * f;
     }
 
     return d;
@@ -331,69 +325,64 @@ double c2me_natives_interpolated_sample(interpolated_sampler_data *data, int x, 
     double e = 0.0;
     double f = 0.0;
     bool bl = true;
-    double g = 1.0;
 
-    for (int l = 0; l < 8; ++l)
+    octave_sampler_data *interpolationSampler = data->interpolationNoise;
+    for (int l = 0; l < interpolationSampler->length && interpolationSampler->indexes[l] < 8; ++l)
     {
-        octave_sampler_data *octaveSampler = data->interpolationNoise;
-        if (octaveSampler->notNull[l])
-        {
-            f += c2me_natives_sample(
-                     octaveSampler->sampler_permutations + 256 * l,
-                     octaveSampler->sampler_originX[l],
-                     octaveSampler->sampler_originY[l],
-                     octaveSampler->sampler_originZ[l],
-                     c2me_natives_octave_maintainPrecision((double)i * data->xzMainScale * g),
-                     c2me_natives_octave_maintainPrecision((double)j * data->yMainScale * g),
-                     c2me_natives_octave_maintainPrecision((double)k * data->xzMainScale * g),
-                     data->yMainScale * g,
-                     (double)j * data->yMainScale * g) /
-                 g;
-        }
-
-        g /= 2.0;
+        double g = 1.0 / pow(2.0, interpolationSampler->indexes[l]);
+        f += c2me_natives_sample(
+                 interpolationSampler->sampler_permutations + 256 * l,
+                 interpolationSampler->sampler_originX[l],
+                 interpolationSampler->sampler_originY[l],
+                 interpolationSampler->sampler_originZ[l],
+                 c2me_natives_octave_maintainPrecision((double)i * data->xzMainScale * g),
+                 c2me_natives_octave_maintainPrecision((double)j * data->yMainScale * g),
+                 c2me_natives_octave_maintainPrecision((double)k * data->xzMainScale * g),
+                 data->yMainScale * g,
+                 (double)j * data->yMainScale * g) /
+             g;
     }
 
     double h = (f / 10.0 + 1.0) / 2.0;
-    g = 1.0;
 
-    for (int m = 0; m < 16; ++m)
+    if (!(h >= 1.0))
     {
-        double n = c2me_natives_octave_maintainPrecision((double)i * data->xzScale * g);
-        double o = c2me_natives_octave_maintainPrecision((double)j * data->yScale * g);
-        double p = c2me_natives_octave_maintainPrecision((double)k * data->xzScale * g);
-        double q = data->yScale * g;
-        if (!(h >= 1.0))
+        octave_sampler_data *octaveSampler = data->lowerInterpolatedNoise;
+        for (int m = 0; m < octaveSampler->length && octaveSampler->indexes[m] < 16; ++m)
         {
-            octave_sampler_data *octaveSampler = data->lowerInterpolatedNoise;
-            if (octaveSampler->notNull[m])
-            {
-                d += c2me_natives_sample(
-                         octaveSampler->sampler_permutations + 256 * m,
-                         octaveSampler->sampler_originX[m],
-                         octaveSampler->sampler_originY[m],
-                         octaveSampler->sampler_originZ[m],
-                         n, o, p, q, (double)j * q) /
-                     g;
-            }
+            double g = 1.0 / pow(2.0, octaveSampler->indexes[m]);
+            double n = c2me_natives_octave_maintainPrecision((double)i * data->xzScale * g);
+            double o = c2me_natives_octave_maintainPrecision((double)j * data->yScale * g);
+            double p = c2me_natives_octave_maintainPrecision((double)k * data->xzScale * g);
+            double q = data->yScale * g;
+            d += c2me_natives_sample(
+                     octaveSampler->sampler_permutations + 256 * m,
+                     octaveSampler->sampler_originX[m],
+                     octaveSampler->sampler_originY[m],
+                     octaveSampler->sampler_originZ[m],
+                     n, o, p, q, (double)j * q) /
+                 g;
         }
+    }
 
-        if (!(h <= 0.0))
+    if (!(h <= 0.0))
+    {
+        octave_sampler_data *octaveSampler = data->upperInterpolatedNoise;
+        for (int m = 0; m < octaveSampler->length && octaveSampler->indexes[m] < 16; ++m)
         {
-            octave_sampler_data *octaveSampler = data->upperInterpolatedNoise;
-            if (octaveSampler->notNull[m])
-            {
-                e += c2me_natives_sample(
-                         octaveSampler->sampler_permutations + 256 * m,
-                         octaveSampler->sampler_originX[m],
-                         octaveSampler->sampler_originY[m],
-                         octaveSampler->sampler_originZ[m],
-                         n, o, p, q, (double)j * q) /
-                     g;
-            }
+            double g = 1.0 / pow(2.0, octaveSampler->indexes[m]);
+            double n = c2me_natives_octave_maintainPrecision((double)i * data->xzScale * g);
+            double o = c2me_natives_octave_maintainPrecision((double)j * data->yScale * g);
+            double p = c2me_natives_octave_maintainPrecision((double)k * data->xzScale * g);
+            double q = data->yScale * g;
+            e += c2me_natives_sample(
+                     octaveSampler->sampler_permutations + 256 * m,
+                     octaveSampler->sampler_originX[m],
+                     octaveSampler->sampler_originY[m],
+                     octaveSampler->sampler_originZ[m],
+                     n, o, p, q, (double)j * q) /
+                 g;
         }
-
-        g /= 2.0;
     }
 
     return c2me_natives_clampedLerp(d / 512.0, e / 512.0, h) / 128.0;
