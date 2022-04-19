@@ -47,8 +47,11 @@ public class PriorityUtils {
     }
 
     public static IntSupplier getChunkPriority(ServerWorld serverWorld, Chunk chunk) {
-        final Long2ObjectLinkedOpenHashMap<ChunkHolder> chunkHolders = ((IThreadedAnvilChunkStorage) serverWorld.getChunkManager().threadedAnvilChunkStorage).getChunkHolders();
-        ChunkHolder chunkHolder = chunkHolders.get(chunk.getPos().toLong());
+        ChunkHolder chunkHolder = ThreadLocalWorldGenSchedulingState.getChunkHolder();
+        if (chunkHolder == null) {
+            final Long2ObjectLinkedOpenHashMap<ChunkHolder> chunkHolders = ((IThreadedAnvilChunkStorage) serverWorld.getChunkManager().threadedAnvilChunkStorage).getChunkHolders();
+            chunkHolder = chunkHolders.get(chunk.getPos().toLong());
+        }
         return getChunkPriority(serverWorld, chunkHolder, chunk.getPos());
     }
 

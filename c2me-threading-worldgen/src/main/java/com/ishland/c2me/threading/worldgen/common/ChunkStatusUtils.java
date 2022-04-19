@@ -15,6 +15,7 @@ import net.minecraft.world.chunk.ChunkStatus;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.BooleanSupplier;
 import java.util.function.Function;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
@@ -24,6 +25,8 @@ import static com.ishland.c2me.threading.worldgen.common.ChunkStatusUtils.ChunkS
 import static com.ishland.c2me.threading.worldgen.common.ChunkStatusUtils.ChunkStatusThreadingType.SINGLE_THREADED;
 
 public class ChunkStatusUtils {
+
+    public static final BooleanSupplier FALSE_SUPPLIER = () -> false;
 
     public static ChunkStatusThreadingType getThreadingType(final ChunkStatus status) {
         if (status.equals(ChunkStatus.STRUCTURE_STARTS)
@@ -43,8 +46,9 @@ public class ChunkStatusUtils {
         return AS_IS;
     }
 
-    public static <T> CompletableFuture<T> runChunkGenWithLock(ChunkPos target, int radius, IntSupplier priority, AsyncNamedLock<ChunkPos> chunkLock, Supplier<CompletableFuture<T>> action) {
+    public static <T> CompletableFuture<T> runChunkGenWithLock(ChunkPos target, ChunkStatus status, ChunkHolder holder, int radius, IntSupplier priority, AsyncNamedLock<ChunkPos> chunkLock, Supplier<CompletableFuture<T>> action) {
         Preconditions.checkNotNull(priority);
+        Preconditions.checkNotNull(status);
 //        if (radius == 0)
 //            return StageSupport.tryWith(chunkLock.acquireLock(target), unused -> action.get()).toCompletableFuture().thenCompose(Function.identity());
 
@@ -53,7 +57,15 @@ public class ChunkStatusUtils {
             for (int z = target.z - radius; z <= target.z + radius; z++)
                 fetchedLocks.add(new ChunkPos(x, z));
 
-        final SchedulingAsyncCombinedLock<T> lock = new SchedulingAsyncCombinedLock<>(chunkLock, new HashSet<>(fetchedLocks), priority, SchedulerThread.INSTANCE, action);
+        BooleanSupplier isCancelled;
+
+        if (holder != null) {
+            isCancelled = () -> holder.getFutureFor(status).isDone();
+        } else {
+            isCancelled = FALSE_SUPPLIER;
+        }
+
+        final SchedulingAsyncCombinedLock<T> lock = new SchedulingAsyncCombinedLock<>(chunkLock, new HashSet<>(fetchedLocks), priority, isCancelled, SchedulerThread.INSTANCE, action, target.toString());
         SchedulerThread.INSTANCE.addPendingLock(lock);
         return lock.getFuture();
     }
