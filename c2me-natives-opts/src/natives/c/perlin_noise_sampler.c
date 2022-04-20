@@ -77,6 +77,17 @@ const double FLAT_SIMPLEX_GRAD[] = {
     0,
 };
 
+double *c2me_natives_pow_of_two_table = NULL;
+
+void c2me_natives_init_pow_of_two_table() {
+    if (c2me_natives_pow_of_two_table != NULL) return;
+    
+    c2me_natives_pow_of_two_table = malloc(sizeof(double) * 256);
+    for (int i = 0; i < 256; i++) {
+        c2me_natives_pow_of_two_table[i] = pow(2.0, i);
+    }
+}
+
 inline int __attribute__((always_inline)) c2me_natives_floorDiv(int x, int y)
 {
     int r = x / y;
@@ -262,8 +273,8 @@ inline double __attribute__((always_inline)) c2me_natives_octave_sample_impl(oct
 
     for (int i = 0; i < data->length; ++i)
     {
-        double e = data->lacunarity * pow(2.0, data->indexes[i]);
-        double f = data->persistence / pow(2.0, data->indexes[i]);
+        double e = data->lacunarity * c2me_natives_pow_of_two_table[data->indexes[i]];
+        double f = data->persistence / c2me_natives_pow_of_two_table[data->indexes[i]];
         __uint8_t *permutations = data->sampler_permutations + 256 * i;
         double g = c2me_natives_sample(
             permutations,
@@ -329,7 +340,7 @@ double c2me_natives_interpolated_sample(interpolated_sampler_data *data, int x, 
     octave_sampler_data *interpolationSampler = data->interpolationNoise;
     for (int l = 0; l < interpolationSampler->length && interpolationSampler->indexes[l] < 8; ++l)
     {
-        double g = 1.0 / pow(2.0, interpolationSampler->indexes[l]);
+        double g = 1.0 / c2me_natives_pow_of_two_table[interpolationSampler->indexes[l]];
         f += c2me_natives_sample(
                  interpolationSampler->sampler_permutations + 256 * l,
                  interpolationSampler->sampler_originX[l],
@@ -350,7 +361,7 @@ double c2me_natives_interpolated_sample(interpolated_sampler_data *data, int x, 
         octave_sampler_data *octaveSampler = data->lowerInterpolatedNoise;
         for (int m = 0; m < octaveSampler->length && octaveSampler->indexes[m] < 16; ++m)
         {
-            double g = 1.0 / pow(2.0, octaveSampler->indexes[m]);
+            double g = 1.0 / c2me_natives_pow_of_two_table[octaveSampler->indexes[m]];
             double n = c2me_natives_octave_maintainPrecision((double)i * data->xzScale * g);
             double o = c2me_natives_octave_maintainPrecision((double)j * data->yScale * g);
             double p = c2me_natives_octave_maintainPrecision((double)k * data->xzScale * g);
@@ -370,7 +381,7 @@ double c2me_natives_interpolated_sample(interpolated_sampler_data *data, int x, 
         octave_sampler_data *octaveSampler = data->upperInterpolatedNoise;
         for (int m = 0; m < octaveSampler->length && octaveSampler->indexes[m] < 16; ++m)
         {
-            double g = 1.0 / pow(2.0, octaveSampler->indexes[m]);
+            double g = 1.0 / c2me_natives_pow_of_two_table[octaveSampler->indexes[m]];
             double n = c2me_natives_octave_maintainPrecision((double)i * data->xzScale * g);
             double o = c2me_natives_octave_maintainPrecision((double)j * data->yScale * g);
             double p = c2me_natives_octave_maintainPrecision((double)k * data->xzScale * g);

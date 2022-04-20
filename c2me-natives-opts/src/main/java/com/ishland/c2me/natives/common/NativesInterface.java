@@ -16,6 +16,7 @@ public class NativesInterface {
 
     private static final CLinker LINKER = CLinker.getInstance();
     private static final SymbolLookup LOOKUP = SymbolLookup.loaderLookup();
+    private static final MethodHandle INIT_POW_OF_TWO_TABLE;
     private static final MethodHandle SAMPLE;
     private static final MethodHandle GENERATE_PERMUTATIONS;
     private static final MethodHandle CREATE_OCTAVE_SAMPLER_DATA;
@@ -25,6 +26,12 @@ public class NativesInterface {
     private static final MethodHandle DOUBLE_SAMPLE;
 
     static {
+
+        INIT_POW_OF_TWO_TABLE = LINKER.downcallHandle(
+                LOOKUP.lookup("c2me_natives_init_pow_of_two_table").get(),
+                MethodType.methodType(void.class),
+                FunctionDescriptor.ofVoid()
+        );
 
         SAMPLE = LINKER.downcallHandle(
                 LOOKUP.lookup("c2me_natives_sample").get(),
@@ -82,6 +89,16 @@ public class NativesInterface {
                 MethodType.methodType(double.class, long.class, long.class, double.class, double.class, double.class, double.class),
                 FunctionDescriptor.of(C_DOUBLE, C_LONG_LONG, C_LONG_LONG, C_DOUBLE, C_DOUBLE, C_DOUBLE, C_DOUBLE)
         );
+
+        initPowOfTwoTable();
+    }
+
+    private static void initPowOfTwoTable() {
+        try {
+            INIT_POW_OF_TWO_TABLE.invoke();
+        } catch (Throwable t) {
+            throw new RuntimeException(t);
+        }
     }
 
     public static double sample(long permutations, double originX, double originY, double originZ, double x, double y, double z, double yScale, double yMax) {
