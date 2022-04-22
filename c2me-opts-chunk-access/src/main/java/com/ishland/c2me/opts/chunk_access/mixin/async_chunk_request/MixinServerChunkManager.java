@@ -1,6 +1,7 @@
 package com.ishland.c2me.opts.chunk_access.mixin.async_chunk_request;
 
 import com.ishland.c2me.base.common.util.CFUtil;
+import com.ishland.c2me.opts.chunk_access.common.CurrentWorldGenState;
 import com.mojang.datafixers.util.Either;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ChunkTicketManager;
@@ -11,6 +12,7 @@ import net.minecraft.server.world.ThreadedAnvilChunkStorage;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.profiler.Profiler;
+import net.minecraft.world.ChunkRegion;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
 import org.jetbrains.annotations.Nullable;
@@ -65,6 +67,11 @@ public abstract class MixinServerChunkManager {
     @Unique
     @Final
     private Chunk c2me$getChunkOffThread(int chunkX, int chunkZ, ChunkStatus leastStatus, boolean create) {
+        final ChunkRegion currentRegion = CurrentWorldGenState.getCurrentRegion();
+        if (currentRegion != null) {
+            final Chunk chunk = currentRegion.getChunk(chunkX, chunkZ, leastStatus, false);
+            if (chunk != null) return chunk;
+        }
         final CompletableFuture<Chunk> chunkLoad = c2me$getChunkFutureOffThread(chunkX, chunkZ, leastStatus, create);
         assert chunkLoad != null;
         return CFUtil.join(chunkLoad);
@@ -80,7 +87,8 @@ public abstract class MixinServerChunkManager {
             long chunkPosLong = chunkPos.toLong();
             int ticketLevel = 33 + ChunkStatus.getDistanceFromFull(leastStatus);
             ChunkHolder chunkHolder = this.getChunkHolder(chunkPosLong);
-            if (create) {
+            boolean doCreate = create && (chunkHolder == null || this.isMissingForLevel(chunkHolder, ticketLevel));
+            if (doCreate) {
                 this.ticketManager.addTicketWithLevel(ASYNC_LOAD, chunkPos, ticketLevel, chunkPos);
                 if (this.isMissingForLevel(chunkHolder, ticketLevel)) {
                     Profiler profiler = this.world.getProfiler();
@@ -95,7 +103,7 @@ public abstract class MixinServerChunkManager {
             }
 
             final CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> future = this.isMissingForLevel(chunkHolder, ticketLevel) ? ChunkHolder.UNLOADED_CHUNK_FUTURE : chunkHolder.getChunkAt(leastStatus, this.threadedAnvilChunkStorage);
-            if (create) {
+            if (doCreate && future != null) {
                 future.exceptionally(__ -> null).thenRunAsync(() -> {
                     this.ticketManager.removeTicketWithLevel(ASYNC_LOAD, chunkPos, ticketLevel, chunkPos);
                 }, this.mainThreadExecutor);

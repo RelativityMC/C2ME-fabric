@@ -245,7 +245,7 @@ public class C2MEStorageThread extends Thread {
                     SneakyThrow.sneaky(t);
                     return null; // Unreachable anyway
                 }
-            }, GlobalExecutors.executor).handleAsync((compound, throwable) -> {
+            }, GlobalExecutors.executor).handle((compound, throwable) -> {
                 if (throwable != null) future.completeExceptionally(throwable);
                 else future.complete(compound);
                 return null;

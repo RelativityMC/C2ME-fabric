@@ -81,8 +81,8 @@ public abstract class MixinPerlinNoiseSampler {
         final int var2 = this.permutations[var0] & 0xFF;
         final int var3 = this.permutations[var1] & 0xFF;
         final int var4 = (var2 + sectionY) & 0xFF;
-        final int var5 = (var2 + sectionY + 1) & 0xFF;
-        final int var6 = (var3 + sectionY) & 0xFF;
+        final int var5 = (var3 + sectionY) & 0xFF;
+        final int var6 = (var2 + sectionY + 1) & 0xFF;
         final int var7 = (var3 + sectionY + 1) & 0xFF;
         final int var8 = this.permutations[var4] & 0xFF;
         final int var9 = this.permutations[var5] & 0xFF;
@@ -90,12 +90,12 @@ public abstract class MixinPerlinNoiseSampler {
         final int var11 = this.permutations[var7] & 0xFF;
 
         final int var12 = (var8 + sectionZ) & 0xFF;
-        final int var13 = (var10 + sectionZ) & 0xFF;
-        final int var14 = (var9 + sectionZ) & 0xFF;
+        final int var13 = (var9 + sectionZ) & 0xFF;
+        final int var14 = (var10 + sectionZ) & 0xFF;
         final int var15 = (var11 + sectionZ) & 0xFF;
         final int var16 = (var8 + sectionZ + 1) & 0xFF;
-        final int var17 = (var10 + sectionZ + 1) & 0xFF;
-        final int var18 = (var9 + sectionZ + 1) & 0xFF;
+        final int var17 = (var9 + sectionZ + 1) & 0xFF;
+        final int var18 = (var10 + sectionZ + 1) & 0xFF;
         final int var19 = (var11 + sectionZ + 1) & 0xFF;
         final int var20 = (this.permutations[var12] & 15) << 2;
         final int var21 = (this.permutations[var13] & 15) << 2;
@@ -130,8 +130,9 @@ public abstract class MixinPerlinNoiseSampler {
         final double var113 = var87 + var101 * (var88 - var87);
         final double var114 = var93 + var101 * (var94 - var93);
         final double var115 = var91 + var101 * (var92 - var91);
+        final double var116 = var89 + var101 * (var90 - var89);
         final double var117 = var114 - var115;
-        final double var118 = var102 * (var89 + var101 * (var90 - var89) - var113);
+        final double var118 = var102 * (var116 - var113);
         final double var119 = var102 * var117;
         final double var120 = var113 + var118;
         final double var121 = var115 + var119;
