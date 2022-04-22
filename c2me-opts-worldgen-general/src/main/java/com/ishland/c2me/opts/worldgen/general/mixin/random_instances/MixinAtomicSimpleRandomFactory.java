@@ -2,9 +2,9 @@ package com.ishland.c2me.opts.worldgen.general.mixin.random_instances;
 
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.random.AbstractRandom;
+import net.minecraft.util.math.random.AtomicSimpleRandom;
 import net.minecraft.util.math.random.RandomDeriver;
 import net.minecraft.util.math.random.SimpleRandom;
-import net.minecraft.world.gen.random.AtomicSimpleRandom;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;

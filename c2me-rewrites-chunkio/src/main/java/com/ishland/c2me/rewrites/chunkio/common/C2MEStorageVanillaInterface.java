@@ -8,6 +8,7 @@ import net.minecraft.world.storage.StorageIoWorker;
 import org.jetbrains.annotations.Nullable;
 
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public class C2MEStorageVanillaInterface extends StorageIoWorker {
@@ -25,15 +26,9 @@ public class C2MEStorageVanillaInterface extends StorageIoWorker {
         return CompletableFuture.completedFuture(null);
     }
 
-    @Nullable
     @Override
-    public NbtCompound getNbt(ChunkPos pos) {
-        return this.backend.getChunkData(pos.toLong(), null).join();
-    }
-
-    @Override
-    public CompletableFuture<NbtCompound> readChunkData(ChunkPos pos) {
-        return this.backend.getChunkData(pos.toLong(), null);
+    public CompletableFuture<Optional<NbtCompound>> readChunkData(ChunkPos pos) {
+        return this.backend.getChunkData(pos.toLong(), null).thenApply(Optional::ofNullable);
     }
 
     @Override
@@ -56,4 +51,6 @@ public class C2MEStorageVanillaInterface extends StorageIoWorker {
     public boolean needsBlending(ChunkPos chunkPos, int i) {
         return super.needsBlending(chunkPos, i);
     }
+
+
 }

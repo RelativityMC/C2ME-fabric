@@ -1,5 +1,5 @@
 allprojects {
-    apply plugin: 'com.ishland.curseforge.modpackresolver'
+//    apply plugin: 'com.ishland.curseforge.modpackresolver'
     apply plugin: 'fabric-loom'
     apply plugin: 'io.github.juuxel.loom-quiltflower'
     apply plugin: 'java-library'

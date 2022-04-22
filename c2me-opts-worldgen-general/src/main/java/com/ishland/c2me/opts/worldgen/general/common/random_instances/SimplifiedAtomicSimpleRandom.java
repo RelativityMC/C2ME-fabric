@@ -1,8 +1,8 @@
 package com.ishland.c2me.opts.worldgen.general.common.random_instances;
 
 import net.minecraft.util.math.random.AbstractRandom;
+import net.minecraft.util.math.random.AtomicSimpleRandom;
 import net.minecraft.util.math.random.SimpleRandom;
-import net.minecraft.world.gen.random.AtomicSimpleRandom;
 
 public class SimplifiedAtomicSimpleRandom extends AtomicSimpleRandom { // TODO [VanillaCopy]
     private static final int INT_BITS = 48;
