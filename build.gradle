@@ -215,7 +215,7 @@ String getVersionSuffix() {
 }
 
 jmh {
-//    includes = ['some regular expression'] // include pattern (regular expression) for benchmarks to be executed
+    includes = ['noise\\.InterpolatedNoiseBenchmark'] // include pattern (regular expression) for benchmarks to be executed
 //    excludes = ['some regular expression'] // exclude pattern (regular expression) for benchmarks to be executed
     iterations = 5 // Number of measurement iterations to do.
     benchmarkMode = ['avgt'] // Benchmark mode. Available modes are: [Throughput/thrpt, AverageTime/avgt, SampleTime/sample, SingleShotTime/ss, All/all]
@@ -225,7 +225,7 @@ jmh {
 //    forceGC = false // Should JMH force GC between iterations?
 //    jvm = 'myjvm' // Custom JVM to use when forking.
 //    jvmArgs = ['-XX:+UnlockDiagnosticVMOptions', '-XX:+LogCompilation', '-XX:+PrintAssembly', '-XX:+DebugNonSafepoints']
-    jvmArgs = ['--enable-native-access=ALL-UNNAMED', '--add-modules', 'jdk.incubator.foreign', '-XX:-EnableJVMCI']
+    jvmArgs = ['--enable-native-access=ALL-UNNAMED', '--add-modules', 'jdk.incubator.foreign']
 //    jvmArgsAppend = ['Custom JVM args to use when forking (append these)']
 //    jvmArgsPrepend =[ 'Custom JVM args to use when forking (prepend these)']
 //    humanOutputFile = project.file("${project.buildDir}/reports/jmh/human.txt") // human-readable output file
