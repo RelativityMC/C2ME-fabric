@@ -93,14 +93,14 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
     protected abstract void save(boolean flush);
 
     @Shadow
-    protected abstract CompletableFuture<Optional<NbtCompound>> method_43383(ChunkPos chunkPos);
+    protected abstract CompletableFuture<Optional<NbtCompound>> getUpdatedChunkNbt(ChunkPos chunkPos);
 
     @Shadow
-    private static boolean method_43380(NbtCompound nbtCompound) {
-        return false;
+    private static boolean containsStatus(NbtCompound nbtCompound) {
+        throw new AbstractMethodError();
     }
 
-    @Shadow protected abstract Chunk method_43382(ChunkPos chunkPos);
+    @Shadow protected abstract Chunk getProtoChunk(ChunkPos chunkPos);
 
     private AsyncNamedLock<ChunkPos> chunkLock = AsyncNamedLock.createFair();
 
@@ -127,7 +127,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
 
         final CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> future = getUpdatedChunkNbtAtAsync(pos)
                 .thenApply(optional -> optional.filter(nbtCompound -> {
-                    boolean bl = method_43380(nbtCompound);
+                    boolean bl = containsStatus(nbtCompound);
                     if (!bl) {
                         LOGGER.error("Chunk file at {} is missing level data, skipping", pos);
                     }
@@ -156,7 +156,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
                         this.mark(pos, protoChunk.getStatus().getChunkType());
                         return Either.left(protoChunk);
                     } else {
-                        return Either.left(this.method_43382(pos));
+                        return Either.left(this.getProtoChunk(pos));
                     }
                 }, this.mainThreadExecutor);
         future.exceptionally(throwable -> null).thenRun(() -> {
@@ -201,7 +201,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
     }
 
     private CompletableFuture<Optional<NbtCompound>> getUpdatedChunkNbtAtAsync(ChunkPos pos) {
-        return method_43383(pos);
+        return getUpdatedChunkNbt(pos);
     }
 
     private ConcurrentLinkedQueue<CompletableFuture<Void>> saveFutures = new ConcurrentLinkedQueue<>();
