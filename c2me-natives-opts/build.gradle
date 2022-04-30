@@ -11,6 +11,11 @@ model {
         }
     }
 
+//    toolChains {
+//        clang(Clang) {
+//        }
+//    }
+
     components {
         natives(NativeLibrarySpec) {
             binaries.all {

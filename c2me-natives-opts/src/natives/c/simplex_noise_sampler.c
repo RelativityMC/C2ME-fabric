@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <time.h>
 
-#include "../includes/common_maths.h"
+#include "../include/common_maths.h"
 
 double c2me_natives_simplex_sample(int *permutations, double x, double y) {
     double var0 = (x + y) * SKEW_FACTOR_2D;
@@ -30,11 +30,9 @@ double c2me_natives_simplex_sample(int *permutations, double x, double y) {
     double var11 = var5 - 1.0 + 2.0 * UNSKEW_FACTOR_2D;
     int var12 = ((int) var1) & 0xFF;
     int var13 = ((int) var2) & 0xFF;
-    int var14 = (var13 + var7);
-    int var15 = (var13 + 1);
     int var16 = permutations[var13 & 255];
-    int var17 = permutations[var14 & 255];
-    int var18 = permutations[var15 & 255];
+    int var17 = permutations[(var13 + var7) & 255];
+    int var18 = permutations[(var13 + 1) & 255];
     int var22 = permutations[((var12 + var16) & 255)] % 12;
     int var23 = permutations[((var12 + var6 + var17) & 255)] % 12;
     int ver24 = permutations[((var12 + 1 + var18) & 255)] % 12;

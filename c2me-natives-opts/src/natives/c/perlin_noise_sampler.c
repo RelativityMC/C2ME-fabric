@@ -4,7 +4,7 @@
 #include <time.h>
 #include <stdio.h>
 
-#include "../includes/common_maths.h"
+#include "../include/common_maths.h"
 
 static inline double __attribute__((always_inline))
 c2me_natives_perlin_sampleScalar(__uint8_t *permutations, int sectionX, int sectionY, int sectionZ, double localX,
