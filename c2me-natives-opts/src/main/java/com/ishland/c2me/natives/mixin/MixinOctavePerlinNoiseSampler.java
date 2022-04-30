@@ -38,7 +38,7 @@ public class MixinOctavePerlinNoiseSampler implements NativesStruct {
      */
     @Overwrite
     public double sample(double x, double y, double z) {
-        return NativesInterface.sampleOctave(octaveSamplerDataPointer, x, y, z);
+        return NativesInterface.perlinSampleOctave(octaveSamplerDataPointer, x, y, z);
     }
 
     @Override

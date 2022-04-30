@@ -4,7 +4,7 @@ import com.ishland.c2me.natives.common.Cleaners;
 import com.ishland.c2me.natives.common.NativesInterface;
 import com.ishland.c2me.natives.common.UnsafeUtil;
 import io.netty.util.internal.PlatformDependent;
-import net.minecraft.util.math.noise.PerlinNoiseSampler;
+import net.minecraft.util.math.noise.SimplexNoiseSampler;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -14,20 +14,27 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(value = PerlinNoiseSampler.class, priority = 1200)
-public class MixinPerlinNoiseSampler {
+@Mixin(value = SimplexNoiseSampler.class, priority = 1200)
+public class MixinSimplexNoiseSampler {
 
-    @Shadow @Final private byte[] permutations;
-    @Shadow @Final public double originX;
-    @Shadow @Final public double originY;
-    @Shadow @Final public double originZ;
+    @Shadow
+    @Final
+    private int[] permutations;
     @Unique
     private long permutationsPointer = 0L;
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(CallbackInfo ci) {
-        this.permutationsPointer = UnsafeUtil.getInstance().allocateMemory(256);
-        PlatformDependent.copyMemory(this.permutations, 0, this.permutationsPointer, 256);
+        this.permutationsPointer = UnsafeUtil.getInstance().allocateMemory(4 * 256);
+        byte[] tmp = new byte[4 * 256];
+        UnsafeUtil.getInstance().copyMemory(
+                permutations,
+                UnsafeUtil.getInstance().arrayBaseOffset(int[].class),
+                tmp,
+                UnsafeUtil.getInstance().arrayBaseOffset(byte[].class),
+                4 * 256
+        );
+        PlatformDependent.copyMemory(tmp, 0, this.permutationsPointer, 4 * 256);
         Cleaners.register(this, this.permutationsPointer);
     }
 
@@ -35,11 +42,9 @@ public class MixinPerlinNoiseSampler {
      * @author ishland
      * @reason use native method
      */
-    @Deprecated
     @Overwrite
-    public double sample(double x, double y, double z, double yScale, double yMax) {
-        if (permutationsPointer == 0L) throw new NullPointerException();
-        return NativesInterface.perlinSample(this.permutationsPointer, this.originX, this.originY, this.originZ, x, y, z, yScale, yMax);
+    public double sample(double x, double y) {
+        return NativesInterface.simplexSample(this.permutationsPointer, x, y);
     }
 
 }

@@ -18,6 +18,7 @@ model {
                 cCompiler.args '-O3'
                 cCompiler.args '-march=x86-64'
                 cCompiler.args '-mtune=tigerlake'
+                cCompiler.args '-std=c11'
                 if (targetPlatform.operatingSystem.macOsX) {
                     cCompiler.args '-I', "${org.gradle.internal.jvm.Jvm.current().javaHome}/include"
                     cCompiler.args '-I', "${org.gradle.internal.jvm.Jvm.current().javaHome}/include/darwin"

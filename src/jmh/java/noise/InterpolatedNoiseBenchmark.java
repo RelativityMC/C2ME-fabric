@@ -36,7 +36,7 @@ public class InterpolatedNoiseBenchmark {
 
     @Benchmark
     public double nativeSampler() {
-        return NativesInterface.sampleInterpolated(pointer, x, y, z);
+        return NativesInterface.perlinSampleInterpolated(pointer, x, y, z);
     }
 
     @Benchmark

@@ -30,7 +30,7 @@ public class MixinDoublePerlinNoiseSampler {
      */
     @Overwrite
     public double sample(double x, double y, double z) {
-        return NativesInterface.sampleDouble(
+        return NativesInterface.perlinSampleDouble(
                 ((NativesStruct) this.firstSampler).getNativePointer(),
                 ((NativesStruct) this.secondSampler).getNativePointer(),
                 x, y, z, this.amplitude

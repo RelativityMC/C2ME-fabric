@@ -166,7 +166,7 @@ public class PerlinNoiseBenchmark {
 
     @Benchmark
     public double nativeSampler() {
-        return NativesInterface.sample(this.permutationsPointer, this.originX, this.originY, this.originZ, 4096, 128, 4096, yScale, yMax);
+        return NativesInterface.perlinSample(this.permutationsPointer, this.originX, this.originY, this.originZ, 4096, 128, 4096, yScale, yMax);
     }
 
 }

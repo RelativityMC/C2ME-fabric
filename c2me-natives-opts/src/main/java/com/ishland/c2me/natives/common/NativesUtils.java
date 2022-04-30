@@ -23,7 +23,7 @@ public class NativesUtils {
             final double yMainScale = (double) accessible(clazz.getDeclaredField("yMainScale")).get(sampler);
             final int cellWidth = (int) accessible(clazz.getDeclaredField("cellWidth")).get(sampler);
             final int cellHeight = (int) accessible(clazz.getDeclaredField("cellHeight")).get(sampler);
-            return NativesInterface.createInterpolatedSamplerData(
+            return NativesInterface.createPerlinInterpolatedSamplerData(
                     createOctaveSamplerPointer(lowerInterpolatedNoise),
                     createOctaveSamplerPointer(upperInterpolatedNoise),
                     createOctaveSamplerPointer(interpolationNoise),
@@ -82,7 +82,7 @@ public class NativesUtils {
                 pos ++;
             }
         }
-        long octaveSamplerDataPointer = NativesInterface.createOctaveSamplerData(
+        long octaveSamplerDataPointer = NativesInterface.createPerlinOctaveSamplerData(
                 lacunarity,
                 persistence,
                 pos,

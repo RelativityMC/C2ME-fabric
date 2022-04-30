@@ -30,7 +30,7 @@ public class MixinInterpolatedNoiseSampler {
 
     @Inject(method = "<init>(Lnet/minecraft/util/math/noise/OctavePerlinNoiseSampler;Lnet/minecraft/util/math/noise/OctavePerlinNoiseSampler;Lnet/minecraft/util/math/noise/OctavePerlinNoiseSampler;Lnet/minecraft/world/gen/chunk/NoiseSamplingConfig;II)V", at = @At("RETURN"))
     private void onInit(CallbackInfo info) {
-        this.interpolatedSamplerPointer = NativesInterface.createInterpolatedSamplerData(
+        this.interpolatedSamplerPointer = NativesInterface.createPerlinInterpolatedSamplerData(
                 ((NativesStruct) this.lowerInterpolatedNoise).getNativePointer(),
                 ((NativesStruct) this.upperInterpolatedNoise).getNativePointer(),
                 ((NativesStruct) this.interpolationNoise).getNativePointer(),
@@ -50,7 +50,7 @@ public class MixinInterpolatedNoiseSampler {
      */
     @Overwrite
     public double sample(DensityFunction.NoisePos pos) {
-        return NativesInterface.sampleInterpolated(this.interpolatedSamplerPointer, pos.blockX(), pos.blockY(), pos.blockZ());
+        return NativesInterface.perlinSampleInterpolated(this.interpolatedSamplerPointer, pos.blockX(), pos.blockY(), pos.blockZ());
     }
 
 }
