@@ -2,6 +2,7 @@ package com.ishland.c2me.natives.mixin;
 
 import com.ishland.c2me.natives.common.Cleaners;
 import com.ishland.c2me.natives.common.NativesInterface;
+import com.ishland.c2me.natives.common.NativesStruct;
 import com.ishland.c2me.natives.common.UnsafeUtil;
 import io.netty.util.internal.PlatformDependent;
 import net.minecraft.util.math.noise.SimplexNoiseSampler;
@@ -15,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(value = SimplexNoiseSampler.class, priority = 1200)
-public class MixinSimplexNoiseSampler {
+public class MixinSimplexNoiseSampler implements NativesStruct {
 
     @Shadow
     @Final
@@ -47,4 +48,8 @@ public class MixinSimplexNoiseSampler {
         return NativesInterface.simplexSample(this.permutationsPointer, x, y);
     }
 
+    @Override
+    public long getNativePointer() {
+        return this.permutationsPointer;
+    }
 }

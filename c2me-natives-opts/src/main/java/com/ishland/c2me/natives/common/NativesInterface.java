@@ -9,6 +9,7 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodType;
 
 import static jdk.incubator.foreign.CLinker.C_DOUBLE;
+import static jdk.incubator.foreign.CLinker.C_FLOAT;
 import static jdk.incubator.foreign.CLinker.C_INT;
 import static jdk.incubator.foreign.CLinker.C_LONG_LONG;
 
@@ -25,6 +26,7 @@ public class NativesInterface {
     private static final MethodHandle PERLIN_INTERPOLATED_SAMPLE;
     private static final MethodHandle PERLIN_DOUBLE_SAMPLE;
     private static final MethodHandle SIMPLEX_SAMPLE;
+    private static final MethodHandle THE_END_SAMPLE;
 
     static {
 
@@ -97,6 +99,14 @@ public class NativesInterface {
                 LOOKUP.lookup("c2me_natives_simplex_sample").get(),
                 MethodType.methodType(double.class, long.class, double.class, double.class),
                 FunctionDescriptor.of(C_DOUBLE, C_LONG_LONG, C_DOUBLE, C_DOUBLE)
+        );
+
+        // float c2me_natives_end_noise_sample(int *permutations, int i, int j)
+
+        THE_END_SAMPLE = LINKER.downcallHandle(
+                LOOKUP.lookup("c2me_natives_end_noise_sample").get(),
+                MethodType.methodType(float.class, long.class, int.class, int.class),
+                FunctionDescriptor.of(C_FLOAT, C_LONG_LONG, C_INT, C_INT)
         );
 
         initNatives();
@@ -186,6 +196,15 @@ public class NativesInterface {
         if (ptr_simplexNoise == 0) throw new NullPointerException();
         try {
             return (double) SIMPLEX_SAMPLE.invoke(ptr_simplexNoise, x, y);
+        } catch (Throwable t) {
+            throw new RuntimeException(t);
+        }
+    }
+
+    public static float theEndSample(long ptr_simplexNoise, int x, int y) {
+        if (ptr_simplexNoise == 0) throw new NullPointerException();
+        try {
+            return (float) THE_END_SAMPLE.invoke(ptr_simplexNoise, x, y);
         } catch (Throwable t) {
             throw new RuntimeException(t);
         }

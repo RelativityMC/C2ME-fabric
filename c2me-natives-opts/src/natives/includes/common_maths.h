@@ -37,6 +37,8 @@ extern double SQRT_3;
 extern double SKEW_FACTOR_2D;
 extern double UNSKEW_FACTOR_2D;
 
+extern void c2me_natives_init();
+
 static inline int __attribute__((always_inline)) c2me_natives_floorDiv(int x, int y) {
     int r = x / y;
     // if the signs are different and modulo not zero, round down
@@ -74,6 +76,15 @@ static inline double __attribute__((always_inline)) c2me_natives_clampedLerp(dou
     } else {
         return delta > 1.0 ? end : c2me_natives_lerp(delta, start, end);
     }
+}
+
+static inline float __attribute__((always_inline)) c2me_natives_fclamp(float value, float min, float max) {
+//    if (value < min) {
+//        return min;
+//    } else {
+//        return value > max ? max : value;
+//    }
+    return fminf(fmaxf(value, min), max);
 }
 
 #endif //C2ME_COMMON_MATHS_H

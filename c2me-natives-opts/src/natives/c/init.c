@@ -7,7 +7,7 @@ double SQRT_3;
 double SKEW_FACTOR_2D;
 double UNSKEW_FACTOR_2D;
 
-extern void c2me_natives_init() {
+void c2me_natives_init() {
     if (c2me_natives_isInitialized) return;
 
     c2me_natives_pow_of_two_table = malloc(sizeof(double) * 256);

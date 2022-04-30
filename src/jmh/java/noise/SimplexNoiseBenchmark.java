@@ -1,7 +1,5 @@
 package noise;
 
-import net.minecraft.util.math.noise.SimplexNoiseSampler;
-import net.minecraft.world.gen.random.SimpleRandom;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Mode;
@@ -9,49 +7,12 @@ import org.openjdk.jmh.annotations.OutputTimeUnit;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.State;
 
-import java.lang.reflect.Field;
 import java.util.concurrent.TimeUnit;
 
 @State(Scope.Benchmark)
 @BenchmarkMode({Mode.Throughput, Mode.AverageTime})
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
-public class SimplexNoiseBenchmark {
-
-    private static final double SQRT_3 = Math.sqrt(3.0);
-    private static final double SKEW_FACTOR_2D = 0.5 * (SQRT_3 - 1.0);
-    private static final double UNSKEW_FACTOR_2D = (3.0 - SQRT_3) / 6.0;
-    private static final double[] FLAT_SIMPLEX_GRAD = new double[]{
-            1, 1, 0, 0,
-            -1, 1, 0, 0,
-            1, -1, 0, 0,
-            -1, -1, 0, 0,
-            1, 0, 1, 0,
-            -1, 0, 1, 0,
-            1, 0, -1, 0,
-            -1, 0, -1, 0,
-            0, 1, 1, 0,
-            0, -1, 1, 0,
-            0, 1, -1, 0,
-            0, -1, -1, 0,
-            1, 1, 0, 0,
-            0, -1, 1, 0,
-            -1, 1, 0, 0,
-            0, -1, -1, 0,
-    };
-
-    private final SimplexNoiseSampler vanillaSampler = new SimplexNoiseSampler(new SimpleRandom(0xFF));
-
-    private final int[] permutations;
-
-    {
-        try {
-            final Field permutationsField = SimplexNoiseSampler.class.getDeclaredField("permutations");
-            permutationsField.setAccessible(true);
-            permutations = (int[]) permutationsField.get(vanillaSampler);
-        } catch (Throwable t) {
-            throw new RuntimeException(t);
-        }
-    }
+public class SimplexNoiseBenchmark extends AbstractSimplexNoise {
 
     private double grad(int hash, double x, double y, double z, double distance) {
         double d = distance - x * x - y * y - z * z;
@@ -89,17 +50,12 @@ public class SimplexNoiseBenchmark {
         final double var11 = var5 - 1.0 + 2.0 * UNSKEW_FACTOR_2D;
         final int var12 = ((int) var1) & 0xFF;
         final int var13 = ((int) var2) & 0xFF;
-        final int var14 = (var13 + var7) & 255;
-        final int var15 = (var13 + 1) & 255;
         final int var16 = this.permutations[var13 & 255];
-        final int var17 = this.permutations[var14];
-        final int var18 = this.permutations[var15];
-        final int var19 = var12 + var16 & 255;
-        final int var20 = var12 + var6 + var17 & 255;
-        final int var21 = var12 + 1 + var18 & 255;
-        final int var22 = this.permutations[var19] % 12;
-        final int var23 = this.permutations[var20] % 12;
-        final int ver24 = this.permutations[var21] % 12;
+        final int var17 = this.permutations[(var13 + var7) & 255];
+        final int var18 = this.permutations[(var13 + 1) & 255];
+        final int var22 = this.permutations[var12 + var16 & 255] % 12;
+        final int var23 = this.permutations[var12 + var6 + var17 & 255] % 12;
+        final int ver24 = this.permutations[var12 + 1 + var18 & 255] % 12;
         final double var25 = this.grad(var22, var4, var5, 0.0, 0.5);
         final double var26 = this.grad(var23, var8, var9, 0.0, 0.5);
         final double var27 = this.grad(ver24, var10, var11, 0.0, 0.5);
@@ -113,7 +69,7 @@ public class SimplexNoiseBenchmark {
 
     @Benchmark
     public double optimizedSampler() {
-        return this.vanillaSampler.sample(4096, 4096);
+        return optimizedSample(4096, 4096);
     }
 
 }

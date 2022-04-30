@@ -8,6 +8,7 @@
     "MixinInterpolatedNoiseSampler",
     "MixinOctavePerlinNoiseSampler",
     "MixinPerlinNoiseSampler",
-    "MixinSimplexNoiseSampler"
+    "MixinSimplexNoiseSampler",
+    "MixinTheEndBiomeSource"
   ]
 }
