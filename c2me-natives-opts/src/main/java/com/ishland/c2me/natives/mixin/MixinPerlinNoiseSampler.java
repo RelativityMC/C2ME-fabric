@@ -1,7 +1,7 @@
 package com.ishland.c2me.natives.mixin;
 
 import com.ishland.c2me.natives.common.NativeMemoryTracker;
-import com.ishland.c2me.natives.common.NativesInterface;
+import com.ishland.c2me.natives.common.NativeInterface;
 import io.netty.util.internal.PlatformDependent;
 import net.minecraft.util.math.noise.PerlinNoiseSampler;
 import org.spongepowered.asm.mixin.Final;
@@ -37,7 +37,7 @@ public class MixinPerlinNoiseSampler {
     @Overwrite
     public double sample(double x, double y, double z, double yScale, double yMax) {
         if (permutationsPointer == 0L) throw new NullPointerException();
-        return NativesInterface.perlinSample(this.permutationsPointer, this.originX, this.originY, this.originZ, x, y, z, yScale, yMax);
+        return NativeInterface.perlinSample(this.permutationsPointer, this.originX, this.originY, this.originZ, x, y, z, yScale, yMax);
     }
 
 }

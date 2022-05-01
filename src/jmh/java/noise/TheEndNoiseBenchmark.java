@@ -1,7 +1,7 @@
 package noise;
 
 import com.ishland.c2me.natives.ModuleEntryPoint;
-import com.ishland.c2me.natives.common.NativesInterface;
+import com.ishland.c2me.natives.common.NativeInterface;
 import com.ishland.c2me.natives.common.UnsafeUtil;
 import io.netty.util.internal.PlatformDependent;
 import net.minecraft.util.math.MathHelper;
@@ -69,7 +69,7 @@ public class TheEndNoiseBenchmark extends AbstractSimplexNoise {
 
     @Benchmark
     public float nativeSampler() {
-        return NativesInterface.theEndSample(this.permutationsPointer, 20000, 20000);
+        return NativeInterface.theEndSample(this.permutationsPointer, 20000, 20000);
     }
 
 }

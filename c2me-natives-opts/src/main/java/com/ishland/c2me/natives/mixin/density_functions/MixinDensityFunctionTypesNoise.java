@@ -1,9 +1,9 @@
 package com.ishland.c2me.natives.mixin.density_functions;
 
 import com.ishland.c2me.base.mixin.access.IDoublePerlinNoiseSampler;
+import com.ishland.c2me.natives.common.NativeInterface;
 import com.ishland.c2me.natives.common.NativeMemoryTracker;
 import com.ishland.c2me.natives.common.NativeStruct;
-import com.ishland.c2me.natives.common.NativesInterface;
 import net.minecraft.util.math.noise.DoublePerlinNoiseSampler;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
 import net.minecraft.world.gen.densityfunction.DensityFunctionTypes;
@@ -20,7 +20,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.Arrays;
 
 @Mixin(DensityFunctionTypes.Noise.class)
-public abstract class MixinDensityFunctionTypesNoise implements DensityFunction.class_6913 {
+public abstract class MixinDensityFunctionTypesNoise implements DensityFunction.class_6913, NativeStruct {
 
     @Shadow
     @Final
@@ -41,7 +41,7 @@ public abstract class MixinDensityFunctionTypesNoise implements DensityFunction.
     private void onInit(CallbackInfo ci) {
         System.out.println("Compiling density function: noise %s".formatted(this));
         if (this.noise != null) {
-            this.dfiPointer = NativesInterface.createDFINoiseData(
+            this.dfiPointer = NativeInterface.createDFINoiseData(
                     false,
                     ((NativeStruct) ((IDoublePerlinNoiseSampler) this.noise).getFirstSampler()).getNativePointer(),
                     ((NativeStruct) ((IDoublePerlinNoiseSampler) this.noise).getSecondSampler()).getNativePointer(),
@@ -50,7 +50,7 @@ public abstract class MixinDensityFunctionTypesNoise implements DensityFunction.
                     this.yScale
             );
         } else {
-            this.dfiPointer = NativesInterface.createDFINoiseData(
+            this.dfiPointer = NativeInterface.createDFINoiseData(
                     true,
                     0,
                     0,
@@ -59,7 +59,7 @@ public abstract class MixinDensityFunctionTypesNoise implements DensityFunction.
                     this.yScale
             );
         }
-        NativeMemoryTracker.registerAllocatedMemory(this, NativesInterface.SIZEOF_density_function_data + NativesInterface.SIZEOF_dfi_noise_data, this.dfiPointer);
+        NativeMemoryTracker.registerAllocatedMemory(this, NativeInterface.SIZEOF_density_function_data + NativeInterface.SIZEOF_dfi_noise_data, this.dfiPointer);
     }
 
     /**
@@ -69,7 +69,7 @@ public abstract class MixinDensityFunctionTypesNoise implements DensityFunction.
     @Overwrite
     public double sample(DensityFunction.NoisePos pos) {
         if (this.noise == null) return 0.0;
-        return NativesInterface.dfiBindingsSingleOp(this.dfiPointer, pos.blockX(), pos.blockY(), pos.blockZ());
+        return NativeInterface.dfiBindingsSingleOp(this.dfiPointer, pos.blockX(), pos.blockY(), pos.blockZ());
     }
 
     @Override
@@ -79,9 +79,14 @@ public abstract class MixinDensityFunctionTypesNoise implements DensityFunction.
             return;
         }
         if (arg instanceof NativeStruct nativeStruct) {
-            NativesInterface.dfiBindingsMultiOp(this.dfiPointer, nativeStruct.getNativePointer(), ds);
+            NativeInterface.dfiBindingsMultiOp(this.dfiPointer, nativeStruct.getNativePointer(), ds);
         } else {
             class_6913.super.method_40470(ds, arg);
         }
+    }
+
+    @Override
+    public long getNativePointer() {
+        return this.dfiPointer;
     }
 }

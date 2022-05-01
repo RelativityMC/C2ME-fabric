@@ -1,7 +1,7 @@
 package noise;
 
 import com.ishland.c2me.natives.ModuleEntryPoint;
-import com.ishland.c2me.natives.common.NativesInterface;
+import com.ishland.c2me.natives.common.NativeInterface;
 import io.netty.util.internal.PlatformDependent;
 import net.minecraft.util.math.noise.PerlinNoiseSampler;
 import net.minecraft.world.gen.random.SimpleRandom;
@@ -166,7 +166,7 @@ public class PerlinNoiseBenchmark {
 
     @Benchmark
     public double nativeSampler() {
-        return NativesInterface.perlinSample(this.permutationsPointer, this.originX, this.originY, this.originZ, 4096, 128, 4096, yScale, yMax);
+        return NativeInterface.perlinSample(this.permutationsPointer, this.originX, this.originY, this.originZ, 4096, 128, 4096, yScale, yMax);
     }
 
 }

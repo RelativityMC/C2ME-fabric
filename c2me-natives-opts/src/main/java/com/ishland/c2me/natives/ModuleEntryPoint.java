@@ -1,6 +1,6 @@
 package com.ishland.c2me.natives;
 
-import com.ishland.c2me.natives.common.NativesInterface;
+import com.ishland.c2me.natives.common.NativeInterface;
 import io.netty.util.internal.PlatformDependent;
 import org.jetbrains.annotations.VisibleForTesting;
 
@@ -20,7 +20,7 @@ public class ModuleEntryPoint {
             boolean success = false;
             try {
                 if (loadNatives()) {
-                    NativesInterface.init();
+                    NativeInterface.init();
                     success = true;
                 }
             } catch (Throwable t) {

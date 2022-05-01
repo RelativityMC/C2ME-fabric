@@ -1,7 +1,7 @@
 package com.ishland.c2me.natives.mixin;
 
+import com.ishland.c2me.natives.common.NativeInterface;
 import com.ishland.c2me.natives.common.NativeMemoryTracker;
-import com.ishland.c2me.natives.common.NativesInterface;
 import com.ishland.c2me.natives.common.NativeStruct;
 import com.ishland.c2me.natives.common.UnsafeUtil;
 import io.netty.util.internal.PlatformDependent;
@@ -45,7 +45,7 @@ public class MixinSimplexNoiseSampler implements NativeStruct {
      */
     @Overwrite
     public double sample(double x, double y) {
-        return NativesInterface.simplexSample(this.permutationsPointer, x, y);
+        return NativeInterface.simplexSample(this.permutationsPointer, x, y);
     }
 
     @Override

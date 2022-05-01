@@ -1,7 +1,7 @@
 package noise;
 
 import com.ishland.c2me.natives.ModuleEntryPoint;
-import com.ishland.c2me.natives.common.NativesInterface;
+import com.ishland.c2me.natives.common.NativeInterface;
 import com.ishland.c2me.natives.common.NativesUtils;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
 import org.openjdk.jmh.annotations.Benchmark;
@@ -36,7 +36,7 @@ public class InterpolatedNoiseBenchmark {
 
     @Benchmark
     public double nativeSampler() {
-        return NativesInterface.perlinSampleInterpolated(pointer, x, y, z);
+        return NativeInterface.perlinSampleInterpolated(pointer, x, y, z);
     }
 
     @Benchmark

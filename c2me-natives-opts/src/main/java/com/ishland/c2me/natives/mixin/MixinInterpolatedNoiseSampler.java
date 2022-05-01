@@ -1,7 +1,7 @@
 package com.ishland.c2me.natives.mixin;
 
+import com.ishland.c2me.natives.common.NativeInterface;
 import com.ishland.c2me.natives.common.NativeMemoryTracker;
-import com.ishland.c2me.natives.common.NativesInterface;
 import com.ishland.c2me.natives.common.NativeStruct;
 import net.minecraft.util.math.noise.InterpolatedNoiseSampler;
 import net.minecraft.util.math.noise.OctavePerlinNoiseSampler;
@@ -30,7 +30,7 @@ public class MixinInterpolatedNoiseSampler {
 
     @Inject(method = "<init>(Lnet/minecraft/util/math/noise/OctavePerlinNoiseSampler;Lnet/minecraft/util/math/noise/OctavePerlinNoiseSampler;Lnet/minecraft/util/math/noise/OctavePerlinNoiseSampler;Lnet/minecraft/world/gen/chunk/NoiseSamplingConfig;II)V", at = @At("RETURN"))
     private void onInit(CallbackInfo info) {
-        this.interpolatedSamplerPointer = NativesInterface.createPerlinInterpolatedSamplerData(
+        this.interpolatedSamplerPointer = NativeInterface.createPerlinInterpolatedSamplerData(
                 ((NativeStruct) this.lowerInterpolatedNoise).getNativePointer(),
                 ((NativeStruct) this.upperInterpolatedNoise).getNativePointer(),
                 ((NativeStruct) this.interpolationNoise).getNativePointer(),
@@ -41,7 +41,7 @@ public class MixinInterpolatedNoiseSampler {
                 this.cellWidth,
                 this.cellHeight
         );
-        NativeMemoryTracker.registerAllocatedMemory(this, NativesInterface.SIZEOF_interpolated_sampler_data, this.interpolatedSamplerPointer);
+        NativeMemoryTracker.registerAllocatedMemory(this, NativeInterface.SIZEOF_interpolated_sampler_data, this.interpolatedSamplerPointer);
     }
 
     /**
@@ -50,7 +50,7 @@ public class MixinInterpolatedNoiseSampler {
      */
     @Overwrite
     public double sample(DensityFunction.NoisePos pos) {
-        return NativesInterface.perlinSampleInterpolated(this.interpolatedSamplerPointer, pos.blockX(), pos.blockY(), pos.blockZ());
+        return NativeInterface.perlinSampleInterpolated(this.interpolatedSamplerPointer, pos.blockX(), pos.blockY(), pos.blockZ());
     }
 
 }

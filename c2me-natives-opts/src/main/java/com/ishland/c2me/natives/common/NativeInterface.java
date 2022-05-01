@@ -15,7 +15,7 @@ import static jdk.incubator.foreign.CLinker.C_FLOAT;
 import static jdk.incubator.foreign.CLinker.C_INT;
 import static jdk.incubator.foreign.CLinker.C_LONG_LONG;
 
-public class NativesInterface {
+public class NativeInterface {
 
     private static final CLinker LINKER = CLinker.getInstance();
     private static final SymbolLookup LOOKUP = SymbolLookup.loaderLookup();
@@ -76,6 +76,22 @@ public class NativesInterface {
     public static long createChunkNoiseSampler1DataEmpty() {
         try {
             return (long) DFA_create_chunk_noise_sampler1_data_empty.invoke();
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    // density_function_impl_data *c2me_natives_create_dfi_constant(double constant)
+
+    private static final MethodHandle DFA_create_dfi_constant = LINKER.downcallHandle(
+            LOOKUP.lookup("c2me_natives_create_dfi_constant").get(),
+            MethodType.methodType(long.class, double.class),
+            FunctionDescriptor.of(C_LONG_LONG, C_DOUBLE)
+    );
+
+    public static long createDFIConstant(double constant) {
+        try {
+            return (long) DFA_create_dfi_constant.invoke(constant);
         } catch (Throwable e) {
             throw new RuntimeException(e);
         }
@@ -155,12 +171,14 @@ public class NativesInterface {
         NativeMemoryTracker.freeMemoryWithoutCleaner(ptr_res, size);
     }
 
+    // ===== Struct sizeof()s =====
     public static final long SIZEOF_octave_sampler_data = sizeOf("octave_sampler_data");
     public static final long SIZEOF_interpolated_sampler_data = sizeOf("interpolated_sampler_data");
     public static final long SIZEOF_chunk_noise_sampler_data = sizeOf("chunk_noise_sampler_data");
     public static final long SIZEOF_dfi_noise_data = sizeOf("dfi_noise_data");
     public static final long SIZEOF_density_function_data = sizeOf("density_function_data");
     public static final long SIZEOF_density_function_multi_pos_args_data = sizeOf("density_function_multi_pos_args_data");
+    public static final long SIZEOF_dfi_constant_data = sizeOf("dfi_constant_data");
 
     static {
 

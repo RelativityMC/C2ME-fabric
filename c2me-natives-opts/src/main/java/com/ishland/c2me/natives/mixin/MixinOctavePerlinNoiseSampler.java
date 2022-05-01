@@ -1,6 +1,6 @@
 package com.ishland.c2me.natives.mixin;
 
-import com.ishland.c2me.natives.common.NativesInterface;
+import com.ishland.c2me.natives.common.NativeInterface;
 import com.ishland.c2me.natives.common.NativeStruct;
 import com.ishland.c2me.natives.common.NativesUtils;
 import it.unimi.dsi.fastutil.doubles.DoubleList;
@@ -39,7 +39,7 @@ public class MixinOctavePerlinNoiseSampler implements NativeStruct {
      */
     @Overwrite
     public double sample(double x, double y, double z) {
-        return NativesInterface.perlinSampleOctave(octaveSamplerDataPointer, x, y, z);
+        return NativeInterface.perlinSampleOctave(octaveSamplerDataPointer, x, y, z);
     }
 
     @Override

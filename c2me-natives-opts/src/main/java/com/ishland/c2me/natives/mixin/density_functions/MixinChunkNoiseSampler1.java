@@ -1,9 +1,9 @@
 package com.ishland.c2me.natives.mixin.density_functions;
 
 import com.ishland.c2me.base.mixin.access.IChunkNoiseSampler;
+import com.ishland.c2me.natives.common.NativeInterface;
 import com.ishland.c2me.natives.common.NativeMemoryTracker;
 import com.ishland.c2me.natives.common.NativeStruct;
-import com.ishland.c2me.natives.common.NativesInterface;
 import com.ishland.c2me.natives.common.UnsafeUtil;
 import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
 import org.spongepowered.asm.mixin.Final;
@@ -24,10 +24,10 @@ public class MixinChunkNoiseSampler1 implements NativeStruct {
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(CallbackInfo info) {
-        this.pointer = NativesInterface.createChunkNoiseSampler1DataEmpty();
+        this.pointer = NativeInterface.createChunkNoiseSampler1DataEmpty();
         NativeMemoryTracker.registerAllocatedMemory(
                 this,
-                NativesInterface.SIZEOF_density_function_multi_pos_args_data + NativesInterface.SIZEOF_chunk_noise_sampler_data,
+                NativeInterface.SIZEOF_density_function_multi_pos_args_data + NativeInterface.SIZEOF_chunk_noise_sampler_data,
                 this.pointer
         );
     }
@@ -49,7 +49,7 @@ public class MixinChunkNoiseSampler1 implements NativeStruct {
         // minimumY: 32
         // height: 36
 
-        final long data_start = this.pointer + NativesInterface.SIZEOF_density_function_multi_pos_args_data;
+        final long data_start = this.pointer + NativeInterface.SIZEOF_density_function_multi_pos_args_data;
         UnsafeUtil.getInstance().putInt(data_start + 0, ((IChunkNoiseSampler) this.field_36595).getHorizontalBlockSize());
         UnsafeUtil.getInstance().putInt(data_start + 4, ((IChunkNoiseSampler) this.field_36595).getVerticalBlockSize());
         UnsafeUtil.getInstance().putInt(data_start + 8, ((IChunkNoiseSampler) this.field_36595).getBaseX());

@@ -1,6 +1,6 @@
 package com.ishland.c2me.natives.mixin;
 
-import com.ishland.c2me.natives.common.NativesInterface;
+import com.ishland.c2me.natives.common.NativeInterface;
 import com.ishland.c2me.natives.common.NativeStruct;
 import net.minecraft.util.math.noise.SimplexNoiseSampler;
 import net.minecraft.world.biome.source.TheEndBiomeSource;
@@ -16,7 +16,7 @@ public class MixinTheEndBiomeSource {
      */
     @Overwrite
     public static float getNoiseAt(SimplexNoiseSampler simplexNoiseSampler, int i, int j) {
-        return NativesInterface.theEndSample(((NativeStruct) simplexNoiseSampler).getNativePointer(), i, j);
+        return NativeInterface.theEndSample(((NativeStruct) simplexNoiseSampler).getNativePointer(), i, j);
     }
 
 }
