@@ -65,6 +65,22 @@ public class NativesInterface {
         }
     }
 
+    // density_function_multi_pos_args_data *c2me_natives_create_chunk_noise_sampler_data_empty()
+
+    private static final MethodHandle DFA_create_chunk_noise_sampler1_data_empty = LINKER.downcallHandle(
+            LOOKUP.lookup("c2me_natives_create_chunk_noise_sampler1_data_empty").get(),
+            MethodType.methodType(long.class),
+            FunctionDescriptor.of(C_LONG_LONG)
+    );
+
+    public static long createChunkNoiseSampler1DataEmpty() {
+        try {
+            return (long) DFA_create_chunk_noise_sampler1_data_empty.invoke();
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     // density_function_impl_data *c2me_natives_create_dfi_noise_data(
     //        bool isNull, octave_sampler_data *firstSampler, octave_sampler_data *secondSampler, double amplitude,
     //        double xzScale, double yScale)

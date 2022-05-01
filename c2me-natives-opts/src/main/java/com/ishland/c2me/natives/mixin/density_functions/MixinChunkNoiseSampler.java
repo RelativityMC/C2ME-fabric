@@ -23,6 +23,9 @@ public class MixinChunkNoiseSampler implements NativeStruct {
     @Shadow private int field_36573;
     @Shadow @Final private int minimumY;
     @Shadow @Final private int height;
+    @Shadow private int field_36574;
+    @Shadow private int field_36575;
+    @Shadow private int field_36576;
     @Unique
     private long pointer = 0;
 
@@ -48,8 +51,11 @@ public class MixinChunkNoiseSampler implements NativeStruct {
         // baseX: 8
         // baseY: 12
         // baseZ: 16
-        // minimumY: 20
-        // height: 24
+        // offsetX: 20
+        // offsetY: 24
+        // offsetZ: 28
+        // minimumY: 32
+        // height: 36
 
         final long data_start = this.pointer + NativesInterface.SIZEOF_density_function_multi_pos_args_data;
         UnsafeUtil.getInstance().putInt(data_start + 0, this.horizontalBlockSize);
@@ -57,8 +63,11 @@ public class MixinChunkNoiseSampler implements NativeStruct {
         UnsafeUtil.getInstance().putInt(data_start + 8, this.field_36594);
         UnsafeUtil.getInstance().putInt(data_start + 12, this.field_36572);
         UnsafeUtil.getInstance().putInt(data_start + 16, this.field_36573);
-        UnsafeUtil.getInstance().putInt(data_start + 20, this.minimumY);
-        UnsafeUtil.getInstance().putInt(data_start + 24, this.height);
+        UnsafeUtil.getInstance().putInt(data_start + 20, this.field_36574);
+        UnsafeUtil.getInstance().putInt(data_start + 24, this.field_36575);
+        UnsafeUtil.getInstance().putInt(data_start + 28, this.field_36576);
+        UnsafeUtil.getInstance().putInt(data_start + 32, this.minimumY);
+        UnsafeUtil.getInstance().putInt(data_start + 36, this.height);
 
         return this.pointer;
     }

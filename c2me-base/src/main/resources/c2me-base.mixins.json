@@ -9,6 +9,7 @@
     "access.IBlockEntity",
     "access.IChunkGenerator",
     "access.IChunkHolder",
+    "access.IChunkNoiseSampler",
     "access.IChunkTicket",
     "access.IChunkTicketManager",
     "access.IChunkTicketManagerNearbyChunkTicketUpdater",
