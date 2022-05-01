@@ -17,8 +17,18 @@ double c2me_natives_dfi_end_islands_single_op(void *instance, int x, int y, int 
 
 void c2me_natives_dfi_end_islands_multi_op(void *instance, double *res, noise_pos *poses, size_t length) {
     dfi_end_islands_data *data = instance;
+    int lastX = NAN, lastZ = NAN;
+    double lastVal;
     for (size_t i = 0; i < length; i++) {
-        res[i] = (c2me_natives_end_noise_sample(data->permutations, poses[i].x / 8, poses[i].z / 8) - 8.0) / 128.0;
+        int currentX = poses[i].x / 8;
+        int currentZ = poses[i].z / 8;
+        if (currentX == lastX && currentZ == lastZ) {
+            res[i] = lastVal;
+        } else {
+            lastVal = res[i] = (c2me_natives_end_noise_sample(data->permutations, currentX, currentZ) - 8.0) / 128.0;
+            lastX = currentX;
+            lastZ = currentZ;
+        }
     }
 }
 

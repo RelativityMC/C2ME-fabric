@@ -2,6 +2,7 @@ package com.ishland.c2me.opts.worldgen.vanilla.mixin.the_end_biome_cache;
 
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.noise.SimplexNoiseSampler;
 import net.minecraft.util.registry.RegistryEntry;
 import net.minecraft.world.biome.Biome;
@@ -14,11 +15,6 @@ import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(TheEndBiomeSource.class)
 public abstract class MixinTheEndBiomeSource {
-
-    @Shadow
-    public static float getNoiseAt(SimplexNoiseSampler simplexNoiseSampler, int i, int j) {
-        return 0;
-    }
 
     @Shadow @Final private SimplexNoiseSampler noise;
 
@@ -50,7 +46,7 @@ public abstract class MixinTheEndBiomeSource {
         }
     }
 
-    private final ThreadLocal<Long2ObjectLinkedOpenHashMap<RegistryEntry<Biome>>> cache = ThreadLocal.withInitial(Long2ObjectLinkedOpenHashMap::new);
+    private final ThreadLocal<Long2ObjectLinkedOpenHashMap<RegistryEntry<Biome>>> cacheInstanced = ThreadLocal.withInitial(Long2ObjectLinkedOpenHashMap::new);
     private final int cacheCapacity = 1024;
 
     /**
@@ -60,7 +56,7 @@ public abstract class MixinTheEndBiomeSource {
     @Overwrite
     public RegistryEntry<Biome> getBiome(int biomeX, int biomeY, int biomeZ, MultiNoiseUtil.MultiNoiseSampler multiNoiseSampler) {
         final long key = ChunkPos.toLong(biomeX, biomeZ);
-        final Long2ObjectLinkedOpenHashMap<RegistryEntry<Biome>> cacheThreadLocal = cache.get();
+        final Long2ObjectLinkedOpenHashMap<RegistryEntry<Biome>> cacheThreadLocal = cacheInstanced.get();
         final RegistryEntry<Biome> biome = cacheThreadLocal.get(key);
         if (biome != null) {
             return biome;
@@ -74,6 +70,37 @@ public abstract class MixinTheEndBiomeSource {
             }
             return gennedBiome;
         }
+    }
+
+    /**
+     * @author ishland
+     * @reason caching
+     */
+    @Overwrite
+    public static float getNoiseAt(SimplexNoiseSampler simplexNoiseSampler, int i, int j) {
+        int k = i / 2;
+        int l = j / 2;
+        int m = i % 2;
+        int n = j % 2;
+        float f = 100.0F - MathHelper.sqrt((float)(i * i + j * j)) * 8.0F;
+        f = MathHelper.clamp(f, -100.0F, 80.0F);
+
+        for(int o = -12; o <= 12; ++o) {
+            for(int p = -12; p <= 12; ++p) {
+                long q = (long)(k + o);
+                long r = (long)(l + p);
+                if (q * q + r * r > 4096L && simplexNoiseSampler.sample((double)q, (double)r) < -0.9F) {
+                    float g = (MathHelper.abs((float)q) * 3439.0F + MathHelper.abs((float)r) * 147.0F) % 13.0F + 9.0F;
+                    float h = (float)(m - o * 2);
+                    float s = (float)(n - p * 2);
+                    float t = 100.0F - MathHelper.sqrt(h * h + s * s) * g;
+                    t = MathHelper.clamp(t, -100.0F, 80.0F);
+                    f = Math.max(f, t);
+                }
+            }
+        }
+
+        return f;
     }
 
 }
