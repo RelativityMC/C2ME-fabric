@@ -19,47 +19,34 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Arrays;
 
-@Mixin(DensityFunctionTypes.Noise.class)
-public abstract class MixinDensityFunctionTypesNoise implements DensityFunction.class_6913, NativeStruct {
+@Mixin(DensityFunctionTypes.ShiftA.class)
+public abstract class MixinDensityFunctionTypesShiftA implements DensityFunction.class_6913, NativeStruct {
 
     @Shadow
     @Final
-    private @Nullable DoublePerlinNoiseSampler noise;
-
-    @Shadow
-    @Final
-    private @Deprecated double xzScale;
-
-    @Shadow
-    @Final
-    private double yScale;
-
+    private @Nullable DoublePerlinNoiseSampler offsetNoise;
     @Unique
     private long pointer = 0;
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    private void onInit(CallbackInfo ci) {
-        System.out.println("Compiling density function: noise %s".formatted(this));
-        if (this.noise != null) {
-            this.pointer = NativeInterface.createDFINoiseData(
+    private void onInit(CallbackInfo info) {
+        System.out.println("Compiling density function: shift_a %s".formatted(this));
+        if (this.offsetNoise != null) {
+            this.pointer = NativeInterface.createDFIShifted0Data(
                     false,
-                    ((NativeStruct) ((IDoublePerlinNoiseSampler) this.noise).getFirstSampler()).getNativePointer(),
-                    ((NativeStruct) ((IDoublePerlinNoiseSampler) this.noise).getSecondSampler()).getNativePointer(),
-                    ((IDoublePerlinNoiseSampler) this.noise).getAmplitude(),
-                    this.xzScale,
-                    this.yScale
+                    ((NativeStruct) ((IDoublePerlinNoiseSampler) this.offsetNoise).getFirstSampler()).getNativePointer(),
+                    ((NativeStruct) ((IDoublePerlinNoiseSampler) this.offsetNoise).getSecondSampler()).getNativePointer(),
+                    ((IDoublePerlinNoiseSampler) this.offsetNoise).getAmplitude()
             );
         } else {
-            this.pointer = NativeInterface.createDFINoiseData(
+            this.pointer = NativeInterface.createDFIShiftedAData(
                     true,
                     0,
                     0,
-                    0,
-                    this.xzScale,
-                    this.yScale
+                    0
             );
         }
-        NativeMemoryTracker.registerAllocatedMemory(this, NativeInterface.SIZEOF_density_function_data + NativeInterface.SIZEOF_dfi_noise_data, this.pointer);
+        NativeMemoryTracker.registerAllocatedMemory(this, NativeInterface.SIZEOF_density_function_data + NativeInterface.SIZEOF_dfi_simple_shifted_noise_data, this.pointer);
     }
 
     /**
@@ -67,21 +54,21 @@ public abstract class MixinDensityFunctionTypesNoise implements DensityFunction.
      * @reason use native method
      */
     @Overwrite
-    public double sample(DensityFunction.NoisePos pos) {
-        if (this.noise == null) return 0.0;
+    public double sample(NoisePos pos) {
+        if (this.offsetNoise == null) return 0.0;
         return NativeInterface.dfiBindingsSingleOp(this.pointer, pos.blockX(), pos.blockY(), pos.blockZ());
     }
 
     @Override
     public void method_40470(double[] ds, class_6911 arg) {
-        if (this.noise == null) {
+        if (this.offsetNoise == null) {
             Arrays.fill(ds, 0.0);
             return;
         }
         if (arg instanceof NativeStruct nativeStruct) {
             NativeInterface.dfiBindingsMultiOp(this.pointer, nativeStruct.getNativePointer(), ds);
         } else {
-            DensityFunction.class_6913.super.method_40470(ds, arg);
+            class_6913.super.method_40470(ds, arg);
         }
     }
 
@@ -89,4 +76,5 @@ public abstract class MixinDensityFunctionTypesNoise implements DensityFunction.
     public long getNativePointer() {
         return this.pointer;
     }
+
 }

@@ -10,12 +10,12 @@ long c2me_natives_sizeof_dfi_end_islands_data() {
     return sizeof(dfi_end_islands_data);
 }
 
-double c2me_natives_dfi_end_islands_single_op(void *instance, int x, int y, int z){
+static double c2me_natives_dfi_end_islands_single_op(void *instance, int x, int y, int z){
     dfi_end_islands_data *data = instance;
     return (c2me_natives_end_noise_sample(data->permutations, x / 8, z / 8) - 8.0) / 128.0;
 }
 
-void c2me_natives_dfi_end_islands_multi_op(void *instance, double *res, noise_pos *poses, size_t length) {
+static void c2me_natives_dfi_end_islands_multi_op(void *instance, double *res, noise_pos *poses, size_t length) {
     dfi_end_islands_data *data = instance;
     int lastX = NAN, lastZ = NAN;
     double lastVal;

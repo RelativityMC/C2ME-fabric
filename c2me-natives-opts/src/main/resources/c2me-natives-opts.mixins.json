@@ -14,7 +14,10 @@
     "density_functions.MixinChunkNoiseSampler1",
     "density_functions.MixinDensityFunctionTypesConstant",
     "density_functions.MixinDensityFunctionTypesEndIslands",
-    "density_functions.MixinDensityFunctionTypesNoise"
+    "density_functions.MixinDensityFunctionTypesNoise",
+    "density_functions.MixinDensityFunctionTypesShift",
+    "density_functions.MixinDensityFunctionTypesShiftA",
+    "density_functions.MixinDensityFunctionTypesShiftB"
   ],
   "client": [
     "client.MixinDebugHud"

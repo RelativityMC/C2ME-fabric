@@ -3,6 +3,9 @@ accessWidener v1 named
 accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$Noise
 accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$Constant
 accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$EndIslands
+accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$Shift
+accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$ShiftA
+accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$ShiftB
 
 extendable    class    net/minecraft/util/math/noise/PerlinNoiseSampler
 

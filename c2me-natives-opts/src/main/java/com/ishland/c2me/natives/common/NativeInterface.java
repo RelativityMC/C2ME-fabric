@@ -135,6 +135,70 @@ public class NativeInterface {
         }
     }
 
+    // density_function_impl_data *c2me_natives_create_dfi_shifted0_data(bool isNull,
+    //                                                                   octave_sampler_data *firstSampler,
+    //                                                                   octave_sampler_data *secondSampler,
+    //                                                                   double amplitude)
+
+    private static final MethodHandle DFI_create_dfi_shifted0_data = LINKER.downcallHandle(
+            LOOKUP.lookup("c2me_natives_create_dfi_shifted0_data").get(),
+            MethodType.methodType(long.class, byte.class, long.class, long.class, double.class),
+            FunctionDescriptor.of(C_LONG_LONG, C_CHAR, C_LONG_LONG, C_LONG_LONG, C_DOUBLE)
+    );
+
+    public static long createDFIShifted0Data(boolean isNull, long firstSampler, long secondSampler, double amplitude) {
+        if (!isNull) {
+            if (firstSampler == 0) throw new NullPointerException();
+            if (secondSampler == 0) throw new NullPointerException();
+        }
+        try {
+            return (long) DFI_create_dfi_shifted0_data.invoke((byte) (isNull ? 1 : 0), firstSampler, secondSampler, amplitude);
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    // density_function_impl_data *c2me_natives_create_dfi_shiftedA_data(bool isNull,
+    //                                                                   octave_sampler_data *firstSampler,
+    //                                                                   octave_sampler_data *secondSampler,
+    //                                                                   double amplitude)
+
+    private static final MethodHandle DFI_create_dfi_shiftedA_data = LINKER.downcallHandle(
+            LOOKUP.lookup("c2me_natives_create_dfi_shiftedA_data").get(),
+            MethodType.methodType(long.class, byte.class, long.class, long.class, double.class),
+            FunctionDescriptor.of(C_LONG_LONG, C_CHAR, C_LONG_LONG, C_LONG_LONG, C_DOUBLE)
+    );
+
+    public static long createDFIShiftedAData(boolean isNull, long firstSampler, long secondSampler, double amplitude) {
+        if (!isNull) {
+            if (firstSampler == 0) throw new NullPointerException();
+            if (secondSampler == 0) throw new NullPointerException();
+        }
+        try {
+            return (long) DFI_create_dfi_shiftedA_data.invoke((byte) (isNull ? 1 : 0), firstSampler, secondSampler, amplitude);
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static final MethodHandle DFI_create_dfi_shiftedB_data = LINKER.downcallHandle(
+            LOOKUP.lookup("c2me_natives_create_dfi_shiftedB_data").get(),
+            MethodType.methodType(long.class, byte.class, long.class, long.class, double.class),
+            FunctionDescriptor.of(C_LONG_LONG, C_CHAR, C_LONG_LONG, C_LONG_LONG, C_DOUBLE)
+    );
+
+    public static long createDFIShiftedBData(boolean isNull, long firstSampler, long secondSampler, double amplitude) {
+        if (!isNull) {
+            if (firstSampler == 0) throw new NullPointerException();
+            if (secondSampler == 0) throw new NullPointerException();
+        }
+        try {
+            return (long) DFI_create_dfi_shiftedB_data.invoke((byte) (isNull ? 1 : 0), firstSampler, secondSampler, amplitude);
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     // ===== Density Function Bindings =====
 
     // double c2me_natives_dfi_bindings_single_op(density_function_impl_data *dfi, int blockX, int blockY, int blockZ)
@@ -197,6 +261,7 @@ public class NativeInterface {
     public static final long SIZEOF_density_function_multi_pos_args_data = sizeOf("density_function_multi_pos_args_data");
     public static final long SIZEOF_dfi_constant_data = sizeOf("dfi_constant_data");
     public static final long SIZEOF_dfi_end_islands_data = sizeOf("dfi_end_islands_data");
+    public static final long SIZEOF_dfi_simple_shifted_noise_data = sizeOf("dfi_simple_shifted_noise_data");
 
     static {
 

@@ -9,12 +9,12 @@ long c2me_natives_sizeof_dfi_constant_data() {
     return sizeof(dfi_constant_data);
 }
 
-double c2me_natives_dfi_constant_single_op(void *instance, int x, int y, int z){
+static double c2me_natives_dfi_constant_single_op(void *instance, int x, int y, int z){
     dfi_constant_data *data = instance;
     return data->constant;
 }
 
-void c2me_natives_dfi_constant_multi_op(void *instance, double *res, noise_pos *poses, size_t length) {
+static void c2me_natives_dfi_constant_multi_op(void *instance, double *res, noise_pos *poses, size_t length) {
     dfi_constant_data *data = instance;
     for (size_t i = 0; i < length; i++) {
         res[i] = data->constant;

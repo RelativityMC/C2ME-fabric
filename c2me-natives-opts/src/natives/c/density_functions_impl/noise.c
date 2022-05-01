@@ -13,7 +13,7 @@ long c2me_natives_sizeof_dfi_noise_data() {
     return sizeof(dfi_noise_data);
 }
 
-double c2me_natives_dfi_noise_single_op(void *instance, int x, int y, int z) {
+static double c2me_natives_dfi_noise_single_op(void *instance, int x, int y, int z) {
     dfi_noise_data *data = instance;
     if (data->isNull) {
         return 0;
@@ -24,13 +24,13 @@ double c2me_natives_dfi_noise_single_op(void *instance, int x, int y, int z) {
     }
 }
 
-void c2me_natives_dfi_noise_multi_op(void *instance, double *res, noise_pos *poses, size_t length) {
+static void c2me_natives_dfi_noise_multi_op(void *instance, double *res, noise_pos *poses, size_t length) {
     dfi_noise_data *data = instance;
     if (data->isNull) {
 //        for (size_t i = 0; i < length; i++) {
 //            res[i] = 0;
 //        }
-        memset(res, 0, sizeof(double) * length);
+        memset(res, 0, sizeof(double) * length); // assumes IEEE 754 double precision floating point format
     } else {
         for (size_t i = 0; i < length; i++) {
             res[i] = c2me_natives_perlin_double_sample(data->firstSampler, data->secondSampler,
