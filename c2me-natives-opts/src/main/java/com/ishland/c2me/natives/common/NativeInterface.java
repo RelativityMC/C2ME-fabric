@@ -199,6 +199,23 @@ public class NativeInterface {
         }
     }
 
+    // density_function_impl_data *c2me_natives_create_dfi_old_blended_noise_data(interpolated_sampler_data *sampler)
+
+    private static final MethodHandle DFI_create_dfi_old_blended_noise_data = LINKER.downcallHandle(
+            LOOKUP.lookup("c2me_natives_create_dfi_old_blended_noise_data").get(),
+            MethodType.methodType(long.class, long.class),
+            FunctionDescriptor.of(C_LONG_LONG, C_LONG_LONG)
+    );
+
+    public static long createDFIOldBlendedNoiseData(long sampler) {
+        if (sampler == 0) throw new NullPointerException();
+        try {
+            return (long) DFI_create_dfi_old_blended_noise_data.invoke(sampler);
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     // ===== Density Function Bindings =====
 
     // double c2me_natives_dfi_bindings_single_op(density_function_impl_data *dfi, int blockX, int blockY, int blockZ)

@@ -193,7 +193,6 @@ double c2me_natives_perlin_interpolated_sample(interpolated_sampler_data *data, 
     double d = 0.0;
     double e = 0.0;
     double f = 0.0;
-    bool bl = true;
 
     octave_sampler_data *interpolationSampler = data->interpolationNoise;
     for (size_t l = 0; l < interpolationSampler->length && interpolationSampler->indexes[l] < 8; ++l) {

@@ -1,5 +1,6 @@
 package com.ishland.c2me.natives.mixin;
 
+import com.ishland.c2me.natives.common.CompiledDensityFunctionArg;
 import com.ishland.c2me.natives.common.NativeInterface;
 import com.ishland.c2me.natives.common.NativeMemoryTracker;
 import com.ishland.c2me.natives.common.NativeStruct;
@@ -10,6 +11,7 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -26,7 +28,12 @@ public abstract class MixinInterpolatedNoiseSampler implements DensityFunction.c
     @Shadow @Final private double yMainScale;
     @Shadow @Final private int cellWidth;
     @Shadow @Final private int cellHeight;
+
+    @Unique
     private long interpolatedSamplerPointer = 0L;
+
+    @Unique
+    private long dfiPointer = 0L;
 
     @Inject(method = "<init>(Lnet/minecraft/util/math/noise/OctavePerlinNoiseSampler;Lnet/minecraft/util/math/noise/OctavePerlinNoiseSampler;Lnet/minecraft/util/math/noise/OctavePerlinNoiseSampler;Lnet/minecraft/world/gen/chunk/NoiseSamplingConfig;II)V", at = @At("RETURN"))
     private void onInit(CallbackInfo info) {
@@ -42,6 +49,9 @@ public abstract class MixinInterpolatedNoiseSampler implements DensityFunction.c
                 this.cellHeight
         );
         NativeMemoryTracker.registerAllocatedMemory(this, NativeInterface.SIZEOF_interpolated_sampler_data, this.interpolatedSamplerPointer);
+
+        this.dfiPointer = NativeInterface.createDFIOldBlendedNoiseData(this.interpolatedSamplerPointer);
+        NativeMemoryTracker.registerAllocatedMemory(this, NativeInterface.SIZEOF_density_function_data, this.dfiPointer);
     }
 
     /**
@@ -53,4 +63,12 @@ public abstract class MixinInterpolatedNoiseSampler implements DensityFunction.c
         return NativeInterface.perlinSampleInterpolated(this.interpolatedSamplerPointer, pos.blockX(), pos.blockY(), pos.blockZ());
     }
 
+    @Override
+    public void method_40470(double[] ds, class_6911 arg) {
+        if (arg instanceof CompiledDensityFunctionArg dfa && dfa.getDFAPointer() != 0) {
+            NativeInterface.dfiBindingsMultiOp(this.dfiPointer, dfa.getDFAPointer(), ds);
+        } else {
+            DensityFunction.class_6913.super.method_40470(ds, arg);
+        }
+    }
 }
