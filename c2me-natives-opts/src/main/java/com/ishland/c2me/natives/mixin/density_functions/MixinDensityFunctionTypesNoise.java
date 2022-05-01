@@ -35,13 +35,13 @@ public abstract class MixinDensityFunctionTypesNoise implements DensityFunction.
     private double yScale;
 
     @Unique
-    private long dfiPointer = 0;
+    private long pointer = 0;
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(CallbackInfo ci) {
         System.out.println("Compiling density function: noise %s".formatted(this));
         if (this.noise != null) {
-            this.dfiPointer = NativeInterface.createDFINoiseData(
+            this.pointer = NativeInterface.createDFINoiseData(
                     false,
                     ((NativeStruct) ((IDoublePerlinNoiseSampler) this.noise).getFirstSampler()).getNativePointer(),
                     ((NativeStruct) ((IDoublePerlinNoiseSampler) this.noise).getSecondSampler()).getNativePointer(),
@@ -50,7 +50,7 @@ public abstract class MixinDensityFunctionTypesNoise implements DensityFunction.
                     this.yScale
             );
         } else {
-            this.dfiPointer = NativeInterface.createDFINoiseData(
+            this.pointer = NativeInterface.createDFINoiseData(
                     true,
                     0,
                     0,
@@ -59,7 +59,7 @@ public abstract class MixinDensityFunctionTypesNoise implements DensityFunction.
                     this.yScale
             );
         }
-        NativeMemoryTracker.registerAllocatedMemory(this, NativeInterface.SIZEOF_density_function_data + NativeInterface.SIZEOF_dfi_noise_data, this.dfiPointer);
+        NativeMemoryTracker.registerAllocatedMemory(this, NativeInterface.SIZEOF_density_function_data + NativeInterface.SIZEOF_dfi_noise_data, this.pointer);
     }
 
     /**
@@ -69,7 +69,7 @@ public abstract class MixinDensityFunctionTypesNoise implements DensityFunction.
     @Overwrite
     public double sample(DensityFunction.NoisePos pos) {
         if (this.noise == null) return 0.0;
-        return NativeInterface.dfiBindingsSingleOp(this.dfiPointer, pos.blockX(), pos.blockY(), pos.blockZ());
+        return NativeInterface.dfiBindingsSingleOp(this.pointer, pos.blockX(), pos.blockY(), pos.blockZ());
     }
 
     @Override
@@ -79,7 +79,7 @@ public abstract class MixinDensityFunctionTypesNoise implements DensityFunction.
             return;
         }
         if (arg instanceof NativeStruct nativeStruct) {
-            NativeInterface.dfiBindingsMultiOp(this.dfiPointer, nativeStruct.getNativePointer(), ds);
+            NativeInterface.dfiBindingsMultiOp(this.pointer, nativeStruct.getNativePointer(), ds);
         } else {
             class_6913.super.method_40470(ds, arg);
         }
@@ -87,6 +87,6 @@ public abstract class MixinDensityFunctionTypesNoise implements DensityFunction.
 
     @Override
     public long getNativePointer() {
-        return this.dfiPointer;
+        return this.pointer;
     }
 }

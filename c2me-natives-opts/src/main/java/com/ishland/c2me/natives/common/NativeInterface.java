@@ -118,6 +118,23 @@ public class NativeInterface {
         }
     }
 
+    // density_function_impl_data *c2me_natives_create_dfi_end_islands(int* permutations)
+
+    private static final MethodHandle DFI_create_dfi_end_islands = LINKER.downcallHandle(
+            LOOKUP.lookup("c2me_natives_create_dfi_end_islands").get(),
+            MethodType.methodType(long.class, long.class),
+            FunctionDescriptor.of(C_LONG_LONG, C_LONG_LONG)
+    );
+
+    public static long createDFIEndIslands(long ptr_permutations) {
+        if (ptr_permutations == 0) throw new NullPointerException();
+        try {
+            return (long) DFI_create_dfi_end_islands.invoke(ptr_permutations);
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     // ===== Density Function Bindings =====
 
     // double c2me_natives_dfi_bindings_single_op(density_function_impl_data *dfi, int blockX, int blockY, int blockZ)
@@ -179,6 +196,7 @@ public class NativeInterface {
     public static final long SIZEOF_density_function_data = sizeOf("density_function_data");
     public static final long SIZEOF_density_function_multi_pos_args_data = sizeOf("density_function_multi_pos_args_data");
     public static final long SIZEOF_dfi_constant_data = sizeOf("dfi_constant_data");
+    public static final long SIZEOF_dfi_end_islands_data = sizeOf("dfi_end_islands_data");
 
     static {
 

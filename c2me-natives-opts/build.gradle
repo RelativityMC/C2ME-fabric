@@ -11,18 +11,19 @@ model {
         }
     }
 
-//    toolChains {
-//        clang(Clang) {
-//        }
-//    }
+    toolChains {
+        clang(Clang) {
+        }
+    }
 
     components {
         natives(NativeLibrarySpec) {
             binaries.all {
 //                cCompiler.args '-g'
                 cCompiler.args '-O3'
-                cCompiler.args '-march=x86-64'
+//                cCompiler.args '-march=x86-64'
                 cCompiler.args '-mtune=tigerlake'
+                cCompiler.args '-lto'
                 cCompiler.args '-std=c11'
                 if (targetPlatform.operatingSystem.macOsX) {
                     cCompiler.args '-I', "${org.gradle.internal.jvm.Jvm.current().javaHome}/include"

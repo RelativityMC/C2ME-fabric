@@ -7,7 +7,7 @@
 
 #include "../include/common_maths.h"
 
-double c2me_natives_simplex_sample(int *permutations, double x, double y) {
+double c2me_natives_simplex_sample(const int *permutations, double x, double y) {
     double var0 = (x + y) * SKEW_FACTOR_2D;
     double var1 = floor(x + var0);
     double var2 = floor(y + var0);
@@ -47,7 +47,7 @@ float c2me_natives_end_noise_sample(int *permutations, int i, int j) {
     int l = j / 2;
     int m = i % 2;
     int n = j % 2;
-    float f = 100.0F - sqrt(i * i + j * j) * 8.0F;
+    float f = 100.0F - sqrtf(i * i + j * j) * 8.0F;
     f = c2me_natives_fclamp(f, -100.0F, 80.0F);
 
     for(int o = -12; o <= 12; ++o) {

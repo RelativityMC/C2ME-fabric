@@ -7,7 +7,7 @@ import net.minecraft.world.biome.source.TheEndBiomeSource;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
-@Mixin(TheEndBiomeSource.class)
+@Mixin(value = TheEndBiomeSource.class, priority = 1200)
 public class MixinTheEndBiomeSource {
 
     /**

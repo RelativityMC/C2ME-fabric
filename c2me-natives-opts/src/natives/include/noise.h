@@ -32,4 +32,8 @@ extern double c2me_natives_perlin_double_sample(
         octave_sampler_data *firstSampler, octave_sampler_data *secondSampler,
         double x, double y, double z, double amplitude);
 
+extern double c2me_natives_simplex_sample(const int *permutations, double x, double y);
+
+extern float c2me_natives_end_noise_sample(int *permutations, int i, int j);
+
 #endif //C2ME_FABRIC_NOISE_STRUCTS_H
