@@ -58,12 +58,12 @@ public class NativesUtils {
 
     public static long createOctaveSamplerPointer(Object owner, PerlinNoiseSampler[] octaveSamplers, byte[][] permutations, double[] amplitudes, double lacunarity, double persistence) {
         final int size = octaveSamplers.length;
-        final long ptr_indexes = UnsafeUtil.getInstance().allocateMemory(size * 8L);
-        final long ptr_sampler_permutations = UnsafeUtil.getInstance().allocateMemory(size * 256L);
-        final long ptr_sampler_originX = UnsafeUtil.getInstance().allocateMemory(size * 8L);
-        final long ptr_sampler_originY = UnsafeUtil.getInstance().allocateMemory(size * 8L);
-        final long ptr_sampler_originZ = UnsafeUtil.getInstance().allocateMemory(size * 8L);
-        final long ptr_amplitudes = UnsafeUtil.getInstance().allocateMemory(size * 8L);
+        final long ptr_indexes = NativeMemoryTracker.allocateMemory(owner, size * 8L);
+        final long ptr_sampler_permutations = NativeMemoryTracker.allocateMemory(owner, size * 256L);
+        final long ptr_sampler_originX = NativeMemoryTracker.allocateMemory(owner, size * 8L);
+        final long ptr_sampler_originY = NativeMemoryTracker.allocateMemory(owner, size * 8L);
+        final long ptr_sampler_originZ = NativeMemoryTracker.allocateMemory(owner, size * 8L);
+        final long ptr_amplitudes = NativeMemoryTracker.allocateMemory(owner, size * 8L);
         int pos = 0;
         for (int i = 0; i < size; i ++) {
             final PerlinNoiseSampler sampler = octaveSamplers[i];
@@ -93,14 +93,7 @@ public class NativesUtils {
                 ptr_sampler_originZ,
                 ptr_amplitudes
         );
-        Cleaners.register(owner,
-                octaveSamplerDataPointer,
-                ptr_indexes,
-                ptr_sampler_permutations,
-                ptr_sampler_originX,
-                ptr_sampler_originY,
-                ptr_sampler_originZ,
-                ptr_amplitudes);
+        NativeMemoryTracker.registerAllocatedMemory(owner, NativesInterface.SIZEOF_octave_sampler_data, octaveSamplerDataPointer);
         return octaveSamplerDataPointer;
     }
 

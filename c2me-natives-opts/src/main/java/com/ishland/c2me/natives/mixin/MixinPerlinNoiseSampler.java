@@ -1,8 +1,7 @@
 package com.ishland.c2me.natives.mixin;
 
-import com.ishland.c2me.natives.common.Cleaners;
+import com.ishland.c2me.natives.common.NativeMemoryTracker;
 import com.ishland.c2me.natives.common.NativesInterface;
-import com.ishland.c2me.natives.common.UnsafeUtil;
 import io.netty.util.internal.PlatformDependent;
 import net.minecraft.util.math.noise.PerlinNoiseSampler;
 import org.spongepowered.asm.mixin.Final;
@@ -26,9 +25,8 @@ public class MixinPerlinNoiseSampler {
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(CallbackInfo ci) {
-        this.permutationsPointer = UnsafeUtil.getInstance().allocateMemory(256);
+        this.permutationsPointer = NativeMemoryTracker.allocateMemory(this, 256);
         PlatformDependent.copyMemory(this.permutations, 0, this.permutationsPointer, 256);
-        Cleaners.register(this, this.permutationsPointer);
     }
 
     /**

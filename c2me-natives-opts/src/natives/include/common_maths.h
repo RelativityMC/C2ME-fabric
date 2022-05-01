@@ -87,4 +87,13 @@ static inline float __attribute__((always_inline)) c2me_natives_fclamp(float val
     return fminf(fmaxf(value, min), max);
 }
 
+static inline int __attribute__((always_inline)) c2me_natives_floorMod(int x, int y) {
+    int mod = x % y;
+    // if the signs are different and modulo not zero, adjust result
+    if ((mod ^ y) < 0 && mod != 0) {
+        mod += y;
+    }
+    return mod;
+}
+
 #endif //C2ME_COMMON_MATHS_H

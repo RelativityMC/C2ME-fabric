@@ -1,7 +1,7 @@
 package com.ishland.c2me.natives.mixin;
 
 import com.ishland.c2me.natives.common.NativesInterface;
-import com.ishland.c2me.natives.common.NativesStruct;
+import com.ishland.c2me.natives.common.NativeStruct;
 import net.minecraft.util.math.noise.DoublePerlinNoiseSampler;
 import net.minecraft.util.math.noise.OctavePerlinNoiseSampler;
 import org.spongepowered.asm.mixin.Final;
@@ -31,8 +31,8 @@ public class MixinDoublePerlinNoiseSampler {
     @Overwrite
     public double sample(double x, double y, double z) {
         return NativesInterface.perlinSampleDouble(
-                ((NativesStruct) this.firstSampler).getNativePointer(),
-                ((NativesStruct) this.secondSampler).getNativePointer(),
+                ((NativeStruct) this.firstSampler).getNativePointer(),
+                ((NativeStruct) this.secondSampler).getNativePointer(),
                 x, y, z, this.amplitude
         );
     }

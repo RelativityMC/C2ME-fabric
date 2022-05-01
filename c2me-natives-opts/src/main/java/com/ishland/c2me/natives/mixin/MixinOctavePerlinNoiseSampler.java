@@ -1,7 +1,7 @@
 package com.ishland.c2me.natives.mixin;
 
 import com.ishland.c2me.natives.common.NativesInterface;
-import com.ishland.c2me.natives.common.NativesStruct;
+import com.ishland.c2me.natives.common.NativeStruct;
 import com.ishland.c2me.natives.common.NativesUtils;
 import it.unimi.dsi.fastutil.doubles.DoubleList;
 import net.minecraft.util.math.noise.OctavePerlinNoiseSampler;
@@ -15,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(value = OctavePerlinNoiseSampler.class, priority = 1200)
-public class MixinOctavePerlinNoiseSampler implements NativesStruct {
+public class MixinOctavePerlinNoiseSampler implements NativeStruct {
 
     @Shadow @Final private double lacunarity;
 
@@ -30,6 +30,7 @@ public class MixinOctavePerlinNoiseSampler implements NativesStruct {
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(CallbackInfo info) {
         this.octaveSamplerDataPointer = NativesUtils.createOctaveSamplerPointer(this, octaveSamplers, null, amplitudes.toDoubleArray(), lacunarity, persistence);
+        // native memory management already handled by NativesUtils#createOctaveSamplerPointer
     }
 
     /**

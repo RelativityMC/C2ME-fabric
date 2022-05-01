@@ -1,7 +1,6 @@
 package noise;
 
 import com.ishland.c2me.natives.ModuleEntryPoint;
-import com.ishland.c2me.natives.common.Cleaners;
 import com.ishland.c2me.natives.common.NativesInterface;
 import com.ishland.c2me.natives.common.UnsafeUtil;
 import io.netty.util.internal.PlatformDependent;
@@ -25,7 +24,7 @@ public class TheEndNoiseBenchmark extends AbstractSimplexNoise {
 
     {
         ModuleEntryPoint.init();
-        this.permutationsPointer = UnsafeUtil.getInstance().allocateMemory(4 * 256);
+        this.permutationsPointer = PlatformDependent.allocateMemory(4 * 256);
         byte[] tmp = new byte[4 * 256];
         UnsafeUtil.getInstance().copyMemory(
                 permutations,
@@ -35,7 +34,6 @@ public class TheEndNoiseBenchmark extends AbstractSimplexNoise {
                 4 * 256
         );
         PlatformDependent.copyMemory(tmp, 0, this.permutationsPointer, 4 * 256);
-        Cleaners.register(this, this.permutationsPointer);
     }
 
     public static float getNoiseAt(SimplexNoiseSampler simplexNoiseSampler, int i, int j) {

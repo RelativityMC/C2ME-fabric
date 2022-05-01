@@ -1,8 +1,8 @@
 package com.ishland.c2me.natives.mixin;
 
-import com.ishland.c2me.natives.common.Cleaners;
+import com.ishland.c2me.natives.common.NativeMemoryTracker;
 import com.ishland.c2me.natives.common.NativesInterface;
-import com.ishland.c2me.natives.common.NativesStruct;
+import com.ishland.c2me.natives.common.NativeStruct;
 import net.minecraft.util.math.noise.InterpolatedNoiseSampler;
 import net.minecraft.util.math.noise.OctavePerlinNoiseSampler;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
@@ -31,9 +31,9 @@ public class MixinInterpolatedNoiseSampler {
     @Inject(method = "<init>(Lnet/minecraft/util/math/noise/OctavePerlinNoiseSampler;Lnet/minecraft/util/math/noise/OctavePerlinNoiseSampler;Lnet/minecraft/util/math/noise/OctavePerlinNoiseSampler;Lnet/minecraft/world/gen/chunk/NoiseSamplingConfig;II)V", at = @At("RETURN"))
     private void onInit(CallbackInfo info) {
         this.interpolatedSamplerPointer = NativesInterface.createPerlinInterpolatedSamplerData(
-                ((NativesStruct) this.lowerInterpolatedNoise).getNativePointer(),
-                ((NativesStruct) this.upperInterpolatedNoise).getNativePointer(),
-                ((NativesStruct) this.interpolationNoise).getNativePointer(),
+                ((NativeStruct) this.lowerInterpolatedNoise).getNativePointer(),
+                ((NativeStruct) this.upperInterpolatedNoise).getNativePointer(),
+                ((NativeStruct) this.interpolationNoise).getNativePointer(),
                 this.xzScale,
                 this.yScale,
                 this.xzMainScale,
@@ -41,7 +41,7 @@ public class MixinInterpolatedNoiseSampler {
                 this.cellWidth,
                 this.cellHeight
         );
-        Cleaners.register(this, this.interpolatedSamplerPointer);
+        NativeMemoryTracker.registerAllocatedMemory(this, NativesInterface.SIZEOF_interpolated_sampler_data, this.interpolatedSamplerPointer);
     }
 
     /**

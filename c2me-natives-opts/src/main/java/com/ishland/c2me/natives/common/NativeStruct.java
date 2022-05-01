@@ -1,6 +1,6 @@
 package com.ishland.c2me.natives.common;
 
-public interface NativesStruct {
+public interface NativeStruct {
 
     long getNativePointer();
 

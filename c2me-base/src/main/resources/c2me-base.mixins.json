@@ -12,6 +12,7 @@
     "access.IChunkTicket",
     "access.IChunkTicketManager",
     "access.IChunkTicketManagerNearbyChunkTicketUpdater",
+    "access.IDoublePerlinNoiseSampler",
     "access.IMultiNoiseBiomeSource",
     "access.INbtCompound",
     "access.IPerlinNoiseSampler",

@@ -4,10 +4,12 @@ import io.netty.util.internal.PlatformDependent;
 import jdk.incubator.foreign.CLinker;
 import jdk.incubator.foreign.FunctionDescriptor;
 import jdk.incubator.foreign.SymbolLookup;
+import sun.misc.Unsafe;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodType;
 
+import static jdk.incubator.foreign.CLinker.C_CHAR;
 import static jdk.incubator.foreign.CLinker.C_DOUBLE;
 import static jdk.incubator.foreign.CLinker.C_FLOAT;
 import static jdk.incubator.foreign.CLinker.C_INT;
@@ -27,6 +29,122 @@ public class NativesInterface {
     private static final MethodHandle PERLIN_DOUBLE_SAMPLE;
     private static final MethodHandle SIMPLEX_SAMPLE;
     private static final MethodHandle THE_END_SAMPLE;
+
+    // ===== Density Functions Constructors =====
+
+//    // density_function_multi_pos_args_data *
+//    // c2me_natives_create_chunk_noise_sampler_data(int horizontalBlockSize, int verticalBlockSize, int baseX, int baseY,
+//    //                                              int baseZ)
+//    private static final MethodHandle DFA_create_chunk_noise_sampler_data = LINKER.downcallHandle(
+//            LOOKUP.lookup("c2me_natives_create_chunk_noise_sampler_data").get(),
+//            MethodType.methodType(long.class, int.class, int.class, int.class, int.class, int.class),
+//            FunctionDescriptor.of(C_LONG_LONG, C_INT, C_INT, C_INT, C_INT, C_INT)
+//    );
+//
+//    public static long createChunkNoiseSamplerData(int horizontalBlockSize, int verticalBlockSize, int baseX, int baseY, int baseZ) {
+//        try {
+//            return (long) DFA_create_chunk_noise_sampler_data.invoke(horizontalBlockSize, verticalBlockSize, baseX, baseY, baseZ);
+//        } catch (Throwable e) {
+//            throw new RuntimeException(e);
+//        }
+//    }
+
+    // density_function_multi_pos_args_data *c2me_natives_create_chunk_noise_sampler_data_empty()
+
+    private static final MethodHandle DFA_create_chunk_noise_sampler_data_empty = LINKER.downcallHandle(
+            LOOKUP.lookup("c2me_natives_create_chunk_noise_sampler_data_empty").get(),
+            MethodType.methodType(long.class),
+            FunctionDescriptor.of(C_LONG_LONG)
+    );
+
+    public static long createChunkNoiseSamplerDataEmpty() {
+        try {
+            return (long) DFA_create_chunk_noise_sampler_data_empty.invoke();
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    // density_function_impl_data *c2me_natives_create_dfi_noise_data(
+    //        bool isNull, octave_sampler_data *firstSampler, octave_sampler_data *secondSampler, double amplitude,
+    //        double xzScale, double yScale)
+    private static final MethodHandle DFI_create_dfi_noise_data = LINKER.downcallHandle(
+            LOOKUP.lookup("c2me_natives_create_dfi_noise_data").get(),
+            MethodType.methodType(long.class, byte.class, long.class, long.class, double.class, double.class, double.class),
+            FunctionDescriptor.of(C_LONG_LONG, C_CHAR, C_LONG_LONG, C_LONG_LONG, C_DOUBLE, C_DOUBLE, C_DOUBLE)
+    );
+
+    public static long createDFINoiseData(boolean isNull, long firstSampler, long secondSampler, double amplitude, double xzScale, double yScale) {
+        if (!isNull) {
+            if (firstSampler == 0) throw new NullPointerException();
+            if (secondSampler == 0) throw new NullPointerException();
+        }
+        try {
+            return (long) DFI_create_dfi_noise_data.invoke((byte) (isNull ? 1 : 0), firstSampler, secondSampler, amplitude, xzScale, yScale);
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    // ===== Density Function Bindings =====
+
+    // double c2me_natives_dfi_bindings_single_op(density_function_impl_data *dfi, int blockX, int blockY, int blockZ)
+    private static final MethodHandle DFI_bindings_single_op = LINKER.downcallHandle(
+            LOOKUP.lookup("c2me_natives_dfi_bindings_single_op").get(),
+            MethodType.methodType(double.class, long.class, int.class, int.class, int.class),
+            FunctionDescriptor.of(C_DOUBLE, C_LONG_LONG, C_INT, C_INT, C_INT)
+    );
+
+    public static double dfiBindingsSingleOp(long ptr_dfi, int blockX, int blockY, int blockZ) {
+        if (ptr_dfi == 0) throw new NullPointerException();
+        try {
+            return (double) DFI_bindings_single_op.invoke(ptr_dfi, blockX, blockY, blockZ);
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    // void c2me_natives_dfi_bindings_multi_op(density_function_impl_data *dfi, density_function_multi_pos_args_data *dfa,
+    //                                          double *res, size_t length)
+    private static final MethodHandle DFI_bindings_multi_op = LINKER.downcallHandle(
+            LOOKUP.lookup("c2me_natives_dfi_bindings_multi_op").get(),
+            MethodType.methodType(void.class, long.class, long.class, long.class, long.class),
+            FunctionDescriptor.ofVoid(C_LONG_LONG, C_LONG_LONG, C_LONG_LONG, C_LONG_LONG)
+    );
+
+    public static void dfiBindingsMultiOp(long ptr_dfi, long ptr_dfa, long ptr_res, long length) {
+        if (ptr_dfi == 0) throw new NullPointerException();
+        if (ptr_dfa == 0) throw new NullPointerException();
+        if (ptr_res == 0) throw new NullPointerException();
+        try {
+            DFI_bindings_multi_op.invoke(ptr_dfi, ptr_dfa, ptr_res, length);
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void dfiBindingsMultiOp(long ptr_dfi, long ptr_dfa, double[] res) {
+        final int size = res.length * 8;
+        final long ptr_res = NativeMemoryTracker.allocateMemoryWithoutCleaner(size);
+        dfiBindingsMultiOp(ptr_dfi, ptr_dfa, ptr_res, res.length);
+        byte[] tmp = new byte[size];
+        PlatformDependent.copyMemory(ptr_res, tmp, 0, size);
+        UnsafeUtil.getInstance().copyMemory(
+                tmp,
+                Unsafe.ARRAY_BYTE_BASE_OFFSET,
+                res,
+                Unsafe.ARRAY_DOUBLE_BASE_OFFSET,
+                size
+        );
+        NativeMemoryTracker.freeMemoryWithoutCleaner(ptr_res, size);
+    }
+
+    public static final long SIZEOF_octave_sampler_data = sizeOf("octave_sampler_data");
+    public static final long SIZEOF_interpolated_sampler_data = sizeOf("interpolated_sampler_data");
+    public static final long SIZEOF_chunk_noise_sampler_data = sizeOf("chunk_noise_sampler_data");
+    public static final long SIZEOF_dfi_noise_data = sizeOf("dfi_noise_data");
+    public static final long SIZEOF_density_function_data = sizeOf("density_function_data");
+    public static final long SIZEOF_density_function_multi_pos_args_data = sizeOf("density_function_multi_pos_args_data");
 
     static {
 
@@ -222,6 +340,27 @@ public class NativesInterface {
         System.out.println("%.2fns/op".formatted((endTime - startTime) / (double) count));
 
         PlatformDependent.freeMemory(memoryAddress);
+    }
+
+    /**
+     * Returns struct size
+     *
+     * <br/>
+     * Note: this operation is expensive and a function must be declared to return the size of the struct
+     *
+     * @param structName name of struct
+     * @return size of struct
+     */
+    static long sizeOf(String structName) {
+        try {
+            return (long) LINKER.downcallHandle(
+                    LOOKUP.lookup(String.format("c2me_natives_sizeof_%s", structName)).get(),
+                    MethodType.methodType(long.class),
+                    FunctionDescriptor.of(C_LONG_LONG)
+            ).invoke();
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static void init() {

@@ -1,4 +1,6 @@
 accessWidener v1 named
 
+accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$Noise
+
 extendable    class    net/minecraft/util/math/noise/PerlinNoiseSampler
 

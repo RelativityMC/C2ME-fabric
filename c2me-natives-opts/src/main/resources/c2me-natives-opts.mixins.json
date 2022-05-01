@@ -9,6 +9,12 @@
     "MixinOctavePerlinNoiseSampler",
     "MixinPerlinNoiseSampler",
     "MixinSimplexNoiseSampler",
-    "MixinTheEndBiomeSource"
+    "MixinTheEndBiomeSource",
+    "density_functions.MixinChunkNoiseSampler",
+    "density_functions.MixinChunkNoiseSampler1",
+    "density_functions.MixinDensityFunctionTypesNoise"
+  ],
+  "client": [
+    "client.MixinDebugHud"
   ]
 }

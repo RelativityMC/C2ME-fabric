@@ -10,11 +10,13 @@ set(CMAKE_C_FLAGS_RELEASE "-O3 -mtune=tigerlake")
 
 set(CMAKE_C_COMPILER "gcc")
 
-add_executable(C2ME_fabric
-        c2me-natives-opts/src/natives/c/perlin_noise_sampler.c
-        c2me-natives-opts/src/natives/include/common_maths.h
-        c2me-natives-opts/src/natives/c/simplex_noise_sampler.c
-        c2me-natives-opts/src/natives/c/init.c
+file(GLOB SOURCES
+        c2me-natives-opts/src/natives/c/**/*.c
+        c2me-natives-opts/src/natives/c/*.c
+        c2me-natives-opts/src/natives/include/**/*.c
+        c2me-natives-opts/src/natives/include/*.c
         )
+
+add_executable(C2ME_fabric ${SOURCES})
 
 target_link_libraries(C2ME_fabric m)

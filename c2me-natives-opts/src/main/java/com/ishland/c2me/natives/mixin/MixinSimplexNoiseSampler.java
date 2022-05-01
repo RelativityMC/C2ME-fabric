@@ -1,8 +1,8 @@
 package com.ishland.c2me.natives.mixin;
 
-import com.ishland.c2me.natives.common.Cleaners;
+import com.ishland.c2me.natives.common.NativeMemoryTracker;
 import com.ishland.c2me.natives.common.NativesInterface;
-import com.ishland.c2me.natives.common.NativesStruct;
+import com.ishland.c2me.natives.common.NativeStruct;
 import com.ishland.c2me.natives.common.UnsafeUtil;
 import io.netty.util.internal.PlatformDependent;
 import net.minecraft.util.math.noise.SimplexNoiseSampler;
@@ -14,9 +14,10 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import sun.misc.Unsafe;
 
 @Mixin(value = SimplexNoiseSampler.class, priority = 1200)
-public class MixinSimplexNoiseSampler implements NativesStruct {
+public class MixinSimplexNoiseSampler implements NativeStruct {
 
     @Shadow
     @Final
@@ -26,17 +27,16 @@ public class MixinSimplexNoiseSampler implements NativesStruct {
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(CallbackInfo ci) {
-        this.permutationsPointer = UnsafeUtil.getInstance().allocateMemory(4 * 256);
+        this.permutationsPointer = NativeMemoryTracker.allocateMemory(this, 4 * 256);
         byte[] tmp = new byte[4 * 256];
         UnsafeUtil.getInstance().copyMemory(
                 permutations,
-                UnsafeUtil.getInstance().arrayBaseOffset(int[].class),
+                Unsafe.ARRAY_INT_BASE_OFFSET,
                 tmp,
-                UnsafeUtil.getInstance().arrayBaseOffset(byte[].class),
+                Unsafe.ARRAY_BYTE_BASE_OFFSET,
                 4 * 256
         );
         PlatformDependent.copyMemory(tmp, 0, this.permutationsPointer, 4 * 256);
-        Cleaners.register(this, this.permutationsPointer);
     }
 
     /**

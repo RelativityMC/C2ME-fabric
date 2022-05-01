@@ -5,6 +5,7 @@
 #include <stdio.h>
 
 #include "../include/common_maths.h"
+#include "../include/noise.h"
 
 static inline double __attribute__((always_inline))
 c2me_natives_perlin_sampleScalar(__uint8_t *permutations, int sectionX, int sectionY, int sectionZ, double localX,
@@ -123,18 +124,6 @@ __uint8_t *c2me_natives_perlin_generatePermutations() {
     return permutations;
 }
 
-typedef struct {
-    double lacunarity;
-    double persistence;
-    size_t length;
-    size_t *indexes;
-    __uint8_t *sampler_permutations;
-    double *sampler_originX;
-    double *sampler_originY;
-    double *sampler_originZ;
-    double *amplitudes;
-} octave_sampler_data;
-
 octave_sampler_data *c2me_natives_perlin_create_octave_sampler_data(
         double lacunarity, double persistence, size_t length, size_t *indexes, __uint8_t *sampler_permutations,
         double *sampler_originX, double *sampler_originY, double *sampler_originZ, double *amplitudes) {
@@ -179,18 +168,6 @@ c2me_natives_perlin_octave_sample_impl(octave_sampler_data *data, double x, doub
 double c2me_natives_perlin_octave_sample(octave_sampler_data *data, double x, double y, double z) {
     return c2me_natives_perlin_octave_sample_impl(data, x, y, z, 0.0, 0.0, false);
 }
-
-typedef struct {
-    octave_sampler_data *lowerInterpolatedNoise;
-    octave_sampler_data *upperInterpolatedNoise;
-    octave_sampler_data *interpolationNoise;
-    double xzScale;
-    double yScale;
-    double xzMainScale;
-    double yMainScale;
-    int cellWidth;
-    int cellHeight;
-} interpolated_sampler_data;
 
 interpolated_sampler_data *c2me_natives_perlin_create_interpolated_sampler_data(
         octave_sampler_data *lowerInterpolatedNoise, octave_sampler_data *upperInterpolatedNoise,
