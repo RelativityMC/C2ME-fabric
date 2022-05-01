@@ -15,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(value = InterpolatedNoiseSampler.class, priority = 1200)
-public class MixinInterpolatedNoiseSampler {
+public abstract class MixinInterpolatedNoiseSampler implements DensityFunction.class_6913 {
 
     @Shadow @Final private OctavePerlinNoiseSampler lowerInterpolatedNoise;
     @Shadow @Final private OctavePerlinNoiseSampler upperInterpolatedNoise;

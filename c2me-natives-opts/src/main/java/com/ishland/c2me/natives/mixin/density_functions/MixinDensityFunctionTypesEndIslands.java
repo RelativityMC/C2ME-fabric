@@ -1,5 +1,7 @@
 package com.ishland.c2me.natives.mixin.density_functions;
 
+import com.ishland.c2me.natives.common.CompiledDensityFunctionArg;
+import com.ishland.c2me.natives.common.CompiledDensityFunctionImpl;
 import com.ishland.c2me.natives.common.NativeInterface;
 import com.ishland.c2me.natives.common.NativeMemoryTracker;
 import com.ishland.c2me.natives.common.NativeStruct;
@@ -16,7 +18,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(DensityFunctionTypes.EndIslands.class)
-public abstract class MixinDensityFunctionTypesEndIslands implements DensityFunction.class_6913, NativeStruct {
+public abstract class MixinDensityFunctionTypesEndIslands implements DensityFunction.class_6913, CompiledDensityFunctionImpl {
 
     @Shadow
     @Final
@@ -42,15 +44,15 @@ public abstract class MixinDensityFunctionTypesEndIslands implements DensityFunc
 
     @Override
     public void method_40470(double[] ds, class_6911 arg) {
-        if (arg instanceof NativeStruct nativeStruct) {
-            NativeInterface.dfiBindingsMultiOp(this.pointer, nativeStruct.getNativePointer(), ds);
+        if (arg instanceof CompiledDensityFunctionArg dfa && dfa.getDFAPointer() != 0) {
+            NativeInterface.dfiBindingsMultiOp(this.pointer, dfa.getDFAPointer(), ds);
         } else {
             class_6913.super.method_40470(ds, arg);
         }
     }
 
     @Override
-    public long getNativePointer() {
+    public long getDFIPointer() {
         return this.pointer;
     }
 

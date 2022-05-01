@@ -1,8 +1,8 @@
 package com.ishland.c2me.natives.mixin.density_functions;
 
+import com.ishland.c2me.natives.common.CompiledDensityFunctionArg;
 import com.ishland.c2me.natives.common.NativeInterface;
 import com.ishland.c2me.natives.common.NativeMemoryTracker;
-import com.ishland.c2me.natives.common.NativeStruct;
 import com.ishland.c2me.natives.common.UnsafeUtil;
 import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
 import org.spongepowered.asm.mixin.Final;
@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ChunkNoiseSampler.class)
-public class MixinChunkNoiseSampler implements NativeStruct {
+public class MixinChunkNoiseSampler implements CompiledDensityFunctionArg {
 
     @Shadow @Final private int horizontalBlockSize;
     @Shadow @Final private int verticalBlockSize;
@@ -42,7 +42,7 @@ public class MixinChunkNoiseSampler implements NativeStruct {
 
     @SuppressWarnings({"PointlessArithmeticExpression", "SuspiciousNameCombination"})
     @Override
-    public long getNativePointer() {
+    public long getDFAPointer() {
         // update contents in native before returning
         //
         // Offsets:

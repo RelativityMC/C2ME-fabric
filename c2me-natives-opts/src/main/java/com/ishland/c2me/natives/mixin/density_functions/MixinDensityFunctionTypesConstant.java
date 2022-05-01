@@ -1,8 +1,8 @@
 package com.ishland.c2me.natives.mixin.density_functions;
 
+import com.ishland.c2me.natives.common.CompiledDensityFunctionImpl;
 import com.ishland.c2me.natives.common.NativeInterface;
 import com.ishland.c2me.natives.common.NativeMemoryTracker;
-import com.ishland.c2me.natives.common.NativeStruct;
 import net.minecraft.world.gen.densityfunction.DensityFunctionTypes;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(DensityFunctionTypes.Constant.class)
-public class MixinDensityFunctionTypesConstant implements NativeStruct {
+public class MixinDensityFunctionTypesConstant implements CompiledDensityFunctionImpl {
 
     @Shadow @Final private double value;
     @Unique
@@ -27,7 +27,7 @@ public class MixinDensityFunctionTypesConstant implements NativeStruct {
     }
 
     @Override
-    public long getNativePointer() {
+    public long getDFIPointer() {
         return this.pointer;
     }
 
