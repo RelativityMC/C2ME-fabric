@@ -154,9 +154,9 @@ c2me_natives_perlin_octave_sample_impl(octave_sampler_data *data, double x, doub
                 data->sampler_originX[i],
                 data->sampler_originY[i],
                 data->sampler_originZ[i],
-                c2me_natives_octave_maintainPrecision(x * e),
-                useOrigin ? -(data->sampler_originY[i]) : c2me_natives_octave_maintainPrecision(y * e),
-                c2me_natives_octave_maintainPrecision(z * e),
+                math_octave_maintainPrecision(x * e),
+                useOrigin ? -(data->sampler_originY[i]) : math_octave_maintainPrecision(y * e),
+                math_octave_maintainPrecision(z * e),
                 yScale * e,
                 yMax * e);
         d += data->amplitudes[i] * g * f;
@@ -187,9 +187,9 @@ interpolated_sampler_data *c2me_natives_perlin_create_interpolated_sampler_data(
 }
 
 double c2me_natives_perlin_interpolated_sample(interpolated_sampler_data *data, int x, int y, int z) {
-    int i = c2me_natives_floorDiv(x, data->cellWidth);
-    int j = c2me_natives_floorDiv(y, data->cellHeight);
-    int k = c2me_natives_floorDiv(z, data->cellWidth);
+    int i = math_floorDiv(x, data->cellWidth);
+    int j = math_floorDiv(y, data->cellHeight);
+    int k = math_floorDiv(z, data->cellWidth);
     double d = 0.0;
     double e = 0.0;
     double f = 0.0;
@@ -202,9 +202,9 @@ double c2me_natives_perlin_interpolated_sample(interpolated_sampler_data *data, 
                 interpolationSampler->sampler_originX[l],
                 interpolationSampler->sampler_originY[l],
                 interpolationSampler->sampler_originZ[l],
-                c2me_natives_octave_maintainPrecision((double) i * data->xzMainScale * g),
-                c2me_natives_octave_maintainPrecision((double) j * data->yMainScale * g),
-                c2me_natives_octave_maintainPrecision((double) k * data->xzMainScale * g),
+                math_octave_maintainPrecision((double) i * data->xzMainScale * g),
+                math_octave_maintainPrecision((double) j * data->yMainScale * g),
+                math_octave_maintainPrecision((double) k * data->xzMainScale * g),
                 data->yMainScale * g,
                 (double) j * data->yMainScale * g) /
              g;
@@ -216,9 +216,9 @@ double c2me_natives_perlin_interpolated_sample(interpolated_sampler_data *data, 
         octave_sampler_data *octaveSampler = data->lowerInterpolatedNoise;
         for (size_t m = 0; m < octaveSampler->length && octaveSampler->indexes[m] < 16; ++m) {
             double g = 1.0 / c2me_natives_pow_of_two_table[octaveSampler->indexes[m]];
-            double n = c2me_natives_octave_maintainPrecision((double) i * data->xzScale * g);
-            double o = c2me_natives_octave_maintainPrecision((double) j * data->yScale * g);
-            double p = c2me_natives_octave_maintainPrecision((double) k * data->xzScale * g);
+            double n = math_octave_maintainPrecision((double) i * data->xzScale * g);
+            double o = math_octave_maintainPrecision((double) j * data->yScale * g);
+            double p = math_octave_maintainPrecision((double) k * data->xzScale * g);
             double q = data->yScale * g;
             d += c2me_natives_perlin_sample(
                     octaveSampler->sampler_permutations + 256 * m,
@@ -234,9 +234,9 @@ double c2me_natives_perlin_interpolated_sample(interpolated_sampler_data *data, 
         octave_sampler_data *octaveSampler = data->upperInterpolatedNoise;
         for (size_t m = 0; m < octaveSampler->length && octaveSampler->indexes[m] < 16; ++m) {
             double g = 1.0 / c2me_natives_pow_of_two_table[octaveSampler->indexes[m]];
-            double n = c2me_natives_octave_maintainPrecision((double) i * data->xzScale * g);
-            double o = c2me_natives_octave_maintainPrecision((double) j * data->yScale * g);
-            double p = c2me_natives_octave_maintainPrecision((double) k * data->xzScale * g);
+            double n = math_octave_maintainPrecision((double) i * data->xzScale * g);
+            double o = math_octave_maintainPrecision((double) j * data->yScale * g);
+            double p = math_octave_maintainPrecision((double) k * data->xzScale * g);
             double q = data->yScale * g;
             e += c2me_natives_perlin_sample(
                     octaveSampler->sampler_permutations + 256 * m,
@@ -248,7 +248,7 @@ double c2me_natives_perlin_interpolated_sample(interpolated_sampler_data *data, 
         }
     }
 
-    return c2me_natives_clampedLerp(d / 512.0, e / 512.0, h) / 128.0;
+    return math_clampedLerp(d / 512.0, e / 512.0, h) / 128.0;
 }
 
 double c2me_natives_perlin_double_sample(

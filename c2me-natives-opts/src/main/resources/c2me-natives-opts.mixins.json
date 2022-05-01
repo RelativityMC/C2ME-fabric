@@ -17,7 +17,8 @@
     "density_functions.MixinDensityFunctionTypesNoise",
     "density_functions.MixinDensityFunctionTypesShift",
     "density_functions.MixinDensityFunctionTypesShiftA",
-    "density_functions.MixinDensityFunctionTypesShiftB"
+    "density_functions.MixinDensityFunctionTypesShiftB",
+    "density_functions.MixinDensityFunctionTypesYClampedGradient"
   ],
   "client": [
     "client.MixinDebugHud"

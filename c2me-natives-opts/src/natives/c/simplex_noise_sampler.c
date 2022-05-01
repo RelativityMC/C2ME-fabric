@@ -36,9 +36,9 @@ double c2me_natives_simplex_sample(const int *permutations, double x, double y) 
     int var22 = permutations[((var12 + var16) & 255)] % 12;
     int var23 = permutations[((var12 + var6 + var17) & 255)] % 12;
     int ver24 = permutations[((var12 + 1 + var18) & 255)] % 12;
-    double var25 = c2me_natives_simplex_grad(var22, var4, var5, 0.0, 0.5);
-    double var26 = c2me_natives_simplex_grad(var23, var8, var9, 0.0, 0.5);
-    double var27 = c2me_natives_simplex_grad(ver24, var10, var11, 0.0, 0.5);
+    double var25 = math_simplex_grad(var22, var4, var5, 0.0, 0.5);
+    double var26 = math_simplex_grad(var23, var8, var9, 0.0, 0.5);
+    double var27 = math_simplex_grad(ver24, var10, var11, 0.0, 0.5);
     return 70.0 * (var25 + var26 + var27);
 }
 
@@ -48,7 +48,7 @@ float c2me_natives_end_noise_sample(int *permutations, int i, int j) {
     int m = i % 2;
     int n = j % 2;
     float f = 100.0F - sqrtf(i * i + j * j) * 8.0F;
-    f = c2me_natives_fclamp(f, -100.0F, 80.0F);
+    f = math_fclamp(f, -100.0F, 80.0F);
 
     for(int o = -12; o <= 12; ++o) {
         for(int p = -12; p <= 12; ++p) {
@@ -59,7 +59,7 @@ float c2me_natives_end_noise_sample(int *permutations, int i, int j) {
                 float h = (float)(m - o * 2);
                 float s = (float)(n - p * 2);
                 float t = 100.0F - sqrtf(h * h + s * s) * g;
-                t = c2me_natives_fclamp(t, -100.0F, 80.0F);
+                t = math_fclamp(t, -100.0F, 80.0F);
                 f = fmaxf(f, t);
             }
         }

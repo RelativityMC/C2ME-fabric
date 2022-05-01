@@ -39,7 +39,7 @@ extern double UNSKEW_FACTOR_2D;
 
 extern void c2me_natives_init();
 
-static inline int __attribute__((always_inline)) c2me_natives_floorDiv(int x, int y) {
+static inline int __attribute__((always_inline)) math_floorDiv(int x, int y) {
     int r = x / y;
     // if the signs are different and modulo not zero, round down
     if ((x ^ y) < 0 && (r * y != x)) {
@@ -48,12 +48,12 @@ static inline int __attribute__((always_inline)) c2me_natives_floorDiv(int x, in
     return r;
 }
 
-static inline double __attribute__((always_inline)) c2me_natives_octave_maintainPrecision(double value) {
+static inline double __attribute__((always_inline)) math_octave_maintainPrecision(double value) {
     __int64_t l = value;
     return value - (double) (l < value ? l - 1L : l) * 3.3554432E7;
 }
 
-static inline double __attribute__((always_inline)) c2me_natives_simplex_grad(int hash, double x, double y, double z, double distance) {
+static inline double __attribute__((always_inline)) math_simplex_grad(int hash, double x, double y, double z, double distance) {
     double d = distance - x * x - y * y - z * z;
     if (d < 0.0) {
         return 0.0;
@@ -66,19 +66,19 @@ static inline double __attribute__((always_inline)) c2me_natives_simplex_grad(in
     }
 }
 
-static inline double __attribute__((always_inline)) c2me_natives_lerp(double delta, double start, double end) {
+static inline double __attribute__((always_inline)) math_lerp(double delta, double start, double end) {
     return start + delta * (end - start);
 }
 
-static inline double __attribute__((always_inline)) c2me_natives_clampedLerp(double start, double end, double delta) {
+static inline double __attribute__((always_inline)) math_clampedLerp(double start, double end, double delta) {
     if (delta < 0.0) {
         return start;
     } else {
-        return delta > 1.0 ? end : c2me_natives_lerp(delta, start, end);
+        return delta > 1.0 ? end : math_lerp(delta, start, end);
     }
 }
 
-static inline float __attribute__((always_inline)) c2me_natives_fclamp(float value, float min, float max) {
+static inline float __attribute__((always_inline)) math_fclamp(float value, float min, float max) {
 //    if (value < min) {
 //        return min;
 //    } else {
@@ -87,13 +87,21 @@ static inline float __attribute__((always_inline)) c2me_natives_fclamp(float val
     return fminf(fmaxf(value, min), max);
 }
 
-static inline double __attribute__((always_inline)) c2me_natives_clamp(double value, double min, double max) {
+static inline double __attribute__((always_inline)) math_clamp(double value, double min, double max) {
 //    if (value < min) {
 //        return min;
 //    } else {
 //        return value > max ? max : value;
 //    }
     return fmin(fmax(value, min), max);
+}
+
+static inline double __attribute__((always_inline)) math_getLerpProgress(double value, double start, double end) {
+    return (value - start) / (end - start);
+}
+
+static inline double __attribute__((always_inline)) math_clampedLerpFromProgress(double lerpValue, double lerpStart, double lerpEnd, double start, double end) {
+    return math_clampedLerp(start, end, math_getLerpProgress(lerpValue, lerpStart, lerpEnd));
 }
 
 static inline int __attribute__((always_inline)) c2me_natives_floorMod(int x, int y) {

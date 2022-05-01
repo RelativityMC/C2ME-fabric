@@ -6,6 +6,7 @@ accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTy
 accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$Shift
 accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$ShiftA
 accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$ShiftB
+accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$YClampedGradient
 
 extendable    class    net/minecraft/util/math/noise/PerlinNoiseSampler
 
