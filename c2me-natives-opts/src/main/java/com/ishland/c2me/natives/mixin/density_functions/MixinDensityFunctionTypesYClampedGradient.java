@@ -27,7 +27,7 @@ public abstract class MixinDensityFunctionTypesYClampedGradient implements Densi
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(CallbackInfo info) {
-        System.out.println("Compiling density function: end_islands %s".formatted(this));
+//        System.out.println("Compiling density function: y_clamped_gradient %s".formatted(this));
         this.pointer = NativeInterface.createDFIClampedGradientData(this.fromY, this.toY, this.fromValue, this.toValue);
         NativeMemoryTracker.registerAllocatedMemory(this, NativeInterface.SIZEOF_density_function_data + NativeInterface.SIZEOF_dfi_y_clamped_gradient_data, this.pointer);
     }

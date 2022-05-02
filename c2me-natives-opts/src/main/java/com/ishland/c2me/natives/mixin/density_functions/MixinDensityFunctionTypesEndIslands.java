@@ -28,7 +28,7 @@ public abstract class MixinDensityFunctionTypesEndIslands implements DensityFunc
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(CallbackInfo info) {
-        System.out.println("Compiling density function: end_islands %s".formatted(this));
+//        System.out.println("Compiling density function: end_islands %s".formatted(this));
         this.pointer = NativeInterface.createDFIEndIslands(((NativeStruct) this.field_36554).getNativePointer());
         NativeMemoryTracker.registerAllocatedMemory(this, NativeInterface.SIZEOF_density_function_data + NativeInterface.SIZEOF_dfi_end_islands_data, this.pointer);
     }

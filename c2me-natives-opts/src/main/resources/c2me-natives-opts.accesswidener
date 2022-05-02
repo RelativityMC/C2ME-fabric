@@ -8,5 +8,8 @@ accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTy
 accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$ShiftB
 accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$YClampedGradient
 
+accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$Clamp
+accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$class_6932
+
 extendable    class    net/minecraft/util/math/noise/PerlinNoiseSampler
 

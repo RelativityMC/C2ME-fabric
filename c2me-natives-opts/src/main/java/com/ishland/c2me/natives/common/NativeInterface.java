@@ -232,6 +232,23 @@ public class NativeInterface {
         }
     }
 
+    // density_function_impl_data *c2me_natives_create_dfi_clamp(density_function_impl_data *input, double minValue, double maxValue)
+
+    private static final MethodHandle DFI_create_dfi_clamp = LINKER.downcallHandle(
+            LOOKUP.lookup("c2me_natives_create_dfi_clamp").get(),
+            MethodType.methodType(long.class, long.class, double.class, double.class),
+            FunctionDescriptor.of(C_LONG_LONG, C_LONG_LONG, C_DOUBLE, C_DOUBLE)
+    );
+
+    public static long createDFIClamp(long ptr_input, double minValue, double maxValue) {
+        if (ptr_input == 0) throw new NullPointerException();
+        try {
+            return (long) DFI_create_dfi_clamp.invoke(ptr_input, minValue, maxValue);
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     // ===== Density Function Bindings =====
 
     // double c2me_natives_dfi_bindings_single_op(density_function_impl_data *dfi, int blockX, int blockY, int blockZ)
@@ -296,6 +313,7 @@ public class NativeInterface {
     public static final long SIZEOF_dfi_end_islands_data = sizeOf("dfi_end_islands_data");
     public static final long SIZEOF_dfi_simple_shifted_noise_data = sizeOf("dfi_simple_shifted_noise_data");
     public static final long SIZEOF_dfi_y_clamped_gradient_data = sizeOf("dfi_y_clamped_gradient_data");
+    public static final long SIZEOF_dfi_clamp_data = sizeOf("dfi_clamp_data");
 
     static {
 

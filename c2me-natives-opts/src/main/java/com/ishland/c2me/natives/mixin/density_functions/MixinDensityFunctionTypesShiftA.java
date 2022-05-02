@@ -32,7 +32,7 @@ public abstract class MixinDensityFunctionTypesShiftA implements DensityFunction
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(CallbackInfo info) {
-        System.out.println("Compiling density function: shift_a %s".formatted(this));
+//        System.out.println("Compiling density function: shift_a %s".formatted(this));
         if (this.offsetNoise != null) {
             this.pointer = NativeInterface.createDFIShifted0Data(
                     false,

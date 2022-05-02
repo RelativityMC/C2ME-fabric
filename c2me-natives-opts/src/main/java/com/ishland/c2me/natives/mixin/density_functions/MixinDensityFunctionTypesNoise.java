@@ -41,7 +41,7 @@ public abstract class MixinDensityFunctionTypesNoise implements DensityFunction.
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(CallbackInfo ci) {
-        System.out.println("Compiling density function: noise %s".formatted(this));
+//        System.out.println("Compiling density function: noise %s".formatted(this));
         if (this.noise != null) {
             this.pointer = NativeInterface.createDFINoiseData(
                     false,
