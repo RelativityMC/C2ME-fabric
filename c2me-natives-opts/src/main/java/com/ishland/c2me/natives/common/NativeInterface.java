@@ -13,6 +13,7 @@ import static jdk.incubator.foreign.ValueLayout.JAVA_DOUBLE;
 import static jdk.incubator.foreign.ValueLayout.JAVA_FLOAT;
 import static jdk.incubator.foreign.ValueLayout.JAVA_INT;
 import static jdk.incubator.foreign.ValueLayout.JAVA_LONG;
+import static jdk.incubator.foreign.ValueLayout.JAVA_SHORT;
 
 public class NativeInterface {
 
@@ -221,6 +222,8 @@ public class NativeInterface {
         }
     }
 
+
+
     // density_function_impl_data *c2me_natives_create_dfi_clamp(density_function_impl_data *input, double minValue, double maxValue)
 
     private static final MethodHandle DFI_create_dfi_clamp = LINKER.downcallHandle(
@@ -232,6 +235,43 @@ public class NativeInterface {
         if (ptr_input == 0) throw new NullPointerException();
         try {
             return (long) DFI_create_dfi_clamp.invoke(ptr_input, minValue, maxValue);
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    // density_function_impl_data *
+    // c2me_natives_create_dfi_operation_half(short operation, density_function_impl_data *input, double constantArgument)
+
+    private static final MethodHandle DFI_create_dfi_operation_half = LINKER.downcallHandle(
+            LOOKUP.lookup("c2me_natives_create_dfi_operation_half").get(),
+            FunctionDescriptor.of(JAVA_LONG, JAVA_SHORT, JAVA_LONG, JAVA_DOUBLE)
+    );
+
+    public static long createDFIOperationHalf(short operation, long ptr_input, double constantArgument) {
+        if (operation < 0 || operation > 3) throw new IndexOutOfBoundsException("operation must be in [0, 3]");
+        if (ptr_input == 0) throw new NullPointerException();
+        try {
+            return (long) DFI_create_dfi_operation_half.invoke(operation, ptr_input, constantArgument);
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    // density_function_impl_data *c2me_natives_create_dfi_operation_full(short operation, density_function_impl_data *input1,
+    //                                                                    density_function_impl_data *input2)
+
+    private static final MethodHandle DFI_create_dfi_operation_full = LINKER.downcallHandle(
+            LOOKUP.lookup("c2me_natives_create_dfi_operation_full").get(),
+            FunctionDescriptor.of(JAVA_LONG, JAVA_SHORT, JAVA_LONG, JAVA_LONG)
+    );
+
+    public static long createDFIOperationFull(short operation, long ptr_input1, long ptr_input2) {
+        if (operation < 0 || operation > 3) throw new IndexOutOfBoundsException("operation must be in [0, 3]");
+        if (ptr_input1 == 0) throw new NullPointerException();
+        if (ptr_input2 == 0) throw new NullPointerException();
+        try {
+            return (long) DFI_create_dfi_operation_full.invoke(operation, ptr_input1, ptr_input2);
         } catch (Throwable e) {
             throw new RuntimeException(e);
         }
@@ -300,6 +340,8 @@ public class NativeInterface {
     public static final long SIZEOF_dfi_simple_shifted_noise_data = sizeOf("dfi_simple_shifted_noise_data");
     public static final long SIZEOF_dfi_y_clamped_gradient_data = sizeOf("dfi_y_clamped_gradient_data");
     public static final long SIZEOF_dfi_clamp_data = sizeOf("dfi_clamp_data");
+    public static final long SIZEOF_dfi_operation_half_data = sizeOf("dfi_operation_half_data");
+    public static final long SIZEOF_dfi_operation_full_data = sizeOf("dfi_operation_full_data");
 
     static {
 

@@ -4,6 +4,7 @@
 #include <math.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdint.h>
 
 #define BILLION 1000000000L
 

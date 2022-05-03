@@ -17,49 +17,45 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(DensityFunctionTypes.Clamp.class)
-public abstract class MixinDensityFunctionTypesClamp implements DensityFunctionTypes.class_6932, CompiledDensityFunctionImpl {
+@Mixin(DensityFunctionTypes.class_6929.class)
+public abstract class MixinDensityFunctionTypesHalfOperation implements DensityFunctionTypes.class_6932, CompiledDensityFunctionImpl {
 
     @Shadow
     @Final
     private DensityFunction input;
 
-    @Shadow
-    @Final
-    private double minValue;
-    @Shadow
-    @Final
-    private double maxValue;
+    @Shadow public abstract DensityFunctionTypes.Operation.Type type();
+
+    @Shadow @Final private double argument;
     @Unique
-    private long pointer = 0L;
+    private long pointer;
 
     @Unique
     private String errorMessage = null;
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(CallbackInfo info) {
-//        System.err.println("Compiling density function: clamp %s".formatted(this));
         if (!DensityFunctionUtils.isCompiled(this.input)) {
             this.errorMessage = DensityFunctionUtils.getErrorMessage(
                     this,
                     ImmutableMap.of("input", this.input)
             );
             assert this.errorMessage != null;
-            System.err.println("Failed to compile density function: clamp %s".formatted(this));
+            System.err.println("Failed to compile density function: operation_half %s".formatted(this));
             System.err.println(DensityFunctionUtils.indent(this.errorMessage, false));
             return;
         }
-        this.pointer = NativeInterface.createDFIClamp(
+
+        this.pointer = NativeInterface.createDFIOperationHalf(
+                DensityFunctionUtils.mapOperationToNative(this.type()),
                 ((CompiledDensityFunctionImpl) this.input).getDFIPointer(),
-                this.minValue,
-                this.maxValue
+                this.argument
         );
         NativeMemoryTracker.registerAllocatedMemory(
                 this,
-                NativeInterface.SIZEOF_density_function_data + NativeInterface.SIZEOF_dfi_clamp_data,
+                NativeInterface.SIZEOF_density_function_data + NativeInterface.SIZEOF_dfi_operation_half_data,
                 this.pointer
         );
-//        System.err.println("Compiled density function successfully: clamp %s".formatted(this));
     }
 
     @Override
@@ -67,7 +63,7 @@ public abstract class MixinDensityFunctionTypesClamp implements DensityFunctionT
         if (this.pointer != 0) {
             return NativeInterface.dfiBindingsSingleOp(this.pointer, pos.blockX(), pos.blockY(), pos.blockZ());
         } else {
-            // TODO [VanillaCopy]
+            // [VanillaCopy]
             return this.apply(this.input().sample(pos));
         }
     }
@@ -77,10 +73,10 @@ public abstract class MixinDensityFunctionTypesClamp implements DensityFunctionT
         if (arg instanceof CompiledDensityFunctionArg dfa && dfa.getDFAPointer() != 0 && this.pointer != 0) {
             NativeInterface.dfiBindingsMultiOp(this.pointer, dfa.getDFAPointer(), ds);
         } else {
-            // TODO [VanillaCopy]
+            // [VanillaCopy]
             this.input().method_40470(ds, arg);
 
-            for (int i = 0; i < ds.length; ++i) {
+            for(int i = 0; i < ds.length; ++i) {
                 ds[i] = this.apply(ds[i]);
             }
         }
@@ -96,4 +92,5 @@ public abstract class MixinDensityFunctionTypesClamp implements DensityFunctionT
     public String getCompilationFailedReason() {
         return this.errorMessage;
     }
+
 }

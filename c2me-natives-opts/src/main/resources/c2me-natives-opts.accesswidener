@@ -10,6 +10,9 @@ accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTy
 
 accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$Clamp
 accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$class_6932
+accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$class_6917
+accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$class_6929
+accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$Operation
 
 extendable    class    net/minecraft/util/math/noise/PerlinNoiseSampler
 
