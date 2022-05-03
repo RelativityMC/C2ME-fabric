@@ -37,13 +37,14 @@ public abstract class MixinDensityFunctionTypesClamp implements DensityFunctionT
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(CallbackInfo info) {
-        System.err.println("Compiling density function: clamp %s".formatted(this));
+//        System.err.println("Compiling density function: clamp %s".formatted(this));
         if (!DensityFunctionUtils.isCompiled(this.input)) {
             this.errorMessage = DensityFunctionUtils.getErrorMessage(
                     this,
                     ImmutableMap.of("input", this.input)
             );
             assert this.errorMessage != null;
+            System.err.println("Failed to compile density function: clamp %s".formatted(this.errorMessage));
             System.err.println(DensityFunctionUtils.indent(this.errorMessage));
             return;
         }
@@ -52,7 +53,7 @@ public abstract class MixinDensityFunctionTypesClamp implements DensityFunctionT
                 this.minValue,
                 this.maxValue
         );
-        System.err.println("Compiled density function successfully: clamp %s".formatted(this));
+//        System.err.println("Compiled density function successfully: clamp %s".formatted(this));
     }
 
     @Override
