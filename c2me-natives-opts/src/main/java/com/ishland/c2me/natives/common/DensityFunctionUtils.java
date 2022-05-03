@@ -8,6 +8,8 @@ import java.util.Map;
 
 public class DensityFunctionUtils {
 
+    public static final boolean DEBUG = Boolean.getBoolean("com.ishland.c2me.natives.debug");
+
     public static boolean isCompiled(DensityFunction... function) {
         for (DensityFunction df : function) {
             if (df instanceof CompiledDensityFunctionImpl dfi) {
@@ -22,9 +24,9 @@ public class DensityFunctionUtils {
     private static String getErrorMessage(DensityFunction function) {
         if (function instanceof CompiledDensityFunctionImpl dfi) {
             if (dfi.getCompilationFailedReason() != null) {
-                return String.format("Parent (%s) failed to compile: \n    %s", function.getClass().getName(), indent(dfi.getCompilationFailedReason(), false));
+                return String.format("Parent (%s) failed to %s: \n    %s", function.getClass().getName(), dfi.getDFIType().verb(), indent(dfi.getCompilationFailedReason(), false));
             } else if (dfi.getDFIPointer() == 0L) {
-                return String.format("Parent (%s) failed to compile for unknown reasons", function.getClass().getName());
+                return String.format("Parent (%s) failed to %s for unknown reasons", function.getClass().getName(), dfi.getDFIType().verb());
             }
             return null;
         } else {
@@ -32,9 +34,9 @@ public class DensityFunctionUtils {
         }
     }
 
-    public static String getErrorMessage(DensityFunction owner, Map<String, DensityFunction> map) {
+    public static String getErrorMessage(CompiledDensityFunctionImpl owner, Map<String, DensityFunction> map) {
         StringBuilder sb = new StringBuilder();
-        sb.append(String.format("Density function (%s) failed to compile for these reasons: \n", owner.getClass().getName()));
+        sb.append(String.format("Density function (%s) failed to %s for these reasons: \n", owner.getClass().getName(), owner.getDFIType().verb()));
         boolean hasFailures = false;
         for (Iterator<Map.Entry<String, DensityFunction>> iterator = map.entrySet().iterator(); iterator.hasNext(); ) {
             Map.Entry<String, DensityFunction> entry = iterator.next();

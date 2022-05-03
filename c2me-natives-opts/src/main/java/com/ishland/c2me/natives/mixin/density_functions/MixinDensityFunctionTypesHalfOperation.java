@@ -36,13 +36,15 @@ public abstract class MixinDensityFunctionTypesHalfOperation implements DensityF
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(CallbackInfo info) {
         if (!DensityFunctionUtils.isCompiled(this.input)) {
-            this.errorMessage = DensityFunctionUtils.getErrorMessage(
-                    this,
-                    ImmutableMap.of("input", this.input)
-            );
-            assert this.errorMessage != null;
-            System.err.println("Failed to compile density function: operation_half %s".formatted(this));
-            System.err.println(DensityFunctionUtils.indent(this.errorMessage, false));
+            if (DensityFunctionUtils.DEBUG) {
+                this.errorMessage = DensityFunctionUtils.getErrorMessage(
+                        this,
+                        ImmutableMap.of("input", this.input)
+                );
+                assert this.errorMessage != null;
+                System.err.println("Failed to compile density function: operation_half %s".formatted(this));
+                System.err.println(DensityFunctionUtils.indent(this.errorMessage, false));
+            }
             return;
         }
 

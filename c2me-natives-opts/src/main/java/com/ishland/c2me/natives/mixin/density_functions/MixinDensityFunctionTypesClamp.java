@@ -30,6 +30,7 @@ public abstract class MixinDensityFunctionTypesClamp implements DensityFunctionT
     @Shadow
     @Final
     private double maxValue;
+
     @Unique
     private long pointer = 0L;
 
@@ -40,13 +41,15 @@ public abstract class MixinDensityFunctionTypesClamp implements DensityFunctionT
     private void onInit(CallbackInfo info) {
 //        System.err.println("Compiling density function: clamp %s".formatted(this));
         if (!DensityFunctionUtils.isCompiled(this.input)) {
-            this.errorMessage = DensityFunctionUtils.getErrorMessage(
-                    this,
-                    ImmutableMap.of("input", this.input)
-            );
-            assert this.errorMessage != null;
-            System.err.println("Failed to compile density function: clamp %s".formatted(this));
-            System.err.println(DensityFunctionUtils.indent(this.errorMessage, false));
+            if (DensityFunctionUtils.DEBUG) {
+                this.errorMessage = DensityFunctionUtils.getErrorMessage(
+                        this,
+                        ImmutableMap.of("input", this.input)
+                );
+                assert this.errorMessage != null;
+                System.err.println("Failed to compile density function: clamp %s".formatted(this));
+                System.err.println(DensityFunctionUtils.indent(this.errorMessage, false));
+            }
             return;
         }
         this.pointer = NativeInterface.createDFIClamp(

@@ -18,6 +18,7 @@
     "density_functions.MixinDensityFunctionTypesFullOperation",
     "density_functions.MixinDensityFunctionTypesHalfOperation",
     "density_functions.MixinDensityFunctionTypesNoise",
+    "density_functions.MixinDensityFunctionTypesRegistryEntry",
     "density_functions.MixinDensityFunctionTypesShift",
     "density_functions.MixinDensityFunctionTypesShiftA",
     "density_functions.MixinDensityFunctionTypesShiftB",

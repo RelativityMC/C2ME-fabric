@@ -13,6 +13,7 @@ accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTy
 accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$class_6917
 accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$class_6929
 accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$Operation
+accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$class_7051
 
 extendable    class    net/minecraft/util/math/noise/PerlinNoiseSampler
 

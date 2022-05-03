@@ -11,4 +11,23 @@ public interface CompiledDensityFunctionImpl {
         return null;
     }
 
+    default Type getDFIType() {
+        return Type.COMPILED;
+    }
+
+    enum Type {
+        COMPILED("compile"),
+        PASS_THROUGH("pass-through");
+
+        private final String verb;
+
+        Type(String verb) {
+            this.verb = verb;
+        }
+
+        public String verb() {
+            return verb;
+        }
+    }
+
 }

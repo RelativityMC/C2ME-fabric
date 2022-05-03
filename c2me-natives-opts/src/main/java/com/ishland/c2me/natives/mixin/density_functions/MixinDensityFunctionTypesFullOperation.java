@@ -39,16 +39,18 @@ public abstract class MixinDensityFunctionTypesFullOperation implements DensityF
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(CallbackInfo info) {
         if (!DensityFunctionUtils.isCompiled(this.argument1, this.argument2)) {
-            this.errorMessage = DensityFunctionUtils.getErrorMessage(
-                    this,
-                    ImmutableMap.of(
-                            "argument1", this.argument1,
-                            "argument2", this.argument2
-                    )
-            );
-            assert this.errorMessage != null;
-            System.err.println("Failed to compile density function: operation_full %s".formatted(this));
-            System.err.println(DensityFunctionUtils.indent(this.errorMessage, false));
+            if (DensityFunctionUtils.DEBUG) {
+                this.errorMessage = DensityFunctionUtils.getErrorMessage(
+                        this,
+                        ImmutableMap.of(
+                                "argument1", this.argument1,
+                                "argument2", this.argument2
+                        )
+                );
+                assert this.errorMessage != null;
+                System.err.println("Failed to compile density function: operation_full %s".formatted(this));
+                System.err.println(DensityFunctionUtils.indent(this.errorMessage, false));
+            }
             return;
         }
 
