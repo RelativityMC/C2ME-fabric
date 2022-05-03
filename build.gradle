@@ -5,6 +5,13 @@ plugins {
     id "me.champeau.jmh" version "0.6.6"
 }
 
+//java {
+//    toolchain {
+//        languageVersion = JavaLanguageVersion.of(18)
+//        vendor = JvmVendorSpec.ADOPTIUM
+//    }
+//}
+
 @SuppressWarnings('unused')
 static def moduleDependencies(project, List<String> depNames) {
     project.dependencies {

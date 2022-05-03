@@ -4,6 +4,9 @@ moduleDependencies(project, [
 
 apply plugin: 'c'
 
+sourceCompatibility = JavaVersion.VERSION_18
+targetCompatibility = JavaVersion.VERSION_18
+
 model {
     platforms {
         x64 {

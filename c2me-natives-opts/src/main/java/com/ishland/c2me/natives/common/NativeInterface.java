@@ -7,17 +7,16 @@ import jdk.incubator.foreign.SymbolLookup;
 import sun.misc.Unsafe;
 
 import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodType;
 
-import static jdk.incubator.foreign.CLinker.C_CHAR;
-import static jdk.incubator.foreign.CLinker.C_DOUBLE;
-import static jdk.incubator.foreign.CLinker.C_FLOAT;
-import static jdk.incubator.foreign.CLinker.C_INT;
-import static jdk.incubator.foreign.CLinker.C_LONG_LONG;
+import static jdk.incubator.foreign.ValueLayout.JAVA_BOOLEAN;
+import static jdk.incubator.foreign.ValueLayout.JAVA_DOUBLE;
+import static jdk.incubator.foreign.ValueLayout.JAVA_FLOAT;
+import static jdk.incubator.foreign.ValueLayout.JAVA_INT;
+import static jdk.incubator.foreign.ValueLayout.JAVA_LONG;
 
 public class NativeInterface {
 
-    private static final CLinker LINKER = CLinker.getInstance();
+    private static final CLinker LINKER = CLinker.systemCLinker();
     private static final SymbolLookup LOOKUP = SymbolLookup.loaderLookup();
     private static final MethodHandle INIT;
     private static final MethodHandle PERLIN_SAMPLE;
@@ -53,8 +52,7 @@ public class NativeInterface {
 
     private static final MethodHandle DFA_create_chunk_noise_sampler_data_empty = LINKER.downcallHandle(
             LOOKUP.lookup("c2me_natives_create_chunk_noise_sampler_data_empty").get(),
-            MethodType.methodType(long.class),
-            FunctionDescriptor.of(C_LONG_LONG)
+            FunctionDescriptor.of(JAVA_LONG)
     );
 
     public static long createChunkNoiseSamplerDataEmpty() {
@@ -69,8 +67,7 @@ public class NativeInterface {
 
     private static final MethodHandle DFA_create_chunk_noise_sampler1_data_empty = LINKER.downcallHandle(
             LOOKUP.lookup("c2me_natives_create_chunk_noise_sampler1_data_empty").get(),
-            MethodType.methodType(long.class),
-            FunctionDescriptor.of(C_LONG_LONG)
+            FunctionDescriptor.of(JAVA_LONG)
     );
 
     public static long createChunkNoiseSampler1DataEmpty() {
@@ -85,8 +82,7 @@ public class NativeInterface {
 
     private static final MethodHandle DFA_create_dfi_constant = LINKER.downcallHandle(
             LOOKUP.lookup("c2me_natives_create_dfi_constant").get(),
-            MethodType.methodType(long.class, double.class),
-            FunctionDescriptor.of(C_LONG_LONG, C_DOUBLE)
+            FunctionDescriptor.of(JAVA_LONG, JAVA_DOUBLE)
     );
 
     public static long createDFIConstant(double constant) {
@@ -102,8 +98,7 @@ public class NativeInterface {
     //        double xzScale, double yScale)
     private static final MethodHandle DFI_create_dfi_noise_data = LINKER.downcallHandle(
             LOOKUP.lookup("c2me_natives_create_dfi_noise_data").get(),
-            MethodType.methodType(long.class, byte.class, long.class, long.class, double.class, double.class, double.class),
-            FunctionDescriptor.of(C_LONG_LONG, C_CHAR, C_LONG_LONG, C_LONG_LONG, C_DOUBLE, C_DOUBLE, C_DOUBLE)
+            FunctionDescriptor.of(JAVA_LONG, JAVA_BOOLEAN, JAVA_LONG, JAVA_LONG, JAVA_DOUBLE, JAVA_DOUBLE, JAVA_DOUBLE)
     );
 
     public static long createDFINoiseData(boolean isNull, long firstSampler, long secondSampler, double amplitude, double xzScale, double yScale) {
@@ -112,7 +107,7 @@ public class NativeInterface {
             if (secondSampler == 0) throw new NullPointerException();
         }
         try {
-            return (long) DFI_create_dfi_noise_data.invoke((byte) (isNull ? 1 : 0), firstSampler, secondSampler, amplitude, xzScale, yScale);
+            return (long) DFI_create_dfi_noise_data.invoke(isNull, firstSampler, secondSampler, amplitude, xzScale, yScale);
         } catch (Throwable e) {
             throw new RuntimeException(e);
         }
@@ -122,8 +117,7 @@ public class NativeInterface {
 
     private static final MethodHandle DFI_create_dfi_end_islands = LINKER.downcallHandle(
             LOOKUP.lookup("c2me_natives_create_dfi_end_islands").get(),
-            MethodType.methodType(long.class, long.class),
-            FunctionDescriptor.of(C_LONG_LONG, C_LONG_LONG)
+            FunctionDescriptor.of(JAVA_LONG, JAVA_LONG)
     );
 
     public static long createDFIEndIslands(long ptr_permutations) {
@@ -142,8 +136,7 @@ public class NativeInterface {
 
     private static final MethodHandle DFI_create_dfi_shifted0_data = LINKER.downcallHandle(
             LOOKUP.lookup("c2me_natives_create_dfi_shifted0_data").get(),
-            MethodType.methodType(long.class, byte.class, long.class, long.class, double.class),
-            FunctionDescriptor.of(C_LONG_LONG, C_CHAR, C_LONG_LONG, C_LONG_LONG, C_DOUBLE)
+            FunctionDescriptor.of(JAVA_LONG, JAVA_BOOLEAN, JAVA_LONG, JAVA_LONG, JAVA_DOUBLE)
     );
 
     public static long createDFIShifted0Data(boolean isNull, long firstSampler, long secondSampler, double amplitude) {
@@ -152,7 +145,7 @@ public class NativeInterface {
             if (secondSampler == 0) throw new NullPointerException();
         }
         try {
-            return (long) DFI_create_dfi_shifted0_data.invoke((byte) (isNull ? 1 : 0), firstSampler, secondSampler, amplitude);
+            return (long) DFI_create_dfi_shifted0_data.invoke(isNull, firstSampler, secondSampler, amplitude);
         } catch (Throwable e) {
             throw new RuntimeException(e);
         }
@@ -165,8 +158,7 @@ public class NativeInterface {
 
     private static final MethodHandle DFI_create_dfi_shiftedA_data = LINKER.downcallHandle(
             LOOKUP.lookup("c2me_natives_create_dfi_shiftedA_data").get(),
-            MethodType.methodType(long.class, byte.class, long.class, long.class, double.class),
-            FunctionDescriptor.of(C_LONG_LONG, C_CHAR, C_LONG_LONG, C_LONG_LONG, C_DOUBLE)
+            FunctionDescriptor.of(JAVA_LONG, JAVA_BOOLEAN, JAVA_LONG, JAVA_LONG, JAVA_DOUBLE)
     );
 
     public static long createDFIShiftedAData(boolean isNull, long firstSampler, long secondSampler, double amplitude) {
@@ -175,7 +167,7 @@ public class NativeInterface {
             if (secondSampler == 0) throw new NullPointerException();
         }
         try {
-            return (long) DFI_create_dfi_shiftedA_data.invoke((byte) (isNull ? 1 : 0), firstSampler, secondSampler, amplitude);
+            return (long) DFI_create_dfi_shiftedA_data.invoke(isNull, firstSampler, secondSampler, amplitude);
         } catch (Throwable e) {
             throw new RuntimeException(e);
         }
@@ -183,8 +175,7 @@ public class NativeInterface {
 
     private static final MethodHandle DFI_create_dfi_shiftedB_data = LINKER.downcallHandle(
             LOOKUP.lookup("c2me_natives_create_dfi_shiftedB_data").get(),
-            MethodType.methodType(long.class, byte.class, long.class, long.class, double.class),
-            FunctionDescriptor.of(C_LONG_LONG, C_CHAR, C_LONG_LONG, C_LONG_LONG, C_DOUBLE)
+            FunctionDescriptor.of(JAVA_LONG, JAVA_BOOLEAN, JAVA_LONG, JAVA_LONG, JAVA_DOUBLE)
     );
 
     public static long createDFIShiftedBData(boolean isNull, long firstSampler, long secondSampler, double amplitude) {
@@ -193,7 +184,7 @@ public class NativeInterface {
             if (secondSampler == 0) throw new NullPointerException();
         }
         try {
-            return (long) DFI_create_dfi_shiftedB_data.invoke((byte) (isNull ? 1 : 0), firstSampler, secondSampler, amplitude);
+            return (long) DFI_create_dfi_shiftedB_data.invoke(isNull, firstSampler, secondSampler, amplitude);
         } catch (Throwable e) {
             throw new RuntimeException(e);
         }
@@ -203,8 +194,7 @@ public class NativeInterface {
 
     private static final MethodHandle DFI_create_dfi_old_blended_noise_data = LINKER.downcallHandle(
             LOOKUP.lookup("c2me_natives_create_dfi_old_blended_noise_data").get(),
-            MethodType.methodType(long.class, long.class),
-            FunctionDescriptor.of(C_LONG_LONG, C_LONG_LONG)
+            FunctionDescriptor.of(JAVA_LONG, JAVA_LONG)
     );
 
     public static long createDFIOldBlendedNoiseData(long sampler) {
@@ -220,8 +210,7 @@ public class NativeInterface {
 
     private static final MethodHandle DFI_create_dfi_y_clamped_gradient_data = LINKER.downcallHandle(
             LOOKUP.lookup("c2me_natives_create_dfi_y_clamped_gradient_data").get(),
-            MethodType.methodType(long.class, double.class, double.class, double.class, double.class),
-            FunctionDescriptor.of(C_LONG_LONG, C_DOUBLE, C_DOUBLE, C_DOUBLE, C_DOUBLE)
+            FunctionDescriptor.of(JAVA_LONG, JAVA_DOUBLE, JAVA_DOUBLE, JAVA_DOUBLE, JAVA_DOUBLE)
     );
 
     public static long createDFIClampedGradientData(double fromY, double toY, double fromValue, double toValue) {
@@ -236,8 +225,7 @@ public class NativeInterface {
 
     private static final MethodHandle DFI_create_dfi_clamp = LINKER.downcallHandle(
             LOOKUP.lookup("c2me_natives_create_dfi_clamp").get(),
-            MethodType.methodType(long.class, long.class, double.class, double.class),
-            FunctionDescriptor.of(C_LONG_LONG, C_LONG_LONG, C_DOUBLE, C_DOUBLE)
+            FunctionDescriptor.of(JAVA_LONG, JAVA_LONG, JAVA_DOUBLE, JAVA_DOUBLE)
     );
 
     public static long createDFIClamp(long ptr_input, double minValue, double maxValue) {
@@ -254,8 +242,7 @@ public class NativeInterface {
     // double c2me_natives_dfi_bindings_single_op(density_function_impl_data *dfi, int blockX, int blockY, int blockZ)
     private static final MethodHandle DFI_bindings_single_op = LINKER.downcallHandle(
             LOOKUP.lookup("c2me_natives_dfi_bindings_single_op").get(),
-            MethodType.methodType(double.class, long.class, int.class, int.class, int.class),
-            FunctionDescriptor.of(C_DOUBLE, C_LONG_LONG, C_INT, C_INT, C_INT)
+            FunctionDescriptor.of(JAVA_DOUBLE, JAVA_LONG, JAVA_INT, JAVA_INT, JAVA_INT)
     );
 
     public static double dfiBindingsSingleOp(long ptr_dfi, int blockX, int blockY, int blockZ) {
@@ -271,8 +258,7 @@ public class NativeInterface {
     //                                          double *res, size_t length)
     private static final MethodHandle DFI_bindings_multi_op = LINKER.downcallHandle(
             LOOKUP.lookup("c2me_natives_dfi_bindings_multi_op").get(),
-            MethodType.methodType(void.class, long.class, long.class, long.class, long.class),
-            FunctionDescriptor.ofVoid(C_LONG_LONG, C_LONG_LONG, C_LONG_LONG, C_LONG_LONG)
+            FunctionDescriptor.ofVoid(JAVA_LONG, JAVA_LONG, JAVA_LONG, JAVA_LONG)
     );
 
     public static void dfiBindingsMultiOp(long ptr_dfi, long ptr_dfa, long ptr_res, long length) {
@@ -319,20 +305,17 @@ public class NativeInterface {
 
         INIT = LINKER.downcallHandle(
                 LOOKUP.lookup("c2me_natives_init").get(),
-                MethodType.methodType(void.class),
                 FunctionDescriptor.ofVoid()
         );
 
         PERLIN_SAMPLE = LINKER.downcallHandle(
                 LOOKUP.lookup("c2me_natives_perlin_sample").get(),
-                MethodType.methodType(double.class, long.class, double.class, double.class, double.class, double.class, double.class, double.class, double.class, double.class),
-                FunctionDescriptor.of(C_DOUBLE, C_LONG_LONG, C_DOUBLE, C_DOUBLE, C_DOUBLE, C_DOUBLE, C_DOUBLE, C_DOUBLE, C_DOUBLE, C_DOUBLE)
+                FunctionDescriptor.of(JAVA_DOUBLE, JAVA_LONG, JAVA_DOUBLE, JAVA_DOUBLE, JAVA_DOUBLE, JAVA_DOUBLE, JAVA_DOUBLE, JAVA_DOUBLE, JAVA_DOUBLE, JAVA_DOUBLE)
         );
 
         PERLIN_GENERATE_PERMUTATIONS = LINKER.downcallHandle(
                 LOOKUP.lookup("c2me_natives_perlin_generatePermutations").get(),
-                MethodType.methodType(long.class),
-                FunctionDescriptor.of(C_LONG_LONG));
+                FunctionDescriptor.of(JAVA_LONG));
 
         // octave_sampler_data *c2me_natives_create_octave_sampler_data(
         //    double lacunarity, double persistence, size_t length, size_t *indexes, __uint8_t *sampler_permutations,
@@ -340,16 +323,14 @@ public class NativeInterface {
 
         PERLIN_CREATE_OCTAVE_SAMPLER_DATA = LINKER.downcallHandle(
                 LOOKUP.lookup("c2me_natives_perlin_create_octave_sampler_data").get(),
-                MethodType.methodType(long.class, double.class, double.class, long.class, long.class, long.class, long.class, long.class, long.class, long.class),
-                FunctionDescriptor.of(C_LONG_LONG, C_DOUBLE, C_DOUBLE, C_LONG_LONG, C_LONG_LONG, C_LONG_LONG, C_LONG_LONG, C_LONG_LONG, C_LONG_LONG, C_LONG_LONG)
+                FunctionDescriptor.of(JAVA_LONG, JAVA_DOUBLE, JAVA_DOUBLE, JAVA_LONG, JAVA_LONG, JAVA_LONG, JAVA_LONG, JAVA_LONG, JAVA_LONG, JAVA_LONG)
         );
 
         // double c2me_natives_octave_sample(octave_sampler_data *data, double x, double y, double z)
 
         PERLIN_OCTAVE_SAMPLE = LINKER.downcallHandle(
                 LOOKUP.lookup("c2me_natives_perlin_octave_sample").get(),
-                MethodType.methodType(double.class, long.class, double.class, double.class, double.class),
-                FunctionDescriptor.of(C_DOUBLE, C_LONG_LONG, C_DOUBLE, C_DOUBLE, C_DOUBLE)
+                FunctionDescriptor.of(JAVA_DOUBLE, JAVA_LONG, JAVA_DOUBLE, JAVA_DOUBLE, JAVA_DOUBLE)
         );
 
         // interpolated_sampler_data *c2me_natives_create_interpolated_sampler_data(
@@ -358,16 +339,14 @@ public class NativeInterface {
 
         PERLIN_CREATE_INTERPOLATED_SAMPLER_DATA = LINKER.downcallHandle(
                 LOOKUP.lookup("c2me_natives_perlin_create_interpolated_sampler_data").get(),
-                MethodType.methodType(long.class, long.class, long.class, long.class, double.class, double.class, double.class, double.class, int.class, int.class),
-                FunctionDescriptor.of(C_LONG_LONG, C_LONG_LONG, C_LONG_LONG, C_LONG_LONG, C_DOUBLE, C_DOUBLE, C_DOUBLE, C_DOUBLE, C_INT, C_INT)
+                FunctionDescriptor.of(JAVA_LONG, JAVA_LONG, JAVA_LONG, JAVA_LONG, JAVA_DOUBLE, JAVA_DOUBLE, JAVA_DOUBLE, JAVA_DOUBLE, JAVA_INT, JAVA_INT)
         );
 
         // double c2me_natives_interpolated_sample(interpolated_sampler_data *data, int x, int y, int z)
 
         PERLIN_INTERPOLATED_SAMPLE = LINKER.downcallHandle(
                 LOOKUP.lookup("c2me_natives_perlin_interpolated_sample").get(),
-                MethodType.methodType(double.class, long.class, int.class, int.class, int.class),
-                FunctionDescriptor.of(C_DOUBLE, C_LONG_LONG, C_INT, C_INT, C_INT)
+                FunctionDescriptor.of(JAVA_DOUBLE, JAVA_LONG, JAVA_INT, JAVA_INT, JAVA_INT)
         );
 
         // double c2me_natives_double_sample(
@@ -376,24 +355,21 @@ public class NativeInterface {
 
         PERLIN_DOUBLE_SAMPLE = LINKER.downcallHandle(
                 LOOKUP.lookup("c2me_natives_perlin_double_sample").get(),
-                MethodType.methodType(double.class, long.class, long.class, double.class, double.class, double.class, double.class),
-                FunctionDescriptor.of(C_DOUBLE, C_LONG_LONG, C_LONG_LONG, C_DOUBLE, C_DOUBLE, C_DOUBLE, C_DOUBLE)
+                FunctionDescriptor.of(JAVA_DOUBLE, JAVA_LONG, JAVA_LONG, JAVA_DOUBLE, JAVA_DOUBLE, JAVA_DOUBLE, JAVA_DOUBLE)
         );
 
         // double c2me_natives_simplex_sample(int *permutations, double x, double y)
 
         SIMPLEX_SAMPLE = LINKER.downcallHandle(
                 LOOKUP.lookup("c2me_natives_simplex_sample").get(),
-                MethodType.methodType(double.class, long.class, double.class, double.class),
-                FunctionDescriptor.of(C_DOUBLE, C_LONG_LONG, C_DOUBLE, C_DOUBLE)
+                FunctionDescriptor.of(JAVA_DOUBLE, JAVA_LONG, JAVA_DOUBLE, JAVA_DOUBLE)
         );
 
         // float c2me_natives_end_noise_sample(int *permutations, int i, int j)
 
         THE_END_SAMPLE = LINKER.downcallHandle(
                 LOOKUP.lookup("c2me_natives_end_noise_sample").get(),
-                MethodType.methodType(float.class, long.class, int.class, int.class),
-                FunctionDescriptor.of(C_FLOAT, C_LONG_LONG, C_INT, C_INT)
+                FunctionDescriptor.of(JAVA_FLOAT, JAVA_LONG, JAVA_INT, JAVA_INT)
         );
 
         initNatives();
@@ -524,8 +500,7 @@ public class NativeInterface {
         try {
             return (long) LINKER.downcallHandle(
                     LOOKUP.lookup(String.format("c2me_natives_sizeof_%s", structName)).get(),
-                    MethodType.methodType(long.class),
-                    FunctionDescriptor.of(C_LONG_LONG)
+                    FunctionDescriptor.of(JAVA_LONG)
             ).invoke();
         } catch (Throwable e) {
             throw new RuntimeException(e);
