@@ -1,6 +1,7 @@
 package com.ishland.c2me.natives.mixin;
 
 import com.ishland.c2me.natives.common.CompiledDensityFunctionArg;
+import com.ishland.c2me.natives.common.CompiledDensityFunctionImpl;
 import com.ishland.c2me.natives.common.NativeInterface;
 import com.ishland.c2me.natives.common.NativeMemoryTracker;
 import com.ishland.c2me.natives.common.NativeStruct;
@@ -17,7 +18,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(value = InterpolatedNoiseSampler.class, priority = 1200)
-public abstract class MixinInterpolatedNoiseSampler implements DensityFunction.class_6913 {
+public abstract class MixinInterpolatedNoiseSampler implements DensityFunction.class_6913, CompiledDensityFunctionImpl {
 
     @Shadow @Final private OctavePerlinNoiseSampler lowerInterpolatedNoise;
     @Shadow @Final private OctavePerlinNoiseSampler upperInterpolatedNoise;
@@ -70,5 +71,10 @@ public abstract class MixinInterpolatedNoiseSampler implements DensityFunction.c
         } else {
             DensityFunction.class_6913.super.method_40470(ds, arg);
         }
+    }
+
+    @Override
+    public long getDFIPointer() {
+        return this.dfiPointer;
     }
 }

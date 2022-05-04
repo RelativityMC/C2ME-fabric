@@ -3,7 +3,6 @@ package com.ishland.c2me.natives.mixin.density_functions;
 import com.google.common.collect.ImmutableMap;
 import com.ishland.c2me.natives.common.CompiledDensityFunctionImpl;
 import com.ishland.c2me.natives.common.DensityFunctionUtils;
-import net.minecraft.util.registry.RegistryEntry;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
 import net.minecraft.world.gen.densityfunction.DensityFunctionTypes;
 import org.jetbrains.annotations.Nullable;
@@ -15,13 +14,10 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(DensityFunctionTypes.class_7051.class)
-public abstract class MixinDensityFunctionTypesRegistryEntry implements DensityFunction, CompiledDensityFunctionImpl {
+@Mixin(DensityFunctionTypes.class_6927.class)
+public class MixinDensityFunctionTypesNonConfiguredCache implements CompiledDensityFunctionImpl {
 
-    @Shadow
-    @Final
-    private RegistryEntry<DensityFunction> function;
-
+    @Shadow @Final private DensityFunction wrapped;
     @Unique
     private long pointer = 0L;
 
@@ -30,21 +26,20 @@ public abstract class MixinDensityFunctionTypesRegistryEntry implements DensityF
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(CallbackInfo ci) {
-        final DensityFunction df = this.function.value();
-        if (!DensityFunctionUtils.isCompiled(df)) {
+        if (!DensityFunctionUtils.isCompiled(this.wrapped)) {
             if (DensityFunctionUtils.DEBUG) {
                 this.errorMessage = DensityFunctionUtils.getErrorMessage(
                         this,
-                        ImmutableMap.of("function_value", df)
+                        ImmutableMap.of("function_value", this.wrapped)
                 );
                 assert this.errorMessage != null;
-                System.err.println("Failed to pass-through density function: registry_entry %s".formatted(this));
+                System.err.println("Failed to pass-through density function: non_configured_cache %s".formatted(this));
                 System.err.println(DensityFunctionUtils.indent(this.errorMessage, false));
             }
             return;
         }
 
-        this.pointer = ((CompiledDensityFunctionImpl) df).getDFIPointer();
+        this.pointer = ((CompiledDensityFunctionImpl) this.wrapped).getDFIPointer();
         // memory management not needed
     }
 
@@ -60,7 +55,8 @@ public abstract class MixinDensityFunctionTypesRegistryEntry implements DensityF
     }
 
     @Override
-    public Type getDFIType() {
-        return Type.PASS_THROUGH;
+    public CompiledDensityFunctionImpl.Type getDFIType() {
+        return CompiledDensityFunctionImpl.Type.PASS_THROUGH;
     }
+
 }
