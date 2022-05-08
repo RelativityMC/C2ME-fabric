@@ -65,4 +65,15 @@ public class DensityFunctionUtils {
         };
     }
 
+    public static short mapSingleOperationToNative(DensityFunctionTypes.class_6925.Type type) {
+        return switch (type) {
+            case ABS -> 0;
+            case SQUARE -> 1;
+            case CUBE -> 2;
+            case HALF_NEGATIVE -> 3;
+            case QUARTER_NEGATIVE -> 4;
+            case SQUEEZE -> 5;
+        };
+    }
+
 }

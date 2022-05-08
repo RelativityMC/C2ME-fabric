@@ -277,6 +277,24 @@ public class NativeInterface {
         }
     }
 
+    // density_function_impl_data *
+    // c2me_natives_create_dfi_single_operation(short operation, density_function_impl_data *input)
+
+    private static final MethodHandle DFI_create_dfi_single_operation = LINKER.downcallHandle(
+            LOOKUP.lookup("c2me_natives_create_dfi_single_operation").get(),
+            FunctionDescriptor.of(JAVA_LONG, JAVA_SHORT, JAVA_LONG)
+    );
+
+    public static long createDFISingleOperation(short operation, long ptr_input) {
+        if (operation < 0 || operation > 5) throw new IndexOutOfBoundsException("operation must be in [0, 5]");
+        if (ptr_input == 0) throw new NullPointerException();
+        try {
+            return (long) DFI_create_dfi_single_operation.invoke(operation, ptr_input);
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     // ===== Density Function Bindings =====
 
     // double c2me_natives_dfi_bindings_single_op(density_function_impl_data *dfi, int blockX, int blockY, int blockZ)
@@ -342,6 +360,7 @@ public class NativeInterface {
     public static final long SIZEOF_dfi_clamp_data = sizeOf("dfi_clamp_data");
     public static final long SIZEOF_dfi_operation_half_data = sizeOf("dfi_operation_half_data");
     public static final long SIZEOF_dfi_operation_full_data = sizeOf("dfi_operation_full_data");
+    public static final long SIZEOF_dfi_single_operation_data = sizeOf("dfi_single_operation_data");
 
     static {
 
