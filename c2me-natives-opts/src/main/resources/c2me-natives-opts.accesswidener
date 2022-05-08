@@ -17,6 +17,10 @@ accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTy
 accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$class_6927
 accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$Beardifier
 accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$BlendAlpha
+accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$BlendOffset
 
 extendable    class    net/minecraft/util/math/noise/PerlinNoiseSampler
+extendable    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$Constant
+
+accessible    method    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$Constant    <init>    (D)V
 
