@@ -24,6 +24,7 @@
     "density_functions.MixinDensityFunctionTypesShift",
     "density_functions.MixinDensityFunctionTypesShiftA",
     "density_functions.MixinDensityFunctionTypesShiftB",
+    "density_functions.MixinDensityFunctionTypesShiftedNoise",
     "density_functions.MixinDensityFunctionTypesSingleOperation",
     "density_functions.MixinDensityFunctionTypesUnconfiguredConstants",
     "density_functions.MixinDensityFunctionTypesYClampedGradient"

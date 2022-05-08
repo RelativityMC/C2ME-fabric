@@ -38,7 +38,8 @@ public class DensityFunctionUtils {
         StringBuilder sb = new StringBuilder();
         sb.append(String.format("Density function (%s) failed to %s for these reasons: \n", owner.getClass().getName(), owner.getDFIType().verb()));
         boolean hasFailures = false;
-        for (Iterator<Map.Entry<String, DensityFunction>> iterator = map.entrySet().iterator(); iterator.hasNext(); ) {
+        final Iterator<Map.Entry<String, DensityFunction>> iterator = map.entrySet().stream().filter(entry -> !isCompiled(entry.getValue())).iterator();
+        while (iterator.hasNext()) {
             Map.Entry<String, DensityFunction> entry = iterator.next();
             String error = getErrorMessage(entry.getValue());
             if (error != null) {

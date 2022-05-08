@@ -223,7 +223,6 @@ public class NativeInterface {
     }
 
 
-
     // density_function_impl_data *c2me_natives_create_dfi_clamp(density_function_impl_data *input, double minValue, double maxValue)
 
     private static final MethodHandle DFI_create_dfi_clamp = LINKER.downcallHandle(
@@ -295,6 +294,36 @@ public class NativeInterface {
         }
     }
 
+    // density_function_impl_data *c2me_natives_create_dfi_shifted_noise_data(bool isNull,
+    //                                                                        density_function_impl_data *shift_x,
+    //                                                                        density_function_impl_data *shift_y,
+    //                                                                        density_function_impl_data *shift_z,
+    //                                                                        double xz_scale,
+    //                                                                        double y_scale,
+    //                                                                        octave_sampler_data *firstSampler,
+    //                                                                        octave_sampler_data *secondSampler,
+    //                                                                        double amplitude)
+
+    private static final MethodHandle DFI_create_dfi_shifted_noise_data = LINKER.downcallHandle(
+            LOOKUP.lookup("c2me_natives_create_dfi_shifted_noise_data").get(),
+            FunctionDescriptor.of(JAVA_LONG, JAVA_BOOLEAN, JAVA_LONG, JAVA_LONG, JAVA_LONG, JAVA_DOUBLE, JAVA_DOUBLE, JAVA_LONG, JAVA_LONG, JAVA_DOUBLE)
+    );
+
+    public static long createDFIShiftedNoiseData(boolean isNull, long ptr_shift_x, long ptr_shift_y, long ptr_shift_z, double xz_scale, double y_scale, long ptr_firstSampler, long ptr_secondSampler, double amplitude) {
+        if (!isNull) {
+            if (ptr_shift_x == 0) throw new NullPointerException();
+            if (ptr_shift_y == 0) throw new NullPointerException();
+            if (ptr_shift_z == 0) throw new NullPointerException();
+            if (ptr_firstSampler == 0) throw new NullPointerException();
+            if (ptr_secondSampler == 0) throw new NullPointerException();
+        }
+        try {
+            return (long) DFI_create_dfi_shifted_noise_data.invoke(isNull, ptr_shift_x, ptr_shift_y, ptr_shift_z, xz_scale, y_scale, ptr_firstSampler, ptr_secondSampler, amplitude);
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     // ===== Density Function Bindings =====
 
     // double c2me_natives_dfi_bindings_single_op(density_function_impl_data *dfi, int blockX, int blockY, int blockZ)
@@ -361,6 +390,7 @@ public class NativeInterface {
     public static final long SIZEOF_dfi_operation_half_data = sizeOf("dfi_operation_half_data");
     public static final long SIZEOF_dfi_operation_full_data = sizeOf("dfi_operation_full_data");
     public static final long SIZEOF_dfi_single_operation_data = sizeOf("dfi_single_operation_data");
+    public static final long SIZEOF_dfi_shifted_noise_data = sizeOf("dfi_shifted_noise_data");
 
     static {
 
@@ -550,7 +580,7 @@ public class NativeInterface {
 
     /**
      * Returns struct size
-     *
+     * <p>
      * <br/>
      * Note: this operation is expensive and a function must be declared to return the size of the struct
      *
