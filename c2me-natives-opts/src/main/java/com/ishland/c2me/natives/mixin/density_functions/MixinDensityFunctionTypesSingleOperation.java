@@ -65,7 +65,7 @@ public abstract class MixinDensityFunctionTypesSingleOperation implements Densit
 
     @Override
     public double sample(NoisePos pos) {
-        if (this.pointer != 0) {
+        if (DensityFunctionUtils.isSafeForNative(pos) && this.pointer != 0) {
             return NativeInterface.dfiBindingsSingleOp(this.pointer, pos.blockX(), pos.blockY(), pos.blockZ());
         } else {
             return method_40521(this.type(), this.input.sample(pos));
@@ -74,7 +74,7 @@ public abstract class MixinDensityFunctionTypesSingleOperation implements Densit
 
     @Override
     public void method_40470(double[] ds, class_6911 arg) {
-        if (arg instanceof CompiledDensityFunctionArg dfa && dfa.getDFAPointer() != 0 && this.pointer != 0) {
+        if (arg instanceof CompiledDensityFunctionArg dfa && dfa.getDFAPointer() != 0 && DensityFunctionUtils.isSafeForNative(arg) && this.pointer != 0) {
             NativeInterface.dfiBindingsMultiOp(this.pointer, dfa.getDFAPointer(), ds);
         } else {
             // TODO [VanillaCopy]

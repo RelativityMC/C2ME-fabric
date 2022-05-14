@@ -13,6 +13,7 @@
     "density_functions.MixinChunkNoiseSampler",
     "density_functions.MixinChunkNoiseSampler1",
     "density_functions.MixinDensityFunctionTypes",
+    "density_functions.MixinDensityFunctionTypesBlendDensity",
     "density_functions.MixinDensityFunctionTypesClamp",
     "density_functions.MixinDensityFunctionTypesConstant",
     "density_functions.MixinDensityFunctionTypesEndIslands",

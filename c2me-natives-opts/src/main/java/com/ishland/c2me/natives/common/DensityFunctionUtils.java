@@ -1,5 +1,7 @@
 package com.ishland.c2me.natives.common;
 
+import net.minecraft.world.gen.chunk.Blender;
+import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
 import net.minecraft.world.gen.densityfunction.DensityFunctionTypes;
 
@@ -9,6 +11,17 @@ import java.util.Map;
 public class DensityFunctionUtils {
 
     public static final boolean DEBUG = Boolean.getBoolean("com.ishland.c2me.natives.debug");
+
+    public static boolean isSafeForNative(DensityFunction.NoisePos pos) {
+        return pos.getBlender() == Blender.getNoBlending();
+    }
+
+    public static boolean isSafeForNative(DensityFunction.class_6911 dfa) {
+        if (dfa instanceof ChunkNoiseSampler sampler) {
+            return sampler.getBlender() == Blender.getNoBlending();
+        }
+        return true;
+    }
 
     public static boolean isCompiled(DensityFunction... function) {
         for (DensityFunction df : function) {

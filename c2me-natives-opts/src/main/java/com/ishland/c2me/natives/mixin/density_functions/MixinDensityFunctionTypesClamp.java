@@ -67,7 +67,7 @@ public abstract class MixinDensityFunctionTypesClamp implements DensityFunctionT
 
     @Override
     public double sample(DensityFunction.NoisePos pos) {
-        if (this.pointer != 0) {
+        if (DensityFunctionUtils.isSafeForNative(pos) && this.pointer != 0) {
             return NativeInterface.dfiBindingsSingleOp(this.pointer, pos.blockX(), pos.blockY(), pos.blockZ());
         } else {
             // TODO [VanillaCopy]
@@ -77,7 +77,7 @@ public abstract class MixinDensityFunctionTypesClamp implements DensityFunctionT
 
     @Override
     public void method_40470(double[] ds, class_6911 arg) {
-        if (arg instanceof CompiledDensityFunctionArg dfa && dfa.getDFAPointer() != 0 && this.pointer != 0) {
+        if (arg instanceof CompiledDensityFunctionArg dfa && dfa.getDFAPointer() != 0 && DensityFunctionUtils.isSafeForNative(arg) && this.pointer != 0) {
             NativeInterface.dfiBindingsMultiOp(this.pointer, dfa.getDFAPointer(), ds);
         } else {
             // TODO [VanillaCopy]

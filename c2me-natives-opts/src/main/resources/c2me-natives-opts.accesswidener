@@ -21,6 +21,8 @@ accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTy
 accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$class_6925
 accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$class_6925$Type
 accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$ShiftedNoise
+accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$BlendDensity
+accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$class_6943
 
 extendable    class    net/minecraft/util/math/noise/PerlinNoiseSampler
 extendable    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$Constant
