@@ -1,7 +1,6 @@
 package com.ishland.c2me.notickvd.mixin;
 
 import com.ishland.c2me.base.common.util.FilteringIterable;
-import com.ishland.c2me.base.common.util.MCUtil;
 import com.ishland.c2me.notickvd.common.IChunkTicketManager;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import net.minecraft.entity.Entity;
@@ -30,7 +29,7 @@ public class MixinServerChunkManager {
     private Iterable<Entity> redirectIterateEntities(ServerWorld serverWorld) {
         final LongSet noTickOnlyChunks = ((IChunkTicketManager) this.ticketManager).getNoTickOnlyChunks();
         if (noTickOnlyChunks == null) return serverWorld.iterateEntities();
-        return new FilteringIterable<>(serverWorld.iterateEntities(), entity -> !noTickOnlyChunks.contains(MCUtil.toLong(entity.getChunkPos())));
+        return new FilteringIterable<>(serverWorld.iterateEntities(), entity -> !noTickOnlyChunks.contains(entity.getChunkPos().toLong()));
     }
 
 }
