@@ -23,7 +23,7 @@ static double c2me_natives_dfi_shifted_noise_single_op(void *instance, int x, in
     double e = y * data->y_scale + c2me_natives_dfi_bindings_single_op(data->shift_y, x, y, z);
     double f = z * data->xz_scale + c2me_natives_dfi_bindings_single_op(data->shift_z, x, y, z);
 
-    return c2me_natives_perlin_double_sample(data->firstSampler, data->secondSampler, d, e, f, data->amplitude);
+    return math_noise_perlin_double_sample(data->firstSampler, data->secondSampler, d, e, f, data->amplitude);
 }
 
 static void c2me_natives_dfi_shifted_noise_multi_op(void *instance, double *res, noise_pos *poses, size_t length) {
@@ -40,7 +40,7 @@ static void c2me_natives_dfi_shifted_noise_multi_op(void *instance, double *res,
         double e = pos->y * data->y_scale + c2me_natives_dfi_bindings_single_op(data->shift_y, pos->x, pos->y, pos->z);
         double f = pos->z * data->xz_scale + c2me_natives_dfi_bindings_single_op(data->shift_z, pos->x, pos->y, pos->z);
 
-        res[i] = c2me_natives_perlin_double_sample(data->firstSampler, data->secondSampler, d, e, f, data->amplitude);
+        res[i] = math_noise_perlin_double_sample(data->firstSampler, data->secondSampler, d, e, f, data->amplitude);
     }
 }
 

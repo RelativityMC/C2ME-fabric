@@ -21,7 +21,7 @@ static double c2me_natives_dfi_shifted0_single_op(void *instance, int x, int y, 
     if (data->isNull) {
         return 0;
     } else {
-        return c2me_natives_perlin_double_sample(data->firstSampler, data->secondSampler,
+        return math_noise_perlin_double_sample(data->firstSampler, data->secondSampler,
                                                  x * 0.25, y * 0.25, z * 0.25,
                                                  data->amplitude) * 4.0;
     }
@@ -33,7 +33,7 @@ static void c2me_natives_dfi_shifted0_multi_op(void *instance, double *res, nois
         memset(res, 0, sizeof(double) * length); // assumes IEEE 754 double precision floating point format
     } else {
         for (size_t i = 0; i < length; ++i) {
-            res[i] = c2me_natives_perlin_double_sample(data->firstSampler, data->secondSampler,
+            res[i] = math_noise_perlin_double_sample(data->firstSampler, data->secondSampler,
                                                        poses[i].x * 0.25, poses[i].y * 0.25, poses[i].z * 0.25,
                                                        data->amplitude) * 4.0;
         }
@@ -45,7 +45,7 @@ static double c2me_natives_dfi_shiftedA_single_op(void *instance, int x, int y, 
     if (data->isNull) {
         return 0;
     } else {
-        return c2me_natives_perlin_double_sample(data->firstSampler, data->secondSampler,
+        return math_noise_perlin_double_sample(data->firstSampler, data->secondSampler,
                                                  x * 0.25, 0.0, z * 0.25,
                                                  data->amplitude) * 4.0;
     }
@@ -62,7 +62,7 @@ static void c2me_natives_dfi_shiftedA_multi_op(void *instance, double *res, nois
             if (poses[i].x == lastX && poses[i].z == lastZ) {
                 res[i] = lastVal;
             }else {
-                lastVal = c2me_natives_perlin_double_sample(data->firstSampler, data->secondSampler,
+                lastVal = math_noise_perlin_double_sample(data->firstSampler, data->secondSampler,
                                                             poses[i].x * 0.25, 0.0, poses[i].z * 0.25,
                                                             data->amplitude) * 4.0;
                 lastX = poses[i].x;
@@ -77,7 +77,7 @@ static double c2me_natives_dfi_shiftedB_single_op(void *instance, int x, int y, 
     if (data->isNull) {
         return 0;
     } else {
-        return c2me_natives_perlin_double_sample(data->firstSampler, data->secondSampler,
+        return math_noise_perlin_double_sample(data->firstSampler, data->secondSampler,
                                                  x * 0.25, y * 0.25, 0.0,
                                                  data->amplitude) * 4.0;
     }
@@ -89,7 +89,7 @@ static void c2me_natives_dfi_shiftedB_multi_op(void *instance, double *res, nois
         memset(res, 0, sizeof(double) * length); // assumes IEEE 754 double precision floating point format
     } else {
         for (size_t i = 0; i < length; ++i) {
-            res[i] = c2me_natives_perlin_double_sample(data->firstSampler, data->secondSampler,
+            res[i] = math_noise_perlin_double_sample(data->firstSampler, data->secondSampler,
                                                        poses[i].x * 0.25, poses[i].y * 0.25, 0.0,
                                                        data->amplitude) * 4.0;
         }

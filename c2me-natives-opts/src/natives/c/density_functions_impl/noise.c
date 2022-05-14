@@ -18,7 +18,7 @@ static double c2me_natives_dfi_noise_single_op(void *instance, int x, int y, int
     if (data->isNull) {
         return 0;
     } else {
-        return c2me_natives_perlin_double_sample(data->firstSampler, data->secondSampler,
+        return math_noise_perlin_double_sample(data->firstSampler, data->secondSampler,
                                                  x * data->xzScale, y * data->yScale, z * data->xzScale,
                                                  data->amplitude);
     }
@@ -33,7 +33,7 @@ static void c2me_natives_dfi_noise_multi_op(void *instance, double *res, noise_p
         memset(res, 0, sizeof(double) * length); // assumes IEEE 754 double precision floating point format
     } else {
         for (size_t i = 0; i < length; i++) {
-            res[i] = c2me_natives_perlin_double_sample(data->firstSampler, data->secondSampler,
+            res[i] = math_noise_perlin_double_sample(data->firstSampler, data->secondSampler,
                                                        poses[i].x * data->xzScale, poses[i].y * data->yScale,
                                                        poses[i].z * data->xzScale,
                                                        data->amplitude);
