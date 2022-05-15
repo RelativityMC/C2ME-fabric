@@ -1,7 +1,7 @@
 package noise;
 
 import net.minecraft.util.math.noise.PerlinNoiseSampler;
-import net.minecraft.world.gen.random.SimpleRandom;
+import net.minecraft.util.math.random.SimpleRandom;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Mode;
