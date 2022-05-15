@@ -36,7 +36,7 @@ You can find semi-stable releases here: https://github.com/RelativityMC/C2ME-fab
 ### Development builds
 **Note: Development builds may modify the config files in a way unreadable by previous versions. You may encounter crashes or config reset when rolling back to previous versions. Please always backup your config.**
 
-You can find development builds here: https://ci.codemc.io/job/RelativityMC/job/C2ME-fabric
+You can find development builds here: https://ci.codemc.io/job/RelativityMC/job/C2ME-fabric  
 Note that these builds may contain more bugfixes and performance improvements but are less tested.  
 If you have encountered any problems in release builds, give development builds a try before reporting.
 
