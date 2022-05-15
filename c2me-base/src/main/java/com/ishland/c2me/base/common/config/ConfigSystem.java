@@ -2,7 +2,6 @@ package com.ishland.c2me.base.common.config;
 
 import com.electronwill.nightconfig.core.CommentedConfig;
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
-import com.google.common.base.Preconditions;
 import com.ishland.c2me.base.common.util.BooleanUtils;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
@@ -43,7 +42,11 @@ public class ConfigSystem {
         }
 
         Updaters.update(config);
-        Preconditions.checkArgument(config.getInt("version") == CURRENT_CONFIG_VERSION, "Config version mismatch");
+        if (config.getInt("version") != CURRENT_CONFIG_VERSION) {
+            config.clear();
+            LOGGER.warn("Config version mismatch, resetting config");
+            config.set("version", CURRENT_CONFIG_VERSION);
+        }
 
         visitedConfig.add("version");
 
