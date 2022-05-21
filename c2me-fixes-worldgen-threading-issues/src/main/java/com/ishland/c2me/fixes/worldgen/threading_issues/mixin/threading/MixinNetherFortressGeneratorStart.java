@@ -19,7 +19,7 @@ public class MixinNetherFortressGeneratorStart {
     @Shadow public List<NetherFortressGenerator.PieceData> bridgePieces;
     @Shadow public List<NetherFortressGenerator.PieceData> corridorPieces;
 
-    @Redirect(method = "<init>(Lnet/minecraft/util/math/random/AbstractRandom;II)V", at = @At(value = "FIELD", target = "Lnet/minecraft/structure/NetherFortressGenerator$PieceData;generatedCount:I", opcode = Opcodes.PUTFIELD))
+    @Redirect(method = "<init>(Lnet/minecraft/util/math/random/Random;II)V", at = @At(value = "FIELD", target = "Lnet/minecraft/structure/NetherFortressGenerator$PieceData;generatedCount:I", opcode = Opcodes.PUTFIELD))
     private void redirectSetPieceDataGeneratedCount(NetherFortressGenerator.PieceData pieceData, int value) {
         ((INetherFortressGeneratorPieceData) pieceData).getGeneratedCountAtomic().set(value);
     }

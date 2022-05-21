@@ -3,7 +3,7 @@ package com.ishland.c2me;
 import com.ibm.asyncutil.util.Combinators;
 import net.fabricmc.api.ModInitializer;
 import net.minecraft.util.math.random.ChunkRandom;
-import net.minecraft.util.math.random.SimpleRandom;
+import net.minecraft.util.math.random.LocalRandom;
 import net.minecraft.world.storage.ChunkStreamVersion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,7 +80,7 @@ public class C2MEMod implements ModInitializer {
         AtomicIntegerArray array = new AtomicIntegerArray(taskSize);
         final List<CompletableFuture<Integer>> futures = IntStream.range(0, taskSize)
                 .mapToObj(value -> CompletableFuture.supplyAsync(() -> {
-                    final ChunkRandom chunkRandom = new ChunkRandom(new SimpleRandom(System.nanoTime()));
+                    final ChunkRandom chunkRandom = new ChunkRandom(new LocalRandom(System.nanoTime()));
                     chunkRandom.skip(4096);
                     final int i = chunkRandom.nextInt();
                     array.set(value, i);

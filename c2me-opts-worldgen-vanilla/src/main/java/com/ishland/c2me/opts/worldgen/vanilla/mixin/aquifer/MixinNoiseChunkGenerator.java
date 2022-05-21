@@ -21,7 +21,8 @@ public class MixinNoiseChunkGenerator {
     @Mutable
     @Shadow @Final private AquiferSampler.FluidLevelSampler fluidLevelSampler;
 
-    @Inject(method = "<init>(Lnet/minecraft/util/registry/Registry;Lnet/minecraft/util/registry/Registry;Lnet/minecraft/world/biome/source/BiomeSource;Lnet/minecraft/world/biome/source/BiomeSource;Lnet/minecraft/util/registry/RegistryEntry;)V", at = @At("RETURN"))
+    @Inject(method = "" +
+            "<init>", at = @At("RETURN"))
     private void modifyFluidLevelSampler(CallbackInfo ci) {
         // TODO [VanillaCopy]
         ChunkGeneratorSettings chunkGeneratorSettings = this.settings.value();

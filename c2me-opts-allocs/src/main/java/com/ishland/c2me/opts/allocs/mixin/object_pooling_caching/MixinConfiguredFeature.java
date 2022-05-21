@@ -3,7 +3,7 @@ package com.ishland.c2me.opts.allocs.mixin.object_pooling_caching;
 import com.ishland.c2me.opts.allocs.common.PooledFeatureContext;
 import com.ishland.c2me.opts.allocs.common.SimpleObjectPool;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.random.AbstractRandom;
+import net.minecraft.util.math.random.Random;
 import net.minecraft.world.StructureWorldAccess;
 import net.minecraft.world.gen.chunk.ChunkGenerator;
 import net.minecraft.world.gen.feature.ConfiguredFeature;
@@ -28,7 +28,7 @@ public class MixinConfiguredFeature<FC extends FeatureConfig, F extends Feature<
      * @reason pool FeatureContext
      */
     @Overwrite
-    public boolean generate(StructureWorldAccess world, ChunkGenerator chunkGenerator, AbstractRandom random, BlockPos origin) {
+    public boolean generate(StructureWorldAccess world, ChunkGenerator chunkGenerator, Random random, BlockPos origin) {
         if (!world.isValidForSetBlock(origin)) return false;
         final SimpleObjectPool<PooledFeatureContext<?>> pool = PooledFeatureContext.POOL.get();
         final PooledFeatureContext<FC> context = (PooledFeatureContext<FC>) pool.alloc();

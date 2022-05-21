@@ -1,7 +1,7 @@
 package com.ishland.c2me.opts.allocs.common;
 
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.random.AbstractRandom;
+import net.minecraft.util.math.random.Random;
 import net.minecraft.world.StructureWorldAccess;
 import net.minecraft.world.gen.chunk.ChunkGenerator;
 import net.minecraft.world.gen.feature.ConfiguredFeature;
@@ -17,7 +17,7 @@ public class PooledFeatureContext<FC extends FeatureConfig> extends FeatureConte
     private Optional<ConfiguredFeature<?, ?>> feature;
     private StructureWorldAccess world;
     private ChunkGenerator generator;
-    private AbstractRandom random;
+    private Random random;
     private BlockPos origin;
     private FC config;
 
@@ -25,7 +25,7 @@ public class PooledFeatureContext<FC extends FeatureConfig> extends FeatureConte
         super(null, null, null, null, null, null);
     }
 
-    public void reInit(Optional<ConfiguredFeature<?, ?>> feature, StructureWorldAccess world, ChunkGenerator generator, AbstractRandom random, BlockPos origin, FC config) {
+    public void reInit(Optional<ConfiguredFeature<?, ?>> feature, StructureWorldAccess world, ChunkGenerator generator, Random random, BlockPos origin, FC config) {
         this.feature = feature;
         this.world = world;
         this.generator = generator;
@@ -51,7 +51,7 @@ public class PooledFeatureContext<FC extends FeatureConfig> extends FeatureConte
         return this.generator;
     }
 
-    public AbstractRandom getRandom() {
+    public Random getRandom() {
         return this.random;
     }
 

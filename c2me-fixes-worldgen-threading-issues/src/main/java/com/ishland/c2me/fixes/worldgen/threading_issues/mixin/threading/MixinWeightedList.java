@@ -3,7 +3,6 @@ package com.ishland.c2me.fixes.worldgen.threading_issues.mixin.threading;
 import com.ishland.c2me.base.mixin.access.IWeightedListEntry;
 import com.ishland.c2me.fixes.worldgen.threading_issues.common.IWeightedList;
 import net.minecraft.util.collection.WeightedList;
-import net.minecraft.util.math.random.AbstractRandom;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -18,7 +17,7 @@ public class MixinWeightedList<U> implements IWeightedList<U> {
 
     @Shadow @Final public List<WeightedList.Entry<U>> entries;
 
-    @Shadow @Final private AbstractRandom random;
+    @Shadow @Final private net.minecraft.util.math.random.Random random;
 
     /**
      * @author ishland

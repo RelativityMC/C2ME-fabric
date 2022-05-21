@@ -19,11 +19,11 @@ public abstract class MixinSerializingRegionBasedStorage implements ISerializing
     @Shadow
     protected abstract <T> void update(ChunkPos pos, DynamicOps<T> dynamicOps, @Nullable T data);
 
-    @Shadow @Final private DynamicRegistryManager field_39315;
+    @Shadow @Final private DynamicRegistryManager dynamicRegistryManager;
 
     @Override
     public void update(ChunkPos pos, NbtCompound tag) {
-        this.update(pos, RegistryOps.of(NbtOps.INSTANCE, this.field_39315), tag);
+        this.update(pos, RegistryOps.of(NbtOps.INSTANCE, this.dynamicRegistryManager), tag);
     }
 
 }
