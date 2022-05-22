@@ -32,7 +32,7 @@ public abstract class MixinLevelPropagator {
         return longs;
     }
 
-    @Inject(method = "applyPendingUpdates", at = @At(value = "INVOKE", target = "Lit/unimi/dsi/fastutil/longs/LongLinkedOpenHashSet;removeFirstLong()J", shift = At.Shift.BEFORE), locals = LocalCapture.CAPTURE_FAILHARD, cancellable = true)
+    @Inject(method = "applyPendingUpdates", at = @At(value = "INVOKE", target = "Lit/unimi/dsi/fastutil/longs/LongLinkedOpenHashSet;removeFirstLong()J", shift = At.Shift.BEFORE, remap = false), locals = LocalCapture.CAPTURE_FAILHARD, cancellable = true)
     private void beforeRemoveFirstLong(int maxSteps, CallbackInfoReturnable<Integer> cir, LongLinkedOpenHashSet longs) {
         if (longs == null) {
             System.err.println("Whats going on with LevelPropagator? Recovering state...");

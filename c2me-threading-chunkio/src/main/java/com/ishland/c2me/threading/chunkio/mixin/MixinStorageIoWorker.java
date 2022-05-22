@@ -12,6 +12,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -20,7 +21,7 @@ import java.util.concurrent.locks.LockSupport;
 @Mixin(StorageIoWorker.class)
 public abstract class MixinStorageIoWorker implements IAsyncChunkStorage {
 
-    @Shadow protected abstract CompletableFuture<NbtCompound> readChunkData(ChunkPos pos);
+    @Shadow public abstract CompletableFuture<Optional<NbtCompound>> readChunkData(ChunkPos pos);
 
     private ExecutorService threadExecutor;
 
@@ -30,7 +31,7 @@ public abstract class MixinStorageIoWorker implements IAsyncChunkStorage {
     }
 
     @Override
-    public CompletableFuture<NbtCompound> getNbtAtAsync(ChunkPos pos) {
+    public CompletableFuture<Optional<NbtCompound>> getNbtAtAsync(ChunkPos pos) {
         return readChunkData(pos);
     }
 

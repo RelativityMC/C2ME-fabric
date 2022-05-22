@@ -2,13 +2,11 @@ package com.ishland.c2me.threading.chunkio.mixin;
 
 import com.ibm.asyncutil.locks.AsyncNamedLock;
 import com.ishland.c2me.base.common.GlobalExecutors;
-import com.ishland.c2me.base.mixin.access.IVersionedChunkStorage;
 import com.ishland.c2me.threading.chunkio.common.AsyncSerializationManager;
 import com.ishland.c2me.threading.chunkio.common.ChunkIoMainThreadTaskUtils;
 import com.ishland.c2me.threading.chunkio.common.IAsyncChunkStorage;
 import com.ishland.c2me.threading.chunkio.common.ISerializingRegionBasedStorage;
 import com.ishland.c2me.threading.chunkio.common.TaskCancellationException;
-import com.ishland.c2me.base.common.util.SneakyThrow;
 import com.mojang.datafixers.DataFixer;
 import com.mojang.datafixers.util.Either;
 import net.minecraft.nbt.NbtCompound;
@@ -18,14 +16,11 @@ import net.minecraft.server.world.ThreadedAnvilChunkStorage;
 import net.minecraft.structure.StructureManager;
 import net.minecraft.structure.StructureStart;
 import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.registry.Registry;
 import net.minecraft.util.thread.ThreadExecutor;
 import net.minecraft.world.ChunkSerializer;
 import net.minecraft.world.PersistentStateManager;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
-import net.minecraft.world.chunk.ProtoChunk;
-import net.minecraft.world.chunk.UpgradeData;
 import net.minecraft.world.gen.chunk.ChunkGenerator;
 import net.minecraft.world.poi.PointOfInterestStorage;
 import net.minecraft.world.storage.VersionedChunkStorage;
@@ -42,6 +37,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.nio.file.Path;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -87,11 +83,24 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
     @Shadow
     protected abstract boolean isLevelChunk(ChunkPos chunkPos);
 
-    @Shadow private ChunkGenerator chunkGenerator;
+    @Shadow
+    private ChunkGenerator chunkGenerator;
 
-    @Shadow protected abstract boolean save(Chunk chunk);
+    @Shadow
+    protected abstract boolean save(Chunk chunk);
 
-    @Shadow protected abstract void save(boolean flush);
+    @Shadow
+    protected abstract void save(boolean flush);
+
+    @Shadow
+    protected abstract CompletableFuture<Optional<NbtCompound>> getUpdatedChunkNbt(ChunkPos chunkPos);
+
+    @Shadow
+    private static boolean containsStatus(NbtCompound nbtCompound) {
+        throw new AbstractMethodError();
+    }
+
+    @Shadow protected abstract Chunk getProtoChunk(ChunkPos chunkPos);
 
     private AsyncNamedLock<ChunkPos> chunkLock = AsyncNamedLock.createFair();
 
@@ -114,37 +123,42 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
             scheduledChunks.add(pos);
         }
 
-        final CompletableFuture<NbtCompound> poiData = ((IAsyncChunkStorage) ((com.ishland.c2me.base.mixin.access.ISerializingRegionBasedStorage) this.pointOfInterestStorage).getWorker()).getNbtAtAsync(pos);
+        final CompletableFuture<Optional<NbtCompound>> poiData = ((IAsyncChunkStorage) ((com.ishland.c2me.base.mixin.access.ISerializingRegionBasedStorage) this.pointOfInterestStorage).getWorker()).getNbtAtAsync(pos);
 
-        final CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> future = getUpdatedChunkNbtAtAsync(pos).thenApplyAsync(compoundTag -> {
-            if (compoundTag != null) {
-                try {
-                    if (compoundTag.contains("Status", 8)) {
-                        ChunkIoMainThreadTaskUtils.push();
+        final CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> future = getUpdatedChunkNbtAtAsync(pos)
+                .thenApply(optional -> optional.filter(nbtCompound -> {
+                    boolean bl = containsStatus(nbtCompound);
+                    if (!bl) {
+                        LOGGER.error("Chunk file at {} is missing level data, skipping", pos);
+                    }
+
+                    return bl;
+                }))
+                .thenApplyAsync(optional -> {
+                    if (optional.isPresent()) {
                         try {
-                            return ChunkSerializer.deserialize(this.world, this.pointOfInterestStorage, pos, compoundTag);
-                        } finally {
-                            ChunkIoMainThreadTaskUtils.pop();
+                            ChunkIoMainThreadTaskUtils.push();
+                            try {
+                                return ChunkSerializer.deserialize(this.world, this.pointOfInterestStorage, pos, optional.get());
+                            } finally {
+                                ChunkIoMainThreadTaskUtils.pop();
+                            }
+                        } catch (Throwable t) {
+                            LOGGER.error("Couldn't load chunk {}, chunk data will be lost!", pos, t);
                         }
                     }
 
-                    LOGGER.warn("Chunk file at {} is missing level data, skipping", pos);
-                } catch (Throwable t) {
-                    LOGGER.error("Couldn't load chunk {}, chunk data will be lost!", pos, t);
-                }
-            }
-            return null;
-        }, GlobalExecutors.executor).thenCombine(poiData, (protoChunk, tag) -> protoChunk).thenApplyAsync(protoChunk -> {
-            ((ISerializingRegionBasedStorage) this.pointOfInterestStorage).update(pos, poiData.join());
-            ChunkIoMainThreadTaskUtils.drainQueue();
-            if (protoChunk != null) {
-                this.mark(pos, protoChunk.getStatus().getChunkType());
-                return Either.left(protoChunk);
-            } else {
-                this.markAsProtoChunk(pos);
-                return Either.left(new ProtoChunk(pos, UpgradeData.NO_UPGRADE_DATA, this.world, this.world.getRegistryManager().get(Registry.BIOME_KEY), null));
-            }
-        }, this.mainThreadExecutor);
+                    return null;
+                }, GlobalExecutors.executor).thenCombine(poiData, (protoChunk, tag) -> protoChunk).thenApplyAsync(protoChunk -> {
+                    ((ISerializingRegionBasedStorage) this.pointOfInterestStorage).update(pos, poiData.join().orElse(null));
+                    ChunkIoMainThreadTaskUtils.drainQueue();
+                    if (protoChunk != null) {
+                        this.mark(pos, protoChunk.getStatus().getChunkType());
+                        return Either.left(protoChunk);
+                    } else {
+                        return Either.left(this.getProtoChunk(pos));
+                    }
+                }, this.mainThreadExecutor);
         future.exceptionally(throwable -> null).thenRun(() -> {
             synchronized (scheduledChunks) {
                 scheduledChunks.remove(pos);
@@ -186,17 +200,8 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
          */
     }
 
-    private CompletableFuture<NbtCompound> getUpdatedChunkNbtAtAsync(ChunkPos pos) {
-        return chunkLock.acquireLock(pos).toCompletableFuture().thenCompose(lockToken -> ((IAsyncChunkStorage) ((IVersionedChunkStorage) this).getWorker()).getNbtAtAsync(pos).thenApply(compoundTag -> {
-            if (compoundTag != null)
-                return this.updateChunkNbt(this.world.getRegistryKey(), this.persistentStateManagerFactory, compoundTag, this.chunkGenerator.getCodecKey());
-            else return null;
-        }).handle((tag, throwable) -> {
-            lockToken.releaseLock();
-            if (throwable != null)
-                SneakyThrow.sneaky(throwable);
-            return tag;
-        }));
+    private CompletableFuture<Optional<NbtCompound>> getUpdatedChunkNbtAtAsync(ChunkPos pos) {
+        return getUpdatedChunkNbt(pos);
     }
 
     private ConcurrentLinkedQueue<CompletableFuture<Void>> saveFutures = new ConcurrentLinkedQueue<>();

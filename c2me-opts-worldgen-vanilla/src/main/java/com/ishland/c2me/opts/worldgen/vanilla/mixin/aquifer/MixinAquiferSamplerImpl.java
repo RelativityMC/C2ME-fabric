@@ -5,12 +5,12 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.random.Random;
+import net.minecraft.util.math.random.RandomSplitter;
 import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.gen.chunk.AquiferSampler;
 import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
-import net.minecraft.world.gen.random.AbstractRandom;
-import net.minecraft.world.gen.random.RandomDeriver;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -60,7 +60,7 @@ public class MixinAquiferSamplerImpl {
 
     @Shadow @Final private long[] blockPositions;
 
-    @Shadow @Final private RandomDeriver randomDeriver;
+    @Shadow @Final private RandomSplitter randomDeriver;
 
     @Shadow
     @Final
@@ -102,7 +102,7 @@ public class MixinAquiferSamplerImpl {
     private AquiferSampler.FluidLevelSampler fluidLevelSampler;
 
     @Unique
-    private AbstractRandom randomInstance;
+    private Random randomInstance;
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(CallbackInfo info) {

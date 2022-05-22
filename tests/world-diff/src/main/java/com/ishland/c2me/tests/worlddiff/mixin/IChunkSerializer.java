@@ -4,7 +4,7 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.structure.StructureContext;
 import net.minecraft.structure.StructureStart;
 import net.minecraft.world.ChunkSerializer;
-import net.minecraft.world.gen.feature.ConfiguredStructureFeature;
+import net.minecraft.world.gen.structure.StructureType;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Invoker;
 
@@ -14,7 +14,7 @@ import java.util.Map;
 public interface IChunkSerializer {
 
     @Invoker
-    static Map<ConfiguredStructureFeature<?, ?>, StructureStart> invokeReadStructureStarts(StructureContext context, NbtCompound nbt, long worldSeed) {
+    static Map<StructureType, StructureStart> invokeReadStructureStarts(StructureContext context, NbtCompound nbt, long worldSeed) {
         throw new AbstractMethodError();
     }
 

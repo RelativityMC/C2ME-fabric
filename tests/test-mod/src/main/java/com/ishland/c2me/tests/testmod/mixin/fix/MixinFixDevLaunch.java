@@ -16,13 +16,13 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 public class MixinFixDevLaunch {
 
     @Dynamic
-    @Redirect(method = "*", at = @At(value = "INVOKE", target = "Lnet/fabricmc/loader/api/FabricLoader;isDevelopmentEnvironment()Z"), require = 0)
+    @Redirect(method = "*", at = @At(value = "INVOKE", target = "Lnet/fabricmc/loader/api/FabricLoader;isDevelopmentEnvironment()Z", remap = false), require = 0)
     private boolean redirectDevEnvironment(FabricLoader unused) {
         return false;
     }
 
     @Dynamic
-    @Redirect(method = "*", at = @At(value = "INVOKE", target = "Lnet/fabricmc/loader/api/FabricLoader;isDevelopmentEnvironment()Z"), require = 0)
+    @Redirect(method = "*", at = @At(value = "INVOKE", target = "Lnet/fabricmc/loader/api/FabricLoader;isDevelopmentEnvironment()Z", remap = false), require = 0)
     private static boolean redirectDevEnvironmentStatic(FabricLoader unused) {
         return false;
     }

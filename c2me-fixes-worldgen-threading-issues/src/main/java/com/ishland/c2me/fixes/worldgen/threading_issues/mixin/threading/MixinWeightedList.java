@@ -17,7 +17,7 @@ public class MixinWeightedList<U> implements IWeightedList<U> {
 
     @Shadow @Final public List<WeightedList.Entry<U>> entries;
 
-    @Shadow @Final private Random random;
+    @Shadow @Final private net.minecraft.util.math.random.Random random;
 
     /**
      * @author ishland

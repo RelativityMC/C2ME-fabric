@@ -16,7 +16,7 @@ public abstract class MixinPerlinNoiseSampler {
 
     @Shadow @Final public double originZ;
 
-    @Shadow @Final private byte[] permutations;
+    @Shadow @Final private byte[] permutation;
 
     @Unique
     private static final double[] FLAT_SIMPLEX_GRAD = new double[]{
@@ -78,16 +78,16 @@ public abstract class MixinPerlinNoiseSampler {
         // TODO [VanillaCopy] but optimized
         final int var0 = sectionX & 0xFF;
         final int var1 = (sectionX + 1) & 0xFF;
-        final int var2 = this.permutations[var0] & 0xFF;
-        final int var3 = this.permutations[var1] & 0xFF;
+        final int var2 = this.permutation[var0] & 0xFF;
+        final int var3 = this.permutation[var1] & 0xFF;
         final int var4 = (var2 + sectionY) & 0xFF;
         final int var5 = (var3 + sectionY) & 0xFF;
         final int var6 = (var2 + sectionY + 1) & 0xFF;
         final int var7 = (var3 + sectionY + 1) & 0xFF;
-        final int var8 = this.permutations[var4] & 0xFF;
-        final int var9 = this.permutations[var5] & 0xFF;
-        final int var10 = this.permutations[var6] & 0xFF;
-        final int var11 = this.permutations[var7] & 0xFF;
+        final int var8 = this.permutation[var4] & 0xFF;
+        final int var9 = this.permutation[var5] & 0xFF;
+        final int var10 = this.permutation[var6] & 0xFF;
+        final int var11 = this.permutation[var7] & 0xFF;
 
         final int var12 = (var8 + sectionZ) & 0xFF;
         final int var13 = (var9 + sectionZ) & 0xFF;
@@ -97,14 +97,14 @@ public abstract class MixinPerlinNoiseSampler {
         final int var17 = (var9 + sectionZ + 1) & 0xFF;
         final int var18 = (var10 + sectionZ + 1) & 0xFF;
         final int var19 = (var11 + sectionZ + 1) & 0xFF;
-        final int var20 = (this.permutations[var12] & 15) << 2;
-        final int var21 = (this.permutations[var13] & 15) << 2;
-        final int var22 = (this.permutations[var14] & 15) << 2;
-        final int var23 = (this.permutations[var15] & 15) << 2;
-        final int var24 = (this.permutations[var16] & 15) << 2;
-        final int var25 = (this.permutations[var17] & 15) << 2;
-        final int var26 = (this.permutations[var18] & 15) << 2;
-        final int var27 = (this.permutations[var19] & 15) << 2;
+        final int var20 = (this.permutation[var12] & 15) << 2;
+        final int var21 = (this.permutation[var13] & 15) << 2;
+        final int var22 = (this.permutation[var14] & 15) << 2;
+        final int var23 = (this.permutation[var15] & 15) << 2;
+        final int var24 = (this.permutation[var16] & 15) << 2;
+        final int var25 = (this.permutation[var17] & 15) << 2;
+        final int var26 = (this.permutation[var18] & 15) << 2;
+        final int var27 = (this.permutation[var19] & 15) << 2;
         final double var60 = localX - 1.0;
         final double var61 = localY - 1.0;
         final double var62 = localZ - 1.0;

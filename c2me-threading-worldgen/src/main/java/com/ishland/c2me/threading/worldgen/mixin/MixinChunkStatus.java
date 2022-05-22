@@ -59,7 +59,7 @@ public abstract class MixinChunkStatus implements IChunkStatus {
         } else {
             for (int i = 0; i <= this.taskMargin; i++) {
                 final ChunkStatus status = ChunkStatus.byDistanceFromFull(ChunkStatus.getDistanceFromFull((ChunkStatus) (Object) this) + i); // TODO [VanillaCopy] from TACS getRequiredStatusForGeneration
-                if (status == ChunkStatus.STRUCTURE_STARTS) {
+                if (status.getIndex() <= ChunkStatus.BIOMES.getIndex()) {
                     this.reducedTaskRadius = Math.min(this.taskMargin, i);
                     break;
                 }

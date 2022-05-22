@@ -21,7 +21,7 @@ public class MixinSimplexNoiseSampler implements NativeStruct {
 
     @Shadow
     @Final
-    private int[] permutations;
+    private int[] permutation;
     @Unique
     private long permutationsPointer = 0L;
 
@@ -30,7 +30,7 @@ public class MixinSimplexNoiseSampler implements NativeStruct {
         this.permutationsPointer = NativeMemoryTracker.allocateMemory(this, 4 * 256);
         byte[] tmp = new byte[4 * 256];
         UnsafeUtil.getInstance().copyMemory(
-                permutations,
+                permutation,
                 Unsafe.ARRAY_INT_BASE_OFFSET,
                 tmp,
                 Unsafe.ARRAY_BYTE_BASE_OFFSET,

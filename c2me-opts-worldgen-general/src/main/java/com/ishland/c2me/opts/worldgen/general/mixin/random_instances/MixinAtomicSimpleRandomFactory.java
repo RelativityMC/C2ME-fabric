@@ -1,17 +1,17 @@
 package com.ishland.c2me.opts.worldgen.general.mixin.random_instances;
 
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.gen.random.AbstractRandom;
-import net.minecraft.world.gen.random.AtomicSimpleRandom;
-import net.minecraft.world.gen.random.RandomDeriver;
-import net.minecraft.world.gen.random.SimpleRandom;
+import net.minecraft.util.math.random.CheckedRandom;
+import net.minecraft.util.math.random.LocalRandom;
+import net.minecraft.util.math.random.Random;
+import net.minecraft.util.math.random.RandomSplitter;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
-@Mixin(AtomicSimpleRandom.RandomDeriver.class)
-public abstract class MixinAtomicSimpleRandomFactory implements RandomDeriver {
+@Mixin(CheckedRandom.Splitter.class)
+public abstract class MixinAtomicSimpleRandomFactory implements RandomSplitter {
 
     @Shadow @Final private long seed;
 
@@ -21,10 +21,10 @@ public abstract class MixinAtomicSimpleRandomFactory implements RandomDeriver {
      */
     @Overwrite
     @Override
-    public AbstractRandom createRandom(int x, int y, int z) { // TODO [VanillaCopy]
+    public Random split(int x, int y, int z) { // TODO [VanillaCopy]
         long l = MathHelper.hashCode(x, y, z);
         long m = l ^ this.seed;
-        return new SimpleRandom(m);
+        return new LocalRandom(m);
     }
 
     /**
@@ -33,9 +33,9 @@ public abstract class MixinAtomicSimpleRandomFactory implements RandomDeriver {
      */
     @Overwrite
     @Override
-    public AbstractRandom createRandom(String string) { // TODO [VanillaCopy]
+    public Random split(String string) { // TODO [VanillaCopy]
         int i = string.hashCode();
-        return new SimpleRandom((long)i ^ this.seed);
+        return new LocalRandom((long)i ^ this.seed);
     }
 
 }

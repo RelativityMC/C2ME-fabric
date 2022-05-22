@@ -18,6 +18,7 @@ loom {
             source sourceSets.testmod
             vmArgs "-Dc2me.base.config.override.ioSystem.replaceImpl=true",
                     "-Dc2me.base.config.override.asyncScheduling.enabled=true",
+                    "-Dcom.ishland.c2me.mixin.doAudit=true",
                     "--add-modules",
                     "jdk.incubator.vector",
                     "--enable-native-access=ALL-UNNAMED",

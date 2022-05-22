@@ -13,12 +13,12 @@ import java.util.List;
 @Mixin(targets = "net.minecraft.nbt.NbtList$1")
 public class MixinNbtList1 {
 
-    @ModifyVariable(method = "Lnet/minecraft/nbt/NbtList$1;read(Ljava/io/DataInput;ILnet/minecraft/nbt/NbtTagSizeTracker;)Lnet/minecraft/nbt/NbtList;", at = @At(value = "INVOKE_ASSIGN", target = "Lcom/google/common/collect/Lists;newArrayListWithCapacity(I)Ljava/util/ArrayList;"))
+    @ModifyVariable(method = "Lnet/minecraft/nbt/NbtList$1;read(Ljava/io/DataInput;ILnet/minecraft/nbt/NbtTagSizeTracker;)Lnet/minecraft/nbt/NbtList;", at = @At(value = "INVOKE_ASSIGN", target = "Lcom/google/common/collect/Lists;newArrayListWithCapacity(I)Ljava/util/ArrayList;", remap = false))
     private List<NbtElement> modifyList(List<NbtElement> list) {
         return new ObjectArrayList<>();
     }
 
-    @Redirect(method = "Lnet/minecraft/nbt/NbtList$1;read(Ljava/io/DataInput;ILnet/minecraft/nbt/NbtTagSizeTracker;)Lnet/minecraft/nbt/NbtList;", at = @At(value = "INVOKE", target = "Lcom/google/common/collect/Lists;newArrayListWithCapacity(I)Ljava/util/ArrayList;"))
+    @Redirect(method = "Lnet/minecraft/nbt/NbtList$1;read(Ljava/io/DataInput;ILnet/minecraft/nbt/NbtTagSizeTracker;)Lnet/minecraft/nbt/NbtList;", at = @At(value = "INVOKE", target = "Lcom/google/common/collect/Lists;newArrayListWithCapacity(I)Ljava/util/ArrayList;", remap = false))
     private <E> ArrayList<E> redirectNewArrayList(int initialArraySize) {
         return null;
     }

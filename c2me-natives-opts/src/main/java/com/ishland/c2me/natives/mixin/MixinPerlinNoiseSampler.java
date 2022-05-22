@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(value = PerlinNoiseSampler.class, priority = 1200)
 public class MixinPerlinNoiseSampler {
 
-    @Shadow @Final private byte[] permutations;
+    @Shadow @Final private byte[] permutation;
     @Shadow @Final public double originX;
     @Shadow @Final public double originY;
     @Shadow @Final public double originZ;
@@ -26,7 +26,7 @@ public class MixinPerlinNoiseSampler {
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(CallbackInfo ci) {
         this.permutationsPointer = NativeMemoryTracker.allocateMemory(this, 256);
-        PlatformDependent.copyMemory(this.permutations, 0, this.permutationsPointer, 256);
+        PlatformDependent.copyMemory(this.permutation, 0, this.permutationsPointer, 256);
     }
 
     /**

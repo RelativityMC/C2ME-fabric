@@ -1,10 +1,10 @@
 package com.ishland.c2me.opts.worldgen.general.common.random_instances;
 
-import net.minecraft.world.gen.random.AbstractRandom;
-import net.minecraft.world.gen.random.AtomicSimpleRandom;
-import net.minecraft.world.gen.random.SimpleRandom;
+import net.minecraft.util.math.random.CheckedRandom;
+import net.minecraft.util.math.random.LocalRandom;
+import net.minecraft.util.math.random.Random;
 
-public class SimplifiedAtomicSimpleRandom extends AtomicSimpleRandom { // TODO [VanillaCopy]
+public class SimplifiedAtomicSimpleRandom extends CheckedRandom { // TODO [VanillaCopy]
     private static final int INT_BITS = 48;
     private static final long SEED_MASK = 281474976710655L;
     private static final long MULTIPLIER = 25214903917L;
@@ -17,13 +17,13 @@ public class SimplifiedAtomicSimpleRandom extends AtomicSimpleRandom { // TODO [
     }
 
     @Override
-    public AbstractRandom derive() {
-        return new SimpleRandom(this.nextLong());
+    public Random split() {
+        return new LocalRandom(this.nextLong());
     }
 
     @Override
-    public net.minecraft.world.gen.random.RandomDeriver createRandomDeriver() {
-        return new AtomicSimpleRandom.RandomDeriver(this.nextLong());
+    public net.minecraft.util.math.random.RandomSplitter nextSplitter() {
+        return new CheckedRandom.Splitter(this.nextLong());
     }
 
     @Override

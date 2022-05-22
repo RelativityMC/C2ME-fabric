@@ -1,19 +1,23 @@
 package com.ishland.c2me.client.uncapvd.mixin;
 
-import net.minecraft.client.option.DoubleOption;
+import com.ishland.c2me.client.uncapvd.common.Config;
 import net.minecraft.client.option.GameOptions;
-import net.minecraft.client.option.Option;
+import net.minecraft.client.option.SimpleOption;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(GameOptions.class)
 public class MixinGameOptions {
 
-    @Redirect(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/option/DoubleOption;setMax(F)V"))
-    private void redirectSetMaxVD(DoubleOption doubleOption, float max) {
-        if (doubleOption == Option.RENDER_DISTANCE) return;
-        doubleOption.setMax(max);
+    @Shadow @Final private SimpleOption<Integer> viewDistance;
+
+    @Inject(method = "<init>", at = @At("RETURN"))
+    private void onInit(CallbackInfo ci) {
+        ((ISimpleOption<Integer>) this.viewDistance).setCallbacks(new SimpleOption.ValidatingIntSliderCallbacks(2, Config.maxViewDistance));
     }
 
 }

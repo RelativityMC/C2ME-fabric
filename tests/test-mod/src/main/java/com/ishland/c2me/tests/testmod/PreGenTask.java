@@ -22,7 +22,7 @@ import net.minecraft.util.registry.RegistryEntryList;
 import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.ChunkStatus;
-import net.minecraft.world.gen.feature.ConfiguredStructureFeature;
+import net.minecraft.world.gen.structure.StructureType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -74,16 +74,22 @@ public class PreGenTask {
                         .stream()
                         .filter(biomeclass_6880 -> biomeRegistry.getKey(biomeclass_6880.value()).isPresent())
                         .collect(Collectors.toCollection(HashSet::new));
-        final Registry<ConfiguredStructureFeature<?, ?>> structureFeatureRegistry = world.getRegistryManager().get(Registry.CONFIGURED_STRUCTURE_FEATURE_KEY);
-        final Set<RegistryEntryList<ConfiguredStructureFeature<?, ?>>> structureFeatures = structureFeatureRegistry.getEntrySet().stream()
-                .filter(entry -> world.getChunkManager().getChunkGenerator().getBiomeSource().getBiomes().stream().anyMatch(entry.getValue().getBiomes()::contains))
-                .flatMap(entry -> structureFeatureRegistry.getEntry(entry.getKey()).map(RegistryEntryList::of).stream())
-                .collect(Collectors.toSet());
+        final Registry<StructureType> structureFeatureRegistry = world.getRegistryManager().get(Registry.STRUCTURE_KEY);
+        final Set<RegistryEntryList<StructureType>> structureFeatures;
+        if (!isLocateStructureSlowAF(world)) {
+            structureFeatures = structureFeatureRegistry.getEntrySet().stream()
+                    .filter(entry -> world.getChunkManager().getChunkGenerator().getBiomeSource().getBiomes().stream().anyMatch(entry.getValue().getValidBiomes()::contains))
+                    .flatMap(entry -> structureFeatureRegistry.getEntry(entry.getKey()).map(RegistryEntryList::of).stream())
+                    .collect(Collectors.toSet());
+        } else {
+            LOGGER.warn("locateStructure() is too slow, disabling structure locating");
+            structureFeatures = Collections.emptySet();
+        }
         System.err.printf("Submitting tasks\n");
         final CompletableFuture<Void> biomeFuture = CompletableFuture.allOf(biomes.stream()
                 .map(biome -> CompletableFuture.runAsync(() -> {
                     //noinspection OptionalGetWithoutIsPresent
-                    final Pair<BlockPos, RegistryEntry<Biome>> pair = world.locateBiome(entry -> biomeRegistry.getKey(biome.value()).get() == entry.getKey().get(), spawnPos, SEARCH_RADIUS, 8);
+                    final Pair<BlockPos, RegistryEntry<Biome>> pair = world.locateBiome(entry -> biomeRegistry.getKey(biome.value()).get() == entry.getKey().get(), spawnPos, SEARCH_RADIUS, 8, 64);
                     locatedBiomes.incrementAndGet();
                     if (pair != null) {
                         final ChunkPos chunkPos = new ChunkPos(pair.getFirst());
@@ -94,7 +100,7 @@ public class PreGenTask {
                 }, EXECUTOR)).distinct().toArray(CompletableFuture[]::new));
         final CompletableFuture<Void> structureFuture = CompletableFuture.allOf(structureFeatures.stream()
                 .map(structureFeature -> CompletableFuture.runAsync(() -> {
-                    final Pair<BlockPos, RegistryEntry<ConfiguredStructureFeature<?, ?>>> pair = world.getChunkManager().getChunkGenerator().locateStructure(world, structureFeature, spawnPos, SEARCH_RADIUS / 16, false);
+                    final Pair<BlockPos, RegistryEntry<StructureType>> pair = world.getChunkManager().getChunkGenerator().locateStructure(world, structureFeature, spawnPos, SEARCH_RADIUS / 16, false);
                     locatedStructures.incrementAndGet();
                     if (pair != null) {
                         final ChunkPos chunkPos = new ChunkPos(pair.getFirst());
@@ -224,6 +230,34 @@ public class PreGenTask {
             return null;
         });
         return future;
+    }
+
+    private static boolean isLocateStructureSlowAF(ServerWorld world) {
+        final Registry<StructureType> structureFeatureRegistry = world.getRegistryManager().get(Registry.STRUCTURE_KEY);
+        final Set<RegistryEntry<StructureType>> entries = structureFeatureRegistry.getEntrySet().stream()
+                .flatMap(thing -> structureFeatureRegistry.getEntry(thing.getKey()).stream())
+                .collect(Collectors.toSet());
+        for (RegistryEntry<StructureType> entry : entries) {
+            long startTime = System.nanoTime();
+            final CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+                world.getChunkManager().getChunkGenerator().locateStructure(
+                        world,
+                        RegistryEntryList.of(entry),
+                        BlockPos.ORIGIN,
+                        24,
+                        false
+                );
+            }, EXECUTOR);
+            while (!future.isDone() && System.nanoTime() - startTime <= 1_000_000_000L) {
+                if (!((IMinecraftServer) world.getServer()).c2metest$runAsyncTask())
+                    LockSupport.parkNanos("waiting for tasks", 100000L);
+            }
+            long endTime = System.nanoTime();
+            LOGGER.info("locateStructure() took {}ms", (endTime - startTime) / 1_000_000);
+            if (endTime - startTime > 1_000_000_000L) return true;
+        }
+
+        return false;
     }
 
     public record ChunkGeneratedEventInfo(long generatedCount, long totalCount, ServerWorld world) {

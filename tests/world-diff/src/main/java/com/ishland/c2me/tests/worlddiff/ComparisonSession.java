@@ -25,6 +25,7 @@ import net.minecraft.resource.ResourcePackSource;
 import net.minecraft.resource.ResourceType;
 import net.minecraft.resource.VanillaDataPackProvider;
 import net.minecraft.server.SaveLoader;
+import net.minecraft.server.SaveLoading;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.state.property.Property;
 import net.minecraft.structure.StructureContext;
@@ -48,7 +49,7 @@ import net.minecraft.world.biome.BiomeKeys;
 import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.PalettedContainer;
-import net.minecraft.world.gen.feature.ConfiguredStructureFeature;
+import net.minecraft.world.gen.structure.StructureType;
 import net.minecraft.world.level.storage.LevelStorage;
 import net.minecraft.world.storage.StorageIoWorker;
 import net.minecraft.world.updater.WorldUpdater;
@@ -63,6 +64,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -107,8 +109,8 @@ public class ComparisonSession implements Closeable {
 //            final Function<ChunkPos, ArrayList<StructureStart>> newArrayList = k -> new ArrayList<>();
 //            ConcurrentHashMap<ConfiguredStructureFeature<?, ?>, ConcurrentHashMap<ChunkPos, ArrayList<StructureStart>>> baseStructureStarts = new ConcurrentHashMap<>();
 //            ConcurrentHashMap<ConfiguredStructureFeature<?, ?>, ConcurrentHashMap<ChunkPos, ArrayList<StructureStart>>> targetStructureStarts = new ConcurrentHashMap<>();
-            final Registry<ConfiguredStructureFeature<?, ?>> baseStructureFeatureRegistry = baseWorld.dynamicRegistryManager.get(Registry.CONFIGURED_STRUCTURE_FEATURE_KEY);
-            final Registry<ConfiguredStructureFeature<?, ?>> targetStructureFeatureRegistry = targetWorld.dynamicRegistryManager.get(Registry.CONFIGURED_STRUCTURE_FEATURE_KEY);
+            final Registry<StructureType> baseStructureFeatureRegistry = baseWorld.dynamicRegistryManager.get(Registry.STRUCTURE_KEY);
+            final Registry<StructureType> targetStructureFeatureRegistry = targetWorld.dynamicRegistryManager.get(Registry.STRUCTURE_KEY);
             AtomicLong completedChunks = new AtomicLong();
             AtomicLong completedBlocks = new AtomicLong();
             AtomicLong differenceBlocks = new AtomicLong();
@@ -121,9 +123,9 @@ public class ComparisonSession implements Closeable {
                                             || ChunkSerializer.getChunkType(chunkDataBase) == ChunkStatus.ChunkType.PROTOCHUNK)
                                         return null;
 
-                                    final Map<ConfiguredStructureFeature<?, ?>, StructureStart> baseStructures = IChunkSerializer.invokeReadStructureStarts(baseStructureContext, chunkDataBase.getCompound("structures"), baseWorld.saveProperties.getGeneratorOptions().getSeed());
+                                    final Map<StructureType, StructureStart> baseStructures = IChunkSerializer.invokeReadStructureStarts(baseStructureContext, chunkDataBase.getCompound("structures"), baseWorld.saveProperties.getGeneratorOptions().getSeed());
 //                                            .forEach((configuredStructureFeature, structureStart) -> baseStructureStarts.computeIfAbsent(configuredStructureFeature, newConcurrentHashMap).computeIfAbsent(structureStart.getPos(), newArrayList).add(structureStart));
-                                    final Map<ConfiguredStructureFeature<?, ?>, StructureStart> targetStructures = IChunkSerializer.invokeReadStructureStarts(targetStructureContext, chunkDataTarget.getCompound("structures"), targetWorld.saveProperties.getGeneratorOptions().getSeed());
+                                    final Map<StructureType, StructureStart> targetStructures = IChunkSerializer.invokeReadStructureStarts(targetStructureContext, chunkDataTarget.getCompound("structures"), targetWorld.saveProperties.getGeneratorOptions().getSeed());
 //                                            .forEach((configuredStructureFeature, structureStart) -> targetStructureStarts.computeIfAbsent(configuredStructureFeature, newConcurrentHashMap).computeIfAbsent(structureStart.getPos(), newArrayList).add(structureStart));
 
                                     baseStructures.forEach((configuredStructureFeature, baseStructureStart) -> {
@@ -251,24 +253,19 @@ public class ComparisonSession implements Closeable {
 
         SaveLoader saveLoader;
         try {
-            SaveLoader.FunctionLoaderConfig lv = new SaveLoader.FunctionLoaderConfig(
-                    resourcePackManager,
-                    CommandManager.RegistrationEnvironment.DEDICATED,
-                    2,
-                    false
+            DataPackSettings dataPackSettings0 = Objects.requireNonNullElse(session.getDataPackSettings(), DataPackSettings.SAFE_MODE);
+            SaveLoading.DataPacks lv = new SaveLoading.DataPacks(resourcePackManager, dataPackSettings0, false);
+            SaveLoading.ServerConfig functionLoaderConfig = new SaveLoading.ServerConfig(
+                    lv, CommandManager.RegistrationEnvironment.DEDICATED, 2
             );
-            saveLoader = SaveLoader.ofLoaded(
-                            lv,
-                            () -> {
-                                DataPackSettings dataPackSettings = session.getDataPackSettings();
-                                return dataPackSettings == null ? DataPackSettings.SAFE_MODE : dataPackSettings;
-                            },
+            saveLoader = SaveLoader.load(
+                            functionLoaderConfig,
                             (resourceManager, dataPackSettings) -> {
-                                DynamicRegistryManager.Mutable lvx = DynamicRegistryManager.createAndLoad();
-                                DynamicOps<NbtElement> dynamicOps = RegistryOps.ofLoaded(NbtOps.INSTANCE, lvx, resourceManager);
-                                SaveProperties savePropertiesx = session.readLevelProperties(dynamicOps, dataPackSettings, lvx.getRegistryLifecycle());
+                                DynamicRegistryManager.Mutable mutable = DynamicRegistryManager.createAndLoad();
+                                DynamicOps<NbtElement> dynamicOps = RegistryOps.ofLoaded(NbtOps.INSTANCE, mutable, resourceManager);
+                                SaveProperties savePropertiesx = session.readLevelProperties(dynamicOps, dataPackSettings, mutable.getRegistryLifecycle());
                                 if (savePropertiesx != null) {
-                                    return Pair.of(savePropertiesx, lvx.toImmutable());
+                                    return Pair.of(savePropertiesx, mutable.toImmutable());
                                 } else {
                                     throw new RuntimeException("Failed to load level properties");
                                 }
@@ -283,16 +280,13 @@ public class ComparisonSession implements Closeable {
             LOGGER.warn(
                     "Failed to load datapacks, can't proceed with server load. You can either fix your datapacks or reset to vanilla with --safeMode", var38
             );
-            resourcePackManager.close();
             throw new RuntimeException(var38);
         }
 
-        saveLoader.refresh();
         DynamicRegistryManager.Immutable registryManager = saveLoader.dynamicRegistryManager();
 //        serverPropertiesLoader.getPropertiesHandler().getGeneratorOptions(registryManager);
         SaveProperties saveProperties = saveLoader.saveProperties();
         if (saveProperties == null) {
-            resourcePackManager.close();
             throw new FileNotFoundException();
         }
         final ImmutableSet<RegistryKey<World>> worldKeys = saveProperties.getGeneratorOptions().getWorlds();
@@ -331,7 +325,6 @@ public class ComparisonSession implements Closeable {
                         }
                     });
                     System.out.println("Closing world");
-                    resourcePackManager.close();
                     session.close();
                     System.out.println("World closed");
                 }

@@ -4,6 +4,7 @@
   "package": "com.ishland.c2me.threading.worldgen.mixin",
   "plugin": "com.ishland.c2me.base.common.ModuleMixinPlugin",
   "mixins": [
+    "MixinChunkGenerator",
     "MixinChunkRegion",
     "MixinChunkStatus",
     "MixinChunkTicketManager",

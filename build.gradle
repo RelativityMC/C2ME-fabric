@@ -1,7 +1,7 @@
 plugins {
     id 'java-library'
-    id 'fabric-loom' version '0.11-SNAPSHOT' apply false
-    id 'io.github.juuxel.loom-quiltflower' version '1.6.0' apply false
+    id 'fabric-loom' version '0.12-SNAPSHOT' apply false
+    id 'io.github.juuxel.loom-quiltflower' version '1.6.1' apply false
     id "me.champeau.jmh" version "0.6.6"
 }
 
@@ -101,9 +101,9 @@ configure (allprojects - project(":tests")) {
         from rootProject.file("LICENSE")
     }
 
-    java {
-        withSourcesJar()
-    }
+//    java {
+//        withSourcesJar()
+//    }
 
     // ensure that the encoding is set to UTF-8, no matter what the system default is
     // this fixes some edge cases with special characters not displaying correctly
@@ -144,10 +144,13 @@ configure (allprojects - project(":tests")) {
 
 subprojects {
     afterEvaluate {
-        genSourcesWithFernFlower.enabled = false
-        genSourcesWithQuiltflower.enabled = false
-        genSourcesWithCfr.enabled = false
-        unpickJar.enabled = false
+        afterEvaluate {
+            genSourcesWithFernFlower.enabled = false
+            genSourcesWithQuiltflower.enabled = false
+            genSourcesWithCfr.enabled = false
+            unpickJar.enabled = false
+            downloadAssets.enabled = false
+        }
     }
 }
 

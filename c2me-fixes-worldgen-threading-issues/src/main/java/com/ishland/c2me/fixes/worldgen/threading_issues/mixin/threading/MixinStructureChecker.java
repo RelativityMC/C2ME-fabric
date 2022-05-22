@@ -7,7 +7,7 @@ import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.world.StructureLocator;
-import net.minecraft.world.gen.feature.StructureFeature;
+import net.minecraft.world.gen.structure.StructureType;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
@@ -27,10 +27,10 @@ import java.util.function.Consumer;
 public class MixinStructureChecker {
 
     @Mutable
-    @Shadow @Final private Long2ObjectMap<Object2IntMap<StructureFeature<?>>> cachedFeaturesByChunkPos;
+    @Shadow @Final private Long2ObjectMap<Object2IntMap<StructureType>> cachedFeaturesByChunkPos;
 
     @Mutable
-    @Shadow @Final private Map<StructureFeature<?>, Long2BooleanMap> generationPossibilityByFeature;
+    @Shadow @Final private Map<StructureType, Long2BooleanMap> generationPossibilityByFeature;
 
     @Unique
     private Object mapMutex = new Object();
