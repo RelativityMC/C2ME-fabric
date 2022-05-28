@@ -9,14 +9,16 @@ import org.jetbrains.annotations.Nullable;
 
 import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.IntSupplier;
+import java.util.function.LongFunction;
 
 public class C2MEStorageVanillaInterface extends StorageIoWorker {
 
     private final C2MEStorageThread backend;
 
-    public C2MEStorageVanillaInterface(Path directory, boolean dsync, String name) {
+    public C2MEStorageVanillaInterface(Path directory, boolean dsync, String name, LongFunction<IntSupplier> priorityProvider) {
         super(null, dsync, name);
-        this.backend = new C2MEStorageThread(directory, dsync, name);
+        this.backend = new C2MEStorageThread(directory, dsync, name, priorityProvider);
     }
 
     @Override

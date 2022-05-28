@@ -1,12 +1,15 @@
 package com.ishland.c2me.rewrites.chunkio.common;
 
+import com.ishland.c2me.base.ModuleEntryPoint;
 import com.ishland.c2me.base.common.GlobalExecutors;
+import com.ishland.c2me.base.common.scheduler.PriorityUtils;
 import com.ishland.c2me.base.common.util.SneakyThrow;
 import com.ishland.c2me.base.mixin.access.IRegionBasedStorage;
 import com.ishland.c2me.opts.chunkio.common.ConfigConstants;
 import com.ishland.c2me.base.mixin.access.IRegionFile;
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtIo;
@@ -14,6 +17,7 @@ import net.minecraft.nbt.scanner.NbtScanner;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.storage.RegionBasedStorage;
 import net.minecraft.world.storage.RegionFile;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,13 +26,18 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
+import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
+import java.util.concurrent.PriorityBlockingQueue;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.LockSupport;
 import java.util.function.Function;
+import java.util.function.IntSupplier;
+import java.util.function.LongFunction;
 
 public class C2MEStorageThread extends Thread {
 
@@ -40,9 +49,11 @@ public class C2MEStorageThread extends Thread {
     private final CompletableFuture<Void> closeFuture = new CompletableFuture<>();
 
     private final RegionBasedStorage storage;
+    private final LongFunction<IntSupplier> priorityProvider;
     private final Long2ObjectLinkedOpenHashMap<NbtCompound> writeBacklog = new Long2ObjectLinkedOpenHashMap<>();
     private final Long2ObjectOpenHashMap<NbtCompound> cache = new Long2ObjectOpenHashMap<>();
-    private final ConcurrentLinkedQueue<ReadRequest> pendingReadRequests = new ConcurrentLinkedQueue<>();
+    private final Queue<ReadRequest> pendingReadRequests;
+    private final Semaphore readSemaphore = new Semaphore((int) ModuleEntryPoint.globalExecutorParallelism + 1);
     private final ConcurrentLinkedQueue<WriteRequest> pendingWriteRequests = new ConcurrentLinkedQueue<>();
     private final ConcurrentLinkedQueue<Runnable> pendingTasks = new ConcurrentLinkedQueue<>();
     private final Executor executor = command -> {
@@ -55,8 +66,14 @@ public class C2MEStorageThread extends Thread {
     };
     private final ObjectArraySet<CompletableFuture<Void>> writeFutures = new ObjectArraySet<>();
 
-    public C2MEStorageThread(Path directory, boolean dsync, String name) {
+    public C2MEStorageThread(Path directory, boolean dsync, String name, LongFunction<IntSupplier> priorityProvider) {
         this.storage = new RegionBasedStorage(directory, dsync);
+        this.priorityProvider = priorityProvider;
+        if (this.priorityProvider != null) {
+            this.pendingReadRequests = new PriorityBlockingQueue<>();
+        } else {
+            this.pendingReadRequests = new ConcurrentLinkedQueue<>();
+        }
         this.setName("C2ME Storage #%d".formatted(SERIAL.incrementAndGet()));
         this.setDaemon(true);
         this.setUncaughtExceptionHandler((t, e) -> LOGGER.error("Thread %s died".formatted(t), e));
@@ -100,7 +117,7 @@ public class C2MEStorageThread extends Thread {
      */
     public CompletableFuture<NbtCompound> getChunkData(long pos, NbtScanner scanner) {
         final CompletableFuture<NbtCompound> future = new CompletableFuture<>();
-        this.pendingReadRequests.add(new ReadRequest(pos, future, scanner));
+        this.pendingReadRequests.add(new ReadRequest(pos, future, scanner, this.priorityProvider != null ? this.priorityProvider.apply(pos) : null));
         LockSupport.unpark(this);
         return future.thenApply(Function.identity());
     }
@@ -118,6 +135,7 @@ public class C2MEStorageThread extends Thread {
         try {
             while (true) {
                 runWriteFutureGC();
+                doPriorityChanges();
                 if (handleTasks()) continue;
                 if (handlePendingReads()) continue;
                 if (handlePendingWrites()) continue;
@@ -165,15 +183,17 @@ public class C2MEStorageThread extends Thread {
 
     private boolean handlePendingReads() {
         boolean hasWork = false;
-        ReadRequest readRequest;
-        while ((readRequest = this.pendingReadRequests.poll()) != null) {
+        while (!pendingReadRequests.isEmpty() && readSemaphore.tryAcquire()) {
+            ReadRequest readRequest = this.pendingReadRequests.poll();
             hasWork = true;
+            assert readRequest != null;
             final long pos = readRequest.pos;
             final CompletableFuture<NbtCompound> future = readRequest.future;
             final NbtScanner scanner = readRequest.scanner;
             final NbtCompound cached = this.cache.get(pos);
             if (cached != null) {
                 future.complete(cached);
+                readSemaphore.release();
                 continue;
             }
             scheduleChunkRead(pos, future, scanner);
@@ -193,6 +213,29 @@ public class C2MEStorageThread extends Thread {
 
     private void runWriteFutureGC() {
         this.writeFutures.removeIf(CompletableFuture::isDone);
+    }
+
+    private long lastRebuild = 0;
+    private long lastPrioritySerial = 0;
+    private final ObjectArrayList<ReadRequest> priorityChangeTmpStorage = new ObjectArrayList<>();
+    private void doPriorityChanges() {
+        if (this.pendingReadRequests instanceof PriorityBlockingQueue<ReadRequest> queue) {
+            final long currentTimeMillis = System.currentTimeMillis();
+            if (currentTimeMillis > lastRebuild + 500) { // at most twice a second
+                lastRebuild = currentTimeMillis;
+                final int currentPrioritySerial = PriorityUtils.priorityChangeSerial();
+                if (this.lastPrioritySerial != currentPrioritySerial) {
+                    this.lastPrioritySerial = currentPrioritySerial;
+                    final long startTime = System.nanoTime();
+                    // re-add locks to reflect priority changes
+                    priorityChangeTmpStorage.clear();
+                    queue.drainTo(priorityChangeTmpStorage);
+                    queue.addAll(priorityChangeTmpStorage);
+                    priorityChangeTmpStorage.clear();
+//                System.out.printf("Did priority changes for %d entries in %.2fms\n", size, (System.nanoTime() - startTime) / 1_000_000.0);
+                }
+            }
+        }
     }
 
     private void flushBacklog() {
@@ -215,9 +258,11 @@ public class C2MEStorageThread extends Thread {
         if (cached != null) {
             if (scanner != null) {
                 cached.accept(scanner);
+                readSemaphore.release();
                 future.complete(null);
                 return;
             } else {
+                readSemaphore.release();
                 future.complete(cached);
                 return;
             }
@@ -229,6 +274,7 @@ public class C2MEStorageThread extends Thread {
             final DataInputStream chunkInputStream = regionFile.getChunkInputStream(pos1);
             if (chunkInputStream == null) {
                 future.complete(null);
+                readSemaphore.release();
                 return;
             }
             CompletableFuture.supplyAsync(() -> {
@@ -246,11 +292,13 @@ public class C2MEStorageThread extends Thread {
                     return null; // Unreachable anyway
                 }
             }, GlobalExecutors.executor).handle((compound, throwable) -> {
+                readSemaphore.release();
                 if (throwable != null) future.completeExceptionally(throwable);
                 else future.complete(compound);
                 return null;
             });
         } catch (Throwable t) {
+            readSemaphore.release();
             future.completeExceptionally(t);
         }
     }
@@ -306,7 +354,11 @@ public class C2MEStorageThread extends Thread {
         }
     }
 
-    private record ReadRequest(long pos, CompletableFuture<NbtCompound> future, @Nullable NbtScanner scanner) {
+    private record ReadRequest(long pos, CompletableFuture<NbtCompound> future, @Nullable NbtScanner scanner, @Nullable IntSupplier priorityProvider) implements Comparable<ReadRequest> {
+        @Override
+        public int compareTo(@NotNull C2MEStorageThread.ReadRequest o) {
+            return Integer.compare(this.priorityProvider != null ? this.priorityProvider.getAsInt() : 0, o.priorityProvider != null ? o.priorityProvider.getAsInt() : 0);
+        }
     }
 
     private record WriteRequest(long pos, NbtCompound nbt) {

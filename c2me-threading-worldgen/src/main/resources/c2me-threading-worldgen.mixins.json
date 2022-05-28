@@ -12,7 +12,6 @@
     "MixinServerWorld",
     "MixinThreadedAnvilChunkStorage",
     "cancellation.MixinChunkHolder",
-    "priority.MixinServerChunkManager",
     "progresslogger.MixinWorldGenerationProgressLogger"
   ]
 }

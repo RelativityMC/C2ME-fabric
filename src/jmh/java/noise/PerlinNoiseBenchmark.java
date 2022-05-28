@@ -1,7 +1,7 @@
 package noise;
 
 import net.minecraft.util.math.noise.PerlinNoiseSampler;
-import net.minecraft.world.gen.random.SimpleRandom;
+import net.minecraft.world.gen.random.LocalRandom;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Mode;
@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit;
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
 public class PerlinNoiseBenchmark {
 
-    private final PerlinNoiseSampler vanillaSampler = new PerlinNoiseSampler(new SimpleRandom(0xFF));
+    private final PerlinNoiseSampler vanillaSampler = new PerlinNoiseSampler(new LocalRandom(0xFF));
 
     private final byte[] permutations;
     private static final double[] FLAT_SIMPLEX_GRAD = new double[]{
