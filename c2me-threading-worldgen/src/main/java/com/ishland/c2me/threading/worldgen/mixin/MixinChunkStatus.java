@@ -6,8 +6,8 @@ import com.ishland.c2me.threading.worldgen.common.ChunkStatusUtils;
 import com.ishland.c2me.threading.worldgen.common.Config;
 import com.ishland.c2me.threading.worldgen.common.IChunkStatus;
 import com.ishland.c2me.threading.worldgen.common.IWorldGenLockable;
-import com.ishland.c2me.threading.worldgen.common.PriorityUtils;
-import com.ishland.c2me.threading.worldgen.common.ThreadLocalWorldGenSchedulingState;
+import com.ishland.c2me.base.common.scheduler.PriorityUtils;
+import com.ishland.c2me.base.common.scheduler.ThreadLocalWorldGenSchedulingState;
 import com.mojang.datafixers.util.Either;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ServerLightingProvider;
@@ -116,7 +116,7 @@ public abstract class MixinChunkStatus implements IChunkStatus {
             } else {
                 int lockRadius = Config.reduceLockRadius && this.reducedTaskRadius != -1 ? this.reducedTaskRadius : this.taskMargin;
                 //noinspection ConstantConditions
-                completableFuture = ChunkStatusUtils.runChunkGenWithLock(targetChunk.getPos(), (ChunkStatus) (Object) this, holder, lockRadius, PriorityUtils.getChunkPriority(world, targetChunk), ((IWorldGenLockable) world).getWorldGenChunkLock(), () ->
+                completableFuture = ChunkStatusUtils.runChunkGenWithLock(targetChunk.getPos(), (ChunkStatus) (Object) this, holder, lockRadius, PriorityUtils.getChunkPriority(world, targetChunk.getPos()), ((IWorldGenLockable) world).getWorldGenChunkLock(), () ->
                         ChunkStatusUtils.getThreadingType((ChunkStatus) (Object) this).runTask(((IWorldGenLockable) world).getWorldGenSingleThreadedLock(), generationTask))
                         .exceptionally(t -> {
                             Throwable actual = t;

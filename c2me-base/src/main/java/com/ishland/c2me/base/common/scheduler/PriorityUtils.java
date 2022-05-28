@@ -1,4 +1,4 @@
-package com.ishland.c2me.threading.worldgen.common;
+package com.ishland.c2me.base.common.scheduler;
 
 import com.ishland.c2me.base.mixin.access.IChunkTicketManager;
 import com.ishland.c2me.base.mixin.access.IChunkTicketManagerNearbyChunkTicketUpdater;
@@ -10,11 +10,11 @@ import net.minecraft.server.world.ChunkTicketManager;
 import net.minecraft.server.world.ServerChunkManager;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.ChunkPos;
-import net.minecraft.world.chunk.Chunk;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.IntSupplier;
 
 public class PriorityUtils {
@@ -31,6 +31,8 @@ public class PriorityUtils {
     private static final int BITS_8 = 0b11111111;
     private static final int BITS_4 = 0b111;
 
+    private static final AtomicInteger priorityChanges = new AtomicInteger(0);
+
     public static IntSupplier getChunkPriority(ServerWorld serverWorld, @Nullable ChunkHolder holder, ChunkPos chunkPos) {
         final ServerChunkManager chunkManager = serverWorld.getChunkManager();
         final ISyncLoadManager syncLoadManager = (ISyncLoadManager) chunkManager;
@@ -46,13 +48,13 @@ public class PriorityUtils {
                         | (distanceFromPlayers.get(pos) & BITS_8);
     }
 
-    public static IntSupplier getChunkPriority(ServerWorld serverWorld, Chunk chunk) {
+    public static IntSupplier getChunkPriority(ServerWorld serverWorld, ChunkPos pos) {
         ChunkHolder chunkHolder = ThreadLocalWorldGenSchedulingState.getChunkHolder();
         if (chunkHolder == null) {
             final Long2ObjectLinkedOpenHashMap<ChunkHolder> chunkHolders = ((IThreadedAnvilChunkStorage) serverWorld.getChunkManager().threadedAnvilChunkStorage).getChunkHolders();
-            chunkHolder = chunkHolders.get(chunk.getPos().toLong());
+            chunkHolder = chunkHolders.get(pos.toLong());
         }
-        return getChunkPriority(serverWorld, chunkHolder, chunk.getPos());
+        return getChunkPriority(serverWorld, chunkHolder, pos);
     }
 
     private static byte syncLoadPriority(ChunkPos pos, ISyncLoadManager manager) {
@@ -65,6 +67,14 @@ public class PriorityUtils {
 
     private static int chebyshevDistance(ChunkPos one, ChunkPos another) {
         return (another != null && one != null) ? Math.min(Math.abs(one.x - another.x), Math.abs(one.z - another.z)) : Integer.MAX_VALUE;
+    }
+
+    public static void notifyPriorityChange() {
+        priorityChanges.incrementAndGet();
+    }
+
+    public static int priorityChangeSerial() {
+        return priorityChanges.get();
     }
 
 }

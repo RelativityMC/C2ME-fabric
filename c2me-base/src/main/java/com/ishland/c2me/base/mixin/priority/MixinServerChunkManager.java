@@ -1,7 +1,7 @@
-package com.ishland.c2me.threading.worldgen.mixin.priority;
+package com.ishland.c2me.base.mixin.priority;
 
-import com.ishland.c2me.base.common.scheduler.SchedulerThread;
-import com.ishland.c2me.threading.worldgen.common.ISyncLoadManager;
+import com.ishland.c2me.base.common.scheduler.ISyncLoadManager;
+import com.ishland.c2me.base.common.scheduler.PriorityUtils;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ServerChunkManager;
 import net.minecraft.util.math.ChunkPos;
@@ -43,7 +43,7 @@ public abstract class MixinServerChunkManager implements ISyncLoadManager {
         if (Thread.currentThread() != this.serverThread) return;
 
         this.currentSyncLoadChunk = new ChunkPos(x, z);
-        SchedulerThread.INSTANCE.notifyPriorityChange();
+        PriorityUtils.notifyPriorityChange();
     }
 
     @Inject(method = "getChunk(IILnet/minecraft/world/chunk/ChunkStatus;Z)Lnet/minecraft/world/chunk/Chunk;", at = @At("RETURN"))
@@ -52,7 +52,7 @@ public abstract class MixinServerChunkManager implements ISyncLoadManager {
 
         if (this.currentSyncLoadChunk != null) {
             this.currentSyncLoadChunk = null;
-            SchedulerThread.INSTANCE.notifyPriorityChange();
+            PriorityUtils.notifyPriorityChange();
         }
     }
 
