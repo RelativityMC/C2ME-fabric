@@ -4,7 +4,7 @@ import com.ishland.c2me.natives.ModuleEntryPoint;
 import com.ishland.c2me.natives.common.NativeInterface;
 import io.netty.util.internal.PlatformDependent;
 import net.minecraft.util.math.noise.PerlinNoiseSampler;
-import net.minecraft.util.math.random.SimpleRandom;
+import net.minecraft.util.math.random.LocalRandom;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Mode;
@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit;
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
 public class PerlinNoiseBenchmark {
 
-    private final PerlinNoiseSampler vanillaSampler = new PerlinNoiseSampler(new SimpleRandom(0xFF));
+    private final PerlinNoiseSampler vanillaSampler = new PerlinNoiseSampler(new LocalRandom(0xFF));
 
     private final byte[] permutations;
     private final long permutationsPointer;

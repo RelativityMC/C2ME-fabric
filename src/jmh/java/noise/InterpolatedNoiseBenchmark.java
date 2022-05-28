@@ -3,7 +3,6 @@ package noise;
 import com.ishland.c2me.natives.ModuleEntryPoint;
 import com.ishland.c2me.natives.common.NativeInterface;
 import com.ishland.c2me.natives.common.NativesUtils;
-import net.minecraft.world.gen.densityfunction.DensityFunction;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Mode;
@@ -23,7 +22,7 @@ public class InterpolatedNoiseBenchmark {
         ModuleEntryPoint.init();
     }
 
-    private final InterpolatedNoiseSamplerCopy sampler = InterpolatedNoiseSamplerCopy.field_37205;
+    private final InterpolatedNoiseSamplerCopy sampler = InterpolatedNoiseSamplerCopy.createBase3dNoiseFunction(1.0, 1.0, 80.0, 160.0, 2.0);
 
     private final long pointer = NativesUtils.createInterpolatedSamplerPointer(sampler, InterpolatedNoiseSamplerCopy.class);
 
@@ -41,10 +40,7 @@ public class InterpolatedNoiseBenchmark {
 
     @Benchmark
     public double vanillaSampler() {
-        return sampler.sample(new NoisePos(x, y, z));
-    }
-
-    private record NoisePos(int blockX, int blockY, int blockZ) implements DensityFunction.NoisePos {
+        return sampler.sample(new InterpolatedNoiseSamplerCopy.NoisePos(x, y, z));
     }
 
 }

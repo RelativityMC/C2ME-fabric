@@ -17,17 +17,26 @@ public class NativesUtils {
             final OctavePerlinNoiseSampler lowerInterpolatedNoise = (OctavePerlinNoiseSampler) accessible(clazz.getDeclaredField("lowerInterpolatedNoise")).get(sampler);
             final OctavePerlinNoiseSampler upperInterpolatedNoise = (OctavePerlinNoiseSampler) accessible(clazz.getDeclaredField("upperInterpolatedNoise")).get(sampler);
             final OctavePerlinNoiseSampler interpolationNoise = (OctavePerlinNoiseSampler) accessible(clazz.getDeclaredField("interpolationNoise")).get(sampler);
+            final double field_38271 = (double) accessible(clazz.getDeclaredField("field_38271")).get(sampler);
+            final double field_38272 = (double) accessible(clazz.getDeclaredField("field_38272")).get(sampler);
             final double xzScale = (double) accessible(clazz.getDeclaredField("xzScale")).get(sampler);
             final double yScale = (double) accessible(clazz.getDeclaredField("yScale")).get(sampler);
-            final double xzMainScale = (double) accessible(clazz.getDeclaredField("xzMainScale")).get(sampler);
-            final double yMainScale = (double) accessible(clazz.getDeclaredField("yMainScale")).get(sampler);
-            final int cellWidth = (int) accessible(clazz.getDeclaredField("cellWidth")).get(sampler);
-            final int cellHeight = (int) accessible(clazz.getDeclaredField("cellHeight")).get(sampler);
+            final double xzFactor = (double) accessible(clazz.getDeclaredField("xzFactor")).get(sampler);
+            final double yFactor = (double) accessible(clazz.getDeclaredField("yFactor")).get(sampler);
+            final double smearScaleMultiplier = (double) accessible(clazz.getDeclaredField("smearScaleMultiplier")).get(sampler);
+            final double maxValue = (double) accessible(clazz.getDeclaredField("maxValue")).get(sampler);
             return NativeInterface.createPerlinInterpolatedSamplerData(
                     createOctaveSamplerPointer(lowerInterpolatedNoise),
                     createOctaveSamplerPointer(upperInterpolatedNoise),
                     createOctaveSamplerPointer(interpolationNoise),
-                    xzScale, yScale, xzMainScale, yMainScale, cellWidth, cellHeight
+                    field_38271,
+                    field_38272,
+                    xzScale,
+                    yScale,
+                    xzFactor,
+                    yFactor,
+                    smearScaleMultiplier,
+                    maxValue
             );
         } catch (Throwable t) {
             throw new RuntimeException(t);
@@ -50,7 +59,7 @@ public class NativesUtils {
 
     private static byte[] getPermutations(PerlinNoiseSampler sampler) {
         try {
-            return (byte[]) accessible(PerlinNoiseSampler.class.getDeclaredField("permutations")).get(sampler);
+            return (byte[]) accessible(PerlinNoiseSampler.class.getDeclaredField("permutation")).get(sampler);
         } catch (Throwable t) {
             throw new RuntimeException(t);
         }
@@ -70,7 +79,7 @@ public class NativesUtils {
             if (sampler != null) {
                 UnsafeUtil.getInstance().putLong(ptr_indexes + pos * 8L, i);
                 if (sampler instanceof IPerlinNoiseSampler) {
-                    PlatformDependent.copyMemory(((IPerlinNoiseSampler) sampler).getPermutations(), 0, ptr_sampler_permutations + 256L * pos, 256);
+                    PlatformDependent.copyMemory(((IPerlinNoiseSampler) sampler).getPermutation(), 0, ptr_sampler_permutations + 256L * pos, 256);
                 } else {
                     PlatformDependent.copyMemory(permutations[i], 0, ptr_sampler_permutations + 256L * pos, 256);
                 }

@@ -6,7 +6,6 @@ import com.ishland.c2me.natives.common.CompiledDensityFunctionImpl;
 import com.ishland.c2me.natives.common.NativeInterface;
 import com.ishland.c2me.natives.common.NativeMemoryTracker;
 import com.ishland.c2me.natives.common.NativeStruct;
-import net.minecraft.util.math.noise.DoublePerlinNoiseSampler;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
 import net.minecraft.world.gen.densityfunction.DensityFunctionTypes;
 import org.jetbrains.annotations.Nullable;
@@ -26,7 +25,7 @@ public abstract class MixinDensityFunctionTypesNoise implements DensityFunction.
 
     @Shadow
     @Final
-    private @Nullable DoublePerlinNoiseSampler noise;
+    private @Nullable DensityFunction.class_7270 noise;
 
     @Shadow
     @Final
@@ -42,12 +41,12 @@ public abstract class MixinDensityFunctionTypesNoise implements DensityFunction.
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(CallbackInfo ci) {
 //        System.out.println("Compiling density function: noise %s".formatted(this));
-        if (this.noise != null) {
+        if (this.noise != null && this.noise.noise() != null) {
             this.pointer = NativeInterface.createDFINoiseData(
                     false,
-                    ((NativeStruct) ((IDoublePerlinNoiseSampler) this.noise).getFirstSampler()).getNativePointer(),
-                    ((NativeStruct) ((IDoublePerlinNoiseSampler) this.noise).getSecondSampler()).getNativePointer(),
-                    ((IDoublePerlinNoiseSampler) this.noise).getAmplitude(),
+                    ((NativeStruct) ((IDoublePerlinNoiseSampler) this.noise.noise()).getFirstSampler()).getNativePointer(),
+                    ((NativeStruct) ((IDoublePerlinNoiseSampler) this.noise.noise()).getSecondSampler()).getNativePointer(),
+                    ((IDoublePerlinNoiseSampler) this.noise.noise()).getAmplitude(),
                     this.xzScale,
                     this.yScale
             );
@@ -70,13 +69,13 @@ public abstract class MixinDensityFunctionTypesNoise implements DensityFunction.
      */
     @Overwrite
     public double sample(DensityFunction.NoisePos pos) {
-        if (this.noise == null) return 0.0;
+        if (this.noise == null || this.noise.noise() == null) return 0.0;
         return NativeInterface.dfiBindingsSingleOp(this.pointer, pos.blockX(), pos.blockY(), pos.blockZ());
     }
 
     @Override
     public void method_40470(double[] ds, class_6911 arg) {
-        if (this.noise == null) {
+        if (this.noise == null || this.noise.noise() == null) {
             Arrays.fill(ds, 0.0);
             return;
         }

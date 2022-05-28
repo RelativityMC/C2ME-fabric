@@ -8,7 +8,6 @@ import com.ishland.c2me.natives.common.DensityFunctionUtils;
 import com.ishland.c2me.natives.common.NativeInterface;
 import com.ishland.c2me.natives.common.NativeMemoryTracker;
 import com.ishland.c2me.natives.common.NativeStruct;
-import net.minecraft.util.math.noise.DoublePerlinNoiseSampler;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
 import net.minecraft.world.gen.densityfunction.DensityFunctionTypes;
 import org.jetbrains.annotations.Nullable;
@@ -37,7 +36,7 @@ public abstract class MixinDensityFunctionTypesShiftedNoise implements DensityFu
 
     @Shadow
     @Final
-    private @Nullable DoublePerlinNoiseSampler noise;
+    private @Nullable DensityFunction.class_7270 noise;
     @Shadow @Final private double xzScale;
     @Shadow @Final private double yScale;
     @Unique
@@ -49,7 +48,7 @@ public abstract class MixinDensityFunctionTypesShiftedNoise implements DensityFu
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(CallbackInfo ci) {
-        if (this.noise == null) {
+        if (this.noise == null || this.noise.noise() == null) {
             this.pointer = NativeInterface.createDFIShiftedNoiseData(true, 0, 0, 0, 0, 0, 0, 0, 0);
             NativeMemoryTracker.registerAllocatedMemory(
                     this,
@@ -81,9 +80,9 @@ public abstract class MixinDensityFunctionTypesShiftedNoise implements DensityFu
                     ((CompiledDensityFunctionImpl) this.shiftZ).getDFIPointer(),
                     this.xzScale,
                     this.yScale,
-                    ((NativeStruct) ((IDoublePerlinNoiseSampler) this.noise).getFirstSampler()).getNativePointer(),
-                    ((NativeStruct) ((IDoublePerlinNoiseSampler) this.noise).getSecondSampler()).getNativePointer(),
-                    ((IDoublePerlinNoiseSampler) this.noise).getAmplitude()
+                    ((NativeStruct) ((IDoublePerlinNoiseSampler) this.noise.noise()).getFirstSampler()).getNativePointer(),
+                    ((NativeStruct) ((IDoublePerlinNoiseSampler) this.noise.noise()).getSecondSampler()).getNativePointer(),
+                    ((IDoublePerlinNoiseSampler) this.noise.noise()).getAmplitude()
             );
 
             NativeMemoryTracker.registerAllocatedMemory(
@@ -97,7 +96,7 @@ public abstract class MixinDensityFunctionTypesShiftedNoise implements DensityFu
 
     @Override
     public double sample(DensityFunction.NoisePos pos) {
-        if (this.noise == null) {
+        if (this.noise == null || this.noise.noise() == null) {
             return 0.0;
         } else if (this.pointer != 0L) {
             return NativeInterface.dfiBindingsSingleOp(this.pointer, pos.blockX(), pos.blockY(), pos.blockZ());
@@ -106,13 +105,13 @@ public abstract class MixinDensityFunctionTypesShiftedNoise implements DensityFu
             double d = (double)pos.blockX() * this.xzScale + this.shiftX.sample(pos);
             double e = (double)pos.blockY() * this.yScale + this.shiftY.sample(pos);
             double f = (double)pos.blockZ() * this.xzScale + this.shiftZ.sample(pos);
-            return this.noise.sample(d, e, f);
+            return this.noise.method_42356(d, e, f);
         }
     }
 
     @Override
     public void method_40470(double[] ds, DensityFunction.class_6911 arg) {
-        if (this.noise == null) {
+        if (this.noise == null || this.noise.noise() == null) {
             Arrays.fill(ds, 0.0);
         } else if (arg instanceof CompiledDensityFunctionArg dfa && dfa.getDFAPointer() != 0 && this.pointer != 0) {
             NativeInterface.dfiBindingsMultiOp(this.pointer, dfa.getDFAPointer(), ds);

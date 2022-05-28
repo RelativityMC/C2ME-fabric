@@ -7,8 +7,9 @@
 #include "../include/common_maths.h"
 #include "../include/noise.h"
 
-double c2me_natives_perlin_sample(__uint8_t *permutations, double originX, double originY, double originZ, double x, double y,
-                                  double z, double yScale, double yMax) {
+double
+c2me_natives_perlin_sample(__uint8_t *permutations, double originX, double originY, double originZ, double x, double y,
+                           double z, double yScale, double yMax) {
     return math_noise_perlin_sample(permutations, originX, originY, originZ, x, y, z, yScale, yMax);
 }
 
@@ -52,17 +53,27 @@ double c2me_natives_perlin_octave_sample(octave_sampler_data *data, double x, do
 interpolated_sampler_data *c2me_natives_perlin_create_interpolated_sampler_data(
         octave_sampler_data *lowerInterpolatedNoise, octave_sampler_data *upperInterpolatedNoise,
         octave_sampler_data *interpolationNoise,
-        double xzScale, double yScale, double xzMainScale, double yMainScale, int cellWidth, int cellHeight) {
+        double field_38271,
+        double field_38272,
+        double xzScale,
+        double yScale,
+        double xzFactor,
+        double yFactor,
+        double smearScaleMultiplier,
+        double maxValue) {
     interpolated_sampler_data *ptr = malloc(sizeof(interpolated_sampler_data));
     ptr->lowerInterpolatedNoise = lowerInterpolatedNoise;
     ptr->upperInterpolatedNoise = upperInterpolatedNoise;
     ptr->interpolationNoise = interpolationNoise;
+    ptr->field_38271 = field_38271;
+    ptr->field_38272 = field_38272;
     ptr->xzScale = xzScale;
     ptr->yScale = yScale;
-    ptr->xzMainScale = xzMainScale;
-    ptr->yMainScale = yMainScale;
-    ptr->cellWidth = cellWidth;
-    ptr->cellHeight = cellHeight;
+    ptr->xzFactor = xzFactor;
+    ptr->yFactor = yFactor;
+    ptr->smearScaleMultiplier = smearScaleMultiplier;
+    ptr->maxValue = maxValue;
+
     return ptr;
 }
 

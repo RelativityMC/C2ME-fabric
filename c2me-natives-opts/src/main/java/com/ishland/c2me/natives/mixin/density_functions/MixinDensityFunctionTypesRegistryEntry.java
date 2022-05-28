@@ -15,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(DensityFunctionTypes.class_7051.class)
+@Mixin(DensityFunctionTypes.RegistryEntryHolder.class)
 public abstract class MixinDensityFunctionTypesRegistryEntry implements DensityFunction, CompiledDensityFunctionImpl {
 
     @Shadow

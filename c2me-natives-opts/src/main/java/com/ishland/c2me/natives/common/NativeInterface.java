@@ -424,13 +424,21 @@ public class NativeInterface {
                 FunctionDescriptor.of(JAVA_DOUBLE, JAVA_LONG, JAVA_DOUBLE, JAVA_DOUBLE, JAVA_DOUBLE)
         );
 
-        // interpolated_sampler_data *c2me_natives_create_interpolated_sampler_data(
-        //    octave_sampler_data *lowerInterpolatedNoise, octave_sampler_data *upperInterpolatedNoise, octave_sampler_data *interpolationNoise,
-        //    double xzScale, double yScale, double xzMainScale, double yMainScale, int cellWidth, int cellHeight)
+        // interpolated_sampler_data *c2me_natives_perlin_create_interpolated_sampler_data(
+        //        octave_sampler_data *lowerInterpolatedNoise, octave_sampler_data *upperInterpolatedNoise,
+        //        octave_sampler_data *interpolationNoise,
+        //        double field_38271,
+        //        double field_38272,
+        //        double xzScale,
+        //        double yScale,
+        //        double xzFactor,
+        //        double yFactor,
+        //        double smearScaleMultiplier,
+        //        double maxValue)
 
         PERLIN_CREATE_INTERPOLATED_SAMPLER_DATA = LINKER.downcallHandle(
                 LOOKUP.lookup("c2me_natives_perlin_create_interpolated_sampler_data").get(),
-                FunctionDescriptor.of(JAVA_LONG, JAVA_LONG, JAVA_LONG, JAVA_LONG, JAVA_DOUBLE, JAVA_DOUBLE, JAVA_DOUBLE, JAVA_DOUBLE, JAVA_INT, JAVA_INT)
+                FunctionDescriptor.of(JAVA_LONG, JAVA_LONG, JAVA_LONG, JAVA_LONG, JAVA_DOUBLE, JAVA_DOUBLE, JAVA_DOUBLE, JAVA_DOUBLE, JAVA_DOUBLE, JAVA_DOUBLE, JAVA_DOUBLE, JAVA_DOUBLE)
         );
 
         // double c2me_natives_interpolated_sample(interpolated_sampler_data *data, int x, int y, int z)
@@ -515,15 +523,36 @@ public class NativeInterface {
         }
     }
 
-    public static long createPerlinInterpolatedSamplerData(long ptr_lowerInterpolatedNoise, long ptr_upperInterpolatedNoise, long ptr_interpolationNoise,
-                                                           double xzScale, double yScale, double xzMainScale, double yMainScale, int cellWidth, int cellHeight) {
-        if (ptr_interpolationNoise == 0) throw new NullPointerException();
+    public static long createPerlinInterpolatedSamplerData(long ptr_lowerInterpolatedNoise,
+                                                           long ptr_upperInterpolatedNoise,
+                                                           long ptr_interpolationNoise,
+                                                           double field_38271,
+                                                           double field_38272,
+                                                           double xzScale,
+                                                           double yScale,
+                                                           double xzFactor,
+                                                           double yFactor,
+                                                           double smearScaleMultiplier,
+                                                           double maxValue) {
         if (ptr_lowerInterpolatedNoise == 0) throw new NullPointerException();
         if (ptr_upperInterpolatedNoise == 0) throw new NullPointerException();
+        if (ptr_interpolationNoise == 0) throw new NullPointerException();
         try {
-            return (long) PERLIN_CREATE_INTERPOLATED_SAMPLER_DATA.invoke(ptr_lowerInterpolatedNoise, ptr_upperInterpolatedNoise, ptr_interpolationNoise, xzScale, yScale, xzMainScale, yMainScale, cellWidth, cellHeight);
-        } catch (Throwable t) {
-            throw new RuntimeException(t);
+            return (long) PERLIN_CREATE_INTERPOLATED_SAMPLER_DATA.invoke(
+                    ptr_lowerInterpolatedNoise,
+                    ptr_upperInterpolatedNoise,
+                    ptr_interpolationNoise,
+                    field_38271,
+                    field_38272,
+                    xzScale,
+                    yScale,
+                    xzFactor,
+                    yFactor,
+                    smearScaleMultiplier,
+                    maxValue
+            );
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
         }
     }
 

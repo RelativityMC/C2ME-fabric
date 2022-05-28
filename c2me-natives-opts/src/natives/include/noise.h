@@ -22,12 +22,14 @@ typedef struct {
     octave_sampler_data *lowerInterpolatedNoise;
     octave_sampler_data *upperInterpolatedNoise;
     octave_sampler_data *interpolationNoise;
+    double field_38271;
+    double field_38272;
     double xzScale;
     double yScale;
-    double xzMainScale;
-    double yMainScale;
-    int cellWidth;
-    int cellHeight;
+    double xzFactor;
+    double yFactor;
+    double smearScaleMultiplier;
+    double maxValue;
 } interpolated_sampler_data;
 
 static inline double __attribute__((always_inline))
@@ -104,8 +106,9 @@ math_noise_perlin_sampleScalar(__uint8_t *permutations, int sectionX, int sectio
     return var120 + (var103 * (var121 - var120));
 }
 
-static double math_noise_perlin_sample(__uint8_t *permutations, double originX, double originY, double originZ, double x, double y,
-                                       double z, double yScale, double yMax) {
+static double
+math_noise_perlin_sample(__uint8_t *permutations, double originX, double originY, double originZ, double x, double y,
+                         double z, double yScale, double yMax) {
     double d = x + originX;
     double e = y + originY;
     double f = z + originZ;
@@ -131,8 +134,9 @@ static double math_noise_perlin_sample(__uint8_t *permutations, double originX, 
 }
 
 static inline double __attribute__((always_inline))
-math_noise_perlin_octave_sample_impl(octave_sampler_data *data, double x, double y, double z, double yScale, double yMax,
-                                       bool useOrigin) {
+math_noise_perlin_octave_sample_impl(octave_sampler_data *data, double x, double y, double z, double yScale,
+                                     double yMax,
+                                     bool useOrigin) {
     double d = 0.0;
 
     for (size_t i = 0; i < data->length; ++i) {
@@ -160,68 +164,81 @@ static double math_noise_perlin_octave_sample(octave_sampler_data *data, double 
 }
 
 static double math_noise_perlin_interpolated_sample(interpolated_sampler_data *data, int x, int y, int z) {
-    int i = math_floorDiv(x, data->cellWidth);
-    int j = math_floorDiv(y, data->cellHeight);
-    int k = math_floorDiv(z, data->cellWidth);
-    double d = 0.0;
-    double e = 0.0;
-    double f = 0.0;
+    double d = (double) x * data->field_38271;
+    double e = (double) y * data->field_38272;
+    double f = (double) z * data->field_38271;
+    double g = d / data->xzFactor;
+    double h = e / data->yFactor;
+    double i = f / data->xzFactor;
+    double j = data->field_38272 * data->smearScaleMultiplier;
+    double k = j / data->yFactor;
+    double l = 0.0;
+    double m = 0.0;
+    double n = 0.0;
+    bool bl = true;
+//    double o = 1.0;
 
-    octave_sampler_data *interpolationSampler = data->interpolationNoise;
-    for (size_t l = 0; l < interpolationSampler->length && interpolationSampler->indexes[l] < 8; ++l) {
-        double g = 1.0 / c2me_natives_pow_of_two_table[interpolationSampler->indexes[l]];
-        f += math_noise_perlin_sample(
-                interpolationSampler->sampler_permutations + 256 * l,
-                interpolationSampler->sampler_originX[l],
-                interpolationSampler->sampler_originY[l],
-                interpolationSampler->sampler_originZ[l],
-                math_octave_maintainPrecision((double) i * data->xzMainScale * g),
-                math_octave_maintainPrecision((double) j * data->yMainScale * g),
-                math_octave_maintainPrecision((double) k * data->xzMainScale * g),
-                data->yMainScale * g,
-                (double) j * data->yMainScale * g) /
-             g;
-    }
-
-    double h = (f / 10.0 + 1.0) / 2.0;
-
-    if (!(h >= 1.0)) {
-        octave_sampler_data *octaveSampler = data->lowerInterpolatedNoise;
-        for (size_t m = 0; m < octaveSampler->length && octaveSampler->indexes[m] < 16; ++m) {
-            double g = 1.0 / c2me_natives_pow_of_two_table[octaveSampler->indexes[m]];
-            double n = math_octave_maintainPrecision((double) i * data->xzScale * g);
-            double o = math_octave_maintainPrecision((double) j * data->yScale * g);
-            double p = math_octave_maintainPrecision((double) k * data->xzScale * g);
-            double q = data->yScale * g;
-            d += math_noise_perlin_sample(
-                    octaveSampler->sampler_permutations + 256 * m,
-                    octaveSampler->sampler_originX[m],
-                    octaveSampler->sampler_originY[m],
-                    octaveSampler->sampler_originZ[m],
-                    n, o, p, q, (double) j * q) /
-                 g;
+    {
+        octave_sampler_data *noise = data->interpolationNoise;
+        for (size_t offset = 0; offset < noise->length; offset++) {
+            double o = 1.0 / c2me_natives_pow_of_two_table[data->interpolationNoise->indexes[offset]];
+            n += math_noise_perlin_sample(
+                    noise->sampler_permutations + 256 * offset,
+                    noise->sampler_originX[offset],
+                    noise->sampler_originY[offset],
+                    noise->sampler_originZ[offset],
+                    math_octave_maintainPrecision(g * o),
+                    math_octave_maintainPrecision(h * o),
+                    math_octave_maintainPrecision(i * o),
+                    k * o,
+                    h * o
+            ) / o;
         }
     }
 
-    if (!(h <= 0.0)) {
-        octave_sampler_data *octaveSampler = data->upperInterpolatedNoise;
-        for (size_t m = 0; m < octaveSampler->length && octaveSampler->indexes[m] < 16; ++m) {
-            double g = 1.0 / c2me_natives_pow_of_two_table[octaveSampler->indexes[m]];
-            double n = math_octave_maintainPrecision((double) i * data->xzScale * g);
-            double o = math_octave_maintainPrecision((double) j * data->yScale * g);
-            double p = math_octave_maintainPrecision((double) k * data->xzScale * g);
-            double q = data->yScale * g;
-            e += math_noise_perlin_sample(
-                    octaveSampler->sampler_permutations + 256 * m,
-                    octaveSampler->sampler_originX[m],
-                    octaveSampler->sampler_originY[m],
-                    octaveSampler->sampler_originZ[m],
-                    n, o, p, q, (double) j * q) /
-                 g;
+    double q = (n / 10.0 + 1.0) / 2.0;
+    bool bl2 = q >= 1.0;
+    bool bl3 = q <= 0.0;
+
+    if (q < 1.0) { // !(q >= 1.0)
+        octave_sampler_data *noise = data->lowerInterpolatedNoise;
+        for (size_t offset = 0; offset < noise->length && noise->indexes[offset] < 16; offset ++) {
+            double o = 1.0 / c2me_natives_pow_of_two_table[noise->indexes[offset]];
+
+            l += math_noise_perlin_sample(
+                    noise->sampler_permutations + 256 * offset,
+                    noise->sampler_originX[offset],
+                    noise->sampler_originY[offset],
+                    noise->sampler_originZ[offset],
+                    math_octave_maintainPrecision(d * o),
+                    math_octave_maintainPrecision(e * o),
+                    math_octave_maintainPrecision(f * o),
+                    j * o,
+                    e * o
+                    ) / o;
         }
     }
 
-    return math_clampedLerp(d / 512.0, e / 512.0, h) / 128.0;
+    if (q > 0.0) { // !(q <= 0.0)
+        octave_sampler_data *noise = data->upperInterpolatedNoise;
+        for (size_t offset = 0; offset < noise->length && noise->indexes[offset] < 16; offset ++) {
+            double o = 1.0 / c2me_natives_pow_of_two_table[noise->indexes[offset]];
+
+            m += math_noise_perlin_sample(
+                    noise->sampler_permutations + 256 * offset,
+                    noise->sampler_originX[offset],
+                    noise->sampler_originY[offset],
+                    noise->sampler_originZ[offset],
+                    math_octave_maintainPrecision(d * o),
+                    math_octave_maintainPrecision(e * o),
+                    math_octave_maintainPrecision(f * o),
+                    j * o,
+                    e * o
+                    ) / o;
+        }
+    }
+
+    return math_clampedLerp(l / 512.0, m / 512.0, q) / 128.0;
 }
 
 static double math_noise_perlin_double_sample(
@@ -231,7 +248,8 @@ static double math_noise_perlin_double_sample(
     double e = y * 1.0181268882175227;
     double f = z * 1.0181268882175227;
 
-    return (math_noise_perlin_octave_sample(firstSampler, x, y, z) + math_noise_perlin_octave_sample(secondSampler, d, e, f)) *
+    return (math_noise_perlin_octave_sample(firstSampler, x, y, z) +
+            math_noise_perlin_octave_sample(secondSampler, d, e, f)) *
            amplitude;
 }
 
@@ -278,14 +296,14 @@ static float math_noise_end_noise_sample(int *permutations, int i, int j) {
     float f = 100.0F - sqrtf(i * i + j * j) * 8.0F;
     f = math_fclamp(f, -100.0F, 80.0F);
 
-    for(int o = -12; o <= 12; ++o) {
-        for(int p = -12; p <= 12; ++p) {
+    for (int o = -12; o <= 12; ++o) {
+        for (int p = -12; p <= 12; ++p) {
             int64_t q = k + o;
             int64_t r = l + p;
-            if (q * q + r * r > 4096L && math_noise_simplex_sample(permutations, (double)q, (double)r) < -0.9F) {
+            if (q * q + r * r > 4096L && math_noise_simplex_sample(permutations, (double) q, (double) r) < -0.9F) {
                 float g = (labs(q) * 3439 + labs(r) * 147) % 13 + 9;
-                float h = (float)(m - o * 2);
-                float s = (float)(n - p * 2);
+                float h = (float) (m - o * 2);
+                float s = (float) (n - p * 2);
                 float t = 100.0F - sqrtf(h * h + s * s) * g;
                 t = math_fclamp(t, -100.0F, 80.0F);
                 f = fmaxf(f, t);

@@ -6,7 +6,6 @@ import com.ishland.c2me.natives.common.CompiledDensityFunctionImpl;
 import com.ishland.c2me.natives.common.NativeInterface;
 import com.ishland.c2me.natives.common.NativeMemoryTracker;
 import com.ishland.c2me.natives.common.NativeStruct;
-import net.minecraft.util.math.noise.DoublePerlinNoiseSampler;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
 import net.minecraft.world.gen.densityfunction.DensityFunctionTypes;
 import org.jetbrains.annotations.Nullable;
@@ -26,19 +25,19 @@ public abstract class MixinDensityFunctionTypesShiftB implements DensityFunction
 
     @Shadow
     @Final
-    private @Nullable DoublePerlinNoiseSampler offsetNoise;
+    private @Nullable DensityFunction.class_7270 offsetNoise;
     @Unique
     private long pointer = 0;
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(CallbackInfo info) {
 //        System.out.println("Compiling density function: shift_b %s".formatted(this));
-        if (this.offsetNoise != null) {
+        if (this.offsetNoise != null && this.offsetNoise.noise() != null) {
             this.pointer = NativeInterface.createDFIShifted0Data(
                     false,
-                    ((NativeStruct) ((IDoublePerlinNoiseSampler) this.offsetNoise).getFirstSampler()).getNativePointer(),
-                    ((NativeStruct) ((IDoublePerlinNoiseSampler) this.offsetNoise).getSecondSampler()).getNativePointer(),
-                    ((IDoublePerlinNoiseSampler) this.offsetNoise).getAmplitude()
+                    ((NativeStruct) ((IDoublePerlinNoiseSampler) this.offsetNoise.noise()).getFirstSampler()).getNativePointer(),
+                    ((NativeStruct) ((IDoublePerlinNoiseSampler) this.offsetNoise.noise()).getSecondSampler()).getNativePointer(),
+                    ((IDoublePerlinNoiseSampler) this.offsetNoise.noise()).getAmplitude()
             );
         } else {
             this.pointer = NativeInterface.createDFIShiftedBData(
@@ -57,13 +56,13 @@ public abstract class MixinDensityFunctionTypesShiftB implements DensityFunction
      */
     @Overwrite
     public double sample(NoisePos pos) {
-        if (this.offsetNoise == null) return 0.0;
+        if (this.offsetNoise == null || this.offsetNoise.noise() == null) return 0.0;
         return NativeInterface.dfiBindingsSingleOp(this.pointer, pos.blockX(), pos.blockY(), pos.blockZ());
     }
 
     @Override
     public void method_40470(double[] ds, class_6911 arg) {
-        if (this.offsetNoise == null) {
+        if (this.offsetNoise == null || this.offsetNoise.noise() == null) {
             Arrays.fill(ds, 0.0);
             return;
         }

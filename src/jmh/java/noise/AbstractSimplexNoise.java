@@ -1,7 +1,7 @@
 package noise;
 
 import net.minecraft.util.math.noise.SimplexNoiseSampler;
-import net.minecraft.world.gen.random.SimpleRandom;
+import net.minecraft.util.math.random.LocalRandom;
 
 import java.lang.reflect.Field;
 
@@ -29,7 +29,7 @@ public abstract class AbstractSimplexNoise {
             0, -1, -1, 0,
     };
 
-    protected final SimplexNoiseSampler vanillaSampler = new SimplexNoiseSampler(new SimpleRandom(0xFF));
+    protected final SimplexNoiseSampler vanillaSampler = new SimplexNoiseSampler(new LocalRandom(0xFF));
 
     protected final int[] permutations;
 

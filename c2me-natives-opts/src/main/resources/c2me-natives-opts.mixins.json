@@ -9,7 +9,6 @@
     "MixinOctavePerlinNoiseSampler",
     "MixinPerlinNoiseSampler",
     "MixinSimplexNoiseSampler",
-    "MixinTheEndBiomeSource",
     "density_functions.MixinChunkNoiseSampler",
     "density_functions.MixinChunkNoiseSampler1",
     "density_functions.MixinDensityFunctionTypes",

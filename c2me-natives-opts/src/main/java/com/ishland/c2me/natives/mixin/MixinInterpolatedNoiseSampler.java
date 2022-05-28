@@ -25,29 +25,32 @@ public abstract class MixinInterpolatedNoiseSampler implements DensityFunction.c
     @Shadow @Final private OctavePerlinNoiseSampler interpolationNoise;
     @Shadow @Final private double xzScale;
     @Shadow @Final private double yScale;
-    @Shadow @Final private double xzMainScale;
-    @Shadow @Final private double yMainScale;
-    @Shadow @Final private int cellWidth;
-    @Shadow @Final private int cellHeight;
-
+    @Shadow @Final private double field_38271;
+    @Shadow @Final private double field_38272;
+    @Shadow @Final private double xzFactor;
+    @Shadow @Final private double yFactor;
+    @Shadow @Final private double smearScaleMultiplier;
+    @Shadow @Final private double maxValue;
     @Unique
     private long interpolatedSamplerPointer = 0L;
 
     @Unique
     private long dfiPointer = 0L;
 
-    @Inject(method = "<init>(Lnet/minecraft/util/math/noise/OctavePerlinNoiseSampler;Lnet/minecraft/util/math/noise/OctavePerlinNoiseSampler;Lnet/minecraft/util/math/noise/OctavePerlinNoiseSampler;Lnet/minecraft/world/gen/chunk/NoiseSamplingConfig;II)V", at = @At("RETURN"))
+    @Inject(method = "<init>(Lnet/minecraft/util/math/noise/OctavePerlinNoiseSampler;Lnet/minecraft/util/math/noise/OctavePerlinNoiseSampler;Lnet/minecraft/util/math/noise/OctavePerlinNoiseSampler;DDDDD)V", at = @At("RETURN"))
     private void onInit(CallbackInfo info) {
         this.interpolatedSamplerPointer = NativeInterface.createPerlinInterpolatedSamplerData(
                 ((NativeStruct) this.lowerInterpolatedNoise).getNativePointer(),
                 ((NativeStruct) this.upperInterpolatedNoise).getNativePointer(),
                 ((NativeStruct) this.interpolationNoise).getNativePointer(),
-                this.xzScale,
-                this.yScale,
-                this.xzMainScale,
-                this.yMainScale,
-                this.cellWidth,
-                this.cellHeight
+                this.field_38271,
+                this.field_38272,
+                xzScale,
+                yScale,
+                xzFactor,
+                yFactor,
+                smearScaleMultiplier,
+                maxValue
         );
         NativeMemoryTracker.registerAllocatedMemory(this, NativeInterface.SIZEOF_interpolated_sampler_data, this.interpolatedSamplerPointer);
 

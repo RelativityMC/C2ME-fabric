@@ -1,114 +1,135 @@
 package noise;
 
+import com.google.common.annotations.VisibleForTesting;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.noise.InterpolatedNoiseSampler;
 import net.minecraft.util.math.noise.OctavePerlinNoiseSampler;
 import net.minecraft.util.math.noise.PerlinNoiseSampler;
-import net.minecraft.world.gen.chunk.NoiseSamplingConfig;
-import net.minecraft.world.gen.densityfunction.DensityFunction;
-import net.minecraft.world.gen.random.AbstractRandom;
-import net.minecraft.world.gen.random.Xoroshiro128PlusPlusRandom;
+import net.minecraft.util.math.random.Random;
+import net.minecraft.util.math.random.Xoroshiro128PlusPlusRandom;
 
 import java.util.stream.IntStream;
 
 public class InterpolatedNoiseSamplerCopy {
-    public static final InterpolatedNoiseSamplerCopy field_37205 = new InterpolatedNoiseSamplerCopy(
-            new Xoroshiro128PlusPlusRandom(0L), new NoiseSamplingConfig(1.0, 1.0, 80.0, 160.0), 4, 8
-    );
     private final OctavePerlinNoiseSampler lowerInterpolatedNoise;
     private final OctavePerlinNoiseSampler upperInterpolatedNoise;
     private final OctavePerlinNoiseSampler interpolationNoise;
+    private final double field_38271;
+    private final double field_38272;
+    private final double xzFactor;
+    private final double yFactor;
+    private final double smearScaleMultiplier;
+    private final double maxValue;
     private final double xzScale;
     private final double yScale;
-    private final double xzMainScale;
-    private final double yMainScale;
-    private final int cellWidth;
-    private final int cellHeight;
-    private final double field_36630;
+
+    public static InterpolatedNoiseSamplerCopy createBase3dNoiseFunction(double xzScale, double yScale, double xzFactor, double yFactor, double smearScaleMultiplier) {
+        return new InterpolatedNoiseSamplerCopy(new Xoroshiro128PlusPlusRandom(0L), xzScale, yScale, xzFactor, yFactor, smearScaleMultiplier);
+    }
 
     private InterpolatedNoiseSamplerCopy(
             OctavePerlinNoiseSampler lowerInterpolatedNoise,
             OctavePerlinNoiseSampler upperInterpolatedNoise,
             OctavePerlinNoiseSampler interpolationNoise,
-            NoiseSamplingConfig config,
-            int cellWidth,
-            int cellHeight
+            double xzScale,
+            double yScale,
+            double xzFactor,
+            double yFactor,
+            double smearScaleMultiplier
     ) {
         this.lowerInterpolatedNoise = lowerInterpolatedNoise;
         this.upperInterpolatedNoise = upperInterpolatedNoise;
         this.interpolationNoise = interpolationNoise;
-        this.xzScale = 684.412 * config.xzScale();
-        this.yScale = 684.412 * config.yScale();
-        this.xzMainScale = this.xzScale / config.xzFactor();
-        this.yMainScale = this.yScale / config.yFactor();
-        this.cellWidth = cellWidth;
-        this.cellHeight = cellHeight;
-        this.field_36630 = lowerInterpolatedNoise.method_40556(this.yScale);
+        this.xzScale = xzScale;
+        this.yScale = yScale;
+        this.xzFactor = xzFactor;
+        this.yFactor = yFactor;
+        this.smearScaleMultiplier = smearScaleMultiplier;
+        this.field_38271 = 684.412 * this.xzScale;
+        this.field_38272 = 684.412 * this.yScale;
+        this.maxValue = lowerInterpolatedNoise.method_40556(this.field_38272);
     }
 
-    public InterpolatedNoiseSamplerCopy(AbstractRandom random, NoiseSamplingConfig config, int cellWidth, int cellHeight) {
+    @VisibleForTesting
+    public InterpolatedNoiseSamplerCopy(Random random, double xzScale, double yScale, double xzFactor, double yFactor, double smearScaleMultiplier) {
         this(
                 OctavePerlinNoiseSampler.createLegacy(random, IntStream.rangeClosed(-15, 0)),
                 OctavePerlinNoiseSampler.createLegacy(random, IntStream.rangeClosed(-15, 0)),
                 OctavePerlinNoiseSampler.createLegacy(random, IntStream.rangeClosed(-7, 0)),
-                config,
-                cellWidth,
-                cellHeight
+                xzScale,
+                yScale,
+                xzFactor,
+                yFactor,
+                smearScaleMultiplier
         );
     }
 
-    public double sample(DensityFunction.NoisePos pos) {
-        int i = Math.floorDiv(pos.blockX(), this.cellWidth);
-        int j = Math.floorDiv(pos.blockY(), this.cellHeight);
-        int k = Math.floorDiv(pos.blockZ(), this.cellWidth);
-        double d = 0.0;
-        double e = 0.0;
-        double f = 0.0;
-        boolean bl = true;
-        double g = 1.0;
+    public InterpolatedNoiseSampler copyWithRandom(Random random) {
+        return new InterpolatedNoiseSampler(random, this.xzScale, this.yScale, this.xzFactor, this.yFactor, this.smearScaleMultiplier);
+    }
 
-        for(int l = 0; l < 8; ++l) {
-            PerlinNoiseSampler perlinNoiseSampler = this.interpolationNoise.getOctave(l);
+    public double sample(NoisePos pos) {
+        double d = (double)pos.blockX() * this.field_38271;
+        double e = (double)pos.blockY() * this.field_38272;
+        double f = (double)pos.blockZ() * this.field_38271;
+        double g = d / this.xzFactor;
+        double h = e / this.yFactor;
+        double i = f / this.xzFactor;
+        double j = this.field_38272 * this.smearScaleMultiplier;
+        double k = j / this.yFactor;
+        double l = 0.0;
+        double m = 0.0;
+        double n = 0.0;
+        boolean bl = true;
+        double o = 1.0;
+
+        for(int p = 0; p < 8; ++p) {
+            PerlinNoiseSampler perlinNoiseSampler = this.interpolationNoise.getOctave(p);
             if (perlinNoiseSampler != null) {
-                f += perlinNoiseSampler.sample(
-                        OctavePerlinNoiseSampler.maintainPrecision((double)i * this.xzMainScale * g),
-                        OctavePerlinNoiseSampler.maintainPrecision((double)j * this.yMainScale * g),
-                        OctavePerlinNoiseSampler.maintainPrecision((double)k * this.xzMainScale * g),
-                        this.yMainScale * g,
-                        (double)j * this.yMainScale * g
+                n += perlinNoiseSampler.sample(
+                        OctavePerlinNoiseSampler.maintainPrecision(g * o),
+                        OctavePerlinNoiseSampler.maintainPrecision(h * o),
+                        OctavePerlinNoiseSampler.maintainPrecision(i * o),
+                        k * o,
+                        h * o
                 )
-                        / g;
+                        / o;
             }
 
-            g /= 2.0;
+            o /= 2.0;
         }
 
-        double h = (f / 10.0 + 1.0) / 2.0;
-        boolean bl2 = h >= 1.0;
-        boolean bl3 = h <= 0.0;
-        g = 1.0;
+        double q = (n / 10.0 + 1.0) / 2.0;
+        boolean bl2 = q >= 1.0;
+        boolean bl3 = q <= 0.0;
+        o = 1.0;
 
-        for(int m = 0; m < 16; ++m) {
-            double n = OctavePerlinNoiseSampler.maintainPrecision((double)i * this.xzScale * g);
-            double o = OctavePerlinNoiseSampler.maintainPrecision((double)j * this.yScale * g);
-            double p = OctavePerlinNoiseSampler.maintainPrecision((double)k * this.xzScale * g);
-            double q = this.yScale * g;
+        for(int r = 0; r < 16; ++r) {
+            double s = OctavePerlinNoiseSampler.maintainPrecision(d * o);
+            double t = OctavePerlinNoiseSampler.maintainPrecision(e * o);
+            double u = OctavePerlinNoiseSampler.maintainPrecision(f * o);
+            double v = j * o;
             if (!bl2) {
-                PerlinNoiseSampler perlinNoiseSampler2 = this.lowerInterpolatedNoise.getOctave(m);
+                PerlinNoiseSampler perlinNoiseSampler2 = this.lowerInterpolatedNoise.getOctave(r);
                 if (perlinNoiseSampler2 != null) {
-                    d += perlinNoiseSampler2.sample(n, o, p, q, (double)j * q) / g;
+                    l += perlinNoiseSampler2.sample(s, t, u, v, e * o) / o;
                 }
             }
 
             if (!bl3) {
-                PerlinNoiseSampler perlinNoiseSampler2 = this.upperInterpolatedNoise.getOctave(m);
+                PerlinNoiseSampler perlinNoiseSampler2 = this.upperInterpolatedNoise.getOctave(r);
                 if (perlinNoiseSampler2 != null) {
-                    e += perlinNoiseSampler2.sample(n, o, p, q, (double)j * q) / g;
+                    m += perlinNoiseSampler2.sample(s, t, u, v, e * o) / o;
                 }
             }
 
-            g /= 2.0;
+            o /= 2.0;
         }
 
-        return MathHelper.clampedLerp(d / 512.0, e / 512.0, h) / 128.0;
+        return MathHelper.clampedLerp(l / 512.0, m / 512.0, q) / 128.0;
     }
+
+    record NoisePos(int blockX, int blockY, int blockZ) {
+    }
+
 }
