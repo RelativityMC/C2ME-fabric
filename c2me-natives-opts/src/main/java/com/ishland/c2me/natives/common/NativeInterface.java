@@ -409,12 +409,12 @@ public class NativeInterface {
                 FunctionDescriptor.of(JAVA_LONG));
 
         // octave_sampler_data *c2me_natives_create_octave_sampler_data(
-        //    double lacunarity, double persistence, size_t length, size_t *indexes, __uint8_t *sampler_permutations,
+        //    double lacunarity, double persistence, size_t length, size_t octave_length, size_t *indexes, __uint8_t *sampler_permutations,
         //    double *sampler_originX, double *sampler_originY, double *sampler_originZ, double *amplitudes)
 
         PERLIN_CREATE_OCTAVE_SAMPLER_DATA = LINKER.downcallHandle(
                 LOOKUP.lookup("c2me_natives_perlin_create_octave_sampler_data").get(),
-                FunctionDescriptor.of(JAVA_LONG, JAVA_DOUBLE, JAVA_DOUBLE, JAVA_LONG, JAVA_LONG, JAVA_LONG, JAVA_LONG, JAVA_LONG, JAVA_LONG, JAVA_LONG)
+                FunctionDescriptor.of(JAVA_LONG, JAVA_DOUBLE, JAVA_DOUBLE, JAVA_LONG, JAVA_LONG, JAVA_LONG, JAVA_LONG, JAVA_LONG, JAVA_LONG, JAVA_LONG, JAVA_LONG)
         );
 
         // double c2me_natives_octave_sample(octave_sampler_data *data, double x, double y, double z)
@@ -499,7 +499,7 @@ public class NativeInterface {
         }
     }
 
-    public static long createPerlinOctaveSamplerData(double lacunarity, double persistence, long length, long ptr_indexes, long ptr_sampler_permutations,
+    public static long createPerlinOctaveSamplerData(double lacunarity, double persistence, long length, long octave_length, long ptr_indexes, long ptr_sampler_permutations,
                                                      long ptr_sampler_originX, long ptr_sampler_originY, long ptr_sampler_originZ, long ptr_amplitudes) {
         if (ptr_indexes == 0) throw new NullPointerException();
         if (ptr_sampler_permutations == 0) throw new NullPointerException();
@@ -508,7 +508,7 @@ public class NativeInterface {
         if (ptr_sampler_originZ == 0) throw new NullPointerException();
         if (ptr_amplitudes == 0) throw new NullPointerException();
         try {
-            return (long) PERLIN_CREATE_OCTAVE_SAMPLER_DATA.invoke(lacunarity, persistence, length, ptr_indexes, ptr_sampler_permutations, ptr_sampler_originX, ptr_sampler_originY, ptr_sampler_originZ, ptr_amplitudes);
+            return (long) PERLIN_CREATE_OCTAVE_SAMPLER_DATA.invoke(lacunarity, persistence, length, octave_length, ptr_indexes, ptr_sampler_permutations, ptr_sampler_originX, ptr_sampler_originY, ptr_sampler_originZ, ptr_amplitudes);
         } catch (Throwable t) {
             throw new RuntimeException(t);
         }

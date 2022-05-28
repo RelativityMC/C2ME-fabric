@@ -95,6 +95,7 @@ public class NativesUtils {
                 lacunarity,
                 persistence,
                 pos,
+                octaveSamplers.length,
                 ptr_indexes,
                 ptr_sampler_permutations,
                 ptr_sampler_originX,

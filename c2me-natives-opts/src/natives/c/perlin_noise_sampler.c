@@ -31,12 +31,13 @@ __uint8_t *c2me_natives_perlin_generatePermutations() {
 }
 
 octave_sampler_data *c2me_natives_perlin_create_octave_sampler_data(
-        double lacunarity, double persistence, size_t length, size_t *indexes, __uint8_t *sampler_permutations,
+        double lacunarity, double persistence, size_t length, size_t octave_length, size_t *indexes, __uint8_t *sampler_permutations,
         double *sampler_originX, double *sampler_originY, double *sampler_originZ, double *amplitudes) {
     octave_sampler_data *ptr = malloc(sizeof(octave_sampler_data));
     ptr->lacunarity = lacunarity;
     ptr->persistence = persistence;
     ptr->length = length;
+    ptr->octave_length = octave_length;
     ptr->indexes = indexes;
     ptr->sampler_permutations = sampler_permutations;
     ptr->sampler_originX = sampler_originX;

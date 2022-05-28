@@ -10,6 +10,7 @@ typedef struct {
     double lacunarity;
     double persistence;
     size_t length;
+    size_t octave_length;
     size_t *indexes;
     __uint8_t *sampler_permutations;
     double *sampler_originX;
@@ -164,9 +165,9 @@ static double math_noise_perlin_octave_sample(octave_sampler_data *data, double 
 }
 
 static double math_noise_perlin_interpolated_sample(interpolated_sampler_data *data, int x, int y, int z) {
-    double d = (double) x * data->field_38271;
-    double e = (double) y * data->field_38272;
-    double f = (double) z * data->field_38271;
+    double d = x * data->field_38271;
+    double e = y * data->field_38272;
+    double f = z * data->field_38271;
     double g = d / data->xzFactor;
     double h = e / data->yFactor;
     double i = f / data->xzFactor;
@@ -175,13 +176,14 @@ static double math_noise_perlin_interpolated_sample(interpolated_sampler_data *d
     double l = 0.0;
     double m = 0.0;
     double n = 0.0;
-    bool bl = true;
-//    double o = 1.0;
+    //    double o = 1.0;
 
     {
         octave_sampler_data *noise = data->interpolationNoise;
-        for (size_t offset = 0; offset < noise->length; offset++) {
-            double o = 1.0 / c2me_natives_pow_of_two_table[data->interpolationNoise->indexes[offset]];
+        for (int64_t offset = noise->length - 1; offset >= 0; offset--) {
+            int64_t actualIndex = noise->octave_length - 1 - noise->indexes[offset];
+            if (actualIndex >= 8) break;
+            double o = 1.0 / c2me_natives_pow_of_two_table[actualIndex];
             n += math_noise_perlin_sample(
                     noise->sampler_permutations + 256 * offset,
                     noise->sampler_originX[offset],
@@ -197,13 +199,13 @@ static double math_noise_perlin_interpolated_sample(interpolated_sampler_data *d
     }
 
     double q = (n / 10.0 + 1.0) / 2.0;
-    bool bl2 = q >= 1.0;
-    bool bl3 = q <= 0.0;
 
     if (q < 1.0) { // !(q >= 1.0)
         octave_sampler_data *noise = data->lowerInterpolatedNoise;
-        for (size_t offset = 0; offset < noise->length && noise->indexes[offset] < 16; offset ++) {
-            double o = 1.0 / c2me_natives_pow_of_two_table[noise->indexes[offset]];
+        for (int64_t offset = noise->length - 1; offset >= 0; offset --) {
+            int64_t actualIndex = noise->octave_length - 1 - noise->indexes[offset];
+            if (actualIndex >= 16) break;
+            double o = 1.0 / c2me_natives_pow_of_two_table[actualIndex];
 
             l += math_noise_perlin_sample(
                     noise->sampler_permutations + 256 * offset,
@@ -221,8 +223,10 @@ static double math_noise_perlin_interpolated_sample(interpolated_sampler_data *d
 
     if (q > 0.0) { // !(q <= 0.0)
         octave_sampler_data *noise = data->upperInterpolatedNoise;
-        for (size_t offset = 0; offset < noise->length && noise->indexes[offset] < 16; offset ++) {
-            double o = 1.0 / c2me_natives_pow_of_two_table[noise->indexes[offset]];
+        for (size_t offset = noise->length - 1; offset >= 0; offset --) {
+            size_t actualIndex = noise->octave_length - 1 - noise->indexes[offset];
+            if (actualIndex >= 16) break;
+            double o = 1.0 / c2me_natives_pow_of_two_table[actualIndex];
 
             m += math_noise_perlin_sample(
                     noise->sampler_permutations + 256 * offset,

@@ -49,9 +49,13 @@ static inline int __attribute__((always_inline)) math_floorDiv(int x, int y) {
     return r;
 }
 
+static inline int64_t __attribute__((always_inline)) math_lfloor(double value) {
+    int64_t l = (int64_t)value;
+    return value < (double)l ? l - 1L : l;
+}
+
 static inline double __attribute__((always_inline)) math_octave_maintainPrecision(double value) {
-    __int64_t l = value;
-    return value - (double) (l < value ? l - 1L : l) * 3.3554432E7;
+    return value - (double)math_lfloor(value / 3.3554432E7 + 0.5) * 3.3554432E7;
 }
 
 static inline double __attribute__((always_inline)) math_simplex_grad(int hash, double x, double y, double z, double distance) {
