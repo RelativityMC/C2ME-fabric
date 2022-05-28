@@ -73,20 +73,20 @@ configure (allprojects - project(":tests")) {
             accessWidenerPath = awFile
         }
 
-        runs {
-            devlaunchClient {
-                client()
-                ideConfigGenerated project.rootProject == project
-                name = "DevLaunch Client"
-                source sourceSets.devlaunch
-            }
-            devlaunchServer {
-                server()
-                ideConfigGenerated project.rootProject == project
-                name = "DevLaunch Server"
-                source sourceSets.devlaunch
-            }
-        }
+//        runs {
+//            devlaunchClient {
+//                client()
+//                ideConfigGenerated true
+//                name = "DevLaunch Client"
+//                source sourceSets.devlaunch
+//            }
+//            devlaunchServer {
+//                server()
+//                ideConfigGenerated true
+//                name = "DevLaunch Server"
+//                source sourceSets.devlaunch
+//            }
+//        }
     }
 
     processResources {
@@ -178,10 +178,10 @@ dependencies {
 loom {
     runs {
         server {
-            inherit devlaunchServer
+//            inherit devlaunchServer
         }
         client {
-            inherit devlaunchClient
+//            inherit devlaunchClient
         }
     }
 }
@@ -196,7 +196,7 @@ dependencies {
             api project(path: ":${it.name}", configuration: "namedElements")
             include project("${it.name}:")
 
-            devlaunchImplementation project("${it.name}:").sourceSets.devlaunch.output
+//            devlaunchImplementation project("${it.name}:").sourceSets.devlaunch.output
         }
     }
 }
