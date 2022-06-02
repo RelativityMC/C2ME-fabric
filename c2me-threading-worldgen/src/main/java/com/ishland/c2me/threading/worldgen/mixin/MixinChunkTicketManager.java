@@ -1,6 +1,6 @@
 package com.ishland.c2me.threading.worldgen.mixin;
 
-import com.ishland.c2me.base.common.scheduler.SchedulerThread;
+import com.ishland.c2me.base.common.scheduler.PriorityUtils;
 import net.minecraft.server.world.ChunkTicketManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -12,7 +12,7 @@ public class MixinChunkTicketManager {
 
     @Inject(method = "tick", at = @At("RETURN"))
     private void onTick(CallbackInfoReturnable<Boolean> cir) {
-        if (cir.getReturnValueZ()) SchedulerThread.INSTANCE.notifyPriorityChange();
+        if (cir.getReturnValueZ()) PriorityUtils.notifyPriorityChange();
     }
 
 }

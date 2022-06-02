@@ -1,9 +1,9 @@
 package com.ishland.c2me.tests.testmod.mixin.pregen;
 
-import net.minecraft.world.gen.structure.StructureType;
+import net.minecraft.world.gen.structure.Structure;
 import org.spongepowered.asm.mixin.Mixin;
 
-@Mixin(StructureType.class)
+@Mixin(Structure.class)
 public class MixinStructureFeature {
 
 //    @Redirect(method = "locateStructure", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/WorldView;getBiomeAccess()Lnet/minecraft/world/biome/source/BiomeAccess;"), require = 0)

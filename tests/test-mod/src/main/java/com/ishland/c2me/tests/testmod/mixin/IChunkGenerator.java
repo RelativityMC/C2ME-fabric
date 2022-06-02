@@ -9,6 +9,6 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 public interface IChunkGenerator {
 
     @Accessor
-    BiomeSource getPopulationSource();
+    BiomeSource getBiomeSource();
 
 }

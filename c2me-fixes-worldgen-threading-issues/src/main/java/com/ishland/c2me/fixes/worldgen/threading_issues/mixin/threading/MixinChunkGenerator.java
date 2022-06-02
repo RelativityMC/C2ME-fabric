@@ -1,10 +1,17 @@
 package com.ishland.c2me.fixes.worldgen.threading_issues.mixin.threading;
 
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.gen.chunk.ChunkGenerator;
+import net.minecraft.world.gen.chunk.placement.ConcentricRingsStructurePlacement;
 import net.minecraft.world.gen.noise.NoiseConfig;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 @Mixin(ChunkGenerator.class)
 public abstract class MixinChunkGenerator {
@@ -55,19 +62,22 @@ public abstract class MixinChunkGenerator {
 
     @Shadow protected abstract void computeStructurePlacements(NoiseConfig arg);
 
+    @Shadow @Final private Map<ConcentricRingsStructurePlacement, CompletableFuture<List<ChunkPos>>> concentricRingPositions;
+
     /**
      * @author ishland
      * @reason synchronize stronghold position generation
      */
     @Overwrite
-    public void method_41058(NoiseConfig arg) {
+    public void computeStructurePlacementsIfNeeded(NoiseConfig arg) {
         if (!this.hasComputedStructurePlacements) {
             synchronized (this) {
                 if (!this.hasComputedStructurePlacements) {
                     System.out.println("Initializing stronghold positions, this may take a while");
                     this.computeStructurePlacements(arg);
                     this.hasComputedStructurePlacements = true;
-                    System.out.println("Stronghold positions initialized");
+                    CompletableFuture.allOf(this.concentricRingPositions.values().toArray(CompletableFuture[]::new))
+                            .thenRun(() -> System.out.println("Stronghold positions initialized"));
                 }
             }
         }

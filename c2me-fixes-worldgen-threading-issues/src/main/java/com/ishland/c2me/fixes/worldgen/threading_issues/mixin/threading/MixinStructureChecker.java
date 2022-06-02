@@ -7,7 +7,7 @@ import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.world.StructureLocator;
-import net.minecraft.world.gen.structure.StructureType;
+import net.minecraft.world.gen.structure.Structure;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
@@ -27,10 +27,10 @@ import java.util.function.Consumer;
 public class MixinStructureChecker {
 
     @Mutable
-    @Shadow @Final private Long2ObjectMap<Object2IntMap<StructureType>> cachedFeaturesByChunkPos;
+    @Shadow @Final private Long2ObjectMap<Object2IntMap<Structure>> cachedStructuresByChunkPos;
 
     @Mutable
-    @Shadow @Final private Map<StructureType, Long2BooleanMap> generationPossibilityByFeature;
+    @Shadow @Final private Map<Structure, Long2BooleanMap> generationPossibilityByStructure;
 
     @Unique
     private Object mapMutex = new Object();
@@ -38,8 +38,8 @@ public class MixinStructureChecker {
     @Inject(method = "<init>", at = @At(value = "RETURN"))
     private void onInit(CallbackInfo info) {
         this.mapMutex = new Object();
-        this.cachedFeaturesByChunkPos = Long2ObjectMaps.synchronize(this.cachedFeaturesByChunkPos);
-        this.generationPossibilityByFeature = Object2ObjectMaps.synchronize(new Object2ObjectOpenHashMap<>(), this.mapMutex);
+        this.cachedStructuresByChunkPos = Long2ObjectMaps.synchronize(this.cachedStructuresByChunkPos);
+        this.generationPossibilityByStructure = Object2ObjectMaps.synchronize(new Object2ObjectOpenHashMap<>(), this.mapMutex);
     }
 
     @Redirect(method = "cache(JLit/unimi/dsi/fastutil/objects/Object2IntMap;)V", at = @At(value = "INVOKE", target = "Ljava/util/Collection;forEach(Ljava/util/function/Consumer;)V"))

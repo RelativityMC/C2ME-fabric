@@ -1,6 +1,6 @@
 package com.ishland.c2me.threading.worldgen.mixin;
 
-import com.ishland.c2me.threading.worldgen.common.ThreadLocalWorldGenSchedulingState;
+import com.ishland.c2me.base.common.scheduler.ThreadLocalWorldGenSchedulingState;
 import com.mojang.datafixers.util.Either;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;

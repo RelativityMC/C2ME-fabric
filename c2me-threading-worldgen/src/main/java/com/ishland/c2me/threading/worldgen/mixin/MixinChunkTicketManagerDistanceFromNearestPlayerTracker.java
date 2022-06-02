@@ -1,7 +1,7 @@
 package com.ishland.c2me.threading.worldgen.mixin;
 
 import com.google.common.base.Preconditions;
-import com.ishland.c2me.base.common.scheduler.SchedulerThread;
+import com.ishland.c2me.base.common.scheduler.PriorityUtils;
 import net.minecraft.server.world.ChunkTicketManager;
 import net.minecraft.world.ChunkPosDistanceLevelPropagator;
 import org.spongepowered.asm.mixin.Mixin;
@@ -22,7 +22,7 @@ public abstract class MixinChunkTicketManagerDistanceFromNearestPlayerTracker ex
         final int updates = this.applyPendingUpdates(Integer.MAX_VALUE);
         if (!((Object) this instanceof ChunkTicketManager.NearbyChunkTicketUpdater)) return updates;
         if (Integer.MAX_VALUE - updates != 0) {
-            SchedulerThread.INSTANCE.notifyPriorityChange();
+            PriorityUtils.notifyPriorityChange();
         }
         return updates;
     }

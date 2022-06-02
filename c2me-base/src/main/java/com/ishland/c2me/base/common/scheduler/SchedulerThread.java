@@ -1,16 +1,15 @@
 package com.ishland.c2me.base.common.scheduler;
 
 import com.ishland.c2me.base.ModuleEntryPoint;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.LockSupport;
 
 public class SchedulerThread extends Thread implements Executor {
@@ -25,7 +24,7 @@ public class SchedulerThread extends Thread implements Executor {
     private final Semaphore semaphore = new Semaphore((int) ModuleEntryPoint.globalExecutorParallelism);
 
     private long lastRebuild = System.currentTimeMillis();
-    private final AtomicBoolean hasPriorityChanges = new AtomicBoolean(false);
+    private int lastPrioritySerial = 0;
 
     private SchedulerThread() {
         this.setName("C2ME scheduler");
@@ -73,26 +72,26 @@ public class SchedulerThread extends Thread implements Executor {
         LockSupport.unpark(this);
     }
 
+    private final ObjectArrayList<SchedulingAsyncCombinedLock<?>> priorityChangeTmpStorage = new ObjectArrayList<>();
+
     private boolean doPriorityChanges() {
         final long currentTimeMillis = System.currentTimeMillis();
         if (currentTimeMillis > lastRebuild + 500) { // at most twice a second
             lastRebuild = currentTimeMillis;
-            if (this.hasPriorityChanges.compareAndSet(true, false)) {
+            final int currentPrioritySerial = PriorityUtils.priorityChangeSerial();
+            if (this.lastPrioritySerial != currentPrioritySerial) {
+                this.lastPrioritySerial = currentPrioritySerial;
                 final long startTime = System.nanoTime();
-                final int size = this.pendingLocks.size();
-                ArrayList<SchedulingAsyncCombinedLock<?>> tmp = new ArrayList<>(size);
                 // re-add locks to reflect priority changes
-                this.pendingLocks.drainTo(tmp);
-                this.pendingLocks.addAll(tmp);
+                priorityChangeTmpStorage.clear();
+                this.pendingLocks.drainTo(priorityChangeTmpStorage);
+                this.pendingLocks.addAll(priorityChangeTmpStorage);
+                priorityChangeTmpStorage.clear();
 //                System.out.printf("Did priority changes for %d entries in %.2fms\n", size, (System.nanoTime() - startTime) / 1_000_000.0);
                 return true;
             }
         }
         return false;
-    }
-
-    public void notifyPriorityChange() {
-        this.hasPriorityChanges.set(true);
     }
 
     @Override
