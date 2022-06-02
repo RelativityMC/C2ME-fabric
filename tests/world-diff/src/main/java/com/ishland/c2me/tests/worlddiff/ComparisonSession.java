@@ -12,6 +12,7 @@ import com.mojang.serialization.DynamicOps;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.class_7522;
 import net.minecraft.datafixer.Schemas;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
@@ -29,8 +30,8 @@ import net.minecraft.server.SaveLoading;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.state.property.Property;
 import net.minecraft.structure.StructureContext;
-import net.minecraft.structure.StructureManager;
 import net.minecraft.structure.StructureStart;
+import net.minecraft.structure.StructureTemplateManager;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 import net.minecraft.util.WorldSavePath;
@@ -49,7 +50,7 @@ import net.minecraft.world.biome.BiomeKeys;
 import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.PalettedContainer;
-import net.minecraft.world.gen.structure.StructureType;
+import net.minecraft.world.gen.structure.Structure;
 import net.minecraft.world.level.storage.LevelStorage;
 import net.minecraft.world.storage.StorageIoWorker;
 import net.minecraft.world.updater.WorldUpdater;
@@ -75,7 +76,9 @@ import java.util.stream.Stream;
 public class ComparisonSession implements Closeable {
 
     // From ChunkSerializer
-    private static final Codec<PalettedContainer<BlockState>> CODEC = PalettedContainer.createCodec(Block.STATE_IDS, BlockState.CODEC, PalettedContainer.PaletteProvider.BLOCK_STATE, Blocks.AIR.getDefaultState());
+    private static final Codec<PalettedContainer<BlockState>> CODEC = PalettedContainer.method_44343(
+            Block.STATE_IDS, BlockState.CODEC, PalettedContainer.PaletteProvider.BLOCK_STATE, Blocks.AIR.getDefaultState()
+    );
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -109,8 +112,8 @@ public class ComparisonSession implements Closeable {
 //            final Function<ChunkPos, ArrayList<StructureStart>> newArrayList = k -> new ArrayList<>();
 //            ConcurrentHashMap<ConfiguredStructureFeature<?, ?>, ConcurrentHashMap<ChunkPos, ArrayList<StructureStart>>> baseStructureStarts = new ConcurrentHashMap<>();
 //            ConcurrentHashMap<ConfiguredStructureFeature<?, ?>, ConcurrentHashMap<ChunkPos, ArrayList<StructureStart>>> targetStructureStarts = new ConcurrentHashMap<>();
-            final Registry<StructureType> baseStructureFeatureRegistry = baseWorld.dynamicRegistryManager.get(Registry.STRUCTURE_KEY);
-            final Registry<StructureType> targetStructureFeatureRegistry = targetWorld.dynamicRegistryManager.get(Registry.STRUCTURE_KEY);
+            final Registry<Structure> baseStructureFeatureRegistry = baseWorld.dynamicRegistryManager.get(Registry.STRUCTURE_KEY);
+            final Registry<Structure> targetStructureFeatureRegistry = targetWorld.dynamicRegistryManager.get(Registry.STRUCTURE_KEY);
             AtomicLong completedChunks = new AtomicLong();
             AtomicLong completedBlocks = new AtomicLong();
             AtomicLong differenceBlocks = new AtomicLong();
@@ -123,9 +126,9 @@ public class ComparisonSession implements Closeable {
                                             || ChunkSerializer.getChunkType(chunkDataBase) == ChunkStatus.ChunkType.PROTOCHUNK)
                                         return null;
 
-                                    final Map<StructureType, StructureStart> baseStructures = IChunkSerializer.invokeReadStructureStarts(baseStructureContext, chunkDataBase.getCompound("structures"), baseWorld.saveProperties.getGeneratorOptions().getSeed());
+                                    final Map<Structure, StructureStart> baseStructures = IChunkSerializer.invokeReadStructureStarts(baseStructureContext, chunkDataBase.getCompound("structures"), baseWorld.saveProperties.getGeneratorOptions().getSeed());
 //                                            .forEach((configuredStructureFeature, structureStart) -> baseStructureStarts.computeIfAbsent(configuredStructureFeature, newConcurrentHashMap).computeIfAbsent(structureStart.getPos(), newArrayList).add(structureStart));
-                                    final Map<StructureType, StructureStart> targetStructures = IChunkSerializer.invokeReadStructureStarts(targetStructureContext, chunkDataTarget.getCompound("structures"), targetWorld.saveProperties.getGeneratorOptions().getSeed());
+                                    final Map<Structure, StructureStart> targetStructures = IChunkSerializer.invokeReadStructureStarts(targetStructureContext, chunkDataTarget.getCompound("structures"), targetWorld.saveProperties.getGeneratorOptions().getSeed());
 //                                            .forEach((configuredStructureFeature, structureStart) -> targetStructureStarts.computeIfAbsent(configuredStructureFeature, newConcurrentHashMap).computeIfAbsent(structureStart.getPos(), newArrayList).add(structureStart));
 
                                     baseStructures.forEach((configuredStructureFeature, baseStructureStart) -> {
@@ -209,7 +212,7 @@ public class ComparisonSession implements Closeable {
 
     private static Map<ChunkSectionPos, ChunkSection> readSections(ChunkPos pos, NbtCompound chunkData, Registry<Biome> registry) {
         NbtList nbtList = chunkData.getList("sections", 10);
-        Codec<PalettedContainer<RegistryEntry<Biome>>> codec = PalettedContainer.createCodec(registry.getIndexedEntries(), registry.createEntryCodec(), PalettedContainer.PaletteProvider.BIOME, registry.entryOf(BiomeKeys.PLAINS));
+        Codec<class_7522<RegistryEntry<Biome>>> codec = createCodec(registry);
         HashMap<ChunkSectionPos, ChunkSection> result = new HashMap<>();
         for (int i = 0; i < nbtList.size(); i++) {
             final NbtCompound sectionData = nbtList.getCompound(i);
@@ -224,7 +227,7 @@ public class ComparisonSession implements Closeable {
                     palettedContainer = new PalettedContainer<>(Block.STATE_IDS, Blocks.AIR.getDefaultState(), PalettedContainer.PaletteProvider.BLOCK_STATE);
                 }
 
-                PalettedContainer<RegistryEntry<Biome>> palettedContainer3;
+                class_7522<RegistryEntry<Biome>> palettedContainer3;
                 if (sectionData.contains("biomes", 10)) {
                     palettedContainer3 = codec.parse(NbtOps.INSTANCE, sectionData.getCompound("biomes"))
                             .promotePartial(s -> LOGGER.error("Recoverable errors when loading section [" + pos.x + ", " + y + ", " + pos.z + "]: " + s))
@@ -238,6 +241,12 @@ public class ComparisonSession implements Closeable {
             }
         }
         return result;
+    }
+
+    private static Codec<class_7522<RegistryEntry<Biome>>> createCodec(Registry<Biome> biomeRegistry) {
+        return PalettedContainer.method_44347(
+                biomeRegistry.getIndexedEntries(), biomeRegistry.createEntryCodec(), PalettedContainer.PaletteProvider.BIOME, biomeRegistry.entryOf(BiomeKeys.PLAINS)
+        );
     }
 
     private static WorldHandle getWorldHandle(File worldFolder, String description) throws IOException, TimeoutException {
@@ -310,7 +319,7 @@ public class ComparisonSession implements Closeable {
                 regionIoWorkers,
                 poiIoWorkers,
                 saveProperties,
-                new StructureManager(saveLoader.resourceManager(), session, Schemas.getFixer()),
+                new StructureTemplateManager(saveLoader.resourceManager(), session, Schemas.getFixer()),
                 saveLoader.resourceManager(),
                 resourcePackManager,
                 registryManager,
@@ -335,7 +344,7 @@ public class ComparisonSession implements Closeable {
                               HashMap<RegistryKey<World>, StorageIoWorker> regionIoWorkers,
                               HashMap<RegistryKey<World>, StorageIoWorker> poiIoWorkers,
                               SaveProperties saveProperties,
-                              StructureManager structureManager,
+                              StructureTemplateManager structureManager,
                               ResourceManager resourceManager,
                               ResourcePackManager resourcePackManager,
                               DynamicRegistryManager dynamicRegistryManager,
