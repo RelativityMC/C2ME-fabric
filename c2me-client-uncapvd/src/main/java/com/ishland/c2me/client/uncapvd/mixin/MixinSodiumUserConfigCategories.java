@@ -8,8 +8,11 @@ import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
 
 @Pseudo
-@Mixin(targets = "me.jellysquid.mods.sodium.client.gui.SodiumGameOptionPages")
-public class MixinSodiumGameOptionPages {
+@Mixin(targets = {
+        "me.jellysquid.mods.sodium.client.gui.SodiumGameOptionPages",
+        "net.caffeinemc.sodium.config.user.UserConfigCategories",
+})
+public class MixinSodiumUserConfigCategories {
 
     @Dynamic
     @ModifyConstant(method = "lambda$general$0", constant = @Constant(intValue = 32), remap = false)
