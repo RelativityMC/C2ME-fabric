@@ -53,7 +53,7 @@ public class StacktraceRecorder {
         private static final String BlendingData$getBlendingData = FabricLoader.getInstance().getMappingResolver()
                 .mapMethodName("intermediary", "net.minecraft.class_6749", "method_39570", "(Lnet/minecraft/class_3233;II)Lnet/minecraft/class_6749;");
         private static final String ChunkGenerator$carve = FabricLoader.getInstance().getMappingResolver()
-                .mapMethodName("intermediary", "net.minecraft.class_2794", "method_12108", "(Lnet/minecraft/class_3233;JLnet/minecraft/class_4543;Lnet/minecraft/class_5138;Lnet/minecraft/class_2791;Lnet/minecraft/class_2893$class_2894;)V");
+                .mapMethodName("intermediary", "net.minecraft.class_2794", "method_12108", "(Lnet/minecraft/class_3233;JLnet/minecraft/class_7138;Lnet/minecraft/class_4543;Lnet/minecraft/class_5138;Lnet/minecraft/class_2791;Lnet/minecraft/class_2893$class_2894;)V");
         private static final String SpawnHelper$populateEntities = FabricLoader.getInstance().getMappingResolver()
                 .mapMethodName("intermediary", "net.minecraft.class_1948", "method_8661", "(Lnet/minecraft/class_5425;Lnet/minecraft/class_1959;Lnet/minecraft/class_1923;Ljava/util/Random;)V");
         private static final String StructureAccessor$method_41032 = FabricLoader.getInstance().getMappingResolver()

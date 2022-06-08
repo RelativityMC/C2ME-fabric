@@ -46,6 +46,11 @@ public class MixinChunkTicketManager implements IChunkTicketManager {
         this.noTickSystem.removePlayerSource(pos.toChunkPos());
     }
 
+    @Inject(method = "removePersistentTickets", at = @At("RETURN"))
+    private void onRemovePersistentTickets(CallbackInfo ci) {
+        this.noTickSystem.tick();
+    }
+
     @Inject(method = "purge", at = @At("RETURN"))
     private void onPurge(CallbackInfo ci) {
         this.noTickSystem.runPurge(this.age);
