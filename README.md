@@ -23,7 +23,7 @@ So backup your worlds and practice good game modding skills.
 | Branch                     | Status                               |
 |----------------------------|--------------------------------------|
 | fabric/ver/1.19            | Active, Mainline                     |
-| fabric/ver/1.18            | Active                               |
+| fabric/ver/1.18            | Bugfixes only                        |
 | fabric/backport/ver/1.18.1 | Inactive                             |
 | fabric/ver/1.17            | Inactive                             |
 | fabric/ver/1.16.5          | Inactive                             |
