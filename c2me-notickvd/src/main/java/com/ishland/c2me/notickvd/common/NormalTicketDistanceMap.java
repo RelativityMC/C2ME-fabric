@@ -1,7 +1,6 @@
 package com.ishland.c2me.notickvd.common;
 
 import com.ishland.c2me.base.mixin.access.IChunkTicket;
-import com.ishland.c2me.base.mixin.access.IChunkTicketManager;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
@@ -25,7 +24,7 @@ public class NormalTicketDistanceMap extends ChunkPosDistanceLevelPropagator {
 
     @Override
     protected int getInitialLevel(long id) {
-        SortedArraySet<ChunkTicket<?>> sortedArraySet = ((IChunkTicketManager) chunkTicketManager).getTicketsByPosition().get(id);
+        SortedArraySet<ChunkTicket<?>> sortedArraySet = ((com.ishland.c2me.base.mixin.access.IChunkTicketManager) chunkTicketManager).getTicketsByPosition().get(id);
         if (sortedArraySet != null) {
             if (sortedArraySet.isEmpty()) return Integer.MAX_VALUE;
             for (ChunkTicket<?> next : sortedArraySet) {
