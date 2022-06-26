@@ -17,7 +17,9 @@ public class MixinGameOptions {
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(CallbackInfo ci) {
-        ((ISimpleOption<Integer>) this.viewDistance).setCallbacks(new SimpleOption.ValidatingIntSliderCallbacks(2, Config.maxViewDistance));
+        final SimpleOption.ValidatingIntSliderCallbacks callbacks = new SimpleOption.ValidatingIntSliderCallbacks(2, Config.maxViewDistance);
+        ((ISimpleOption<Integer>) this.viewDistance).setCallbacks(callbacks);
+        ((ISimpleOption<Integer>) this.viewDistance).setCodec(callbacks.codec());
     }
 
 }

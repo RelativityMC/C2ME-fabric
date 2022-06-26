@@ -25,7 +25,7 @@ public class MixinWorldGenerationProgressLogger {
     private volatile ChunkPos spawnPos = null;
     private volatile int radius = 0;
     private volatile int chunkStatusTransitions = 0;
-    private volatile int chunkStatuses = 0;
+    private int chunkStatuses = 0;
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(int radius, CallbackInfo info) {

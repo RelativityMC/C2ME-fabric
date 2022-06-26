@@ -14,7 +14,7 @@ public class ModuleEntryPoint {
             .comment("Configures the parallelism of global executor")
             .getLong(getDefaultGlobalExecutorParallelism(), getDefaultGlobalExecutorParallelism(), ConfigSystem.LongChecks.THREAD_COUNT);
 
-    private static int getDefaultGlobalExecutorParallelism() {
+    public static int getDefaultGlobalExecutorParallelism() {
         return Math.max(1, Math.min(getDefaultParallelismCPU(), getDefaultParallelismHeap()));
     }
 

@@ -1,6 +1,5 @@
 package com.ishland.c2me.notickvd.common;
 
-import com.ishland.c2me.base.mixin.access.IChunkTicketManager;
 import com.mojang.logging.LogUtils;
 import it.unimi.dsi.fastutil.longs.Long2BooleanLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2BooleanMap;
@@ -47,7 +46,7 @@ public class PlayerNoTickDistanceMap extends ChunkPosDistanceLevelPropagator {
 
     @Override
     protected int getInitialLevel(long chunkPos) {
-        final ObjectSet<ServerPlayerEntity> players = ((IChunkTicketManager) chunkTicketManager).getPlayersByChunkPos().get(chunkPos);
+        final ObjectSet<ServerPlayerEntity> players = ((com.ishland.c2me.base.mixin.access.IChunkTicketManager) chunkTicketManager).getPlayersByChunkPos().get(chunkPos);
         return players != null && !players.isEmpty() ? 249 - viewDistance : Integer.MAX_VALUE;
     }
 

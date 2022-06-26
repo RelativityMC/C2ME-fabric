@@ -6,6 +6,6 @@
   "mixins": [
     "ISimpleOption",
     "MixinGameOptions",
-    "MixinSodiumGameOptionPages"
+    "MixinSodiumUserConfigCategories"
   ]
 }

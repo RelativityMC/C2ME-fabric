@@ -54,8 +54,13 @@ public class NoTickSystem {
         this.pendingActions.add(() -> this.playerNoTickDistanceMap.setViewDistance(viewDistance));
     }
 
-    public void tick() {
+    public void tickScheduler() {
         this.noThreadScheduler.tick(Throwable::printStackTrace);
+
+    }
+
+    public void tick() {
+        tickScheduler();
         scheduleTick();
     }
 
