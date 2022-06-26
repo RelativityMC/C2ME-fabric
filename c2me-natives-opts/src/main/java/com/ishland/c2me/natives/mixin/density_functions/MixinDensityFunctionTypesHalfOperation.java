@@ -17,14 +17,14 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(DensityFunctionTypes.class_6929.class)
-public abstract class MixinDensityFunctionTypesHalfOperation implements DensityFunctionTypes.class_6932, CompiledDensityFunctionImpl {
+@Mixin(DensityFunctionTypes.LinearOperation.class)
+public abstract class MixinDensityFunctionTypesHalfOperation implements DensityFunctionTypes.Unary, CompiledDensityFunctionImpl {
 
     @Shadow
     @Final
     private DensityFunction input;
 
-    @Shadow public abstract DensityFunctionTypes.Operation.Type type();
+    @Shadow public abstract DensityFunctionTypes.BinaryOperationLike.Type type();
 
     @Shadow @Final private double argument;
     @Unique
@@ -71,12 +71,12 @@ public abstract class MixinDensityFunctionTypesHalfOperation implements DensityF
     }
 
     @Override
-    public void method_40470(double[] ds, class_6911 arg) {
+    public void applyEach(double[] ds, EachApplier arg) {
         if (arg instanceof CompiledDensityFunctionArg dfa && dfa.getDFAPointer() != 0 && DensityFunctionUtils.isSafeForNative(arg) && this.pointer != 0) {
             NativeInterface.dfiBindingsMultiOp(this.pointer, dfa.getDFAPointer(), ds);
         } else {
             // [VanillaCopy]
-            this.input().method_40470(ds, arg);
+            this.input().applyEach(ds, arg);
 
             for(int i = 0; i < ds.length; ++i) {
                 ds[i] = this.apply(ds[i]);

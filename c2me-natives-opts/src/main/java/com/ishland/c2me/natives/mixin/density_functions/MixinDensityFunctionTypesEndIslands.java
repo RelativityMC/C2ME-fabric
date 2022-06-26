@@ -18,18 +18,18 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(DensityFunctionTypes.EndIslands.class)
-public abstract class MixinDensityFunctionTypesEndIslands implements DensityFunction.class_6913, CompiledDensityFunctionImpl {
+public abstract class MixinDensityFunctionTypesEndIslands implements DensityFunction.Base, CompiledDensityFunctionImpl {
 
     @Shadow
     @Final
-    private SimplexNoiseSampler field_36554;
+    private SimplexNoiseSampler sampler;
     @Unique
     private long pointer = 0;
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(CallbackInfo info) {
 //        System.out.println("Compiling density function: end_islands %s".formatted(this));
-        this.pointer = NativeInterface.createDFIEndIslands(((NativeStruct) this.field_36554).getNativePointer());
+        this.pointer = NativeInterface.createDFIEndIslands(((NativeStruct) this.sampler).getNativePointer());
         NativeMemoryTracker.registerAllocatedMemory(this, NativeInterface.SIZEOF_density_function_data + NativeInterface.SIZEOF_dfi_end_islands_data, this.pointer);
     }
 
@@ -43,11 +43,11 @@ public abstract class MixinDensityFunctionTypesEndIslands implements DensityFunc
     }
 
     @Override
-    public void method_40470(double[] ds, class_6911 arg) {
+    public void applyEach(double[] ds, EachApplier arg) {
         if (arg instanceof CompiledDensityFunctionArg dfa && dfa.getDFAPointer() != 0) {
             NativeInterface.dfiBindingsMultiOp(this.pointer, dfa.getDFAPointer(), ds);
         } else {
-            class_6913.super.method_40470(ds, arg);
+            Base.super.applyEach(ds, arg);
         }
     }
 
@@ -59,7 +59,7 @@ public abstract class MixinDensityFunctionTypesEndIslands implements DensityFunc
     @Override
     public String toString() {
         return "EndIslands{" +
-                "noise=" + field_36554 +
+                "noise=" + sampler +
                 '}';
     }
 }

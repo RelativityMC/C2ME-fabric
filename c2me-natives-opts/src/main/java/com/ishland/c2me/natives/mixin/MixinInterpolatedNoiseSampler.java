@@ -18,7 +18,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(value = InterpolatedNoiseSampler.class, priority = 1200)
-public abstract class MixinInterpolatedNoiseSampler implements DensityFunction.class_6913, CompiledDensityFunctionImpl {
+public abstract class MixinInterpolatedNoiseSampler implements DensityFunction.Base, CompiledDensityFunctionImpl {
 
     @Shadow @Final private OctavePerlinNoiseSampler lowerInterpolatedNoise;
     @Shadow @Final private OctavePerlinNoiseSampler upperInterpolatedNoise;
@@ -68,11 +68,11 @@ public abstract class MixinInterpolatedNoiseSampler implements DensityFunction.c
     }
 
     @Override
-    public void method_40470(double[] ds, class_6911 arg) {
+    public void applyEach(double[] ds, EachApplier arg) {
         if (arg instanceof CompiledDensityFunctionArg dfa && dfa.getDFAPointer() != 0) {
             NativeInterface.dfiBindingsMultiOp(this.dfiPointer, dfa.getDFAPointer(), ds);
         } else {
-            DensityFunction.class_6913.super.method_40470(ds, arg);
+            DensityFunction.Base.super.applyEach(ds, arg);
         }
     }
 

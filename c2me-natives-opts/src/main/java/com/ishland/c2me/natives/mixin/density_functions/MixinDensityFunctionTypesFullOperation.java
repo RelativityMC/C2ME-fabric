@@ -17,11 +17,11 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(DensityFunctionTypes.class_6917.class)
-public abstract class MixinDensityFunctionTypesFullOperation implements DensityFunctionTypes.class_6932, CompiledDensityFunctionImpl {
+@Mixin(DensityFunctionTypes.BinaryOperation.class)
+public abstract class MixinDensityFunctionTypesFullOperation implements DensityFunctionTypes.Unary, CompiledDensityFunctionImpl {
 
     @Shadow
-    public abstract DensityFunctionTypes.Operation.Type type();
+    public abstract DensityFunctionTypes.BinaryOperationLike.Type type();
 
     @Shadow
     @Final
@@ -29,7 +29,7 @@ public abstract class MixinDensityFunctionTypesFullOperation implements DensityF
     @Shadow
     @Final
     private DensityFunction argument2;
-    @Shadow @Final private DensityFunctionTypes.Operation.Type type;
+    @Shadow @Final private DensityFunctionTypes.BinaryOperationLike.Type type;
     @Unique
     private long pointer;
 
@@ -84,16 +84,16 @@ public abstract class MixinDensityFunctionTypesFullOperation implements DensityF
     }
 
     @Override
-    public void method_40470(double[] ds, class_6911 arg) {
+    public void applyEach(double[] ds, EachApplier arg) {
         if (arg instanceof CompiledDensityFunctionArg dfa && dfa.getDFAPointer() != 0 && DensityFunctionUtils.isSafeForNative(arg) && this.pointer != 0) {
             NativeInterface.dfiBindingsMultiOp(this.pointer, dfa.getDFAPointer(), ds);
         } else {
             // TODO [VanillaCopy]
-            this.argument1.method_40470(ds, arg);
+            this.argument1.applyEach(ds, arg);
             switch(this.type) {
                 case ADD:
                     double[] es = new double[ds.length];
-                    this.argument2.method_40470(es, arg);
+                    this.argument2.applyEach(es, arg);
 
                     for(int i = 0; i < ds.length; ++i) {
                         ds[i] += es[i];
@@ -104,7 +104,7 @@ public abstract class MixinDensityFunctionTypesFullOperation implements DensityF
 
                     for(int k = 0; k < ds.length; ++k) {
                         double f = ds[k];
-                        ds[k] = f > e ? f : Math.max(f, this.argument2.sample(arg.method_40477(k)));
+                        ds[k] = f > e ? f : Math.max(f, this.argument2.sample(arg.getPosAt(k)));
                     }
                     break;
                 case MIN:
@@ -112,13 +112,13 @@ public abstract class MixinDensityFunctionTypesFullOperation implements DensityF
 
                     for(int k = 0; k < ds.length; ++k) {
                         double f = ds[k];
-                        ds[k] = f < e1 ? f : Math.min(f, this.argument2.sample(arg.method_40477(k)));
+                        ds[k] = f < e1 ? f : Math.min(f, this.argument2.sample(arg.getPosAt(k)));
                     }
                     break;
                 case MUL:
                     for(int j = 0; j < ds.length; ++j) {
                         double d = ds[j];
-                        ds[j] = d == 0.0 ? 0.0 : d * this.argument2.sample(arg.method_40477(j));
+                        ds[j] = d == 0.0 ? 0.0 : d * this.argument2.sample(arg.getPosAt(j));
                     }
             }
         }

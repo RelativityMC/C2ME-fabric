@@ -21,11 +21,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.Arrays;
 
 @Mixin(DensityFunctionTypes.Noise.class)
-public abstract class MixinDensityFunctionTypesNoise implements DensityFunction.class_6913, CompiledDensityFunctionImpl {
+public abstract class MixinDensityFunctionTypesNoise implements DensityFunction.Base, CompiledDensityFunctionImpl {
 
     @Shadow
     @Final
-    private @Nullable DensityFunction.class_7270 noise;
+    private @Nullable DensityFunction.Noise noise;
 
     @Shadow
     @Final
@@ -74,7 +74,7 @@ public abstract class MixinDensityFunctionTypesNoise implements DensityFunction.
     }
 
     @Override
-    public void method_40470(double[] ds, class_6911 arg) {
+    public void applyEach(double[] ds, EachApplier arg) {
         if (this.noise == null || this.noise.noise() == null) {
             Arrays.fill(ds, 0.0);
             return;
@@ -82,7 +82,7 @@ public abstract class MixinDensityFunctionTypesNoise implements DensityFunction.
         if (arg instanceof CompiledDensityFunctionArg dfa && dfa.getDFAPointer() != 0) {
             NativeInterface.dfiBindingsMultiOp(this.pointer, dfa.getDFAPointer(), ds);
         } else {
-            DensityFunction.class_6913.super.method_40470(ds, arg);
+            DensityFunction.Base.super.applyEach(ds, arg);
         }
     }
 

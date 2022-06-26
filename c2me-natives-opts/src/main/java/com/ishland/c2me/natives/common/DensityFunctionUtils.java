@@ -16,7 +16,7 @@ public class DensityFunctionUtils {
         return pos.getBlender() == Blender.getNoBlending();
     }
 
-    public static boolean isSafeForNative(DensityFunction.class_6911 dfa) {
+    public static boolean isSafeForNative(DensityFunction.EachApplier dfa) {
         if (dfa instanceof ChunkNoiseSampler sampler) {
             return sampler.getBlender() == Blender.getNoBlending();
         }
@@ -70,7 +70,7 @@ public class DensityFunctionUtils {
             return s.replaceAll("\n", "\n    ");
     }
 
-    public static short mapOperationToNative(DensityFunctionTypes.Operation.Type type) {
+    public static short mapOperationToNative(DensityFunctionTypes.BinaryOperationLike.Type type) {
         return switch (type) {
             case ADD -> 0;
             case MUL -> 1;
@@ -79,7 +79,7 @@ public class DensityFunctionUtils {
         };
     }
 
-    public static short mapSingleOperationToNative(DensityFunctionTypes.class_6925.Type type) {
+    public static short mapSingleOperationToNative(DensityFunctionTypes.UnaryOperation.Type type) {
         return switch (type) {
             case ABS -> 0;
             case SQUARE -> 1;

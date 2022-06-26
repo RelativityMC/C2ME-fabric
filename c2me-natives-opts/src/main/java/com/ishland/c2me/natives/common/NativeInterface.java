@@ -324,6 +324,28 @@ public class NativeInterface {
         }
     }
 
+    // density_function_impl_data *c2me_natives_create_dfi_range_choice_data(density_function_impl_data *input,
+    //                                                                       double minInclusive, double maxExclusive,
+    //                                                                       density_function_impl_data *whenInRange,
+    //                                                                       density_function_impl_data *whenOutOfRange)
+
+    private static final MethodHandle DFI_create_dfi_range_choice_data = LINKER.downcallHandle(
+            LOOKUP.lookup("c2me_natives_create_dfi_range_choice_data").get(),
+            FunctionDescriptor.of(JAVA_LONG, JAVA_LONG, JAVA_DOUBLE, JAVA_DOUBLE, JAVA_LONG, JAVA_LONG)
+    );
+
+    public static long createDFIRangeChoiceData(long ptr_input, double minInclusive, double maxExclusive, long ptr_whenInRange, long ptr_whenOutOfRange) {
+        if (ptr_input == 0) throw new NullPointerException();
+        if (ptr_whenInRange == 0) throw new NullPointerException();
+        if (ptr_whenOutOfRange == 0) throw new NullPointerException();
+
+        try {
+            return (long) DFI_create_dfi_range_choice_data.invoke(ptr_input, minInclusive, maxExclusive, ptr_whenInRange, ptr_whenOutOfRange);
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     // ===== Density Function Bindings =====
 
     // double c2me_natives_dfi_bindings_single_op(density_function_impl_data *dfi, int blockX, int blockY, int blockZ)
@@ -391,6 +413,7 @@ public class NativeInterface {
     public static final long SIZEOF_dfi_operation_full_data = sizeOf("dfi_operation_full_data");
     public static final long SIZEOF_dfi_single_operation_data = sizeOf("dfi_single_operation_data");
     public static final long SIZEOF_dfi_shifted_noise_data = sizeOf("dfi_shifted_noise_data");
+    public static final long SIZEOF_dfi_range_choice_data = sizeOf("dfi_range_choice_data");
 
     static {
 

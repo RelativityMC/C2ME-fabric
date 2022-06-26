@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(DensityFunctionTypes.class_6927.class)
+@Mixin(DensityFunctionTypes.Wrapping.class)
 public class MixinDensityFunctionTypesNonConfiguredCache implements CompiledDensityFunctionImpl {
 
     @Shadow @Final private DensityFunction wrapped;

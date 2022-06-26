@@ -17,15 +17,15 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(DensityFunctionTypes.class_6925.class)
-public abstract class MixinDensityFunctionTypesSingleOperation implements DensityFunctionTypes.class_6932, CompiledDensityFunctionImpl {
+@Mixin(DensityFunctionTypes.UnaryOperation.class)
+public abstract class MixinDensityFunctionTypesUnaryOperation implements DensityFunctionTypes.Unary, CompiledDensityFunctionImpl {
 
     @Shadow @Final private DensityFunction input;
 
-    @Shadow public abstract DensityFunctionTypes.class_6925.Type type();
+    @Shadow public abstract DensityFunctionTypes.UnaryOperation.Type type();
 
     @Shadow
-    protected static double method_40521(DensityFunctionTypes.class_6925.Type type, double d) {
+    protected static double apply(DensityFunctionTypes.UnaryOperation.Type type, double d) {
         throw new AbstractMethodError();
     }
 
@@ -68,17 +68,17 @@ public abstract class MixinDensityFunctionTypesSingleOperation implements Densit
         if (DensityFunctionUtils.isSafeForNative(pos) && this.pointer != 0) {
             return NativeInterface.dfiBindingsSingleOp(this.pointer, pos.blockX(), pos.blockY(), pos.blockZ());
         } else {
-            return method_40521(this.type(), this.input.sample(pos));
+            return apply(this.type(), this.input.sample(pos));
         }
     }
 
     @Override
-    public void method_40470(double[] ds, class_6911 arg) {
+    public void applyEach(double[] ds, EachApplier arg) {
         if (arg instanceof CompiledDensityFunctionArg dfa && dfa.getDFAPointer() != 0 && DensityFunctionUtils.isSafeForNative(arg) && this.pointer != 0) {
             NativeInterface.dfiBindingsMultiOp(this.pointer, dfa.getDFAPointer(), ds);
         } else {
             // TODO [VanillaCopy]
-            this.input.method_40470(ds, arg);
+            this.input.applyEach(ds, arg);
             for(int i = 0; i < ds.length; ++i) {
                 ds[i] = this.apply(ds[i]);
             }

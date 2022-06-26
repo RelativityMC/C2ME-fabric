@@ -15,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(DensityFunctionTypes.BlendDensity.class)
-public abstract class MixinDensityFunctionTypesBlendDensity implements DensityFunctionTypes.class_6943, CompiledDensityFunctionImpl {
+public abstract class MixinDensityFunctionTypesBlendDensity implements DensityFunctionTypes.Positional, CompiledDensityFunctionImpl {
 
     @Shadow @Final private DensityFunction input;
     @Unique

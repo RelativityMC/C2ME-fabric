@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
         DensityFunctionTypes.BlendAlpha.class,
         DensityFunctionTypes.BlendOffset.class,
 })
-public abstract class MixinDensityFunctionTypesUnconfiguredConstants implements DensityFunction.class_6913, CompiledDensityFunctionImpl {
+public abstract class MixinDensityFunctionTypesUnconfiguredConstants implements DensityFunction.Base, CompiledDensityFunctionImpl {
 
     @Unique
     private long pointer = 0L;

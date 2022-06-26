@@ -5,4 +5,5 @@ import org.spongepowered.asm.mixin.Mixin;
 
 @Mixin(DensityFunctionTypes.class)
 public class MixinDensityFunctionTypes {
+    // intentionally empty
 }

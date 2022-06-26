@@ -36,7 +36,7 @@ public abstract class MixinDensityFunctionTypesShiftedNoise implements DensityFu
 
     @Shadow
     @Final
-    private @Nullable DensityFunction.class_7270 noise;
+    private @Nullable DensityFunction.Noise noise;
     @Shadow @Final private double xzScale;
     @Shadow @Final private double yScale;
     @Unique
@@ -105,18 +105,18 @@ public abstract class MixinDensityFunctionTypesShiftedNoise implements DensityFu
             double d = (double)pos.blockX() * this.xzScale + this.shiftX.sample(pos);
             double e = (double)pos.blockY() * this.yScale + this.shiftY.sample(pos);
             double f = (double)pos.blockZ() * this.xzScale + this.shiftZ.sample(pos);
-            return this.noise.method_42356(d, e, f);
+            return this.noise.sample(d, e, f);
         }
     }
 
     @Override
-    public void method_40470(double[] ds, DensityFunction.class_6911 arg) {
+    public void applyEach(double[] ds, DensityFunction.EachApplier arg) {
         if (this.noise == null || this.noise.noise() == null) {
             Arrays.fill(ds, 0.0);
         } else if (arg instanceof CompiledDensityFunctionArg dfa && dfa.getDFAPointer() != 0 && this.pointer != 0) {
             NativeInterface.dfiBindingsMultiOp(this.pointer, dfa.getDFAPointer(), ds);
         } else {
-            arg.method_40478(ds, this);
+            arg.applyEach(ds, this);
         }
     }
 

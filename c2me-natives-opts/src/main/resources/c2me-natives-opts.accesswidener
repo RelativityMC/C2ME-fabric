@@ -9,20 +9,21 @@ accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTy
 accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$YClampedGradient
 
 accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$Clamp
-accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$class_6932
-accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$class_6917
-accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$class_6929
-accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$Operation
+accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$Unary
+accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$BinaryOperation
+accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$LinearOperation
+accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$BinaryOperationLike
 accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$RegistryEntryHolder
-accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$class_6927
+accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$Wrapping
 accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$Beardifier
 accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$BlendAlpha
 accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$BlendOffset
-accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$class_6925
-accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$class_6925$Type
+accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$UnaryOperation
+accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$UnaryOperation$Type
 accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$ShiftedNoise
 accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$BlendDensity
-accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$class_6943
+accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$Positional
+accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$RangeChoice
 
 extendable    class    net/minecraft/util/math/noise/PerlinNoiseSampler
 extendable    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$Constant
