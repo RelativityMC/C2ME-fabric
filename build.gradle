@@ -1,7 +1,7 @@
 plugins {
     id 'java-library'
     id 'fabric-loom' version '0.12-SNAPSHOT' apply false
-    id 'io.github.juuxel.loom-quiltflower' version '1.6.1' apply false
+    id 'io.github.juuxel.loom-quiltflower' version '1.+' apply false
     id "me.champeau.jmh" version "0.6.6"
 }
 
