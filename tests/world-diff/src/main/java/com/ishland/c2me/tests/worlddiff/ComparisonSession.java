@@ -12,7 +12,6 @@ import com.mojang.serialization.DynamicOps;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
-import net.minecraft.class_7522;
 import net.minecraft.datafixer.Schemas;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
@@ -50,6 +49,7 @@ import net.minecraft.world.biome.BiomeKeys;
 import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.PalettedContainer;
+import net.minecraft.world.chunk.ReadableContainer;
 import net.minecraft.world.gen.structure.Structure;
 import net.minecraft.world.level.storage.LevelStorage;
 import net.minecraft.world.storage.StorageIoWorker;
@@ -76,7 +76,7 @@ import java.util.stream.Stream;
 public class ComparisonSession implements Closeable {
 
     // From ChunkSerializer
-    private static final Codec<PalettedContainer<BlockState>> CODEC = PalettedContainer.method_44343(
+    private static final Codec<PalettedContainer<BlockState>> CODEC = PalettedContainer.createPalettedContainerCodec(
             Block.STATE_IDS, BlockState.CODEC, PalettedContainer.PaletteProvider.BLOCK_STATE, Blocks.AIR.getDefaultState()
     );
 
@@ -212,7 +212,7 @@ public class ComparisonSession implements Closeable {
 
     private static Map<ChunkSectionPos, ChunkSection> readSections(ChunkPos pos, NbtCompound chunkData, Registry<Biome> registry) {
         NbtList nbtList = chunkData.getList("sections", 10);
-        Codec<class_7522<RegistryEntry<Biome>>> codec = createCodec(registry);
+        Codec<ReadableContainer<RegistryEntry<Biome>>> codec = createCodec(registry);
         HashMap<ChunkSectionPos, ChunkSection> result = new HashMap<>();
         for (int i = 0; i < nbtList.size(); i++) {
             final NbtCompound sectionData = nbtList.getCompound(i);
@@ -227,7 +227,7 @@ public class ComparisonSession implements Closeable {
                     palettedContainer = new PalettedContainer<>(Block.STATE_IDS, Blocks.AIR.getDefaultState(), PalettedContainer.PaletteProvider.BLOCK_STATE);
                 }
 
-                class_7522<RegistryEntry<Biome>> palettedContainer3;
+                ReadableContainer<RegistryEntry<Biome>> palettedContainer3;
                 if (sectionData.contains("biomes", 10)) {
                     palettedContainer3 = codec.parse(NbtOps.INSTANCE, sectionData.getCompound("biomes"))
                             .promotePartial(s -> LOGGER.error("Recoverable errors when loading section [" + pos.x + ", " + y + ", " + pos.z + "]: " + s))
@@ -243,8 +243,8 @@ public class ComparisonSession implements Closeable {
         return result;
     }
 
-    private static Codec<class_7522<RegistryEntry<Biome>>> createCodec(Registry<Biome> biomeRegistry) {
-        return PalettedContainer.method_44347(
+    private static Codec<ReadableContainer<RegistryEntry<Biome>>> createCodec(Registry<Biome> biomeRegistry) {
+        return PalettedContainer.createReadableContainerCodec(
                 biomeRegistry.getIndexedEntries(), biomeRegistry.createEntryCodec(), PalettedContainer.PaletteProvider.BIOME, biomeRegistry.entryOf(BiomeKeys.PLAINS)
         );
     }
