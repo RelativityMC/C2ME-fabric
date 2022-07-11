@@ -346,6 +346,59 @@ public class NativeInterface {
         }
     }
 
+    // spline_data *c2me_natives_create_spline_data_constant(float constantValue)
+
+    private static final MethodHandle spline_create_constant = LINKER.downcallHandle(
+            LOOKUP.lookup("c2me_natives_create_spline_data_constant").get(),
+            FunctionDescriptor.of(JAVA_LONG, JAVA_FLOAT)
+    );
+
+    public static long createSplineConstant(float constantValue) {
+        try {
+            return (long) spline_create_constant.invoke(constantValue);
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    // spline_data *c2me_natives_create_spline_data_impl(density_function_impl_data *locationFunction, float *locations,
+    //                                                   uint32_t locations_length, spline_data *values, float *derivatives)
+
+    private static final MethodHandle spline_create_impl = LINKER.downcallHandle(
+            LOOKUP.lookup("c2me_natives_create_spline_data_impl").get(),
+            FunctionDescriptor.of(JAVA_LONG, JAVA_LONG, JAVA_LONG, JAVA_INT, JAVA_LONG, JAVA_LONG)
+    );
+
+    public static long createSplineImpl(long ptr_locationFunction, long ptr_locations, int locations_length, long ptr_values, long ptr_derivatives) {
+        if (ptr_locationFunction == 0L) throw new NullPointerException();
+        if (ptr_locations == 0L) throw new NullPointerException();
+        if (ptr_values == 0L) throw new NullPointerException();
+        if (ptr_derivatives == 0L) throw new NullPointerException();
+
+        try {
+            return (long) spline_create_impl.invoke(ptr_locationFunction, ptr_locations, locations_length, ptr_values, ptr_derivatives);
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
+    // density_function_impl_data *c2me_natives_create_dfi_spline(spline_data *spline)
+
+    private static final MethodHandle DFI_create_dfi_spline = LINKER.downcallHandle(
+            LOOKUP.lookup("c2me_natives_create_dfi_spline").get(),
+            FunctionDescriptor.of(JAVA_LONG, JAVA_LONG)
+    );
+
+    public static long createDFISpline(long ptr_spline) {
+        if (ptr_spline == 0L) throw new NullPointerException();
+        try {
+            return (long) DFI_create_dfi_spline.invoke(ptr_spline);
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     // ===== Density Function Bindings =====
 
     // double c2me_natives_dfi_bindings_single_op(density_function_impl_data *dfi, int blockX, int blockY, int blockZ)
@@ -414,6 +467,8 @@ public class NativeInterface {
     public static final long SIZEOF_dfi_single_operation_data = sizeOf("dfi_single_operation_data");
     public static final long SIZEOF_dfi_shifted_noise_data = sizeOf("dfi_shifted_noise_data");
     public static final long SIZEOF_dfi_range_choice_data = sizeOf("dfi_range_choice_data");
+    public static final long SIZEOF_spline_data_constant = sizeOf("spline_data_constant");
+    public static final long SIZEOF_spline_data_impl = sizeOf("spline_data_impl");
 
     static {
 

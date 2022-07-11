@@ -1,12 +1,16 @@
 package com.ishland.c2me.natives.common;
 
+import net.minecraft.util.function.ToFloatFunction;
+import net.minecraft.util.math.Spline;
 import net.minecraft.world.gen.chunk.Blender;
 import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
 import net.minecraft.world.gen.densityfunction.DensityFunctionTypes;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 public class DensityFunctionUtils {
 
@@ -34,6 +38,42 @@ public class DensityFunctionUtils {
         return true;
     }
 
+    public static <C, I extends ToFloatFunction<C>> boolean isCompiled(Spline<C, I>... splines) {
+        for (Spline<C, I> spline : splines) {
+            if (spline instanceof CompiledSpline compiledSpline) {
+                if (compiledSpline.getSplinePointer() == 0L) return false;
+            } else {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static String getErrorMessage(Object object) {
+        if (object instanceof DensityFunction df) {
+            return getErrorMessage(df);
+        } else if (object instanceof Spline<?,?> spline) {
+            return getErrorMessage(spline);
+        } else {
+            return "unknown type " + object.getClass().getName();
+        }
+    }
+
+    public static boolean isCompiled(Object... objects) {
+        for (Object object : objects) {
+            if (object instanceof DensityFunction df) {
+                if (!isCompiled(df)) return false;
+            } else if (object instanceof Spline<?,?> spline) {
+                if (!isCompiled(spline)) return false;
+            } else if (object instanceof DensityFunctionTypes.Spline.DensityFunctionWrapper wrapper) {
+                if (wrapper.function().value() == null || !isCompiled(wrapper.function().value())) return false;
+            } else {
+                return false;
+            }
+        }
+        return true;
+    }
+
     private static String getErrorMessage(DensityFunction function) {
         if (function instanceof CompiledDensityFunctionImpl dfi) {
             if (dfi.getCompilationFailedReason() != null) {
@@ -47,17 +87,47 @@ public class DensityFunctionUtils {
         }
     }
 
-    public static String getErrorMessage(CompiledDensityFunctionImpl owner, Map<String, DensityFunction> map) {
+    public static String getErrorMessage(CompiledDensityFunctionImpl owner, Map<String, Object> map) {
         StringBuilder sb = new StringBuilder();
         sb.append(String.format("Density function (%s) failed to %s for these reasons: \n", owner.getClass().getName(), owner.getDFIType().verb()));
         boolean hasFailures = false;
-        final Iterator<Map.Entry<String, DensityFunction>> iterator = map.entrySet().stream().filter(entry -> !isCompiled(entry.getValue())).iterator();
+        final Iterator<Map.Entry<String, Object>> iterator = map.entrySet().stream().filter(entry -> !isCompiled(entry.getValue())).iterator();
         while (iterator.hasNext()) {
-            Map.Entry<String, DensityFunction> entry = iterator.next();
+            Map.Entry<String, Object> entry = iterator.next();
             String error = getErrorMessage(entry.getValue());
             if (error != null) {
                 hasFailures = true;
                 sb.append(String.format("%s: \n%s   %s\n", entry.getKey(), iterator.hasNext() ? "|" : " ", indent(error, iterator.hasNext())));
+            }
+        }
+        return hasFailures ? sb.toString().stripTrailing() : null;
+    }
+
+    public static <C, I extends ToFloatFunction<C>> String getErrorMessage(Spline<C, I> spline) {
+        if (spline instanceof CompiledSpline compiledSpline) {
+            if (compiledSpline.getCompilationFailedReason() != null) {
+                return String.format("Spline (%s) failed to compile: \n    %s", spline.getClass().getName(), indent(compiledSpline.getCompilationFailedReason(), false));
+            } else if (compiledSpline.getSplinePointer() == 0L) {
+                return String.format("Spline (%s) failed to compile for unknown reasons", spline.getClass().getName());
+            }
+            return null;
+        } else {
+            return String.format("Spline (%s) can't be compiled", spline.getClass().getName());
+        }
+    }
+
+    public static <C, I extends ToFloatFunction<C>> String getErrorMessage(CompiledSpline spline, Object locationFunction, List<Spline<C, I>> values) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(String.format("Spline (%s) failed to compile for these reasons: \n", spline.getClass().getName()));
+        boolean hasFailures = false;
+        final Iterator<Object> iterator = Stream.concat(values.stream(), Stream.of(locationFunction))
+                .filter(entry -> !isCompiled(entry)).iterator();
+        while (iterator.hasNext()) {
+            Object entry = iterator.next();
+            String error = getErrorMessage(entry);
+            if (error != null) {
+                hasFailures = true;
+                sb.append(String.format("%s: \n%s   %s\n", entry, iterator.hasNext() ? "|" : " ", indent(error, iterator.hasNext())));
             }
         }
         return hasFailures ? sb.toString().stripTrailing() : null;

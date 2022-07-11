@@ -4,7 +4,6 @@ import com.ishland.c2me.natives.common.NativeInterface;
 import com.ishland.c2me.natives.common.NativeMemoryTracker;
 import com.ishland.c2me.natives.common.NativeStruct;
 import com.ishland.c2me.natives.common.UnsafeUtil;
-import io.netty.util.internal.PlatformDependent;
 import net.minecraft.util.math.noise.SimplexNoiseSampler;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -32,11 +31,10 @@ public class MixinSimplexNoiseSampler implements NativeStruct {
         UnsafeUtil.getInstance().copyMemory(
                 permutation,
                 Unsafe.ARRAY_INT_BASE_OFFSET,
-                tmp,
-                Unsafe.ARRAY_BYTE_BASE_OFFSET,
+                null,
+                this.permutationsPointer,
                 4 * 256
         );
-        PlatformDependent.copyMemory(tmp, 0, this.permutationsPointer, 4 * 256);
     }
 
     /**

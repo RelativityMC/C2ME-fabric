@@ -26,9 +26,12 @@
     "density_functions.MixinDensityFunctionTypesShiftA",
     "density_functions.MixinDensityFunctionTypesShiftB",
     "density_functions.MixinDensityFunctionTypesShiftedNoise",
+    "density_functions.MixinDensityFunctionTypesSpline",
     "density_functions.MixinDensityFunctionTypesUnaryOperation",
     "density_functions.MixinDensityFunctionTypesUnconfiguredConstants",
-    "density_functions.MixinDensityFunctionTypesYClampedGradient"
+    "density_functions.MixinDensityFunctionTypesYClampedGradient",
+    "spline.MixinSplineFixedFloatFunction",
+    "spline.MixinSplineImpl"
   ],
   "client": [
     "client.MixinDebugHud"

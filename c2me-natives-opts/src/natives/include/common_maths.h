@@ -75,6 +75,10 @@ static inline double __attribute__((always_inline)) math_lerp(double delta, doub
     return start + delta * (end - start);
 }
 
+static inline float __attribute__((always_inline)) math_lerpf(float delta, float start, float end) {
+    return start + delta * (end - start);
+}
+
 static inline double __attribute__((always_inline)) math_clampedLerp(double start, double end, double delta) {
     if (delta < 0.0) {
         return start;
