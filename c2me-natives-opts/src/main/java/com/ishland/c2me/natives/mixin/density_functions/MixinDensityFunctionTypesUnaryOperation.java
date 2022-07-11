@@ -11,6 +11,7 @@ import net.minecraft.world.gen.densityfunction.DensityFunctionTypes;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -26,6 +27,13 @@ public abstract class MixinDensityFunctionTypesUnaryOperation implements Density
 
     @Shadow
     protected static double apply(DensityFunctionTypes.UnaryOperation.Type type, double d) {
+        throw new AbstractMethodError();
+    }
+
+    @Shadow @Final private DensityFunctionTypes.UnaryOperation.Type type;
+
+    @Shadow
+    public static DensityFunctionTypes.UnaryOperation create(DensityFunctionTypes.UnaryOperation.Type type, DensityFunction input) {
         throw new AbstractMethodError();
     }
 
@@ -94,6 +102,17 @@ public abstract class MixinDensityFunctionTypesUnaryOperation implements Density
     @Override
     public String getCompilationFailedReason() {
         return this.errorMessage;
+    }
+
+    /**
+     * @author ishland
+     * @reason reduce allocs
+     */
+    @Overwrite
+    public DensityFunctionTypes.UnaryOperation apply(DensityFunction.DensityFunctionVisitor densityFunctionVisitor) {
+        final DensityFunction apply = this.input.apply(densityFunctionVisitor);
+        if (apply == this.input) return (DensityFunctionTypes.UnaryOperation) (Object) this;
+        return create(this.type, apply);
     }
 
 }

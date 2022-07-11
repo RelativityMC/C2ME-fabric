@@ -11,6 +11,7 @@ import net.minecraft.world.gen.densityfunction.DensityFunctionTypes;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -133,6 +134,18 @@ public abstract class MixinDensityFunctionTypesFullOperation implements DensityF
     @Override
     public String getCompilationFailedReason() {
         return this.errorMessage;
+    }
+
+    /**
+     * @author ishland
+     * @reason reduce allocs
+     */
+    @Overwrite
+    public DensityFunction apply(DensityFunction.DensityFunctionVisitor visitor) {
+        final DensityFunction apply = this.argument1.apply(visitor);
+        final DensityFunction apply1 = this.argument2.apply(visitor);
+        if (apply == this.argument1 && apply1 == this.argument2) return visitor.apply(this);
+        return visitor.apply(DensityFunctionTypes.BinaryOperationLike.create(this.type, apply, apply1));
     }
 
 }

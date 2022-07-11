@@ -33,7 +33,7 @@ public abstract class MixinDensityFunctionTypesShiftA implements DensityFunction
     private void onInit(CallbackInfo info) {
 //        System.out.println("Compiling density function: shift_a %s".formatted(this));
         if (this.offsetNoise != null && this.offsetNoise.noise() != null) {
-            this.pointer = NativeInterface.createDFIShifted0Data(
+            this.pointer = NativeInterface.createDFIShiftedAData(
                     false,
                     ((NativeStruct) ((IDoublePerlinNoiseSampler) this.offsetNoise.noise()).getFirstSampler()).getNativePointer(),
                     ((NativeStruct) ((IDoublePerlinNoiseSampler) this.offsetNoise.noise()).getSecondSampler()).getNativePointer(),
@@ -76,6 +76,17 @@ public abstract class MixinDensityFunctionTypesShiftA implements DensityFunction
     @Override
     public long getDFIPointer() {
         return this.pointer;
+    }
+
+    /**
+     * @author ishland
+     * @reason reduce allocs
+     */
+    @Overwrite
+    public DensityFunction apply(DensityFunction.DensityFunctionVisitor visitor) {
+        final Noise apply = visitor.apply(this.offsetNoise);
+        if (apply == this.offsetNoise) return visitor.apply(this);
+        return visitor.apply(new DensityFunctionTypes.ShiftA(apply));
     }
 
 }

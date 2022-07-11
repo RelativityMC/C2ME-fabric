@@ -11,6 +11,7 @@ import net.minecraft.world.gen.densityfunction.DensityFunctionTypes;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -27,6 +28,7 @@ public abstract class MixinDensityFunctionTypesHalfOperation implements DensityF
     @Shadow public abstract DensityFunctionTypes.BinaryOperationLike.Type type();
 
     @Shadow @Final private double argument;
+    @Shadow @Final private DensityFunctionTypes.LinearOperation.SpecificType specificType;
     @Unique
     private long pointer;
 
@@ -93,6 +95,32 @@ public abstract class MixinDensityFunctionTypesHalfOperation implements DensityF
     @Override
     public String getCompilationFailedReason() {
         return this.errorMessage;
+    }
+
+    /**
+     * @author ishland
+     * @reason reduce allocs
+     */
+    @Overwrite
+    public DensityFunction apply(DensityFunction.DensityFunctionVisitor visitor) {
+        DensityFunction densityFunction = this.input.apply(visitor);
+        if (densityFunction == this.input) return this;
+        double d = densityFunction.minValue();
+        double e = densityFunction.maxValue();
+        double f;
+        double g;
+        if (this.specificType == DensityFunctionTypes.LinearOperation.SpecificType.ADD) {
+            f = d + this.argument;
+            g = e + this.argument;
+        } else if (this.argument >= 0.0) {
+            f = d * this.argument;
+            g = e * this.argument;
+        } else {
+            f = e * this.argument;
+            g = d * this.argument;
+        }
+
+        return new DensityFunctionTypes.LinearOperation(this.specificType, densityFunction, f, g, this.argument);
     }
 
 }

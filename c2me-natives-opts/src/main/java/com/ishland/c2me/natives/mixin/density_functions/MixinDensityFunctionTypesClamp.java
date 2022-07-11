@@ -11,6 +11,7 @@ import net.minecraft.world.gen.densityfunction.DensityFunctionTypes;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -98,5 +99,16 @@ public abstract class MixinDensityFunctionTypesClamp implements DensityFunctionT
     @Override
     public String getCompilationFailedReason() {
         return this.errorMessage;
+    }
+
+    /**
+     * @author ishland
+     * @reason reduce allocs
+     */
+    @Overwrite
+    public DensityFunction apply(DensityFunction.DensityFunctionVisitor visitor) {
+        final DensityFunction apply = this.input.apply(visitor);
+        if (apply == this.input) return this;
+        return new DensityFunctionTypes.Clamp(apply, this.minValue, this.maxValue);
     }
 }

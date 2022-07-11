@@ -13,6 +13,7 @@ import net.minecraft.world.gen.densityfunction.DensityFunctionTypes;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -22,7 +23,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(DensityFunctionTypes.Spline.class)
 public abstract class MixinDensityFunctionTypesSpline implements DensityFunction, CompiledDensityFunctionImpl {
 
-    @Shadow @Final private Spline<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> spline;
+    @Shadow
+    @Final
+    private Spline<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> spline;
     @Unique
     private long pointer = 0L;
 
@@ -80,6 +83,17 @@ public abstract class MixinDensityFunctionTypesSpline implements DensityFunction
     @Override
     public String getCompilationFailedReason() {
         return this.errorMessage;
+    }
+
+    /**
+     * @author ishland
+     * @reason reduce allocs
+     */
+    @Overwrite
+    public DensityFunction apply(DensityFunction.DensityFunctionVisitor visitor) {
+        final Spline<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> spline1 = this.spline.method_41187(densityFunctionWrapper -> densityFunctionWrapper.apply(visitor));
+        if (spline1 == this.spline) return visitor.apply(this);
+        return visitor.apply(new DensityFunctionTypes.Spline(spline1));
     }
 
 }

@@ -12,6 +12,7 @@ import net.minecraft.world.gen.densityfunction.DensityFunctionTypes;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -19,6 +20,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import sun.misc.Unsafe;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Mixin(Spline.Implementation.class)
@@ -31,6 +33,12 @@ public abstract class MixinSplineImpl<C, I extends ToFloatFunction<C>> implement
     @Shadow @Final private float[] locations;
     @Shadow @Final private List<Spline<C, I>> values;
     @Shadow @Final private float[] derivatives;
+
+    @Shadow
+    static <C, I extends ToFloatFunction<C>> Spline.Implementation<C, I> method_41299(I toFloatFunction, float[] fs, List<Spline<C, I>> list, float[] gs) {
+        throw new AbstractMethodError();
+    }
+
     @Unique
     private long pointer = 0L;
 
@@ -83,4 +91,28 @@ public abstract class MixinSplineImpl<C, I extends ToFloatFunction<C>> implement
     public String getCompilationFailedReason() {
         return this.errorMessage;
     }
+
+    /**
+     * @author ishland
+     * @reason reduce allocs
+     */
+    @Overwrite
+    public Spline<C, I> method_41187(Spline.class_7073<I> arg) {
+        boolean hasChanges = false;
+        final List<Spline<C, I>> list = new ArrayList<>();
+        for (Spline<C, I> spline : this.values()) {
+            Spline<C, I> ciSpline = spline.method_41187(arg);
+            if (ciSpline != spline) hasChanges = true;
+            list.add(ciSpline);
+        }
+        final I visit = arg.visit(this.locationFunction);
+        if (visit != this.locationFunction) hasChanges = true;
+
+        if (!hasChanges) return (Spline<C, I>) this;
+
+        return method_41299(
+                visit, this.locations, list, this.derivatives
+        );
+    }
+
 }

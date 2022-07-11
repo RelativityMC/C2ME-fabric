@@ -78,4 +78,15 @@ public abstract class MixinDensityFunctionTypesShift implements DensityFunction.
         return this.pointer;
     }
 
+    /**
+     * @author ishland
+     * @reason reduce allocs
+     */
+    @Overwrite
+    public DensityFunction apply(DensityFunction.DensityFunctionVisitor visitor) {
+        final Noise apply = visitor.apply(this.offsetNoise);
+        if (apply == this.offsetNoise) return visitor.apply(this);
+        return visitor.apply(new DensityFunctionTypes.Shift(apply));
+    }
+
 }

@@ -9,6 +9,7 @@ import net.minecraft.world.gen.densityfunction.DensityFunctionTypes;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -63,4 +64,16 @@ public abstract class MixinDensityFunctionTypesRegistryEntry implements DensityF
     public Type getDFIType() {
         return Type.PASS_THROUGH;
     }
+
+    /**
+     * @author ishland
+     * @reason reduce allocs
+     */
+    @Overwrite
+    public DensityFunction apply(DensityFunction.DensityFunctionVisitor visitor) {
+        final DensityFunction apply = this.function.value().apply(visitor);
+        if (apply == this.function.value()) return visitor.apply(this);
+        return visitor.apply(new DensityFunctionTypes.RegistryEntryHolder(new RegistryEntry.Direct<>(apply)));
+    }
+
 }

@@ -7,14 +7,15 @@ accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTy
 accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$ShiftA
 accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$ShiftB
 accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$YClampedGradient
-
 accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$Clamp
 accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$Unary
 accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$BinaryOperation
 accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$LinearOperation
+accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$LinearOperation$SpecificType
 accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$BinaryOperationLike
 accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$RegistryEntryHolder
 accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$Wrapping
+accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$Wrapping$Type
 accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$Beardifier
 accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$BlendAlpha
 accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$BlendOffset
@@ -28,5 +29,20 @@ accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTy
 extendable    class    net/minecraft/util/math/noise/PerlinNoiseSampler
 extendable    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$Constant
 
-accessible    method    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$Constant    <init>    (D)V
-
+accessible    method    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$Noise                  <init>    (Lnet/minecraft/world/gen/densityfunction/DensityFunction$Noise;DD)V
+accessible    method    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$Constant               <init>    (D)V
+accessible    method    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$EndIslands             <init>    (J)V
+accessible    method    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$Shift                  <init>    (Lnet/minecraft/world/gen/densityfunction/DensityFunction$Noise;)V
+accessible    method    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$ShiftA                 <init>    (Lnet/minecraft/world/gen/densityfunction/DensityFunction$Noise;)V
+accessible    method    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$ShiftB                 <init>    (Lnet/minecraft/world/gen/densityfunction/DensityFunction$Noise;)V
+accessible    method    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$YClampedGradient       <init>    (IIDD)V
+accessible    method    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$Clamp                  <init>    (Lnet/minecraft/world/gen/densityfunction/DensityFunction;DD)V
+accessible    method    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$BinaryOperation        <init>    (Lnet/minecraft/world/gen/densityfunction/DensityFunctionTypes$BinaryOperationLike$Type;Lnet/minecraft/world/gen/densityfunction/DensityFunction;Lnet/minecraft/world/gen/densityfunction/DensityFunction;DD)V
+accessible    method    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$LinearOperation        <init>    (Lnet/minecraft/world/gen/densityfunction/DensityFunctionTypes$LinearOperation$SpecificType;Lnet/minecraft/world/gen/densityfunction/DensityFunction;DDD)V
+accessible    method    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$RegistryEntryHolder    <init>    (Lnet/minecraft/util/registry/RegistryEntry;)V
+accessible    method    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$Wrapping               <init>    (Lnet/minecraft/world/gen/densityfunction/DensityFunctionTypes$Wrapping$Type;Lnet/minecraft/world/gen/densityfunction/DensityFunction;)V
+accessible    method    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$Beardifier             <init>    (Ljava/lang/String;I)V
+accessible    method    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$UnaryOperation         <init>    (Lnet/minecraft/world/gen/densityfunction/DensityFunctionTypes$UnaryOperation$Type;Lnet/minecraft/world/gen/densityfunction/DensityFunction;DD)V
+accessible    method    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$ShiftedNoise           <init>    (Lnet/minecraft/world/gen/densityfunction/DensityFunction;Lnet/minecraft/world/gen/densityfunction/DensityFunction;Lnet/minecraft/world/gen/densityfunction/DensityFunction;DDLnet/minecraft/world/gen/densityfunction/DensityFunction$Noise;)V
+accessible    method    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$BlendDensity           <init>    (Lnet/minecraft/world/gen/densityfunction/DensityFunction;)V
+accessible    method    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$RangeChoice            <init>    (Lnet/minecraft/world/gen/densityfunction/DensityFunction;DDLnet/minecraft/world/gen/densityfunction/DensityFunction;Lnet/minecraft/world/gen/densityfunction/DensityFunction;)V

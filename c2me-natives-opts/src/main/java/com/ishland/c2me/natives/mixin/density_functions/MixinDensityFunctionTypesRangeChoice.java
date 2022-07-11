@@ -11,6 +11,7 @@ import net.minecraft.world.gen.densityfunction.DensityFunctionTypes;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -20,11 +21,21 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(DensityFunctionTypes.RangeChoice.class)
 public abstract class MixinDensityFunctionTypesRangeChoice implements DensityFunction, CompiledDensityFunctionImpl {
 
-    @Shadow @Final private DensityFunction input;
-    @Shadow @Final private DensityFunction whenInRange;
-    @Shadow @Final private DensityFunction whenOutOfRange;
-    @Shadow @Final private double minInclusive;
-    @Shadow @Final private double maxExclusive;
+    @Shadow
+    @Final
+    private DensityFunction input;
+    @Shadow
+    @Final
+    private DensityFunction whenInRange;
+    @Shadow
+    @Final
+    private DensityFunction whenOutOfRange;
+    @Shadow
+    @Final
+    private double minInclusive;
+    @Shadow
+    @Final
+    private double maxExclusive;
     @Unique
     private long pointer = 0L;
 
@@ -82,7 +93,7 @@ public abstract class MixinDensityFunctionTypesRangeChoice implements DensityFun
         } else {
             this.input.applyEach(densities, applier);
 
-            for(int i = 0; i < densities.length; ++i) {
+            for (int i = 0; i < densities.length; ++i) {
                 double d = densities[i];
                 if (d >= this.minInclusive && d < this.maxExclusive) {
                     densities[i] = this.whenInRange.sample(applier.getPosAt(i));
@@ -104,5 +115,22 @@ public abstract class MixinDensityFunctionTypesRangeChoice implements DensityFun
         return this.errorMessage;
     }
 
+    /**
+     * @author ishland
+     * @reason reduce allocs
+     */
+    @Overwrite
+    public DensityFunction apply(DensityFunction.DensityFunctionVisitor visitor) {
+        final DensityFunction apply = this.input.apply(visitor);
+        final DensityFunction apply1 = this.whenInRange.apply(visitor);
+        final DensityFunction apply2 = this.whenOutOfRange.apply(visitor);
+        if (apply == this.input && apply1 == this.whenInRange && apply2 == this.whenOutOfRange)
+            return visitor.apply(this);
+        return visitor.apply(
+                new DensityFunctionTypes.RangeChoice(
+                        apply, this.minInclusive, this.maxExclusive, apply1, apply2
+                )
+        );
+    }
 
 }

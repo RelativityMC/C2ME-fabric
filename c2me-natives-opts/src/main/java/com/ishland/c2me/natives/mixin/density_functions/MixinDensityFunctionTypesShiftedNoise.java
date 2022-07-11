@@ -13,6 +13,7 @@ import net.minecraft.world.gen.densityfunction.DensityFunctionTypes;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -37,8 +38,12 @@ public abstract class MixinDensityFunctionTypesShiftedNoise implements DensityFu
     @Shadow
     @Final
     private @Nullable DensityFunction.Noise noise;
-    @Shadow @Final private double xzScale;
-    @Shadow @Final private double yScale;
+    @Shadow
+    @Final
+    private double xzScale;
+    @Shadow
+    @Final
+    private double yScale;
     @Unique
     private long pointer = 0L;
 
@@ -102,9 +107,9 @@ public abstract class MixinDensityFunctionTypesShiftedNoise implements DensityFu
             return NativeInterface.dfiBindingsSingleOp(this.pointer, pos.blockX(), pos.blockY(), pos.blockZ());
         } else {
             // TODO [VanillaCopy]
-            double d = (double)pos.blockX() * this.xzScale + this.shiftX.sample(pos);
-            double e = (double)pos.blockY() * this.yScale + this.shiftY.sample(pos);
-            double f = (double)pos.blockZ() * this.xzScale + this.shiftZ.sample(pos);
+            double d = (double) pos.blockX() * this.xzScale + this.shiftX.sample(pos);
+            double e = (double) pos.blockY() * this.yScale + this.shiftY.sample(pos);
+            double f = (double) pos.blockZ() * this.xzScale + this.shiftZ.sample(pos);
             return this.noise.sample(d, e, f);
         }
     }
@@ -129,6 +134,25 @@ public abstract class MixinDensityFunctionTypesShiftedNoise implements DensityFu
     @Override
     public String getCompilationFailedReason() {
         return this.errorMessage;
+    }
+
+    /**
+     * @author ishland
+     * @reason reduce allocs
+     */
+    @Overwrite
+    public DensityFunction apply(DensityFunction.DensityFunctionVisitor visitor) {
+        final DensityFunction apply = this.shiftX.apply(visitor);
+        final DensityFunction apply1 = this.shiftY.apply(visitor);
+        final DensityFunction apply2 = this.shiftZ.apply(visitor);
+        final Noise apply3 = visitor.apply(this.noise);
+        if (apply == this.shiftX && apply1 == this.shiftY && apply2 == this.shiftZ && apply3 == this.noise)
+            return visitor.apply(this);
+        return visitor.apply(
+                new DensityFunctionTypes.ShiftedNoise(
+                        apply, apply1, apply2, this.xzScale, this.yScale, apply3
+                )
+        );
     }
 
 }
