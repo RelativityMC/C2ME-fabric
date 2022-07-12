@@ -25,6 +25,7 @@ accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTy
 accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$BlendDensity
 accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$Positional
 accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$RangeChoice
+accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$WeirdScaledSampler
 
 extendable    class    net/minecraft/util/math/noise/PerlinNoiseSampler
 extendable    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$Constant
@@ -46,3 +47,4 @@ accessible    method    net/minecraft/world/gen/densityfunction/DensityFunctionT
 accessible    method    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$ShiftedNoise           <init>    (Lnet/minecraft/world/gen/densityfunction/DensityFunction;Lnet/minecraft/world/gen/densityfunction/DensityFunction;Lnet/minecraft/world/gen/densityfunction/DensityFunction;DDLnet/minecraft/world/gen/densityfunction/DensityFunction$Noise;)V
 accessible    method    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$BlendDensity           <init>    (Lnet/minecraft/world/gen/densityfunction/DensityFunction;)V
 accessible    method    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$RangeChoice            <init>    (Lnet/minecraft/world/gen/densityfunction/DensityFunction;DDLnet/minecraft/world/gen/densityfunction/DensityFunction;Lnet/minecraft/world/gen/densityfunction/DensityFunction;)V
+accessible    method    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$WeirdScaledSampler     <init>    (Lnet/minecraft/world/gen/densityfunction/DensityFunction;Lnet/minecraft/world/gen/densityfunction/DensityFunction$Noise;Lnet/minecraft/world/gen/densityfunction/DensityFunctionTypes$WeirdScaledSampler$RarityValueMapper;)V

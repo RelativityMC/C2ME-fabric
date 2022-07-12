@@ -29,6 +29,7 @@
     "density_functions.MixinDensityFunctionTypesSpline",
     "density_functions.MixinDensityFunctionTypesUnaryOperation",
     "density_functions.MixinDensityFunctionTypesUnconfiguredConstants",
+    "density_functions.MixinDensityFunctionTypesWeirdScaledSampler",
     "density_functions.MixinDensityFunctionTypesWrapper",
     "density_functions.MixinDensityFunctionTypesYClampedGradient",
     "spline.MixinSplineFixedFloatFunction",

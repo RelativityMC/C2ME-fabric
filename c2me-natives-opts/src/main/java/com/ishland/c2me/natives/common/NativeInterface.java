@@ -399,6 +399,29 @@ public class NativeInterface {
         }
     }
 
+    // density_function_impl_data *
+    // c2me_natives_create_dfi_weird_scaled_sampler_data(density_function_impl_data *input, short operation,
+    //                                                   bool isNull, octave_sampler_data *firstSampler,
+    //                                                   octave_sampler_data *secondSampler, double amplitude)
+
+    private static final MethodHandle DFI_create_dfi_weird_scaled_sampler_data = LINKER.downcallHandle(
+            LOOKUP.lookup("c2me_natives_create_dfi_weird_scaled_sampler_data").get(),
+            FunctionDescriptor.of(JAVA_LONG, JAVA_LONG, JAVA_SHORT, JAVA_BOOLEAN, JAVA_LONG, JAVA_LONG, JAVA_DOUBLE)
+    );
+
+    public static long createDFIWeirdScaledSampler(long ptr_input, short operation, boolean isNull, long ptr_firstSampler, long ptr_secondSampler, double amplitude) {
+        if (ptr_input == 0L) throw new NullPointerException();
+        if (!isNull) {
+            if (ptr_firstSampler == 0L) throw new NullPointerException();
+            if (ptr_secondSampler == 0L) throw new NullPointerException();
+        }
+        try {
+            return (long) DFI_create_dfi_weird_scaled_sampler_data.invoke(ptr_input, operation, isNull, ptr_firstSampler, ptr_secondSampler, amplitude);
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     // ===== Density Function Bindings =====
 
     // double c2me_natives_dfi_bindings_single_op(density_function_impl_data *dfi, int blockX, int blockY, int blockZ)
@@ -469,6 +492,7 @@ public class NativeInterface {
     public static final long SIZEOF_dfi_range_choice_data = sizeOf("dfi_range_choice_data");
     public static final long SIZEOF_spline_data_constant = sizeOf("spline_data_constant");
     public static final long SIZEOF_spline_data_impl = sizeOf("spline_data_impl");
+    public static final long SIZEOF_dfi_weird_scaled_sampler = sizeOf("dfi_weird_scaled_sampler");
 
     static {
 

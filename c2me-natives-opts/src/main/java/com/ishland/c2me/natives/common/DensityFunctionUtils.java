@@ -160,4 +160,11 @@ public class DensityFunctionUtils {
         };
     }
 
+    public static short mapWeirdScaledSamplerTypeToNative(DensityFunctionTypes.WeirdScaledSampler.RarityValueMapper mapper) {
+        return switch (mapper) {
+            case TYPE1 -> 0; // scaleTunnels
+            case TYPE2 -> 1; // scaleCaves
+        };
+    }
+
 }
