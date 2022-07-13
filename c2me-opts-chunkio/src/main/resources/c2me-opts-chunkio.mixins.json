@@ -4,6 +4,8 @@
   "package": "com.ishland.c2me.opts.chunkio.mixin",
   "plugin": "com.ishland.c2me.opts.chunkio.MixinPlugin",
   "mixins": [
+    "async_chunk_on_player_login.MixinPlayerManager",
+    "async_chunk_on_player_login.MixinServerPlayerEntity",
     "compression.increase_buffer_size.MixinChunkStreamVersion",
     "compression.modify_default_chunk_compression.MixinRegionFile",
     "hide_sync_disk_writes_behind_flag.MixinRegionBasedStorage",
