@@ -78,6 +78,7 @@ public abstract class MixinPlayerManager {
             ((IAsyncChunkPlayer) instance.player).setPlayerData(null);
             c2me$mountSavedVehicles(instance.player, playerData);
 
+            ticketManager.removeTicket(ASYNC_PLAYER_LOGIN, pos, 2, Unit.INSTANCE);
             ((IAsyncChunkPlayer) instance.player).onChunkLoadComplete();
             LOGGER.info("Async chunk loading for player {} completed", instance.player.getName().getString());
         }, ((IServerChunkManager) chunkManager).getMainThreadExecutor());
