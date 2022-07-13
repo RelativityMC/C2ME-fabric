@@ -53,7 +53,7 @@ public abstract class MixinPlayerManager {
         final ChunkTicketManager ticketManager = ((IServerChunkManager) chunkManager).getTicketManager();
 
         final ChunkPos pos = new ChunkPos(new BlockPos(x, y, z));
-        ticketManager.addTicket(ASYNC_PLAYER_LOGIN, pos, 2, Unit.INSTANCE);
+        ticketManager.addTicket(ASYNC_PLAYER_LOGIN, pos, 3, Unit.INSTANCE);
         ((IServerChunkManager) chunkManager).invokeTick();
         final ChunkHolder chunkHolder = ((IThreadedAnvilChunkStorage) chunkManager.threadedAnvilChunkStorage).getCurrentChunkHolders().get(pos.toLong());
         if (chunkHolder == null) {
@@ -81,7 +81,7 @@ public abstract class MixinPlayerManager {
             ((IAsyncChunkPlayer) instance.player).setPlayerData(null);
             c2me$mountSavedVehicles(instance.player, playerData);
 
-            ticketManager.removeTicket(ASYNC_PLAYER_LOGIN, pos, 2, Unit.INSTANCE);
+            ticketManager.removeTicket(ASYNC_PLAYER_LOGIN, pos, 3, Unit.INSTANCE);
             ((IAsyncChunkPlayer) instance.player).onChunkLoadComplete();
             LOGGER.info("Async chunk loading for player {} completed", instance.player.getName().getString());
         }, runnable -> {
