@@ -7,7 +7,9 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.PlayerManager;
+import net.minecraft.server.ServerTask;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ChunkHolder;
@@ -59,6 +61,7 @@ public abstract class MixinPlayerManager {
         }
         instance.player.notInAnyWorld = true; // suppress move packets
 
+        final MinecraftServer server = instance.player.server;
         chunkHolder.getEntityTickingFuture().whenCompleteAsync((worldChunkUnloadedEither, throwable) -> {
             if (throwable != null) {
                 LOGGER.error("Error while loading chunks", throwable);
@@ -81,7 +84,9 @@ public abstract class MixinPlayerManager {
             ticketManager.removeTicket(ASYNC_PLAYER_LOGIN, pos, 2, Unit.INSTANCE);
             ((IAsyncChunkPlayer) instance.player).onChunkLoadComplete();
             LOGGER.info("Async chunk loading for player {} completed", instance.player.getName().getString());
-        }, ((IServerChunkManager) chunkManager).getMainThreadExecutor());
+        }, runnable -> {
+            server.send(new ServerTask(0, runnable));
+        });
     }
 
     private void c2me$mountSavedVehicles(ServerPlayerEntity player, NbtCompound playerData) {
