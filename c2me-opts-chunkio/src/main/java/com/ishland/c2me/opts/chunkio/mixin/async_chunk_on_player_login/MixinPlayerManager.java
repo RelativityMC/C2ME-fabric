@@ -27,6 +27,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.UUID;
@@ -74,8 +75,10 @@ public abstract class MixinPlayerManager {
             instance.player.onSpawn();
 
             final NbtCompound playerData = ((IAsyncChunkPlayer) instance.player).getPlayerData();
+            ((IAsyncChunkPlayer) instance.player).setPlayerData(null);
             c2me$mountSavedVehicles(instance.player, playerData);
 
+            ((IAsyncChunkPlayer) instance.player).onChunkLoadComplete();
             LOGGER.info("Async chunk loading for player {} completed", instance.player.getName().getString());
         }, ((IServerChunkManager) chunkManager).getMainThreadExecutor());
     }
@@ -141,6 +144,11 @@ public abstract class MixinPlayerManager {
     @Inject(method = "loadPlayerData", at = @At(value = "RETURN"))
     private void onLoadPlayerData(ServerPlayerEntity player, CallbackInfoReturnable<NbtCompound> cir) {
         ((IAsyncChunkPlayer) player).setPlayerData(cir.getReturnValue());
+    }
+
+    @Inject(method = "savePlayerData", at = @At(value = "HEAD"), cancellable = true)
+    private void beforeSavePlayerData(ServerPlayerEntity player, CallbackInfo ci) {
+        if (!((IAsyncChunkPlayer) player).isChunkLoadCompleted()) ci.cancel();
     }
 
 }

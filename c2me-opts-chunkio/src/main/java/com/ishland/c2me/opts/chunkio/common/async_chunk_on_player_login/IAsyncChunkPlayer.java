@@ -8,4 +8,8 @@ public interface IAsyncChunkPlayer {
 
     NbtCompound getPlayerData();
 
+    boolean isChunkLoadCompleted();
+
+    void onChunkLoadComplete();
+
 }

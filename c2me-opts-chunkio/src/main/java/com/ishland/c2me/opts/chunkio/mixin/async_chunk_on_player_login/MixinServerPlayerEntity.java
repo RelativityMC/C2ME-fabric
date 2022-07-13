@@ -10,7 +10,10 @@ import org.spongepowered.asm.mixin.Unique;
 public class MixinServerPlayerEntity implements IAsyncChunkPlayer {
 
     @Unique
-    private NbtCompound playerData;
+    private NbtCompound playerData = null;
+
+    @Unique
+    private boolean chunkLoadCompleted = false;
 
     @Override
     public void setPlayerData(NbtCompound nbtCompound) {
@@ -20,5 +23,15 @@ public class MixinServerPlayerEntity implements IAsyncChunkPlayer {
     @Override
     public NbtCompound getPlayerData() {
         return this.playerData;
+    }
+
+    @Override
+    public boolean isChunkLoadCompleted() {
+        return this.chunkLoadCompleted;
+    }
+
+    @Override
+    public void onChunkLoadComplete() {
+        this.chunkLoadCompleted = true;
     }
 }
