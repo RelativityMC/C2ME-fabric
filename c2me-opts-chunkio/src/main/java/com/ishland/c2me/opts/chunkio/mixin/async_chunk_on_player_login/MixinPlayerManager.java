@@ -58,14 +58,7 @@ public abstract class MixinPlayerManager {
         }
         instance.player.notInAnyWorld = true; // suppress move packets
 
-        chunkHolder.getEntityTickingFuture().thenApplyAsync(unused -> {
-            try {
-                Thread.sleep(5000); // intentional lag
-                return unused;
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-        }).whenCompleteAsync((worldChunkUnloadedEither, throwable) -> {
+        chunkHolder.getEntityTickingFuture().whenCompleteAsync((worldChunkUnloadedEither, throwable) -> {
             if (throwable != null) {
                 LOGGER.error("Error while loading chunks", throwable);
                 return;
