@@ -27,11 +27,13 @@ import java.io.DataOutputStream;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.util.Queue;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.LockSupport;
@@ -117,9 +119,15 @@ public class C2MEStorageThread extends Thread {
      */
     public CompletableFuture<NbtCompound> getChunkData(long pos, NbtScanner scanner) {
         final CompletableFuture<NbtCompound> future = new CompletableFuture<>();
+        if (this.closing.get()) {
+            future.completeExceptionally(new CancellationException());
+            return future.thenApply(Function.identity());
+        }
         this.pendingReadRequests.add(new ReadRequest(pos, future, scanner, this.priorityProvider != null ? this.priorityProvider.apply(pos) : null));
         LockSupport.unpark(this);
-        return future.thenApply(Function.identity());
+        return future
+                .orTimeout(60, TimeUnit.SECONDS)
+                .thenApply(Function.identity());
     }
 
     public void setChunkData(long pos, @Nullable NbtCompound nbt) {

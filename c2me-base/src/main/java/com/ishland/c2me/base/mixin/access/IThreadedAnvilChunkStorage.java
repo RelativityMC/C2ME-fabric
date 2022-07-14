@@ -20,6 +20,9 @@ public interface IThreadedAnvilChunkStorage {
     @Accessor
     Long2ObjectLinkedOpenHashMap<ChunkHolder> getChunkHolders();
 
+    @Accessor
+    Long2ObjectLinkedOpenHashMap<ChunkHolder> getCurrentChunkHolders();
+
     @Invoker
     boolean invokeSave(ChunkHolder chunkHolder);
 
