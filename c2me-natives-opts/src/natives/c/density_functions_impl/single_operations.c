@@ -130,7 +130,7 @@ static const density_function_multi_op multi_ops[] = {
         c2me_natives_dfi_single_operation_squeeze_multi_op,
 };
 
-density_function_impl_data *
+density_function_impl_data __attribute__((malloc)) *
 c2me_natives_create_dfi_single_operation(short operation, density_function_impl_data *input) {
     void *ptr = malloc(sizeof(density_function_impl_data) + sizeof(dfi_single_operation_data));
 

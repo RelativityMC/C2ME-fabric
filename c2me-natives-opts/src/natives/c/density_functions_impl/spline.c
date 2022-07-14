@@ -19,8 +19,9 @@ long c2me_natives_sizeof_spline_data_impl() {
     return sizeof(spline_data);
 }
 
-spline_data *c2me_natives_create_spline_data_impl(density_function_impl_data *locationFunction, float *locations,
-                                                  uint32_t locations_length, spline_data **values, float *derivatives) {
+spline_data __attribute__((malloc)) *
+c2me_natives_create_spline_data_impl(density_function_impl_data *locationFunction, float *locations,
+                                     uint32_t locations_length, spline_data **values, float *derivatives) {
     spline_data *data = malloc(sizeof(spline_data));
     data->isConstant = false;
     data->locationFunction = locationFunction;
@@ -31,7 +32,7 @@ spline_data *c2me_natives_create_spline_data_impl(density_function_impl_data *lo
     return data;
 }
 
-spline_data *c2me_natives_create_spline_data_constant(float constantValue) {
+spline_data __attribute__((malloc)) *c2me_natives_create_spline_data_constant(float constantValue) {
     spline_data *data = malloc(sizeof(bool) + sizeof(float));
     data->isConstant = true;
     data->constantValue = constantValue;
@@ -106,7 +107,7 @@ static void c2me_natives_dfi_spline_multi_op(void *instance, double *res, noise_
     }
 }
 
-density_function_impl_data *c2me_natives_create_dfi_spline(spline_data *spline) {
+density_function_impl_data __attribute__((malloc)) *c2me_natives_create_dfi_spline(spline_data *spline) {
     density_function_impl_data *data = malloc(sizeof(density_function_impl_data));
     data->instance = spline;
     data->single_op = c2me_natives_dfi_spline_single_op;

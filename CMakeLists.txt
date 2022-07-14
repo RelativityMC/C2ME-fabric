@@ -7,7 +7,6 @@ set(C_STANDARD 11)
 set(CMAKE_C_FLAGS "-Wall -Wextra")
 set(CMAKE_C_FLAGS_DEBUG "-g")
 set(CMAKE_C_FLAGS_RELEASE "-O3 -mtune=tigerlake")
-set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
 
 set(CMAKE_C_COMPILER "clang")
 

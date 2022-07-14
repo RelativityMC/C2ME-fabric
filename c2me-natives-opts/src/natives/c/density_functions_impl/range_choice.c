@@ -30,10 +30,11 @@ static void c2me_natives_dfi_range_choice_multi_op(void *instance, double *res, 
     }
 }
 
-density_function_impl_data *c2me_natives_create_dfi_range_choice_data(density_function_impl_data *input,
-                                                                      double minInclusive, double maxExclusive,
-                                                                      density_function_impl_data *whenInRange,
-                                                                      density_function_impl_data *whenOutOfRange) {
+density_function_impl_data __attribute__((malloc)) *
+c2me_natives_create_dfi_range_choice_data(density_function_impl_data *input,
+                                          double minInclusive, double maxExclusive,
+                                          density_function_impl_data *whenInRange,
+                                          density_function_impl_data *whenOutOfRange) {
     void *ptr = malloc(sizeof(density_function_impl_data) + sizeof(dfi_range_choice_data));
 
     dfi_range_choice_data *data = ptr + sizeof(density_function_impl_data);

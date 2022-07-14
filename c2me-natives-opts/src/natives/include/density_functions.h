@@ -25,10 +25,10 @@ typedef struct {
     density_function_arg_multi_pos_get_all_pos get_all_pos;
 } density_function_multi_pos_args_data;
 
-extern double c2me_natives_dfi_bindings_single_op(density_function_impl_data *dfi, int blockX, int blockY, int blockZ);
-extern void c2me_natives_dfi_bindings_multi_op(density_function_impl_data *dfi, density_function_multi_pos_args_data *dfa,
+extern double c2me_natives_dfi_bindings_single_op(const density_function_impl_data *dfi, int blockX, int blockY, int blockZ);
+extern void c2me_natives_dfi_bindings_multi_op(const density_function_impl_data *dfi, density_function_multi_pos_args_data *dfa,
                                                double *res, size_t length);
-extern void c2me_natives_dfi_bindings_multi_op_provided(density_function_impl_data *dfi, noise_pos *poses, double *res,
+extern void c2me_natives_dfi_bindings_multi_op_provided(const density_function_impl_data *dfi, noise_pos *poses, double *res,
                                                         size_t length);
 
 #endif //C2ME_FABRIC_DENSITY_FUNCTIONS_H

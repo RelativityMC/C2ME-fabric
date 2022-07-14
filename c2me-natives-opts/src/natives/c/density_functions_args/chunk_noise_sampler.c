@@ -30,7 +30,7 @@ size_t c2me_natives_sizeof_chunk_noise_sampler_data() {
     return sizeof(chunk_noise_sampler_data);
 }
 
-noise_pos c2me_natives_dfa_chunk_noise_sampler_get_pos(void *instance, int i) {
+static noise_pos c2me_natives_dfa_chunk_noise_sampler_get_pos(void *instance, int i) {
     chunk_noise_sampler_data *data = instance;
     int j = c2me_natives_floorMod(i, data->horizontalBlockSize);
     int k = math_floorDiv(i, data->horizontalBlockSize);
@@ -44,7 +44,7 @@ noise_pos c2me_natives_dfa_chunk_noise_sampler_get_pos(void *instance, int i) {
     return pos;
 }
 
-size_t c2me_natives_dfa_chunk_noise_sampler_get_all_pos(void *instance, noise_pos *array, size_t length) {
+static size_t c2me_natives_dfa_chunk_noise_sampler_get_all_pos(void *instance, noise_pos *array, size_t length) {
     chunk_noise_sampler_data *data = instance;
 
     size_t index = 0;
@@ -71,7 +71,7 @@ size_t c2me_natives_dfa_chunk_noise_sampler_get_all_pos(void *instance, noise_po
     return index;
 }
 
-noise_pos c2me_natives_dfa_chunk_noise_sampler1_get_pos(void *instance, int i) {
+static noise_pos c2me_natives_dfa_chunk_noise_sampler1_get_pos(void *instance, int i) {
     chunk_noise_sampler_data *data = instance;
 
     noise_pos pos;
@@ -82,7 +82,7 @@ noise_pos c2me_natives_dfa_chunk_noise_sampler1_get_pos(void *instance, int i) {
     return pos;
 }
 
-size_t c2me_natives_dfa_chunk_noise_sampler1_get_all_pos(void *instance, noise_pos *array, size_t length) {
+static size_t c2me_natives_dfa_chunk_noise_sampler1_get_all_pos(void *instance, noise_pos *array, size_t length) {
     chunk_noise_sampler_data *data = instance;
 
     int i;
@@ -118,7 +118,7 @@ size_t c2me_natives_dfa_chunk_noise_sampler1_get_all_pos(void *instance, noise_p
 //    return dfa;
 //}
 
-density_function_multi_pos_args_data *c2me_natives_create_chunk_noise_sampler_data_empty() {
+density_function_multi_pos_args_data __attribute__((malloc)) *c2me_natives_create_chunk_noise_sampler_data_empty() {
     void *ptr = malloc(sizeof(density_function_multi_pos_args_data) + sizeof(chunk_noise_sampler_data));
     chunk_noise_sampler_data *data = ptr + sizeof(density_function_multi_pos_args_data);
 
@@ -129,7 +129,7 @@ density_function_multi_pos_args_data *c2me_natives_create_chunk_noise_sampler_da
     return dfa;
 }
 
-density_function_multi_pos_args_data *c2me_natives_create_chunk_noise_sampler1_data_empty() {
+density_function_multi_pos_args_data __attribute__((malloc)) *c2me_natives_create_chunk_noise_sampler1_data_empty() {
     void *ptr = malloc(sizeof(density_function_multi_pos_args_data) + sizeof(chunk_noise_sampler_data));
     chunk_noise_sampler_data *data = ptr + sizeof(density_function_multi_pos_args_data);
 

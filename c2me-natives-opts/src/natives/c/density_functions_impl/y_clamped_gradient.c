@@ -10,20 +10,22 @@ long c2me_natives_sizeof_dfi_y_clamped_gradient_data() {
     return sizeof(dfi_y_clamped_gradient_data);
 }
 
-static double c2me_natives_dfi_y_clamped_gradient_single_op(void *instance, int x, int y, int z) {
-    dfi_y_clamped_gradient_data *data = (dfi_y_clamped_gradient_data *)instance;
+static __attribute__((pure)) double c2me_natives_dfi_y_clamped_gradient_single_op(void *instance, int x, int y, int z) {
+    dfi_y_clamped_gradient_data *data = (dfi_y_clamped_gradient_data *) instance;
     return math_clampedLerpFromProgress(y, data->fromY, data->toY, data->fromValue, data->toValue);
 }
 
-static void c2me_natives_dfi_y_clamped_gradient_multi_op(void *instance, double *res, noise_pos *poses, size_t length) {
-    dfi_y_clamped_gradient_data *data = (dfi_y_clamped_gradient_data *)instance;
+static __attribute__((pure)) void
+c2me_natives_dfi_y_clamped_gradient_multi_op(void *instance, double *res, noise_pos *poses, size_t length) {
+    dfi_y_clamped_gradient_data *data = (dfi_y_clamped_gradient_data *) instance;
     for (size_t i = 0; i < length; i++) {
         res[i] = math_clampedLerpFromProgress(poses[i].y, data->fromY, data->toY, data->fromValue, data->toValue);
     }
 }
 
-density_function_impl_data *c2me_natives_create_dfi_y_clamped_gradient_data(double fromY, double toY, double fromValue, double toValue) {
-    void* ptr = malloc(sizeof(density_function_impl_data) + sizeof(dfi_y_clamped_gradient_data));
+density_function_impl_data __attribute__((malloc)) *
+c2me_natives_create_dfi_y_clamped_gradient_data(double fromY, double toY, double fromValue, double toValue) {
+    void *ptr = malloc(sizeof(density_function_impl_data) + sizeof(dfi_y_clamped_gradient_data));
 
     dfi_y_clamped_gradient_data *data = ptr + sizeof(density_function_impl_data);
     data->fromY = fromY;

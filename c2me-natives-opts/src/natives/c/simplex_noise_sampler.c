@@ -8,11 +8,11 @@
 #include "../include/common_maths.h"
 #include "../include/noise.h"
 
-double c2me_natives_simplex_sample(const int *permutations, double x, double y) {
+double __attribute__((pure)) c2me_natives_simplex_sample(const int *permutations, double x, double y) {
     return math_noise_simplex_sample(permutations, x, y);
 }
 
-float c2me_natives_end_noise_sample(int *permutations, int i, int j) {
+float __attribute__((pure)) c2me_natives_end_noise_sample(const int *permutations, int i, int j) {
     return math_noise_end_noise_sample(permutations, i, j);
 }
 

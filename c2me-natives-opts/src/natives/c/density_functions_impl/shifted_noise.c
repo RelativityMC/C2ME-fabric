@@ -44,15 +44,15 @@ static void c2me_natives_dfi_shifted_noise_multi_op(void *instance, double *res,
     }
 }
 
-density_function_impl_data *c2me_natives_create_dfi_shifted_noise_data(bool isNull,
-                                                                       density_function_impl_data *shift_x,
-                                                                       density_function_impl_data *shift_y,
-                                                                       density_function_impl_data *shift_z,
-                                                                       double xz_scale,
-                                                                       double y_scale,
-                                                                       octave_sampler_data *firstSampler,
-                                                                       octave_sampler_data *secondSampler,
-                                                                       double amplitude) {
+density_function_impl_data __attribute__((malloc)) *c2me_natives_create_dfi_shifted_noise_data(bool isNull,
+                                                                                               density_function_impl_data *shift_x,
+                                                                                               density_function_impl_data *shift_y,
+                                                                                               density_function_impl_data *shift_z,
+                                                                                               double xz_scale,
+                                                                                               double y_scale,
+                                                                                               octave_sampler_data *firstSampler,
+                                                                                               octave_sampler_data *secondSampler,
+                                                                                               double amplitude) {
     void *ptr = malloc(sizeof(density_function_impl_data) + sizeof(dfi_shifted_noise_data));
 
     dfi_shifted_noise_data *data = ptr + sizeof(density_function_impl_data);

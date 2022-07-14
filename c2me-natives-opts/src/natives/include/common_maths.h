@@ -40,7 +40,7 @@ extern double UNSKEW_FACTOR_2D;
 
 extern void c2me_natives_init();
 
-static inline int __attribute__((always_inline)) math_floorDiv(int x, int y) {
+static int __attribute__((const)) math_floorDiv(int x, int y) {
     int r = x / y;
     // if the signs are different and modulo not zero, round down
     if ((x ^ y) < 0 && (r * y != x)) {
@@ -49,16 +49,16 @@ static inline int __attribute__((always_inline)) math_floorDiv(int x, int y) {
     return r;
 }
 
-static inline int64_t __attribute__((always_inline)) math_lfloor(double value) {
-    int64_t l = (int64_t)value;
-    return value < (double)l ? l - 1L : l;
+static int64_t __attribute__((const)) math_lfloor(double value) {
+    int64_t l = (int64_t) value;
+    return value < (double) l ? l - 1L : l;
 }
 
-static inline double __attribute__((always_inline)) math_octave_maintainPrecision(double value) {
-    return value - (double)math_lfloor(value / 3.3554432E7 + 0.5) * 3.3554432E7;
+static double __attribute__((const)) math_octave_maintainPrecision(double value) {
+    return value - (double) math_lfloor(value / 3.3554432E7 + 0.5) * 3.3554432E7;
 }
 
-static inline double __attribute__((always_inline)) math_simplex_grad(int hash, double x, double y, double z, double distance) {
+static double __attribute__((const)) math_simplex_grad(int hash, double x, double y, double z, double distance) {
     double d = distance - x * x - y * y - z * z;
     if (d < 0.0) {
         return 0.0;
@@ -71,15 +71,15 @@ static inline double __attribute__((always_inline)) math_simplex_grad(int hash, 
     }
 }
 
-static inline double __attribute__((always_inline)) math_lerp(double delta, double start, double end) {
+static double __attribute__((const)) math_lerp(double delta, double start, double end) {
     return start + delta * (end - start);
 }
 
-static inline float __attribute__((always_inline)) math_lerpf(float delta, float start, float end) {
+static float __attribute__((const)) math_lerpf(float delta, float start, float end) {
     return start + delta * (end - start);
 }
 
-static inline double __attribute__((always_inline)) math_clampedLerp(double start, double end, double delta) {
+static double __attribute__((const)) math_clampedLerp(double start, double end, double delta) {
     if (delta < 0.0) {
         return start;
     } else {
@@ -87,7 +87,7 @@ static inline double __attribute__((always_inline)) math_clampedLerp(double star
     }
 }
 
-static inline float __attribute__((always_inline)) math_fclamp(float value, float min, float max) {
+static float __attribute__((const)) math_fclamp(float value, float min, float max) {
 //    if (value < min) {
 //        return min;
 //    } else {
@@ -96,7 +96,7 @@ static inline float __attribute__((always_inline)) math_fclamp(float value, floa
     return fminf(fmaxf(value, min), max);
 }
 
-static inline double __attribute__((always_inline)) math_clamp(double value, double min, double max) {
+static double __attribute__((const)) math_clamp(double value, double min, double max) {
 //    if (value < min) {
 //        return min;
 //    } else {
@@ -105,15 +105,16 @@ static inline double __attribute__((always_inline)) math_clamp(double value, dou
     return fmin(fmax(value, min), max);
 }
 
-static inline double __attribute__((always_inline)) math_getLerpProgress(double value, double start, double end) {
+static double __attribute__((const)) math_getLerpProgress(double value, double start, double end) {
     return (value - start) / (end - start);
 }
 
-static inline double __attribute__((always_inline)) math_clampedLerpFromProgress(double lerpValue, double lerpStart, double lerpEnd, double start, double end) {
+static double __attribute__((const))
+math_clampedLerpFromProgress(double lerpValue, double lerpStart, double lerpEnd, double start, double end) {
     return math_clampedLerp(start, end, math_getLerpProgress(lerpValue, lerpStart, lerpEnd));
 }
 
-static inline int __attribute__((always_inline)) c2me_natives_floorMod(int x, int y) {
+static int __attribute__((const)) c2me_natives_floorMod(int x, int y) {
     int mod = x % y;
     // if the signs are different and modulo not zero, adjust result
     if ((mod ^ y) < 0 && mod != 0) {

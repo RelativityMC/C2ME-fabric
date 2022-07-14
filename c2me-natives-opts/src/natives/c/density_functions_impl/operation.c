@@ -168,7 +168,7 @@ static const density_function_multi_op full_multi_op[] = {
 };
 
 
-density_function_impl_data *
+density_function_impl_data __attribute__((malloc)) *
 c2me_natives_create_dfi_operation_half(short operation, density_function_impl_data *input, double constantArgument) {
     void *ptr = malloc(sizeof(density_function_impl_data) + sizeof(dfi_operation_half_data));
 
@@ -184,8 +184,9 @@ c2me_natives_create_dfi_operation_half(short operation, density_function_impl_da
     return impl;
 }
 
-density_function_impl_data *c2me_natives_create_dfi_operation_full(short operation, density_function_impl_data *input1,
-                                                                   density_function_impl_data *input2) {
+density_function_impl_data __attribute__((malloc)) *
+c2me_natives_create_dfi_operation_full(short operation, density_function_impl_data *input1,
+                                       density_function_impl_data *input2) {
     void *ptr = malloc(sizeof(density_function_impl_data) + sizeof(dfi_operation_full_data));
 
     dfi_operation_full_data *data = ptr + sizeof(density_function_impl_data);

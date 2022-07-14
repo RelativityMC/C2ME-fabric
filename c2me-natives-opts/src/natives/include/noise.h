@@ -6,23 +6,23 @@
 #ifndef C2ME_FABRIC_NOISE_STRUCTS_H
 #define C2ME_FABRIC_NOISE_STRUCTS_H
 
-typedef struct {
+typedef const struct {
     double lacunarity;
     double persistence;
     size_t length;
     size_t octave_length;
-    size_t *indexes;
-    __uint8_t *sampler_permutations;
-    double *sampler_originX;
-    double *sampler_originY;
-    double *sampler_originZ;
-    double *amplitudes;
+    const size_t *indexes;
+    const __uint8_t *sampler_permutations;
+    const double *sampler_originX;
+    const double *sampler_originY;
+    const double *sampler_originZ;
+    const double *amplitudes;
 } octave_sampler_data;
 
-typedef struct {
-    octave_sampler_data *lowerInterpolatedNoise;
-    octave_sampler_data *upperInterpolatedNoise;
-    octave_sampler_data *interpolationNoise;
+typedef const struct {
+    const octave_sampler_data *lowerInterpolatedNoise;
+    const octave_sampler_data *upperInterpolatedNoise;
+    const octave_sampler_data *interpolationNoise;
     double field_38271;
     double field_38272;
     double xzScale;
@@ -33,8 +33,8 @@ typedef struct {
     double maxValue;
 } interpolated_sampler_data;
 
-static inline double __attribute__((always_inline))
-math_noise_perlin_sampleScalar(__uint8_t *permutations, int sectionX, int sectionY, int sectionZ, double localX,
+static inline double __attribute__((always_inline, pure))
+math_noise_perlin_sampleScalar(const __uint8_t *permutations, int sectionX, int sectionY, int sectionZ, double localX,
                                double localY, double localZ, double fadeLocalX) {
     int var0 = sectionX & 0xFF;
     int var1 = (sectionX + 1) & 0xFF;
@@ -107,8 +107,9 @@ math_noise_perlin_sampleScalar(__uint8_t *permutations, int sectionX, int sectio
     return var120 + (var103 * (var121 - var120));
 }
 
-static double
-math_noise_perlin_sample(__uint8_t *permutations, double originX, double originY, double originZ, double x, double y,
+static double __attribute__((pure))
+math_noise_perlin_sample(const __uint8_t *permutations, double originX, double originY, double originZ, double x,
+                         double y,
                          double z, double yScale, double yMax) {
     double d = x + originX;
     double e = y + originY;
@@ -134,8 +135,8 @@ math_noise_perlin_sample(__uint8_t *permutations, double originX, double originY
     return math_noise_perlin_sampleScalar(permutations, (int) i, (int) j, (int) k, g, h - o, l, h);
 }
 
-static inline double __attribute__((always_inline))
-math_noise_perlin_octave_sample_impl(octave_sampler_data *data, double x, double y, double z, double yScale,
+static inline double __attribute__((always_inline, pure))
+math_noise_perlin_octave_sample_impl(const octave_sampler_data *data, double x, double y, double z, double yScale,
                                      double yMax,
                                      bool useOrigin) {
     double d = 0.0;
@@ -160,11 +161,13 @@ math_noise_perlin_octave_sample_impl(octave_sampler_data *data, double x, double
     return d;
 }
 
-static double math_noise_perlin_octave_sample(octave_sampler_data *data, double x, double y, double z) {
+static __attribute__((pure)) double
+math_noise_perlin_octave_sample(const octave_sampler_data *data, double x, double y, double z) {
     return math_noise_perlin_octave_sample_impl(data, x, y, z, 0.0, 0.0, false);
 }
 
-static double math_noise_perlin_interpolated_sample(interpolated_sampler_data *data, int x, int y, int z) {
+static __attribute__((pure)) double
+math_noise_perlin_interpolated_sample(const interpolated_sampler_data *data, int x, int y, int z) {
     double d = x * data->field_38271;
     double e = y * data->field_38272;
     double f = z * data->field_38271;
@@ -202,7 +205,7 @@ static double math_noise_perlin_interpolated_sample(interpolated_sampler_data *d
 
     if (q < 1.0) { // !(q >= 1.0)
         octave_sampler_data *noise = data->lowerInterpolatedNoise;
-        for (int64_t offset = noise->length - 1; offset >= 0; offset --) {
+        for (int64_t offset = noise->length - 1; offset >= 0; offset--) {
             int64_t actualIndex = noise->octave_length - 1 - noise->indexes[offset];
             if (actualIndex >= 16) break;
             double o = 1.0 / c2me_natives_pow_of_two_table[actualIndex];
@@ -217,13 +220,13 @@ static double math_noise_perlin_interpolated_sample(interpolated_sampler_data *d
                     math_octave_maintainPrecision(f * o),
                     j * o,
                     e * o
-                    ) / o;
+            ) / o;
         }
     }
 
     if (q > 0.0) { // !(q <= 0.0)
         octave_sampler_data *noise = data->upperInterpolatedNoise;
-        for (size_t offset = noise->length - 1; offset >= 0; offset --) {
+        for (size_t offset = noise->length - 1; offset >= 0; offset--) {
             size_t actualIndex = noise->octave_length - 1 - noise->indexes[offset];
             if (actualIndex >= 16) break;
             double o = 1.0 / c2me_natives_pow_of_two_table[actualIndex];
@@ -238,15 +241,15 @@ static double math_noise_perlin_interpolated_sample(interpolated_sampler_data *d
                     math_octave_maintainPrecision(f * o),
                     j * o,
                     e * o
-                    ) / o;
+            ) / o;
         }
     }
 
     return math_clampedLerp(l / 512.0, m / 512.0, q) / 128.0;
 }
 
-static double math_noise_perlin_double_sample(
-        octave_sampler_data *firstSampler, octave_sampler_data *secondSampler,
+static __attribute__((pure)) double math_noise_perlin_double_sample(
+        const octave_sampler_data *firstSampler, const octave_sampler_data *secondSampler,
         double x, double y, double z, double amplitude) {
     double d = x * 1.0181268882175227;
     double e = y * 1.0181268882175227;
@@ -257,7 +260,7 @@ static double math_noise_perlin_double_sample(
            amplitude;
 }
 
-static double math_noise_simplex_sample(const int *permutations, double x, double y) {
+static __attribute__((pure)) double math_noise_simplex_sample(const int *permutations, double x, double y) {
     double var0 = (x + y) * SKEW_FACTOR_2D;
     double var1 = floor(x + var0);
     double var2 = floor(y + var0);
@@ -292,7 +295,7 @@ static double math_noise_simplex_sample(const int *permutations, double x, doubl
     return 70.0 * (var25 + var26 + var27);
 }
 
-static float math_noise_end_noise_sample(int *permutations, int i, int j) {
+static __attribute__((pure)) float math_noise_end_noise_sample(const int *permutations, int i, int j) {
     int k = i / 2;
     int l = j / 2;
     int m = i % 2;
@@ -319,6 +322,6 @@ static float math_noise_end_noise_sample(int *permutations, int i, int j) {
 }
 
 
-extern float c2me_natives_end_noise_sample(int *permutations, int i, int j);
+extern __attribute__((pure)) float c2me_natives_end_noise_sample(const int *permutations, int i, int j);
 
 #endif //C2ME_FABRIC_NOISE_STRUCTS_H

@@ -98,7 +98,7 @@ static const density_function_multi_op multi_ops[] = {
         c2me_natives_dfi_weird_scaled_samplers_caves_multi_op,
 };
 
-density_function_impl_data *
+density_function_impl_data __attribute__((malloc)) *
 c2me_natives_create_dfi_weird_scaled_sampler_data(density_function_impl_data *input, short operation,
                                                   bool isNull, octave_sampler_data *firstSampler,
                                                   octave_sampler_data *secondSampler, double amplitude) {

@@ -24,7 +24,8 @@ static void c2me_natives_dfi_clamp_multi_op(void *instance, double *res, noise_p
     }
 }
 
-density_function_impl_data *c2me_natives_create_dfi_clamp(density_function_impl_data *input, double minValue, double maxValue) {
+density_function_impl_data __attribute__((malloc)) *
+c2me_natives_create_dfi_clamp(density_function_impl_data *input, double minValue, double maxValue) {
     void *ptr = malloc(sizeof(density_function_impl_data) + sizeof(dfi_clamp_data));
 
     dfi_clamp_data *data = (dfi_clamp_data *) (ptr + sizeof(density_function_impl_data));

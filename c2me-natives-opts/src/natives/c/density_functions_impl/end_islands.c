@@ -10,12 +10,13 @@ long c2me_natives_sizeof_dfi_end_islands_data() {
     return sizeof(dfi_end_islands_data);
 }
 
-static double c2me_natives_dfi_end_islands_single_op(void *instance, int x, int y, int z){
+static __attribute__((pure)) double c2me_natives_dfi_end_islands_single_op(void *instance, int x, int y, int z) {
     dfi_end_islands_data *data = instance;
     return (math_noise_end_noise_sample(data->permutations, x / 8, z / 8) - 8.0) / 128.0;
 }
 
-static void c2me_natives_dfi_end_islands_multi_op(void *instance, double *res, noise_pos *poses, size_t length) {
+static __attribute__((pure)) void
+c2me_natives_dfi_end_islands_multi_op(void *instance, double *res, noise_pos *poses, size_t length) {
     dfi_end_islands_data *data = instance;
     int lastX = NAN, lastZ = NAN;
     double lastVal;
@@ -32,8 +33,8 @@ static void c2me_natives_dfi_end_islands_multi_op(void *instance, double *res, n
     }
 }
 
-density_function_impl_data *c2me_natives_create_dfi_end_islands(int* permutations) {
-    void* ptr = malloc(sizeof(density_function_impl_data) + sizeof(dfi_end_islands_data));
+density_function_impl_data __attribute__((malloc)) *c2me_natives_create_dfi_end_islands(int *permutations) {
+    void *ptr = malloc(sizeof(density_function_impl_data) + sizeof(dfi_end_islands_data));
 
     dfi_end_islands_data *data = ptr + sizeof(density_function_impl_data);
     data->permutations = permutations;

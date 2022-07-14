@@ -7,8 +7,9 @@
 #include "../include/common_maths.h"
 #include "../include/noise.h"
 
-double
-c2me_natives_perlin_sample(__uint8_t *permutations, double originX, double originY, double originZ, double x, double y,
+double __attribute__((pure))
+c2me_natives_perlin_sample(const __uint8_t *permutations, double originX, double originY, double originZ, double x,
+                           double y,
                            double z, double yScale, double yMax) {
     return math_noise_perlin_sample(permutations, originX, originY, originZ, x, y, z, yScale, yMax);
 }
@@ -30,30 +31,38 @@ __uint8_t *c2me_natives_perlin_generatePermutations() {
     return permutations;
 }
 
-octave_sampler_data *c2me_natives_perlin_create_octave_sampler_data(
-        double lacunarity, double persistence, size_t length, size_t octave_length, size_t *indexes, __uint8_t *sampler_permutations,
-        double *sampler_originX, double *sampler_originY, double *sampler_originZ, double *amplitudes) {
+octave_sampler_data __attribute__((malloc)) *c2me_natives_perlin_create_octave_sampler_data(
+        double lacunarity, double persistence, const size_t length, size_t octave_length, const size_t *indexes,
+        const __uint8_t *sampler_permutations,
+        const double *sampler_originX, const double *sampler_originY, const double *sampler_originZ,
+        const double *amplitudes) {
     octave_sampler_data *ptr = malloc(sizeof(octave_sampler_data));
-    ptr->lacunarity = lacunarity;
-    ptr->persistence = persistence;
-    ptr->length = length;
-    ptr->octave_length = octave_length;
-    ptr->indexes = indexes;
-    ptr->sampler_permutations = sampler_permutations;
-    ptr->sampler_originX = sampler_originX;
-    ptr->sampler_originY = sampler_originY;
-    ptr->sampler_originZ = sampler_originZ;
-    ptr->amplitudes = amplitudes;
+    octave_sampler_data init = {
+            .lacunarity = lacunarity,
+            .persistence = persistence,
+            .length = length,
+            .octave_length = octave_length,
+            .indexes = indexes,
+            .sampler_permutations = sampler_permutations,
+            .sampler_originX = sampler_originX,
+            .sampler_originY = sampler_originY,
+            .sampler_originZ = sampler_originZ,
+            .amplitudes = amplitudes,
+    };
+    memcpy(ptr, &init, sizeof(octave_sampler_data));
+
     return ptr;
 }
 
-double c2me_natives_perlin_octave_sample(octave_sampler_data *data, double x, double y, double z) {
+double __attribute__((pure))
+c2me_natives_perlin_octave_sample(octave_sampler_data *data, double x, double y, double z) {
     return math_noise_perlin_octave_sample(data, x, y, z);
 }
 
-interpolated_sampler_data *c2me_natives_perlin_create_interpolated_sampler_data(
-        octave_sampler_data *lowerInterpolatedNoise, octave_sampler_data *upperInterpolatedNoise,
-        octave_sampler_data *interpolationNoise,
+interpolated_sampler_data __attribute__((malloc)) *c2me_natives_perlin_create_interpolated_sampler_data(
+        const octave_sampler_data *lowerInterpolatedNoise,
+        const octave_sampler_data *upperInterpolatedNoise,
+        const octave_sampler_data *interpolationNoise,
         double field_38271,
         double field_38272,
         double xzScale,
@@ -63,27 +72,31 @@ interpolated_sampler_data *c2me_natives_perlin_create_interpolated_sampler_data(
         double smearScaleMultiplier,
         double maxValue) {
     interpolated_sampler_data *ptr = malloc(sizeof(interpolated_sampler_data));
-    ptr->lowerInterpolatedNoise = lowerInterpolatedNoise;
-    ptr->upperInterpolatedNoise = upperInterpolatedNoise;
-    ptr->interpolationNoise = interpolationNoise;
-    ptr->field_38271 = field_38271;
-    ptr->field_38272 = field_38272;
-    ptr->xzScale = xzScale;
-    ptr->yScale = yScale;
-    ptr->xzFactor = xzFactor;
-    ptr->yFactor = yFactor;
-    ptr->smearScaleMultiplier = smearScaleMultiplier;
-    ptr->maxValue = maxValue;
+    interpolated_sampler_data init = {
+            .lowerInterpolatedNoise = lowerInterpolatedNoise,
+            .upperInterpolatedNoise = upperInterpolatedNoise,
+            .interpolationNoise = interpolationNoise,
+            .field_38271 = field_38271,
+            .field_38272 = field_38272,
+            .xzScale = xzScale,
+            .yScale = yScale,
+            .xzFactor = xzFactor,
+            .yFactor = yFactor,
+            .smearScaleMultiplier = smearScaleMultiplier,
+            .maxValue = maxValue,
+    };
+    memcpy(ptr, &init, sizeof(interpolated_sampler_data));
 
     return ptr;
 }
 
-double c2me_natives_perlin_interpolated_sample(interpolated_sampler_data *data, int x, int y, int z) {
+double __attribute__((pure))
+c2me_natives_perlin_interpolated_sample(const interpolated_sampler_data *data, int x, int y, int z) {
     return math_noise_perlin_interpolated_sample(data, x, y, z);
 }
 
-double c2me_natives_perlin_double_sample(
-        octave_sampler_data *firstSampler, octave_sampler_data *secondSampler,
+double __attribute__((pure)) c2me_natives_perlin_double_sample(
+        const octave_sampler_data *firstSampler, const octave_sampler_data *secondSampler,
         double x, double y, double z, double amplitude) {
     return math_noise_perlin_double_sample(firstSampler, secondSampler, x, y, z, amplitude);
 }
