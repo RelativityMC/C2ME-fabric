@@ -4,6 +4,8 @@ import net.minecraft.nbt.NbtCompound;
 
 public interface IAsyncChunkPlayer {
 
+    void markPlayerForAsyncChunkLoad();
+
     void setPlayerData(NbtCompound nbtCompound);
 
     NbtCompound getPlayerData();
