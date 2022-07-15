@@ -92,7 +92,7 @@ public class MixinAquiferSamplerImpl {
 
     @Shadow
     @Final
-    private static double field_36221;
+    private static double NEEDS_FLUID_TICK_DISTANCE_THRESHOLD;
 
     @Shadow
     private boolean needsFluidTick;
@@ -187,7 +187,7 @@ public class MixinAquiferSamplerImpl {
                 double e = 1.0 - Math.abs(p - o) / 25.0; // C2ME - inline
                 final BlockState fluidLevel2BlockState = fluidLevel2.getBlockState(blockY);
                 if (e <= 0.0) {
-                    this.needsFluidTick = e >= field_36221;
+                    this.needsFluidTick = e >= NEEDS_FLUID_TICK_DISTANCE_THRESHOLD;
                     return fluidLevel2BlockState;
                 } else {
                     final boolean fluidLevel2BlockStateOfWater = fluidLevel2BlockState.isOf(Blocks.WATER);
@@ -382,7 +382,7 @@ public class MixinAquiferSamplerImpl {
         for (int[] is : field_34581) {
             int o = i + (is[0] << 4); // C2ME - inline
             int p = k + (is[1] << 4); // C2ME - inline
-            int q = this.chunkNoiseSampler.method_39900(o, p);
+            int q = this.chunkNoiseSampler.estimateSurfaceHeight(o, p);
             int r = q + 8;
             boolean bl2 = is[0] == 0 && is[1] == 0;
             if (bl2 && n > r) {

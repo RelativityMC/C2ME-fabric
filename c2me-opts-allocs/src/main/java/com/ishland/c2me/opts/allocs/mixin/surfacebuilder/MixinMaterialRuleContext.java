@@ -35,7 +35,7 @@ public class MixinMaterialRuleContext {
     private Supplier<RegistryEntry<Biome>> biomeSupplier;
 
     @Shadow
-    private int y;
+    private int blockY;
 
     @Shadow
     private int fluidHeight;
@@ -74,7 +74,7 @@ public class MixinMaterialRuleContext {
     public void initVerticalContext(int i, int j, int k, int l, int m, int n) {
         // TODO [VanillaCopy]
         ++this.uniquePosValue;
-        this.y = m;
+        this.blockY = m;
         this.fluidHeight = k;
         this.stoneDepthBelow = j;
         this.stoneDepthAbove = i;
