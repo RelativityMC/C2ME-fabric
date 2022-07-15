@@ -3,12 +3,13 @@ package com.ishland.c2me.fixes.worldgen.threading_issues.common;
 import net.minecraft.util.math.random.LocalRandom;
 
 import java.util.ConcurrentModificationException;
+import java.util.function.Supplier;
 
 public class CheckedThreadLocalRandom extends LocalRandom {
 
-    private final Thread owner;
+    private final Supplier<Thread> owner;
 
-    public CheckedThreadLocalRandom(long seed, Thread owner) {
+    public CheckedThreadLocalRandom(long seed, Supplier<Thread> owner) {
         super(seed);
         this.owner = owner;
     }
