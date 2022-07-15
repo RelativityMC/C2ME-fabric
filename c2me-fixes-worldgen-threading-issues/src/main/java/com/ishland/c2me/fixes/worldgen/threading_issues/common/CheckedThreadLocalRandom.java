@@ -16,13 +16,13 @@ public class CheckedThreadLocalRandom extends LocalRandom {
 
     @Override
     public void setSeed(long seed) {
-        if (this.owner != null && Thread.currentThread() != this.owner) throw new ConcurrentModificationException();
+        if (Thread.currentThread() != this.owner.get()) throw new ConcurrentModificationException();
         super.setSeed(seed);
     }
 
     @Override
     public int next(int bits) {
-        if (this.owner != null && Thread.currentThread() != this.owner) throw new ConcurrentModificationException();
+        if (Thread.currentThread() != this.owner.get()) throw new ConcurrentModificationException();
         return super.next(bits);
     }
 }
