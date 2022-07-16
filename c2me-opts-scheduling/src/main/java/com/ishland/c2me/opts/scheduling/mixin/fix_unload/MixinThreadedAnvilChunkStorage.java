@@ -33,7 +33,7 @@ public abstract class MixinThreadedAnvilChunkStorage {
 
     @ModifyArg(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ThreadedAnvilChunkStorage;unloadChunks(Ljava/util/function/BooleanSupplier;)V"))
     private BooleanSupplier redirectTickUnloadChunks(BooleanSupplier shouldKeepTicking) {
-        return ShouldKeepTickingUtils.minimumTicks(shouldKeepTicking, 32);
+        return () -> true;
     }
 
     @Inject(method = "<init>", at = @At("RETURN"))
