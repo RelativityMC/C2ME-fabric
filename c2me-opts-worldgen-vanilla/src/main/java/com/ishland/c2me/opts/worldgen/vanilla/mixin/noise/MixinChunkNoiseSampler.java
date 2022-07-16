@@ -17,11 +17,11 @@ import java.util.Map;
 public class MixinChunkNoiseSampler {
 
     @Mutable
-    @Shadow @Final private Map<DensityFunction, DensityFunction> field_36582;
+    @Shadow @Final private Map<DensityFunction, DensityFunction> actualDensityFunctionCache;
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(CallbackInfo info) {
-        this.field_36582 = new Reference2ReferenceOpenHashMap<>(this.field_36582);
+        this.actualDensityFunctionCache = new Reference2ReferenceOpenHashMap<>(this.actualDensityFunctionCache);
     }
 
 }

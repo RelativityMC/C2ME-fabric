@@ -13,28 +13,28 @@ public interface IChunkNoiseSampler {
     @Accessor
     int getVerticalBlockSize();
 
-    @Accessor("field_36594")
+    @Accessor("startBlockX")
     int getBaseX();
 
-    @Accessor("field_36572")
+    @Accessor("startBlockY")
     int getBaseY();
 
-    @Accessor("field_36573")
+    @Accessor("startBlockZ")
     int getBaseZ();
 
-    @Accessor("field_36574")
+    @Accessor("cellBlockX")
     int getOffsetX();
 
-    @Accessor("field_36575")
+    @Accessor("cellBlockY")
     int getOffsetY();
 
-    @Accessor("field_36576")
+    @Accessor("cellBlockZ")
     int getOffsetZ();
 
-    @Accessor
+    @Accessor("minimumCellY")
     int getMinimumY();
 
-    @Accessor
+    @Accessor("cellHeight")
     int getHeight();
 
 }
