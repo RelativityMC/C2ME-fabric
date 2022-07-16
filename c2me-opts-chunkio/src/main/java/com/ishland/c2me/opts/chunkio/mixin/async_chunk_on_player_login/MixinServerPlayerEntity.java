@@ -16,7 +16,12 @@ public class MixinServerPlayerEntity implements IAsyncChunkPlayer {
     private NbtCompound playerData = null;
 
     @Unique
-    private boolean chunkLoadCompleted = false;
+    private boolean chunkLoadCompleted = true;
+
+    @Override
+    public void markPlayerForAsyncChunkLoad() {
+        this.chunkLoadCompleted = false;
+    }
 
     @Override
     public void setPlayerData(NbtCompound nbtCompound) {
