@@ -18,14 +18,14 @@ public class MixinChunkNoiseSampler implements CompiledDensityFunctionArg {
 
     @Shadow @Final private int horizontalBlockSize;
     @Shadow @Final private int verticalBlockSize;
-    @Shadow private int field_36594;
-    @Shadow private int field_36572;
-    @Shadow private int field_36573;
-    @Shadow @Final private int minimumY;
-    @Shadow @Final private int height;
-    @Shadow private int field_36574;
-    @Shadow private int field_36575;
-    @Shadow private int field_36576;
+    @Shadow private int startBlockX;
+    @Shadow private int startBlockY;
+    @Shadow private int startBlockZ;
+    @Shadow @Final private int minimumCellY;
+    @Shadow @Final private int cellHeight;
+    @Shadow private int cellBlockX;
+    @Shadow private int cellBlockY;
+    @Shadow private int cellBlockZ;
     @Unique
     private long pointer = 0;
 
@@ -60,14 +60,14 @@ public class MixinChunkNoiseSampler implements CompiledDensityFunctionArg {
         final long data_start = this.pointer + NativeInterface.SIZEOF_density_function_multi_pos_args_data;
         UnsafeUtil.getInstance().putInt(data_start + 0, this.horizontalBlockSize);
         UnsafeUtil.getInstance().putInt(data_start + 4, this.verticalBlockSize);
-        UnsafeUtil.getInstance().putInt(data_start + 8, this.field_36594);
-        UnsafeUtil.getInstance().putInt(data_start + 12, this.field_36572);
-        UnsafeUtil.getInstance().putInt(data_start + 16, this.field_36573);
-        UnsafeUtil.getInstance().putInt(data_start + 20, this.field_36574);
-        UnsafeUtil.getInstance().putInt(data_start + 24, this.field_36575);
-        UnsafeUtil.getInstance().putInt(data_start + 28, this.field_36576);
-        UnsafeUtil.getInstance().putInt(data_start + 32, this.minimumY);
-        UnsafeUtil.getInstance().putInt(data_start + 36, this.height);
+        UnsafeUtil.getInstance().putInt(data_start + 8, this.startBlockX);
+        UnsafeUtil.getInstance().putInt(data_start + 12, this.startBlockY);
+        UnsafeUtil.getInstance().putInt(data_start + 16, this.startBlockZ);
+        UnsafeUtil.getInstance().putInt(data_start + 20, this.cellBlockX);
+        UnsafeUtil.getInstance().putInt(data_start + 24, this.cellBlockY);
+        UnsafeUtil.getInstance().putInt(data_start + 28, this.cellBlockZ);
+        UnsafeUtil.getInstance().putInt(data_start + 32, this.minimumCellY);
+        UnsafeUtil.getInstance().putInt(data_start + 36, this.cellHeight);
 
         return this.pointer;
     }
