@@ -5,8 +5,9 @@
   "plugin": "com.ishland.c2me.base.common.ModuleMixinPlugin",
   "mixins": [
     "MixinChunkHolder",
+    "MixinChunkTicketManager",
     "MixinThreadedAnvilChunkStorage",
-    "asynccatchers.MixinServerChunkManager",
-    "asynccatchers.MixinChunkTicketManager"
+    "asynccatchers.MixinChunkTicketManager",
+    "asynccatchers.MixinServerChunkManager"
   ]
 }
