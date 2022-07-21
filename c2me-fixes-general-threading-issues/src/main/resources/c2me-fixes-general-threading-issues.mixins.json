@@ -7,7 +7,6 @@
     "MixinChunkHolder",
     "MixinChunkTicketManager",
     "MixinThreadedAnvilChunkStorage",
-    "asynccatchers.MixinChunkTicketManager",
     "asynccatchers.MixinServerChunkManager"
   ]
 }
