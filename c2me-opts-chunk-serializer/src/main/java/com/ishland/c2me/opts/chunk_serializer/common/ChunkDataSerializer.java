@@ -37,68 +37,68 @@ import java.util.stream.LongStream;
 
 public final class ChunkDataSerializer {
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final byte[] STRING_DATA_VERSION = NbtWriter.getStringBytes("DataVersion");
-    private static final byte[] STRING_X_POS = NbtWriter.getStringBytes("xPos");
-    private static final byte[] STRING_Y_POS = NbtWriter.getStringBytes("yPos");
-    private static final byte[] STRING_Z_POS = NbtWriter.getStringBytes("zPos");
-    private static final byte[] STRING_LAST_UPDATE = NbtWriter.getStringBytes("LastUpdate");
-    private static final byte[] STRING_INHABITED_TIME = NbtWriter.getStringBytes("InhabitedTime");
-    private static final byte[] STRING_STATUS = NbtWriter.getStringBytes("Status");
-    private static final byte[] STRING_BLENDING_DATA = NbtWriter.getStringBytes("blending_data");
-    private static final byte[] STRING_BELOW_ZERO_RETROGEN = NbtWriter.getStringBytes("below_zero_retrogen");
-    private static final byte[] STRING_UPGRADE_DATA = NbtWriter.getStringBytes("upgrade_data");
-    private static final byte[] STRING_IS_LIGHT_ON = NbtWriter.getStringBytes("isLightOn");
-    private static final byte[] STRING_BLOCK_ENTITIES = NbtWriter.getStringBytes("block_entities");
-    private static final byte[] STRING_PALETTE = NbtWriter.getStringBytes("palette");
-    private static final byte[] STRING_DATA = NbtWriter.getStringBytes("data");
-    private static final byte[] STRING_SECTIONS = NbtWriter.getStringBytes("sections");
-    private static final byte[] STRING_BLOCK_STATES = NbtWriter.getStringBytes("block_states");
-    private static final byte[] STRING_BIOMES = NbtWriter.getStringBytes("biomes");
-    private static final byte[] STRING_BLOCK_LIGHT = NbtWriter.getStringBytes("BlockLight");
-    private static final byte[] STRING_SKY_LIGHT = NbtWriter.getStringBytes("SkyLight");
-    private static final byte[] STRING_OLD_NOISE = NbtWriter.getStringBytes("old_noise");
-    private static final byte[] STRING_HEIGHTS = NbtWriter.getStringBytes("heights");
-    private static final byte[] STRING_TARGET_STATUS = NbtWriter.getStringBytes("target_status");
-    private static final byte[] STRING_MISSING_BEDROCK = NbtWriter.getStringBytes("missing_bedrock");
-    private static final byte[] STRING_INDICES = NbtWriter.getStringBytes("Indices");
-    private static final byte[] STRING_SIDES = NbtWriter.getStringBytes("Sides");
-    private static final byte[] STRING_ENTITIES = NbtWriter.getStringBytes("entities");
-    private static final byte[] STRING_LIGHTS = NbtWriter.getStringBytes("Lights");
-    private static final byte[] STRING_CARVING_MASKS = NbtWriter.getStringBytes("CarvingMasks");
-    private static final byte[] STRING_HEIGHTMAPS = NbtWriter.getStringBytes("Heightmaps");
-    private static final byte[] STRING_POST_PROCESSING = NbtWriter.getStringBytes("PostProcessing");
-    private static final byte[] STRING_BLOCK_TICKS = NbtWriter.getStringBytes("block_ticks");
-    private static final byte[] STRING_FLUID_TICKS = NbtWriter.getStringBytes("fluid_ticks");
-    private static final byte[] STRING_STRUCTURES = NbtWriter.getStringBytes("structures");
-    private static final byte[] STRING_STARTS = NbtWriter.getStringBytes("starts");
-    private static final byte[] STRING_BIG_REFERENCES = NbtWriter.getStringBytes("References");
-    private static final byte[] STRING_ID = NbtWriter.getStringBytes("id");
-    private static final byte[] STRING_CHUNK_X = NbtWriter.getStringBytes("ChunkX");
-    private static final byte[] STRING_CHUNK_Z = NbtWriter.getStringBytes("ChunkZ");
-    private static final byte[] STRING_SMALL_REFERENCES = NbtWriter.getStringBytes("references");
-    private static final byte[] STRING_CHILDREN = NbtWriter.getStringBytes("Children");
-    private static final byte[] STRING_INVALID = NbtWriter.getStringBytes("INVALID");
-    private static final byte[] STRING_BB = NbtWriter.getStringBytes("BB");
-    private static final byte[] STRING_O = NbtWriter.getStringBytes("O");
-    private static final byte[] STRING_GD = NbtWriter.getStringBytes("GD");
-    private static final byte[] STRING_NAME = NbtWriter.getStringBytes("Name");
-    private static final byte[] STRING_PROPERTIES = NbtWriter.getStringBytes("Properties");
+    private static final byte[] STRING_DATA_VERSION = NbtWriter.getAsciiStringBytes("DataVersion");
+    private static final byte[] STRING_X_POS = NbtWriter.getAsciiStringBytes("xPos");
+    private static final byte[] STRING_Y_POS = NbtWriter.getAsciiStringBytes("yPos");
+    private static final byte[] STRING_Z_POS = NbtWriter.getAsciiStringBytes("zPos");
+    private static final byte[] STRING_LAST_UPDATE = NbtWriter.getAsciiStringBytes("LastUpdate");
+    private static final byte[] STRING_INHABITED_TIME = NbtWriter.getAsciiStringBytes("InhabitedTime");
+    private static final byte[] STRING_STATUS = NbtWriter.getAsciiStringBytes("Status");
+    private static final byte[] STRING_BLENDING_DATA = NbtWriter.getAsciiStringBytes("blending_data");
+    private static final byte[] STRING_BELOW_ZERO_RETROGEN = NbtWriter.getAsciiStringBytes("below_zero_retrogen");
+    private static final byte[] STRING_UPGRADE_DATA = NbtWriter.getAsciiStringBytes("upgrade_data");
+    private static final byte[] STRING_IS_LIGHT_ON = NbtWriter.getAsciiStringBytes("isLightOn");
+    private static final byte[] STRING_BLOCK_ENTITIES = NbtWriter.getAsciiStringBytes("block_entities");
+    private static final byte[] STRING_PALETTE = NbtWriter.getAsciiStringBytes("palette");
+    private static final byte[] STRING_DATA = NbtWriter.getAsciiStringBytes("data");
+    private static final byte[] STRING_SECTIONS = NbtWriter.getAsciiStringBytes("sections");
+    private static final byte[] STRING_BLOCK_STATES = NbtWriter.getAsciiStringBytes("block_states");
+    private static final byte[] STRING_BIOMES = NbtWriter.getAsciiStringBytes("biomes");
+    private static final byte[] STRING_BLOCK_LIGHT = NbtWriter.getAsciiStringBytes("BlockLight");
+    private static final byte[] STRING_SKY_LIGHT = NbtWriter.getAsciiStringBytes("SkyLight");
+    private static final byte[] STRING_OLD_NOISE = NbtWriter.getAsciiStringBytes("old_noise");
+    private static final byte[] STRING_HEIGHTS = NbtWriter.getAsciiStringBytes("heights");
+    private static final byte[] STRING_TARGET_STATUS = NbtWriter.getAsciiStringBytes("target_status");
+    private static final byte[] STRING_MISSING_BEDROCK = NbtWriter.getAsciiStringBytes("missing_bedrock");
+    private static final byte[] STRING_INDICES = NbtWriter.getAsciiStringBytes("Indices");
+    private static final byte[] STRING_SIDES = NbtWriter.getAsciiStringBytes("Sides");
+    private static final byte[] STRING_ENTITIES = NbtWriter.getAsciiStringBytes("entities");
+    private static final byte[] STRING_LIGHTS = NbtWriter.getAsciiStringBytes("Lights");
+    private static final byte[] STRING_CARVING_MASKS = NbtWriter.getAsciiStringBytes("CarvingMasks");
+    private static final byte[] STRING_HEIGHTMAPS = NbtWriter.getAsciiStringBytes("Heightmaps");
+    private static final byte[] STRING_POST_PROCESSING = NbtWriter.getAsciiStringBytes("PostProcessing");
+    private static final byte[] STRING_BLOCK_TICKS = NbtWriter.getAsciiStringBytes("block_ticks");
+    private static final byte[] STRING_FLUID_TICKS = NbtWriter.getAsciiStringBytes("fluid_ticks");
+    private static final byte[] STRING_STRUCTURES = NbtWriter.getAsciiStringBytes("structures");
+    private static final byte[] STRING_STARTS = NbtWriter.getAsciiStringBytes("starts");
+    private static final byte[] STRING_BIG_REFERENCES = NbtWriter.getAsciiStringBytes("References");
+    private static final byte[] STRING_ID = NbtWriter.getAsciiStringBytes("id");
+    private static final byte[] STRING_CHUNK_X = NbtWriter.getAsciiStringBytes("ChunkX");
+    private static final byte[] STRING_CHUNK_Z = NbtWriter.getAsciiStringBytes("ChunkZ");
+    private static final byte[] STRING_SMALL_REFERENCES = NbtWriter.getAsciiStringBytes("references");
+    private static final byte[] STRING_CHILDREN = NbtWriter.getAsciiStringBytes("Children");
+    private static final byte[] STRING_INVALID = NbtWriter.getAsciiStringBytes("INVALID");
+    private static final byte[] STRING_BB = NbtWriter.getAsciiStringBytes("BB");
+    private static final byte[] STRING_O = NbtWriter.getAsciiStringBytes("O");
+    private static final byte[] STRING_GD = NbtWriter.getAsciiStringBytes("GD");
+    private static final byte[] STRING_NAME = NbtWriter.getAsciiStringBytes("Name");
+    private static final byte[] STRING_PROPERTIES = NbtWriter.getAsciiStringBytes("Properties");
 
-    private static final byte[] STRING_CHAR_BIG_Y = NbtWriter.getStringBytes("Y");
-    private static final byte[] STRING_CHAR_SMALL_I = NbtWriter.getStringBytes("i");
-    private static final byte[] STRING_CHAR_SMALL_P = NbtWriter.getStringBytes("p");
-    private static final byte[] STRING_CHAR_SMALL_T = NbtWriter.getStringBytes("t");
-    private static final byte[] STRING_CHAR_SMALL_X = NbtWriter.getStringBytes("x");
-    private static final byte[] STRING_CHAR_SMALL_Y = NbtWriter.getStringBytes("y");
-    private static final byte[] STRING_CHAR_SMALL_Z = NbtWriter.getStringBytes("z");
+    private static final byte[] STRING_CHAR_BIG_Y = NbtWriter.getAsciiStringBytes("Y");
+    private static final byte[] STRING_CHAR_SMALL_I = NbtWriter.getAsciiStringBytes("i");
+    private static final byte[] STRING_CHAR_SMALL_P = NbtWriter.getAsciiStringBytes("p");
+    private static final byte[] STRING_CHAR_SMALL_T = NbtWriter.getAsciiStringBytes("t");
+    private static final byte[] STRING_CHAR_SMALL_X = NbtWriter.getAsciiStringBytes("x");
+    private static final byte[] STRING_CHAR_SMALL_Y = NbtWriter.getAsciiStringBytes("y");
+    private static final byte[] STRING_CHAR_SMALL_Z = NbtWriter.getAsciiStringBytes("z");
 
-    private static final byte[] STRING_C2ME = NbtWriter.getStringBytes("C2ME");
-    private static final byte[] STRING_KROPPEB = NbtWriter.getStringBytes("Kroppeb was here :); Version: 0.2.3");
+    private static final byte[] STRING_C2ME = NbtWriter.getAsciiStringBytes("C2ME");
+    private static final byte[] STRING_KROPPEB = NbtWriter.getAsciiStringBytes("Kroppeb was here :); Version: 0.2.3");
 
-    private static final byte[] STRING_C2ME_MARK_A = NbtWriter.getStringBytes("C2ME::MarkA");
-    private static final byte[] STRING_MARKER_FLUID_PROTO = NbtWriter.getStringBytes("fluid:proto");
-    private static final byte[] STRING_MARKER_FLUID_FULL = NbtWriter.getStringBytes("fluid:full");
-    private static final byte[] STRING_MARKER_FLUID_FALLBACK = NbtWriter.getStringBytes("fluid:fallback");
+    private static final byte[] STRING_C2ME_MARK_A = NbtWriter.getAsciiStringBytes("C2ME::MarkA");
+    private static final byte[] STRING_MARKER_FLUID_PROTO = NbtWriter.getAsciiStringBytes("fluid:proto");
+    private static final byte[] STRING_MARKER_FLUID_FULL = NbtWriter.getAsciiStringBytes("fluid:full");
+    private static final byte[] STRING_MARKER_FLUID_FALLBACK = NbtWriter.getAsciiStringBytes("fluid:fallback");
 
 
     public static void write(ServerWorld world, Chunk chunk, NbtWriter writer) {
@@ -370,7 +370,7 @@ public final class ChunkDataSerializer {
                 }
                 indicesCount++;
                 // TODO: cache this
-                writer.putIntArray(NbtWriter.getStringBytes(string), centerIndicesToUpgrade[i]);
+                writer.putIntArray(NbtWriter.getAsciiStringBytes(string), centerIndicesToUpgrade[i]);
             }
         }
 

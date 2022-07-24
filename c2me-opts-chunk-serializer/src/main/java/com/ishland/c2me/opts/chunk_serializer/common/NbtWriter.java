@@ -7,7 +7,6 @@ import net.minecraft.nbt.NbtElement;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryEntry;
-import net.minecraft.world.biome.Biome;
 import org.jetbrains.annotations.NotNull;
 import sun.misc.Unsafe;
 
@@ -186,7 +185,7 @@ public class NbtWriter {
 
 
     public void putStringEntry(String s) {
-        this.putStringEntry(getStringBytes(s));
+        this.putStringEntry(getAsciiStringBytes(s));
     }
 
     public <T> void putRegistryEntry(Registry<T> registry, T value) {
@@ -213,9 +212,9 @@ public class NbtWriter {
     @Deprecated
     public void putElementList(String name, List<? extends NbtElement> element) {
         if (element.isEmpty()) {
-            this.startFixedList(NbtWriter.getStringBytes(name), element.size(), (byte) 0);
+            this.startFixedList(NbtWriter.getAsciiStringBytes(name), element.size(), (byte) 0);
         } else {
-            this.startFixedList(NbtWriter.getStringBytes(name), element.size(), element.get(0).getType());
+            this.startFixedList(NbtWriter.getAsciiStringBytes(name), element.size(), element.get(0).getType());
         }
         for (NbtElement elementBase : element) {
             elementBase.accept(this.getVisitor());
@@ -295,7 +294,7 @@ public class NbtWriter {
 
     @Deprecated
     public void putString(byte[] name, String value) {
-        this.putString(name, getStringBytes(value));
+        this.putString(name, getAsciiStringBytes(value));
     }
 
 
@@ -409,33 +408,48 @@ public class NbtWriter {
     //endregion
 
 
-    public static byte @NotNull[] getStringBytes(String string) {
+    public static byte @NotNull[] getAsciiStringBytes(String string) {
         byte[] bytes = string.getBytes(StandardCharsets.UTF_8);
         for (byte aByte : bytes) {
             if (aByte <= 0) {
-                // TODO fix this
                 throw new IllegalArgumentException("String contains invalid characters");
             }
         }
+        return wrapAsciiBytes(bytes);
+    }
+
+    @NotNull
+    private static byte[] wrapAsciiBytes(byte[] bytes) {
         byte[] wrappedBytes = new byte[bytes.length + 2];
-        // store length in first 4 bytes
+        // store length in first 2 bytes
         wrappedBytes[0] = (byte) (bytes.length >> 8);
         wrappedBytes[1] = (byte) (bytes.length);
         System.arraycopy(bytes, 0, wrappedBytes, 2, bytes.length);
         return wrappedBytes;
     }
 
-    public static <T> byte[] getNameBytesFromRegistry(Registry<T> registry, T value) {
+    public static byte @NotNull[] getStringBytes(String string) {
+        byte[] bytes = string.getBytes(StandardCharsets.UTF_8);
+        for (byte aByte : bytes) {
+            if (aByte <= 0) {
+                // TODO: properly run conversion
+                throw new IllegalArgumentException("String contains invalid characters");
+            }
+        }
+        return wrapAsciiBytes(bytes);
+    }
+
+    public static <T> byte @NotNull[] getNameBytesFromRegistry(Registry<T> registry, T value) {
         return getNameBytesFromId(registry.getId(value));
     }
 
-    public static <T> byte[] getNameBytesFromRegistry( RegistryEntry<T> value) {
+    public static <T> byte @NotNull[] getNameBytesFromRegistry( RegistryEntry<T> value) {
         return getNameBytesFromId(value.getKey().get().getValue());
     }
 
-    public static <T> byte[] getNameBytesFromId(Identifier id) {
+    public static <T> byte @NotNull[] getNameBytesFromId(Identifier id) {
         // TODO: cache this
-        return getStringBytes(id.toString());
+        return getAsciiStringBytes(id.toString());
     }
 
     public NbtWriterVisitor getVisitor() {

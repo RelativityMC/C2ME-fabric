@@ -14,7 +14,7 @@ public class GenerationStepCarverMixin implements GenerationStepCarverAccessor {
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void postInit(String enum$name, int enum$ordinal, String name, CallbackInfo ci) {
-        this.nameBytes = NbtWriter.getStringBytes(enum$name);
+        this.nameBytes = NbtWriter.getAsciiStringBytes(enum$name);
     }
 
     @Override
