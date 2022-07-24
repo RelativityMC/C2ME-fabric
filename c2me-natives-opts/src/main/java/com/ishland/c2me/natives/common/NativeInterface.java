@@ -422,6 +422,24 @@ public class NativeInterface {
         }
     }
 
+    // density_function_impl_data __attribute__((malloc)) *
+    // c2me_natives_create_dfi_caching_flat_cache_data(density_function_impl_data *delegate, uint32_t length,
+    //                                                 int32_t baseX, int32_t baseZ, double *cacheFlattened)
+
+    private static final MethodHandle DFI_create_dfi_caching_flat_cache_data = LINKER.downcallHandle(
+            FunctionDescriptor.of(JAVA_LONG, JAVA_LONG, JAVA_INT, JAVA_INT, JAVA_INT, JAVA_LONG)
+    );
+
+    public static long createDFICachingFloatCacheData(long ptr_delegate, int length, int baseX, int baseZ, long ptr_cacheFlattened) {
+        if (ptr_delegate == 0L) throw new NullPointerException();
+        // ptr_cacheFlattened is nullable
+        try {
+            return (long) DFI_create_dfi_caching_flat_cache_data.invoke(ptr_delegate, length, baseX, baseZ, ptr_cacheFlattened);
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     // ===== Density Function Bindings =====
 
     // double c2me_natives_dfi_bindings_single_op(density_function_impl_data *dfi, int blockX, int blockY, int blockZ)
@@ -493,6 +511,7 @@ public class NativeInterface {
     public static final long SIZEOF_spline_data_constant = sizeOf("spline_data_constant");
     public static final long SIZEOF_spline_data_impl = sizeOf("spline_data_impl");
     public static final long SIZEOF_dfi_weird_scaled_sampler = sizeOf("dfi_weird_scaled_sampler");
+    public static final long SIZEOF_dfi_caching_flat_cache_data = sizeOf("dfi_caching_flat_cache_data");
 
     static {
 

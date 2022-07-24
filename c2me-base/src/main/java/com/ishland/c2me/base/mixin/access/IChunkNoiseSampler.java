@@ -37,4 +37,7 @@ public interface IChunkNoiseSampler {
     @Accessor("cellHeight")
     int getHeight();
 
+    @Accessor
+    int getBiomeHorizontalEnd();
+
 }
