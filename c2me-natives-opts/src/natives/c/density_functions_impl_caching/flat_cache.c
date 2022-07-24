@@ -66,6 +66,7 @@ c2me_natives_create_dfi_caching_flat_cache_data(density_function_impl_data *dele
             }
         }
         c2me_natives_dfi_bindings_multi_op_provided(delegate, poses, cacheFlattenedGen, counter);
+        data->cacheFlattened = cacheFlattenedGen;
     } else {
         data->cacheFlattened = cacheFlattened;
     }
