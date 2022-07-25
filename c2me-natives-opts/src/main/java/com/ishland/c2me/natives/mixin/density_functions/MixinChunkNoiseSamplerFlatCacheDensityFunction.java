@@ -43,14 +43,18 @@ public abstract class MixinChunkNoiseSamplerFlatCacheDensityFunction implements 
     private String errorMessage = null;
 
     @Unique
-    private boolean isInitDelayed = false;
+    private boolean isInitDelayed;
 
     @Unique
     private int length = -1;
 
     @Redirect(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/gen/densityfunction/DensityFunction;sample(Lnet/minecraft/world/gen/densityfunction/DensityFunction$NoisePos;)D"))
     private double preventSample(DensityFunction instance, NoisePos noisePos) {
-        return 0;
+        if (DensityFunctionUtils.isCompiled(delegate)) {
+            return 0;
+        } else {
+            return instance.sample(noisePos);
+        }
     }
 
     @Inject(method = "<init>", at = @At(value = "RETURN"))
@@ -98,8 +102,8 @@ public abstract class MixinChunkNoiseSamplerFlatCacheDensityFunction implements 
         this.pointer = NativeInterface.createDFICachingFloatCacheData(
                 ((CompiledDensityFunctionImpl) this.delegate).getDFIPointer(),
                 this.length,
-                ((IChunkNoiseSampler) this.field_36611).getBaseX(),
-                ((IChunkNoiseSampler) this.field_36611).getBaseZ(),
+                ((IChunkNoiseSampler) this.field_36611).getBiomeX(),
+                ((IChunkNoiseSampler) this.field_36611).getBiomeZ(),
                 ptr_cacheFlattened
         );
         NativeMemoryTracker.registerAllocatedMemory(
@@ -124,8 +128,8 @@ public abstract class MixinChunkNoiseSamplerFlatCacheDensityFunction implements 
             // TODO [VanillaCopy]
             int i = BiomeCoords.fromBlock(pos.blockX());
             int j = BiomeCoords.fromBlock(pos.blockZ());
-            int k = i - ((IChunkNoiseSampler) this.field_36611).getBaseX();
-            int l = j - ((IChunkNoiseSampler) this.field_36611).getBaseZ();
+            int k = i - ((IChunkNoiseSampler) this.field_36611).getBiomeX();
+            int l = j - ((IChunkNoiseSampler) this.field_36611).getBiomeZ();
             int m = this.cache.length;
             return k >= 0 && l >= 0 && k < m && l < m ? this.cache[k][l] : this.delegate.sample(pos);
         }

@@ -123,4 +123,12 @@ static int __attribute__((const)) math_floorMod(int x, int y) {
     return mod;
 }
 
+static int __attribute__((const)) math_biome2block(int biomeCoord) {
+    return biomeCoord << 2;
+}
+
+static int __attribute__((const)) math_block2biome(int blockCoord) {
+    return blockCoord >> 2;
+}
+
 #endif //C2ME_COMMON_MATHS_H

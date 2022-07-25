@@ -40,4 +40,10 @@ public interface IChunkNoiseSampler {
     @Accessor
     int getBiomeHorizontalEnd();
 
+    @Accessor
+    int getBiomeX();
+
+    @Accessor
+    int getBiomeZ();
+
 }
