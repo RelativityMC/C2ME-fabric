@@ -32,9 +32,9 @@ size_t c2me_natives_sizeof_chunk_noise_sampler_data() {
 
 static noise_pos c2me_natives_dfa_chunk_noise_sampler_get_pos(void *instance, int i) {
     chunk_noise_sampler_data *data = instance;
-    int j = c2me_natives_floorMod(i, data->horizontalBlockSize);
+    int j = math_floorMod(i, data->horizontalBlockSize);
     int k = math_floorDiv(i, data->horizontalBlockSize);
-    int l = c2me_natives_floorMod(k, data->horizontalBlockSize);
+    int l = math_floorMod(k, data->horizontalBlockSize);
     int m = data->verticalBlockSize - 1 - math_floorDiv(k, data->horizontalBlockSize);
 
     noise_pos pos;

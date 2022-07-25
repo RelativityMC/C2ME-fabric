@@ -114,7 +114,7 @@ math_clampedLerpFromProgress(double lerpValue, double lerpStart, double lerpEnd,
     return math_clampedLerp(start, end, math_getLerpProgress(lerpValue, lerpStart, lerpEnd));
 }
 
-static int __attribute__((const)) c2me_natives_floorMod(int x, int y) {
+static int __attribute__((const)) math_floorMod(int x, int y) {
     int mod = x % y;
     // if the signs are different and modulo not zero, adjust result
     if ((mod ^ y) < 0 && mod != 0) {
