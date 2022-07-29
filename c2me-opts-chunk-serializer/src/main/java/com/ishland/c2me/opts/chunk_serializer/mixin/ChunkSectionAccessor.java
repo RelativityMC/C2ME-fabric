@@ -5,6 +5,7 @@ import net.minecraft.util.registry.RegistryEntry;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.PalettedContainer;
+import net.minecraft.world.chunk.ReadableContainer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
@@ -14,5 +15,5 @@ public interface ChunkSectionAccessor {
     PalettedContainer<BlockState> getBlockStateContainer();
 
     @Accessor
-    PalettedContainer<RegistryEntry<Biome>> getBiomeContainer();
+    ReadableContainer<RegistryEntry<Biome>> getBiomeContainer();
 }

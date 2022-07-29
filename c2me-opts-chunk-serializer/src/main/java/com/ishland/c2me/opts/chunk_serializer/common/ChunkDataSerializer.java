@@ -1,11 +1,13 @@
 package com.ishland.c2me.opts.chunk_serializer.common;
 
 import com.ishland.c2me.opts.chunk_serializer.mixin.*;
+import com.mojang.serialization.Codec;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.shorts.ShortList;
 import net.minecraft.SharedConstants;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.nbt.*;
 import net.minecraft.server.world.ServerWorld;
@@ -13,28 +15,37 @@ import net.minecraft.structure.StructureContext;
 import net.minecraft.structure.StructurePiece;
 import net.minecraft.structure.StructurePiecesList;
 import net.minecraft.structure.StructureStart;
+import net.minecraft.util.collection.IndexedIterable;
 import net.minecraft.util.math.*;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryEntry;
+import net.minecraft.world.ChunkSerializer;
 import net.minecraft.world.Heightmap;
 import net.minecraft.world.LightType;
 import net.minecraft.world.TickPriority;
 import net.minecraft.world.biome.Biome;
+import net.minecraft.world.biome.BiomeKeys;
 import net.minecraft.world.chunk.*;
 import net.minecraft.world.chunk.light.LightingProvider;
 import net.minecraft.world.gen.GenerationStep;
 import net.minecraft.world.gen.carver.CarvingMask;
 import net.minecraft.world.gen.chunk.BlendingData;
-import net.minecraft.world.gen.feature.ConfiguredStructureFeature;
+import net.minecraft.world.gen.structure.Structure;
+import net.minecraft.world.tick.ChunkTickScheduler;
 import net.minecraft.world.tick.OrderedTick;
 import net.minecraft.world.tick.SerializableTickScheduler;
+import net.minecraft.world.tick.SimpleTickScheduler;
+import net.minecraft.world.tick.Tick;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.LongStream;
 
+@SuppressWarnings("JavadocReference")
 public final class ChunkDataSerializer {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final byte[] STRING_DATA_VERSION = NbtWriter.getAsciiStringBytes("DataVersion");
@@ -58,6 +69,8 @@ public final class ChunkDataSerializer {
     private static final byte[] STRING_SKY_LIGHT = NbtWriter.getAsciiStringBytes("SkyLight");
     private static final byte[] STRING_OLD_NOISE = NbtWriter.getAsciiStringBytes("old_noise");
     private static final byte[] STRING_HEIGHTS = NbtWriter.getAsciiStringBytes("heights");
+    private static final byte[] STRING_MIN_SECTION = NbtWriter.getAsciiStringBytes("min_section");
+    private static final byte[] STRING_MAX_SECTION = NbtWriter.getAsciiStringBytes("max_section");
     private static final byte[] STRING_TARGET_STATUS = NbtWriter.getAsciiStringBytes("target_status");
     private static final byte[] STRING_MISSING_BEDROCK = NbtWriter.getAsciiStringBytes("missing_bedrock");
     private static final byte[] STRING_INDICES = NbtWriter.getAsciiStringBytes("Indices");
@@ -93,7 +106,7 @@ public final class ChunkDataSerializer {
     private static final byte[] STRING_CHAR_SMALL_Z = NbtWriter.getAsciiStringBytes("z");
 
     private static final byte[] STRING_C2ME = NbtWriter.getAsciiStringBytes("C2ME");
-    private static final byte[] STRING_KROPPEB = NbtWriter.getAsciiStringBytes("Kroppeb was here :); Version: 0.2.3");
+    private static final byte[] STRING_KROPPEB = NbtWriter.getAsciiStringBytes("Kroppeb was here :); Version: 0.3.0");
 
     private static final byte[] STRING_C2ME_MARK_A = NbtWriter.getAsciiStringBytes("C2ME::MarkA");
     private static final byte[] STRING_MARKER_FLUID_PROTO = NbtWriter.getAsciiStringBytes("fluid:proto");
@@ -101,8 +114,13 @@ public final class ChunkDataSerializer {
     private static final byte[] STRING_MARKER_FLUID_FALLBACK = NbtWriter.getAsciiStringBytes("fluid:fallback");
 
 
+    /**
+     * Mirror of {@link ChunkSerializer#serialize(ServerWorld, Chunk)}
+     */
     public static void write(ServerWorld world, Chunk chunk, NbtWriter writer) {
         ChunkPos chunkPos = chunk.getPos();
+
+        System.out.printf("Serializing chunk at: %d %d%n", chunkPos.x, chunkPos.z);
 
         writer.putString(STRING_C2ME, STRING_KROPPEB);
         writer.putInt(STRING_DATA_VERSION, SharedConstants.getGameVersion().getWorldVersion());
@@ -115,19 +133,25 @@ public final class ChunkDataSerializer {
 
         BlendingData blendingData = chunk.getBlendingData();
         if (blendingData != null) {
-            writeBlendingData(writer.startCompound(STRING_BLENDING_DATA), (BlendingDataAccessor) blendingData);
+            // Inline codec
+            writer.startCompound(STRING_BLENDING_DATA);
+            writeBlendingData(writer, (BlendingDataAccessor) blendingData);
             writer.finishCompound();
         }
 
         BelowZeroRetrogen belowZeroRetrogen = chunk.getBelowZeroRetrogen();
         if (belowZeroRetrogen != null) {
-            writeBelowZeroRetrogen(writer.startCompound(STRING_BELOW_ZERO_RETROGEN), (BelowZeroRetrogenAccessor) (Object) belowZeroRetrogen);
+            // Inline codec
+            writer.startCompound(STRING_BELOW_ZERO_RETROGEN);
+            writeBelowZeroRetrogen(writer, (BelowZeroRetrogenAccessor) (Object) belowZeroRetrogen);
             writer.finishCompound();
         }
 
         UpgradeData upgradeData = chunk.getUpgradeData();
         if (!upgradeData.isDone()) {
-            writeUpgradeData(writer.startCompound(STRING_UPGRADE_DATA), (UpgradeDataAccessor) upgradeData);
+            // Inline serialization
+            writer.startCompound(STRING_UPGRADE_DATA);
+            writeUpgradeData(writer, (UpgradeDataAccessor) upgradeData);
             writer.finishCompound();
         }
 
@@ -185,16 +209,16 @@ public final class ChunkDataSerializer {
         }
 
         serializeTicks(writer, world, chunk.getTickSchedulers());
-        final ShortList[] postProcessingLists = chunk.getPostProcessingLists();
+        ShortList[] postProcessingLists = chunk.getPostProcessingLists();
         putShortListArray(postProcessingLists, writer, STRING_POST_PROCESSING);
 
 
         writer.startCompound(STRING_HEIGHTMAPS);
-        for (Map.Entry<Heightmap.Type, Heightmap> chunkNibbleArray : chunk.getHeightmaps()) {
-            if (chunk.getStatus().getHeightmapTypes().contains(chunkNibbleArray.getKey())) {
+        for (Map.Entry<Heightmap.Type, Heightmap> entry : chunk.getHeightmaps()) {
+            if (chunk.getStatus().getHeightmapTypes().contains(entry.getKey())) {
                 writer.putLongArray(
-                        ((HeightMapTypeAccessor) (Object) chunkNibbleArray.getKey()).getNameBytes(),
-                        chunkNibbleArray.getValue().asLongArray());
+                        ((HeightMapTypeAccessor) (Object) entry.getKey()).getNameBytes(),
+                        entry.getValue().asLongArray());
 
             }
         }
@@ -220,6 +244,9 @@ public final class ChunkDataSerializer {
         }
     }
 
+    /**
+     * Mirror section of {@link ChunkSerializer#serialize(ServerWorld, Chunk)}
+     */
     private static void writeSectionData(
             NbtWriter writer,
             Chunk chunk,
@@ -278,17 +305,24 @@ public final class ChunkDataSerializer {
         writer.finishList(sectionsStart, sectionCount);
     }
 
+    /**
+     * mirror of {@link ChunkSerializer#CODEC}
+     * created by {@link PalettedContainer#createPalettedContainerCodec(IndexedIterable, Codec, PalettedContainer.PaletteProvider, Object)}
+     * with: {@link Block#STATE_IDS} as idList,
+     * {@link BlockState#CODEC} as entryCodec,
+     * {@link PalettedContainer.PaletteProvider#BLOCK_STATE} as paletteProvider,
+     * {@link Blocks#AIR}{@code .getDefaultState()} as defaultValue
+     */
     @SuppressWarnings("unchecked")
     private static void writeBlockStates(NbtWriter writer, PalettedContainer<BlockState> blockStateContainer) {
         writer.startCompound(STRING_BLOCK_STATES);
         // todo can this be optimized?
         // todo: does this conflict with lithium by any chance?
-        var data = (PalettedContainerAccessor.PalettedContainerSerializedAccessor<BlockState>) (Object)
-                ((PalettedContainerAccessor<BlockState>) blockStateContainer).invokeWrite(
-                        Block.STATE_IDS,
-                        PalettedContainer.PaletteProvider.BLOCK_STATE);
+        var data = blockStateContainer.serialize(
+                Block.STATE_IDS,
+                PalettedContainer.PaletteProvider.BLOCK_STATE);
 
-        List<BlockState> paletteEntries = data.getPaletteEntries();
+        List<BlockState> paletteEntries = data.paletteEntries();
         writer.startFixedList(STRING_PALETTE, paletteEntries.size(), NbtElement.COMPOUND_TYPE);
 
         for (BlockState paletteEntry : paletteEntries) {
@@ -303,7 +337,7 @@ public final class ChunkDataSerializer {
             writer.finishCompound();
         }
 
-        Optional<LongStream> storage = data.getStorage();
+        Optional<LongStream> storage = data.storage();
         //noinspection OptionalIsPresent
         if (storage.isPresent()) {
             writer.putLongArray(STRING_DATA, storage.get().toArray());
@@ -311,22 +345,30 @@ public final class ChunkDataSerializer {
         writer.finishCompound();
     }
 
-    private static void writeBiomes(NbtWriter writer, PalettedContainer<RegistryEntry<Biome>> biomeContainer, Registry<Biome> biomeRegistry) {
+    /**
+     * mirror of local codec
+     * created by {@link PalettedContainer#createReadableContainerCodec(IndexedIterable, Codec, PalettedContainer.PaletteProvider, Object)}
+     * with: {@link Registry#getIndexedEntries()} as idList,
+     * {@link Registry#createEntryCodec()} as entryCodec,
+     * {@link PalettedContainer.PaletteProvider#BIOME} as paletteProvider,
+     * {@link BiomeKeys#PLAINS} as defaultValue
+     */
+    private static void writeBiomes(NbtWriter writer, ReadableContainer<RegistryEntry<Biome>> biomeContainer, Registry<Biome> biomeRegistry) {
         writer.startCompound(STRING_BIOMES);
         // todo can this be optimized?
         // todo: does this conflict with lithium by any chance?
-        var data = MixinUtil.of(MixinUtil.of(biomeContainer).invokeWrite(
+        var data = biomeContainer.serialize(
                 biomeRegistry.getIndexedEntries(),
-                PalettedContainer.PaletteProvider.BIOME));
+                PalettedContainer.PaletteProvider.BIOME);
 
-        List<RegistryEntry<Biome>> paletteEntries = data.getPaletteEntries();
+        List<RegistryEntry<Biome>> paletteEntries = data.paletteEntries();
         writer.startFixedList(STRING_PALETTE, paletteEntries.size(), NbtElement.STRING_TYPE);
 
         for (RegistryEntry<Biome> paletteEntry : paletteEntries) {
             writer.putRegistryEntry(paletteEntry);
         }
 
-        Optional<LongStream> storage = data.getStorage();
+        Optional<LongStream> storage = data.storage();
         //noinspection OptionalIsPresent
         if (storage.isPresent()) {
             writer.putLongArray(STRING_DATA, storage.get().toArray());
@@ -334,18 +376,28 @@ public final class ChunkDataSerializer {
         writer.finishCompound();
     }
 
+    /**
+     * mirror of {@link BlendingData#CODEC}
+     */
     private static void writeBlendingData(NbtWriter writer, BlendingDataAccessor blendingData) {
-        writer.putBoolean(STRING_OLD_NOISE, blendingData.invokeUsesOldNoise());
+        writer.putInt(STRING_MIN_SECTION, blendingData.getOldHeightLimit().getBottomSectionCoord());
+        writer.putInt(STRING_MAX_SECTION, blendingData.getOldHeightLimit().getTopSectionCoord());
 
-        double[] heights = blendingData.getHeights();
+        double[] heights = blendingData.getSurfaceHeights();
         for (double d : heights) {
             if (d != Double.MAX_VALUE) {
                 writer.putDoubles(STRING_HEIGHTS, heights);
-                break;
+                return;
             }
         }
+
+        // set to empty list
+        writer.startFixedList(STRING_HEIGHTS, 0, NbtElement.DOUBLE_TYPE);
     }
 
+    /**
+     * mirror of {@link BelowZeroRetrogen#CODEC}
+     */
     private static void writeBelowZeroRetrogen(NbtWriter writer, BelowZeroRetrogenAccessor belowZeroRetrogen) {
         writer.putRegistry(STRING_TARGET_STATUS, Registry.CHUNK_STATUS, belowZeroRetrogen.invokeGetTargetStatus());
 
@@ -406,6 +458,9 @@ public final class ChunkDataSerializer {
     }
 
 
+    /**
+     * mirror of {@link ChunkSerializer#serializeTicks(ServerWorld, NbtCompound, Chunk.TickSchedulers)}
+     */
     private static void serializeTicks(NbtWriter writer, ServerWorld world, Chunk.TickSchedulers tickSchedulers) {
         long l = world.getLevelProperties().getTime();
 
@@ -413,29 +468,29 @@ public final class ChunkDataSerializer {
         writeFluidTicks(writer, l, tickSchedulers.fluids());
     }
 
-    @SuppressWarnings("unchecked")
-    private static void writeBlockTicks(NbtWriter writer, long l, SerializableTickScheduler<Block> blocks) {
-        if (blocks instanceof SimpleTickSchedulerAccessor<?>) {
-            SimpleTickSchedulerAccessor<Block> simpleTickSchedulerAccessor =
-                    (SimpleTickSchedulerAccessor<Block>) blocks;
 
-            final List<TickAccessor<Block>> scheduledTicks = simpleTickSchedulerAccessor.getScheduledTicks();
+    /**
+     * mirrors of {@link SimpleTickScheduler#toNbt(long, Function)},
+     * {@link ChunkTickScheduler#toNbt(long, Function)} and
+     * {@link Tick#toNbt(Function)}
+     */
+    private static void writeBlockTicks(NbtWriter writer, long l, SerializableTickScheduler<Block> blocks) {
+        if (blocks instanceof SimpleTickSchedulerAccessor<Block> simpleTickSchedulerAccessor) {
+            final List<Tick<Block>> scheduledTicks = simpleTickSchedulerAccessor.getScheduledTicks();
             writer.startFixedList(STRING_BLOCK_TICKS, scheduledTicks.size(), NbtElement.COMPOUND_TYPE);
-            for (TickAccessor<Block> scheduledTick : scheduledTicks) {
+            for (Tick<Block> scheduledTick : scheduledTicks) {
                 writeBlockTick(writer, scheduledTick);
             }
-        } else if (blocks instanceof ChunkTickSchedulerAccessor<?>) {
-            ChunkTickSchedulerAccessor<Block> chunkTickSchedulerAccessor =
-                    (ChunkTickSchedulerAccessor<Block>) blocks;
+        } else if (blocks instanceof ChunkTickSchedulerAccessor<Block> chunkTickSchedulerAccessor) {
 
-            final @Nullable List<TickAccessor<Block>> scheduledTicks = chunkTickSchedulerAccessor.getTicks();
+            final @Nullable List<Tick<Block>> scheduledTicks = chunkTickSchedulerAccessor.getTicks();
             final Queue<OrderedTick<Block>> tickQueue = chunkTickSchedulerAccessor.getTickQueue();
 
             int size = (scheduledTicks == null ? tickQueue.size() : scheduledTicks.size() + tickQueue.size());
 
             writer.startFixedList(STRING_BLOCK_TICKS, size, NbtElement.COMPOUND_TYPE);
             if (scheduledTicks != null) {
-                for (TickAccessor<Block> scheduledTick : scheduledTicks) {
+                for (Tick<Block> scheduledTick : scheduledTicks) {
                     writeBlockTick(writer, scheduledTick);
                 }
             }
@@ -450,29 +505,22 @@ public final class ChunkDataSerializer {
         }
     }
 
-    @SuppressWarnings("unchecked")
     private static void writeFluidTicks(NbtWriter writer, long l, SerializableTickScheduler<Fluid> fluids) {
-        if (fluids instanceof SimpleTickSchedulerAccessor<?>) {
-            SimpleTickSchedulerAccessor<Fluid> simpleTickSchedulerAccessor =
-                    (SimpleTickSchedulerAccessor<Fluid>) fluids;
-
-            final List<TickAccessor<Fluid>> scheduledTicks = simpleTickSchedulerAccessor.getScheduledTicks();
+        if (fluids instanceof SimpleTickSchedulerAccessor<Fluid> simpleTickSchedulerAccessor) {
+            final List<Tick<Fluid>> scheduledTicks = simpleTickSchedulerAccessor.getScheduledTicks();
             writer.startFixedList(STRING_FLUID_TICKS, scheduledTicks.size(), NbtElement.COMPOUND_TYPE);
-            for (TickAccessor<Fluid> scheduledTick : scheduledTicks) {
+            for (Tick<Fluid> scheduledTick : scheduledTicks) {
                 writeFluidTick(writer, scheduledTick);
             }
-        } else if (fluids instanceof ChunkTickSchedulerAccessor<?>) {
-            ChunkTickSchedulerAccessor<Fluid> chunkTickSchedulerAccessor =
-                    (ChunkTickSchedulerAccessor<Fluid>) fluids;
-
-            final @Nullable List<TickAccessor<Fluid>> scheduledTicks = chunkTickSchedulerAccessor.getTicks();
+        } else if (fluids instanceof ChunkTickSchedulerAccessor<Fluid> chunkTickSchedulerAccessor) {
+            final @Nullable List<Tick<Fluid>> scheduledTicks = chunkTickSchedulerAccessor.getTicks();
             final Queue<OrderedTick<Fluid>> tickQueue = chunkTickSchedulerAccessor.getTickQueue();
 
             int size = (scheduledTicks == null ? tickQueue.size() : scheduledTicks.size() + tickQueue.size());
 
             writer.startFixedList(STRING_FLUID_TICKS, size, NbtElement.COMPOUND_TYPE);
             if (scheduledTicks != null) {
-                for (TickAccessor<Fluid> scheduledTick : scheduledTicks) {
+                for (Tick<Fluid> scheduledTick : scheduledTicks) {
                     writeFluidTick(writer, scheduledTick);
                 }
             }
@@ -501,24 +549,24 @@ public final class ChunkDataSerializer {
         writer.finishCompound();
     }
 
-    private static void writeFluidTick(NbtWriter writer, TickAccessor<Fluid> scheduledTick) {
+    private static void writeFluidTick(NbtWriter writer, Tick<Fluid> scheduledTick) {
         writer.compoundEntryStart();
-        writer.putRegistry(STRING_CHAR_SMALL_I, Registry.FLUID, scheduledTick.getType());
+        writer.putRegistry(STRING_CHAR_SMALL_I, Registry.FLUID, scheduledTick.type());
         writeGenericTickData(writer, scheduledTick);
         writer.finishCompound();
     }
 
-    private static void writeBlockTick(NbtWriter writer, TickAccessor<Block> scheduledTick) {
+    private static void writeBlockTick(NbtWriter writer, Tick<Block> scheduledTick) {
         writer.compoundEntryStart();
-        writer.putRegistry(STRING_CHAR_SMALL_I, Registry.BLOCK, scheduledTick.getType());
+        writer.putRegistry(STRING_CHAR_SMALL_I, Registry.BLOCK, scheduledTick.type());
         writeGenericTickData(writer, scheduledTick);
         writer.finishCompound();
     }
 
     private static void writeGenericTickData(
             NbtWriter writer,
-            TickAccessor<?> scheduledTick) {
-        writeGenericTickData(writer, scheduledTick.getPos(), scheduledTick.getDelay(), scheduledTick.getPriority());
+            Tick<?> scheduledTick) {
+        writeGenericTickData(writer, scheduledTick.pos(), scheduledTick.delay(), scheduledTick.priority());
     }
 
     private static void writeGenericTickData(
@@ -533,22 +581,24 @@ public final class ChunkDataSerializer {
         writer.putInt(STRING_CHAR_SMALL_P, priority.getIndex());
     }
 
-    // mirror of writeStructures
+    /**
+     * mirror of {@link ChunkSerializer#writeStructures(StructureContext, ChunkPos, Map, Map)}
+     */
     private static void writeStructures(
             NbtWriter writer,
             StructureContext context,
             ChunkPos pos,
-            Map<ConfiguredStructureFeature<?, ?>, StructureStart> starts,
-            Map<ConfiguredStructureFeature<?, ?>, LongSet> references
+            Map<Structure, StructureStart> starts,
+            Map<Structure, LongSet> references
     ) {
         writer.startCompound(STRING_STRUCTURES);
         writer.startCompound(STRING_STARTS);
 
-        Registry<ConfiguredStructureFeature<?, ?>> configuredStructureFeatureRegistry = context.registryManager().get(Registry.CONFIGURED_STRUCTURE_FEATURE_KEY);
+        Registry<Structure> configuredStructureFeatureRegistry = context.registryManager().get(Registry.STRUCTURE_KEY);
 
         for (var entry : starts.entrySet()) {
             writer.startCompound(NbtWriter.getNameBytesFromRegistry(configuredStructureFeatureRegistry, entry.getKey()));
-            final StructureStartAccessor value = (StructureStartAccessor) (Object) entry.getValue();
+            StructureStartAccessor value = cast(entry.getValue());
             writeStructureStart(writer, value, context, pos);
             writer.finishCompound();
         }
@@ -563,11 +613,15 @@ public final class ChunkDataSerializer {
         }
         writer.finishCompound();
 
-
         writer.finishCompound();
     }
 
-    // mirror of StructureStart#toNbt
+
+    /**
+     * mirror of {@link StructureStart#toNbt(StructureContext, ChunkPos)}
+     * <p>
+     * section mirror of {@link StructurePiecesList#toNbt(StructureContext)}
+     */
     private static void writeStructureStart(NbtWriter writer, StructureStartAccessor structureStart, StructureContext context, ChunkPos pos) {
         final StructurePiecesList children = structureStart.getChildren();
         if (children.isEmpty()) {
@@ -575,15 +629,16 @@ public final class ChunkDataSerializer {
             return;
         }
 
-        writer.putRegistry(STRING_ID, context.registryManager().get(Registry.CONFIGURED_STRUCTURE_FEATURE_KEY), structureStart.getFeature());
+        writer.putRegistry(STRING_ID, context.registryManager().get(Registry.STRUCTURE_KEY), structureStart.getStructure());
         writer.putInt(STRING_CHUNK_X, pos.x);
         writer.putInt(STRING_CHUNK_Z, pos.z);
         writer.putInt(STRING_SMALL_REFERENCES, structureStart.getReferences());
 
+        // section: StructurePiecesList#toNbt(StructureContext)
         writer.startFixedList(STRING_CHILDREN, children.pieces().size(), NbtElement.COMPOUND_TYPE);
         for (StructurePiece piece : children.pieces()) {
             writer.putElementEntry(piece.toNbt(context));
-            //writeStructurePiece(writer,(StructurePieceAccessor) piece, context);
+            // TODO: writeStructurePiece(writer,(StructurePieceAccessor) piece, context);
         }
     }
 
@@ -605,5 +660,12 @@ public final class ChunkDataSerializer {
         // FML, didn't think about this one
         // this.writeNbt(context, nbtCompound);
         writer.finishCompound();
+    }
+
+
+    @SuppressWarnings("unchecked")
+    @Contract("null -> null; !null -> !null")
+    private static <T> T cast(Object entry) {
+        return (T) entry;
     }
 }

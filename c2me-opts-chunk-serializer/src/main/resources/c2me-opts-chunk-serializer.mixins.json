@@ -12,15 +12,12 @@
     "GenerationStepCarverMixin",
     "HeightMapTypeMixin",
     "MixinThreadedAnvilChunkStorage",
-    "PalettedContainerAccessor",
-    "PalettedContainerAccessor$PalettedContainerSerializedAccessor",
     "SimpleTickSchedulerAccessor",
     "RegionBasedStorageAccessor",
     "StateAccessor",
     "StorageIoWorkerAccessor",
     "StructurePieceAccessor",
     "StructureStartAccessor",
-    "TickAccessor",
     "UpgradeDataAccessor",
     "VersionedChunkStorageAccessor"
   ]
