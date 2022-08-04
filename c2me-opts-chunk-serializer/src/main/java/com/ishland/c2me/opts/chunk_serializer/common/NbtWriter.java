@@ -1,5 +1,6 @@
 package com.ishland.c2me.opts.chunk_serializer.common;
 
+import com.ishland.c2me.opts.chunk_serializer.common.utils.StringBytesConvertible;
 import com.ishland.c2me.opts.chunk_serializer.common.utils.UnsafeUtils;
 import it.unimi.dsi.fastutil.longs.LongCollection;
 import it.unimi.dsi.fastutil.longs.LongIterable;
@@ -10,7 +11,9 @@ import net.minecraft.util.registry.RegistryEntry;
 import org.jetbrains.annotations.NotNull;
 import sun.misc.Unsafe;
 
+import java.io.UTFDataFormatException;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.List;
 
 @SuppressWarnings("WeakerAccess")
@@ -185,7 +188,7 @@ public class NbtWriter {
 
 
     public void putStringEntry(String s) {
-        this.putStringEntry(getAsciiStringBytes(s));
+        this.putStringEntry(getStringBytes(s));
     }
 
     public <T> void putRegistryEntry(Registry<T> registry, T value) {
@@ -193,7 +196,7 @@ public class NbtWriter {
     }
 
 
-    public <T>void putRegistryEntry(RegistryEntry<T> registryEntry) {
+    public <T> void putRegistryEntry(RegistryEntry<T> registryEntry) {
         this.putStringEntry(getNameBytesFromRegistry(registryEntry));
     }
 
@@ -212,9 +215,9 @@ public class NbtWriter {
     @Deprecated
     public void putElementList(String name, List<? extends NbtElement> element) {
         if (element.isEmpty()) {
-            this.startFixedList(NbtWriter.getAsciiStringBytes(name), element.size(), (byte) 0);
+            this.startFixedList(NbtWriter.getStringBytes(name), element.size(), (byte) 0);
         } else {
-            this.startFixedList(NbtWriter.getAsciiStringBytes(name), element.size(), element.get(0).getType());
+            this.startFixedList(NbtWriter.getStringBytes(name), element.size(), element.get(0).getType());
         }
         for (NbtElement elementBase : element) {
             elementBase.accept(this.getVisitor());
@@ -294,7 +297,7 @@ public class NbtWriter {
 
     @Deprecated
     public void putString(byte[] name, String value) {
-        this.putString(name, getAsciiStringBytes(value));
+        this.putString(name, getStringBytes(value));
     }
 
 
@@ -408,7 +411,7 @@ public class NbtWriter {
     //endregion
 
 
-    public static byte @NotNull[] getAsciiStringBytes(String string) {
+    public static byte @NotNull [] getAsciiStringBytes(String string) {
         byte[] bytes = string.getBytes(StandardCharsets.UTF_8);
         for (byte aByte : bytes) {
             if (aByte <= 0) {
@@ -428,27 +431,47 @@ public class NbtWriter {
         return wrappedBytes;
     }
 
-    public static byte @NotNull[] getStringBytes(String string) {
-        byte[] bytes = string.getBytes(StandardCharsets.UTF_8);
-        for (byte aByte : bytes) {
-            if (aByte <= 0) {
-                // TODO: properly run conversion
-                throw new IllegalArgumentException("String contains invalid characters");
+    public static byte @NotNull [] getStringBytes(String string) {
+        ;
+        byte[] res = new byte[string.length() * 3 + 2];
+        int index = 2;
+        for (char c : string.toCharArray()) {
+            if (c >= '\u0001' && c <= '\u007f') {
+                res[index++] = (byte) c;
+            } else if (c <= '\u07ff') {
+                res[index++] = (byte) (0xc0 | (0x1f & (c >> 6)));
+                res[index++] = (byte) (0x80 | (0x3f & c));
+            } else {
+                res[index++] = (byte) (0xe0 | (0x0f & (c >> 12)));
+                res[index++] = (byte) (0x80 | (0x3f & (c >> 6)));
+                res[index++] = (byte) (0x80 | (0x3f & c));
             }
         }
-        return wrapAsciiBytes(bytes);
+
+        int length = index - 2;
+
+        if (length > 65535) {
+            throw new RuntimeException(new UTFDataFormatException("String too large"));
+        }
+
+        res[0] = (byte) (length >> 8);
+        res[1] = (byte) (length);
+
+        return Arrays.copyOf(res, index);
     }
 
-    public static <T> byte @NotNull[] getNameBytesFromRegistry(Registry<T> registry, T value) {
+    public static <T> byte @NotNull [] getNameBytesFromRegistry(Registry<T> registry, T value) {
         return getNameBytesFromId(registry.getId(value));
     }
 
-    public static <T> byte @NotNull[] getNameBytesFromRegistry( RegistryEntry<T> value) {
+    public static <T> byte @NotNull [] getNameBytesFromRegistry(RegistryEntry<T> value) {
         return getNameBytesFromId(value.getKey().get().getValue());
     }
 
-    public static <T> byte @NotNull[] getNameBytesFromId(Identifier id) {
-        // TODO: cache this
+    public static <T> byte @NotNull [] getNameBytesFromId(Identifier id) {
+        if (id instanceof StringBytesConvertible stringBytesConvertible) {
+            return stringBytesConvertible.getStringBytes();
+        }
         return getAsciiStringBytes(id.toString());
     }
 

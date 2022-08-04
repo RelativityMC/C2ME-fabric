@@ -19,6 +19,7 @@
     "StructurePieceAccessor",
     "StructureStartAccessor",
     "UpgradeDataAccessor",
-    "VersionedChunkStorageAccessor"
+    "VersionedChunkStorageAccessor",
+    "IdentifierMixin"
   ]
 }

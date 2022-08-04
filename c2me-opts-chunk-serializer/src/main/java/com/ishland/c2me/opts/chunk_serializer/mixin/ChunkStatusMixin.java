@@ -16,7 +16,7 @@ public class ChunkStatusMixin implements ChunkStatusAccessor {
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void postInit(String id, ChunkStatus previous, int taskMargin, EnumSet<?> heightMapTypes, ChunkStatus.ChunkType chunkType, ChunkStatus.GenerationTask generationTask, ChunkStatus.LoadTask loadTask, CallbackInfo ci) {
-        this.idBytes = NbtWriter.getAsciiStringBytes(id);
+        this.idBytes = NbtWriter.getStringBytes(id);
     }
 
     @Override
