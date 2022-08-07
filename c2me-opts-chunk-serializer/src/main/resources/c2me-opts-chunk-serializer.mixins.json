@@ -20,6 +20,7 @@
     "StructureStartAccessor",
     "UpgradeDataAccessor",
     "VersionedChunkStorageAccessor",
-    "IdentifierMixin"
+    "IdentifierMixin",
+    "SaveStateAccessor"
   ]
 }

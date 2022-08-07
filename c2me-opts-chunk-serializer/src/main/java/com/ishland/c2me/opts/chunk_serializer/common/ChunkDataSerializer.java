@@ -5,6 +5,7 @@ import com.ishland.c2me.opts.chunk_serializer.mixin.*;
 import com.mojang.serialization.Codec;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.shorts.ShortList;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.SharedConstants;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -119,7 +120,9 @@ public final class ChunkDataSerializer {
     private static final byte[] STRING_SKYLIGHT_STATE_TAG = NbtWriter.getAsciiStringBytes("starlight.skylight_state");
     private static final byte[] STRING_STARLIGHT_VERSION_TAG = NbtWriter.getAsciiStringBytes("starlight.light_version");
     private static final int STARLIGHT_LIGHT_VERSION = 8;
-    private static boolean STARLIGHT = true;
+
+    // TODO: validating starlight compatibility?
+    private static final boolean STARLIGHT = FabricLoader.getInstance().isModLoaded("starlight");
 
     /**
      * Mirror of {@link ChunkSerializer#serialize(ServerWorld, Chunk)}
@@ -270,7 +273,7 @@ public final class ChunkDataSerializer {
             Registry<Biome> biomeRegistry
     ) {
         if (STARLIGHT) {
-
+            writeSectionDataStarlight(writer, chunk, chunkPos, chunkSections, lightingProvider, biomeRegistry);
         } else {
             writeSectionDataVanilla(writer, chunk, chunkPos, chunkSections, lightingProvider, biomeRegistry);
         }
