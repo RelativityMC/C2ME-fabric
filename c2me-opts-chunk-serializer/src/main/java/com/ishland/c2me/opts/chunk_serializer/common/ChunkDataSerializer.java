@@ -1,5 +1,6 @@
 package com.ishland.c2me.opts.chunk_serializer.common;
 
+import com.ishland.c2me.opts.chunk_serializer.common.utils.StarLightUtil;
 import com.ishland.c2me.opts.chunk_serializer.mixin.*;
 import com.mojang.serialization.Codec;
 import it.unimi.dsi.fastutil.longs.LongSet;
@@ -113,6 +114,12 @@ public final class ChunkDataSerializer {
     private static final byte[] STRING_MARKER_FLUID_FULL = NbtWriter.getAsciiStringBytes("fluid:full");
     private static final byte[] STRING_MARKER_FLUID_FALLBACK = NbtWriter.getAsciiStringBytes("fluid:fallback");
 
+    // STARLIGHT
+    private static final byte[] STRING_BLOCKLIGHT_STATE_TAG = NbtWriter.getAsciiStringBytes("starlight.blocklight_state");
+    private static final byte[] STRING_SKYLIGHT_STATE_TAG = NbtWriter.getAsciiStringBytes("starlight.skylight_state");
+    private static final byte[] STRING_STARLIGHT_VERSION_TAG = NbtWriter.getAsciiStringBytes("starlight.light_version");
+    private static final int STARLIGHT_LIGHT_VERSION = 8;
+    private static boolean STARLIGHT = true;
 
     /**
      * Mirror of {@link ChunkSerializer#serialize(ServerWorld, Chunk)}
@@ -158,14 +165,11 @@ public final class ChunkDataSerializer {
         ChunkSection[] chunkSections = chunk.getSectionArray();
         LightingProvider lightingProvider = world.getChunkManager().getLightingProvider();
         Registry<Biome> biomeRegistry = world.getRegistryManager().get(Registry.BIOME_KEY);
-        boolean bl = chunk.isLightOn();
+
+        checkLightFlag(chunk, writer, world);
 
         writeSectionData(writer, chunk, chunkPos, (ChunkSectionAccessor[]) chunkSections, lightingProvider, biomeRegistry);
 
-
-        if (bl) {
-            writer.putBoolean(STRING_IS_LIGHT_ON, true);
-        }
 
         long blockEntitiesStart = writer.startList(STRING_BLOCK_ENTITIES, NbtElement.COMPOUND_TYPE);
         int blockEntitiesCount = 0;
@@ -228,6 +232,19 @@ public final class ChunkDataSerializer {
         writeStructures(writer, StructureContext.from(world), chunkPos, chunk.getStructureStarts(), chunk.getStructureReferences());
     }
 
+    private static void checkLightFlag(Chunk chunk, NbtWriter writer, ServerWorld world) {
+        if (STARLIGHT) {
+            // starlight also has a check to see if the "level" isn't a "serverlevel"???
+            if (chunk.isLightOn()) {
+                writer.putBoolean(STRING_IS_LIGHT_ON, false);
+            }
+        } else {
+            if (chunk.isLightOn()) {
+                writer.putBoolean(STRING_IS_LIGHT_ON, true);
+            }
+        }
+    }
+
     private static void putShortListArray(ShortList[] data, NbtWriter writer, byte[] name) {
         writer.startFixedList(name, data.length, NbtElement.LIST_TYPE);
 
@@ -244,10 +261,25 @@ public final class ChunkDataSerializer {
         }
     }
 
+    private static void writeSectionData(
+            NbtWriter writer,
+            Chunk chunk,
+            ChunkPos chunkPos,
+            ChunkSectionAccessor[] chunkSections,
+            LightingProvider lightingProvider,
+            Registry<Biome> biomeRegistry
+    ) {
+        if (STARLIGHT) {
+
+        } else {
+            writeSectionDataVanilla(writer, chunk, chunkPos, chunkSections, lightingProvider, biomeRegistry);
+        }
+    }
+
     /**
      * Mirror section of {@link ChunkSerializer#serialize(ServerWorld, Chunk)}
      */
-    private static void writeSectionData(
+    private static void writeSectionDataVanilla(
             NbtWriter writer,
             Chunk chunk,
             ChunkPos chunkPos,
@@ -303,6 +335,105 @@ public final class ChunkDataSerializer {
         }
 
         writer.finishList(sectionsStart, sectionCount);
+    }
+
+    /**
+     * Mirror section of {@link ChunkSerializer#serialize(ServerWorld, Chunk)}
+     * with the changes by StarLight applied inline
+     */
+    private static void writeSectionDataStarlight(
+            NbtWriter writer,
+            Chunk chunk,
+            ChunkPos chunkPos,
+            ChunkSectionAccessor[] chunkSections,
+            LightingProvider lightingProvider,
+            Registry<Biome> biomeRegistry
+    ) {
+        // START DIFF
+        boolean lit = chunk.isLightOn();
+        ChunkStatus status = chunk.getStatus();
+        boolean shouldWrite = lit && status.isAtLeast(ChunkStatus.LIGHT);
+        var blockNibbles = StarLightUtil.getBlockNibbles(chunk);
+        var skyNibbles = StarLightUtil.getSkyNibbles(chunk);
+        int minSection;
+        // END DIFF
+
+        long sectionsStart = writer.startList(STRING_SECTIONS, NbtElement.COMPOUND_TYPE);
+        int sectionCount = 0;
+
+        for (int i = minSection = lightingProvider.getBottomY(); i < lightingProvider.getTopY(); ++i) {
+            int index = chunk.sectionCoordToIndex(i);
+            boolean bl2 = index >= 0 && index < chunkSections.length;
+
+            // START DIFF
+//
+//            ChunkNibbleArray blockLight = lightingProvider.get(LightType.BLOCK)
+//                    .getLightSection(ChunkSectionPos.from(chunkPos, i));
+//            ChunkNibbleArray skyLight = lightingProvider.get(LightType.SKY)
+//                    .getLightSection(ChunkSectionPos.from(chunkPos, i));
+
+            var blockNibble = shouldWrite ? StarLightUtil.getSaveState(blockNibbles[i - minSection]) : null;
+            var skyNibble = shouldWrite ? StarLightUtil.getSaveState(skyNibbles[i - minSection]) : null;
+
+            if (bl2 || blockNibble != null || skyNibble != null) {
+                // END DIFF
+                boolean hasInner = false;
+                if (bl2) {
+                    hasInner = true;
+                    writer.compoundEntryStart();
+                    ChunkSectionAccessor chunkSection = chunkSections[index];
+
+                    writeBlockStates(writer, chunkSection.getBlockStateContainer());
+                    writeBiomes(writer, chunkSection.getBiomeContainer(), biomeRegistry);
+                }
+
+                // START DIFF
+//                if (blockLight != null && !blockLight.isUninitialized()) {
+//                    if (!hasInner) {
+//                        writer.compoundEntryStart();
+//                        hasInner = true;
+//                    }
+//                    writer.putByteArray(STRING_BLOCK_LIGHT, blockLight.asByteArray());
+//                }
+
+//                if (skyLight != null && !skyLight.isUninitialized()) {
+//                    if (!hasInner) {
+//                        writer.compoundEntryStart();
+//                        hasInner = true;
+//                    }
+//                    writer.putByteArray(STRING_SKY_LIGHT, skyLight.asByteArray());
+//                }
+
+                if (blockNibble != null) {
+                    if (blockNibble.getData() != null) {
+                        writer.putByteArray(STRING_BLOCK_LIGHT, blockNibble.getData());
+                    }
+                    writer.putInt(STRING_BLOCKLIGHT_STATE_TAG, blockNibble.getState());
+                }
+
+                if (skyNibble != null) {
+                    if (skyNibble.getData() != null) {
+                        writer.putByteArray(STRING_SKY_LIGHT, skyNibble.getData());
+                    }
+                    writer.putInt(STRING_SKYLIGHT_STATE_TAG, skyNibble.getState());
+                }
+
+                // END DIFF
+
+
+                if (hasInner) {
+                    writer.putByte(STRING_CHAR_BIG_Y, (byte) i);
+                    writer.finishCompound();
+                    sectionCount++;
+                }
+            }
+        }
+
+        writer.finishList(sectionsStart, sectionCount);
+
+        if (lit) {
+            writer.putInt(STRING_STARLIGHT_VERSION_TAG, STARLIGHT_LIGHT_VERSION);
+        }
     }
 
     /**
@@ -661,8 +792,6 @@ public final class ChunkDataSerializer {
         // this.writeNbt(context, nbtCompound);
         writer.finishCompound();
     }
-
-
 
 
     @SuppressWarnings("unchecked")
