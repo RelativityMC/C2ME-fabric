@@ -18,7 +18,7 @@ import java.util.function.Supplier;
 
 public class ConfigSystem {
 
-    static final Logger LOGGER = LoggerFactory.getLogger("C2ME Config System");
+    public static final Logger LOGGER = LoggerFactory.getLogger("C2ME Config System");
 
     private static final long CURRENT_CONFIG_VERSION = 3;
 
@@ -200,6 +200,25 @@ public class ConfigSystem {
             generateDefaultEntry(def, incompatibleDef);
 
             return this.incompatibilityDetected ? incompatibleDef : (isDefaultValue ? def : CONFIG.getEnum(this.key, enumClass));
+        }
+
+        public String getString(String def, String incompatibleDef) {
+            findModDefinedIncompatibility();
+            final String systemPropertyOverride = getSystemPropertyOverride();
+            final Object configured = systemPropertyOverride != null ? systemPropertyOverride : CONFIG.get(this.key);
+            boolean isDefaultValue = false;
+            if (configured != null) {
+                if (String.valueOf(configured).equals("default")) { // default placeholder
+                    isDefaultValue = true;
+                } else if (!(configured instanceof String)) { // try to fix config
+                    CONFIG.set(this.key, String.valueOf(configured));
+                }
+            } else {
+                isDefaultValue = true;
+            }
+            generateDefaultEntry(def, incompatibleDef);
+
+            return this.incompatibilityDetected ? incompatibleDef : (isDefaultValue ? def : CONFIG.get(this.key));
         }
 
         private void findModDefinedIncompatibility() {
