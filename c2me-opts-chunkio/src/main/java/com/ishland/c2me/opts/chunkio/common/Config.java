@@ -26,6 +26,7 @@ public class Config {
                     1  for GZip (RFC1952) (Vanilla compatible)\s
                     2  for Zlib (RFC1950) (Vanilla default) (Vanilla compatible)\s
                     3  for Uncompressed (Fastest, but higher disk usage) (Vanilla compatible)\s
+                    4  for zstd (Vanilla Incompatible, won't loads world saved with it without this option)\s
                     \s
                     Original chunk data will still readable after modifying this option \s
                     as this option only affects newly stored chunks\s
