@@ -15,7 +15,7 @@ public class ConfigConstants {
             CHUNK_STREAM_VERSION = ChunkStreamVersion.DEFLATE;
         } else {
             final ChunkStreamVersion chunkStreamVersion = ChunkStreamVersion.get((int) Config.chunkStreamVersion);
-            if (chunkStreamVersion == null) {
+            if (Config.chunkStreamVersion != 4 && chunkStreamVersion == null) {
                 Config.LOGGER.warn("Unknown compression {}, using vanilla default instead", Config.chunkStreamVersion);
                 CHUNK_STREAM_VERSION = ChunkStreamVersion.DEFLATE;
             } else {
