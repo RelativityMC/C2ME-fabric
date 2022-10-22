@@ -68,7 +68,7 @@ public class MixinAquiferSamplerImpl {
 
     @Shadow
     @Final
-    private static int[][] field_34581;
+    private static int[][] CHUNK_POS_OFFSETS;
 
     @Shadow
     @Final
@@ -361,7 +361,7 @@ public class MixinAquiferSamplerImpl {
         if (fluidLevel != null) {
             return fluidLevel;
         } else {
-            AquiferSampler.FluidLevel fluidLevel2 = this.method_40463(i, j, k);
+            AquiferSampler.FluidLevel fluidLevel2 = this.getFluidLevel(i, j, k);
             this.waterLevels[o] = fluidLevel2;
             return fluidLevel2;
         }
@@ -372,14 +372,14 @@ public class MixinAquiferSamplerImpl {
      * @reason optimize
      */
     @Overwrite
-    private AquiferSampler.FluidLevel method_40463(int i, int j, int k) {
+    private AquiferSampler.FluidLevel getFluidLevel(int i, int j, int k) {
         AquiferSampler.FluidLevel fluidLevel = this.fluidLevelSampler.getFluidLevel(i, j, k);
         int l = Integer.MAX_VALUE;
         int m = j + 12;
         int n = j - 12;
         boolean bl = false;
 
-        for (int[] is : field_34581) {
+        for (int[] is : CHUNK_POS_OFFSETS) {
             int o = i + (is[0] << 4); // C2ME - inline
             int p = k + (is[1] << 4); // C2ME - inline
             int q = this.chunkNoiseSampler.estimateSurfaceHeight(o, p);

@@ -1,13 +1,13 @@
 package com.ishland.c2me.threading.worldgen.mixin;
 
+import com.ishland.c2me.base.common.scheduler.PriorityUtils;
+import com.ishland.c2me.base.common.scheduler.ThreadLocalWorldGenSchedulingState;
 import com.ishland.c2me.base.common.util.SneakyThrow;
 import com.ishland.c2me.opts.chunk_access.common.CurrentWorldGenState;
 import com.ishland.c2me.threading.worldgen.common.ChunkStatusUtils;
 import com.ishland.c2me.threading.worldgen.common.Config;
 import com.ishland.c2me.threading.worldgen.common.IChunkStatus;
 import com.ishland.c2me.threading.worldgen.common.IWorldGenLockable;
-import com.ishland.c2me.base.common.scheduler.PriorityUtils;
-import com.ishland.c2me.base.common.scheduler.ThreadLocalWorldGenSchedulingState;
 import com.mojang.datafixers.util.Either;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ServerLightingProvider;
@@ -15,7 +15,6 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.structure.StructureTemplateManager;
 import net.minecraft.util.profiling.jfr.Finishable;
 import net.minecraft.util.profiling.jfr.FlightProfiler;
-import net.minecraft.util.registry.Registry;
 import net.minecraft.world.ChunkRegion;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
@@ -51,6 +50,12 @@ public abstract class MixinChunkStatus implements IChunkStatus {
     @Shadow
     @Final
     private String id;
+
+    @Shadow
+    public static List<ChunkStatus> createOrderedList() {
+        throw new AbstractMethodError();
+    }
+
     private int reducedTaskRadius = -1;
 
     public void calculateReducedTaskRadius() {
@@ -80,7 +85,7 @@ public abstract class MixinChunkStatus implements IChunkStatus {
     @Dynamic
     @Inject(method = "<clinit>", at = @At("RETURN"))
     private static void onCLInit(CallbackInfo info) {
-        for (ChunkStatus chunkStatus : Registry.CHUNK_STATUS) {
+        for (ChunkStatus chunkStatus : createOrderedList()) {
             ((IChunkStatus) chunkStatus).calculateReducedTaskRadius();
         }
     }

@@ -1,6 +1,5 @@
 package com.ishland.c2me.tests.worlddiff;
 
-import com.google.common.collect.ImmutableSet;
 import com.ibm.asyncutil.locks.AsyncSemaphore;
 import com.ibm.asyncutil.locks.FairAsyncSemaphore;
 import com.ishland.c2me.tests.worlddiff.mixin.IChunkSerializer;
@@ -12,6 +11,9 @@ import com.mojang.serialization.DynamicOps;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.class_7712;
+import net.minecraft.class_7723;
+import net.minecraft.command.CommandRegistryWrapper;
 import net.minecraft.datafixer.Schemas;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
@@ -24,6 +26,7 @@ import net.minecraft.resource.ResourcePackManager;
 import net.minecraft.resource.ResourcePackSource;
 import net.minecraft.resource.ResourceType;
 import net.minecraft.resource.VanillaDataPackProvider;
+import net.minecraft.resource.featuretoggle.FeatureFlags;
 import net.minecraft.server.SaveLoader;
 import net.minecraft.server.SaveLoading;
 import net.minecraft.server.command.CommandManager;
@@ -50,6 +53,7 @@ import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.PalettedContainer;
 import net.minecraft.world.chunk.ReadableContainer;
+import net.minecraft.world.dimension.DimensionOptions;
 import net.minecraft.world.gen.structure.Structure;
 import net.minecraft.world.level.storage.LevelStorage;
 import net.minecraft.world.storage.StorageIoWorker;
@@ -66,6 +70,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -255,32 +260,31 @@ public class ComparisonSession implements Closeable {
 
         System.out.printf("Reading world data for %s\n", description);
         ResourcePackManager resourcePackManager = new ResourcePackManager(
-                ResourceType.SERVER_DATA,
                 new VanillaDataPackProvider(),
-                new FileResourcePackProvider(session.getDirectory(WorldSavePath.DATAPACKS).toFile(), ResourcePackSource.PACK_SOURCE_WORLD)
+                new FileResourcePackProvider(session.getDirectory(WorldSavePath.DATAPACKS), ResourceType.SERVER_DATA, ResourcePackSource.WORLD)
         );
 
         SaveLoader saveLoader;
         try {
-            DataPackSettings dataPackSettings0 = Objects.requireNonNullElse(session.getDataPackSettings(), DataPackSettings.SAFE_MODE);
-            SaveLoading.DataPacks lv = new SaveLoading.DataPacks(resourcePackManager, dataPackSettings0, false);
-            SaveLoading.ServerConfig functionLoaderConfig = new SaveLoading.ServerConfig(
-                    lv, CommandManager.RegistrationEnvironment.DEDICATED, 2
-            );
-            saveLoader = SaveLoader.load(
-                            functionLoaderConfig,
-                            (resourceManager, dataPackSettings) -> {
-                                DynamicRegistryManager.Mutable mutable = DynamicRegistryManager.createAndLoad();
-                                DynamicOps<NbtElement> dynamicOps = RegistryOps.ofLoaded(NbtOps.INSTANCE, mutable, resourceManager);
-                                SaveProperties savePropertiesx = session.readLevelProperties(dynamicOps, dataPackSettings, mutable.getRegistryLifecycle());
-                                if (savePropertiesx != null) {
-                                    return Pair.of(savePropertiesx, mutable.toImmutable());
-                                } else {
-                                    throw new RuntimeException("Failed to load level properties");
-                                }
-                            },
-                            Util.getMainWorkerExecutor(),
-                            Runnable::run
+            final class_7712 datapack = new class_7712(new DataPackSettings(List.of(), List.of()), FeatureFlags.DEFAULT_ENABLED_FEATURES);
+            SaveLoading.DataPacks dataPacks = new SaveLoading.DataPacks(resourcePackManager, datapack, false, true);
+            SaveLoading.ServerConfig serverConfig =  new SaveLoading.ServerConfig(dataPacks, CommandManager.RegistrationEnvironment.DEDICATED, 2);
+            saveLoader = Util.waitAndApply(
+                            applyExecutor -> SaveLoading.load(
+                                    serverConfig,
+                                    arg -> {
+                                        Registry<DimensionOptions> registry = arg.datapackDimensions().get(Registry.DIMENSION_KEY);
+                                        DynamicOps<NbtElement> dynamicOps = RegistryOps.of(NbtOps.INSTANCE, arg.datapackWorldgen());
+                                        Pair<SaveProperties, class_7723.class_7725> pair = session.readLevelProperties(
+                                                dynamicOps, arg.dataConfiguration(), registry, arg.datapackWorldgen().getRegistryLifecycle()
+                                        );
+                                        Objects.requireNonNull(pair);
+                                        return new SaveLoading.class_7661<>(pair.getFirst(), pair.getSecond().method_45537());
+                                    },
+                                    SaveLoader::new,
+                                    Util.getMainWorkerExecutor(),
+                                    applyExecutor
+                            )
                     )
                     .get(15, TimeUnit.SECONDS);
         } catch (TimeoutException e) {
@@ -292,14 +296,14 @@ public class ComparisonSession implements Closeable {
             throw new RuntimeException(var38);
         }
 
-        DynamicRegistryManager.Immutable registryManager = saveLoader.dynamicRegistryManager();
+        DynamicRegistryManager.Immutable registryManager = saveLoader.dynamicRegistryManager().method_45926();
 //        serverPropertiesLoader.getPropertiesHandler().getGeneratorOptions(registryManager);
         SaveProperties saveProperties = saveLoader.saveProperties();
         if (saveProperties == null) {
             throw new FileNotFoundException();
         }
-        final ImmutableSet<RegistryKey<World>> worldKeys = saveProperties.getGeneratorOptions().getWorlds();
-        final WorldUpdater worldUpdater = new WorldUpdater(session, Schemas.getFixer(), saveProperties.getGeneratorOptions(), false);
+        final Set<RegistryKey<World>> worldKeys = registryManager.get(Registry.WORLD_KEY).getKeys();
+        final WorldUpdater worldUpdater = new WorldUpdater(session, Schemas.getFixer(), registryManager.get(Registry.DIMENSION_KEY), false);
         final HashMap<RegistryKey<World>, List<ChunkPos>> chunkPosesMap = new HashMap<>();
         for (RegistryKey<World> world : worldKeys) {
             System.out.printf("%s: Counting chunks for world %s\n", description, world);
@@ -319,7 +323,9 @@ public class ComparisonSession implements Closeable {
                 regionIoWorkers,
                 poiIoWorkers,
                 saveProperties,
-                new StructureTemplateManager(saveLoader.resourceManager(), session, Schemas.getFixer()),
+                new StructureTemplateManager(saveLoader.resourceManager(), session, Schemas.getFixer(),
+                        CommandRegistryWrapper.of(registryManager.get(Registry.BLOCK_KEY))
+                        .method_45919(saveProperties.method_45560())),
                 saveLoader.resourceManager(),
                 resourcePackManager,
                 registryManager,
