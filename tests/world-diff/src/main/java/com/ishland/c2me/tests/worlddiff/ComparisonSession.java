@@ -11,14 +11,13 @@ import com.mojang.serialization.DynamicOps;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
-import net.minecraft.class_7712;
-import net.minecraft.class_7723;
 import net.minecraft.command.CommandRegistryWrapper;
 import net.minecraft.datafixer.Schemas;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.nbt.NbtOps;
+import net.minecraft.resource.DataConfiguration;
 import net.minecraft.resource.DataPackSettings;
 import net.minecraft.resource.FileResourcePackProvider;
 import net.minecraft.resource.ResourceManager;
@@ -54,6 +53,7 @@ import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.PalettedContainer;
 import net.minecraft.world.chunk.ReadableContainer;
 import net.minecraft.world.dimension.DimensionOptions;
+import net.minecraft.world.dimension.DimensionOptionsRegistryHolder;
 import net.minecraft.world.gen.structure.Structure;
 import net.minecraft.world.level.storage.LevelStorage;
 import net.minecraft.world.storage.StorageIoWorker;
@@ -266,20 +266,20 @@ public class ComparisonSession implements Closeable {
 
         SaveLoader saveLoader;
         try {
-            final class_7712 datapack = new class_7712(new DataPackSettings(List.of(), List.of()), FeatureFlags.DEFAULT_ENABLED_FEATURES);
+            final DataConfiguration datapack = new DataConfiguration(new DataPackSettings(List.of(), List.of()), FeatureFlags.DEFAULT_ENABLED_FEATURES);
             SaveLoading.DataPacks dataPacks = new SaveLoading.DataPacks(resourcePackManager, datapack, false, true);
             SaveLoading.ServerConfig serverConfig =  new SaveLoading.ServerConfig(dataPacks, CommandManager.RegistrationEnvironment.DEDICATED, 2);
             saveLoader = Util.waitAndApply(
                             applyExecutor -> SaveLoading.load(
                                     serverConfig,
                                     arg -> {
-                                        Registry<DimensionOptions> registry = arg.datapackDimensions().get(Registry.DIMENSION_KEY);
-                                        DynamicOps<NbtElement> dynamicOps = RegistryOps.of(NbtOps.INSTANCE, arg.datapackWorldgen());
-                                        Pair<SaveProperties, class_7723.class_7725> pair = session.readLevelProperties(
-                                                dynamicOps, arg.dataConfiguration(), registry, arg.datapackWorldgen().getRegistryLifecycle()
+                                        Registry<DimensionOptions> registry = arg.dimensionsRegistryManager().get(Registry.DIMENSION_KEY);
+                                        DynamicOps<NbtElement> dynamicOps = RegistryOps.of(NbtOps.INSTANCE, arg.worldGenRegistryManager());
+                                        Pair<SaveProperties, DimensionOptionsRegistryHolder.DimensionsConfig> pair = session.readLevelProperties(
+                                                dynamicOps, arg.dataConfiguration(), registry, arg.worldGenRegistryManager().getRegistryLifecycle()
                                         );
                                         Objects.requireNonNull(pair);
-                                        return new SaveLoading.class_7661<>(pair.getFirst(), pair.getSecond().method_45537());
+                                        return new SaveLoading.LoadContext<>(pair.getFirst(), pair.getSecond().toDynamicRegistryManager());
                                     },
                                     SaveLoader::new,
                                     Util.getMainWorkerExecutor(),
@@ -296,7 +296,7 @@ public class ComparisonSession implements Closeable {
             throw new RuntimeException(var38);
         }
 
-        DynamicRegistryManager.Immutable registryManager = saveLoader.dynamicRegistryManager().method_45926();
+        DynamicRegistryManager.Immutable registryManager = saveLoader.combinedDynamicRegistries().getCombinedRegistryManager();
 //        serverPropertiesLoader.getPropertiesHandler().getGeneratorOptions(registryManager);
         SaveProperties saveProperties = saveLoader.saveProperties();
         if (saveProperties == null) {
@@ -325,7 +325,7 @@ public class ComparisonSession implements Closeable {
                 saveProperties,
                 new StructureTemplateManager(saveLoader.resourceManager(), session, Schemas.getFixer(),
                         CommandRegistryWrapper.of(registryManager.get(Registry.BLOCK_KEY))
-                        .method_45919(saveProperties.method_45560())),
+                        .withFeatureFilter(saveProperties.getEnabledFeatures())),
                 saveLoader.resourceManager(),
                 resourcePackManager,
                 registryManager,
