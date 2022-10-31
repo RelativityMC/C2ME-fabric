@@ -9,11 +9,13 @@ import org.spongepowered.asm.mixin.gen.Invoker;
 @Mixin(ChunkStreamVersion.class)
 public class AddZstd {
 
+    // Use invoker to use private "add" function
     @Invoker("add")
     public static ChunkStreamVersion add(ChunkStreamVersion version) {
         return null;
     }
 
+    // Add new compression option
     private static final ChunkStreamVersion zstd = add(new ChunkStreamVersion(4, inputStream -> new ZstdInputStream(inputStream), outputStream ->new ZstdOutputStream(outputStream)));
     
 }
