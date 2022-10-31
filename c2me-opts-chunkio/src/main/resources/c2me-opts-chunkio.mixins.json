@@ -6,6 +6,7 @@
   "mixins": [
     "compression.increase_buffer_size.MixinChunkStreamVersion",
     "compression.modify_default_chunk_compression.MixinRegionFile",
+    "compression.zstd.AddZstd",
     "hide_sync_disk_writes_behind_flag.MixinRegionBasedStorage",
     "limit_nbt_cache.MixinStorageIoWorker"
   ]

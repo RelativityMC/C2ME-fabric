@@ -1,5 +1,7 @@
 package com.ishland.c2me.opts.chunkio.mixin.compression.increase_buffer_size;
 
+import com.github.luben.zstd.ZstdInputStream;
+import com.github.luben.zstd.ZstdOutputStream;
 import net.minecraft.world.storage.ChunkStreamVersion;
 import org.spongepowered.asm.mixin.Dynamic;
 import org.spongepowered.asm.mixin.Mixin;
@@ -31,6 +33,8 @@ public class MixinChunkStreamVersion {
             return new ChunkStreamVersion(id, in -> new InflaterInputStream(in, new Inflater(), 16 * 1024), out -> new DeflaterOutputStream(out, new Deflater(), 16 * 1024));
         } else if (id == 3) { // UNCOMPRESSED
             return new ChunkStreamVersion(id, BufferedInputStream::new, BufferedOutputStream::new);
+        } else if (id == 4) { // zstd
+            return new ChunkStreamVersion(id, in -> new ZstdInputStream(in), out -> new ZstdOutputStream(out));
         } else {
             return new ChunkStreamVersion(id, inputStreamWrapper, outputStreamWrapper);
         }
