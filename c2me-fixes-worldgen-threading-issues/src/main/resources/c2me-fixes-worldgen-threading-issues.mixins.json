@@ -7,7 +7,6 @@
     "asm.ASMTargets",
     "deadlocks.MixinDataFixerType",
     "threading.MixinChunk",
-    "threading.MixinChunkGenerator",
     "threading.MixinDesertTempleGenerator",
     "threading.MixinJungleTempleGenerator",
     "threading.MixinMineshaftGeneratorMineshaftRoom",

@@ -11,7 +11,6 @@ import com.mojang.serialization.DynamicOps;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
-import net.minecraft.command.CommandRegistryWrapper;
 import net.minecraft.datafixer.Schemas;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
@@ -124,62 +123,64 @@ public class ComparisonSession implements Closeable {
             AtomicLong differenceBlocks = new AtomicLong();
             ConcurrentHashMap<Identifier, AtomicLong> blockDifference = new ConcurrentHashMap<>();
             final CompletableFuture<Void> future = CompletableFuture.allOf(chunks.stream().map(pos -> working.acquire().toCompletableFuture().thenCompose(unused ->
-                    ((IStorageIoWorker) regionBaseIo).invokeReadChunkData(pos)
-                            .thenCombineAsync(((IStorageIoWorker) regionTargetIo).invokeReadChunkData(pos), (chunkDataBase, chunkDataTarget) -> {
-                                try {
-                                    if (ChunkSerializer.getChunkType(chunkDataBase) == ChunkStatus.ChunkType.PROTOCHUNK
-                                            || ChunkSerializer.getChunkType(chunkDataBase) == ChunkStatus.ChunkType.PROTOCHUNK)
-                                        return null;
+                            ((IStorageIoWorker) regionBaseIo).invokeReadChunkData(pos)
+                                    .thenCombineAsync(((IStorageIoWorker) regionTargetIo).invokeReadChunkData(pos), (chunkDataBase, chunkDataTarget) -> {
+                                        try {
+                                            if (ChunkSerializer.getChunkType(chunkDataBase) == ChunkStatus.ChunkType.PROTOCHUNK
+                                                    || ChunkSerializer.getChunkType(chunkDataBase) == ChunkStatus.ChunkType.PROTOCHUNK)
+                                                return null;
 
-                                    final Map<Structure, StructureStart> baseStructures = IChunkSerializer.invokeReadStructureStarts(baseStructureContext, chunkDataBase.getCompound("structures"), baseWorld.saveProperties.getGeneratorOptions().getSeed());
+                                            final Map<Structure, StructureStart> baseStructures = IChunkSerializer.invokeReadStructureStarts(baseStructureContext, chunkDataBase.getCompound("structures"), baseWorld.saveProperties.getGeneratorOptions().getSeed());
 //                                            .forEach((configuredStructureFeature, structureStart) -> baseStructureStarts.computeIfAbsent(configuredStructureFeature, newConcurrentHashMap).computeIfAbsent(structureStart.getPos(), newArrayList).add(structureStart));
-                                    final Map<Structure, StructureStart> targetStructures = IChunkSerializer.invokeReadStructureStarts(targetStructureContext, chunkDataTarget.getCompound("structures"), targetWorld.saveProperties.getGeneratorOptions().getSeed());
+                                            final Map<Structure, StructureStart> targetStructures = IChunkSerializer.invokeReadStructureStarts(targetStructureContext, chunkDataTarget.getCompound("structures"), targetWorld.saveProperties.getGeneratorOptions().getSeed());
 //                                            .forEach((configuredStructureFeature, structureStart) -> targetStructureStarts.computeIfAbsent(configuredStructureFeature, newConcurrentHashMap).computeIfAbsent(structureStart.getPos(), newArrayList).add(structureStart));
 
-                                    baseStructures.forEach((configuredStructureFeature, baseStructureStart) -> {
-                                        final Identifier id = baseStructureFeatureRegistry.getId(configuredStructureFeature);
-                                        final StructureStart targetStructureStart = targetStructures.get(targetStructureFeatureRegistry.get(id));
-                                        if (targetStructureStart == null) System.out.printf("%s not found in target world in chunk %s\n", id, pos);
-                                    });
-                                    targetStructures.forEach((configuredStructureFeature, targetStructureStart) -> {
-                                        final Identifier id = targetStructureFeatureRegistry.getId(configuredStructureFeature);
-                                        final StructureStart baseStructureStart = baseStructures.get(baseStructureFeatureRegistry.get(id));
-                                        if (baseStructureStart == null) System.out.printf("%s not found in base world in chunk %s\n", id, pos);
-                                    });
+                                            baseStructures.forEach((configuredStructureFeature, baseStructureStart) -> {
+                                                final Identifier id = baseStructureFeatureRegistry.getId(configuredStructureFeature);
+                                                final StructureStart targetStructureStart = targetStructures.get(targetStructureFeatureRegistry.get(id));
+                                                if (targetStructureStart == null)
+                                                    System.out.printf("%s not found in target world in chunk %s\n", id, pos);
+                                            });
+                                            targetStructures.forEach((configuredStructureFeature, targetStructureStart) -> {
+                                                final Identifier id = targetStructureFeatureRegistry.getId(configuredStructureFeature);
+                                                final StructureStart baseStructureStart = baseStructures.get(baseStructureFeatureRegistry.get(id));
+                                                if (baseStructureStart == null)
+                                                    System.out.printf("%s not found in base world in chunk %s\n", id, pos);
+                                            });
 
-                                    final Map<ChunkSectionPos, ChunkSection> sectionsBase = readSections(pos, chunkDataBase, baseWorld.dynamicRegistryManager.get(Registry.BIOME_KEY));
-                                    final Map<ChunkSectionPos, ChunkSection> sectionsTarget = readSections(pos, chunkDataTarget, baseWorld.dynamicRegistryManager.get(Registry.BIOME_KEY));
-                                    sectionsBase.forEach((chunkSectionPos, chunkSectionBase) -> {
-                                        final ChunkSection chunkSectionTarget = sectionsTarget.get(chunkSectionPos);
-                                        if (chunkSectionBase == null || chunkSectionTarget == null) {
-                                            completedBlocks.addAndGet(16 * 16 * 16);
-                                            differenceBlocks.addAndGet(16 * 16 * 16);
-                                            return;
-                                        }
-                                        for (int x = 0; x < 16; x++)
-                                            for (int y = 0; y < 16; y++)
-                                                for (int z = 0; z < 16; z++) {
-                                                    final BlockState state1 = chunkSectionBase.getBlockState(x, y, z);
-                                                    final BlockState state2 = chunkSectionTarget.getBlockState(x, y, z);
-                                                    if (!blockStateEquals(state1, state2)) {
-                                                        differenceBlocks.incrementAndGet();
-                                                        if (!Registry.BLOCK.getId(state1.getBlock()).equals(Registry.BLOCK.getId(state2.getBlock()))) {
-                                                            blockDifference.computeIfAbsent(Registry.BLOCK.getId(state1.getBlock()), unused1 -> new AtomicLong()).incrementAndGet();
-                                                            blockDifference.computeIfAbsent(Registry.BLOCK.getId(state2.getBlock()), unused1 -> new AtomicLong()).incrementAndGet();
-                                                        }
-                                                    }
-                                                    completedBlocks.incrementAndGet();
+                                            final Map<ChunkSectionPos, ChunkSection> sectionsBase = readSections(pos, chunkDataBase, baseWorld.dynamicRegistryManager.get(Registry.BIOME_KEY));
+                                            final Map<ChunkSectionPos, ChunkSection> sectionsTarget = readSections(pos, chunkDataTarget, baseWorld.dynamicRegistryManager.get(Registry.BIOME_KEY));
+                                            sectionsBase.forEach((chunkSectionPos, chunkSectionBase) -> {
+                                                final ChunkSection chunkSectionTarget = sectionsTarget.get(chunkSectionPos);
+                                                if (chunkSectionBase == null || chunkSectionTarget == null) {
+                                                    completedBlocks.addAndGet(16 * 16 * 16);
+                                                    differenceBlocks.addAndGet(16 * 16 * 16);
+                                                    return;
                                                 }
-                                    });
-                                    return null;
-                                } catch (Throwable t) {
-                                    t.printStackTrace(System.err);
-                                    throw new RuntimeException(t);
-                                } finally {
-                                    completedChunks.incrementAndGet();
-                                    working.release();
-                                }
-                            })
+                                                for (int x = 0; x < 16; x++)
+                                                    for (int y = 0; y < 16; y++)
+                                                        for (int z = 0; z < 16; z++) {
+                                                            final BlockState state1 = chunkSectionBase.getBlockState(x, y, z);
+                                                            final BlockState state2 = chunkSectionTarget.getBlockState(x, y, z);
+                                                            if (!blockStateEquals(state1, state2)) {
+                                                                differenceBlocks.incrementAndGet();
+                                                                if (!Registry.BLOCK.getId(state1.getBlock()).equals(Registry.BLOCK.getId(state2.getBlock()))) {
+                                                                    blockDifference.computeIfAbsent(Registry.BLOCK.getId(state1.getBlock()), unused1 -> new AtomicLong()).incrementAndGet();
+                                                                    blockDifference.computeIfAbsent(Registry.BLOCK.getId(state2.getBlock()), unused1 -> new AtomicLong()).incrementAndGet();
+                                                                }
+                                                            }
+                                                            completedBlocks.incrementAndGet();
+                                                        }
+                                            });
+                                            return null;
+                                        } catch (Throwable t) {
+                                            t.printStackTrace(System.err);
+                                            throw new RuntimeException(t);
+                                        } finally {
+                                            completedChunks.incrementAndGet();
+                                            working.release();
+                                        }
+                                    })
             )).distinct().toArray(CompletableFuture[]::new));
             while (!future.isDone()) {
                 System.out.printf("[noprint]%s: %d / %d (%.1f%%) chunks, %d blocks, %d block differences (%.4f%%)\n",
@@ -190,7 +191,6 @@ public class ComparisonSession implements Closeable {
                 } catch (InterruptedException ignored) {
                 }
             }
-
 
 
             System.err.printf("Comparison completed for %s: block state differences: %d / %d (%.4f%%)\n",
@@ -268,7 +268,7 @@ public class ComparisonSession implements Closeable {
         try {
             final DataConfiguration datapack = new DataConfiguration(new DataPackSettings(List.of(), List.of()), FeatureFlags.DEFAULT_ENABLED_FEATURES);
             SaveLoading.DataPacks dataPacks = new SaveLoading.DataPacks(resourcePackManager, datapack, false, true);
-            SaveLoading.ServerConfig serverConfig =  new SaveLoading.ServerConfig(dataPacks, CommandManager.RegistrationEnvironment.DEDICATED, 2);
+            SaveLoading.ServerConfig serverConfig = new SaveLoading.ServerConfig(dataPacks, CommandManager.RegistrationEnvironment.DEDICATED, 2);
             saveLoader = Util.waitAndApply(
                             applyExecutor -> SaveLoading.load(
                                     serverConfig,
@@ -324,8 +324,11 @@ public class ComparisonSession implements Closeable {
                 poiIoWorkers,
                 saveProperties,
                 new StructureTemplateManager(saveLoader.resourceManager(), session, Schemas.getFixer(),
-                        CommandRegistryWrapper.of(registryManager.get(Registry.BLOCK_KEY))
-                        .withFeatureFilter(saveProperties.getEnabledFeatures())),
+                        saveLoader.combinedDynamicRegistries()
+                                .getCombinedRegistryManager()
+                                .<Block>get(Registry.BLOCK_KEY)
+                                .getReadOnlyWrapper()
+                                .withFeatureFilter(saveProperties.getEnabledFeatures())),
                 saveLoader.resourceManager(),
                 resourcePackManager,
                 registryManager,

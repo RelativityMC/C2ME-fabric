@@ -15,7 +15,7 @@ public class MixinNoiseChunkGenerator {
      * @reason optimize
      */
     @Overwrite
-    private static AquiferSampler.FluidLevelSampler method_45510(ChunkGeneratorSettings chunkGeneratorSettings) {
+    private static AquiferSampler.FluidLevelSampler createFluidLevelSampler(ChunkGeneratorSettings chunkGeneratorSettings) {
         AquiferSampler.FluidLevel fluidLevel = new AquiferSampler.FluidLevel(-54, Blocks.LAVA.getDefaultState());
         int i = chunkGeneratorSettings.seaLevel();
         AquiferSampler.FluidLevel fluidLevel2 = new AquiferSampler.FluidLevel(i, chunkGeneratorSettings.defaultFluid());
