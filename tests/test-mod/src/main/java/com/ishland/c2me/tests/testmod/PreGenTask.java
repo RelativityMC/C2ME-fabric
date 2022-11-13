@@ -20,6 +20,7 @@ import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryEntry;
 import net.minecraft.util.registry.RegistryEntryList;
 import net.minecraft.util.registry.RegistryKey;
+import net.minecraft.util.registry.RegistryKeys;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.gen.structure.Structure;
@@ -68,13 +69,13 @@ public class PreGenTask {
         final AtomicInteger locatedBiomes = new AtomicInteger();
         final AtomicInteger locatedStructures = new AtomicInteger();
         System.err.printf("Fetching structure and biome list\n");
-        final Registry<Biome> biomeRegistry = world.getRegistryManager().get(Registry.BIOME_KEY);
+        final Registry<Biome> biomeRegistry = world.getRegistryManager().get(RegistryKeys.BIOME_WORLDGEN);
         final Set<RegistryEntry<Biome>> biomes =
                 world.getChunkManager().getChunkGenerator().getBiomeSource().getBiomes()
                         .stream()
                         .filter(biomeclass_6880 -> biomeRegistry.getKey(biomeclass_6880.value()).isPresent())
                         .collect(Collectors.toCollection(HashSet::new));
-        final Registry<Structure> structureFeatureRegistry = world.getRegistryManager().get(Registry.STRUCTURE_KEY);
+        final Registry<Structure> structureFeatureRegistry = world.getRegistryManager().get(RegistryKeys.STRUCTURE_WORLDGEN);
         final Set<RegistryEntryList<Structure>> structureFeatures;
         if (!isLocateStructureSlowAF(world)) {
             structureFeatures = structureFeatureRegistry.getEntrySet().stream()
@@ -233,7 +234,7 @@ public class PreGenTask {
     }
 
     private static boolean isLocateStructureSlowAF(ServerWorld world) {
-        final Registry<Structure> structureFeatureRegistry = world.getRegistryManager().get(Registry.STRUCTURE_KEY);
+        final Registry<Structure> structureFeatureRegistry = world.getRegistryManager().get(RegistryKeys.STRUCTURE_WORLDGEN);
         final Set<RegistryEntry<Structure>> entries = structureFeatureRegistry.getEntrySet().stream()
                 .flatMap(thing -> structureFeatureRegistry.getEntry(thing.getKey()).stream())
                 .collect(Collectors.toSet());

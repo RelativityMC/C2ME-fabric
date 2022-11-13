@@ -39,9 +39,11 @@ import net.minecraft.util.dynamic.RegistryOps;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.ChunkSectionPos;
 import net.minecraft.util.registry.DynamicRegistryManager;
+import net.minecraft.util.registry.Registries;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryEntry;
 import net.minecraft.util.registry.RegistryKey;
+import net.minecraft.util.registry.RegistryKeys;
 import net.minecraft.world.ChunkSerializer;
 import net.minecraft.world.SaveProperties;
 import net.minecraft.world.World;
@@ -116,8 +118,8 @@ public class ComparisonSession implements Closeable {
 //            final Function<ChunkPos, ArrayList<StructureStart>> newArrayList = k -> new ArrayList<>();
 //            ConcurrentHashMap<ConfiguredStructureFeature<?, ?>, ConcurrentHashMap<ChunkPos, ArrayList<StructureStart>>> baseStructureStarts = new ConcurrentHashMap<>();
 //            ConcurrentHashMap<ConfiguredStructureFeature<?, ?>, ConcurrentHashMap<ChunkPos, ArrayList<StructureStart>>> targetStructureStarts = new ConcurrentHashMap<>();
-            final Registry<Structure> baseStructureFeatureRegistry = baseWorld.dynamicRegistryManager.get(Registry.STRUCTURE_KEY);
-            final Registry<Structure> targetStructureFeatureRegistry = targetWorld.dynamicRegistryManager.get(Registry.STRUCTURE_KEY);
+            final Registry<Structure> baseStructureFeatureRegistry = baseWorld.dynamicRegistryManager.get(RegistryKeys.STRUCTURE_WORLDGEN);
+            final Registry<Structure> targetStructureFeatureRegistry = targetWorld.dynamicRegistryManager.get(RegistryKeys.STRUCTURE_WORLDGEN);
             AtomicLong completedChunks = new AtomicLong();
             AtomicLong completedBlocks = new AtomicLong();
             AtomicLong differenceBlocks = new AtomicLong();
@@ -148,8 +150,8 @@ public class ComparisonSession implements Closeable {
                                                     System.out.printf("%s not found in base world in chunk %s\n", id, pos);
                                             });
 
-                                            final Map<ChunkSectionPos, ChunkSection> sectionsBase = readSections(pos, chunkDataBase, baseWorld.dynamicRegistryManager.get(Registry.BIOME_KEY));
-                                            final Map<ChunkSectionPos, ChunkSection> sectionsTarget = readSections(pos, chunkDataTarget, baseWorld.dynamicRegistryManager.get(Registry.BIOME_KEY));
+                                            final Map<ChunkSectionPos, ChunkSection> sectionsBase = readSections(pos, chunkDataBase, baseWorld.dynamicRegistryManager.get(RegistryKeys.BIOME_WORLDGEN));
+                                            final Map<ChunkSectionPos, ChunkSection> sectionsTarget = readSections(pos, chunkDataTarget, baseWorld.dynamicRegistryManager.get(RegistryKeys.BIOME_WORLDGEN));
                                             sectionsBase.forEach((chunkSectionPos, chunkSectionBase) -> {
                                                 final ChunkSection chunkSectionTarget = sectionsTarget.get(chunkSectionPos);
                                                 if (chunkSectionBase == null || chunkSectionTarget == null) {
@@ -164,9 +166,9 @@ public class ComparisonSession implements Closeable {
                                                             final BlockState state2 = chunkSectionTarget.getBlockState(x, y, z);
                                                             if (!blockStateEquals(state1, state2)) {
                                                                 differenceBlocks.incrementAndGet();
-                                                                if (!Registry.BLOCK.getId(state1.getBlock()).equals(Registry.BLOCK.getId(state2.getBlock()))) {
-                                                                    blockDifference.computeIfAbsent(Registry.BLOCK.getId(state1.getBlock()), unused1 -> new AtomicLong()).incrementAndGet();
-                                                                    blockDifference.computeIfAbsent(Registry.BLOCK.getId(state2.getBlock()), unused1 -> new AtomicLong()).incrementAndGet();
+                                                                if (!Registries.BLOCK.getId(state1.getBlock()).equals(Registries.BLOCK.getId(state2.getBlock()))) {
+                                                                    blockDifference.computeIfAbsent(Registries.BLOCK.getId(state1.getBlock()), unused1 -> new AtomicLong()).incrementAndGet();
+                                                                    blockDifference.computeIfAbsent(Registries.BLOCK.getId(state2.getBlock()), unused1 -> new AtomicLong()).incrementAndGet();
                                                                 }
                                                             }
                                                             completedBlocks.incrementAndGet();
@@ -208,7 +210,7 @@ public class ComparisonSession implements Closeable {
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     private static boolean blockStateEquals(BlockState state1, BlockState state2) {
-        if (!Registry.BLOCK.getId(state1.getBlock()).equals(Registry.BLOCK.getId(state2.getBlock()))) return false;
+        if (!Registries.BLOCK.getId(state1.getBlock()).equals(Registries.BLOCK.getId(state2.getBlock()))) return false;
         for (Property property : state1.getProperties()) {
             if (state1.get(property).compareTo(state2.get(property)) != 0) return false;
         }
@@ -273,7 +275,7 @@ public class ComparisonSession implements Closeable {
                             applyExecutor -> SaveLoading.load(
                                     serverConfig,
                                     arg -> {
-                                        Registry<DimensionOptions> registry = arg.dimensionsRegistryManager().get(Registry.DIMENSION_KEY);
+                                        Registry<DimensionOptions> registry = arg.dimensionsRegistryManager().get(RegistryKeys.field_41224);
                                         DynamicOps<NbtElement> dynamicOps = RegistryOps.of(NbtOps.INSTANCE, arg.worldGenRegistryManager());
                                         Pair<SaveProperties, DimensionOptionsRegistryHolder.DimensionsConfig> pair = session.readLevelProperties(
                                                 dynamicOps, arg.dataConfiguration(), registry, arg.worldGenRegistryManager().getRegistryLifecycle()
@@ -302,8 +304,8 @@ public class ComparisonSession implements Closeable {
         if (saveProperties == null) {
             throw new FileNotFoundException();
         }
-        final Set<RegistryKey<World>> worldKeys = registryManager.get(Registry.WORLD_KEY).getKeys();
-        final WorldUpdater worldUpdater = new WorldUpdater(session, Schemas.getFixer(), registryManager.get(Registry.DIMENSION_KEY), false);
+        final Set<RegistryKey<World>> worldKeys = registryManager.get(RegistryKeys.DIMENSION).getKeys();
+        final WorldUpdater worldUpdater = new WorldUpdater(session, Schemas.getFixer(), registryManager.get(RegistryKeys.field_41224), false);
         final HashMap<RegistryKey<World>, List<ChunkPos>> chunkPosesMap = new HashMap<>();
         for (RegistryKey<World> world : worldKeys) {
             System.out.printf("%s: Counting chunks for world %s\n", description, world);
@@ -326,7 +328,7 @@ public class ComparisonSession implements Closeable {
                 new StructureTemplateManager(saveLoader.resourceManager(), session, Schemas.getFixer(),
                         saveLoader.combinedDynamicRegistries()
                                 .getCombinedRegistryManager()
-                                .<Block>get(Registry.BLOCK_KEY)
+                                .get(RegistryKeys.BLOCK)
                                 .getReadOnlyWrapper()
                                 .withFeatureFilter(saveProperties.getEnabledFeatures())),
                 saveLoader.resourceManager(),
