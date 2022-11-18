@@ -18,7 +18,7 @@ public class MixinServerPropertiesHandler {
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(CallbackInfo ci) {
-        this.generatorOptions = new GeneratorOptions(GeneratorOptions.parseSeed("c2metest"), true, false);
+        this.generatorOptions = new GeneratorOptions(GeneratorOptions.parseSeed("c2metest").getAsLong(), true, false);
     }
 
 }

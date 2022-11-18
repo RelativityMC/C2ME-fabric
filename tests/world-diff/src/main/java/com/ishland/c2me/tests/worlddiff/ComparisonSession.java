@@ -16,6 +16,13 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.nbt.NbtOps;
+import net.minecraft.registry.DynamicRegistryManager;
+import net.minecraft.registry.Registries;
+import net.minecraft.registry.Registry;
+import net.minecraft.registry.RegistryKey;
+import net.minecraft.registry.RegistryKeys;
+import net.minecraft.registry.RegistryOps;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.resource.DataConfiguration;
 import net.minecraft.resource.DataPackSettings;
 import net.minecraft.resource.FileResourcePackProvider;
@@ -35,15 +42,8 @@ import net.minecraft.structure.StructureTemplateManager;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 import net.minecraft.util.WorldSavePath;
-import net.minecraft.util.dynamic.RegistryOps;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.ChunkSectionPos;
-import net.minecraft.util.registry.DynamicRegistryManager;
-import net.minecraft.util.registry.Registries;
-import net.minecraft.util.registry.Registry;
-import net.minecraft.util.registry.RegistryEntry;
-import net.minecraft.util.registry.RegistryKey;
-import net.minecraft.util.registry.RegistryKeys;
 import net.minecraft.world.ChunkSerializer;
 import net.minecraft.world.SaveProperties;
 import net.minecraft.world.World;
@@ -275,7 +275,7 @@ public class ComparisonSession implements Closeable {
                             applyExecutor -> SaveLoading.load(
                                     serverConfig,
                                     arg -> {
-                                        Registry<DimensionOptions> registry = arg.dimensionsRegistryManager().get(RegistryKeys.field_41224);
+                                        Registry<DimensionOptions> registry = arg.dimensionsRegistryManager().get(RegistryKeys.DIMENSION);
                                         DynamicOps<NbtElement> dynamicOps = RegistryOps.of(NbtOps.INSTANCE, arg.worldGenRegistryManager());
                                         Pair<SaveProperties, DimensionOptionsRegistryHolder.DimensionsConfig> pair = session.readLevelProperties(
                                                 dynamicOps, arg.dataConfiguration(), registry, arg.worldGenRegistryManager().getRegistryLifecycle()
@@ -304,8 +304,8 @@ public class ComparisonSession implements Closeable {
         if (saveProperties == null) {
             throw new FileNotFoundException();
         }
-        final Set<RegistryKey<World>> worldKeys = registryManager.get(RegistryKeys.DIMENSION).getKeys();
-        final WorldUpdater worldUpdater = new WorldUpdater(session, Schemas.getFixer(), registryManager.get(RegistryKeys.field_41224), false);
+        final Set<RegistryKey<World>> worldKeys = registryManager.get(RegistryKeys.WORLD).getKeys();
+        final WorldUpdater worldUpdater = new WorldUpdater(session, Schemas.getFixer(), registryManager.get(RegistryKeys.DIMENSION), false);
         final HashMap<RegistryKey<World>, List<ChunkPos>> chunkPosesMap = new HashMap<>();
         for (RegistryKey<World> world : worldKeys) {
             System.out.printf("%s: Counting chunks for world %s\n", description, world);

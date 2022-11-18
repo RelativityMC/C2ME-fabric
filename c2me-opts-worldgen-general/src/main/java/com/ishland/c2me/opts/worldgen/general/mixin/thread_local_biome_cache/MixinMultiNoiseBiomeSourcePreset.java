@@ -1,7 +1,7 @@
 package com.ishland.c2me.opts.worldgen.general.mixin.thread_local_biome_cache;
 
 import com.ishland.c2me.opts.worldgen.general.common.threadlocal_biome_cache.ThreadLocalCachingMultiNoiseBiomeSource;
-import net.minecraft.util.registry.RegistryEntry;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.source.MultiNoiseBiomeSource;
 import net.minecraft.world.biome.source.util.MultiNoiseUtil;
