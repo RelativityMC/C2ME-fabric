@@ -118,8 +118,8 @@ public class ComparisonSession implements Closeable {
 //            final Function<ChunkPos, ArrayList<StructureStart>> newArrayList = k -> new ArrayList<>();
 //            ConcurrentHashMap<ConfiguredStructureFeature<?, ?>, ConcurrentHashMap<ChunkPos, ArrayList<StructureStart>>> baseStructureStarts = new ConcurrentHashMap<>();
 //            ConcurrentHashMap<ConfiguredStructureFeature<?, ?>, ConcurrentHashMap<ChunkPos, ArrayList<StructureStart>>> targetStructureStarts = new ConcurrentHashMap<>();
-            final Registry<Structure> baseStructureFeatureRegistry = baseWorld.dynamicRegistryManager.get(RegistryKeys.STRUCTURE_WORLDGEN);
-            final Registry<Structure> targetStructureFeatureRegistry = targetWorld.dynamicRegistryManager.get(RegistryKeys.STRUCTURE_WORLDGEN);
+            final Registry<Structure> baseStructureFeatureRegistry = baseWorld.dynamicRegistryManager.get(RegistryKeys.STRUCTURE);
+            final Registry<Structure> targetStructureFeatureRegistry = targetWorld.dynamicRegistryManager.get(RegistryKeys.STRUCTURE);
             AtomicLong completedChunks = new AtomicLong();
             AtomicLong completedBlocks = new AtomicLong();
             AtomicLong differenceBlocks = new AtomicLong();
@@ -150,8 +150,8 @@ public class ComparisonSession implements Closeable {
                                                     System.out.printf("%s not found in base world in chunk %s\n", id, pos);
                                             });
 
-                                            final Map<ChunkSectionPos, ChunkSection> sectionsBase = readSections(pos, chunkDataBase, baseWorld.dynamicRegistryManager.get(RegistryKeys.BIOME_WORLDGEN));
-                                            final Map<ChunkSectionPos, ChunkSection> sectionsTarget = readSections(pos, chunkDataTarget, baseWorld.dynamicRegistryManager.get(RegistryKeys.BIOME_WORLDGEN));
+                                            final Map<ChunkSectionPos, ChunkSection> sectionsBase = readSections(pos, chunkDataBase, baseWorld.dynamicRegistryManager.get(RegistryKeys.BIOME));
+                                            final Map<ChunkSectionPos, ChunkSection> sectionsTarget = readSections(pos, chunkDataTarget, baseWorld.dynamicRegistryManager.get(RegistryKeys.BIOME));
                                             sectionsBase.forEach((chunkSectionPos, chunkSectionBase) -> {
                                                 final ChunkSection chunkSectionTarget = sectionsTarget.get(chunkSectionPos);
                                                 if (chunkSectionBase == null || chunkSectionTarget == null) {

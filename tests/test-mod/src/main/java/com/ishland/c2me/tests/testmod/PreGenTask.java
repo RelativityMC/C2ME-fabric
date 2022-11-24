@@ -69,13 +69,13 @@ public class PreGenTask {
         final AtomicInteger locatedBiomes = new AtomicInteger();
         final AtomicInteger locatedStructures = new AtomicInteger();
         System.err.printf("Fetching structure and biome list\n");
-        final Registry<Biome> biomeRegistry = world.getRegistryManager().get(RegistryKeys.BIOME_WORLDGEN);
+        final Registry<Biome> biomeRegistry = world.getRegistryManager().get(RegistryKeys.BIOME);
         final Set<RegistryEntry<Biome>> biomes =
                 world.getChunkManager().getChunkGenerator().getBiomeSource().getBiomes()
                         .stream()
                         .filter(biomeclass_6880 -> biomeRegistry.getKey(biomeclass_6880.value()).isPresent())
                         .collect(Collectors.toCollection(HashSet::new));
-        final Registry<Structure> structureFeatureRegistry = world.getRegistryManager().get(RegistryKeys.STRUCTURE_WORLDGEN);
+        final Registry<Structure> structureFeatureRegistry = world.getRegistryManager().get(RegistryKeys.STRUCTURE);
         final Set<RegistryEntryList<Structure>> structureFeatures;
         if (!isLocateStructureSlowAF(world)) {
             structureFeatures = structureFeatureRegistry.getEntrySet().stream()
@@ -234,7 +234,7 @@ public class PreGenTask {
     }
 
     private static boolean isLocateStructureSlowAF(ServerWorld world) {
-        final Registry<Structure> structureFeatureRegistry = world.getRegistryManager().get(RegistryKeys.STRUCTURE_WORLDGEN);
+        final Registry<Structure> structureFeatureRegistry = world.getRegistryManager().get(RegistryKeys.STRUCTURE);
         final Set<RegistryEntry<Structure>> entries = structureFeatureRegistry.getEntrySet().stream()
                 .flatMap(thing -> structureFeatureRegistry.getEntry(thing.getKey()).stream())
                 .collect(Collectors.toSet());
