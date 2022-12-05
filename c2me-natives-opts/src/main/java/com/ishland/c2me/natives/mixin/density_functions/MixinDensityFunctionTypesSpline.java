@@ -91,7 +91,7 @@ public abstract class MixinDensityFunctionTypesSpline implements DensityFunction
      */
     @Overwrite
     public DensityFunction apply(DensityFunction.DensityFunctionVisitor visitor) {
-        final Spline<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> spline1 = this.spline.method_41187(densityFunctionWrapper -> densityFunctionWrapper.apply(visitor));
+        final Spline<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> spline1 = this.spline.apply(densityFunctionWrapper -> densityFunctionWrapper.apply(visitor));
         if (spline1 == this.spline) return visitor.apply(this);
         return visitor.apply(new DensityFunctionTypes.Spline(spline1));
     }

@@ -15,6 +15,7 @@ import net.minecraft.util.profiler.Profiler;
 import net.minecraft.world.ChunkRegion;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
+import net.minecraft.world.chunk.ReadOnlyChunk;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -69,7 +70,8 @@ public abstract class MixinServerChunkManager {
     private Chunk c2me$getChunkOffThread(int chunkX, int chunkZ, ChunkStatus leastStatus, boolean create) {
         final ChunkRegion currentRegion = CurrentWorldGenState.getCurrentRegion();
         if (currentRegion != null) {
-            final Chunk chunk = currentRegion.getChunk(chunkX, chunkZ, leastStatus, false);
+            Chunk chunk = currentRegion.getChunk(chunkX, chunkZ, leastStatus, false);
+            if (chunk instanceof ReadOnlyChunk readOnlyChunk) chunk = readOnlyChunk.getWrappedChunk();
             if (chunk != null) return chunk;
         }
         final CompletableFuture<Chunk> chunkLoad = c2me$getChunkFutureOffThread(chunkX, chunkZ, leastStatus, create);

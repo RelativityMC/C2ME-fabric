@@ -3,7 +3,7 @@ package com.ishland.c2me.natives.mixin.density_functions;
 import com.google.common.collect.ImmutableMap;
 import com.ishland.c2me.natives.common.CompiledDensityFunctionImpl;
 import com.ishland.c2me.natives.common.DensityFunctionUtils;
-import net.minecraft.util.registry.RegistryEntry;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
 import net.minecraft.world.gen.densityfunction.DensityFunctionTypes;
 import org.jetbrains.annotations.Nullable;

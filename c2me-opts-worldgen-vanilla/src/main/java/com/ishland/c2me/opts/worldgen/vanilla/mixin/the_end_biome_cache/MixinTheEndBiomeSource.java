@@ -1,9 +1,9 @@
 package com.ishland.c2me.opts.worldgen.vanilla.mixin.the_end_biome_cache;
 
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.ChunkSectionPos;
-import net.minecraft.util.registry.RegistryEntry;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.source.BiomeCoords;
 import net.minecraft.world.biome.source.TheEndBiomeSource;

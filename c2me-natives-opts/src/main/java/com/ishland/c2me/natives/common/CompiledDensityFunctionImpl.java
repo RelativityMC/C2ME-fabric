@@ -4,6 +4,12 @@ import javax.annotation.Nullable;
 
 public interface CompiledDensityFunctionImpl {
 
+    default void initializeHook() {
+        DeferredCompilationUtil.deferCompilation(this::runDeferredCompilation);
+    }
+
+    void runDeferredCompilation();
+
     long getDFIPointer();
 
     @Nullable

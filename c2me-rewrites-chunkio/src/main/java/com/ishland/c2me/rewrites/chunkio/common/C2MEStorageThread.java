@@ -316,7 +316,7 @@ public class C2MEStorageThread extends Thread {
             try {
                 final ChunkPos pos1 = new ChunkPos(pos);
                 final RegionFile regionFile = ((IRegionBasedStorage) this.storage).invokeGetRegionFile(pos1);
-                regionFile.method_31740(pos1);
+                regionFile.delete(pos1);
             } catch (Throwable t) {
                 LOGGER.error("Error writing chunk %s".formatted(new ChunkPos(pos)), t);
             }

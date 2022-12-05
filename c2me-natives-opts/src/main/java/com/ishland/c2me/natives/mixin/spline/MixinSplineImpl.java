@@ -35,7 +35,7 @@ public abstract class MixinSplineImpl<C, I extends ToFloatFunction<C>> implement
     @Shadow @Final private float[] derivatives;
 
     @Shadow
-    static <C, I extends ToFloatFunction<C>> Spline.Implementation<C, I> method_41299(I toFloatFunction, float[] fs, List<Spline<C, I>> list, float[] gs) {
+    static <C, I extends ToFloatFunction<C>> Spline.Implementation<C, I> build(I toFloatFunction, float[] fs, List<Spline<C, I>> list, float[] gs) {
         throw new AbstractMethodError();
     }
 
@@ -97,11 +97,11 @@ public abstract class MixinSplineImpl<C, I extends ToFloatFunction<C>> implement
      * @reason reduce allocs
      */
     @Overwrite
-    public Spline<C, I> method_41187(Spline.class_7073<I> arg) {
+    public Spline<C, I> apply(Spline.Visitor<I> arg) {
         boolean hasChanges = false;
         final List<Spline<C, I>> list = new ArrayList<>();
         for (Spline<C, I> spline : this.values()) {
-            Spline<C, I> ciSpline = spline.method_41187(arg);
+            Spline<C, I> ciSpline = spline.apply(arg);
             if (ciSpline != spline) hasChanges = true;
             list.add(ciSpline);
         }
@@ -110,7 +110,7 @@ public abstract class MixinSplineImpl<C, I extends ToFloatFunction<C>> implement
 
         if (!hasChanges) return (Spline<C, I>) this;
 
-        return method_41299(
+        return build(
                 visit, this.locations, list, this.derivatives
         );
     }

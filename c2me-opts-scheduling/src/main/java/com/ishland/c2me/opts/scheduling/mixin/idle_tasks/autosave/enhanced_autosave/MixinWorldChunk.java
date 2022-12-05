@@ -1,9 +1,9 @@
 package com.ishland.c2me.opts.scheduling.mixin.idle_tasks.autosave.enhanced_autosave;
 
 import com.ishland.c2me.opts.scheduling.common.idle_tasks.IThreadedAnvilChunkStorage;
+import net.minecraft.registry.Registry;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.registry.Registry;
 import net.minecraft.world.HeightLimitView;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;

@@ -83,7 +83,7 @@ public abstract class MixinChunkNoiseSamplerFlatCacheDensityFunction implements 
     }
 
     @Unique
-    private void runCompilation() {
+    public void runCompilation() {
         this.isInitDelayed = false;
         long ptr_cacheFlattened = 0L; // set to null to let cache initialization happen in native
         if (this.cache != null) {

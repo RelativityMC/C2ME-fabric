@@ -1,7 +1,7 @@
 package com.ishland.c2me.tests.worlddiff.mixin;
 
+import net.minecraft.registry.RegistryKey;
 import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.World;
 import net.minecraft.world.updater.WorldUpdater;
 import org.spongepowered.asm.mixin.Mixin;
