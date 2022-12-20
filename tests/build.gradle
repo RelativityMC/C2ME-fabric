@@ -25,9 +25,6 @@ allprojects {
             content { includeGroup "curse.maven" }
         }
     }
-    loom {
-        shareRemapCaches = true
-    }
     afterEvaluate {
         migrateMappings.configure {
             outputDir = project.file("src/main/java")
