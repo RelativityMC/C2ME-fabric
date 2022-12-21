@@ -12,7 +12,7 @@
     "minecraft": "*",
     "fabricloader": "*",
     "c2me-base": "*",
-    "java": ">=18"
+    "java": ">=19"
   },
   "accessWidener": "c2me-natives-opts.accesswidener",
 

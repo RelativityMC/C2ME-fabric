@@ -226,6 +226,10 @@ String getVersionSuffix() {
     return split[split.length - 2] + suffix
 }
 
+tasks.getByPath("compileJmhJava").configure {
+    it.options.compilerArgs << "--release" << "19" << "--enable-preview"
+}
+
 jmh {
     includes = ['noise\\.InterpolatedNoiseBenchmark'] // include pattern (regular expression) for benchmarks to be executed
 //    excludes = ['some regular expression'] // exclude pattern (regular expression) for benchmarks to be executed

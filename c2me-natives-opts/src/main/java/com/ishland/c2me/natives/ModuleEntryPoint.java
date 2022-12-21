@@ -16,21 +16,17 @@ public class ModuleEntryPoint {
     private static final boolean enabled;
 
     static {
-        if (ModuleLayer.boot().findModule("jdk.incubator.foreign").isPresent()) {
-            boolean success = false;
-            try {
-                if (loadNatives()) {
-                    NativeInterface.init();
-                    success = true;
-                }
-            } catch (Throwable t) {
-                System.err.println("Failed to load libraries: %s".formatted(t.getMessage()));
-                t.printStackTrace();
+        boolean success = false;
+        try {
+            if (loadNatives()) {
+                NativeInterface.init();
+                success = true;
             }
-            enabled = success;
-        } else {
-            enabled = false;
+        } catch (Throwable t) {
+            System.err.println("Failed to load libraries: %s".formatted(t.getMessage()));
+            t.printStackTrace();
         }
+        enabled = success;
     }
 
     @VisibleForTesting

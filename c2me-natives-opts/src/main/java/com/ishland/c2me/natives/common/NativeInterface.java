@@ -1,23 +1,23 @@
 package com.ishland.c2me.natives.common;
 
 import io.netty.util.internal.PlatformDependent;
-import jdk.incubator.foreign.CLinker;
-import jdk.incubator.foreign.FunctionDescriptor;
-import jdk.incubator.foreign.SymbolLookup;
 import sun.misc.Unsafe;
 
+import java.lang.foreign.FunctionDescriptor;
+import java.lang.foreign.Linker;
+import java.lang.foreign.SymbolLookup;
 import java.lang.invoke.MethodHandle;
 
-import static jdk.incubator.foreign.ValueLayout.JAVA_BOOLEAN;
-import static jdk.incubator.foreign.ValueLayout.JAVA_DOUBLE;
-import static jdk.incubator.foreign.ValueLayout.JAVA_FLOAT;
-import static jdk.incubator.foreign.ValueLayout.JAVA_INT;
-import static jdk.incubator.foreign.ValueLayout.JAVA_LONG;
-import static jdk.incubator.foreign.ValueLayout.JAVA_SHORT;
+import static java.lang.foreign.ValueLayout.JAVA_BOOLEAN;
+import static java.lang.foreign.ValueLayout.JAVA_DOUBLE;
+import static java.lang.foreign.ValueLayout.JAVA_FLOAT;
+import static java.lang.foreign.ValueLayout.JAVA_INT;
+import static java.lang.foreign.ValueLayout.JAVA_LONG;
+import static java.lang.foreign.ValueLayout.JAVA_SHORT;
 
 public class NativeInterface {
 
-    private static final CLinker LINKER = CLinker.systemCLinker();
+    private static final Linker LINKER = Linker.nativeLinker();
     private static final SymbolLookup LOOKUP = SymbolLookup.loaderLookup();
     private static final MethodHandle INIT;
     private static final MethodHandle PERLIN_SAMPLE;

@@ -4,8 +4,8 @@ moduleDependencies(project, [
 
 apply plugin: 'c'
 
-sourceCompatibility = JavaVersion.VERSION_18
-targetCompatibility = JavaVersion.VERSION_18
+sourceCompatibility = JavaVersion.VERSION_19
+targetCompatibility = JavaVersion.VERSION_19
 
 model {
     platforms {
@@ -63,5 +63,5 @@ processResources {
 }
 
 tasks.withType(JavaCompile).configureEach {
-    it.options.compilerArgs << "--add-modules" << "jdk.incubator.foreign"
+    it.options.compilerArgs << "--enable-preview"
 }
