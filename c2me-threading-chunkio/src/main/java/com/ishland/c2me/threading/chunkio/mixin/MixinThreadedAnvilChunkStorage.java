@@ -3,9 +3,11 @@ package com.ishland.c2me.threading.chunkio.mixin;
 import com.ibm.asyncutil.locks.AsyncNamedLock;
 import com.ishland.c2me.base.common.GlobalExecutors;
 import com.ishland.c2me.threading.chunkio.common.AsyncSerializationManager;
+import com.ishland.c2me.threading.chunkio.common.BlendingInfoUtil;
 import com.ishland.c2me.threading.chunkio.common.ChunkIoMainThreadTaskUtils;
 import com.ishland.c2me.threading.chunkio.common.IAsyncChunkStorage;
 import com.ishland.c2me.threading.chunkio.common.ISerializingRegionBasedStorage;
+import com.ishland.c2me.threading.chunkio.common.ProtoChunkExtension;
 import com.ishland.c2me.threading.chunkio.common.TaskCancellationException;
 import com.mojang.datafixers.DataFixer;
 import com.mojang.datafixers.util.Either;
@@ -22,6 +24,7 @@ import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.gen.chunk.ChunkGenerator;
 import net.minecraft.world.poi.PointOfInterestStorage;
+import net.minecraft.world.storage.StorageIoWorker;
 import net.minecraft.world.storage.VersionedChunkStorage;
 import org.slf4j.Logger;
 import org.spongepowered.asm.mixin.Dynamic;
@@ -35,10 +38,13 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.nio.file.Path;
+import java.util.BitSet;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Supplier;
 
@@ -119,6 +125,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
         }
 
         final CompletableFuture<Optional<NbtCompound>> poiData = ((IAsyncChunkStorage) ((com.ishland.c2me.base.mixin.access.ISerializingRegionBasedStorage) this.pointOfInterestStorage).getWorker()).getNbtAtAsync(pos);
+        final CompletionStage<List<BitSet>> blendingInfos = BlendingInfoUtil.getBlendingInfos((StorageIoWorker) this.getWorker(), pos);
 
         final CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> future = getUpdatedChunkNbtAtAsync(pos)
                 .thenApply(optional -> optional.filter(nbtCompound -> {
@@ -144,7 +151,13 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
                     }
 
                     return null;
-                }, GlobalExecutors.executor).thenCombine(poiData, (protoChunk, tag) -> protoChunk).thenApplyAsync(protoChunk -> {
+                }, GlobalExecutors.executor)
+                .thenCombine(poiData, (protoChunk, tag) -> protoChunk)
+                .thenCombine(blendingInfos, (protoChunk, bitSet) -> {
+                    if (protoChunk != null) ((ProtoChunkExtension) protoChunk).setBlendingInfo(pos, bitSet);
+                    return protoChunk;
+                })
+                .thenApplyAsync(protoChunk -> {
                     ((ISerializingRegionBasedStorage) this.pointOfInterestStorage).update(pos, poiData.join().orElse(null));
                     ChunkIoMainThreadTaskUtils.drainQueue();
                     if (protoChunk != null) {
