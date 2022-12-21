@@ -21,16 +21,21 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(DensityFunctionTypes.UnaryOperation.class)
 public abstract class MixinDensityFunctionTypesUnaryOperation implements DensityFunctionTypes.Unary, CompiledDensityFunctionImpl {
 
-    @Shadow @Final private DensityFunction input;
+    @Shadow
+    @Final
+    private DensityFunction input;
 
-    @Shadow public abstract DensityFunctionTypes.UnaryOperation.Type type();
+    @Shadow
+    public abstract DensityFunctionTypes.UnaryOperation.Type type();
 
     @Shadow
     protected static double apply(DensityFunctionTypes.UnaryOperation.Type type, double d) {
         throw new AbstractMethodError();
     }
 
-    @Shadow @Final private DensityFunctionTypes.UnaryOperation.Type type;
+    @Shadow
+    @Final
+    private DensityFunctionTypes.UnaryOperation.Type type;
 
     @Shadow
     public static DensityFunctionTypes.UnaryOperation create(DensityFunctionTypes.UnaryOperation.Type type, DensityFunction input) {
@@ -45,6 +50,17 @@ public abstract class MixinDensityFunctionTypesUnaryOperation implements Density
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(CallbackInfo info) {
+        compileIfNeeded(false);
+    }
+
+    @Override
+    public void compileIfNeeded(boolean includeParents) {
+        if (pointer != 0L) return;
+
+        if (includeParents) {
+            DensityFunctionUtils.triggerCompilationIfNeeded(this.input);
+        }
+
         if (!DensityFunctionUtils.isCompiled(this.input)) {
             if (DensityFunctionUtils.DEBUG) {
                 this.errorMessage = DensityFunctionUtils.getErrorMessage(
@@ -87,7 +103,7 @@ public abstract class MixinDensityFunctionTypesUnaryOperation implements Density
         } else {
             // TODO [VanillaCopy]
             this.input.applyEach(ds, arg);
-            for(int i = 0; i < ds.length; ++i) {
+            for (int i = 0; i < ds.length; ++i) {
                 ds[i] = this.apply(ds[i]);
             }
         }

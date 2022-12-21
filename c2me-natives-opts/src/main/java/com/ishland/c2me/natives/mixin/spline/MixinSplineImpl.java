@@ -47,6 +47,17 @@ public abstract class MixinSplineImpl<C, I extends ToFloatFunction<C>> implement
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(CallbackInfo info) {
+        compileIfNeeded(false);
+    }
+
+    @Override
+    public void compileIfNeeded(boolean includeParents) {
+        if (this.pointer != 0L) return;
+
+        if (includeParents) {
+            DensityFunctionUtils.triggerCompilationIfNeeded(this.locationFunction);
+        }
+
         if (!DensityFunctionUtils.isCompiled(this.locationFunction) || !DensityFunctionUtils.isCompiled(this.values().toArray())) {
             if (DensityFunctionUtils.DEBUG) {
                 this.errorMessage = DensityFunctionUtils.getErrorMessage(this, this.locationFunction, this.values);

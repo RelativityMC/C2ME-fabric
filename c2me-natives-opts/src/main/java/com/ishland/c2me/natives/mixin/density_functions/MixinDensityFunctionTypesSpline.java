@@ -34,6 +34,17 @@ public abstract class MixinDensityFunctionTypesSpline implements DensityFunction
 
     @Inject(method = "<init>", at = @At(value = "RETURN"))
     private void onInit(CallbackInfo info) {
+        compileIfNeeded(false);
+    }
+
+    @Override
+    public void compileIfNeeded(boolean includeParents) {
+        if (pointer != 0L) return;
+
+        if (includeParents) {
+            DensityFunctionUtils.triggerCompilationIfNeeded(this.spline);
+        }
+
         if (!DensityFunctionUtils.isCompiled(this.spline)) {
             if (DensityFunctionUtils.DEBUG) {
                 this.errorMessage = DensityFunctionUtils.getErrorMessage(

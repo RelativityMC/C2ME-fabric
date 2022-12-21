@@ -31,7 +31,21 @@ public abstract class MixinDensityFunctionTypesRegistryEntry implements DensityF
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(CallbackInfo ci) {
+        compileIfNeeded(false);
+    }
+
+    @Override
+    public void compileIfNeeded(boolean includeParents) {
+        if (this.pointer != 0L) return;
+
+        if (!this.function.hasKeyAndValue()) return;
+
         final DensityFunction df = this.function.value();
+
+        if (includeParents) {
+            DensityFunctionUtils.triggerCompilationIfNeeded(df);
+        }
+
         if (!DensityFunctionUtils.isCompiled(df)) {
             if (DensityFunctionUtils.DEBUG) {
                 this.errorMessage = DensityFunctionUtils.getErrorMessage(

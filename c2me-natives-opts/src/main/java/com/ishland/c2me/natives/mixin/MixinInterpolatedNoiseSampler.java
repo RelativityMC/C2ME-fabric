@@ -39,11 +39,6 @@ public abstract class MixinInterpolatedNoiseSampler implements DensityFunction.B
 
     @Inject(method = "<init>(Lnet/minecraft/util/math/noise/OctavePerlinNoiseSampler;Lnet/minecraft/util/math/noise/OctavePerlinNoiseSampler;Lnet/minecraft/util/math/noise/OctavePerlinNoiseSampler;DDDDD)V", at = @At("RETURN"))
     private void onInit(CallbackInfo info) {
-        this.initializeHook();
-    }
-
-    @Override
-    public void runDeferredCompilation() {
         this.interpolatedSamplerPointer = NativeInterface.createPerlinInterpolatedSamplerData(
                 ((NativeStruct) this.lowerInterpolatedNoise).getNativePointer(),
                 ((NativeStruct) this.upperInterpolatedNoise).getNativePointer(),
@@ -61,6 +56,11 @@ public abstract class MixinInterpolatedNoiseSampler implements DensityFunction.B
 
         this.dfiPointer = NativeInterface.createDFIOldBlendedNoiseData(this.interpolatedSamplerPointer);
         NativeMemoryTracker.registerAllocatedMemory(this, NativeInterface.SIZEOF_density_function_data, this.dfiPointer);
+    }
+
+    @Override
+    public void compileIfNeeded(boolean includeParents) {
+        // no-op: always compilable
     }
 
     /**

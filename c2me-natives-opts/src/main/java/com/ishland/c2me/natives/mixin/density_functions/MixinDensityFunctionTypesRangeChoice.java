@@ -44,7 +44,17 @@ public abstract class MixinDensityFunctionTypesRangeChoice implements DensityFun
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(CallbackInfo info) {
-//        System.err.println("Compiling density function: clamp %s".formatted(this));
+        compileIfNeeded(false);
+    }
+
+    @Override
+    public void compileIfNeeded(boolean includeParents) {
+        if (this.pointer != 0L) return;
+
+        if (includeParents) {
+            DensityFunctionUtils.triggerCompilationIfNeeded(this.input, this.whenInRange, this.whenOutOfRange);
+        }
+
         if (!DensityFunctionUtils.isCompiled(this.input, this.whenInRange, this.whenOutOfRange)) {
             if (DensityFunctionUtils.DEBUG) {
                 this.errorMessage = DensityFunctionUtils.getErrorMessage(

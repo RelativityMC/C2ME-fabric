@@ -1,12 +1,12 @@
 package com.ishland.c2me.natives.common;
 
-import javax.annotation.Nullable;
 
 public interface CompiledSpline {
 
     long getSplinePointer();
 
-    @Nullable
+    void compileIfNeeded(boolean includeParents);
+
     default String getCompilationFailedReason() {
         return null;
     }

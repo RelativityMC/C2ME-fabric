@@ -33,6 +33,7 @@
     "density_functions.MixinDensityFunctionTypesWeirdScaledSampler",
     "density_functions.MixinDensityFunctionTypesWrapper",
     "density_functions.MixinDensityFunctionTypesYClampedGradient",
+    "order.MixinRegistryLoader",
     "spline.MixinSplineFixedFloatFunction",
     "spline.MixinSplineImpl"
   ],

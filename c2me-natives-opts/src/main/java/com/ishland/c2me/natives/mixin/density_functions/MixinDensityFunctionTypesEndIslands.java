@@ -33,6 +33,11 @@ public abstract class MixinDensityFunctionTypesEndIslands implements DensityFunc
         NativeMemoryTracker.registerAllocatedMemory(this, NativeInterface.SIZEOF_density_function_data + NativeInterface.SIZEOF_dfi_end_islands_data, this.pointer);
     }
 
+    @Override
+    public void compileIfNeeded(boolean includeParents) {
+        // no-op: always compilable
+    }
+
     /**
      * @author ishland
      * @reason use native method

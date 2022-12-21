@@ -39,6 +39,17 @@ public abstract class MixinDensityFunctionTypesFullOperation implements DensityF
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(CallbackInfo info) {
+        compileIfNeeded(false);
+    }
+
+    @Override
+    public void compileIfNeeded(boolean includeParents) {
+        if (this.pointer != 0L) return;
+
+        if (includeParents) {
+            DensityFunctionUtils.triggerCompilationIfNeeded(this.argument1, this.argument2);
+        }
+
         if (!DensityFunctionUtils.isCompiled(this.argument1, this.argument2)) {
             if (DensityFunctionUtils.DEBUG) {
                 this.errorMessage = DensityFunctionUtils.getErrorMessage(

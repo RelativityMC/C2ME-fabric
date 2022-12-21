@@ -53,6 +53,17 @@ public abstract class MixinDensityFunctionTypesShiftedNoise implements DensityFu
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(CallbackInfo ci) {
+        compileIfNeeded(false);
+    }
+
+    @Override
+    public void compileIfNeeded(boolean includeParents) {
+        if (this.pointer != 0L) return;
+
+        if (includeParents) {
+            DensityFunctionUtils.triggerCompilationIfNeeded(this.shiftX, this.shiftY, this.shiftZ);
+        }
+
         if (this.noise == null || this.noise.noise() == null) {
             this.pointer = NativeInterface.createDFIShiftedNoiseData(true, 0, 0, 0, 0, 0, 0, 0, 0);
             NativeMemoryTracker.registerAllocatedMemory(
@@ -96,7 +107,6 @@ public abstract class MixinDensityFunctionTypesShiftedNoise implements DensityFu
                     this.pointer
             );
         }
-
     }
 
     @Override

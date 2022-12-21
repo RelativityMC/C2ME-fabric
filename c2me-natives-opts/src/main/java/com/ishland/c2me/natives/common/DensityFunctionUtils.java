@@ -66,7 +66,7 @@ public class DensityFunctionUtils {
             } else if (object instanceof Spline<?,?> spline) {
                 if (!isCompiled(spline)) return false;
             } else if (object instanceof DensityFunctionTypes.Spline.DensityFunctionWrapper wrapper) {
-                if (wrapper.function().value() == null || !isCompiled(wrapper.function().value())) return false;
+                if (!wrapper.function().hasKeyAndValue() || !isCompiled(wrapper.function().value())) return false;
             } else {
                 return false;
             }
@@ -165,6 +165,20 @@ public class DensityFunctionUtils {
             case TYPE1 -> 0; // scaleTunnels
             case TYPE2 -> 1; // scaleCaves
         };
+    }
+
+    public static void triggerCompilationIfNeeded(Object... objects) {
+        for (Object object : objects) {
+            if (object instanceof CompiledDensityFunctionImpl dfi) {
+                dfi.compileIfNeeded(true);
+            } else if (object instanceof CompiledSpline spline) {
+                spline.compileIfNeeded(true);
+            } else if (object instanceof DensityFunctionTypes.Spline.DensityFunctionWrapper wrapper) {
+                if (wrapper.function().hasKeyAndValue() && wrapper.function().value() instanceof CompiledDensityFunctionImpl dfi) {
+                    dfi.compileIfNeeded(true);
+                }
+            }
+        }
     }
 
 }

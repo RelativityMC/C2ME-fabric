@@ -40,7 +40,17 @@ public abstract class MixinDensityFunctionTypesClamp implements DensityFunctionT
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(CallbackInfo info) {
-//        System.err.println("Compiling density function: clamp %s".formatted(this));
+        compileIfNeeded(false);
+    }
+
+    @Override
+    public void compileIfNeeded(boolean includeParents) {
+        if (this.pointer != 0L) return;
+
+        if (includeParents) {
+            DensityFunctionUtils.triggerCompilationIfNeeded(this.input);
+        }
+
         if (!DensityFunctionUtils.isCompiled(this.input)) {
             if (DensityFunctionUtils.DEBUG) {
                 this.errorMessage = DensityFunctionUtils.getErrorMessage(
@@ -63,7 +73,6 @@ public abstract class MixinDensityFunctionTypesClamp implements DensityFunctionT
                 NativeInterface.SIZEOF_density_function_data + NativeInterface.SIZEOF_dfi_clamp_data,
                 this.pointer
         );
-//        System.err.println("Compiled density function successfully: clamp %s".formatted(this));
     }
 
     @Override

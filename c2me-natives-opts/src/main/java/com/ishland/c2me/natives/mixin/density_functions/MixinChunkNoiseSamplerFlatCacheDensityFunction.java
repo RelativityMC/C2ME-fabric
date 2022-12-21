@@ -59,6 +59,17 @@ public abstract class MixinChunkNoiseSamplerFlatCacheDensityFunction implements 
 
     @Inject(method = "<init>", at = @At(value = "RETURN"))
     private void onInit(ChunkNoiseSampler chunkNoiseSampler, DensityFunction delegate, boolean sample, CallbackInfo ci) {
+        compileIfNeeded(false);
+    }
+
+    @Override
+    public void compileIfNeeded(boolean includeParents) {
+        if (this.pointer != 0L) return;
+
+        if (includeParents) {
+            DensityFunctionUtils.triggerCompilationIfNeeded(delegate);
+        }
+
         if (!DensityFunctionUtils.isCompiled(delegate)) {
             if (DensityFunctionUtils.DEBUG) {
                 this.errorMessage = DensityFunctionUtils.getErrorMessage(
@@ -74,12 +85,7 @@ public abstract class MixinChunkNoiseSamplerFlatCacheDensityFunction implements 
 
         this.length = ((IChunkNoiseSampler) this.field_36611).getBiomeHorizontalEnd() + 1;
 
-        if (sample) {
-            this.cache = null; // release unused cache
-            runCompilation();
-        } else {
-            this.isInitDelayed = true;
-        }
+        this.isInitDelayed = true;
     }
 
     @Unique

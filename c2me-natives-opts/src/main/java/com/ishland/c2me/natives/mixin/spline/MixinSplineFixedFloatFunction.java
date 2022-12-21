@@ -30,6 +30,11 @@ public class MixinSplineFixedFloatFunction implements CompiledSpline {
     }
 
     @Override
+    public void compileIfNeeded(boolean includeParents) {
+        // no-op: always compilable
+    }
+
+    @Override
     public long getSplinePointer() {
         return this.pointer;
     }

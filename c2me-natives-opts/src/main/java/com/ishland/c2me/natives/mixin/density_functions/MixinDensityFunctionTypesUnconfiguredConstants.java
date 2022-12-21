@@ -29,6 +29,11 @@ public abstract class MixinDensityFunctionTypesUnconfiguredConstants implements 
     }
 
     @Override
+    public void compileIfNeeded(boolean includeParents) {
+        // no-op: always compilable
+    }
+
+    @Override
     public long getDFIPointer() {
         return this.pointer;
     }
