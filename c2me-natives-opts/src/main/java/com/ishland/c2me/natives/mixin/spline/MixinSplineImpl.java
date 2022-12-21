@@ -56,6 +56,7 @@ public abstract class MixinSplineImpl<C, I extends ToFloatFunction<C>> implement
 
         if (includeParents) {
             DensityFunctionUtils.triggerCompilationIfNeeded(this.locationFunction);
+            DensityFunctionUtils.triggerCompilationIfNeeded(this.values().toArray());
         }
 
         if (!DensityFunctionUtils.isCompiled(this.locationFunction) || !DensityFunctionUtils.isCompiled(this.values().toArray())) {

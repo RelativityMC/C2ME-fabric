@@ -54,6 +54,14 @@ public class DensityFunctionUtils {
             return getErrorMessage(df);
         } else if (object instanceof Spline<?,?> spline) {
             return getErrorMessage(spline);
+        } else if (object instanceof DensityFunctionTypes.Spline.DensityFunctionWrapper wrapper) {
+            if (!wrapper.function().hasKeyAndValue()) {
+                return "Spline density function wrapper is empty";
+            } else if (!isCompiled(wrapper.function().value())) {
+                return getErrorMessage(wrapper.function().value());
+            } else {
+                return "unknown error";
+            }
         } else {
             return "unknown type " + object.getClass().getName();
         }

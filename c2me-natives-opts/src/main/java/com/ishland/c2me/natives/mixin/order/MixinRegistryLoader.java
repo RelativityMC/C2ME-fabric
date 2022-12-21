@@ -50,10 +50,12 @@ public class MixinRegistryLoader {
     @Inject(method = "method_45128", at = @At("RETURN"))
     private static void postFreeze(Map<RegistryKey<?>, Exception> map, Pair<MutableRegistry<?>, ?> loader, CallbackInfo ci) {
         if (loader.getFirst().getKey().equals(RegistryKeys.DENSITY_FUNCTION)) {
+            System.out.println("=".repeat(80));
             final MutableRegistry<DensityFunction> registry = (MutableRegistry<DensityFunction>) loader.getFirst();
             for (DensityFunction function : registry) {
                 DensityFunctionUtils.triggerCompilationIfNeeded(function);
             }
+            System.out.println("=".repeat(80));
         }
     }
 
