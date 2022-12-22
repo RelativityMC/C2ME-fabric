@@ -24,7 +24,9 @@ import java.util.Map;
 public class MixinRegistryLoader {
 
     @Mutable
-    @Shadow @Final public static List<RegistryLoader.Entry<?>> DYNAMIC_REGISTRIES;
+    @Shadow
+    @Final
+    public static List<RegistryLoader.Entry<?>> DYNAMIC_REGISTRIES;
 
     @Inject(method = "<clinit>", at = @At("RETURN"))
     private static void onCLInit(CallbackInfo ci) {
@@ -51,6 +53,7 @@ public class MixinRegistryLoader {
     private static void postFreeze(Map<RegistryKey<?>, Exception> map, Pair<MutableRegistry<?>, ?> loader, CallbackInfo ci) {
         if (loader.getFirst().getKey().equals(RegistryKeys.DENSITY_FUNCTION)) {
             System.out.println("=".repeat(80));
+            System.out.println("Triggering compilation for density functions");
             final MutableRegistry<DensityFunction> registry = (MutableRegistry<DensityFunction>) loader.getFirst();
             for (DensityFunction function : registry) {
                 DensityFunctionUtils.triggerCompilationIfNeeded(function);

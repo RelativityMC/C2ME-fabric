@@ -54,7 +54,7 @@ c2me_natives_create_dfi_caching_flat_cache_data(density_function_impl_data *dele
     data->biomeZ = biomeZ;
     if (cacheFlattened == NULL) {
         // generate cache data
-        double *cacheFlattenedGen = data + sizeof(dfi_caching_flat_cache_data);
+        double *cacheFlattenedGen = ptr + sizeof(density_function_impl_data) + sizeof(dfi_caching_flat_cache_data);
         noise_pos poses[length * length];
         size_t counter = 0;
         for (int32_t offsetX = 0; offsetX < length; offsetX++) {

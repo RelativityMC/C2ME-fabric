@@ -48,6 +48,8 @@ public abstract class MixinChunkNoiseSamplerFlatCacheDensityFunction implements 
     @Unique
     private int length = -1;
 
+    private boolean doSample = false;
+
     @Redirect(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/gen/densityfunction/DensityFunction;sample(Lnet/minecraft/world/gen/densityfunction/DensityFunction$NoisePos;)D"))
     private double preventSample(DensityFunction instance, NoisePos noisePos) {
         if (DensityFunctionUtils.isCompiled(delegate)) {
@@ -59,6 +61,7 @@ public abstract class MixinChunkNoiseSamplerFlatCacheDensityFunction implements 
 
     @Inject(method = "<init>", at = @At(value = "RETURN"))
     private void onInit(ChunkNoiseSampler chunkNoiseSampler, DensityFunction delegate, boolean sample, CallbackInfo ci) {
+        doSample = sample;
         compileIfNeeded(false);
     }
 
@@ -92,7 +95,7 @@ public abstract class MixinChunkNoiseSamplerFlatCacheDensityFunction implements 
     public void runCompilation() {
         this.isInitDelayed = false;
         long ptr_cacheFlattened = 0L; // set to null to let cache initialization happen in native
-        if (this.cache != null) {
+        if (!this.doSample) {
             // provided cache, copy contents to native
             ptr_cacheFlattened = NativeMemoryTracker.allocateMemory(this, this.length * this.length * 8L);
             final double[][] cache1 = this.cache;
@@ -105,7 +108,7 @@ public abstract class MixinChunkNoiseSamplerFlatCacheDensityFunction implements 
         }
 
         // we assume the delegate is compiled here since the caller need to check isInitDelayed before doing this
-        this.pointer = NativeInterface.createDFICachingFloatCacheData(
+        this.pointer = NativeInterface.createDFICachingFlatCacheData(
                 ((CompiledDensityFunctionImpl) this.delegate).getDFIPointer(),
                 this.length,
                 ((IChunkNoiseSampler) this.field_36611).getBiomeX(),
@@ -119,6 +122,7 @@ public abstract class MixinChunkNoiseSamplerFlatCacheDensityFunction implements 
                         (ptr_cacheFlattened == 0L ? this.length * this.length * 8L : 0L),
                 this.pointer
         );
+        this.cache = null;
     }
 
     /**

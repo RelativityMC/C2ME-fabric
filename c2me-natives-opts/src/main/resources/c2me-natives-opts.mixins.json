@@ -11,6 +11,7 @@
     "MixinSimplexNoiseSampler",
     "density_functions.MixinChunkNoiseSampler",
     "density_functions.MixinChunkNoiseSampler1",
+    "density_functions.MixinChunkNoiseSamplerCache2D",
     "density_functions.MixinChunkNoiseSamplerFlatCacheDensityFunction",
     "density_functions.MixinDensityFunctionTypes",
     "density_functions.MixinDensityFunctionTypesBlendDensity",
