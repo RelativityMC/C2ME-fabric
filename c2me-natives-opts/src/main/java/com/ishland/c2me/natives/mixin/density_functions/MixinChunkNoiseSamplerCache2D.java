@@ -47,9 +47,11 @@ public abstract class MixinChunkNoiseSamplerCache2D implements CompiledDensityFu
             if (DensityFunctionUtils.DEBUG) {
                 this.errorMessage = DensityFunctionUtils.getErrorMessage(
                         this,
-                        ImmutableMap.of("delegate", this)
+                        ImmutableMap.of("delegate", this.delegate)
                 );
                 assert this.errorMessage != null;
+                System.err.println("Failed to compile density function: cache_2d_initialized %s".formatted(this));
+                System.err.println(DensityFunctionUtils.indent(this.errorMessage, false));
             }
             return;
         }
