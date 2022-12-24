@@ -458,6 +458,23 @@ public class NativeInterface {
         }
     }
 
+    // density_function_impl_data __attribute__((malloc)) *
+    // c2me_natives_create_dfi_caching_cache_once_data(density_function_impl_data *delegate)
+
+    private static final MethodHandle DFI_create_dfi_caching_cache_once_data = LINKER.downcallHandle(
+            LOOKUP.lookup("c2me_natives_create_dfi_caching_cache_once_data").get(),
+            FunctionDescriptor.of(JAVA_LONG, JAVA_LONG)
+    );
+
+    public static long createDFICachingCacheOnceData(long ptr_delegate) {
+        if (ptr_delegate == 0L) throw new NullPointerException();
+        try {
+            return (long) DFI_create_dfi_caching_cache_once_data.invoke(ptr_delegate);
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     // ===== Density Function Bindings =====
 
     // double c2me_natives_dfi_bindings_single_op(density_function_impl_data *dfi, int blockX, int blockY, int blockZ)

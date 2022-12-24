@@ -46,4 +46,13 @@ public interface IChunkNoiseSampler {
     @Accessor
     int getBiomeZ();
 
+    @Accessor
+    long getCacheOnceUniqueIndex();
+
+    @Accessor
+    long getSampleUniqueIndex();
+
+    @Accessor
+    int getIndex();
+
 }
