@@ -40,20 +40,20 @@ static double c2me_natives_dfi_weird_scaled_samplers_tunnels_single_op(void *ins
     dfi_weird_scaled_sampler *data = instance;
     double input = c2me_natives_dfi_bindings_single_op(data->input, x, y, z);
     double scale = cave_scaler_tunnels(input);
-    return scale * math_noise_perlin_double_sample(data->firstSampler, data->secondSampler,
-                                                   x / scale, y / scale,
-                                                   z / scale,
-                                                   data->amplitude);
+    return scale * fabs(math_noise_perlin_double_sample(data->firstSampler, data->secondSampler,
+                                                        x / scale, y / scale,
+                                                        z / scale,
+                                                        data->amplitude));
 }
 
 static double c2me_natives_dfi_weird_scaled_samplers_caves_single_op(void *instance, int x, int y, int z) {
     dfi_weird_scaled_sampler *data = instance;
     double input = c2me_natives_dfi_bindings_single_op(data->input, x, y, z);
     double scale = cave_scaler_caves(input);
-    return scale * math_noise_perlin_double_sample(data->firstSampler, data->secondSampler,
-                                                   x / scale, y / scale,
-                                                   z / scale,
-                                                   data->amplitude);
+    return scale * fabs(math_noise_perlin_double_sample(data->firstSampler, data->secondSampler,
+                                                        x / scale, y / scale,
+                                                        z / scale,
+                                                        data->amplitude));
 }
 
 static void
@@ -64,11 +64,11 @@ c2me_natives_dfi_weird_scaled_samplers_tunnels_multi_op(void *instance, double *
 
     for (size_t i = 0; i < length; ++i) {
         double scale = cave_scaler_tunnels(res[i]);
-        res[i] = scale * math_noise_perlin_double_sample(data->firstSampler, data->secondSampler,
-                                                         poses[i].x / scale,
-                                                         poses[i].y / scale,
-                                                         poses[i].z / scale,
-                                                         data->amplitude);
+        res[i] = scale * fabs(math_noise_perlin_double_sample(data->firstSampler, data->secondSampler,
+                                                              poses[i].x / scale,
+                                                              poses[i].y / scale,
+                                                              poses[i].z / scale,
+                                                              data->amplitude));
     }
 }
 
@@ -80,11 +80,11 @@ c2me_natives_dfi_weird_scaled_samplers_caves_multi_op(void *instance, double *re
 
     for (size_t i = 0; i < length; ++i) {
         double scale = cave_scaler_caves(res[i]);
-        res[i] = scale * math_noise_perlin_double_sample(data->firstSampler, data->secondSampler,
-                                                         poses[i].x / scale,
-                                                         poses[i].y / scale,
-                                                         poses[i].z / scale,
-                                                         data->amplitude);
+        res[i] = scale * fabs(math_noise_perlin_double_sample(data->firstSampler, data->secondSampler,
+                                                              poses[i].x / scale,
+                                                              poses[i].y / scale,
+                                                              poses[i].z / scale,
+                                                              data->amplitude));
     }
 }
 
