@@ -41,7 +41,9 @@ public class C2MEMod implements ModInitializer {
             runBenchmark("DEFLATE", ChunkStreamVersion.DEFLATE, false);
             runBenchmark("UNCOMPRESSED", ChunkStreamVersion.UNCOMPRESSED, false);
         }
-        consistencyTest();
+        if (Boolean.getBoolean("com.ishland.c2me.runConsistencyTest")) {
+            consistencyTest();
+        }
     }
 
     private void runBenchmark(String name, ChunkStreamVersion version, boolean suppressLog) {
