@@ -33,10 +33,10 @@ static const double FLAT_SIMPLEX_GRAD[] = {
 
 extern bool c2me_natives_isInitialized;
 
-extern double *c2me_natives_pow_of_two_table;
-extern double SQRT_3;
-extern double SKEW_FACTOR_2D;
-extern double UNSKEW_FACTOR_2D;
+extern double c2me_natives_pow_of_two_table[256];
+static const double SQRT_3 = 1.7320508075688772; // sqrt(3.0)
+static const double SKEW_FACTOR_2D = 0.3660254037844386; // 0.5 * (SQRT_3 - 1.0)
+static const double UNSKEW_FACTOR_2D = 0.21132486540518713; // (3.0 - SQRT_3) / 6.0
 
 extern void c2me_natives_init();
 
