@@ -13,7 +13,7 @@ public class MixinPlugin extends ModuleMixinPlugin {
             if (mixinClassName.startsWith("com.ishland.c2me.opts.scheduling.mixin.idle_tasks.autosave.enhanced_autosave."))
                 return Config.autoSaveMode == Config.AutoSaveMode.ENHANCED;
             if (mixinClassName.startsWith("com.ishland.c2me.opts.scheduling.mixin.mid_tick_chunk_tasks."))
-                return Config.doMidTickChunkTasks;
+                return Config.midTickChunkTasksInterval > 0;
             return true;
         } else {
             return false;
