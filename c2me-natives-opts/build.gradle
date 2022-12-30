@@ -9,18 +9,27 @@ targetCompatibility = JavaVersion.VERSION_19
 
 model {
     platforms {
-        x64 {
-            architecture "x64"
+        windows {
+            architecture "x86_64"
+            operatingSystem "windows"
+        }
+        linux {
+            architecture "x86_64"
+            operatingSystem "linux"
         }
     }
 
     toolChains {
         clang(Clang) {
+            target("linux")
+            target("windows") 
         }
     }
 
     components {
         natives(NativeLibrarySpec) {
+            targetPlatform "windows"
+            targetPlatform "linux"
             binaries.all {
 //                cCompiler.args '-g'
                 cCompiler.args '-O3'
@@ -41,7 +50,8 @@ model {
                 } else if (targetPlatform.operatingSystem.windows) {
                     cCompiler.args "-I${org.gradle.internal.jvm.Jvm.current().javaHome}/include"
                     cCompiler.args "-I${org.gradle.internal.jvm.Jvm.current().javaHome}/include/win32"
-                    linker.args "Shlwapi.lib", "Advapi32.lib"
+                    cCompiler.args "-fPIC"
+                    linker.args "-LShlwapi", "-LAdvapi32"
                 } else if (targetPlatform.operatingSystem.freeBSD) {
                     cCompiler.args '-I', "${org.gradle.internal.jvm.Jvm.current().javaHome}/include"
                     cCompiler.args '-I', "${org.gradle.internal.jvm.Jvm.current().javaHome}/include/freebsd"
@@ -53,13 +63,20 @@ model {
 
 processResources {
     with copySpec {
-        from(buildDir.toPath().resolve("libs").resolve("natives").resolve("shared")) {
+        from(buildDir.toPath().resolve("libs").resolve("natives").resolve("shared").resolve("linux")) {
             include '/*.so'
         }
         rename { "libc2me-natives-opts.so" }
     }
+    with copySpec {
+        from(buildDir.toPath().resolve("libs").resolve("natives").resolve("shared").resolve("windows")) {
+            include '/*.dll'
+        }
+        rename { "libc2me-natives-opts.dll" }
+    }
 
-    dependsOn "nativesSharedLibrary"
+    dependsOn "nativesLinuxSharedLibrary"
+    dependsOn "nativesWindowsSharedLibrary"
 }
 
 tasks.withType(JavaCompile).configureEach {
