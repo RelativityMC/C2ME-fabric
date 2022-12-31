@@ -22,7 +22,16 @@ model {
     toolChains {
         clang(Clang) {
             target("linux")
-            target("windows") 
+        }
+        mingw(Gcc){
+            target("windows")
+            eachPlatform() {
+                cCompiler.executable "x86_64-w64-mingw32-gcc"
+                cppCompiler.executable "x86_64-w64-mingw32-g++"
+                linker.executable "x86_64-w64-mingw32-g++"
+                assembler.executable "x86_64-w64-mingw32-as"
+                staticLibArchiver.executable "x86_64-w64-mingw32-ar"
+            }
         }
     }
 

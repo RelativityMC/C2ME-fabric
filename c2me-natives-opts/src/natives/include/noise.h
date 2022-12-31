@@ -12,7 +12,7 @@ typedef const struct {
     size_t length;
     size_t octave_length;
     const size_t *indexes;
-    const __uint8_t *sampler_permutations;
+    const uint8_t *sampler_permutations;
     const double *sampler_originX;
     const double *sampler_originY;
     const double *sampler_originZ;
@@ -34,7 +34,7 @@ typedef const struct {
 } interpolated_sampler_data;
 
 static inline double __attribute__((always_inline, pure))
-math_noise_perlin_sampleScalar(const __uint8_t *permutations, int sectionX, int sectionY, int sectionZ, double localX,
+math_noise_perlin_sampleScalar(const uint8_t *permutations, int sectionX, int sectionY, int sectionZ, double localX,
                                double localY, double localZ, double fadeLocalX) {
     int var0 = sectionX & 0xFF;
     int var1 = (sectionX + 1) & 0xFF;
@@ -108,7 +108,7 @@ math_noise_perlin_sampleScalar(const __uint8_t *permutations, int sectionX, int 
 }
 
 static double __attribute__((pure))
-math_noise_perlin_sample(const __uint8_t *permutations, double originX, double originY, double originZ, double x,
+math_noise_perlin_sample(const uint8_t *permutations, double originX, double originY, double originZ, double x,
                          double y,
                          double z, double yScale, double yMax) {
     double d = x + originX;
@@ -144,7 +144,7 @@ math_noise_perlin_octave_sample_impl(const octave_sampler_data *data, double x, 
     for (size_t i = 0; i < data->length; ++i) {
         double e = data->lacunarity * c2me_natives_pow_of_two_table[data->indexes[i]];
         double f = data->persistence / c2me_natives_pow_of_two_table[data->indexes[i]];
-        __uint8_t *permutations = data->sampler_permutations + 256 * i;
+        uint8_t *permutations = data->sampler_permutations + 256 * i;
         double g = math_noise_perlin_sample(
                 permutations,
                 data->sampler_originX[i],
