@@ -6,7 +6,6 @@
   "mixins": [
     "access.IAquiferSamplerFluidLevel",
     "access.IAtomicSimpleRandomDeriver",
-    "access.IBlender",
     "access.IBlockEntity",
     "access.IChunkGenerator",
     "access.IChunkHolder",
@@ -20,7 +19,6 @@
     "access.ISerializingRegionBasedStorage",
     "access.IServerChunkManager",
     "access.ISimpleRandom",
-    "access.IStorageIoWorker",
     "access.IStructureWeightSampler",
     "access.IThreadedAnvilChunkStorage",
     "access.IVersionedChunkStorage",
