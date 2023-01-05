@@ -3,12 +3,16 @@ package com.ishland.c2me.threading.chunkio.mixin;
 import com.ibm.asyncutil.locks.AsyncNamedLock;
 import com.ishland.c2me.base.common.GlobalExecutors;
 import com.ishland.c2me.threading.chunkio.common.AsyncSerializationManager;
+import com.ishland.c2me.threading.chunkio.common.BlendingInfoUtil;
 import com.ishland.c2me.threading.chunkio.common.ChunkIoMainThreadTaskUtils;
 import com.ishland.c2me.threading.chunkio.common.IAsyncChunkStorage;
 import com.ishland.c2me.threading.chunkio.common.ISerializingRegionBasedStorage;
+import com.ishland.c2me.threading.chunkio.common.ProtoChunkExtension;
 import com.ishland.c2me.threading.chunkio.common.TaskCancellationException;
 import com.mojang.datafixers.DataFixer;
 import com.mojang.datafixers.util.Either;
+import it.unimi.dsi.fastutil.longs.Long2ByteMap;
+import it.unimi.dsi.fastutil.longs.Long2ByteMaps;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ServerWorld;
@@ -20,13 +24,16 @@ import net.minecraft.world.ChunkSerializer;
 import net.minecraft.world.PersistentStateManager;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
+import net.minecraft.world.chunk.ProtoChunk;
 import net.minecraft.world.gen.chunk.ChunkGenerator;
 import net.minecraft.world.poi.PointOfInterestStorage;
+import net.minecraft.world.storage.StorageIoWorker;
 import net.minecraft.world.storage.VersionedChunkStorage;
 import org.slf4j.Logger;
 import org.spongepowered.asm.mixin.Dynamic;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -35,10 +42,13 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.nio.file.Path;
+import java.util.BitSet;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Supplier;
 
@@ -97,11 +107,14 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
 
     @Shadow protected abstract Chunk getProtoChunk(ChunkPos chunkPos);
 
+    @Mutable
+    @Shadow @Final private Long2ByteMap chunkToType;
     private AsyncNamedLock<ChunkPos> chunkLock = AsyncNamedLock.createFair();
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(CallbackInfo info) {
         chunkLock = AsyncNamedLock.createFair();
+        this.chunkToType = Long2ByteMaps.synchronize(this.chunkToType);
     }
 
     private Set<ChunkPos> scheduledChunks = new HashSet<>();
@@ -144,13 +157,32 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
                     }
 
                     return null;
-                }, GlobalExecutors.executor).thenCombine(poiData, (protoChunk, tag) -> protoChunk).thenApplyAsync(protoChunk -> {
+                }, GlobalExecutors.executor)
+                .thenCombine(poiData, (protoChunk, tag) -> protoChunk)
+//                .thenCombine(blendingInfos, (protoChunk, bitSet) -> {
+//                    if (protoChunk != null) ((ProtoChunkExtension) protoChunk).setBlendingInfo(pos, bitSet);
+//                    return protoChunk;
+//                })
+                .thenCompose(protoChunk -> {
+                    ProtoChunk res = protoChunk != null ? protoChunk : (ProtoChunk) this.getProtoChunk(pos);
+                    if (res.getBelowZeroRetrogen() != null || res.getStatus().getChunkType() == ChunkStatus.ChunkType.PROTOCHUNK) {
+                        final CompletionStage<List<BitSet>> blendingInfos = BlendingInfoUtil.getBlendingInfos((StorageIoWorker) this.getWorker(), pos);
+                        return blendingInfos.thenApply(bitSet -> {
+                            ((ProtoChunkExtension) res).setBlendingInfo(pos, bitSet);
+                            return res;
+                        });
+                    } else {
+                        return CompletableFuture.completedFuture(res);
+                    }
+                })
+                .thenApplyAsync(protoChunk -> {
                     ((ISerializingRegionBasedStorage) this.pointOfInterestStorage).update(pos, poiData.join().orElse(null));
                     ChunkIoMainThreadTaskUtils.drainQueue();
                     if (protoChunk != null) {
                         this.mark(pos, protoChunk.getStatus().getChunkType());
                         return Either.left(protoChunk);
                     } else {
+                        LOGGER.error("Why is protoChunk null? Trying to recover from this case...");
                         return Either.left(this.getProtoChunk(pos));
                     }
                 }, this.mainThreadExecutor);
