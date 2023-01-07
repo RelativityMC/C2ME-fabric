@@ -3,24 +3,59 @@ moduleDependencies(project, [
 ])
 
 apply plugin: 'c'
+apply plugin: "de.undercouch.download"
 
 sourceCompatibility = JavaVersion.VERSION_19
 targetCompatibility = JavaVersion.VERSION_19
 
 model {
     platforms {
-        x64 {
-            architecture "x64"
+        windows_x86_64 {
+            architecture "x86_64"
+            operatingSystem "windows"
+        }
+        linux_x86_64 {
+            architecture "x86_64"
+            operatingSystem "linux"
         }
     }
 
     toolChains {
-        clang(Clang) {
+        linux_x86_64(Clang) {
+            target("linux_x86_64")
+            eachPlatform() {
+                cCompiler.withArguments { args ->
+                    args << "-m64"
+                }
+                cppCompiler.withArguments { args ->
+                    args << "-m64"
+                }
+            }
         }
+        def mingwPath = project.projectDir.toPath().resolve('toolchain').resolve("llvm-mingw-${project.llvm_version}-ucrt-ubuntu-18.04-x86_64").resolve("bin");
+        mingw_x86_64(Clang){
+            target("windows_x86_64")
+            eachPlatform() {
+                cCompiler.executable mingwPath.resolve("x86_64-w64-mingw32-clang").toAbsolutePath().toString()
+                cppCompiler.executable mingwPath.resolve("x86_64-w64-mingw32-clang++").toAbsolutePath().toString()
+                linker.executable mingwPath.resolve("x86_64-w64-mingw32-clang++").toAbsolutePath().toString()
+                assembler.executable mingwPath.resolve("x86_64-w64-mingw32-as").toAbsolutePath().toString()
+                staticLibArchiver.executable mingwPath.resolve("x86_64-w64-mingw32-ar").toAbsolutePath().toString()
+            }
+        }
+    }
+
+    tasks.compileNativesWindows_x86_64SharedLibraryNativesC {
+        dependsOn "extractMinGW"
     }
 
     components {
         natives(NativeLibrarySpec) {
+            targetPlatform "windows_x86_64"
+            targetPlatform "linux_x86_64"
+            binaries.withType(StaticLibraryBinarySpec) {
+                buildable = false
+            }
             binaries.all {
 //                cCompiler.args '-g'
                 cCompiler.args '-O3'
@@ -41,7 +76,8 @@ model {
                 } else if (targetPlatform.operatingSystem.windows) {
                     cCompiler.args "-I${org.gradle.internal.jvm.Jvm.current().javaHome}/include"
                     cCompiler.args "-I${org.gradle.internal.jvm.Jvm.current().javaHome}/include/win32"
-                    linker.args "Shlwapi.lib", "Advapi32.lib"
+                    cCompiler.args "-fPIC"
+                    linker.args "-LShlwapi", "-LAdvapi32"
                 } else if (targetPlatform.operatingSystem.freeBSD) {
                     cCompiler.args '-I', "${org.gradle.internal.jvm.Jvm.current().javaHome}/include"
                     cCompiler.args '-I', "${org.gradle.internal.jvm.Jvm.current().javaHome}/include/freebsd"
@@ -53,13 +89,37 @@ model {
 
 processResources {
     with copySpec {
-        from(buildDir.toPath().resolve("libs").resolve("natives").resolve("shared")) {
+        from(buildDir.toPath().resolve("libs").resolve("natives").resolve("shared").resolve("linux_x86_64")) {
             include '/*.so'
         }
         rename { "libc2me-natives-opts.so" }
     }
+    with copySpec {
+        from(buildDir.toPath().resolve("libs").resolve("natives").resolve("shared").resolve("windows_x86_64")) {
+            include '/*.dll'
+        }
+        rename { "libc2me-natives-opts.dll" }
+    }
 
-    dependsOn "nativesSharedLibrary"
+    dependsOn "nativesLinux_x86_64SharedLibrary"
+    dependsOn "nativesWindows_x86_64SharedLibrary"
+}
+
+task downloadMinGW(type: Download) {
+    src "https://github.com/mstorsjo/llvm-mingw/releases/download/${project.llvm_version}/llvm-mingw-${project.llvm_version}-ucrt-ubuntu-18.04-x86_64.tar.xz"
+    dest project.projectDir.toPath().resolve('toolchain').resolve("${project.llvm_version}.tar.xz").toFile()
+    onlyIfModified true
+}
+
+task extractMinGW(dependsOn: downloadMinGW) {
+    doFirst {
+        exec {
+            commandLine("tar", "-xf",
+                    project.projectDir.toPath().resolve('toolchain').resolve("${project.llvm_version}.tar.xz").toAbsolutePath().toString(),
+                    "-C", project.projectDir.toPath().resolve('toolchain').toAbsolutePath().toString()
+            )
+        }
+    }
 }
 
 tasks.withType(JavaCompile).configureEach {

@@ -8,14 +8,14 @@
 #include "../include/noise.h"
 
 double __attribute__((pure))
-c2me_natives_perlin_sample(const __uint8_t *permutations, double originX, double originY, double originZ, double x,
+c2me_natives_perlin_sample(const uint8_t *permutations, double originX, double originY, double originZ, double x,
                            double y,
                            double z, double yScale, double yMax) {
     return math_noise_perlin_sample(permutations, originX, originY, originZ, x, y, z, yScale, yMax);
 }
 
-__uint8_t *c2me_natives_perlin_generatePermutations() {
-    __uint8_t *permutations = malloc(256 * sizeof(__uint8_t));
+uint8_t *c2me_natives_perlin_generatePermutations() {
+    uint8_t *permutations = malloc(256 * sizeof(uint8_t));
 
     for (size_t i = 0; i < 256; i++) {
         permutations[i] = i;
@@ -23,7 +23,7 @@ __uint8_t *c2me_natives_perlin_generatePermutations() {
 
     for (size_t i = 0; i < 256; i++) {
         int j = rand() % (256 - i);
-        __uint8_t b = permutations[i];
+        uint8_t b = permutations[i];
         permutations[i] = permutations[i + j];
         permutations[i + j] = b;
     }
@@ -33,7 +33,7 @@ __uint8_t *c2me_natives_perlin_generatePermutations() {
 
 octave_sampler_data __attribute__((malloc)) *c2me_natives_perlin_create_octave_sampler_data(
         double lacunarity, double persistence, const size_t length, size_t octave_length, const size_t *indexes,
-        const __uint8_t *sampler_permutations,
+        const uint8_t *sampler_permutations,
         const double *sampler_originX, const double *sampler_originY, const double *sampler_originZ,
         const double *amplitudes) {
     octave_sampler_data *ptr = malloc(sizeof(octave_sampler_data));
