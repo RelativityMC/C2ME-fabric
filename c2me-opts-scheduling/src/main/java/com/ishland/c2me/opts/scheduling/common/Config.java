@@ -4,19 +4,22 @@ import com.ishland.c2me.base.common.config.ConfigSystem;
 
 public class Config {
 
-    public static final boolean doMidTickChunkTasks = new ConfigSystem.ConfigAccessor()
-            .key("generalOptimizations.doMidTickChunkTasks")
+    public static final long midTickChunkTasksInterval = new ConfigSystem.ConfigAccessor()
+            .key("generalOptimizations.midTickChunkTasksInterval")
             .comment("""
-                    Whether to enable mid-tick chunk tasks \s
+                    The task interval of mid-tick chunk tasks in nanoseconds (-1 to disable) \s
                     Mid-tick chunk tasks is to execute chunk tasks during server tick loop \s
                     to speed up chunk loading and generation \s
                     This helps chunks loading and generating under high MSPT but may raise \s
                     MSPT when chunks are loading or generating \s
                     \s
+                    It is generally not recommended to adjust this value unless you know \s
+                    what you are doing \s
+                    \s
                     Incompatible with Dimensional Threading (dimthread)
                     """)
             .incompatibleMod("dimthread", "*")
-            .getBoolean(true, false);
+            .getLong(100_000, -1);
 
     public static final AutoSaveMode autoSaveMode = new ConfigSystem.ConfigAccessor()
             .key("generalOptimizations.autoSave.mode")

@@ -11,12 +11,12 @@ public class Config {
     public static final long chunkDataCacheSoftLimit = new ConfigSystem.ConfigAccessor()
             .key("ioSystem.chunkDataCacheSoftLimit")
             .comment("Soft limit for io worker nbt cache")
-            .getLong(1536, 1536, ConfigSystem.LongChecks.POSITIVE_VALUES_ONLY);
+            .getLong(8192, 8192, ConfigSystem.LongChecks.POSITIVE_VALUES_ONLY);
 
     public static final long chunkDataCacheLimit = new ConfigSystem.ConfigAccessor()
             .key("ioSystem.chunkDataCacheLimit")
             .comment("Hard limit for io worker nbt cache")
-            .getLong(6144, 6144, ConfigSystem.LongChecks.POSITIVE_VALUES_ONLY);
+            .getLong(32678, 32678, ConfigSystem.LongChecks.POSITIVE_VALUES_ONLY);
 
     public static final long chunkStreamVersion = new ConfigSystem.ConfigAccessor()
             .key("ioSystem.chunkStreamVersion")
