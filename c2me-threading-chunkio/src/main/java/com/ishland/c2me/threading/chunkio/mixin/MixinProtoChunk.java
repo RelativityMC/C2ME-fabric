@@ -28,7 +28,7 @@ public class MixinProtoChunk implements ProtoChunkExtension {
             for(int j = chunkPos2.getRegionZ(); j <= chunkPos3.getRegionZ(); ++j) {
                 BitSet bitSet = bitSets.get(index ++);
                 if (!bitSet.isEmpty()) {
-                    ChunkPos chunkPos4 = ChunkPos.fromRegion(chunkPos2.x + i, chunkPos2.z + j);
+                    ChunkPos chunkPos4 = ChunkPos.fromRegion(i, j);
                     int k = Math.max(chunkPos2.x - chunkPos4.x, 0);
                     int l = Math.max(chunkPos2.z - chunkPos4.z, 0);
                     int m = Math.min(chunkPos3.x - chunkPos4.x, 31);
