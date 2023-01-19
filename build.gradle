@@ -4,7 +4,7 @@ plugins {
     id 'io.github.juuxel.loom-quiltflower' version '1.6.0' apply false
     id "me.champeau.jmh" version "0.6.6"
     id 'com.modrinth.minotaur' version '2.+' apply false
-	id 'com.matthewprenger.cursegradle' version '1.4.0'
+	id 'com.matthewprenger.cursegradle' version '1.4.0' apply false
 }
 
 @SuppressWarnings('unused')
@@ -196,7 +196,7 @@ if (System.getenv("CURSEFORGE_TOKEN")) {
 			addGameVersion "Java 17"
 
 			mainArtifact(remapJar) {
-				displayName = project.version + " devbuild for " + project.minecraft_version
+				displayName = project.version + " backports for " + project.minecraft_version
 			}
 		}
 		options {
