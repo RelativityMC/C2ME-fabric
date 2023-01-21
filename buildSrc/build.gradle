@@ -15,10 +15,9 @@ repositories {
 dependencies {
     // https://mvnrepository.com/artifact/org.jetbrains/annotations
     implementation 'org.jetbrains:annotations:22.0.0'
-}
 
-test {
-    useJUnitPlatform()
+    // https://mvnrepository.com/artifact/com.google.code.gson/gson
+    implementation 'com.google.code.gson:gson:2.9.0'
 }
 
 gradlePlugin {

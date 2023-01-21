@@ -35,10 +35,13 @@ jobs:
       run: |
         ./gradlew clean build --stacktrace
 
-#    - name: Run FOSSA
-#      uses: fossa-contrib/fossa-action@v1
-#      with:
-#        fossa-api-key: 46711dc8ef0a8d57d06010c8148bb6ea
+    - name: upload to modrinth
+      run: ./gradlew modrinth
+      if: github.ref == 'refs/heads/ver/1.19.4'
+      env:
+        MODRINTH_TOKEN: ${{ secrets.MODRINTH_UPLOAD_TOKEN }}
+        GITHUB_EVENT_RAW_PATH: ${{ github.event_path }}
+      continue-on-error: true
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v2

@@ -4,6 +4,7 @@ plugins {
     id 'io.github.juuxel.loom-quiltflower' version '1.+' apply false
     id "de.undercouch.download" version "5.3.0" apply false
     id "me.champeau.jmh" version "0.6.6"
+    id 'com.modrinth.minotaur' version '2.+' apply false
 }
 
 //java {
@@ -158,6 +159,7 @@ subprojects {
 
 afterEvaluate {
     logger.lifecycle("Version String: ${version}")
+    logger.lifecycle(com.ishland.c2me.gradle.ParseGItHubActionChangelog.getChangelog())
 }
 
 dependencies {
@@ -176,6 +178,19 @@ dependencies {
     afterEvaluate {
         jmh project.sourceSets.main.compileClasspath
     }
+}
+
+apply plugin: 'com.modrinth.minotaur'
+modrinth {
+    token = System.getenv("MODRINTH_TOKEN") // This is the default. Remember to have the MODRINTH_TOKEN environment variable set or else this will fail, or set it to whatever you want - just make sure it stays private!
+    projectId = "c2me-fabric" // This can be the project ID or the slug. Either will work!
+    versionNumber = project.version + "+" + project.minecraft_version // You don't need to set this manually. Will fail if Modrinth has this version already
+    versionName = project.version + " devbuild for " + project.minecraft_version
+    versionType = "alpha" // This is the default -- can also be `beta` or `alpha`
+    uploadFile = remapJar // With Loom, this MUST be set to `remapJar` instead of `jar`!
+    gameVersions = [project.minecraft_version] // Must be an array, even with only one version
+    loaders = ["fabric"] // Must also be an array - no need to specify this if you're using Loom or ForgeGradle
+    changelog = com.ishland.c2me.gradle.ParseGItHubActionChangelog.getChangelog()
 }
 
 loom {
