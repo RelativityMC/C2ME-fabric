@@ -2,18 +2,10 @@ package com.ishland.c2me.opts.scheduling.mixin.task_scheduling;
 
 import com.ishland.c2me.opts.scheduling.common.IThreadedAnvilChunkStorage;
 import net.minecraft.server.world.ChunkHolder;
-import net.minecraft.server.world.ChunkTicketType;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;
-import net.minecraft.util.Util;
-import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.thread.ThreadExecutor;
-import net.minecraft.world.chunk.ChunkStatus;
-import org.spongepowered.asm.mixin.Dynamic;
-import org.spongepowered.asm.mixin.Final;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
-import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
@@ -51,19 +43,19 @@ public class MixinThreadedAnvilChunkStorage implements IThreadedAnvilChunkStorag
         return completableFuture.thenApplyAsync(fn, this.mainInvokingExecutor);
     }
 
-    /**
-     * @author ishland
-     * @reason reduce scheduling overhead with mainInvokingExecutor
-     */
-    @Overwrite
-    public void releaseLightTicket(ChunkPos pos) {
-        // TODO [VanilaCopy]
-        this.mainInvokingExecutor.execute(Util.debugRunnable(() -> {
-            this.ticketManager.removeTicketWithLevel(ChunkTicketType.LIGHT, pos, 33 + ChunkStatus.getDistanceFromFull(ChunkStatus.LIGHT), pos);
-        }, () -> {
-            return "release light ticket " + pos;
-        }));
-    }
+//    /**
+//     * @author ishland
+//     * @reason reduce scheduling overhead with mainInvokingExecutor
+//     */
+//    @Overwrite
+//    public void releaseLightTicket(ChunkPos pos) {
+//        // TODO [VanilaCopy]
+//        this.mainInvokingExecutor.execute(Util.debugRunnable(() -> {
+//            this.ticketManager.removeTicketWithLevel(ChunkTicketType.LIGHT, pos, 33 + ChunkStatus.getDistanceFromFull(ChunkStatus.LIGHT), pos);
+//        }, () -> {
+//            return "release light ticket " + pos;
+//        }));
+//    }
 
     // private synthetic method_17252(Lnet/minecraft/server/world/ChunkHolder;Ljava/lang/Runnable;)V
     /**

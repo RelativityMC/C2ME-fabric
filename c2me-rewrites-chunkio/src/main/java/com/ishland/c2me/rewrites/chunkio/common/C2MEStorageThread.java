@@ -246,19 +246,18 @@ public class C2MEStorageThread extends Thread {
     private void doPriorityChanges() {
         if (this.pendingReadRequests instanceof PriorityBlockingQueue<ReadRequest> queue) {
             final long currentTimeMillis = System.currentTimeMillis();
-            if (currentTimeMillis > lastRebuild + 500) { // at most twice a second
+            final int currentPrioritySerial = PriorityUtils.priorityChangeSerial();
+            if (this.lastPrioritySerial != currentPrioritySerial &&
+                    (currentTimeMillis > lastRebuild + 500 || currentPrioritySerial - this.lastPrioritySerial >= 20)) { // rebuild only when every 500ms or 20 changes
                 lastRebuild = currentTimeMillis;
-                final int currentPrioritySerial = PriorityUtils.priorityChangeSerial();
-                if (this.lastPrioritySerial != currentPrioritySerial) {
-                    this.lastPrioritySerial = currentPrioritySerial;
-                    final long startTime = System.nanoTime();
-                    // re-add locks to reflect priority changes
-                    priorityChangeTmpStorage.clear();
-                    queue.drainTo(priorityChangeTmpStorage);
-                    queue.addAll(priorityChangeTmpStorage);
-                    priorityChangeTmpStorage.clear();
+                this.lastPrioritySerial = currentPrioritySerial;
+                final long startTime = System.nanoTime();
+                // re-add locks to reflect priority changes
+                priorityChangeTmpStorage.clear();
+                queue.drainTo(priorityChangeTmpStorage);
+                queue.addAll(priorityChangeTmpStorage);
+                priorityChangeTmpStorage.clear();
 //                System.out.printf("Did priority changes for %d entries in %.2fms\n", size, (System.nanoTime() - startTime) / 1_000_000.0);
-                }
             }
         }
     }
@@ -327,12 +326,15 @@ public class C2MEStorageThread extends Thread {
 
     private void writeChunk(long pos, NbtCompound nbt) {
         if (nbt == null) {
-            try {
-                final ChunkPos pos1 = new ChunkPos(pos);
-                final RegionFile regionFile = ((IRegionBasedStorage) this.storage).invokeGetRegionFile(pos1);
-                regionFile.delete(pos1);
-            } catch (Throwable t) {
-                LOGGER.error("Error writing chunk %s".formatted(new ChunkPos(pos)), t);
+            if (this.cache.get(pos) == null) {
+                try {
+                    final ChunkPos pos1 = new ChunkPos(pos);
+                    final RegionFile regionFile = ((IRegionBasedStorage) this.storage).invokeGetRegionFile(pos1);
+                    regionFile.delete(pos1);
+                } catch (Throwable t) {
+                    LOGGER.error("Error writing chunk %s".formatted(new ChunkPos(pos)), t);
+                }
+                this.cache.remove(pos);
             }
         } else {
             writeSemaphoreCounter.incrementAndGet();
@@ -365,13 +367,13 @@ public class C2MEStorageThread extends Thread {
                     } catch (Throwable t) {
                         SneakyThrow.sneaky(t);
                     }
+                    this.cache.remove(pos);
                 }
             }, this.executor).handleAsync((unused, throwable) -> {
                 writeSemaphoreCounter.decrementAndGet();
                 if (throwable != null) LOGGER.error("Error writing chunk %s".formatted(new ChunkPos(pos)), throwable);
                 // TODO error retry
 
-                this.cache.remove(pos);
                 return null;
             }, this.executor);
             this.writeFutures.add(future);

@@ -19,7 +19,7 @@ public class SchedulerThread extends Thread implements Executor {
     public static final SchedulerThread INSTANCE = new SchedulerThread();
 
     private final ConcurrentLinkedQueue<Runnable> rawTasks = new ConcurrentLinkedQueue<>();
-    private final PriorityBlockingQueue<SchedulingAsyncCombinedLock<?>> pendingLocks = new PriorityBlockingQueue<>();
+    private final PriorityBlockingQueue<ScheduledTask<?>> pendingTasks = new PriorityBlockingQueue<>();
 
     private final Semaphore semaphore = new Semaphore((int) ModuleEntryPoint.globalExecutorParallelism);
 
@@ -40,10 +40,10 @@ public class SchedulerThread extends Thread implements Executor {
 
             // try locks
             int burst = 0;
-            while (!pendingLocks.isEmpty()  && burst ++ < 128 && semaphore.tryAcquire()) {
-                SchedulingAsyncCombinedLock<?> lock = pendingLocks.poll();
-                if (lock != null && lock.tryAcquire()) {
-                    lock.doAction(semaphore::release); // locked
+            while (!pendingTasks.isEmpty() && burst ++ < 128 && semaphore.tryAcquire()) {
+                ScheduledTask<?> lock = pendingTasks.poll();
+                if (lock != null && lock.trySchedule()) {
+                    lock.addPostAction(semaphore::release); // locked
                     didWork = true;
                 } else {
                     semaphore.release(); // not locked
@@ -67,29 +67,28 @@ public class SchedulerThread extends Thread implements Executor {
         }
     }
 
-    public void addPendingLock(SchedulingAsyncCombinedLock<?> lock) {
-        this.pendingLocks.add(lock);
+    public void addPendingTask(ScheduledTask<?> task) {
+        this.pendingTasks.add(task);
         LockSupport.unpark(this);
     }
 
-    private final ObjectArrayList<SchedulingAsyncCombinedLock<?>> priorityChangeTmpStorage = new ObjectArrayList<>();
+    private final ObjectArrayList<ScheduledTask<?>> priorityChangeTmpStorage = new ObjectArrayList<>();
 
     private boolean doPriorityChanges() {
         final long currentTimeMillis = System.currentTimeMillis();
-        if (currentTimeMillis > lastRebuild + 500) { // at most twice a second
+        final int currentPrioritySerial = PriorityUtils.priorityChangeSerial();
+        if (this.lastPrioritySerial != currentPrioritySerial &&
+                (currentTimeMillis > lastRebuild + 500 || currentPrioritySerial - this.lastPrioritySerial >= 20)) { // rebuild only when every 500ms or 20 changes
             lastRebuild = currentTimeMillis;
-            final int currentPrioritySerial = PriorityUtils.priorityChangeSerial();
-            if (this.lastPrioritySerial != currentPrioritySerial) {
-                this.lastPrioritySerial = currentPrioritySerial;
-                final long startTime = System.nanoTime();
-                // re-add locks to reflect priority changes
-                priorityChangeTmpStorage.clear();
-                this.pendingLocks.drainTo(priorityChangeTmpStorage);
-                this.pendingLocks.addAll(priorityChangeTmpStorage);
-                priorityChangeTmpStorage.clear();
+            this.lastPrioritySerial = currentPrioritySerial;
+            final long startTime = System.nanoTime();
+            // re-add locks to reflect priority changes
+            priorityChangeTmpStorage.clear();
+            this.pendingTasks.drainTo(priorityChangeTmpStorage);
+            this.pendingTasks.addAll(priorityChangeTmpStorage);
+            priorityChangeTmpStorage.clear();
 //                System.out.printf("Did priority changes for %d entries in %.2fms\n", size, (System.nanoTime() - startTime) / 1_000_000.0);
-                return true;
-            }
+            return true;
         }
         return false;
     }

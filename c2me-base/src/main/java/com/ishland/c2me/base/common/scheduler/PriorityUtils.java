@@ -73,6 +73,10 @@ public class PriorityUtils {
         priorityChanges.incrementAndGet();
     }
 
+    public static void notifyPriorityChange(int amount) {
+        priorityChanges.addAndGet(amount);
+    }
+
     public static int priorityChangeSerial() {
         return priorityChanges.get();
     }
