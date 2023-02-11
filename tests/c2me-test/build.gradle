@@ -14,7 +14,7 @@ loom {
     runs {
         testC2MEServer {
             server()
-            runDir getRootProject().getProjectDir().toPath().relativize(project.getBuildDir().toPath()).resolve("testServer").toString()
+            runDir project.getProjectDir().toPath().relativize(project.getBuildDir().toPath()).resolve("testServer").toString()
             source sourceSets.testmod
             vmArgs "-Dc2me.base.config.override.ioSystem.replaceImpl=true",
                     "-Dc2me.base.config.override.asyncScheduling.enabled=true",
