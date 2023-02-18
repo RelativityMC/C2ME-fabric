@@ -1,5 +1,6 @@
 package com.ishland.c2me.fixes.worldgen.threading_issues.mixin.threading;
 
+import net.minecraft.structure.StructureTemplate;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
@@ -10,7 +11,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Collections;
 import java.util.List;
-import net.minecraft.structure.StructureTemplate;
 
 @Mixin(StructureTemplate.class)
 public class MixinStructure {

@@ -3,6 +3,7 @@ package com.ishland.c2me.threading.worldgen.mixin;
 import com.ishland.c2me.base.common.scheduler.PriorityUtils;
 import com.ishland.c2me.base.common.scheduler.ThreadLocalWorldGenSchedulingState;
 import com.ishland.c2me.base.common.util.SneakyThrow;
+import com.ishland.c2me.base.mixin.access.IThreadedAnvilChunkStorage;
 import com.ishland.c2me.opts.chunk_access.common.CurrentWorldGenState;
 import com.ishland.c2me.threading.worldgen.common.ChunkStatusUtils;
 import com.ishland.c2me.threading.worldgen.common.Config;
@@ -117,6 +118,7 @@ public abstract class MixinChunkStatus implements IChunkStatus {
             final ChunkHolder holder = ThreadLocalWorldGenSchedulingState.getChunkHolder();
             if (holder != null && holder.getFutureFor((ChunkStatus) (Object) this).isDone()) {
                 completableFuture = ChunkHolder.UNLOADED_CHUNK_FUTURE;
+                ((IThreadedAnvilChunkStorage) world.getChunkManager().threadedAnvilChunkStorage).invokeReleaseLightTicket(targetChunk.getPos()); // vanilla behavior
 //                System.out.println(String.format("%s: %s is already done or cancelled, skipping generation", this, targetChunk.getPos()));
             } else {
                 int lockRadius = Config.reduceLockRadius && this.reducedTaskRadius != -1 ? this.reducedTaskRadius : this.taskMargin;
