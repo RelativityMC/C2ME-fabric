@@ -124,6 +124,11 @@ public class SMAPSourceDebugExtension {
         }
         if (t.getCause() != null)
             enhanceStackTrace(t.getCause(), cache, keepOriginalFrames);
+        if (t.getSuppressed() != null) {
+            for (Throwable throwable : t.getSuppressed()) {
+                enhanceStackTrace(throwable, cache, keepOriginalFrames);
+            }
+        }
     }
 
     @Nullable

@@ -47,7 +47,7 @@ public class CheckedThreadLocalRandom extends LocalRandom {
         final String exceptionMessage = "ThreadLocalRandom accessed from a different thread (owner: %s, current: %s)"
                 .formatted(this.owner.get().getName(), Thread.currentThread().getName());
         builder.append(exceptionMessage).append('\n');
-        builder.append("This is NOT a bug in C2ME, but a bug in another mod or in vanilla code. \n");
+        builder.append("This is usually NOT a bug in C2ME, but a bug in another mod or in vanilla code. \n");
         builder.append("Possible solutions: \n");
         builder.append("  - Find possible causes in the stack trace below and \n");
         builder.append("    - if caused by another mod, report this to the corresponding mod authors \n");
@@ -63,7 +63,7 @@ public class CheckedThreadLocalRandom extends LocalRandom {
         final String s = builder.toString();
         LOGGER.error(s, exception);
         if (Config.enforceSafeWorldRandomAccess) {
-            throw new RuntimeException(String.format("%s \n (You may make this a fatal warning instead of a hard crash in c2me.toml)", s), exception) {
+            throw new RuntimeException(String.format("%s \n (You may make this a fatal warning instead of a hard crash with fixes.enforceSafeWorldRandomAccess setting in c2me.toml)", s), exception) {
                 @Override
                 public synchronized Throwable fillInStackTrace() {
                     return this;
