@@ -1,7 +1,15 @@
 package com.ishland.c2me.opts.chunk_serializer.common;
 
 import com.ishland.c2me.opts.chunk_serializer.common.utils.StarLightUtil;
-import com.ishland.c2me.opts.chunk_serializer.mixin.*;
+import com.ishland.c2me.opts.chunk_serializer.mixin.BelowZeroRetrogenAccessor;
+import com.ishland.c2me.opts.chunk_serializer.mixin.BlendingDataAccessor;
+import com.ishland.c2me.opts.chunk_serializer.mixin.ChunkSectionAccessor;
+import com.ishland.c2me.opts.chunk_serializer.mixin.ChunkTickSchedulerAccessor;
+import com.ishland.c2me.opts.chunk_serializer.mixin.SimpleTickSchedulerAccessor;
+import com.ishland.c2me.opts.chunk_serializer.mixin.StateAccessor;
+import com.ishland.c2me.opts.chunk_serializer.mixin.StructurePieceAccessor;
+import com.ishland.c2me.opts.chunk_serializer.mixin.StructureStartAccessor;
+import com.ishland.c2me.opts.chunk_serializer.mixin.UpgradeDataAccessor;
 import com.mojang.serialization.Codec;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.shorts.ShortList;
@@ -11,23 +19,41 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.fluid.Fluid;
-import net.minecraft.nbt.*;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtElement;
+import net.minecraft.nbt.NbtList;
+import net.minecraft.nbt.NbtOps;
+import net.minecraft.nbt.NbtShort;
+import net.minecraft.registry.Registries;
+import net.minecraft.registry.Registry;
+import net.minecraft.registry.RegistryKeys;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.structure.StructureContext;
 import net.minecraft.structure.StructurePiece;
 import net.minecraft.structure.StructurePiecesList;
 import net.minecraft.structure.StructureStart;
 import net.minecraft.util.collection.IndexedIterable;
-import net.minecraft.util.math.*;
-import net.minecraft.util.registry.Registry;
-import net.minecraft.util.registry.RegistryEntry;
+import net.minecraft.util.math.BlockBox;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.math.ChunkSectionPos;
+import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.EightWayDirection;
 import net.minecraft.world.ChunkSerializer;
 import net.minecraft.world.Heightmap;
 import net.minecraft.world.LightType;
-import net.minecraft.world.TickPriority;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeKeys;
-import net.minecraft.world.chunk.*;
+import net.minecraft.world.chunk.BelowZeroRetrogen;
+import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.ChunkNibbleArray;
+import net.minecraft.world.chunk.ChunkSection;
+import net.minecraft.world.chunk.ChunkStatus;
+import net.minecraft.world.chunk.PalettedContainer;
+import net.minecraft.world.chunk.ProtoChunk;
+import net.minecraft.world.chunk.ReadableContainer;
+import net.minecraft.world.chunk.UpgradeData;
 import net.minecraft.world.chunk.light.LightingProvider;
 import net.minecraft.world.gen.GenerationStep;
 import net.minecraft.world.gen.carver.CarvingMask;
@@ -38,12 +64,17 @@ import net.minecraft.world.tick.OrderedTick;
 import net.minecraft.world.tick.SerializableTickScheduler;
 import net.minecraft.world.tick.SimpleTickScheduler;
 import net.minecraft.world.tick.Tick;
+import net.minecraft.world.tick.TickPriority;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.BitSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Queue;
 import java.util.function.Function;
 import java.util.stream.LongStream;
 
@@ -167,7 +198,7 @@ public final class ChunkDataSerializer {
 
         ChunkSection[] chunkSections = chunk.getSectionArray();
         LightingProvider lightingProvider = world.getChunkManager().getLightingProvider();
-        Registry<Biome> biomeRegistry = world.getRegistryManager().get(Registry.BIOME_KEY);
+        Registry<Biome> biomeRegistry = world.getRegistryManager().get(RegistryKeys.BIOME);
 
         checkLightFlag(chunk, writer, world);
 
@@ -461,7 +492,7 @@ public final class ChunkDataSerializer {
 
         for (BlockState paletteEntry : paletteEntries) {
             writer.compoundEntryStart();
-            writer.putRegistry(STRING_NAME, Registry.BLOCK, paletteEntry.getBlock());
+            writer.putRegistry(STRING_NAME, Registries.BLOCK, paletteEntry.getBlock());
             if (!paletteEntry.getEntries().isEmpty()) {
                 // TODO: optimize this
                 writer.putElement(STRING_PROPERTIES, ((StateAccessor<BlockState>) paletteEntry).getCodec().codec()
@@ -533,7 +564,7 @@ public final class ChunkDataSerializer {
      * mirror of {@link BelowZeroRetrogen#CODEC}
      */
     private static void writeBelowZeroRetrogen(NbtWriter writer, BelowZeroRetrogenAccessor belowZeroRetrogen) {
-        writer.putRegistry(STRING_TARGET_STATUS, Registry.CHUNK_STATUS, belowZeroRetrogen.invokeGetTargetStatus());
+        writer.putRegistry(STRING_TARGET_STATUS, Registries.CHUNK_STATUS, belowZeroRetrogen.invokeGetTargetStatus());
 
         BitSet missingBedrock = belowZeroRetrogen.getMissingBedrock();
         if (!missingBedrock.isEmpty()) {
@@ -635,7 +666,7 @@ public final class ChunkDataSerializer {
         } else {
             // FALLBACK?
             //noinspection deprecation
-            writer.putElement(STRING_BLOCK_TICKS, blocks.toNbt(l, block -> Registry.BLOCK.getId(block).toString()));
+            writer.putElement(STRING_BLOCK_TICKS, blocks.toNbt(l, block -> Registries.BLOCK.getId(block).toString()));
         }
     }
 
@@ -665,34 +696,34 @@ public final class ChunkDataSerializer {
         } else {
             // FALLBACK?
             //noinspection deprecation
-            writer.putElement(STRING_FLUID_TICKS, fluids.toNbt(l, block -> Registry.FLUID.getId(block).toString()));
+            writer.putElement(STRING_FLUID_TICKS, fluids.toNbt(l, block -> Registries.FLUID.getId(block).toString()));
         }
     }
 
     private static void writeOrderedBlockTick(NbtWriter writer, OrderedTick<Block> orderedTick, long l) {
         writer.compoundEntryStart();
-        writer.putRegistry(STRING_CHAR_SMALL_I, Registry.BLOCK, orderedTick.type());
+        writer.putRegistry(STRING_CHAR_SMALL_I, Registries.BLOCK, orderedTick.type());
         writeGenericTickData(writer, orderedTick.pos(), (int) (orderedTick.triggerTick() - l), orderedTick.priority());
         writer.finishCompound();
     }
 
     private static void writeOrderedFluidTick(NbtWriter writer, OrderedTick<Fluid> orderedTick, long l) {
         writer.compoundEntryStart();
-        writer.putRegistry(STRING_CHAR_SMALL_I, Registry.FLUID, orderedTick.type());
+        writer.putRegistry(STRING_CHAR_SMALL_I, Registries.FLUID, orderedTick.type());
         writeGenericTickData(writer, orderedTick.pos(), (int) (orderedTick.triggerTick() - l), orderedTick.priority());
         writer.finishCompound();
     }
 
     private static void writeFluidTick(NbtWriter writer, Tick<Fluid> scheduledTick) {
         writer.compoundEntryStart();
-        writer.putRegistry(STRING_CHAR_SMALL_I, Registry.FLUID, scheduledTick.type());
+        writer.putRegistry(STRING_CHAR_SMALL_I, Registries.FLUID, scheduledTick.type());
         writeGenericTickData(writer, scheduledTick);
         writer.finishCompound();
     }
 
     private static void writeBlockTick(NbtWriter writer, Tick<Block> scheduledTick) {
         writer.compoundEntryStart();
-        writer.putRegistry(STRING_CHAR_SMALL_I, Registry.BLOCK, scheduledTick.type());
+        writer.putRegistry(STRING_CHAR_SMALL_I, Registries.BLOCK, scheduledTick.type());
         writeGenericTickData(writer, scheduledTick);
         writer.finishCompound();
     }
@@ -728,7 +759,7 @@ public final class ChunkDataSerializer {
         writer.startCompound(STRING_STRUCTURES);
         writer.startCompound(STRING_STARTS);
 
-        Registry<Structure> configuredStructureFeatureRegistry = context.registryManager().get(Registry.STRUCTURE_KEY);
+        Registry<Structure> configuredStructureFeatureRegistry = context.registryManager().get(RegistryKeys.STRUCTURE);
 
         for (var entry : starts.entrySet()) {
             writer.startCompound(NbtWriter.getNameBytesFromRegistry(configuredStructureFeatureRegistry, entry.getKey()));
@@ -763,7 +794,7 @@ public final class ChunkDataSerializer {
             return;
         }
 
-        writer.putRegistry(STRING_ID, context.registryManager().get(Registry.STRUCTURE_KEY), structureStart.getStructure());
+        writer.putRegistry(STRING_ID, context.registryManager().get(RegistryKeys.STRUCTURE), structureStart.getStructure());
         writer.putInt(STRING_CHUNK_X, pos.x);
         writer.putInt(STRING_CHUNK_Z, pos.z);
         writer.putInt(STRING_SMALL_REFERENCES, structureStart.getReferences());
@@ -779,7 +810,7 @@ public final class ChunkDataSerializer {
     @SuppressWarnings("unused")
     private static void writeStructurePiece(NbtWriter writer, StructurePieceAccessor structurePiece, StructureContext context) {
         writer.compoundEntryStart();
-        writer.putRegistry(STRING_ID, Registry.STRUCTURE_PIECE, structurePiece.getType());
+        writer.putRegistry(STRING_ID, Registries.STRUCTURE_PIECE, structurePiece.getType());
 
         final Optional<NbtElement> optional = BlockBox.CODEC.encodeStart(NbtOps.INSTANCE, structurePiece.getBoundingBox()).resultOrPartial(LOGGER::error);
 

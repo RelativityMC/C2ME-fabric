@@ -1,7 +1,7 @@
 package com.ishland.c2me.opts.chunk_serializer.mixin;
 
 import net.minecraft.block.BlockState;
-import net.minecraft.util.registry.RegistryEntry;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.PalettedContainer;

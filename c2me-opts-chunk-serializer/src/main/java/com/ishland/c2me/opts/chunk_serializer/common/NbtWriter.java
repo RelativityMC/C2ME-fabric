@@ -5,9 +5,9 @@ import com.ishland.c2me.opts.chunk_serializer.common.utils.UnsafeUtils;
 import it.unimi.dsi.fastutil.longs.LongCollection;
 import it.unimi.dsi.fastutil.longs.LongIterable;
 import net.minecraft.nbt.NbtElement;
+import net.minecraft.registry.Registry;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.registry.Registry;
-import net.minecraft.util.registry.RegistryEntry;
 import org.jetbrains.annotations.NotNull;
 import sun.misc.Unsafe;
 
