@@ -7,8 +7,11 @@ public final class ModuleEntryPoint {
     @SuppressWarnings("unused")
     public static final boolean enabled = new ConfigSystem.ConfigAccessor()
             .key("ioSystem.gcFreeChunkSerializer")
-            .comment("Whether to use the fast reduced allocation chunk serializer\n" +
-                    "(may cause incompatibility with other mods)")
+            .comment("""
+                    EXPERIMENTAL FEATURE, DO NOT USE UNLESS YOU KNOW WHAT YOU ARE DOING
+                    Whether to use the fast reduced allocation chunk serializer
+                    (may cause incompatibility with other mods)
+                    """)
             .getBoolean(false, false);
 
 }
