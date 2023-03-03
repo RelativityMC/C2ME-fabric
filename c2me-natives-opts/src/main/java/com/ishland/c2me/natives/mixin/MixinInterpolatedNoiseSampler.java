@@ -25,8 +25,8 @@ public abstract class MixinInterpolatedNoiseSampler implements DensityFunction.B
     @Shadow @Final private OctavePerlinNoiseSampler interpolationNoise;
     @Shadow @Final private double xzScale;
     @Shadow @Final private double yScale;
-    @Shadow @Final private double field_38271;
-    @Shadow @Final private double field_38272;
+    @Shadow @Final private double scaledXzScale;
+    @Shadow @Final private double scaledYScale;
     @Shadow @Final private double xzFactor;
     @Shadow @Final private double yFactor;
     @Shadow @Final private double smearScaleMultiplier;
@@ -43,8 +43,8 @@ public abstract class MixinInterpolatedNoiseSampler implements DensityFunction.B
                 ((NativeStruct) this.lowerInterpolatedNoise).getNativePointer(),
                 ((NativeStruct) this.upperInterpolatedNoise).getNativePointer(),
                 ((NativeStruct) this.interpolationNoise).getNativePointer(),
-                this.field_38271,
-                this.field_38272,
+                this.scaledXzScale,
+                this.scaledYScale,
                 xzScale,
                 yScale,
                 xzFactor,
@@ -73,11 +73,11 @@ public abstract class MixinInterpolatedNoiseSampler implements DensityFunction.B
     }
 
     @Override
-    public void applyEach(double[] ds, EachApplier arg) {
+    public void fill(double[] ds, EachApplier arg) {
         if (arg instanceof CompiledDensityFunctionArg dfa && dfa.getDFAPointer() != 0) {
             NativeInterface.dfiBindingsMultiOp(this.dfiPointer, dfa.getDFAPointer(), ds);
         } else {
-            DensityFunction.Base.super.applyEach(ds, arg);
+            DensityFunction.Base.super.fill(ds, arg);
         }
     }
 

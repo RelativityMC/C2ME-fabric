@@ -97,18 +97,18 @@ public abstract class MixinDensityFunctionTypesRangeChoice implements DensityFun
     }
 
     @Override
-    public void applyEach(double[] densities, EachApplier applier) {
+    public void fill(double[] densities, EachApplier applier) {
         if (applier instanceof CompiledDensityFunctionArg dfa && dfa.getDFAPointer() != 0 && DensityFunctionUtils.isSafeForNative(applier) && this.pointer != 0) {
             NativeInterface.dfiBindingsMultiOp(this.pointer, dfa.getDFAPointer(), densities);
         } else {
-            this.input.applyEach(densities, applier);
+            this.input.fill(densities, applier);
 
             for (int i = 0; i < densities.length; ++i) {
                 double d = densities[i];
                 if (d >= this.minInclusive && d < this.maxExclusive) {
-                    densities[i] = this.whenInRange.sample(applier.getPosAt(i));
+                    densities[i] = this.whenInRange.sample(applier.at(i));
                 } else {
-                    densities[i] = this.whenOutOfRange.sample(applier.getPosAt(i));
+                    densities[i] = this.whenOutOfRange.sample(applier.at(i));
                 }
             }
         }

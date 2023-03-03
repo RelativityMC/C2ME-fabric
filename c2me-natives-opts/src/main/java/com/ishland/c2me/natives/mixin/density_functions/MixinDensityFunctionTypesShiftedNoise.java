@@ -125,13 +125,13 @@ public abstract class MixinDensityFunctionTypesShiftedNoise implements DensityFu
     }
 
     @Override
-    public void applyEach(double[] ds, DensityFunction.EachApplier arg) {
+    public void fill(double[] ds, DensityFunction.EachApplier arg) {
         if (this.noise == null || this.noise.noise() == null) {
             Arrays.fill(ds, 0.0);
         } else if (arg instanceof CompiledDensityFunctionArg dfa && dfa.getDFAPointer() != 0 && this.pointer != 0) {
             NativeInterface.dfiBindingsMultiOp(this.pointer, dfa.getDFAPointer(), ds);
         } else {
-            arg.applyEach(ds, this);
+            arg.fill(ds, this);
         }
     }
 

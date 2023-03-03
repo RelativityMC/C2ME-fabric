@@ -7,10 +7,10 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 @Mixin(ChunkNoiseSampler.class)
 public interface IChunkNoiseSampler {
 
-    @Accessor
+    @Accessor("horizontalCellBlockCount")
     int getHorizontalBlockSize();
 
-    @Accessor
+    @Accessor("verticalCellBlockCount")
     int getVerticalBlockSize();
 
     @Accessor("startBlockX")
@@ -34,16 +34,16 @@ public interface IChunkNoiseSampler {
     @Accessor("minimumCellY")
     int getMinimumY();
 
-    @Accessor("cellHeight")
+    @Accessor("verticalCellCount")
     int getHeight();
 
-    @Accessor
+    @Accessor("horizontalBiomeEnd")
     int getBiomeHorizontalEnd();
 
-    @Accessor
+    @Accessor("startBiomeX")
     int getBiomeX();
 
-    @Accessor
+    @Accessor("startBiomeZ")
     int getBiomeZ();
 
     @Accessor

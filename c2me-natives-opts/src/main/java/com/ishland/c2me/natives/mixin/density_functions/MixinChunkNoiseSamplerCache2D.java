@@ -86,11 +86,11 @@ public abstract class MixinChunkNoiseSamplerCache2D implements CompiledDensityFu
     }
 
     @Override
-    public void applyEach(double[] densities, EachApplier applier) {
+    public void fill(double[] densities, EachApplier applier) {
         if (applier instanceof CompiledDensityFunctionArg dfa && dfa.getDFAPointer() != 0 && DensityFunctionUtils.isSafeForNative(applier) && this.pointer != 0) {
             NativeInterface.dfiBindingsMultiOp(this.pointer, dfa.getDFAPointer(), densities);
         } else {
-            this.delegate.applyEach(densities, applier);
+            this.delegate.fill(densities, applier);
         }
     }
 

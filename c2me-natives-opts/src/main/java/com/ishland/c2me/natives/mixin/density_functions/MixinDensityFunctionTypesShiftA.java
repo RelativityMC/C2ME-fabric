@@ -66,7 +66,7 @@ public abstract class MixinDensityFunctionTypesShiftA implements DensityFunction
     }
 
     @Override
-    public void applyEach(double[] ds, EachApplier arg) {
+    public void fill(double[] ds, EachApplier arg) {
         if (this.offsetNoise == null || this.offsetNoise.noise() == null) {
             Arrays.fill(ds, 0.0);
             return;
@@ -74,7 +74,7 @@ public abstract class MixinDensityFunctionTypesShiftA implements DensityFunction
         if (arg instanceof CompiledDensityFunctionArg dfa && dfa.getDFAPointer() != 0) {
             NativeInterface.dfiBindingsMultiOp(this.pointer, dfa.getDFAPointer(), ds);
         } else {
-            Base.super.applyEach(ds, arg);
+            Base.super.fill(ds, arg);
         }
     }
 

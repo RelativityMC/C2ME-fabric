@@ -48,11 +48,11 @@ public abstract class MixinDensityFunctionTypesEndIslands implements DensityFunc
     }
 
     @Override
-    public void applyEach(double[] ds, EachApplier arg) {
+    public void fill(double[] ds, EachApplier arg) {
         if (arg instanceof CompiledDensityFunctionArg dfa && dfa.getDFAPointer() != 0) {
             NativeInterface.dfiBindingsMultiOp(this.pointer, dfa.getDFAPointer(), ds);
         } else {
-            Base.super.applyEach(ds, arg);
+            Base.super.fill(ds, arg);
         }
     }
 

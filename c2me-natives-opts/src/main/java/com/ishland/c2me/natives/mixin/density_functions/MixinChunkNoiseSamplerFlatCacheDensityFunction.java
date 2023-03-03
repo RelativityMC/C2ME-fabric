@@ -23,7 +23,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(ChunkNoiseSampler.FlatCacheDensityFunction.class)
+@Mixin(ChunkNoiseSampler.FlatCache.class)
 public abstract class MixinChunkNoiseSamplerFlatCacheDensityFunction implements CompiledDensityFunctionImpl, DensityFunction {
 
     @Shadow
@@ -150,12 +150,12 @@ public abstract class MixinChunkNoiseSamplerFlatCacheDensityFunction implements 
      * @reason use native method
      */
     @Overwrite
-    public void applyEach(double[] ds, DensityFunction.EachApplier arg) {
+    public void fill(double[] ds, DensityFunction.EachApplier arg) {
         if (this.isInitDelayed) runCompilation();
         if (arg instanceof CompiledDensityFunctionArg dfa && dfa.getDFAPointer() != 0 && DensityFunctionUtils.isSafeForNative(arg) && this.pointer != 0) {
             NativeInterface.dfiBindingsMultiOp(this.pointer, dfa.getDFAPointer(), ds);
         } else {
-            arg.applyEach(ds, this);
+            arg.fill(ds, this);
         }
     }
 

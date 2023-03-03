@@ -52,11 +52,6 @@ public class ChunkStatusUtils {
 //        if (radius == 0)
 //            return StageSupport.tryWith(chunkLock.acquireLock(target), unused -> action.get()).toCompletableFuture().thenCompose(Function.identity());
 
-        ArrayList<ChunkPos> fetchedLocks = new ArrayList<>((2 * radius + 1) * (2 * radius + 1));
-        for (int x = target.x - radius; x <= target.x + radius; x++)
-            for (int z = target.z - radius; z <= target.z + radius; z++)
-                fetchedLocks.add(new ChunkPos(x, z));
-
         BooleanSupplier isCancelled;
 
         if (holder != null) {
@@ -65,8 +60,13 @@ public class ChunkStatusUtils {
             isCancelled = FALSE_SUPPLIER;
         }
 
+        ArrayList<ChunkPos> fetchedLocks = new ArrayList<>((2 * radius + 1) * (2 * radius + 1));
+        for (int x = target.x - radius; x <= target.x + radius; x++)
+            for (int z = target.z - radius; z <= target.z + radius; z++)
+                fetchedLocks.add(new ChunkPos(x, z));
+
         final SchedulingAsyncCombinedLock<T> lock = new SchedulingAsyncCombinedLock<>(chunkLock, new HashSet<>(fetchedLocks), priority, isCancelled, SchedulerThread.INSTANCE, action, target.toString());
-        SchedulerThread.INSTANCE.addPendingLock(lock);
+        SchedulerThread.INSTANCE.addPendingTask(lock);
         return lock.getFuture();
     }
 

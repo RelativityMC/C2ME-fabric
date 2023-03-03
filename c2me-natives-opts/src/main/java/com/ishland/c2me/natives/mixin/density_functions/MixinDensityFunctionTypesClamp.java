@@ -86,12 +86,12 @@ public abstract class MixinDensityFunctionTypesClamp implements DensityFunctionT
     }
 
     @Override
-    public void applyEach(double[] ds, EachApplier arg) {
+    public void fill(double[] ds, EachApplier arg) {
         if (arg instanceof CompiledDensityFunctionArg dfa && dfa.getDFAPointer() != 0 && DensityFunctionUtils.isSafeForNative(arg) && this.pointer != 0) {
             NativeInterface.dfiBindingsMultiOp(this.pointer, dfa.getDFAPointer(), ds);
         } else {
             // TODO [VanillaCopy]
-            this.input().applyEach(ds, arg);
+            this.input().fill(ds, arg);
 
             for (int i = 0; i < ds.length; ++i) {
                 ds[i] = this.apply(ds[i]);

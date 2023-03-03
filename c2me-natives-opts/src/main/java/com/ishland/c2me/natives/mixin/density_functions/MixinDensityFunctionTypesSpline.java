@@ -76,12 +76,12 @@ public abstract class MixinDensityFunctionTypesSpline implements DensityFunction
     }
 
     @Override
-    public void applyEach(double[] ds, EachApplier arg) {
+    public void fill(double[] ds, EachApplier arg) {
         if (arg instanceof CompiledDensityFunctionArg dfa && dfa.getDFAPointer() != 0 && DensityFunctionUtils.isSafeForNative(arg) && this.pointer != 0) {
             NativeInterface.dfiBindingsMultiOp(this.pointer, dfa.getDFAPointer(), ds);
         } else {
             // TODO [VanillaCopy]
-            arg.applyEach(ds, this);
+            arg.fill(ds, this);
         }
     }
 

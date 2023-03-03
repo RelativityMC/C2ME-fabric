@@ -95,6 +95,7 @@ public class PreGenTask {
                     if (pair != null) {
                         final ChunkPos chunkPos = new ChunkPos(pair.getFirst());
                         chunks.addAll(createPreGenChunks25(chunkPos, chunksHashed::add));
+                        LOGGER.info("Located biome {}", biomeRegistry.getId(biome.value()));
                         return;
                     }
                     LOGGER.info("Unable to locate biome {}", biomeRegistry.getId(biome.value()));

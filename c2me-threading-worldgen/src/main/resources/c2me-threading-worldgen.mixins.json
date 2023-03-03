@@ -13,6 +13,7 @@
     "MixinServerWorld",
     "MixinThreadedAnvilChunkStorage",
     "cancellation.MixinChunkHolder",
+    "cancellation.MixinThreadedAnvilChunkStorage",
     "progresslogger.MixinWorldGenerationProgressLogger"
   ]
 }

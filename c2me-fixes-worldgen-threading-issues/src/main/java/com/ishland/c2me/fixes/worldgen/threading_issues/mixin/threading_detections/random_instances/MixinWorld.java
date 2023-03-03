@@ -17,6 +17,7 @@ public class MixinWorld {
 
     @Redirect(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/random/Random;create()Lnet/minecraft/util/math/random/Random;"))
     private Random redirectWorldRandomInit() {
+//        new CheckedThreadLocalRandom(RandomSeed.getSeed(), () -> new Thread()).nextInt();
         return new CheckedThreadLocalRandom(RandomSeed.getSeed(), () -> this.thread);
     }
 

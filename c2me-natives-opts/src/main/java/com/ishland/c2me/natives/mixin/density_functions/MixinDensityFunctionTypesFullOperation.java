@@ -96,16 +96,16 @@ public abstract class MixinDensityFunctionTypesFullOperation implements DensityF
     }
 
     @Override
-    public void applyEach(double[] ds, EachApplier arg) {
+    public void fill(double[] ds, EachApplier arg) {
         if (arg instanceof CompiledDensityFunctionArg dfa && dfa.getDFAPointer() != 0 && DensityFunctionUtils.isSafeForNative(arg) && this.pointer != 0) {
             NativeInterface.dfiBindingsMultiOp(this.pointer, dfa.getDFAPointer(), ds);
         } else {
             // TODO [VanillaCopy]
-            this.argument1.applyEach(ds, arg);
+            this.argument1.fill(ds, arg);
             switch(this.type) {
                 case ADD:
                     double[] es = new double[ds.length];
-                    this.argument2.applyEach(es, arg);
+                    this.argument2.fill(es, arg);
 
                     for(int i = 0; i < ds.length; ++i) {
                         ds[i] += es[i];
@@ -116,7 +116,7 @@ public abstract class MixinDensityFunctionTypesFullOperation implements DensityF
 
                     for(int k = 0; k < ds.length; ++k) {
                         double f = ds[k];
-                        ds[k] = f > e ? f : Math.max(f, this.argument2.sample(arg.getPosAt(k)));
+                        ds[k] = f > e ? f : Math.max(f, this.argument2.sample(arg.at(k)));
                     }
                     break;
                 case MIN:
@@ -124,13 +124,13 @@ public abstract class MixinDensityFunctionTypesFullOperation implements DensityF
 
                     for(int k = 0; k < ds.length; ++k) {
                         double f = ds[k];
-                        ds[k] = f < e1 ? f : Math.min(f, this.argument2.sample(arg.getPosAt(k)));
+                        ds[k] = f < e1 ? f : Math.min(f, this.argument2.sample(arg.at(k)));
                     }
                     break;
                 case MUL:
                     for(int j = 0; j < ds.length; ++j) {
                         double d = ds[j];
-                        ds[j] = d == 0.0 ? 0.0 : d * this.argument2.sample(arg.getPosAt(j));
+                        ds[j] = d == 0.0 ? 0.0 : d * this.argument2.sample(arg.at(j));
                     }
             }
         }
