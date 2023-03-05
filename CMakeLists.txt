@@ -6,9 +6,9 @@ set(C_STANDARD 11)
 
 set(CMAKE_C_FLAGS "-Wall -Wextra")
 set(CMAKE_C_FLAGS_DEBUG "-g")
-set(CMAKE_C_FLAGS_RELEASE "-O3 -mtune=tigerlake")
+set(CMAKE_C_FLAGS_RELEASE "-O3 -mtune=tigerlake -fopenmp-simd -fopenmp")
 
-set(CMAKE_C_COMPILER "clang")
+set(CMAKE_C_COMPILER "clang-15")
 
 file(GLOB SOURCES
         c2me-natives-opts/src/natives/c/*/*.c

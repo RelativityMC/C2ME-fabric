@@ -63,6 +63,8 @@ model {
                 cCompiler.args '-mtune=tigerlake'
 //                cCompiler.args '-lto'
                 cCompiler.args '-std=c11'
+                cCompiler.args '-fopenmp'
+                cCompiler.args '-fopenmp-simd'
                 linker.args '-flto'
                 if (targetPlatform.operatingSystem.macOsX) {
                     cCompiler.args '-I', "${org.gradle.internal.jvm.Jvm.current().javaHome}/include"

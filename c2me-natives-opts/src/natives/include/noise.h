@@ -107,7 +107,7 @@ math_noise_perlin_sampleScalar(const uint8_t *permutations, int sectionX, int se
     return var120 + (var103 * (var121 - var120));
 }
 
-static double __attribute__((pure))
+static inline double __attribute__((pure, always_inline))
 math_noise_perlin_sample(const uint8_t *permutations, double originX, double originY, double originZ, double x,
                          double y,
                          double z, double yScale, double yMax) {
@@ -120,17 +120,7 @@ math_noise_perlin_sample(const uint8_t *permutations, double originX, double ori
     double g = d - i;
     double h = e - j;
     double l = f - k;
-    double o = 0.0;
-    if (yScale != 0.0) {
-        double m;
-        if (yMax >= 0.0 && yMax < h) {
-            m = yMax;
-        } else {
-            m = h;
-        }
-
-        o = floor(m / yScale + 1.0E-7F) * yScale;
-    }
+    double o = yScale != 0 ? floor(((yMax >= 0.0 && yMax < h) ? yMax : h) / yScale + 1.0E-7F) * yScale : 0;
 
     return math_noise_perlin_sampleScalar(permutations, (int) i, (int) j, (int) k, g, h - o, l, h);
 }
@@ -141,6 +131,7 @@ math_noise_perlin_octave_sample_impl(const octave_sampler_data *data, double x, 
                                      bool useOrigin) {
     double d = 0.0;
 
+    #pragma omp simd
     for (size_t i = 0; i < data->length; ++i) {
         double e = data->lacunarity * c2me_natives_pow_of_two_table[data->indexes[i]];
         double f = data->persistence / c2me_natives_pow_of_two_table[data->indexes[i]];
