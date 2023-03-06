@@ -32,10 +32,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.PriorityBlockingQueue;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.LockSupport;
 import java.util.function.Function;
@@ -47,7 +46,6 @@ public class C2MEStorageThread extends Thread {
     private static final Logger LOGGER = LoggerFactory.getLogger("C2ME Storage");
 
     private static final AtomicLong SERIAL = new AtomicLong(0);
-    public static final int SEMAPHORE_COUNTER_INITIAL = (int) ModuleEntryPoint.globalExecutorParallelism + 1;
 
     private final AtomicBoolean closing = new AtomicBoolean(false);
     private final CompletableFuture<Void> closeFuture = new CompletableFuture<>();
@@ -57,8 +55,7 @@ public class C2MEStorageThread extends Thread {
     private final Long2ObjectLinkedOpenHashMap<NbtCompound> writeBacklog = new Long2ObjectLinkedOpenHashMap<>();
     private final Long2ObjectOpenHashMap<NbtCompound> cache = new Long2ObjectOpenHashMap<>();
     private final Queue<ReadRequest> pendingReadRequests;
-    private final AtomicInteger readSemaphoreCounter = new AtomicInteger(SEMAPHORE_COUNTER_INITIAL);
-    private final AtomicInteger writeSemaphoreCounter = new AtomicInteger(SEMAPHORE_COUNTER_INITIAL);
+    private final Semaphore readSemaphore = new Semaphore((int) ModuleEntryPoint.globalExecutorParallelism + 1);
     private final ConcurrentLinkedQueue<WriteRequest> pendingWriteRequests = new ConcurrentLinkedQueue<>();
     private final ConcurrentLinkedQueue<Runnable> pendingTasks = new ConcurrentLinkedQueue<>();
     private final Executor executor = command -> {
@@ -128,12 +125,6 @@ public class C2MEStorageThread extends Thread {
         }
         this.pendingReadRequests.add(new ReadRequest(pos, future, scanner, this.priorityProvider != null ? this.priorityProvider.apply(pos) : null));
         LockSupport.unpark(this);
-        future.thenApply(Function.identity()).orTimeout(60, TimeUnit.SECONDS).exceptionally(throwable -> {
-            if (throwable instanceof TimeoutException) {
-                LOGGER.warn("Chunk read at pos {} took too long (> 1min)", new ChunkPos(pos));
-            }
-            return null;
-        });
         return future
                 .orTimeout(60, TimeUnit.SECONDS)
                 .thenApply(Function.identity());
@@ -157,11 +148,6 @@ public class C2MEStorageThread extends Thread {
                 if (handlePendingReads()) continue;
                 if (handlePendingWrites()) continue;
                 if (writeBacklog()) continue;
-
-                if (isBusy()) {
-                    LockSupport.parkNanos("Waiting for tasks", 10_000_000);
-                    continue;
-                }
 
                 break;
             }
@@ -192,17 +178,6 @@ public class C2MEStorageThread extends Thread {
         return hasWork;
     }
 
-    private boolean isBusy() {
-        return this.writeSemaphoreCounter.get() < SEMAPHORE_COUNTER_INITIAL ||
-                this.readSemaphoreCounter.get() < SEMAPHORE_COUNTER_INITIAL ||
-                !this.pendingWriteRequests.isEmpty() ||
-                !this.pendingReadRequests.isEmpty() ||
-                !this.writeBacklog.isEmpty() ||
-                !this.pendingTasks.isEmpty() ||
-                !this.writeFutures.isEmpty() ||
-                !this.cache.isEmpty();
-    }
-
     private boolean handlePendingWrites() {
         boolean hasWork = false;
         WriteRequest writeRequest;
@@ -216,7 +191,7 @@ public class C2MEStorageThread extends Thread {
 
     private boolean handlePendingReads() {
         boolean hasWork = false;
-        while (!pendingReadRequests.isEmpty() && readSemaphoreCounter.get() > 0) {
+        while (!pendingReadRequests.isEmpty() && readSemaphore.tryAcquire()) {
             ReadRequest readRequest = this.pendingReadRequests.poll();
             hasWork = true;
             assert readRequest != null;
@@ -226,6 +201,7 @@ public class C2MEStorageThread extends Thread {
             final NbtCompound cached = this.cache.get(pos);
             if (cached != null) {
                 future.complete(cached);
+                readSemaphore.release();
                 continue;
             }
             scheduleChunkRead(pos, future, scanner);
@@ -234,7 +210,7 @@ public class C2MEStorageThread extends Thread {
     }
 
     private boolean writeBacklog() {
-        if (!this.writeBacklog.isEmpty() && writeSemaphoreCounter.get() > 0) {
+        if (!this.writeBacklog.isEmpty()) {
             final long pos = this.writeBacklog.firstLongKey();
             final NbtCompound nbt = this.writeBacklog.removeFirst();
             writeChunk(pos, nbt);
@@ -290,9 +266,11 @@ public class C2MEStorageThread extends Thread {
         if (cached != null) {
             if (scanner != null) {
                 cached.accept(scanner);
+                readSemaphore.release();
                 future.complete(null);
                 return;
             } else {
+                readSemaphore.release();
                 future.complete(cached);
                 return;
             }
@@ -304,9 +282,9 @@ public class C2MEStorageThread extends Thread {
             final DataInputStream chunkInputStream = regionFile.getChunkInputStream(pos1);
             if (chunkInputStream == null) {
                 future.complete(null);
+                readSemaphore.release();
                 return;
             }
-            readSemaphoreCounter.incrementAndGet();
             CompletableFuture.supplyAsync(() -> {
                 try {
                     try (DataInputStream inputStream = chunkInputStream) {
@@ -322,12 +300,13 @@ public class C2MEStorageThread extends Thread {
                     return null; // Unreachable anyway
                 }
             }, GlobalExecutors.executor).handle((compound, throwable) -> {
-                readSemaphoreCounter.decrementAndGet();
+                readSemaphore.release();
                 if (throwable != null) future.completeExceptionally(throwable);
                 else future.complete(compound);
                 return null;
             });
         } catch (Throwable t) {
+            readSemaphore.release();
             future.completeExceptionally(t);
         }
     }
@@ -342,7 +321,6 @@ public class C2MEStorageThread extends Thread {
                 LOGGER.error("Error writing chunk %s".formatted(new ChunkPos(pos)), t);
             }
         } else {
-            writeSemaphoreCounter.incrementAndGet();
             final CompletableFuture<Void> future = CompletableFuture.supplyAsync(() -> {
                 try {
                     final RawByteArrayOutputStream out = new RawByteArrayOutputStream(8096);
@@ -374,7 +352,6 @@ public class C2MEStorageThread extends Thread {
                     }
                 }
             }, this.executor).handleAsync((unused, throwable) -> {
-                writeSemaphoreCounter.decrementAndGet();
                 if (throwable != null) LOGGER.error("Error writing chunk %s".formatted(new ChunkPos(pos)), throwable);
                 // TODO error retry
 
