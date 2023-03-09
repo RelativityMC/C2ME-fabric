@@ -38,7 +38,9 @@ allprojects {
         mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
         modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 //        modApi 'com.github.astei:lazydfu:0.1.2'
-        modApi 'com.github.RelativityMC:Starlight:88187e8'
+        modApi('com.github.RelativityMC:Starlight:88187e8') {
+            transitive = false
+        }
         implementation "com.ibm.async:asyncutil:${async_util_version}"
     }
     processResources {

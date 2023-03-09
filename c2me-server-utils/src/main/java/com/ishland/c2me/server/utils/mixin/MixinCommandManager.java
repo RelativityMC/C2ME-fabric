@@ -16,7 +16,7 @@ public class MixinCommandManager {
 
     @Shadow @Final private CommandDispatcher<ServerCommandSource> dispatcher;
 
-    @Inject(method = "<init>", at = @At(value = "INVOKE", target = "Lcom/mojang/brigadier/CommandDispatcher;setConsumer(Lcom/mojang/brigadier/ResultConsumer;)V", shift = At.Shift.BEFORE))
+    @Inject(method = "<init>", at = @At(value = "INVOKE", target = "Lcom/mojang/brigadier/CommandDispatcher;setConsumer(Lcom/mojang/brigadier/ResultConsumer;)V", remap = false, shift = At.Shift.BEFORE))
     private void registerCommands(CallbackInfo ci) {
         C2MECommands.register(this.dispatcher);
     }

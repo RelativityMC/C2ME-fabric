@@ -1,6 +1,6 @@
 plugins {
     id 'java-library'
-    id 'fabric-loom' version '1.0-SNAPSHOT' apply false
+    id 'fabric-loom' version '1.1-SNAPSHOT' apply false
     id 'io.github.juuxel.loom-quiltflower' version '1.+' apply false
     id "me.champeau.jmh" version "0.6.6"
     id 'com.modrinth.minotaur' version '2.+' apply false
@@ -43,13 +43,6 @@ configure (allprojects - project(":tests")) {
     apply plugin: 'io.github.juuxel.loom-quiltflower'
     apply plugin: 'maven-publish'
 
-    sourceSets {
-        devlaunch {
-            compileClasspath += main.compileClasspath
-            runtimeClasspath += main.runtimeClasspath
-        }
-    }
-
     repositories {
         maven { url 'https://jitpack.io' }
     }
@@ -66,19 +59,12 @@ configure (allprojects - project(":tests")) {
         if (awFile.isFile()) {
             accessWidenerPath = awFile
         }
-
         runs {
-            devlaunchClient {
-                client()
+            server {
                 ideConfigGenerated project.rootProject == project
-                name = "DevLaunch Client"
-                source sourceSets.devlaunch
             }
-            devlaunchServer {
-                server()
+            client {
                 ideConfigGenerated project.rootProject == project
-                name = "DevLaunch Server"
-                source sourceSets.devlaunch
             }
         }
     }
@@ -185,17 +171,6 @@ modrinth {
     changelog = com.ishland.c2me.gradle.ParseGItHubActionChangelog.getChangelog()
 }
 
-loom {
-    runs {
-        server {
-            inherit devlaunchServer
-        }
-        client {
-            inherit devlaunchClient
-        }
-    }
-}
-
 subprojects.forEach { remapJar.dependsOn("${it.path}:remapJar") }
 
 dependencies {
@@ -205,8 +180,6 @@ dependencies {
 
             api project(path: ":${it.name}", configuration: "namedElements")
             include project("${it.name}:")
-
-            devlaunchImplementation project("${it.name}:").sourceSets.devlaunch.output
         }
     }
 }

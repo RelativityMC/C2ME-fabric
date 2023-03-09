@@ -3,19 +3,11 @@ import com.ishland.c2me.gradle.RedirectingOutputStream
 evaluationDependsOn(":tests")
 evaluationDependsOn(":tests:test-mod")
 
-sourceSets {
-    testmod {
-        compileClasspath += main.compileClasspath
-        runtimeClasspath += main.runtimeClasspath
-    }
-}
-
 loom {
     runs {
         testC2MEServer {
             server()
             runDir project.getProjectDir().toPath().relativize(project.getBuildDir().toPath()).resolve("testServer").toString()
-            source sourceSets.testmod
             vmArgs "-Dc2me.base.config.override.ioSystem.replaceImpl=true",
                     "-Dc2me.base.config.override.asyncScheduling.enabled=true",
                     "-Dcom.ishland.c2me.mixin.doAudit=true"
@@ -44,8 +36,8 @@ afterEvaluate {
 }
 
 dependencies {
-    testmodImplementation project(":tests:test-mod").sourceSets.main.output
-    testmodImplementation project(":").sourceSets.main.output
+    runtimeOnly project(":tests:test-mod").sourceSets.main.output
+    runtimeOnly project(":").sourceSets.main.output
 }
 
 dependencies {
@@ -53,7 +45,7 @@ dependencies {
         (rootProject.subprojects - project(":tests")).forEach {
             if (it.parent != project(":")) return
 
-            testmodImplementation project(path: ":${it.name}", configuration: "namedElements")
+            runtimeOnly project(path: ":${it.name}", configuration: "namedElements")
         }
     }
 }
