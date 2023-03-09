@@ -116,7 +116,7 @@ public abstract class MixinChunkStatus implements IChunkStatus {
             completableFuture = generationTask.get();
         } else {
             final ChunkHolder holder = ThreadLocalWorldGenSchedulingState.getChunkHolder();
-            if (holder != null && holder.getFutureFor((ChunkStatus) (Object) this).isDone()) {
+            if (holder != null && ChunkStatusUtils.isCancelled(holder, (ChunkStatus) (Object) this)) {
                 completableFuture = ChunkHolder.UNLOADED_CHUNK_FUTURE;
                 ((IThreadedAnvilChunkStorage) world.getChunkManager().threadedAnvilChunkStorage).invokeReleaseLightTicket(targetChunk.getPos()); // vanilla behavior
 //                System.out.println(String.format("%s: %s is already done or cancelled, skipping generation", this, targetChunk.getPos()));

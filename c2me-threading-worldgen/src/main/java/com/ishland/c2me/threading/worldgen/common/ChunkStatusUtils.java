@@ -55,7 +55,7 @@ public class ChunkStatusUtils {
         BooleanSupplier isCancelled;
 
         if (holder != null) {
-            isCancelled = () -> holder.getFutureFor(status).isDone();
+            isCancelled = () -> isCancelled(holder, status);
         } else {
             isCancelled = FALSE_SUPPLIER;
         }
@@ -68,6 +68,10 @@ public class ChunkStatusUtils {
         final SchedulingAsyncCombinedLock<T> lock = new SchedulingAsyncCombinedLock<>(chunkLock, new HashSet<>(fetchedLocks), priority, isCancelled, SchedulerThread.INSTANCE, action, target.toString());
         SchedulerThread.INSTANCE.addPendingTask(lock);
         return lock.getFuture();
+    }
+
+    public static boolean isCancelled(ChunkHolder holder, ChunkStatus targetStatus) {
+        return ChunkHolder.getTargetStatusForLevel(holder.getLevel()).getIndex() < targetStatus.getIndex();
     }
 
     public enum ChunkStatusThreadingType {

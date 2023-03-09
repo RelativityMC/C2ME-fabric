@@ -4,6 +4,8 @@ import net.minecraft.server.world.ChunkTicketType;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.profiler.DummyProfiler;
+import net.minecraft.util.profiler.Profiler;
 import net.minecraft.util.thread.ThreadExecutor;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -25,6 +27,11 @@ public class MixinThreadedAnvilChunkStorage {
         } else {
             ticketManager.addTicketWithLevel(type, pos, level, argument);
         }
+    }
+
+    @Redirect(method = "upgradeChunk", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerWorld;getProfiler()Lnet/minecraft/util/profiler/Profiler;"))
+    private Profiler removeProfilerUsage(ServerWorld instance) {
+        return DummyProfiler.INSTANCE;
     }
 
 }

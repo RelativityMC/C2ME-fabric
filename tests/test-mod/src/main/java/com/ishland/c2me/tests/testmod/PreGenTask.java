@@ -87,6 +87,7 @@ public class PreGenTask {
             structureFeatures = Collections.emptySet();
         }
         System.err.printf("Submitting tasks\n");
+
         final CompletableFuture<Void> biomeFuture = CompletableFuture.allOf(biomes.stream()
                 .map(biome -> CompletableFuture.runAsync(() -> {
                     //noinspection OptionalGetWithoutIsPresent
