@@ -24,8 +24,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class StacktraceRecorder {
 
     private static final Logger LOGGER = LogUtils.getLogger();
-    private static final boolean doRecord = !Boolean.getBoolean("com.ishland.c2me.common.threading.worldgen.debug.NoDebugReducedLockRadius") && Config.reduceLockRadius;
-    private static final boolean warnAtWarningLevel = !Boolean.getBoolean("com.ishland.c2me.common.threading.worldgen.debug.DebugReducedLockRadiusAtWarningLevel");
+    private static final boolean doRecord = Config.reduceLockRadius && Boolean.getBoolean("com.ishland.c2me.common.threading.worldgen.debug.DebugReducedLockRadius");
     private static final int recordFrequency = MathHelper.clamp(Integer.getInteger("com.ishland.c2me.common.threading.worldgen.debug.DebugReducedLockRadiusFrequency", 4), 1, 16);
     private static final long frequencyBitMask = (1L << recordFrequency) - 1;
 
