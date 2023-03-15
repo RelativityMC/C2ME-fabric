@@ -4,6 +4,7 @@ plugins {
     id 'io.github.juuxel.loom-quiltflower' version '1.+' apply false
     id "me.champeau.jmh" version "0.6.6"
     id 'com.modrinth.minotaur' version '2.+' apply false
+    id 'com.matthewprenger.cursegradle' version '1.4.0' apply false
 }
 
 @SuppressWarnings('unused')
@@ -169,6 +170,30 @@ modrinth {
     gameVersions = [project.minecraft_version] // Must be an array, even with only one version
     loaders = ["fabric"] // Must also be an array - no need to specify this if you're using Loom or ForgeGradle
     changelog = com.ishland.c2me.gradle.ParseGItHubActionChangelog.getChangelog()
+}
+
+apply plugin: 'com.matthewprenger.cursegradle'
+if (System.getenv("CURSEFORGE_TOKEN")) {
+    curseforge {
+        apiKey = System.getenv("CURSEFORGE_TOKEN")
+        project {
+            id = '533097'
+            changelogType = "markdown"
+            changelog = com.ishland.c2me.gradle.ParseGItHubActionChangelog.getChangelog()
+            releaseType = 'alpha'
+
+            addGameVersion project.minecraft_version
+            addGameVersion "Fabric"
+            addGameVersion "Java 17"
+
+            mainArtifact(remapJar) {
+                displayName = project.version + " devbuild for " + project.minecraft_version
+            }
+        }
+        options {
+            forgeGradleIntegration = false
+        }
+    }
 }
 
 subprojects.forEach { remapJar.dependsOn("${it.path}:remapJar") }
