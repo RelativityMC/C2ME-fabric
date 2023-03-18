@@ -1,23 +1,11 @@
 package com.ishland.c2me.base.common.scheduler;
 
-import org.jetbrains.annotations.NotNull;
+public interface ScheduledTask {
 
-import java.util.function.IntSupplier;
+    public boolean trySchedule();
 
-public abstract class ScheduledTask<T extends ScheduledTask<T>> implements Comparable<T> {
+    public void addPostAction(Runnable postAction);
 
-    final IntSupplier priority;
+    public long centerPos();
 
-    protected ScheduledTask(IntSupplier priority) {
-        this.priority = priority;
-    }
-
-    abstract boolean trySchedule();
-
-    abstract void addPostAction(Runnable postAction);
-
-    @Override
-    public int compareTo(@NotNull T o) {
-        return Integer.compare(this.priority.getAsInt(), o.priority.getAsInt());
-    }
 }

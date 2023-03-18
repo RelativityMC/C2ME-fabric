@@ -7,6 +7,7 @@ import it.unimi.dsi.fastutil.longs.LongSet;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ChunkTicket;
 import net.minecraft.server.world.ChunkTicketManager;
+import net.minecraft.server.world.ThreadedAnvilChunkStorage;
 import net.minecraft.util.math.ChunkSectionPos;
 import net.minecraft.world.SimulationDistanceLevelPropagator;
 import org.spongepowered.asm.mixin.Final;
@@ -18,6 +19,7 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(ChunkTicketManager.class)
 public class MixinChunkTicketManager implements IChunkTicketManager {
@@ -55,6 +57,13 @@ public class MixinChunkTicketManager implements IChunkTicketManager {
     private void onPurge(CallbackInfo ci) {
         this.noTickSystem.runPurge(this.age);
         this.noTickSystem.tick();
+    }
+
+    @Inject(method = "tick", at = @At("HEAD"))
+    private void onTick(ThreadedAnvilChunkStorage chunkStorage, CallbackInfoReturnable<Boolean> cir) {
+        if (this.simulationDistanceTracker instanceof NoOPTickingMap map) {
+            map.setTACS(chunkStorage);
+        }
     }
 
     @Inject(method = "addTicket(JLnet/minecraft/server/world/ChunkTicket;)V", at = @At("RETURN"))

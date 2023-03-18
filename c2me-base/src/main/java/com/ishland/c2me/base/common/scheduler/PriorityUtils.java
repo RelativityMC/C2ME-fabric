@@ -70,11 +70,11 @@ public class PriorityUtils {
     }
 
     public static void notifyPriorityChange() {
-        priorityChanges.incrementAndGet();
+//        priorityChanges.incrementAndGet();
     }
 
     public static void notifyPriorityChange(int amount) {
-        priorityChanges.addAndGet(amount);
+//        priorityChanges.addAndGet(amount);
     }
 
     public static int priorityChangeSerial() {
