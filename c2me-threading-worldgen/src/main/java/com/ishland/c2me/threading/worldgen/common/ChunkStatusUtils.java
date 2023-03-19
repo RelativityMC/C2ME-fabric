@@ -45,7 +45,7 @@ public class ChunkStatusUtils {
         return AS_IS;
     }
 
-    public static <T> CompletableFuture<T> runChunkGenWithLock(ChunkPos target, ChunkStatus status, ChunkHolder holder, int radius, SchedulingManager schedulingManager, AsyncNamedLock<ChunkPos> chunkLock, Supplier<CompletableFuture<T>> action) {
+    public static <T> CompletableFuture<T> runChunkGenWithLock(ChunkPos target, ChunkStatus status, ChunkHolder holder, int radius, SchedulingManager schedulingManager, boolean async, AsyncNamedLock<ChunkPos> chunkLock, Supplier<CompletableFuture<T>> action) {
         Preconditions.checkNotNull(status);
 //        if (radius == 0)
 //            return StageSupport.tryWith(chunkLock.acquireLock(target), unused -> action.get()).toCompletableFuture().thenCompose(Function.identity());
@@ -70,8 +70,8 @@ public class ChunkStatusUtils {
                 isCancelled,
                 schedulingManager::enqueue,
                 action,
-                target.toString()
-        );
+                target.toString(),
+                async);
         return lock.getFuture();
     }
 

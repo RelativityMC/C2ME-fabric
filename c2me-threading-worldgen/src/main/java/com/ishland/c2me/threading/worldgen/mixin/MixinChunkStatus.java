@@ -125,8 +125,15 @@ public abstract class MixinChunkStatus implements IChunkStatus {
             } else {
                 int lockRadius = Config.reduceLockRadius && this.reducedTaskRadius != -1 ? this.reducedTaskRadius : this.taskMargin;
                 //noinspection ConstantConditions
-                completableFuture = ChunkStatusUtils.runChunkGenWithLock(targetChunk.getPos(), (ChunkStatus) (Object) this, holder, lockRadius, ((IVanillaChunkManager) tacs).c2me$getSchedulingManager(), ((IWorldGenLockable) world).getWorldGenChunkLock(), () ->
-                        ChunkStatusUtils.getThreadingType((ChunkStatus) (Object) this).runTask(((IWorldGenLockable) world).getWorldGenSingleThreadedLock(), generationTask))
+                completableFuture = ChunkStatusUtils.runChunkGenWithLock(
+                                targetChunk.getPos(),
+                                (ChunkStatus) (Object) this,
+                                holder,
+                                lockRadius,
+                                ((IVanillaChunkManager) tacs).c2me$getSchedulingManager(),
+                        (Object) this == ChunkStatus.LIGHT, // lighting is async so don't hold the slot TODO make this check less dirty
+                                ((IWorldGenLockable) world).getWorldGenChunkLock(),
+                                () -> ChunkStatusUtils.getThreadingType((ChunkStatus) (Object) this).runTask(((IWorldGenLockable) world).getWorldGenSingleThreadedLock(), generationTask))
                         .exceptionally(t -> {
                             Throwable actual = t;
                             while (actual instanceof CompletionException) actual = t.getCause();

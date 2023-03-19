@@ -44,7 +44,6 @@ public abstract class MixinServerChunkManager implements ISyncLoadManager {
 
         this.currentSyncLoadChunk = new ChunkPos(x, z);
         PriorityUtils.notifyPriorityChange(20);
-
     }
 
     @Inject(method = "getChunk(IILnet/minecraft/world/chunk/ChunkStatus;Z)Lnet/minecraft/world/chunk/Chunk;", at = @At("RETURN"))

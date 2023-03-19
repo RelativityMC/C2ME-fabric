@@ -8,4 +8,6 @@ public interface ScheduledTask {
 
     public long centerPos();
 
+    public boolean isAsync();
+
 }

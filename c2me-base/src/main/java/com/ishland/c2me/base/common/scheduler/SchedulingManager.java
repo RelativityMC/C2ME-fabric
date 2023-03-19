@@ -59,29 +59,49 @@ public class SchedulingManager {
     private void scheduleExecution() {
         if (scheduledCount.get() < maxScheduled && scheduled.compareAndSet(false, true)) {
             this.executor.execute(() -> {
-                while (scheduledCount.get() < maxScheduled && scheduleExecutionInternal()) {
-                    scheduledCount.incrementAndGet();
+                ScheduleStatus status;
+                while (scheduledCount.get() < maxScheduled && (status = scheduleExecutionInternal()).success) {
+                    if (!status.async) scheduledCount.incrementAndGet();
                 }
                 scheduled.set(false);
             });
         }
     }
 
-    private boolean scheduleExecutionInternal() {
+    private ScheduleStatus scheduleExecutionInternal() {
         final ScheduledTask lock = queue.dequeue();
         if (lock != null) {
             this.pos2Tasks.get(lock.centerPos()).remove(lock);
             runPos2TasksMaintenance(lock.centerPos());
             if (lock.trySchedule()) {
+                final boolean async = lock.isAsync();
                 lock.addPostAction(() -> {
-                    scheduledCount.decrementAndGet();
+                    if (!async) scheduledCount.decrementAndGet();
                     scheduleExecution();
                 });
-                return true;
+                if (async) {
+                    return ScheduleStatus.SCHEDULED_ASYNC;
+                } else {
+                    return ScheduleStatus.SCHEDULED;
+                }
             }
         }
-        return false;
+        return ScheduleStatus.NOT_SCHEDULED;
     }
+
+    private enum ScheduleStatus {
+        SCHEDULED(true, false),
+        SCHEDULED_ASYNC(true, true),
+        NOT_SCHEDULED(false, false);
+
+        public final boolean success;
+        public final boolean async;
+
+        ScheduleStatus(boolean success, boolean async) {
+            this.success = success;
+            this.async = async;
+        }
+    };
 
     private void runPos2TasksMaintenance(long pos) {
         final ObjectArraySet<ScheduledTask> locks = this.pos2Tasks.get(pos);

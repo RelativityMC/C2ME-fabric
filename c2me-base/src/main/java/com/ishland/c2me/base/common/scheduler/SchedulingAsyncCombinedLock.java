@@ -24,9 +24,10 @@ public class SchedulingAsyncCombinedLock<T> implements ScheduledTask {
     private final Supplier<CompletableFuture<T>> action;
     private final String desc;
     private final CompletableFuture<T> future = new CompletableFuture<>();
+    private final boolean async;
     private AsyncLock.LockToken acquiredToken;
 
-    public SchedulingAsyncCombinedLock(AsyncNamedLock<ChunkPos> lock, long center, Set<ChunkPos> names, BooleanSupplier isCancelled, Consumer<SchedulingAsyncCombinedLock<T>> readdForExecution, Supplier<CompletableFuture<T>> action, String desc) {
+    public SchedulingAsyncCombinedLock(AsyncNamedLock<ChunkPos> lock, long center, Set<ChunkPos> names, BooleanSupplier isCancelled, Consumer<SchedulingAsyncCombinedLock<T>> readdForExecution, Supplier<CompletableFuture<T>> action, String desc, boolean async) {
         this.lock = lock;
         this.center = center;
         this.names = names.toArray(ChunkPos[]::new);
@@ -34,6 +35,7 @@ public class SchedulingAsyncCombinedLock<T> implements ScheduledTask {
         this.readdForExecution = readdForExecution;
         this.action = action;
         this.desc = desc;
+        this.async = async;
 
         this.readdForExecution.accept(this);
     }
@@ -118,6 +120,11 @@ public class SchedulingAsyncCombinedLock<T> implements ScheduledTask {
     @Override
     public long centerPos() {
         return center;
+    }
+
+    @Override
+    public boolean isAsync() {
+        return this.async;
     }
 
     public CompletableFuture<T> getFuture() {
