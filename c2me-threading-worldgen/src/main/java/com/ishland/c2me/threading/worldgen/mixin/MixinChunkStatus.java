@@ -7,7 +7,7 @@ import com.ishland.c2me.opts.chunk_access.common.CurrentWorldGenState;
 import com.ishland.c2me.threading.worldgen.common.ChunkStatusUtils;
 import com.ishland.c2me.threading.worldgen.common.Config;
 import com.ishland.c2me.threading.worldgen.common.IChunkStatus;
-import com.ishland.c2me.threading.worldgen.common.IVanillaChunkManager;
+import com.ishland.c2me.base.common.scheduler.IVanillaChunkManager;
 import com.ishland.c2me.threading.worldgen.common.IWorldGenLockable;
 import com.mojang.datafixers.util.Either;
 import net.minecraft.server.world.ChunkHolder;

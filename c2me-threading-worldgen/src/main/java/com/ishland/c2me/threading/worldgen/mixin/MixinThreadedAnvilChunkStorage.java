@@ -1,9 +1,6 @@
 package com.ishland.c2me.threading.worldgen.mixin;
 
-import com.ishland.c2me.base.common.GlobalExecutors;
 import com.ishland.c2me.base.common.scheduler.ThreadLocalWorldGenSchedulingState;
-import com.ishland.c2me.threading.worldgen.common.IVanillaChunkManager;
-import com.ishland.c2me.threading.worldgen.common.SchedulingManager;
 import com.mojang.datafixers.util.Either;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;
@@ -28,7 +25,7 @@ import java.util.concurrent.Executor;
 import java.util.function.IntFunction;
 
 @Mixin(ThreadedAnvilChunkStorage.class)
-public abstract class MixinThreadedAnvilChunkStorage implements IVanillaChunkManager {
+public abstract class MixinThreadedAnvilChunkStorage {
 
     @Shadow
     protected abstract CompletableFuture<Either<List<Chunk>, ChunkHolder.Unloaded>> getRegion(ChunkPos centerChunk, int margin, IntFunction<ChunkStatus> distanceToStatus);
@@ -38,13 +35,6 @@ public abstract class MixinThreadedAnvilChunkStorage implements IVanillaChunkMan
     protected abstract ChunkHolder getChunkHolder(long pos);
 
     @Shadow @Final private ThreadExecutor<Runnable> mainThreadExecutor;
-
-    private final SchedulingManager c2me$schedulingManager = new SchedulingManager(GlobalExecutors.asyncScheduler, GlobalExecutors.GLOBAL_EXECUTOR_PARALLELISM + 1);
-
-    @Override
-    public SchedulingManager c2me$getSchedulingManager() {
-        return this.c2me$schedulingManager;
-    }
 
     /**
      * @author ishland
@@ -77,11 +67,6 @@ public abstract class MixinThreadedAnvilChunkStorage implements IVanillaChunkMan
         if (instance != (Object) this) throw new IllegalStateException();
         return holder.getChunkAt(distanceToStatus.apply(0), (ThreadedAnvilChunkStorage) (Object) this)
                 .thenComposeAsync(unused -> this.getRegion(centerChunk, margin, distanceToStatus), this.mainThreadExecutor);
-    }
-
-    @Inject(method = "setLevel", at = @At("RETURN"))
-    private void onUpdateLevel(long pos, int level, ChunkHolder holder, int i, CallbackInfoReturnable<ChunkHolder> cir) {
-        this.c2me$schedulingManager.updatePriority(pos, level);
     }
 
 }

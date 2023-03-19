@@ -31,6 +31,7 @@
     "access.IXoroshiro128PlusPlusRandomDeriver",
     "access.IXoroshiro128PlusPlusRandomImpl",
     "priority.MixinServerChunkManager",
+    "scheduler.MixinThreadedAnvilChunkStorage",
     "util.log4j2shutdownhookisnomore.MixinMain",
     "util.log4j2shutdownhookisnomore.MixinMinecraftDedicatedServer"
   ]

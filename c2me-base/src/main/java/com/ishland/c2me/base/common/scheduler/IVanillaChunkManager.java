@@ -1,4 +1,4 @@
-package com.ishland.c2me.threading.worldgen.common;
+package com.ishland.c2me.base.common.scheduler;
 
 public interface IVanillaChunkManager {
 
