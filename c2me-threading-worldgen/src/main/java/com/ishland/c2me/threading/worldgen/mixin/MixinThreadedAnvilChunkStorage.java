@@ -63,9 +63,9 @@ public abstract class MixinThreadedAnvilChunkStorage {
     }
 
     @Redirect(method = "upgradeChunk", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ThreadedAnvilChunkStorage;getRegion(Lnet/minecraft/util/math/ChunkPos;ILjava/util/function/IntFunction;)Ljava/util/concurrent/CompletableFuture;"))
-    private CompletableFuture<Either<List<Chunk>, ChunkHolder.Unloaded>> redirectGetRegion(ThreadedAnvilChunkStorage instance, ChunkPos centerChunk, int margin, IntFunction<ChunkStatus> distanceToStatus) {
+    private CompletableFuture<Either<List<Chunk>, ChunkHolder.Unloaded>> redirectGetRegion(ThreadedAnvilChunkStorage instance, ChunkPos centerChunk, int margin, IntFunction<ChunkStatus> distanceToStatus, ChunkHolder holder, ChunkStatus status) {
         if (instance != (Object) this) throw new IllegalStateException();
-        return this.getChunkHolder(centerChunk.toLong()).getChunkAt(distanceToStatus.apply(0), (ThreadedAnvilChunkStorage) (Object) this)
+        return holder.getChunkAt(distanceToStatus.apply(0), (ThreadedAnvilChunkStorage) (Object) this)
                 .thenComposeAsync(unused -> this.getRegion(centerChunk, margin, distanceToStatus), this.mainThreadExecutor);
     }
 
