@@ -41,8 +41,10 @@ public abstract class MixinServerChunkManager implements ISyncLoadManager {
     @Unique
     private volatile long syncLoadNanos = 0;
 
+    @Dynamic
     @Redirect(method = {
             "getChunk(IILnet/minecraft/world/chunk/ChunkStatus;Z)Lnet/minecraft/world/chunk/Chunk;",
+            "getChunkBlocking(IILnet/minecraft/world/chunk/ChunkStatus;Z)Lnet/minecraft/world/chunk/Chunk;",
             },
             at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerChunkManager$MainThreadExecutor;runTasks(Ljava/util/function/BooleanSupplier;)V"), require = 0)
     private void beforeAwaitChunk(ServerChunkManager.MainThreadExecutor instance, BooleanSupplier supplier, int x, int z, ChunkStatus leastStatus, boolean create) {
@@ -54,25 +56,13 @@ public abstract class MixinServerChunkManager implements ISyncLoadManager {
         instance.runTasks(supplier);
     }
 
-    @Dynamic
-    @Inject(method = {
-            "getChunkBlocking(IILnet/minecraft/world/chunk/ChunkStatus;Z)Lnet/minecraft/world/chunk/Chunk;"},
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerChunkManager$MainThreadExecutor;runTasks(Ljava/util/function/BooleanSupplier;)V", shift = At.Shift.BEFORE), require = 0)
-    private void beforeAwaitChunkLithium(int x, int z, ChunkStatus leastStatus, boolean create, CallbackInfoReturnable<Chunk> cir) {
-        if (Thread.currentThread() != this.serverThread) return;
-
-        this.currentSyncLoadChunk = new ChunkPos(x, z);
-        syncLoadNanos = System.nanoTime();
-        ((IVanillaChunkManager) this.threadedAnvilChunkStorage).c2me$getSchedulingManager().setCurrentSyncLoad(this.currentSyncLoadChunk);
-    }
-
     @Inject(method = "getChunk(IILnet/minecraft/world/chunk/ChunkStatus;Z)Lnet/minecraft/world/chunk/Chunk;", at = @At("RETURN"))
     private void afterGetChunk(int x, int z, ChunkStatus leastStatus, boolean create, CallbackInfoReturnable<Chunk> cir) {
         if (Thread.currentThread() != this.serverThread) return;
 
         if (this.currentSyncLoadChunk != null) {
             this.currentSyncLoadChunk = null;
-//            System.out.println("Sync load took %.2fms".formatted((System.nanoTime() - syncLoadNanos) / 1e6));
+            System.out.println("Sync load took %.2fms".formatted((System.nanoTime() - syncLoadNanos) / 1e6));
             ((IVanillaChunkManager) this.threadedAnvilChunkStorage).c2me$getSchedulingManager().setCurrentSyncLoad(null);
         }
     }

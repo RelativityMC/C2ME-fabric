@@ -186,11 +186,12 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
 //                })
                 .thenApplyAsync(protoChunk -> {
                     // blending
-                    ProtoChunk res = protoChunk != null ? protoChunk : (ProtoChunk) this.getProtoChunk(pos);
-                    if (res.getBelowZeroRetrogen() != null || res.getStatus().getChunkType() == ChunkStatus.ChunkType.PROTOCHUNK) {
+                    protoChunk = protoChunk != null ? protoChunk : (ProtoChunk) this.getProtoChunk(pos);
+                    if (protoChunk.getBelowZeroRetrogen() != null || protoChunk.getStatus().getChunkType() == ChunkStatus.ChunkType.PROTOCHUNK) {
                         final CompletionStage<List<BitSet>> blendingInfos = BlendingInfoUtil.getBlendingInfos((StorageIoWorker) this.getWorker(), pos);
-                        ((ProtoChunkExtension) res).setBlendingComputeFuture(
-                                blendingInfos.thenAccept(bitSet -> ((ProtoChunkExtension) res).setBlendingInfo(pos, bitSet)).toCompletableFuture()
+                        ProtoChunk finalProtoChunk = protoChunk;
+                        ((ProtoChunkExtension) protoChunk).setBlendingComputeFuture(
+                                blendingInfos.thenAccept(bitSet -> ((ProtoChunkExtension) finalProtoChunk).setBlendingInfo(pos, bitSet)).toCompletableFuture()
                         );
                     }
 
