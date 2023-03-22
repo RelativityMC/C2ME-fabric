@@ -5,6 +5,7 @@ import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ReferenceOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;
+import net.minecraft.util.math.ChunkPos;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -15,15 +16,16 @@ public class SchedulingManager {
     public static final int MAX_LEVEL = ThreadedAnvilChunkStorage.MAX_LEVEL + 1;
     private final DynamicPriorityQueue<ScheduledTask> queue = new DynamicPriorityQueue<>(MAX_LEVEL + 1);
     private final Long2ReferenceOpenHashMap<ObjectArraySet<ScheduledTask>> pos2Tasks = new Long2ReferenceOpenHashMap<>();
-    private final Long2IntOpenHashMap priorities = new Long2IntOpenHashMap();
+    private final Long2IntOpenHashMap prioritiesFromLevel = new Long2IntOpenHashMap();
     private final AtomicInteger scheduledCount = new AtomicInteger(0);
     private final AtomicBoolean scheduled = new AtomicBoolean(false);
+    private ChunkPos currentSyncLoad = null;
 
     private final Executor executor;
     private final int maxScheduled;
 
     {
-        priorities.defaultReturnValue(MAX_LEVEL);
+        prioritiesFromLevel.defaultReturnValue(MAX_LEVEL);
     }
 
     public SchedulingManager(Executor executor, int maxScheduled) {
@@ -33,27 +35,69 @@ public class SchedulingManager {
 
     public void enqueue(SchedulingAsyncCombinedLock<?> lock) {
         this.executor.execute(() -> {
-            queue.enqueue(lock, priorities.get(lock.centerPos()));
+            queue.enqueue(lock, prioritiesFromLevel.get(lock.centerPos()));
             pos2Tasks.computeIfAbsent(lock.centerPos(), unused -> new ObjectArraySet<>()).add(lock);
             scheduleExecution();
         });
     }
 
-    public void updatePriority(long pos, int priority) {
+    public void updatePriorityFromLevel(long pos, int level) {
         this.executor.execute(() -> {
-            if (priorities.get(pos) == priority) return;
-            if (priority < MAX_LEVEL) {
-                priorities.put(pos, priority);
+            if (prioritiesFromLevel.get(pos) == level) return;
+            if (level < MAX_LEVEL) {
+                prioritiesFromLevel.put(pos, level);
             } else {
-                priorities.remove(pos);
+                prioritiesFromLevel.remove(pos);
             }
-            final ObjectArraySet<ScheduledTask> locks = this.pos2Tasks.get(pos);
-            if (locks != null) {
-                for (ScheduledTask lock : locks) {
-                    queue.changePriority(lock, priority);
-                }
+            updatePriorityInternal(pos);
+        });
+    }
+
+    private void updatePriorityInternal(long pos) {
+        int fromLevel = prioritiesFromLevel.get(pos);
+        int fromSyncLoad;
+        if (currentSyncLoad != null) {
+            final int chebyshevDistance = chebyshev(new ChunkPos(pos), currentSyncLoad);
+            if (chebyshevDistance <= 8) {
+                fromSyncLoad = chebyshevDistance;
+//                System.out.println("dist for chunk [%d,%d] is %d".formatted(currentSyncLoad.x, currentSyncLoad.z, chebyshevDistance));
+            } else {
+                fromSyncLoad = MAX_LEVEL;
+            }
+        } else {
+            fromSyncLoad = MAX_LEVEL;
+        }
+        int priority = Math.min(fromLevel, fromSyncLoad);
+        final ObjectArraySet<ScheduledTask> locks = this.pos2Tasks.get(pos);
+        if (locks != null) {
+            for (ScheduledTask lock : locks) {
+                queue.changePriority(lock, priority);
+            }
+        }
+    }
+
+    public void setCurrentSyncLoad(ChunkPos pos) {
+        executor.execute(() -> {
+            if (this.currentSyncLoad != null) {
+                final ChunkPos lastSyncLoad = this.currentSyncLoad;
+                this.currentSyncLoad = null;
+                updateSyncLoadInternal(lastSyncLoad);
+            }
+            if (pos != null) {
+                this.currentSyncLoad = pos;
+                updateSyncLoadInternal(pos);
             }
         });
+    }
+
+    private void updateSyncLoadInternal(ChunkPos pos) {
+        long startTime = System.nanoTime();
+        for (int xOff = -8; xOff <= 8; xOff++) {
+            for (int zOff = -8; zOff <= 8; zOff++) {
+                updatePriorityInternal(ChunkPos.toLong(pos.x + xOff, pos.z + zOff));
+            }
+        }
+        long endTime = System.nanoTime();
     }
 
     private void scheduleExecution() {
@@ -87,6 +131,14 @@ public class SchedulingManager {
             }
         }
         return ScheduleStatus.NOT_SCHEDULED;
+    }
+
+    private static int chebyshev(ChunkPos a, ChunkPos b) {
+        return Math.max(Math.abs(a.x - b.x), Math.abs(a.z - b.z));
+    }
+
+    private static int chebyshev(long a, long b) {
+        return Math.max(Math.abs(ChunkPos.getPackedX(a) - ChunkPos.getPackedX(b)), Math.abs(ChunkPos.getPackedZ(a) - ChunkPos.getPackedZ(b)));
     }
 
     private enum ScheduleStatus {

@@ -15,11 +15,13 @@ import com.mojang.datafixers.DataFixer;
 import com.mojang.datafixers.util.Either;
 import it.unimi.dsi.fastutil.longs.Long2ByteMap;
 import it.unimi.dsi.fastutil.longs.Long2ByteMaps;
+import net.minecraft.SharedConstants;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;
 import net.minecraft.structure.StructureStart;
+import net.minecraft.util.Util;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.thread.ThreadExecutor;
 import net.minecraft.world.ChunkSerializer;
@@ -100,9 +102,6 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
     protected abstract void save(boolean flush);
 
     @Shadow
-    protected abstract CompletableFuture<Optional<NbtCompound>> getUpdatedChunkNbt(ChunkPos chunkPos);
-
-    @Shadow
     private static boolean containsStatus(NbtCompound nbtCompound) {
         throw new AbstractMethodError();
     }
@@ -111,6 +110,9 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
 
     @Mutable
     @Shadow @Final private Long2ByteMap chunkToType;
+
+    @Shadow protected abstract NbtCompound updateChunkNbt(NbtCompound nbt);
+
     private AsyncNamedLock<ChunkPos> chunkLock = AsyncNamedLock.createFair();
 
     @Inject(method = "<init>", at = @At("RETURN"))
@@ -182,19 +184,16 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
 //                    if (protoChunk != null) ((ProtoChunkExtension) protoChunk).setBlendingInfo(pos, bitSet);
 //                    return protoChunk;
 //                })
-                .thenCompose(protoChunk -> {
+                .thenApplyAsync(protoChunk -> {
+                    // blending
                     ProtoChunk res = protoChunk != null ? protoChunk : (ProtoChunk) this.getProtoChunk(pos);
                     if (res.getBelowZeroRetrogen() != null || res.getStatus().getChunkType() == ChunkStatus.ChunkType.PROTOCHUNK) {
                         final CompletionStage<List<BitSet>> blendingInfos = BlendingInfoUtil.getBlendingInfos((StorageIoWorker) this.getWorker(), pos);
-                        return blendingInfos.thenApply(bitSet -> {
-                            ((ProtoChunkExtension) res).setBlendingInfo(pos, bitSet);
-                            return res;
-                        });
-                    } else {
-                        return CompletableFuture.completedFuture(res);
+                        ((ProtoChunkExtension) res).setBlendingComputeFuture(
+                                blendingInfos.thenAccept(bitSet -> ((ProtoChunkExtension) res).setBlendingInfo(pos, bitSet)).toCompletableFuture()
+                        );
                     }
-                })
-                .thenApplyAsync(protoChunk -> {
+
                     try {
                         ((ISerializingRegionBasedStorage) this.pointOfInterestStorage).update(pos, poiData.join().orElse(null));
                     } catch (Throwable t) {
@@ -260,6 +259,27 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
 
     private CompletableFuture<Optional<NbtCompound>> getUpdatedChunkNbtAtAsync(ChunkPos pos) {
         return getUpdatedChunkNbt(pos);
+    }
+
+    /**
+     * @author ishland
+     * @reason skip datafixer if possible
+     */
+    @Overwrite
+    private CompletableFuture<Optional<NbtCompound>> getUpdatedChunkNbt(ChunkPos chunkPos) {
+//        return this.getNbt(chunkPos).thenApplyAsync(nbt -> nbt.map(this::updateChunkNbt), Util.getMainWorkerExecutor());
+        return this.getNbt(chunkPos).thenCompose(nbt -> {
+            if (nbt.isPresent()) {
+                final NbtCompound compound = nbt.get();
+                if (VersionedChunkStorage.getDataVersion(compound) != SharedConstants.getGameVersion().getSaveVersion().getId()) {
+                    return CompletableFuture.supplyAsync(() -> Optional.of(updateChunkNbt(compound)), Util.getMainWorkerExecutor());
+                } else {
+                    return CompletableFuture.completedFuture(nbt);
+                }
+            } else {
+                return CompletableFuture.completedFuture(Optional.empty());
+            }
+        });
     }
 
     private ConcurrentLinkedQueue<CompletableFuture<Void>> saveFutures = new ConcurrentLinkedQueue<>();
