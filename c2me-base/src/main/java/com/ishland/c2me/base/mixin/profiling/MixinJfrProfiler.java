@@ -1,7 +1,7 @@
-package com.ishland.c2me.threading.worldgen.mixin.profiling;
+package com.ishland.c2me.base.mixin.profiling;
 
-import com.ishland.c2me.threading.worldgen.common.profiling.ChunkLoadScheduleEvent;
-import com.ishland.c2me.threading.worldgen.common.profiling.IVanillaJfrProfiler;
+import com.ishland.c2me.base.common.profiling.ChunkLoadScheduleEvent;
+import com.ishland.c2me.base.common.profiling.IVanillaJfrProfiler;
 import jdk.jfr.Event;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.util.math.ChunkPos;

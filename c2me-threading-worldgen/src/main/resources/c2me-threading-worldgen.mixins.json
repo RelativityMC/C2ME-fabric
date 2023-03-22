@@ -12,8 +12,6 @@
     "MixinThreadedAnvilChunkStorage",
     "cancellation.MixinChunkHolder",
     "cancellation.MixinThreadedAnvilChunkStorage",
-    "profiling.MixinChunkHolder",
-    "profiling.MixinJfrProfiler",
     "progresslogger.MixinWorldGenerationProgressLogger"
   ]
 }

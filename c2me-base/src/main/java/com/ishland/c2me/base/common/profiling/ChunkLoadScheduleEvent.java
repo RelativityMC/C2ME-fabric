@@ -1,4 +1,4 @@
-package com.ishland.c2me.threading.worldgen.common.profiling;
+package com.ishland.c2me.base.common.profiling;
 
 import jdk.jfr.Category;
 import jdk.jfr.Enabled;

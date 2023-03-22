@@ -1,4 +1,4 @@
-package com.ishland.c2me.threading.worldgen.common.profiling;
+package com.ishland.c2me.base.common.profiling;
 
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.util.math.ChunkPos;

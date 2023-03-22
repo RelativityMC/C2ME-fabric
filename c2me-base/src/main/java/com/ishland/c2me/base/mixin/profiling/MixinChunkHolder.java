@@ -1,6 +1,6 @@
-package com.ishland.c2me.threading.worldgen.mixin.profiling;
+package com.ishland.c2me.base.mixin.profiling;
 
-import com.ishland.c2me.threading.worldgen.common.profiling.IVanillaJfrProfiler;
+import com.ishland.c2me.base.common.profiling.IVanillaJfrProfiler;
 import com.mojang.datafixers.util.Either;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ServerWorld;
@@ -30,7 +30,7 @@ public abstract class MixinChunkHolder {
 
     @Inject(method = "getChunkAt", at = @At("RETURN"))
     private void postGetChunkAt(ChunkStatus targetStatus, ThreadedAnvilChunkStorage chunkStorage, CallbackInfoReturnable<CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>>> cir) {
-        if (FlightProfiler.INSTANCE instanceof IVanillaJfrProfiler profiler && this.world instanceof ServerWorld serverWorld) {
+        if (FlightProfiler.INSTANCE instanceof IVanillaJfrProfiler profiler && this.world instanceof ServerWorld serverWorld && !cir.getReturnValue().isDone()) {
             final Finishable finishable = profiler.startChunkLoadSchedule(this.getPos(), serverWorld.getRegistryKey(), targetStatus.getId());
             if (finishable != null) {
                 cir.getReturnValue().exceptionally(unused -> null).thenRun(finishable::finish);
