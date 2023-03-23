@@ -35,9 +35,9 @@ jobs:
       run: |
         ./gradlew clean build --stacktrace
 
-    - name: upload to modrinth and curseforge
-      run: ./gradlew modrinth curseforge
-      if: github.ref == 'refs/heads/ver/1.19.4'
+    - name: upload to modrinth
+      run: ./gradlew modrinth
+      if: github.ref == 'refs/heads/ver/1.20.0'
       env:
         MODRINTH_TOKEN: ${{ secrets.MODRINTH_UPLOAD_TOKEN }}
         CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_API_TOKEN }}
