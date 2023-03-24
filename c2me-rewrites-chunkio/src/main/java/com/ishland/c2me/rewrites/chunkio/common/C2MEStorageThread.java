@@ -34,6 +34,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.LockSupport;
@@ -125,8 +126,13 @@ public class C2MEStorageThread extends Thread {
         }
         this.pendingReadRequests.add(new ReadRequest(pos, future, scanner, this.priorityProvider != null ? this.priorityProvider.apply(pos) : null));
         LockSupport.unpark(this);
+        future.thenApply(Function.identity()).orTimeout(60, TimeUnit.SECONDS).exceptionally(throwable -> {
+            if (throwable instanceof TimeoutException) {
+                LOGGER.warn("Chunk read at pos {} took too long (> 1min)", new ChunkPos(pos).toLong());
+            }
+            return null;
+        });
         return future
-                .orTimeout(60, TimeUnit.SECONDS)
                 .thenApply(Function.identity());
     }
 
