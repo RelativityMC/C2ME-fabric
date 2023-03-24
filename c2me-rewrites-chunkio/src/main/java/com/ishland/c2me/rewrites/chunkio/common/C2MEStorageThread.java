@@ -126,7 +126,7 @@ public class C2MEStorageThread extends Thread {
         }
         this.pendingReadRequests.add(new ReadRequest(pos, future, scanner, this.priorityProvider != null ? this.priorityProvider.apply(pos) : null));
         LockSupport.unpark(this);
-        future.orTimeout(60, TimeUnit.SECONDS).exceptionally(throwable -> {
+        future.thenApply(Function.identity()).orTimeout(60, TimeUnit.SECONDS).exceptionally(throwable -> {
             if (throwable instanceof TimeoutException) {
                 LOGGER.warn("Chunk read at pos {} took too long (> 1min)", new ChunkPos(pos).toLong());
             }
