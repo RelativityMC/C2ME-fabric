@@ -7,6 +7,7 @@ import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.longs.LongSets;
 import net.minecraft.server.world.ChunkTicket;
 import net.minecraft.server.world.ChunkTicketManager;
+import net.minecraft.server.world.ThreadedAnvilChunkStorage;
 import net.minecraft.util.math.ChunkPos;
 import org.threadly.concurrent.NoThreadScheduler;
 
@@ -59,12 +60,12 @@ public class NoTickSystem {
 
     }
 
-    public void tick() {
+    public void tick(ThreadedAnvilChunkStorage tacs) {
         tickScheduler();
-        scheduleTick();
+        scheduleTick(tacs);
     }
 
-    private void scheduleTick() {
+    private void scheduleTick(ThreadedAnvilChunkStorage tacs) {
         if (this.isTicking.compareAndSet(false, true))
             GlobalExecutors.asyncScheduler.execute(() -> {
                 Runnable runnable;
@@ -76,14 +77,17 @@ public class NoTickSystem {
                     }
                 }
 
+                boolean hasNoTickTicketUpdates;
                 if (pendingPurge) {
                     this.normalTicketDistanceMap.purge(this.age);
-                    this.playerNoTickDistanceMap.runPendingTicketUpdates();
+                    hasNoTickTicketUpdates = this.playerNoTickDistanceMap.runPendingTicketUpdates(tacs);
+                } else {
+                    hasNoTickTicketUpdates = false;
                 }
 
                 final boolean hasNormalTicketUpdates = this.normalTicketDistanceMap.update();
                 final boolean hasNoTickUpdates = this.playerNoTickDistanceMap.update();
-                if (hasNormalTicketUpdates || hasNoTickUpdates) {
+                if (hasNormalTicketUpdates || hasNoTickUpdates || hasNoTickTicketUpdates) {
                     final LongSet noTickChunks = this.playerNoTickDistanceMap.getChunks();
                     final LongSet normalChunks = this.normalTicketDistanceMap.getChunks();
                     final LongOpenHashSet longs = new LongOpenHashSet(noTickChunks.size() * 3 / 2);
@@ -96,7 +100,7 @@ public class NoTickSystem {
                     this.noTickOnlyChunksSnapshot = LongSets.unmodifiable(longs);
                 }
                 this.isTicking.set(false);
-                if (hasNormalTicketUpdates || hasNoTickUpdates) scheduleTick(); // run more tasks
+                if (hasNormalTicketUpdates || hasNoTickUpdates) scheduleTick(tacs); // run more tasks
             });
     }
 

@@ -40,8 +40,7 @@ public class DynamicPriorityQueue<E> {
     public void changePriority(E element, int priority) {
         if (priority < 0 || priority >= priorities.length)
             throw new IllegalArgumentException("Priority out of range");
-        if (!priorityMap.containsKey(element))
-            throw new IllegalArgumentException("Element not in queue");
+        if (!priorityMap.containsKey(element)) return; // ignored
 
         int oldPriority = priorityMap.getInt(element);
         if (oldPriority == priority) return; // nothing to do
@@ -73,10 +72,14 @@ public class DynamicPriorityQueue<E> {
 
     public void remove(E element) {
         if (!priorityMap.containsKey(element))
-            throw new IllegalArgumentException("Element not in queue");
+            return; // ignore
         int priority = priorityMap.getInt(element);
         priorities[priority].remove(element);
         priorityMap.removeInt(element);
+    }
+
+    public int size() {
+        return priorityMap.size();
     }
 
 }

@@ -72,8 +72,12 @@ public abstract class MixinThreadedAnvilChunkStorage {
         if (instance != (Object) this) throw new IllegalStateException();
         return holder.getChunkAt(distanceToStatus.apply(0), (ThreadedAnvilChunkStorage) (Object) this)
                 .thenComposeAsync(unused -> this.getRegion(centerChunk, margin, distanceToStatus), r -> {
-                    if (Config.asyncScheduling && this.mainThreadExecutor.isOnThread()) {
-                        GlobalExecutors.executor.execute(r);
+                    if (Config.asyncScheduling) {
+                        if (this.mainThreadExecutor.isOnThread()) {
+                            GlobalExecutors.executor.execute(r);
+                        } else {
+                            r.run();
+                        }
                     } else {
                         this.mainThreadExecutor.execute(r);
                     }

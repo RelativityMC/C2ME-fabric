@@ -32,6 +32,9 @@ public class MixinChunkTicketManager implements IChunkTicketManager {
     @Unique
     private NoTickSystem noTickSystem;
 
+    @Unique
+    private long lastNoTickSystemTick = -1;
+
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(CallbackInfo ci) {
         this.noTickSystem = new NoTickSystem((ChunkTicketManager) (Object) this);
@@ -48,21 +51,19 @@ public class MixinChunkTicketManager implements IChunkTicketManager {
         this.noTickSystem.removePlayerSource(pos.toChunkPos());
     }
 
-    @Inject(method = "removePersistentTickets", at = @At("RETURN"))
-    private void onRemovePersistentTickets(CallbackInfo ci) {
-        this.noTickSystem.tick();
-    }
-
     @Inject(method = "purge", at = @At("RETURN"))
     private void onPurge(CallbackInfo ci) {
         this.noTickSystem.runPurge(this.age);
-        this.noTickSystem.tick();
     }
 
-    @Inject(method = "tick", at = @At("HEAD"))
+    @Inject(method = "tick", at = @At("RETURN"))
     private void onTick(ThreadedAnvilChunkStorage chunkStorage, CallbackInfoReturnable<Boolean> cir) {
         if (this.simulationDistanceTracker instanceof NoOPTickingMap map) {
             map.setTACS(chunkStorage);
+        }
+        if (this.lastNoTickSystemTick != this.age) {
+            this.noTickSystem.tick(chunkStorage);
+            this.lastNoTickSystemTick = this.age;
         }
     }
 
