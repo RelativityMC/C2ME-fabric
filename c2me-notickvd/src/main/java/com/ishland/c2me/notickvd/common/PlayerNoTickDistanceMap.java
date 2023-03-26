@@ -92,7 +92,16 @@ public class PlayerNoTickDistanceMap extends ChunkPosDistanceLevelPropagator {
         return hasUpdates;
     }
 
+    private boolean hasPendingTicketUpdatesAsync = false;
+
     boolean runPendingTicketUpdates(ThreadedAnvilChunkStorage tacs) {
+        final boolean hasUpdatesNow = runPendingTicketUpdatesInternal(tacs);
+        final boolean hasUpdatesEarlier = hasPendingTicketUpdatesAsync;
+        hasPendingTicketUpdatesAsync = false;
+        return hasUpdatesNow || hasUpdatesEarlier;
+    }
+
+    private boolean runPendingTicketUpdatesInternal(ThreadedAnvilChunkStorage tacs) {
         boolean hasUpdates = false;
         // remove old tickets
         {
@@ -134,14 +143,23 @@ public class PlayerNoTickDistanceMap extends ChunkPosDistanceLevelPropagator {
     }
 
     private CompletableFuture<Void> getChunkLoadFuture(ThreadedAnvilChunkStorage tacs, ChunkPos pos) {
-        return CompletableFuture.supplyAsync(() -> {
+        final CompletableFuture<Void> future = CompletableFuture.supplyAsync(() -> {
             final ChunkHolder holder = ((IThreadedAnvilChunkStorage) tacs).getCurrentChunkHolders().get(pos.toLong());
             if (holder == null) {
                 return CompletableFuture.completedFuture((Void) null);
             } else {
-                return holder.getAccessibleFuture().exceptionally(unused -> null).thenAccept(unused -> {});
+                return holder.getAccessibleFuture().exceptionally(unused -> null).thenAccept(unused -> {
+                });
             }
         }, this.noTickSystem.noThreadScheduler).thenCompose(Function.identity());
+        future.thenRunAsync(() -> {
+            this.chunkLoadFutures.remove(future);
+            final boolean hasUpdates = this.runPendingTicketUpdatesInternal(tacs);
+            if (hasUpdates) {
+                hasPendingTicketUpdatesAsync = true;
+            }
+        }, this.noTickSystem.executor);
+        return future;
     }
 
     public void setViewDistance(int viewDistance) {

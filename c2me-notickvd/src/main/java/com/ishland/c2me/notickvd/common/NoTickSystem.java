@@ -12,6 +12,7 @@ import net.minecraft.util.math.ChunkPos;
 import org.threadly.concurrent.NoThreadScheduler;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class NoTickSystem {
@@ -25,6 +26,7 @@ public class NoTickSystem {
     final NoThreadScheduler noThreadScheduler = new NoThreadScheduler();
 
     private final AtomicBoolean isTicking = new AtomicBoolean();
+    final ExecutorService executor = GlobalExecutors.asyncScheduler;
     private volatile LongSet noTickOnlyChunksSnapshot = LongSets.EMPTY_SET;
     private volatile boolean pendingPurge = false;
     private volatile long age = 0;
@@ -57,7 +59,6 @@ public class NoTickSystem {
 
     public void tickScheduler() {
         this.noThreadScheduler.tick(Throwable::printStackTrace);
-
     }
 
     public void tick(ThreadedAnvilChunkStorage tacs) {
@@ -67,7 +68,7 @@ public class NoTickSystem {
 
     private void scheduleTick(ThreadedAnvilChunkStorage tacs) {
         if (this.isTicking.compareAndSet(false, true))
-            GlobalExecutors.asyncScheduler.execute(() -> {
+            executor.execute(() -> {
                 Runnable runnable;
                 while ((runnable = this.pendingActions.poll()) != null) {
                     try {

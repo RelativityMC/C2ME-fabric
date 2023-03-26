@@ -61,6 +61,7 @@ public class MixinChunkTicketManager implements IChunkTicketManager {
         if (this.simulationDistanceTracker instanceof NoOPTickingMap map) {
             map.setTACS(chunkStorage);
         }
+        this.noTickSystem.tickScheduler();
         if (this.lastNoTickSystemTick != this.age) {
             this.noTickSystem.tick(chunkStorage);
             this.lastNoTickSystemTick = this.age;
