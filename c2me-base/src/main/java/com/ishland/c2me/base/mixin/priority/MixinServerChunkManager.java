@@ -62,7 +62,7 @@ public abstract class MixinServerChunkManager implements ISyncLoadManager {
 
         if (this.currentSyncLoadChunk != null) {
             this.currentSyncLoadChunk = null;
-            System.out.println("Sync load took %.2fms".formatted((System.nanoTime() - syncLoadNanos) / 1e6));
+//            System.out.println("Sync load took %.2fms".formatted((System.nanoTime() - syncLoadNanos) / 1e6));
             ((IVanillaChunkManager) this.threadedAnvilChunkStorage).c2me$getSchedulingManager().setCurrentSyncLoad(null);
         }
     }
