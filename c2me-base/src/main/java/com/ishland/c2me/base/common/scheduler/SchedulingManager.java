@@ -33,11 +33,15 @@ public class SchedulingManager {
         this.maxScheduled = maxScheduled;
     }
 
-    public void enqueue(SchedulingAsyncCombinedLock<?> lock) {
+    public void enqueue(ScheduledTask task) {
         this.executor.execute(() -> {
-            queue.enqueue(lock, prioritiesFromLevel.get(lock.centerPos()));
-            pos2Tasks.computeIfAbsent(lock.centerPos(), unused -> new ObjectArraySet<>()).add(lock);
-            scheduleExecution();
+            if (task.isAsync()) {
+                schedule0(task);
+            } else {
+                queue.enqueue(task, prioritiesFromLevel.get(task.centerPos()));
+                pos2Tasks.computeIfAbsent(task.centerPos(), unused -> new ObjectArraySet<>()).add(task);
+                scheduleExecution();
+            }
         });
     }
 
@@ -113,24 +117,25 @@ public class SchedulingManager {
     }
 
     private ScheduleStatus scheduleExecutionInternal() {
-        final ScheduledTask lock = queue.dequeue();
-        if (lock != null) {
-            this.pos2Tasks.get(lock.centerPos()).remove(lock);
-            runPos2TasksMaintenance(lock.centerPos());
-            if (lock.trySchedule()) {
-                final boolean async = lock.isAsync();
-                lock.addPostAction(() -> {
-                    if (!async) scheduledCount.decrementAndGet();
-                    scheduleExecution();
-                });
-                if (async) {
-                    return ScheduleStatus.SCHEDULED_ASYNC;
-                } else {
-                    return ScheduleStatus.SCHEDULED;
-                }
-            }
+        final ScheduledTask task = queue.dequeue();
+        if (task != null) {
+            this.pos2Tasks.get(task.centerPos()).remove(task);
+            runPos2TasksMaintenance(task.centerPos());
+            boolean scheduled1 = schedule0(task);
+            if (scheduled1) return ScheduleStatus.SCHEDULED;
         }
         return ScheduleStatus.NOT_SCHEDULED;
+    }
+
+    private boolean schedule0(ScheduledTask task) {
+        if (task.trySchedule()) {
+            task.addPostAction(() -> {
+                scheduledCount.decrementAndGet();
+                scheduleExecution();
+            });
+            return true;
+        }
+        return false;
     }
 
     private static int chebyshev(ChunkPos a, ChunkPos b) {
