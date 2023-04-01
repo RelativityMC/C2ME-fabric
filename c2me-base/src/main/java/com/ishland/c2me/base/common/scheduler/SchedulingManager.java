@@ -17,6 +17,7 @@ public class SchedulingManager {
     private final DynamicPriorityQueue<ScheduledTask> queue = new DynamicPriorityQueue<>(MAX_LEVEL + 1);
     private final Long2ReferenceOpenHashMap<ObjectArraySet<ScheduledTask>> pos2Tasks = new Long2ReferenceOpenHashMap<>();
     private final Long2IntOpenHashMap prioritiesFromLevel = new Long2IntOpenHashMap();
+    private final NeighborLockingManager neighborLockingManager = new NeighborLockingManager();
     private final AtomicInteger scheduledCount = new AtomicInteger(0);
     private final AtomicBoolean scheduled = new AtomicBoolean(false);
     private ChunkPos currentSyncLoad = null;
@@ -94,6 +95,14 @@ public class SchedulingManager {
         });
     }
 
+    public NeighborLockingManager getNeighborLockingManager() {
+        return this.neighborLockingManager;
+    }
+
+    public Executor getExecutor() {
+        return executor;
+    }
+
     private void updateSyncLoadInternal(ChunkPos pos) {
         long startTime = System.nanoTime();
         for (int xOff = -8; xOff <= 8; xOff++) {
@@ -128,8 +137,8 @@ public class SchedulingManager {
     }
 
     private boolean schedule0(ScheduledTask task) {
-        if (task.trySchedule()) {
-            task.addPostAction(() -> {
+        if (task.tryPrepare()) {
+            task.runTask(() -> {
                 scheduledCount.decrementAndGet();
                 scheduleExecution();
             });

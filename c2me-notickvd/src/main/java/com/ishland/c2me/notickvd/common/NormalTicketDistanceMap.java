@@ -24,7 +24,7 @@ public class NormalTicketDistanceMap extends ChunkPosDistanceLevelPropagator {
 
     @Override
     protected int getInitialLevel(long id) {
-        SortedArraySet<ChunkTicket<?>> sortedArraySet = ((com.ishland.c2me.base.mixin.access.IChunkTicketManager) chunkTicketManager).getTicketsByPosition().get(id);
+        SortedArraySet<ChunkTicket<?>> sortedArraySet = ticketsByPosition.get(id);
         if (sortedArraySet != null) {
             if (sortedArraySet.isEmpty()) return Integer.MAX_VALUE;
             for (ChunkTicket<?> next : sortedArraySet) {

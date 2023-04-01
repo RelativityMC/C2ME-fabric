@@ -1,5 +1,6 @@
 package com.ishland.c2me.opts.allocs.common;
 
+import com.ishland.c2me.base.common.structs.SimpleObjectPool;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.random.Random;
 import net.minecraft.world.StructureWorldAccess;
