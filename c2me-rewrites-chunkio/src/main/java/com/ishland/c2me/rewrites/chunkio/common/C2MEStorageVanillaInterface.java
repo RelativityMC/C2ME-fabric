@@ -1,6 +1,7 @@
 package com.ishland.c2me.rewrites.chunkio.common;
 
 import com.google.common.base.Preconditions;
+import com.ishland.c2me.base.common.theinterface.IDirectStorage;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.scanner.NbtScanner;
 import net.minecraft.util.math.ChunkPos;
@@ -11,7 +12,7 @@ import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-public class C2MEStorageVanillaInterface extends StorageIoWorker {
+public class C2MEStorageVanillaInterface extends StorageIoWorker implements IDirectStorage {
 
     private final C2MEStorageThread backend;
 
@@ -53,4 +54,9 @@ public class C2MEStorageVanillaInterface extends StorageIoWorker {
     }
 
 
+    @Override
+    public CompletableFuture<Void> setRawChunkData(ChunkPos pos, byte[] data) {
+        this.backend.setChunkData(pos.toLong(), data);
+        return CompletableFuture.completedFuture(null);
+    }
 }

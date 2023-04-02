@@ -1,13 +1,13 @@
 package com.ishland.c2me.rewrites.chunkio.common;
 
+import com.ibm.asyncutil.util.Either;
 import com.ishland.c2me.base.common.GlobalExecutors;
 import com.ishland.c2me.base.common.structs.RawByteArrayOutputStream;
 import com.ishland.c2me.base.common.util.SneakyThrow;
 import com.ishland.c2me.base.mixin.access.IRegionBasedStorage;
 import com.ishland.c2me.base.mixin.access.IRegionFile;
 import com.ishland.c2me.opts.chunkio.common.ConfigConstants;
-import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
-import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.longs.Long2ReferenceLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtIo;
@@ -19,8 +19,10 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.util.concurrent.CancellationException;
@@ -44,8 +46,8 @@ public class C2MEStorageThread extends Thread {
     private final CompletableFuture<Void> closeFuture = new CompletableFuture<>();
 
     private final RegionBasedStorage storage;
-    private final Long2ObjectLinkedOpenHashMap<NbtCompound> writeBacklog = new Long2ObjectLinkedOpenHashMap<>();
-    private final Long2ObjectOpenHashMap<NbtCompound> cache = new Long2ObjectOpenHashMap<>();
+    private final Long2ReferenceLinkedOpenHashMap<Either<NbtCompound, byte[]>> writeBacklog = new Long2ReferenceLinkedOpenHashMap<>();
+    private final Long2ReferenceLinkedOpenHashMap<Either<NbtCompound, byte[]>> cache = new Long2ReferenceLinkedOpenHashMap<>();
     private final ConcurrentLinkedQueue<ReadRequest> pendingReadRequests = new ConcurrentLinkedQueue<>();
     private final ConcurrentLinkedQueue<WriteRequest> pendingWriteRequests = new ConcurrentLinkedQueue<>();
     private final ConcurrentLinkedQueue<Runnable> pendingTasks = new ConcurrentLinkedQueue<>();
@@ -121,7 +123,12 @@ public class C2MEStorageThread extends Thread {
     }
 
     public void setChunkData(long pos, @Nullable NbtCompound nbt) {
-        this.pendingWriteRequests.add(new WriteRequest(pos, nbt));
+        this.pendingWriteRequests.add(new WriteRequest(pos, nbt != null ? Either.left(nbt) : null));
+        LockSupport.unpark(this);
+    }
+
+    public void setChunkData(long pos, @Nullable byte[] data) {
+        this.pendingWriteRequests.add(new WriteRequest(pos, data != null ? Either.right(data) : null));
         LockSupport.unpark(this);
     }
 
@@ -187,9 +194,45 @@ public class C2MEStorageThread extends Thread {
             final long pos = readRequest.pos;
             final CompletableFuture<NbtCompound> future = readRequest.future;
             final NbtScanner scanner = readRequest.scanner;
-            final NbtCompound cached = this.cache.get(pos);
-            if (cached != null) {
-                future.complete(cached);
+            if (this.cache.containsKey(pos)) {
+                final Either<NbtCompound, byte[]> cached = this.cache.get(pos);
+                if (cached == null) {
+                    future.complete(null);
+                } else if (cached.left().isPresent()) {
+                    if (scanner != null) {
+                        GlobalExecutors.executor.execute(() -> {
+                            try {
+                                cached.left().get().accept(scanner);
+                                future.complete(null);
+                            } catch (Throwable t) {
+                                future.completeExceptionally(t);
+                            }
+                        });
+                    } else {
+                        future.complete(cached.left().get());
+                    }
+                } else {
+                    CompletableFuture.supplyAsync(() -> {
+                                try {
+                                    final DataInputStream input = new DataInputStream(new ByteArrayInputStream(cached.right().get()));
+                                    if (scanner != null) {
+                                        NbtIo.scan(input, scanner);
+                                        return null;
+                                    } else {
+                                        final NbtCompound compound = NbtIo.read(input);
+                                        return compound;
+                                    }
+                                } catch (IOException e) {
+                                    SneakyThrow.sneaky(e);
+                                    return null; // unreachable
+                                }
+                            }, GlobalExecutors.executor)
+                            .thenAccept(future::complete)
+                            .exceptionally(throwable -> {
+                                future.completeExceptionally(throwable);
+                                return null;
+                            });
+                }
                 continue;
             }
             scheduleChunkRead(pos, future, scanner);
@@ -200,7 +243,7 @@ public class C2MEStorageThread extends Thread {
     private boolean writeBacklog() {
         if (!this.writeBacklog.isEmpty()) {
             final long pos = this.writeBacklog.firstLongKey();
-            final NbtCompound nbt = this.writeBacklog.removeFirst();
+            final Either<NbtCompound, byte[]> nbt = this.writeBacklog.removeFirst();
             writeChunk(pos, nbt);
             return true;
         }
@@ -227,18 +270,6 @@ public class C2MEStorageThread extends Thread {
     }
 
     private void scheduleChunkRead(long pos, CompletableFuture<NbtCompound> future, NbtScanner scanner) {
-        final NbtCompound cached = this.cache.get(pos);
-        if (cached != null) {
-            if (scanner != null) {
-                cached.accept(scanner);
-                future.complete(null);
-                return;
-            } else {
-                future.complete(cached);
-                return;
-            }
-        }
-
         try {
             final ChunkPos pos1 = new ChunkPos(pos);
             final RegionFile regionFile = ((IRegionBasedStorage) this.storage).invokeGetRegionFile(pos1);
@@ -271,7 +302,7 @@ public class C2MEStorageThread extends Thread {
         }
     }
 
-    private void writeChunk(long pos, NbtCompound nbt) {
+    private void writeChunk(long pos, Either<NbtCompound, byte[]> nbt) {
         if (nbt == null) {
             if (this.cache.get(pos) == null) {
                 try {
@@ -294,7 +325,11 @@ public class C2MEStorageThread extends Thread {
                     out.write(0);
                     out.write(ConfigConstants.CHUNK_STREAM_VERSION.getId());
                     try (DataOutputStream dataOutputStream = new DataOutputStream(ConfigConstants.CHUNK_STREAM_VERSION.wrap(out))) {
-                        NbtIo.write(nbt, dataOutputStream);
+                        if (nbt.left().isPresent()) {
+                            NbtIo.write(nbt.left().get(), dataOutputStream);
+                        } else {
+                            dataOutputStream.write(nbt.right().get());
+                        }
                     }
                     return out;
                 } catch (Throwable t) {
@@ -328,7 +363,7 @@ public class C2MEStorageThread extends Thread {
     private record ReadRequest(long pos, CompletableFuture<NbtCompound> future, @Nullable NbtScanner scanner) {
     }
 
-    private record WriteRequest(long pos, NbtCompound nbt) {
+    private record WriteRequest(long pos, Either<NbtCompound, byte[]> nbt) {
     }
 
 }
