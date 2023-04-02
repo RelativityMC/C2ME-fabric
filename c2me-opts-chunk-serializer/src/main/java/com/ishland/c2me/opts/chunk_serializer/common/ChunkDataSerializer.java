@@ -161,7 +161,7 @@ public final class ChunkDataSerializer {
     public static void write(ServerWorld world, Chunk chunk, NbtWriter writer) {
         ChunkPos chunkPos = chunk.getPos();
 
-        System.out.printf("Serializing chunk at: %d %d%n", chunkPos.x, chunkPos.z);
+//        System.out.printf("Serializing chunk at: %d %d%n", chunkPos.x, chunkPos.z);
 
         writer.putString(STRING_C2ME, STRING_KROPPEB);
         writer.putInt(STRING_DATA_VERSION, SharedConstants.getGameVersion().getSaveVersion().getId());

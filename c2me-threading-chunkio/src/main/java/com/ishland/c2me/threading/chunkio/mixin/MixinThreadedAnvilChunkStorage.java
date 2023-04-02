@@ -335,7 +335,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
                                     AsyncSerializationManager.push(scope);
                                     try {
                                         if (com.ishland.c2me.opts.chunk_serializer.ModuleEntryPoint.enabled) {
-                                            System.out.println("Saving chunk %s async with gc free serializer".formatted(chunkPos));
+//                                            System.out.println("Saving chunk %s async with gc free serializer".formatted(chunkPos));
                                             NbtWriter nbtWriter = new NbtWriter();
                                             nbtWriter.start(NbtElement.COMPOUND_TYPE);
                                             ChunkDataSerializer.write(this.world, chunk, nbtWriter);
