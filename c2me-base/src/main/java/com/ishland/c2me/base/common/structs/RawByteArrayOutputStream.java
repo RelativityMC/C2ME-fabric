@@ -1,4 +1,4 @@
-package com.ishland.c2me.rewrites.chunkio.common;
+package com.ishland.c2me.base.common.structs;
 
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;

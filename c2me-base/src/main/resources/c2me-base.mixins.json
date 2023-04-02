@@ -34,6 +34,7 @@
     "profiling.MixinChunkHolder",
     "profiling.MixinJfrProfiler",
     "scheduler.MixinThreadedAnvilChunkStorage",
+    "theinterface.MixinStorageIoWorker",
     "util.log4j2shutdownhookisnomore.MixinMain",
     "util.log4j2shutdownhookisnomore.MixinMinecraftDedicatedServer"
   ]

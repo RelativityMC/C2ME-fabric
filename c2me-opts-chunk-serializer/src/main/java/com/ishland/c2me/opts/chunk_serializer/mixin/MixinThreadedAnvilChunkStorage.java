@@ -1,9 +1,9 @@
 package com.ishland.c2me.opts.chunk_serializer.mixin;
 
+import com.ishland.c2me.base.common.theinterface.IDirectStorage;
 import com.ishland.c2me.opts.chunk_serializer.common.ChunkDataSerializer;
 import com.ishland.c2me.opts.chunk_serializer.common.NbtWriter;
 import com.mojang.datafixers.DataFixer;
-import com.mojang.datafixers.util.Either;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;
@@ -19,7 +19,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
-import java.io.DataOutputStream;
 import java.nio.file.Path;
 
 @Mixin(ThreadedAnvilChunkStorage.class)
@@ -84,18 +83,21 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
 
             // this.setNbt(chunkPos, nbtCompound);
             // temp fix, idk,
-            var storageWorker = (StorageIoWorkerAccessor) this.getIoWorker();
-            var storage = (RegionBasedStorageAccessor) (Object) storageWorker.getStorage();
-            storageWorker.invokeRun(() -> {
-                try {
-                    DataOutputStream chunkOutputStream = storage.invokeGetRegionFile(chunkPos).getChunkOutputStream(chunkPos);
-                    chunkOutputStream.write(nbtWriter.toByteArray());
-                    chunkOutputStream.close();
-                    return Either.left((Void) null);
-                } catch (Exception t) {
-                    return Either.right(t);
-                }
-            });
+//            var storageWorker = (StorageIoWorkerAccessor) this.getIoWorker();
+//            var storage = (RegionBasedStorageAccessor) (Object) storageWorker.getStorage();
+//            storageWorker.invokeRun(() -> {
+//                try {
+//                    DataOutputStream chunkOutputStream = storage.invokeGetRegionFile(chunkPos).getChunkOutputStream(chunkPos);
+//                    chunkOutputStream.write(nbtWriter.toByteArray());
+//                    chunkOutputStream.close();
+//                    nbtWriter.release();
+//                    return Either.left((Void) null);
+//                } catch (Exception t) {
+//                    return Either.right(t);
+//                }
+//            });
+            ((IDirectStorage) this.getIoWorker()).setRawChunkData(chunkPos, nbtWriter.toByteArray());
+            nbtWriter.release();
 
             //endregion end replaced code
 

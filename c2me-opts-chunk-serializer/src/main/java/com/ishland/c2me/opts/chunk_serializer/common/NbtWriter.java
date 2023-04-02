@@ -487,4 +487,11 @@ public class NbtWriter {
         UNSAFE.copyMemory(null, this.buffer, bytes, BYTE_ARRAY_OFFSET, bytes.length);
         return bytes;
     }
+
+    public void release() {
+        if (this.buffer != 0) {
+            UNSAFE.freeMemory(this.buffer);
+            this.buffer = 0;
+        }
+    }
 }
