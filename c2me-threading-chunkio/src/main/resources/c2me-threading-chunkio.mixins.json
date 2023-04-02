@@ -10,7 +10,6 @@
     "MixinSerializingRegionBasedStorage",
     "MixinServerChunkManager",
     "MixinStorageIoWorker",
-    "MixinThreadedAnvilChunkStorage",
-    "MixinVersionedChunkStorage"
+    "MixinThreadedAnvilChunkStorage"
   ]
 }

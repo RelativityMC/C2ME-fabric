@@ -1,16 +1,18 @@
 package com.ishland.c2me.notickvd.common;
 
-import com.ishland.c2me.base.common.scheduler.SchedulerThread;
+import com.ishland.c2me.base.common.GlobalExecutors;
 import it.unimi.dsi.fastutil.longs.LongIterator;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.longs.LongSets;
 import net.minecraft.server.world.ChunkTicket;
 import net.minecraft.server.world.ChunkTicketManager;
+import net.minecraft.server.world.ThreadedAnvilChunkStorage;
 import net.minecraft.util.math.ChunkPos;
 import org.threadly.concurrent.NoThreadScheduler;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class NoTickSystem {
@@ -24,6 +26,7 @@ public class NoTickSystem {
     final NoThreadScheduler noThreadScheduler = new NoThreadScheduler();
 
     private final AtomicBoolean isTicking = new AtomicBoolean();
+    final ExecutorService executor = GlobalExecutors.asyncScheduler;
     private volatile LongSet noTickOnlyChunksSnapshot = LongSets.EMPTY_SET;
     private volatile boolean pendingPurge = false;
     private volatile long age = 0;
@@ -56,17 +59,16 @@ public class NoTickSystem {
 
     public void tickScheduler() {
         this.noThreadScheduler.tick(Throwable::printStackTrace);
-
     }
 
-    public void tick() {
+    public void tick(ThreadedAnvilChunkStorage tacs) {
         tickScheduler();
-        scheduleTick();
+        scheduleTick(tacs);
     }
 
-    private void scheduleTick() {
+    private void scheduleTick(ThreadedAnvilChunkStorage tacs) {
         if (this.isTicking.compareAndSet(false, true))
-            SchedulerThread.INSTANCE.execute(() -> {
+            executor.execute(() -> {
                 Runnable runnable;
                 while ((runnable = this.pendingActions.poll()) != null) {
                     try {
@@ -76,14 +78,17 @@ public class NoTickSystem {
                     }
                 }
 
+                boolean hasNoTickTicketUpdates;
                 if (pendingPurge) {
                     this.normalTicketDistanceMap.purge(this.age);
-                    this.playerNoTickDistanceMap.runPendingTicketUpdates();
+                    hasNoTickTicketUpdates = this.playerNoTickDistanceMap.runPendingTicketUpdates(tacs);
+                } else {
+                    hasNoTickTicketUpdates = false;
                 }
 
                 final boolean hasNormalTicketUpdates = this.normalTicketDistanceMap.update();
                 final boolean hasNoTickUpdates = this.playerNoTickDistanceMap.update();
-                if (hasNormalTicketUpdates || hasNoTickUpdates) {
+                if (hasNormalTicketUpdates || hasNoTickUpdates || hasNoTickTicketUpdates) {
                     final LongSet noTickChunks = this.playerNoTickDistanceMap.getChunks();
                     final LongSet normalChunks = this.normalTicketDistanceMap.getChunks();
                     final LongOpenHashSet longs = new LongOpenHashSet(noTickChunks.size() * 3 / 2);
@@ -96,7 +101,7 @@ public class NoTickSystem {
                     this.noTickOnlyChunksSnapshot = LongSets.unmodifiable(longs);
                 }
                 this.isTicking.set(false);
-                if (hasNormalTicketUpdates || hasNoTickUpdates) scheduleTick(); // run more tasks
+                if (hasNormalTicketUpdates || hasNoTickUpdates) scheduleTick(tacs); // run more tasks
             });
     }
 

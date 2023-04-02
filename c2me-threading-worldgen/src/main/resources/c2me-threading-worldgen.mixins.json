@@ -7,8 +7,6 @@
     "MixinChunkGenerator",
     "MixinChunkRegion",
     "MixinChunkStatus",
-    "MixinChunkTicketManager",
-    "MixinChunkTicketManagerDistanceFromNearestPlayerTracker",
     "MixinNoiseChunkGenerator",
     "MixinServerWorld",
     "MixinThreadedAnvilChunkStorage",

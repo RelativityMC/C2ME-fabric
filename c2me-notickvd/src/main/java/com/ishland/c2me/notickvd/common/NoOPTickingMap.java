@@ -1,13 +1,22 @@
 package com.ishland.c2me.notickvd.common;
 
+import com.ishland.c2me.base.mixin.access.IThreadedAnvilChunkStorage;
+import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ChunkTicket;
 import net.minecraft.server.world.ChunkTicketType;
+import net.minecraft.server.world.ThreadedAnvilChunkStorage;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.SimulationDistanceLevelPropagator;
 
 import java.util.function.LongPredicate;
 
 public class NoOPTickingMap extends SimulationDistanceLevelPropagator {
+
+    private ThreadedAnvilChunkStorage tacs = null;
+
+    public void setTACS(ThreadedAnvilChunkStorage tacs) {
+        this.tacs = tacs;
+    }
 
     @Override
     public void add(long l, ChunkTicket<?> chunkTicket) {
@@ -36,12 +45,17 @@ public class NoOPTickingMap extends SimulationDistanceLevelPropagator {
 
     @Override
     public int getLevel(ChunkPos chunkPos) {
-        return 0;
+        return getLevel(chunkPos.toLong());
     }
 
     @Override
     protected int getLevel(long id) {
-        return 0;
+        if (tacs != null) {
+            final ChunkHolder holder = ((IThreadedAnvilChunkStorage) tacs).getCurrentChunkHolders().get(id);
+            return holder != null ? holder.getLevel() : ThreadedAnvilChunkStorage.MAX_LEVEL + 1;
+        } else {
+            return 0;
+        }
     }
 
     @Override

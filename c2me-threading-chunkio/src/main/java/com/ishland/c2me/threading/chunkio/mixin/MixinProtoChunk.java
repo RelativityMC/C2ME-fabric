@@ -9,9 +9,13 @@ import org.spongepowered.asm.mixin.Unique;
 
 import java.util.BitSet;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 @Mixin(ProtoChunk.class)
 public class MixinProtoChunk implements ProtoChunkExtension {
+
+    @Unique
+    private CompletableFuture<Void> blendingComputeFuture = CompletableFuture.completedFuture(null);
 
     @Unique
     private boolean needBlending = false;
@@ -51,7 +55,15 @@ public class MixinProtoChunk implements ProtoChunkExtension {
     }
 
     @Override
+    public void setBlendingComputeFuture(CompletableFuture<Void> future) {
+        this.blendingComputeFuture = future;
+    }
+
+    @Override
     public boolean getNeedBlending() {
+        if (!blendingComputeFuture.isDone()) {
+            blendingComputeFuture.join();
+        }
         return needBlending;
     }
 }

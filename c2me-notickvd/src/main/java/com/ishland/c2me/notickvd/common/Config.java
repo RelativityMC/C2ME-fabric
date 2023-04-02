@@ -1,14 +1,15 @@
 package com.ishland.c2me.notickvd.common;
 
+import com.ishland.c2me.base.common.GlobalExecutors;
 import com.ishland.c2me.base.common.config.ConfigSystem;
 
 public class Config {
 
-    public static final int updatesPerTick = (int) new ConfigSystem.ConfigAccessor()
-            .key("noTickViewDistance.updatesPerTick")
-            .comment("No-tick view distance updates per tick \n" +
+    public static final int maxConcurrentChunkLoads = (int) new ConfigSystem.ConfigAccessor()
+            .key("noTickViewDistance.maxConcurrentChunkLoads")
+            .comment("No-tick view distance max concurrent chunk loads \n" +
                     " Lower this for a better latency and higher this for a faster loading")
-            .getLong(12, 12, ConfigSystem.LongChecks.POSITIVE_VALUES_ONLY);
+            .getLong(GlobalExecutors.GLOBAL_EXECUTOR_PARALLELISM + 1, GlobalExecutors.GLOBAL_EXECUTOR_PARALLELISM + 1, ConfigSystem.LongChecks.POSITIVE_VALUES_ONLY);
 
     public static final boolean compatibilityMode = new ConfigSystem.ConfigAccessor()
             .key("noTickViewDistance.compatibilityMode")

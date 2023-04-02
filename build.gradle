@@ -1,8 +1,10 @@
 plugins {
     id 'java-library'
-    id 'fabric-loom' version '1.0-SNAPSHOT' apply false
+    id 'fabric-loom' version '1.1-SNAPSHOT' apply false
     id 'io.github.juuxel.loom-quiltflower' version '1.+' apply false
     id "me.champeau.jmh" version "0.6.6"
+    id 'com.modrinth.minotaur' version '2.+' apply false
+    id 'com.matthewprenger.cursegradle' version '1.4.0' apply false
 }
 
 @SuppressWarnings('unused')
@@ -42,13 +44,6 @@ configure (allprojects - project(":tests")) {
     apply plugin: 'io.github.juuxel.loom-quiltflower'
     apply plugin: 'maven-publish'
 
-    sourceSets {
-        devlaunch {
-            compileClasspath += main.compileClasspath
-            runtimeClasspath += main.runtimeClasspath
-        }
-    }
-
     repositories {
         maven { url 'https://jitpack.io' }
     }
@@ -65,19 +60,12 @@ configure (allprojects - project(":tests")) {
         if (awFile.isFile()) {
             accessWidenerPath = awFile
         }
-
         runs {
-            devlaunchClient {
-                client()
+            server {
                 ideConfigGenerated project.rootProject == project
-                name = "DevLaunch Client"
-                source sourceSets.devlaunch
             }
-            devlaunchServer {
-                server()
+            client {
                 ideConfigGenerated project.rootProject == project
-                name = "DevLaunch Server"
-                source sourceSets.devlaunch
             }
         }
     }
@@ -150,6 +138,7 @@ subprojects {
 
 afterEvaluate {
     logger.lifecycle("Version String: ${version}")
+    logger.lifecycle(com.ishland.c2me.gradle.ParseGItHubActionChangelog.getChangelog())
 }
 
 dependencies {
@@ -170,13 +159,39 @@ dependencies {
     }
 }
 
-loom {
-    runs {
-        server {
-            inherit devlaunchServer
+apply plugin: 'com.modrinth.minotaur'
+modrinth {
+    token = System.getenv("MODRINTH_TOKEN") // This is the default. Remember to have the MODRINTH_TOKEN environment variable set or else this will fail, or set it to whatever you want - just make sure it stays private!
+    projectId = "c2me-fabric" // This can be the project ID or the slug. Either will work!
+    versionNumber = project.version + "+" + project.minecraft_version // You don't need to set this manually. Will fail if Modrinth has this version already
+    versionName = project.version + " devbuild for " + project.minecraft_version
+    versionType = "alpha" // This is the default -- can also be `beta` or `alpha`
+    uploadFile = remapJar // With Loom, this MUST be set to `remapJar` instead of `jar`!
+    gameVersions = [project.minecraft_version] // Must be an array, even with only one version
+    loaders = ["fabric"] // Must also be an array - no need to specify this if you're using Loom or ForgeGradle
+    changelog = com.ishland.c2me.gradle.ParseGItHubActionChangelog.getChangelog()
+}
+
+apply plugin: 'com.matthewprenger.cursegradle'
+if (System.getenv("CURSEFORGE_TOKEN")) {
+    curseforge {
+        apiKey = System.getenv("CURSEFORGE_TOKEN")
+        project {
+            id = '533097'
+            changelogType = "markdown"
+            changelog = com.ishland.c2me.gradle.ParseGItHubActionChangelog.getChangelog()
+            releaseType = 'alpha'
+
+            addGameVersion project.minecraft_version
+            addGameVersion "Fabric"
+            addGameVersion "Java 17"
+
+            mainArtifact(remapJar) {
+                displayName = project.version + " devbuild for " + project.minecraft_version
+            }
         }
-        client {
-            inherit devlaunchClient
+        options {
+            forgeGradleIntegration = false
         }
     }
 }
@@ -190,8 +205,6 @@ dependencies {
 
             api project(path: ":${it.name}", configuration: "namedElements")
             include project("${it.name}:")
-
-            devlaunchImplementation project("${it.name}:").sourceSets.devlaunch.output
         }
     }
 }

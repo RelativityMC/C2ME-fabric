@@ -6,7 +6,6 @@
   "mixins": [
     "random_instances.MixinAtomicSimpleRandomFactory",
     "random_instances.MixinRedirectAtomicSimpleRandom",
-    "random_instances.MixinRedirectAtomicSimpleRandomStatic",
-    "thread_local_biome_cache.MixinMultiNoiseBiomeSourcePreset"
+    "random_instances.MixinRedirectAtomicSimpleRandomStatic"
   ]
 }

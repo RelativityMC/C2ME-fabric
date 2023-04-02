@@ -10,29 +10,34 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BooleanSupplier;
+import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
-public class SchedulingAsyncCombinedLock<T> extends ScheduledTask<SchedulingAsyncCombinedLock<T>> {
+public class SchedulingAsyncCombinedLock<T> implements ScheduledTask {
 
     private final AsyncNamedLock<ChunkPos> lock;
+    private final long center;
     private final ChunkPos[] names;
     private final BooleanSupplier isCancelled;
-    private final SchedulerThread schedulerThread;
+    private final Consumer<SchedulingAsyncCombinedLock<T>> readdForExecution;
     private final Supplier<CompletableFuture<T>> action;
     private final String desc;
     private final CompletableFuture<T> future = new CompletableFuture<>();
+    private final boolean async;
     private AsyncLock.LockToken acquiredToken;
 
-    public SchedulingAsyncCombinedLock(AsyncNamedLock<ChunkPos> lock, Set<ChunkPos> names, IntSupplier priority, BooleanSupplier isCancelled, SchedulerThread schedulerThread, Supplier<CompletableFuture<T>> action, String desc) {
-        super(priority);
+    public SchedulingAsyncCombinedLock(AsyncNamedLock<ChunkPos> lock, long center, Set<ChunkPos> names, BooleanSupplier isCancelled, Consumer<SchedulingAsyncCombinedLock<T>> readdForExecution, Supplier<CompletableFuture<T>> action, String desc, boolean async) {
         this.lock = lock;
+        this.center = center;
         this.names = names.toArray(ChunkPos[]::new);
         this.isCancelled = isCancelled;
-        this.schedulerThread = schedulerThread;
+        this.readdForExecution = readdForExecution;
         this.action = action;
         this.desc = desc;
+        this.async = async;
+
+        this.readdForExecution.accept(this);
     }
 
     @Override
@@ -74,7 +79,7 @@ public class SchedulingAsyncCombinedLock<T> extends ScheduledTask<SchedulingAsyn
                 if (!triedRelock && entry.lockToken.isEmpty()) {
                     this.lock.acquireLock(entry.name).thenAccept(lockToken -> {
                         lockToken.releaseLock();
-                        this.schedulerThread.addPendingTask(this);
+                        this.readdForExecution.accept(this);
                     });
                     triedRelock = true;
                 }
@@ -110,6 +115,16 @@ public class SchedulingAsyncCombinedLock<T> extends ScheduledTask<SchedulingAsyn
             else this.future.complete(result);
             return null;
         }, GlobalExecutors.invokingExecutor);
+    }
+
+    @Override
+    public long centerPos() {
+        return center;
+    }
+
+    @Override
+    public boolean isAsync() {
+        return this.async;
     }
 
     public CompletableFuture<T> getFuture() {

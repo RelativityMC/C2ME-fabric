@@ -1,6 +1,5 @@
 package com.ishland.c2me.threading.worldgen.mixin;
 
-import com.ishland.c2me.base.common.scheduler.PriorityUtils;
 import com.ishland.c2me.base.common.scheduler.ThreadLocalWorldGenSchedulingState;
 import com.ishland.c2me.base.common.util.SneakyThrow;
 import com.ishland.c2me.base.mixin.access.IThreadedAnvilChunkStorage;
@@ -8,11 +7,13 @@ import com.ishland.c2me.opts.chunk_access.common.CurrentWorldGenState;
 import com.ishland.c2me.threading.worldgen.common.ChunkStatusUtils;
 import com.ishland.c2me.threading.worldgen.common.Config;
 import com.ishland.c2me.threading.worldgen.common.IChunkStatus;
+import com.ishland.c2me.base.common.scheduler.IVanillaChunkManager;
 import com.ishland.c2me.threading.worldgen.common.IWorldGenLockable;
 import com.mojang.datafixers.util.Either;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ServerLightingProvider;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.server.world.ThreadedAnvilChunkStorage;
 import net.minecraft.structure.StructureTemplateManager;
 import net.minecraft.util.profiling.jfr.Finishable;
 import net.minecraft.util.profiling.jfr.FlightProfiler;
@@ -116,15 +117,23 @@ public abstract class MixinChunkStatus implements IChunkStatus {
             completableFuture = generationTask.get();
         } else {
             final ChunkHolder holder = ThreadLocalWorldGenSchedulingState.getChunkHolder();
-            if (holder != null && holder.getFutureFor((ChunkStatus) (Object) this).isDone()) {
+            final ThreadedAnvilChunkStorage tacs = world.getChunkManager().threadedAnvilChunkStorage;
+            if (holder != null && ChunkStatusUtils.isCancelled(holder, (ChunkStatus) (Object) this)) {
                 completableFuture = ChunkHolder.UNLOADED_CHUNK_FUTURE;
-                ((IThreadedAnvilChunkStorage) world.getChunkManager().threadedAnvilChunkStorage).invokeReleaseLightTicket(targetChunk.getPos()); // vanilla behavior
+                ((IThreadedAnvilChunkStorage) tacs).invokeReleaseLightTicket(targetChunk.getPos()); // vanilla behavior
 //                System.out.println(String.format("%s: %s is already done or cancelled, skipping generation", this, targetChunk.getPos()));
             } else {
                 int lockRadius = Config.reduceLockRadius && this.reducedTaskRadius != -1 ? this.reducedTaskRadius : this.taskMargin;
                 //noinspection ConstantConditions
-                completableFuture = ChunkStatusUtils.runChunkGenWithLock(targetChunk.getPos(), (ChunkStatus) (Object) this, holder, lockRadius, PriorityUtils.getChunkPriority(world, targetChunk.getPos()), ((IWorldGenLockable) world).getWorldGenChunkLock(), () ->
-                        ChunkStatusUtils.getThreadingType((ChunkStatus) (Object) this).runTask(((IWorldGenLockable) world).getWorldGenSingleThreadedLock(), generationTask))
+                completableFuture = ChunkStatusUtils.runChunkGenWithLock(
+                                targetChunk.getPos(),
+                                (ChunkStatus) (Object) this,
+                                holder,
+                                lockRadius,
+                                ((IVanillaChunkManager) tacs).c2me$getSchedulingManager(),
+                        (Object) this == ChunkStatus.LIGHT, // lighting is async so don't hold the slot TODO make this check less dirty
+                                ((IWorldGenLockable) world).getWorldGenChunkLock(),
+                                () -> ChunkStatusUtils.getThreadingType((ChunkStatus) (Object) this).runTask(((IWorldGenLockable) world).getWorldGenSingleThreadedLock(), generationTask))
                         .exceptionally(t -> {
                             Throwable actual = t;
                             while (actual instanceof CompletionException) actual = t.getCause();
