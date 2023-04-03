@@ -1,5 +1,6 @@
 package com.ishland.c2me.opts.chunk_serializer.common;
 
+import com.ishland.c2me.opts.chunk_serializer.common.utils.LithiumUtil;
 import com.ishland.c2me.opts.chunk_serializer.common.utils.StarLightUtil;
 import com.ishland.c2me.opts.chunk_serializer.mixin.BelowZeroRetrogenAccessor;
 import com.ishland.c2me.opts.chunk_serializer.mixin.BlendingDataAccessor;
@@ -18,12 +19,12 @@ import net.minecraft.SharedConstants;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
-import net.minecraft.fluid.Fluid;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.NbtShort;
+import net.minecraft.registry.DefaultedRegistry;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 import net.minecraft.registry.RegistryKeys;
@@ -71,10 +72,10 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.BitSet;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Queue;
 import java.util.function.Function;
 import java.util.stream.LongStream;
 
@@ -627,10 +628,10 @@ public final class ChunkDataSerializer {
      * mirror of {@link ChunkSerializer#serializeTicks(ServerWorld, NbtCompound, Chunk.TickSchedulers)}
      */
     private static void serializeTicks(NbtWriter writer, ServerWorld world, Chunk.TickSchedulers tickSchedulers) {
-        long l = world.getLevelProperties().getTime();
+        long time = world.getLevelProperties().getTime();
 
-        writeBlockTicks(writer, l, tickSchedulers.blocks());
-        writeFluidTicks(writer, l, tickSchedulers.fluids());
+        writeTicks(writer, time, tickSchedulers.blocks(), Registries.BLOCK, STRING_BLOCK_TICKS);
+        writeTicks(writer, time, tickSchedulers.fluids(), Registries.FLUID, STRING_FLUID_TICKS);
     }
 
 
@@ -639,91 +640,70 @@ public final class ChunkDataSerializer {
      * {@link ChunkTickScheduler#toNbt(long, Function)} and
      * {@link Tick#toNbt(Function)}
      */
-    private static void writeBlockTicks(NbtWriter writer, long l, SerializableTickScheduler<Block> blocks) {
-        if (blocks instanceof SimpleTickSchedulerAccessor<Block> simpleTickSchedulerAccessor) {
-            final List<Tick<Block>> scheduledTicks = simpleTickSchedulerAccessor.getScheduledTicks();
-            writer.startFixedList(STRING_BLOCK_TICKS, scheduledTicks.size(), NbtElement.COMPOUND_TYPE);
-            for (Tick<Block> scheduledTick : scheduledTicks) {
-                writeBlockTick(writer, scheduledTick);
+    private static <T> void writeTicks(
+            NbtWriter writer,
+            long time,
+            SerializableTickScheduler<T> scheduler,
+            DefaultedRegistry<T> reg,
+            byte[] key
+    ) {
+        if (scheduler instanceof SimpleTickSchedulerAccessor<T> simpleTickSchedulerAccessor) {
+            final List<Tick<T>> scheduledTicks = simpleTickSchedulerAccessor.getScheduledTicks();
+            writer.startFixedList(key, scheduledTicks.size(), NbtElement.COMPOUND_TYPE);
+            for (Tick<T> scheduledTick : scheduledTicks) {
+                writeTick(writer, scheduledTick, reg);
             }
-        } else if (blocks instanceof ChunkTickSchedulerAccessor<Block> chunkTickSchedulerAccessor) {
+        } else if (scheduler instanceof ChunkTickSchedulerAccessor<T> chunkTickSchedulerAccessor) {
 
-            final @Nullable List<Tick<Block>> scheduledTicks = chunkTickSchedulerAccessor.getTicks();
-            final Queue<OrderedTick<Block>> tickQueue = chunkTickSchedulerAccessor.getTickQueue();
+            int size = 0;
+            long list = writer.startList(key, NbtElement.COMPOUND_TYPE);
 
-            int size = (scheduledTicks == null ? tickQueue.size() : scheduledTicks.size() + tickQueue.size());
+            final @Nullable List<Tick<T>> scheduledTicks = chunkTickSchedulerAccessor.getTicks();
 
-            writer.startFixedList(STRING_BLOCK_TICKS, size, NbtElement.COMPOUND_TYPE);
             if (scheduledTicks != null) {
-                for (Tick<Block> scheduledTick : scheduledTicks) {
-                    writeBlockTick(writer, scheduledTick);
+                size += scheduledTicks.size();
+
+                for (Tick<T> scheduledTick : scheduledTicks) {
+                    writeTick(writer, scheduledTick, reg);
                 }
             }
 
-            for (OrderedTick<Block> orderedTick : tickQueue) {
-                writeOrderedBlockTick(writer, orderedTick, l);
-            }
-        } else {
-            // FALLBACK?
-            //noinspection deprecation
-            writer.putElement(STRING_BLOCK_TICKS, blocks.toNbt(l, block -> Registries.BLOCK.getId(block).toString()));
-        }
-    }
+            if (LithiumUtil.IS_LITHIUM_TICK_QUEUE_ACTIVE) {
+                final Collection<Collection<OrderedTick<T>>> tickQueues = LithiumUtil.getTickQueueCollection(chunkTickSchedulerAccessor);
 
-    private static void writeFluidTicks(NbtWriter writer, long l, SerializableTickScheduler<Fluid> fluids) {
-        if (fluids instanceof SimpleTickSchedulerAccessor<Fluid> simpleTickSchedulerAccessor) {
-            final List<Tick<Fluid>> scheduledTicks = simpleTickSchedulerAccessor.getScheduledTicks();
-            writer.startFixedList(STRING_FLUID_TICKS, scheduledTicks.size(), NbtElement.COMPOUND_TYPE);
-            for (Tick<Fluid> scheduledTick : scheduledTicks) {
-                writeFluidTick(writer, scheduledTick);
-            }
-        } else if (fluids instanceof ChunkTickSchedulerAccessor<Fluid> chunkTickSchedulerAccessor) {
-            final @Nullable List<Tick<Fluid>> scheduledTicks = chunkTickSchedulerAccessor.getTicks();
-            final Queue<OrderedTick<Fluid>> tickQueue = chunkTickSchedulerAccessor.getTickQueue();
+                for (Collection<OrderedTick<T>> tickQueue : tickQueues) {
+                    size += tickQueue.size();
+                    for (OrderedTick<T> orderedTick : tickQueue) {
+                        writeOrderedTick(writer, orderedTick, time, reg);
+                    }
+                }
+            } else {
+                final Collection<OrderedTick<T>> tickQueue = chunkTickSchedulerAccessor.getTickQueue();
+                size += tickQueue.size();
 
-            int size = (scheduledTicks == null ? tickQueue.size() : scheduledTicks.size() + tickQueue.size());
-
-            writer.startFixedList(STRING_FLUID_TICKS, size, NbtElement.COMPOUND_TYPE);
-            if (scheduledTicks != null) {
-                for (Tick<Fluid> scheduledTick : scheduledTicks) {
-                    writeFluidTick(writer, scheduledTick);
+                for (OrderedTick<T> orderedTick : tickQueue) {
+                    writeOrderedTick(writer, orderedTick, time, reg);
                 }
             }
 
-            for (OrderedTick<Fluid> orderedTick : tickQueue) {
-                writeOrderedFluidTick(writer, orderedTick, l);
-            }
+            writer.finishList(list, size);
         } else {
             // FALLBACK?
             //noinspection deprecation
-            writer.putElement(STRING_FLUID_TICKS, fluids.toNbt(l, block -> Registries.FLUID.getId(block).toString()));
+            writer.putElement(key, scheduler.toNbt(time, block -> reg.getId(block).toString()));
         }
     }
 
-    private static void writeOrderedBlockTick(NbtWriter writer, OrderedTick<Block> orderedTick, long l) {
+    private static <T> void writeOrderedTick(NbtWriter writer, OrderedTick<T> orderedTick, long time, Registry<T> reg) {
         writer.compoundEntryStart();
-        writer.putRegistry(STRING_CHAR_SMALL_I, Registries.BLOCK, orderedTick.type());
-        writeGenericTickData(writer, orderedTick.pos(), (int) (orderedTick.triggerTick() - l), orderedTick.priority());
+        writer.putRegistry(STRING_CHAR_SMALL_I, reg, orderedTick.type());
+        writeGenericTickData(writer, orderedTick.pos(), (int) (orderedTick.triggerTick() - time), orderedTick.priority());
         writer.finishCompound();
     }
 
-    private static void writeOrderedFluidTick(NbtWriter writer, OrderedTick<Fluid> orderedTick, long l) {
+    private static <T> void writeTick(NbtWriter writer, Tick<T> scheduledTick, Registry<T> reg) {
         writer.compoundEntryStart();
-        writer.putRegistry(STRING_CHAR_SMALL_I, Registries.FLUID, orderedTick.type());
-        writeGenericTickData(writer, orderedTick.pos(), (int) (orderedTick.triggerTick() - l), orderedTick.priority());
-        writer.finishCompound();
-    }
-
-    private static void writeFluidTick(NbtWriter writer, Tick<Fluid> scheduledTick) {
-        writer.compoundEntryStart();
-        writer.putRegistry(STRING_CHAR_SMALL_I, Registries.FLUID, scheduledTick.type());
-        writeGenericTickData(writer, scheduledTick);
-        writer.finishCompound();
-    }
-
-    private static void writeBlockTick(NbtWriter writer, Tick<Block> scheduledTick) {
-        writer.compoundEntryStart();
-        writer.putRegistry(STRING_CHAR_SMALL_I, Registries.BLOCK, scheduledTick.type());
+        writer.putRegistry(STRING_CHAR_SMALL_I, reg, scheduledTick.type());
         writeGenericTickData(writer, scheduledTick);
         writer.finishCompound();
     }
