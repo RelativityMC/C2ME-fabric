@@ -31,13 +31,12 @@ public class ChunkStatusUtils {
                 || status.equals(ChunkStatus.STRUCTURE_REFERENCES)
                 || status.equals(ChunkStatus.BIOMES)
                 || status.equals(ChunkStatus.NOISE)
+                || status.equals(ChunkStatus.SPAWN)
                 || status.equals(ChunkStatus.SURFACE)
                 || status.equals(ChunkStatus.CARVERS)
 //                || status.equals(ChunkStatus.LIQUID_CARVERS) // empty, don't need to parallelize
                 || status.equals(ChunkStatus.HEIGHTMAPS)) {
             return PARALLELIZED;
-        } else if (status.equals(ChunkStatus.SPAWN)) {
-            return SINGLE_THREADED;
         } else if (status.equals(ChunkStatus.FEATURES)) {
             return Config.allowThreadedFeatures ? PARALLELIZED : SINGLE_THREADED;
         }
