@@ -52,6 +52,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Supplier;
@@ -338,7 +339,9 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
                                 .handle((unused, throwable) -> {
                                     lockToken.releaseLock();
                                     if (throwable != null) {
-                                        if (!(throwable instanceof TaskCancellationException)) {
+                                        Throwable actual = throwable;
+                                        while (actual instanceof CompletionException e) actual = e.getCause();
+                                        if (!(actual instanceof TaskCancellationException)) {
                                             LOGGER.error("Failed to save chunk {},{} asynchronously, falling back to sync saving", chunkPos.x, chunkPos.z, throwable);
                                             final CompletableFuture<Chunk> savingFuture = holder.getSavingFuture();
                                             if (savingFuture != originalSavingFuture) {

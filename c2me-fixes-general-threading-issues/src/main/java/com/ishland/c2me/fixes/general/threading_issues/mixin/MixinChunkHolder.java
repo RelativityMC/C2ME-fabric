@@ -107,7 +107,7 @@ public abstract class MixinChunkHolder {
     @Redirect(method = "*", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ChunkHolder;combineSavingFuture(Ljava/util/concurrent/CompletableFuture;Ljava/lang/String;)V"))
     private void synchronizeCombineSavingFuture(ChunkHolder holder, CompletableFuture<? extends Either<? extends Chunk, ChunkHolder.Unloaded>> then, String thenDesc) {
         synchronized (this) {
-            this.combineSavingFuture(then, thenDesc);
+            this.combineSavingFuture(then.exceptionally(unused -> null), thenDesc);
         }
     }
 
@@ -118,7 +118,7 @@ public abstract class MixinChunkHolder {
     @Overwrite
     public void combineSavingFuture(String string, CompletableFuture<?> completableFuture) {
         synchronized (this) {
-            this.savingFuture = this.savingFuture.thenCombine(completableFuture, (chunk, object) -> chunk);
+            this.savingFuture = this.savingFuture.thenCombine(completableFuture.exceptionally(unused -> null), (chunk, object) -> chunk);
         }
     }
 
