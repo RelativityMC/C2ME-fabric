@@ -8,7 +8,6 @@
     "MixinChunkSerializer",
     "MixinProtoChunk",
     "MixinSerializingRegionBasedStorage",
-    "MixinServerChunkManager",
     "MixinStorageIoWorker",
     "MixinThreadedAnvilChunkStorage"
   ]

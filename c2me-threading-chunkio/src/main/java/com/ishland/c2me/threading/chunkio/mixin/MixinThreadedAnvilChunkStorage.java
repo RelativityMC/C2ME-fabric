@@ -15,6 +15,7 @@ import com.mojang.datafixers.DataFixer;
 import com.mojang.datafixers.util.Either;
 import it.unimi.dsi.fastutil.longs.Long2ByteMap;
 import it.unimi.dsi.fastutil.longs.Long2ByteMaps;
+import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
 import net.minecraft.SharedConstants;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.world.ChunkHolder;
@@ -149,6 +150,8 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
                             }
                         });
 
+        final ReferenceArrayList<Runnable> mainThreadQueue = new ReferenceArrayList<>();
+
         final CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> future = getUpdatedChunkNbtAtAsync(pos)
                 .thenApply(optional -> optional.filter(nbtCompound -> {
                     boolean bl = containsStatus(nbtCompound);
@@ -160,11 +163,11 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
                 }))
                 .thenApplyAsync(optional -> {
                     if (optional.isPresent()) {
-                        ChunkIoMainThreadTaskUtils.push();
+                        ChunkIoMainThreadTaskUtils.push(mainThreadQueue);
                         try {
                             return ChunkSerializer.deserialize(this.world, this.pointOfInterestStorage, pos, optional.get());
                         } finally {
-                            ChunkIoMainThreadTaskUtils.pop();
+                            ChunkIoMainThreadTaskUtils.pop(mainThreadQueue);
                         }
                     }
 
@@ -205,7 +208,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
                             SneakyThrow.sneaky(t);
                         }
                     }
-                    ChunkIoMainThreadTaskUtils.drainQueue();
+                    ChunkIoMainThreadTaskUtils.drainQueue(mainThreadQueue);
                     if (protoChunk != null) {
                         this.mark(pos, protoChunk.getStatus().getChunkType());
                         return Either.left(protoChunk);
