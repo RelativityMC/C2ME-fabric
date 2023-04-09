@@ -11,6 +11,7 @@ import com.ishland.c2me.threading.chunkio.common.IAsyncChunkStorage;
 import com.ishland.c2me.threading.chunkio.common.ISerializingRegionBasedStorage;
 import com.ishland.c2me.threading.chunkio.common.ProtoChunkExtension;
 import com.ishland.c2me.threading.chunkio.common.TaskCancellationException;
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.mojang.datafixers.DataFixer;
 import com.mojang.datafixers.util.Either;
 import it.unimi.dsi.fastutil.longs.Long2ByteMap;
@@ -183,7 +184,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
                         return null; // unreachable
                     }
                 })
-                .thenCombine(poiData, (protoChunk, tag) -> protoChunk)
+//                .thenCombine(poiData, (protoChunk, tag) -> protoChunk)
 //                .thenCombine(blendingInfos, (protoChunk, bitSet) -> {
 //                    if (protoChunk != null) ((ProtoChunkExtension) protoChunk).setBlendingInfo(pos, bitSet);
 //                    return protoChunk;
@@ -199,24 +200,22 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
                         );
                     }
 
-                    try {
-                        ((ISerializingRegionBasedStorage) this.pointOfInterestStorage).update(pos, poiData.join().orElse(null));
-                    } catch (Throwable t) {
-                        if (Config.recoverFromErrors) {
-                            LOGGER.error("Couldn't load poi data for chunk {}, poi data will be lost!", pos, t);
-                        } else {
-                            SneakyThrow.sneaky(t);
+                    ((ProtoChunkExtension) protoChunk).setInitialMainThreadComputeFuture(poiData.thenAcceptAsync(poiDataNbt -> {
+                        try {
+                            ((ISerializingRegionBasedStorage) this.pointOfInterestStorage).update(pos, poiDataNbt.orElse(null));
+                        } catch (Throwable t) {
+                            if (Config.recoverFromErrors) {
+                                LOGGER.error("Couldn't load poi data for chunk {}, poi data will be lost!", pos, t);
+                            } else {
+                                SneakyThrow.sneaky(t);
+                            }
                         }
-                    }
-                    ChunkIoMainThreadTaskUtils.drainQueue(mainThreadQueue);
-                    if (protoChunk != null) {
-                        this.mark(pos, protoChunk.getStatus().getChunkType());
-                        return Either.left(protoChunk);
-                    } else {
-                        LOGGER.error("Why is protoChunk null? Trying to recover from this case...");
-                        return Either.left(this.getProtoChunk(pos));
-                    }
-                }, this.mainThreadExecutor);
+                        ChunkIoMainThreadTaskUtils.drainQueue(mainThreadQueue);
+                    }, this.mainThreadExecutor));
+
+                    this.mark(pos, protoChunk.getStatus().getChunkType());
+                    return Either.left(protoChunk);
+                }, GlobalExecutors.invokingExecutor);
         future.exceptionally(throwable -> {
             LOGGER.error("Couldn't load chunk {}", pos, throwable);
             return null;
@@ -285,6 +284,26 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
                 return CompletableFuture.completedFuture(Optional.empty());
             }
         });
+    }
+
+    @ModifyReturnValue(method = "getChunk", at = @At("RETURN"))
+    private CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> postGetChunk(CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> originalReturn, ChunkHolder holder, ChunkStatus requiredStatus) {
+        if (requiredStatus == ChunkStatus.FULL.getPrevious()) {
+            // wait for initial main thread tasks before proceeding to finish full chunk
+            return originalReturn.thenCompose(either -> {
+                if (either.left().isPresent()) {
+                    final Chunk chunk = either.left().get();
+                    if (chunk instanceof ProtoChunk protoChunk) {
+                        final CompletableFuture<Void> future = ((ProtoChunkExtension) protoChunk).getInitialMainThreadComputeFuture();
+                        if (future != null) {
+                            return future.thenApply(v -> either);
+                        }
+                    }
+                }
+                return CompletableFuture.completedFuture(either);
+            });
+        }
+        return originalReturn;
     }
 
     private ConcurrentLinkedQueue<CompletableFuture<Void>> saveFutures = new ConcurrentLinkedQueue<>();

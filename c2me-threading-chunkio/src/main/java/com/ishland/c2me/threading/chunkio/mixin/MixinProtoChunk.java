@@ -18,6 +18,9 @@ public class MixinProtoChunk implements ProtoChunkExtension {
     private CompletableFuture<Void> blendingComputeFuture = CompletableFuture.completedFuture(null);
 
     @Unique
+    private CompletableFuture<Void> initialMainThreadComputeFuture = CompletableFuture.completedFuture(null);
+
+    @Unique
     private boolean needBlending = false;
 
     @Override
@@ -66,4 +69,15 @@ public class MixinProtoChunk implements ProtoChunkExtension {
         }
         return needBlending;
     }
+
+    @Override
+    public void setInitialMainThreadComputeFuture(CompletableFuture<Void> future) {
+        this.initialMainThreadComputeFuture = future;
+    }
+
+    @Override
+    public CompletableFuture<Void> getInitialMainThreadComputeFuture() {
+        return this.initialMainThreadComputeFuture;
+    }
+
 }
