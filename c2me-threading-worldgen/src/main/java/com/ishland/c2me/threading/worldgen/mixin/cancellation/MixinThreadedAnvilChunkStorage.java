@@ -42,7 +42,7 @@ public abstract class MixinThreadedAnvilChunkStorage {
             if (either.right().isPresent()) {
                 return CompletableFuture.supplyAsync(() -> {
                     if (ChunkHolder.getTargetStatusForLevel(holder.getLevel()).isAtLeast(requiredStatus)) {
-                        LOGGER.info("Chunk load {} raced, recovering", holder.getPos());
+//                        LOGGER.info("Chunk load {} raced, recovering", holder.getPos());
                         return this.getChunk(holder, requiredStatus); // recover from cancellation
                     } else {
                         return CompletableFuture.completedFuture(either);
