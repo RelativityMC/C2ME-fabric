@@ -3,6 +3,7 @@ package com.ishland.c2me.base.common;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.ishland.c2me.base.ModuleEntryPoint;
 import com.ishland.c2me.base.common.util.C2MENormalWorkerThreadFactory;
+import net.minecraft.util.thread.TaskExecutor;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
@@ -34,6 +35,8 @@ public class GlobalExecutors {
     public static final ExecutorService asyncScheduler = new ThreadPoolExecutor(1, 1,
             0L, TimeUnit.MILLISECONDS,
             new LinkedBlockingQueue<>(),
-            new ThreadFactoryBuilder().setDaemon(true).setNameFormat("ksched").build());
+            new ThreadFactoryBuilder().setDaemon(true).setNameFormat("c2me-sched").build());
+
+    public static final TaskExecutor<Runnable> asyncSchedulerTaskExecutor = TaskExecutor.create(asyncScheduler, "c2me-sched");
 
 }

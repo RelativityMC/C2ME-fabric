@@ -41,7 +41,7 @@ public class SchedulingAsyncCombinedLock<T> implements ScheduledTask {
     }
 
     @Override
-    public boolean trySchedule() {
+    public boolean tryPrepare() {
         return tryAcquire();
     }
 
@@ -94,7 +94,7 @@ public class SchedulingAsyncCombinedLock<T> implements ScheduledTask {
     }
 
     @Override
-    public void addPostAction(Runnable postAction) {
+    public void runTask(Runnable postAction) {
         Preconditions.checkNotNull(postAction);
         AsyncLock.LockToken token = this.acquiredToken;
         if (token == null) throw new IllegalStateException();

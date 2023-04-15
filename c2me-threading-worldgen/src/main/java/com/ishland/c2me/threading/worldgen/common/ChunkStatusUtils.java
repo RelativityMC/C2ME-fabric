@@ -4,16 +4,15 @@ import com.google.common.base.Preconditions;
 import com.ibm.asyncutil.locks.AsyncLock;
 import com.ibm.asyncutil.locks.AsyncNamedLock;
 import com.ishland.c2me.base.common.GlobalExecutors;
-import com.ishland.c2me.base.common.scheduler.SchedulingAsyncCombinedLock;
+import com.ishland.c2me.base.common.scheduler.NeighborLockingTask;
 import com.ishland.c2me.base.common.scheduler.SchedulingManager;
 import com.mojang.datafixers.util.Either;
+import it.unimi.dsi.fastutil.longs.LongArrayList;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
 
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BooleanSupplier;
 import java.util.function.Function;
@@ -32,13 +31,12 @@ public class ChunkStatusUtils {
                 || status.equals(ChunkStatus.STRUCTURE_REFERENCES)
                 || status.equals(ChunkStatus.BIOMES)
                 || status.equals(ChunkStatus.NOISE)
+                || status.equals(ChunkStatus.SPAWN)
                 || status.equals(ChunkStatus.SURFACE)
                 || status.equals(ChunkStatus.CARVERS)
-                || status.equals(ChunkStatus.LIQUID_CARVERS)
+//                || status.equals(ChunkStatus.LIQUID_CARVERS) // empty, don't need to parallelize
                 || status.equals(ChunkStatus.HEIGHTMAPS)) {
             return PARALLELIZED;
-        } else if (status.equals(ChunkStatus.SPAWN)) {
-            return SINGLE_THREADED;
         } else if (status.equals(ChunkStatus.FEATURES)) {
             return Config.allowThreadedFeatures ? PARALLELIZED : SINGLE_THREADED;
         }
@@ -58,21 +56,36 @@ public class ChunkStatusUtils {
             isCancelled = FALSE_SUPPLIER;
         }
 
-        ArrayList<ChunkPos> fetchedLocks = new ArrayList<>((2 * radius + 1) * (2 * radius + 1));
+//        ArrayList<ChunkPos> fetchedLocks = new ArrayList<>((2 * radius + 1) * (2 * radius + 1));
+//        for (int x = target.x - radius; x <= target.x + radius; x++)
+//            for (int z = target.z - radius; z <= target.z + radius; z++)
+//                fetchedLocks.add(new ChunkPos(x, z));
+//
+//        final SchedulingAsyncCombinedLock<T> task = new SchedulingAsyncCombinedLock<>(
+//                chunkLock,
+//                target.toLong(),
+//                new HashSet<>(fetchedLocks),
+//                isCancelled,
+//                schedulingManager::enqueue,
+//                action,
+//                target.toString(),
+//                async);
+
+        LongArrayList lockTargets = new LongArrayList((2 * radius + 1) * (2 * radius + 1));
         for (int x = target.x - radius; x <= target.x + radius; x++)
             for (int z = target.z - radius; z <= target.z + radius; z++)
-                fetchedLocks.add(new ChunkPos(x, z));
+                lockTargets.add(ChunkPos.toLong(x, z));
 
-        final SchedulingAsyncCombinedLock<T> lock = new SchedulingAsyncCombinedLock<>(
-                chunkLock,
+        final NeighborLockingTask<T> task = new NeighborLockingTask<>(
+                schedulingManager,
                 target.toLong(),
-                new HashSet<>(fetchedLocks),
+                lockTargets.toLongArray(),
                 isCancelled,
-                schedulingManager::enqueue,
                 action,
-                target.toString(),
-                async);
-        return lock.getFuture();
+                "%s %s".formatted(target.toString(), status.toString()),
+                async
+        );
+        return task.getFuture();
     }
 
     public static boolean isCancelled(ChunkHolder holder, ChunkStatus targetStatus) {

@@ -14,4 +14,7 @@ public interface ProtoChunkExtension {
 
     boolean getNeedBlending();
 
+    void setInitialMainThreadComputeFuture(CompletableFuture<Void> future);
+    CompletableFuture<Void> getInitialMainThreadComputeFuture();
+
 }

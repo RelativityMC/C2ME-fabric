@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(ThreadedAnvilChunkStorage.class)
 public class MixinThreadedAnvilChunkStorage implements IVanillaChunkManager {
 
-    private final SchedulingManager c2me$schedulingManager = new SchedulingManager(GlobalExecutors.asyncScheduler, GlobalExecutors.GLOBAL_EXECUTOR_PARALLELISM + 1);
+    private final SchedulingManager c2me$schedulingManager = new SchedulingManager(GlobalExecutors.asyncSchedulerTaskExecutor::send, GlobalExecutors.GLOBAL_EXECUTOR_PARALLELISM * 2);
 
     @Override
     public SchedulingManager c2me$getSchedulingManager() {

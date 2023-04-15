@@ -20,7 +20,6 @@
     "shutdown.MixinServerEntityManager",
     "shutdown.MixinServerWorld",
     "task_scheduling.MixinEntityChunkDataAccess",
-    "task_scheduling.MixinThreadedAnvilChunkStorage",
-    "task_scheduling.MixinThreadExecutor"
+    "task_scheduling.MixinThreadedAnvilChunkStorage"
   ]
 }

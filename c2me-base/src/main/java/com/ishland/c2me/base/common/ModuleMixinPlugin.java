@@ -1,5 +1,6 @@
 package com.ishland.c2me.base.common;
 
+import com.llamalad7.mixinextras.MixinExtrasBootstrap;
 import org.objectweb.asm.tree.ClassNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +20,7 @@ public class ModuleMixinPlugin implements IMixinConfigPlugin {
 
     @Override
     public void onLoad(String mixinPackage) {
+        MixinExtrasBootstrap.init();
         LOGGER.info("Initializing {}", mixinPackage);
         final String[] split = mixinPackage.split("\\.");
         final String targetClass = String.join(".", Arrays.copyOf(split, split.length - 1)) + ".ModuleEntryPoint";

@@ -2,9 +2,9 @@ package com.ishland.c2me.base.common.scheduler;
 
 public interface ScheduledTask {
 
-    public boolean trySchedule();
+    public boolean tryPrepare();
 
-    public void addPostAction(Runnable postAction);
+    public void runTask(Runnable postAction);
 
     public long centerPos();
 
