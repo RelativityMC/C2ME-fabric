@@ -26,7 +26,7 @@ public class NoTickSystem {
     final NoThreadScheduler noThreadScheduler = new NoThreadScheduler();
 
     private final AtomicBoolean isTicking = new AtomicBoolean();
-    final Executor executor = GlobalExecutors.asyncSchedulerTaskExecutor::send;
+    final Executor executor = GlobalExecutors.asyncScheduler;
     private volatile LongSet noTickOnlyChunksSnapshot = LongSets.EMPTY_SET;
     private volatile boolean pendingPurge = false;
     private volatile long age = 0;
