@@ -28,7 +28,7 @@ public class RandomUtils {
         if (deriver instanceof CheckedRandom.Splitter) {
             final ISimpleRandom random1 = (ISimpleRandom) random;
             final IAtomicSimpleRandomDeriver deriver1 = (IAtomicSimpleRandomDeriver) deriver;
-            random1.setSeed(MathHelper.hashCode(x, y, z) ^ deriver1.getSeed());
+            random1.invokeSetSeed(MathHelper.hashCode(x, y, z) ^ deriver1.getSeed());
             return;
         }
         throw new IllegalArgumentException();
