@@ -68,7 +68,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
 
     @Shadow
     @Final
-    ServerWorld world;
+    private ServerWorld world;
 
     @Shadow
     @Final
