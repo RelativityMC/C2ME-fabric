@@ -11,6 +11,7 @@ import net.minecraft.util.profiling.jfr.FlightProfiler;
 import net.minecraft.world.ChunkRegion;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
+import net.minecraft.world.chunk.ProtoChunk;
 import net.minecraft.world.gen.chunk.ChunkGenerator;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -42,14 +43,21 @@ public class MixinChunkStatus {
                                                                                     Function<Chunk, CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>>> fullChunkConverter,
                                                                                     List<Chunk> chunks) {
         try {
-            CurrentWorldGenState.setCurrentRegion(new ChunkRegion(world,chunks, (ChunkStatus) (Object) this, -1));
+            final ChunkStatus thiz = (ChunkStatus) (Object) this;
+            CurrentWorldGenState.setCurrentRegion(new ChunkRegion(world,chunks, thiz, -1));
             Chunk chunk = chunks.get(chunks.size() / 2);
             Finishable finishable = FlightProfiler.INSTANCE.startChunkGenerationProfiling(chunk.getPos(), world.getRegistryKey(), this.id);
-            CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> completableFuture = this.generationTask.doWork((ChunkStatus) (Object) this, executor, world, generator, structureTemplateManager, lightingProvider, fullChunkConverter, chunks, chunk);
-            return finishable != null ? completableFuture.thenApply((either) -> {
-                finishable.finish();
+            CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> completableFuture = this.generationTask.doWork(thiz, executor, world, generator, structureTemplateManager, lightingProvider, fullChunkConverter, chunks, chunk);
+            return completableFuture.thenApply((either) -> {
+                if (chunk instanceof ProtoChunk protoChunk && !protoChunk.getStatus().isAtLeast(thiz)) {
+                    protoChunk.setStatus(thiz);
+                }
+
+                if (finishable != null) {
+                    finishable.finish();
+                }
                 return either;
-            }) : completableFuture;
+            });
         } finally {
             CurrentWorldGenState.clearCurrentRegion();
         }

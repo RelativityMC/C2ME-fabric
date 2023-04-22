@@ -20,6 +20,7 @@ import net.minecraft.util.profiling.jfr.FlightProfiler;
 import net.minecraft.world.ChunkRegion;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
+import net.minecraft.world.chunk.ProtoChunk;
 import net.minecraft.world.gen.chunk.ChunkGenerator;
 import org.spongepowered.asm.mixin.Dynamic;
 import org.spongepowered.asm.mixin.Final;
@@ -98,14 +99,15 @@ public abstract class MixinChunkStatus implements IChunkStatus {
      */
     @Overwrite
     public CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> runGenerationTask(Executor executor, ServerWorld world, ChunkGenerator chunkGenerator, StructureTemplateManager structureManager, ServerLightingProvider lightingProvider, Function<Chunk, CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>>> function, List<Chunk> list) {
+        final ChunkStatus thiz = (ChunkStatus) (Object) this;
         final Chunk targetChunk = list.get(list.size() / 2);
 
         Finishable finishable = FlightProfiler.INSTANCE.startChunkGenerationProfiling(targetChunk.getPos(), world.getRegistryKey(), this.id);
 
         final Supplier<CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>>> generationTask = () -> {
             try {
-                CurrentWorldGenState.setCurrentRegion(new ChunkRegion(world, list, (ChunkStatus) (Object) this, -1));
-                return this.generationTask.doWork((ChunkStatus) (Object) this, executor, world, chunkGenerator, structureManager, lightingProvider, function, list, targetChunk);
+                CurrentWorldGenState.setCurrentRegion(new ChunkRegion(world, list, thiz, -1));
+                return this.generationTask.doWork(thiz, executor, world, chunkGenerator, structureManager, lightingProvider, function, list, targetChunk);
             } finally {
                 CurrentWorldGenState.clearCurrentRegion();
             }
@@ -113,12 +115,12 @@ public abstract class MixinChunkStatus implements IChunkStatus {
 
         final CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> completableFuture;
 
-        if (targetChunk.getStatus().isAtLeast((ChunkStatus) (Object) this)) {
+        if (targetChunk.getStatus().isAtLeast(thiz)) {
             completableFuture = generationTask.get();
         } else {
             final ChunkHolder holder = ThreadLocalWorldGenSchedulingState.getChunkHolder();
             final ThreadedAnvilChunkStorage tacs = world.getChunkManager().threadedAnvilChunkStorage;
-            if (holder != null && ChunkStatusUtils.isCancelled(holder, (ChunkStatus) (Object) this)) {
+            if (holder != null && ChunkStatusUtils.isCancelled(holder, thiz)) {
                 completableFuture = ChunkHolder.UNLOADED_CHUNK_FUTURE;
                 ((IThreadedAnvilChunkStorage) tacs).invokeReleaseLightTicket(targetChunk.getPos()); // vanilla behavior
 //                System.out.println(String.format("%s: %s is already done or cancelled, skipping generation", this, targetChunk.getPos()));
@@ -127,13 +129,13 @@ public abstract class MixinChunkStatus implements IChunkStatus {
                 //noinspection ConstantConditions
                 completableFuture = ChunkStatusUtils.runChunkGenWithLock(
                                 targetChunk.getPos(),
-                                (ChunkStatus) (Object) this,
+                                thiz,
                                 holder,
                                 lockRadius,
                                 ((IVanillaChunkManager) tacs).c2me$getSchedulingManager(),
                         (Object) this == ChunkStatus.LIGHT, // lighting is async so don't hold the slot TODO make this check less dirty
                                 ((IWorldGenLockable) world).getWorldGenChunkLock(),
-                                () -> ChunkStatusUtils.getThreadingType((ChunkStatus) (Object) this).runTask(((IWorldGenLockable) world).getWorldGenSingleThreadedLock(), generationTask))
+                                () -> ChunkStatusUtils.getThreadingType(thiz).runTask(((IWorldGenLockable) world).getWorldGenSingleThreadedLock(), generationTask))
                         .exceptionally(t -> {
                             Throwable actual = t;
                             while (actual instanceof CompletionException) actual = t.getCause();
@@ -154,10 +156,16 @@ public abstract class MixinChunkStatus implements IChunkStatus {
         });
 
         // TODO [VanillaCopy]
-        return finishable != null ? completableFuture.thenApply(either -> {
-            finishable.finish();
+        return completableFuture.thenApply(either -> {
+            if (targetChunk instanceof ProtoChunk protoChunk && !protoChunk.getStatus().isAtLeast(thiz)) {
+                protoChunk.setStatus(thiz);
+            }
+
+            if (finishable != null) {
+                finishable.finish();
+            }
             return either;
-        }) : completableFuture;
+        });
     }
 
 }

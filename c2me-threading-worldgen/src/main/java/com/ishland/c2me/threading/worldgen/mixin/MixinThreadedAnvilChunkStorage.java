@@ -31,15 +31,14 @@ import java.util.function.IntFunction;
 public abstract class MixinThreadedAnvilChunkStorage {
 
     @Shadow
-    protected abstract CompletableFuture<Either<List<Chunk>, ChunkHolder.Unloaded>> getRegion(ChunkPos centerChunk, int margin, IntFunction<ChunkStatus> distanceToStatus);
-
-    @Shadow
     @Nullable
     protected abstract ChunkHolder getChunkHolder(long pos);
 
     @Shadow @Final private ThreadExecutor<Runnable> mainThreadExecutor;
 
     @Shadow private volatile Long2ObjectLinkedOpenHashMap<ChunkHolder> chunkHolders;
+
+    @Shadow protected abstract CompletableFuture<Either<List<Chunk>, ChunkHolder.Unloaded>> getRegion(ChunkHolder chunkHolder, int margin, IntFunction<ChunkStatus> distanceToStatus);
 
     /**
      * @author ishland
@@ -67,11 +66,11 @@ public abstract class MixinThreadedAnvilChunkStorage {
         ThreadLocalWorldGenSchedulingState.clearChunkHolder();
     }
 
-    @Redirect(method = "upgradeChunk", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ThreadedAnvilChunkStorage;getRegion(Lnet/minecraft/util/math/ChunkPos;ILjava/util/function/IntFunction;)Ljava/util/concurrent/CompletableFuture;"))
-    private CompletableFuture<Either<List<Chunk>, ChunkHolder.Unloaded>> redirectGetRegion(ThreadedAnvilChunkStorage instance, ChunkPos centerChunk, int margin, IntFunction<ChunkStatus> distanceToStatus, ChunkHolder holder, ChunkStatus status) {
+    @Redirect(method = "upgradeChunk", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ThreadedAnvilChunkStorage;getRegion(Lnet/minecraft/server/world/ChunkHolder;ILjava/util/function/IntFunction;)Ljava/util/concurrent/CompletableFuture;"))
+    private CompletableFuture<Either<List<Chunk>, ChunkHolder.Unloaded>> redirectGetRegion(ThreadedAnvilChunkStorage instance, ChunkHolder chunkHolder, int margin, IntFunction<ChunkStatus> distanceToStatus) {
         if (instance != (Object) this) throw new IllegalStateException();
-        return holder.getChunkAt(distanceToStatus.apply(0), (ThreadedAnvilChunkStorage) (Object) this)
-                .thenComposeAsync(unused -> this.getRegion(centerChunk, margin, distanceToStatus), r -> {
+        return chunkHolder.getChunkAt(distanceToStatus.apply(0), (ThreadedAnvilChunkStorage) (Object) this)
+                .thenComposeAsync(unused -> this.getRegion(chunkHolder, margin, distanceToStatus), r -> {
                     if (Config.asyncScheduling) {
                         if (this.mainThreadExecutor.isOnThread()) {
                             GlobalExecutors.executor.execute(r);
