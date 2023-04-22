@@ -242,7 +242,7 @@ public class ComparisonSession implements Closeable {
                 } else {
                     palettedContainer3 = new PalettedContainer<>(registry.getIndexedEntries(), registry.entryOf(BiomeKeys.PLAINS), PalettedContainer.PaletteProvider.BIOME);
                 }
-                ChunkSection chunkSection = new ChunkSection(y, palettedContainer, palettedContainer3);
+                ChunkSection chunkSection = new ChunkSection(palettedContainer, palettedContainer3);
                 chunkSection.calculateCounts();
                 result.put(ChunkSectionPos.from(pos, y), chunkSection);
             }

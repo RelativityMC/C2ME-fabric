@@ -33,14 +33,15 @@ public class ChunkStatusUtils {
                 || status.equals(ChunkStatus.BIOMES)
                 || status.equals(ChunkStatus.NOISE)
                 || status.equals(ChunkStatus.SURFACE)
-                || status.equals(ChunkStatus.CARVERS)
-                || status.equals(ChunkStatus.LIQUID_CARVERS)
-                || status.equals(ChunkStatus.HEIGHTMAPS)) {
+                || status.equals(ChunkStatus.CARVERS)) {
             return PARALLELIZED;
         } else if (status.equals(ChunkStatus.SPAWN)) {
             return SINGLE_THREADED;
         } else if (status.equals(ChunkStatus.FEATURES)) {
             return Config.allowThreadedFeatures ? PARALLELIZED : SINGLE_THREADED;
+        } else if (status.equals(ChunkStatus.INITIALIZE_LIGHT) ||
+                   status.equals(ChunkStatus.LIGHT)) {
+            return AS_IS;
         }
         return AS_IS;
     }

@@ -14,7 +14,6 @@
     "fix.client.MixinMain",
     "fix.logspam.MixinUniformHeightProvider",
     "fix.mem_effects.MixinIngredient",
-    "fix.remapper_being_broken.MixinFabricMaterialBuilder",
     "fix.remapper_being_broken.MixinGeneralUtils",
     "pregen.MixinCrashReport",
     "pregen.MixinMain",
