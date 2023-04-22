@@ -1,5 +1,6 @@
 package com.ishland.c2me.threading.worldgen.mixin.cancellation;
 
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.mojang.datafixers.util.Either;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;
@@ -11,9 +12,7 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
@@ -37,13 +36,13 @@ public abstract class MixinThreadedAnvilChunkStorage {
         return status == ChunkStatus.LIGHT ? ChunkStatus.getDistanceFromFull(ChunkStatus.STRUCTURE_STARTS) - 2 : ChunkStatus.getDistanceFromFull(status);
     }
 
-    @Inject(method = "getChunk", at = @At("RETURN"), cancellable = true)
-    private void injectCancellationHook(ChunkHolder holder, ChunkStatus requiredStatus, CallbackInfoReturnable<CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>>> cir) {
-        cir.setReturnValue(cir.getReturnValue().thenCompose(either -> {
+    @ModifyReturnValue(method = "getChunk", at = @At("RETURN"))
+    private CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> injectCancellationHook(CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> originalReturn, ChunkHolder holder, ChunkStatus requiredStatus) {
+        return originalReturn.thenCompose(either -> {
             if (either.right().isPresent()) {
                 return CompletableFuture.supplyAsync(() -> {
                     if (ChunkHolder.getTargetStatusForLevel(holder.getLevel()).isAtLeast(requiredStatus)) {
-                        LOGGER.info("Chunk load {} raced, recovering", holder.getPos());
+//                        LOGGER.info("Chunk load {} raced, recovering", holder.getPos());
                         return this.getChunk(holder, requiredStatus); // recover from cancellation
                     } else {
                         return CompletableFuture.completedFuture(either);
@@ -52,7 +51,7 @@ public abstract class MixinThreadedAnvilChunkStorage {
             } else {
                 return CompletableFuture.completedFuture(either);
             }
-        }));
+        });
     }
 
 }

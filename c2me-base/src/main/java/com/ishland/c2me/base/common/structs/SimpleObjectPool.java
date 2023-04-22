@@ -1,4 +1,4 @@
-package com.ishland.c2me.opts.allocs.common;
+package com.ishland.c2me.base.common.structs;
 
 import com.google.common.base.Preconditions;
 

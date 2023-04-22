@@ -34,6 +34,8 @@ public class GlobalExecutors {
     public static final ExecutorService asyncScheduler = new ThreadPoolExecutor(1, 1,
             0L, TimeUnit.MILLISECONDS,
             new LinkedBlockingQueue<>(),
-            new ThreadFactoryBuilder().setDaemon(true).setNameFormat("ksched").build());
+            new ThreadFactoryBuilder().setDaemon(true).setNameFormat("c2me-sched").build());
+
+//    public static final TaskExecutor<Runnable> asyncSchedulerTaskExecutor = TaskExecutor.create(asyncScheduler, "c2me-sched");
 
 }
