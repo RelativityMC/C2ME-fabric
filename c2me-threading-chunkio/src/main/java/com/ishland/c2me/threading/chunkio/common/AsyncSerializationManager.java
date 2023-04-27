@@ -114,17 +114,12 @@ public class AsyncSerializationManager {
             }
 
             @Override
-            public void addLightSource(BlockPos blockPos, int i) {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
             public boolean hasUpdates() {
                 throw new UnsupportedOperationException();
             }
 
             @Override
-            public int doLightUpdates(int i, boolean bl, boolean bl2) {
+            public int doLightUpdates() {
                 throw new UnsupportedOperationException();
             }
 
@@ -135,6 +130,11 @@ public class AsyncSerializationManager {
 
             @Override
             public void setColumnEnabled(ChunkPos chunkPos, boolean bl) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public void propagateLight(ChunkPos chunkPos) {
                 throw new UnsupportedOperationException();
             }
 
