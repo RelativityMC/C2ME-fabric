@@ -2,6 +2,7 @@ package com.ishland.c2me.fixes.general.threading_issues.mixin;
 
 import com.mojang.datafixers.util.Either;
 import net.minecraft.server.world.ChunkHolder;
+import net.minecraft.server.world.ChunkLevels;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
@@ -25,12 +26,6 @@ public abstract class MixinChunkHolder {
     @Shadow
     @Final
     public static CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> UNLOADED_CHUNK_FUTURE;
-
-    @Shadow
-    public static ChunkStatus getTargetStatusForLevel(int level) {
-        throw new UnsupportedOperationException();
-    }
-
     @Shadow
     private int level;
 
@@ -78,7 +73,7 @@ public abstract class MixinChunkHolder {
                     return completableFuture;
                 }
             }
-            if (getTargetStatusForLevel(this.level).isAtLeast(targetStatus)) {
+            if (ChunkLevels.getStatus(this.level).isAtLeast(targetStatus)) {
                 future = new CompletableFuture<>();
                 this.futuresByStatus.set(i, future);
                 // C2ME - moved down to prevent deadlock

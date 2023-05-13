@@ -9,6 +9,7 @@ import com.ishland.c2me.base.common.scheduler.SchedulingManager;
 import com.mojang.datafixers.util.Either;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import net.minecraft.server.world.ChunkHolder;
+import net.minecraft.server.world.ChunkLevels;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
@@ -90,7 +91,7 @@ public class ChunkStatusUtils {
     }
 
     public static boolean isCancelled(ChunkHolder holder, ChunkStatus targetStatus) {
-        return ChunkHolder.getTargetStatusForLevel(holder.getLevel()).getIndex() < targetStatus.getIndex();
+        return ChunkLevels.getStatus(holder.getLevel()).getIndex() < targetStatus.getIndex();
     }
 
     public enum ChunkStatusThreadingType {

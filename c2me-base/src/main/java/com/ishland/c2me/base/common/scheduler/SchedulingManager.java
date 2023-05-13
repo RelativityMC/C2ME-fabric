@@ -4,7 +4,7 @@ import com.ishland.c2me.base.common.structs.DynamicPriorityQueue;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ReferenceOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
-import net.minecraft.server.world.ThreadedAnvilChunkStorage;
+import net.minecraft.server.world.ChunkLevels;
 import net.minecraft.util.math.ChunkPos;
 
 import java.util.concurrent.Executor;
@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class SchedulingManager {
 
-    public static final int MAX_LEVEL = ThreadedAnvilChunkStorage.MAX_LEVEL + 1;
+    public static final int MAX_LEVEL = ChunkLevels.INACCESSIBLE + 1;
     private final DynamicPriorityQueue<ScheduledTask> queue = new DynamicPriorityQueue<>(MAX_LEVEL + 1);
     private final Long2ReferenceOpenHashMap<ObjectArraySet<ScheduledTask>> pos2Tasks = new Long2ReferenceOpenHashMap<>();
     private final Long2IntOpenHashMap prioritiesFromLevel = new Long2IntOpenHashMap();
