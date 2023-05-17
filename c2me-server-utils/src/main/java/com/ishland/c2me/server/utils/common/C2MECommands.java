@@ -39,8 +39,8 @@ public class C2MECommands {
         final ChunkTicketManager ticketManager = ((IServerChunkManager) chunkManager).getTicketManager();
         final int noTickOnlyChunks = ((IChunkTicketManager) ticketManager).getNoTickOnlyChunks().size();
         final int noTickPendingTicketUpdates = ((IChunkTicketManager) ticketManager).getNoTickPendingTicketUpdates();
-        ctx.getSource().sendFeedback(Text.of(String.format("No-tick chunks: %d", noTickOnlyChunks)), true);
-        ctx.getSource().sendFeedback(Text.of(String.format("No-tick chunk pending ticket updates: %d", noTickPendingTicketUpdates)), true);
+        ctx.getSource().sendFeedback(() -> Text.of(String.format("No-tick chunks: %d", noTickOnlyChunks)), true);
+        ctx.getSource().sendFeedback(() -> Text.of(String.format("No-tick chunk pending ticket updates: %d", noTickPendingTicketUpdates)), true);
 
         return 0;
     }
