@@ -29,7 +29,7 @@ public class ParseGItHubActionChangelog {
                         .append('(').append(object.get("url").getAsString()).append(')');
                 builder.append(' ');
                 builder.append(object.get("message").getAsString().split("\n")[0]);
-                builder.append(" — ");
+                builder.append(" - ");
                 builder.append(object.get("author").getAsJsonObject().get("name").getAsString());
                 builder.append("  ").append('\n');
             }
