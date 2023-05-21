@@ -1,8 +1,8 @@
 plugins {
     id 'java-library'
-    id 'fabric-loom' version '1.1-SNAPSHOT' apply false
+    id 'fabric-loom' version '1.2-SNAPSHOT' apply false
     id 'io.github.juuxel.loom-quiltflower' version '1.+' apply false
-    id "me.champeau.jmh" version "0.6.6"
+    id "me.champeau.jmh" version "0.7.1"
     id 'com.modrinth.minotaur' version '2.+' apply false
     id 'com.matthewprenger.cursegradle' version '1.4.0' apply false
 }
@@ -157,10 +157,6 @@ dependencies {
     // PSA: Some older mods, compiled on Loom 0.2.1, might have outdated Maven POMs.
     // You may need to force-disable transitiveness on them.
 
-    // jmh
-    afterEvaluate {
-        jmh project.sourceSets.main.compileClasspath
-    }
 }
 
 apply plugin: 'com.modrinth.minotaur'
