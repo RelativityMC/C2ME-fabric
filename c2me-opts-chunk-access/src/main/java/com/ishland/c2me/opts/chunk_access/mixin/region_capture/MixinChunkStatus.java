@@ -24,11 +24,11 @@ import java.util.concurrent.Executor;
 import java.util.function.Function;
 
 @Mixin(value = ChunkStatus.class, priority = 990)
-public class MixinChunkStatus {
+public abstract class MixinChunkStatus {
 
     @Shadow @Final private ChunkStatus.GenerationTask generationTask;
 
-    @Shadow @Final private String id;
+    @Shadow public abstract String toString();
 
     /**
      * @author ishland
@@ -46,7 +46,7 @@ public class MixinChunkStatus {
             final ChunkStatus thiz = (ChunkStatus) (Object) this;
             CurrentWorldGenState.setCurrentRegion(new ChunkRegion(world,chunks, thiz, -1));
             Chunk chunk = chunks.get(chunks.size() / 2);
-            Finishable finishable = FlightProfiler.INSTANCE.startChunkGenerationProfiling(chunk.getPos(), world.getRegistryKey(), this.id);
+            Finishable finishable = FlightProfiler.INSTANCE.startChunkGenerationProfiling(chunk.getPos(), world.getRegistryKey(), this.toString());
             CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> completableFuture = this.generationTask.doWork(thiz, executor, world, generator, structureTemplateManager, lightingProvider, fullChunkConverter, chunks, chunk);
             return completableFuture.thenApply((either) -> {
                 if (chunk instanceof ProtoChunk protoChunk && !protoChunk.getStatus().isAtLeast(thiz)) {

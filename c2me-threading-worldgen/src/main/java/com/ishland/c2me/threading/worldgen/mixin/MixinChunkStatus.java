@@ -51,13 +51,11 @@ public abstract class MixinChunkStatus implements IChunkStatus {
     private int taskMargin;
 
     @Shadow
-    @Final
-    private String id;
-
-    @Shadow
     public static List<ChunkStatus> createOrderedList() {
         throw new AbstractMethodError();
     }
+
+    @Shadow public abstract String toString();
 
     private int reducedTaskRadius = -1;
 
@@ -102,7 +100,7 @@ public abstract class MixinChunkStatus implements IChunkStatus {
         final ChunkStatus thiz = (ChunkStatus) (Object) this;
         final Chunk targetChunk = list.get(list.size() / 2);
 
-        Finishable finishable = FlightProfiler.INSTANCE.startChunkGenerationProfiling(targetChunk.getPos(), world.getRegistryKey(), this.id);
+        Finishable finishable = FlightProfiler.INSTANCE.startChunkGenerationProfiling(targetChunk.getPos(), world.getRegistryKey(), this.toString());
 
         final Supplier<CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>>> generationTask = () -> {
             try {

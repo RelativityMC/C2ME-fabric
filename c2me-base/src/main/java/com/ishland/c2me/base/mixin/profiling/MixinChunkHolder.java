@@ -31,7 +31,7 @@ public abstract class MixinChunkHolder {
     @Inject(method = "getChunkAt", at = @At("RETURN"))
     private void postGetChunkAt(ChunkStatus targetStatus, ThreadedAnvilChunkStorage chunkStorage, CallbackInfoReturnable<CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>>> cir) {
         if (FlightProfiler.INSTANCE instanceof IVanillaJfrProfiler profiler && this.world instanceof ServerWorld serverWorld && !cir.getReturnValue().isDone()) {
-            final Finishable finishable = profiler.startChunkLoadSchedule(this.getPos(), serverWorld.getRegistryKey(), targetStatus.getId());
+            final Finishable finishable = profiler.startChunkLoadSchedule(this.getPos(), serverWorld.getRegistryKey(), targetStatus.toString());
             if (finishable != null) {
                 cir.getReturnValue().exceptionally(unused -> null).thenRun(finishable::finish);
             }
