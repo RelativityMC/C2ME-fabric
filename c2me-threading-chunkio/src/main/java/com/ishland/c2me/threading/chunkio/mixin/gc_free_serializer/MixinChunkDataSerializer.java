@@ -1,6 +1,6 @@
 package com.ishland.c2me.threading.chunkio.mixin.gc_free_serializer;
 
-import com.ishland.c2me.opts.chunk_serializer.common.ChunkDataSerializer;
+import com.ishland.c2me.rewrites.chunk_serializer.common.ChunkDataSerializer;
 import com.ishland.c2me.threading.chunkio.common.AsyncSerializationManager;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.nbt.NbtCompound;

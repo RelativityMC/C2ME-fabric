@@ -5,8 +5,9 @@ import com.ishland.c2me.base.common.GlobalExecutors;
 import com.ishland.c2me.base.common.theinterface.IDirectStorage;
 import com.ishland.c2me.base.common.util.SneakyThrow;
 import com.ishland.c2me.base.mixin.access.IVersionedChunkStorage;
-import com.ishland.c2me.opts.chunk_serializer.common.ChunkDataSerializer;
-import com.ishland.c2me.opts.chunk_serializer.common.NbtWriter;
+import com.ishland.c2me.rewrites.chunk_serializer.ModuleEntryPoint;
+import com.ishland.c2me.rewrites.chunk_serializer.common.ChunkDataSerializer;
+import com.ishland.c2me.rewrites.chunk_serializer.common.NbtWriter;
 import com.ishland.c2me.threading.chunkio.common.AsyncSerializationManager;
 import com.ishland.c2me.threading.chunkio.common.BlendingInfoUtil;
 import com.ishland.c2me.threading.chunkio.common.ChunkIoMainThreadTaskUtils;
@@ -357,7 +358,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
                                     }
                                     AsyncSerializationManager.push(scope);
                                     try {
-                                        if (com.ishland.c2me.opts.chunk_serializer.ModuleEntryPoint.enabled) {
+                                        if (ModuleEntryPoint.enabled) {
 //                                            System.out.println("Saving chunk %s async with gc free serializer".formatted(chunkPos));
                                             NbtWriter nbtWriter = new NbtWriter();
                                             nbtWriter.start(NbtElement.COMPOUND_TYPE);

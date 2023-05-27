@@ -1,26 +1,23 @@
 {
   "schemaVersion": 1,
-  "id": "c2me-threading-chunkio",
+  "id": "c2me-rewrites-chunk-serializer",
   "version": "${version}",
-  "name": "Concurrent Chunk Management Engine (Threading/WorldGen)",
-  "description": "Async chunk loading & unloading module",
+  "name": "Concurrent Chunk Management Engine (Rewrites/Chunk Serializer)",
+  "description": "Optimizations related to chunk serialization",
   "environment": "*",
   "mixins": [
-    "c2me-threading-chunkio.mixins.json"
+    "c2me-rewrites-chunk-serializer.mixins.json"
   ],
   "depends": {
     "minecraft": "*",
     "fabricloader": "*",
-    "c2me-base": "*",
-    "c2me-fixes-general-threading-issues": "*",
-    "c2me-fixes-worldgen-threading-issues": "*",
-    "c2me-fixes-worldgen-vanilla-bugs": "*",
-    "c2me-rewrites-chunk-serializer": "*"
+    "c2me-base": "*"
   },
+  "accessWidener": "c2me-rewrites-chunk-serializer.accesswidener",
 
   "authors": [
     "RelativityMC",
-    "ishland"
+    "Kroppeb"
   ],
   "contact": {
     "sources": "https://github.com/RelativityMC/C2ME-fabric",

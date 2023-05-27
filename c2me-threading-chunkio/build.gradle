@@ -1,5 +1,5 @@
 moduleDependencies(project, [
         "c2me-base",
-        "c2me-opts-chunk-serializer"
+        "c2me-rewrites-chunk-serializer"
 ])
 
