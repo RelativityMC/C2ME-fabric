@@ -9,6 +9,7 @@ import com.ibm.asyncutil.locks.FairAsyncSemaphore;
 import com.ishland.c2me.tests.testmod.mixin.IServerChunkManager;
 import com.ishland.c2me.tests.testmod.mixin.IThreadedAnvilChunkStorage;
 import com.mojang.datafixers.util.Pair;
+import io.netty.util.concurrent.ThreadPerTaskExecutor;
 import net.minecraft.registry.Registry;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
@@ -21,7 +22,14 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.Unit;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.math.ChunkSectionPos;
+import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.world.WorldView;
 import net.minecraft.world.biome.Biome;
+import net.minecraft.world.biome.source.BiomeCoords;
+import net.minecraft.world.biome.source.BiomeSource;
+import net.minecraft.world.biome.source.util.MultiNoiseUtil;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.gen.structure.Structure;
 import org.apache.logging.log4j.LogManager;
@@ -38,8 +46,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.LockSupport;
@@ -88,19 +98,38 @@ public class PreGenTask {
         }
         System.err.printf("Submitting tasks\n");
 
-        final CompletableFuture<Void> biomeFuture = CompletableFuture.allOf(biomes.stream()
-                .map(biome -> CompletableFuture.runAsync(() -> {
-                    //noinspection OptionalGetWithoutIsPresent
-                    final Pair<BlockPos, RegistryEntry<Biome>> pair = world.locateBiome(entry -> biomeRegistry.getKey(biome.value()).get() == entry.getKey().get(), spawnPos, SEARCH_RADIUS, 8, 64);
-                    locatedBiomes.incrementAndGet();
-                    if (pair != null) {
-                        final ChunkPos chunkPos = new ChunkPos(pair.getFirst());
+//        final CompletableFuture<Void> biomeFuture = CompletableFuture.allOf(biomes.stream()
+//                .map(biome -> CompletableFuture.runAsync(() -> {
+//                    //noinspection OptionalGetWithoutIsPresent
+//                    final Pair<BlockPos, RegistryEntry<Biome>> pair = world.locateBiome(entry -> biomeRegistry.getKey(biome.value()).get() == entry.getKey().get(), spawnPos, SEARCH_RADIUS, 8, 64);
+//                    locatedBiomes.incrementAndGet();
+//                    if (pair != null) {
+//                        final ChunkPos chunkPos = new ChunkPos(pair.getFirst());
+//                        chunks.addAll(createPreGenChunks25(chunkPos, chunksHashed::add));
+//                        LOGGER.info("Located biome {}", biomeRegistry.getId(biome.value()));
+//                        return;
+//                    }
+//                    LOGGER.info("Unable to locate biome {}", biomeRegistry.getId(biome.value()));
+//                }, EXECUTOR)).distinct().toArray(CompletableFuture[]::new));
+        final CompletableFuture<Void> biomeFuture = CompletableFuture.runAsync(() -> {
+            Set<RegistryEntry<Biome>> biomesToLocate = Sets.newConcurrentHashSet(biomes);
+            locateAllTheBiomes(world.getChunkManager().getChunkGenerator().getBiomeSource(), spawnPos, SEARCH_RADIUS, 8, 64, new LocateCallback() {
+                @Override
+                public void consume(RegistryEntry<Biome> biome, int x, int y, int z) {
+                    if (biomesToLocate.remove(biome)) {
+                        final ChunkPos chunkPos = new ChunkPos(ChunkSectionPos.getSectionCoord(x), ChunkSectionPos.getSectionCoord(z));
                         chunks.addAll(createPreGenChunks25(chunkPos, chunksHashed::add));
                         LOGGER.info("Located biome {}", biomeRegistry.getId(biome.value()));
-                        return;
+                        locatedBiomes.incrementAndGet();
                     }
-                    LOGGER.info("Unable to locate biome {}", biomeRegistry.getId(biome.value()));
-                }, EXECUTOR)).distinct().toArray(CompletableFuture[]::new));
+                }
+
+                @Override
+                public boolean shouldStop() {
+                    return biomesToLocate.isEmpty();
+                }
+            }, world.getChunkManager().getNoiseConfig().getMultiNoiseSampler(), world, EXECUTOR);
+        }, new ThreadPerTaskExecutor(Thread::new));
         final CompletableFuture<Void> structureFuture = CompletableFuture.allOf(structureFeatures.stream()
                 .map(structureFeature -> CompletableFuture.runAsync(() -> {
                     final Pair<BlockPos, RegistryEntry<Structure>> pair = world.getChunkManager().getChunkGenerator().locateStructure(world, structureFeature, spawnPos, SEARCH_RADIUS / 16, false);
@@ -235,6 +264,49 @@ public class PreGenTask {
         return future;
     }
 
+    private static void locateAllTheBiomes(
+            BiomeSource source,
+            BlockPos origin,
+            int radius,
+            int horizontalBlockCheckInterval,
+            int verticalBlockCheckInterval,
+            LocateCallback locateCallback,
+            MultiNoiseUtil.MultiNoiseSampler noiseSampler,
+            WorldView world,
+            Executor executor
+    ) {
+        int i = Math.floorDiv(radius, horizontalBlockCheckInterval);
+        int[] is = MathHelper.stream(origin.getY(), world.getBottomY() + 1, world.getTopY(), verticalBlockCheckInterval).toArray();
+
+        final int permits = Runtime.getRuntime().availableProcessors() * 4;
+        Semaphore semaphore = new Semaphore(permits);
+
+        for(BlockPos.Mutable mutable : BlockPos.iterateInSquare(BlockPos.ORIGIN, i, Direction.EAST, Direction.SOUTH)) {
+            int j = origin.getX() + mutable.getX() * horizontalBlockCheckInterval;
+            int k = origin.getZ() + mutable.getZ() * horizontalBlockCheckInterval;
+            int l = BiomeCoords.fromBlock(j);
+            int m = BiomeCoords.fromBlock(k);
+
+            semaphore.acquireUninterruptibly();
+            executor.execute(() -> {
+                try {
+                    for(int n : is) {
+                        int o = BiomeCoords.fromBlock(n);
+                        RegistryEntry<Biome> registryEntry = source.getBiome(l, o, m, noiseSampler);
+                        locateCallback.consume(registryEntry, j, n, k);
+                    }
+                } finally {
+                    semaphore.release();
+                }
+            });
+
+            if (locateCallback.shouldStop()) {
+                semaphore.acquireUninterruptibly(permits);
+                return;
+            }
+        }
+    }
+
     private static boolean isLocateStructureSlowAF(ServerWorld world) {
         final Registry<Structure> structureFeatureRegistry = world.getRegistryManager().get(RegistryKeys.STRUCTURE);
         final Set<RegistryEntry<Structure>> entries = structureFeatureRegistry.getEntrySet().stream()
@@ -261,6 +333,12 @@ public class PreGenTask {
         }
 
         return false;
+    }
+
+    private interface LocateCallback {
+        void consume(RegistryEntry<Biome> biome, int x, int y, int z);
+
+        boolean shouldStop();
     }
 
     public record ChunkGeneratedEventInfo(long generatedCount, long totalCount, ServerWorld world) {
