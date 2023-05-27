@@ -1,6 +1,6 @@
 package com.ishland.c2me.rewrites.chunk_serializer.common.utils;
 
-import com.ishland.c2me.rewrites.chunk_serializer.mixin.ChunkTickSchedulerAccessor;
+import com.ishland.c2me.base.mixin.access.IChunkTickScheduler;
 import it.unimi.dsi.fastutil.longs.Long2ReferenceAVLTreeMap;
 import net.minecraft.world.tick.ChunkTickScheduler;
 import net.minecraft.world.tick.OrderedTick;
@@ -28,7 +28,7 @@ public class LithiumUtil {
 
     public static final boolean IS_LITHIUM_TICK_QUEUE_ACTIVE = chunkTickScheduler$TickQueuesByTimeAndPriority != null;
 
-    public static <T> Collection<Collection<OrderedTick<T>>> getTickQueueCollection(ChunkTickSchedulerAccessor<T> accessor) {
+    public static <T> Collection<Collection<OrderedTick<T>>> getTickQueueCollection(IChunkTickScheduler<T> accessor) {
         try {
             //noinspection unchecked
             Long2ReferenceAVLTreeMap<Collection<OrderedTick<T>>> tickQueuesByTimeAndPriority =

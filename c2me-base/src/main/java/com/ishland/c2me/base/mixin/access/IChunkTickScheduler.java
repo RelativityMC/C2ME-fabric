@@ -1,4 +1,4 @@
-package com.ishland.c2me.rewrites.chunk_serializer.mixin;
+package com.ishland.c2me.base.mixin.access;
 
 import net.minecraft.world.tick.ChunkTickScheduler;
 import net.minecraft.world.tick.OrderedTick;
@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Queue;
 
 @Mixin(ChunkTickScheduler.class)
-public interface ChunkTickSchedulerAccessor<T> extends SerializableTickScheduler<T> {
+public interface IChunkTickScheduler<T> extends SerializableTickScheduler<T> {
     @Accessor
     @Nullable List<Tick<T>> getTicks();
 

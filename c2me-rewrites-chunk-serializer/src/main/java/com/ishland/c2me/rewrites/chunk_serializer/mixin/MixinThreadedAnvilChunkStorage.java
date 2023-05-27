@@ -1,6 +1,7 @@
 package com.ishland.c2me.rewrites.chunk_serializer.mixin;
 
 import com.ishland.c2me.base.common.theinterface.IDirectStorage;
+import com.ishland.c2me.base.mixin.access.IVersionedChunkStorage;
 import com.ishland.c2me.rewrites.chunk_serializer.common.ChunkDataSerializer;
 import com.ishland.c2me.rewrites.chunk_serializer.common.NbtWriter;
 import com.mojang.datafixers.DataFixer;
@@ -22,7 +23,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import java.nio.file.Path;
 
 @Mixin(ThreadedAnvilChunkStorage.class)
-public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStorage implements VersionedChunkStorageAccessor {
+public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStorage {
     @Final
     @Shadow
     private static Logger LOGGER;
@@ -96,7 +97,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
 //                    return Either.right(t);
 //                }
 //            });
-            ((IDirectStorage) this.getIoWorker()).setRawChunkData(chunkPos, nbtWriter.toByteArray());
+            ((IDirectStorage) ((IVersionedChunkStorage) this).getWorker()).setRawChunkData(chunkPos, nbtWriter.toByteArray());
             nbtWriter.release();
 
             //endregion end replaced code

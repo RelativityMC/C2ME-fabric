@@ -2,15 +2,15 @@ package com.ishland.c2me.rewrites.chunk_serializer.common;
 
 import com.ishland.c2me.rewrites.chunk_serializer.common.utils.LithiumUtil;
 import com.ishland.c2me.rewrites.chunk_serializer.common.utils.StarLightUtil;
-import com.ishland.c2me.rewrites.chunk_serializer.mixin.BelowZeroRetrogenAccessor;
-import com.ishland.c2me.rewrites.chunk_serializer.mixin.BlendingDataAccessor;
-import com.ishland.c2me.rewrites.chunk_serializer.mixin.ChunkSectionAccessor;
-import com.ishland.c2me.rewrites.chunk_serializer.mixin.ChunkTickSchedulerAccessor;
-import com.ishland.c2me.rewrites.chunk_serializer.mixin.SimpleTickSchedulerAccessor;
-import com.ishland.c2me.rewrites.chunk_serializer.mixin.StateAccessor;
-import com.ishland.c2me.rewrites.chunk_serializer.mixin.StructurePieceAccessor;
-import com.ishland.c2me.rewrites.chunk_serializer.mixin.StructureStartAccessor;
-import com.ishland.c2me.rewrites.chunk_serializer.mixin.UpgradeDataAccessor;
+import com.ishland.c2me.base.mixin.access.IBelowZeroRetrogen;
+import com.ishland.c2me.base.mixin.access.IBlendingData;
+import com.ishland.c2me.base.mixin.access.IChunkSection;
+import com.ishland.c2me.base.mixin.access.IChunkTickScheduler;
+import com.ishland.c2me.base.mixin.access.ISimpleTickScheduler;
+import com.ishland.c2me.base.mixin.access.IState;
+import com.ishland.c2me.base.mixin.access.IStructurePiece;
+import com.ishland.c2me.base.mixin.access.IStructureStart;
+import com.ishland.c2me.base.mixin.access.IUpgradeData;
 import com.mojang.serialization.Codec;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.shorts.ShortList;
@@ -177,7 +177,7 @@ public final class ChunkDataSerializer {
         if (blendingData != null) {
             // Inline codec
             writer.startCompound(STRING_BLENDING_DATA);
-            writeBlendingData(writer, (BlendingDataAccessor) blendingData);
+            writeBlendingData(writer, (IBlendingData) blendingData);
             writer.finishCompound();
         }
 
@@ -185,7 +185,7 @@ public final class ChunkDataSerializer {
         if (belowZeroRetrogen != null) {
             // Inline codec
             writer.startCompound(STRING_BELOW_ZERO_RETROGEN);
-            writeBelowZeroRetrogen(writer, (BelowZeroRetrogenAccessor) (Object) belowZeroRetrogen);
+            writeBelowZeroRetrogen(writer, (IBelowZeroRetrogen) (Object) belowZeroRetrogen);
             writer.finishCompound();
         }
 
@@ -193,7 +193,7 @@ public final class ChunkDataSerializer {
         if (!upgradeData.isDone()) {
             // Inline serialization
             writer.startCompound(STRING_UPGRADE_DATA);
-            writeUpgradeData(writer, (UpgradeDataAccessor) upgradeData);
+            writeUpgradeData(writer, (IUpgradeData) upgradeData);
             writer.finishCompound();
         }
 
@@ -203,7 +203,7 @@ public final class ChunkDataSerializer {
 
         checkLightFlag(chunk, writer, world);
 
-        writeSectionData(writer, chunk, chunkPos, (ChunkSectionAccessor[]) chunkSections, lightingProvider, biomeRegistry);
+        writeSectionData(writer, chunk, chunkPos, (IChunkSection[]) chunkSections, lightingProvider, biomeRegistry);
 
 
         long blockEntitiesStart = writer.startList(STRING_BLOCK_ENTITIES, NbtElement.COMPOUND_TYPE);
@@ -300,7 +300,7 @@ public final class ChunkDataSerializer {
             NbtWriter writer,
             Chunk chunk,
             ChunkPos chunkPos,
-            ChunkSectionAccessor[] chunkSections,
+            IChunkSection[] chunkSections,
             LightingProvider lightingProvider,
             Registry<Biome> biomeRegistry
     ) {
@@ -318,7 +318,7 @@ public final class ChunkDataSerializer {
             NbtWriter writer,
             Chunk chunk,
             ChunkPos chunkPos,
-            ChunkSectionAccessor[] chunkSections,
+            IChunkSection[] chunkSections,
             LightingProvider lightingProvider,
             Registry<Biome> biomeRegistry
     ) {
@@ -339,7 +339,7 @@ public final class ChunkDataSerializer {
                 if (bl2) {
                     hasInner = true;
                     writer.compoundEntryStart();
-                    ChunkSectionAccessor chunkSection = chunkSections[index];
+                    IChunkSection chunkSection = chunkSections[index];
 
                     writeBlockStates(writer, chunkSection.getBlockStateContainer());
                     writeBiomes(writer, chunkSection.getBiomeContainer(), biomeRegistry);
@@ -380,7 +380,7 @@ public final class ChunkDataSerializer {
             NbtWriter writer,
             Chunk chunk,
             ChunkPos chunkPos,
-            ChunkSectionAccessor[] chunkSections,
+            IChunkSection[] chunkSections,
             LightingProvider lightingProvider,
             Registry<Biome> biomeRegistry
     ) {
@@ -416,7 +416,7 @@ public final class ChunkDataSerializer {
                 if (bl2) {
                     hasInner = true;
                     writer.compoundEntryStart();
-                    ChunkSectionAccessor chunkSection = chunkSections[index];
+                    IChunkSection chunkSection = chunkSections[index];
 
                     writeBlockStates(writer, chunkSection.getBlockStateContainer());
                     writeBiomes(writer, chunkSection.getBiomeContainer(), biomeRegistry);
@@ -496,7 +496,7 @@ public final class ChunkDataSerializer {
             writer.putRegistry(STRING_NAME, Registries.BLOCK, paletteEntry.getBlock());
             if (!paletteEntry.getEntries().isEmpty()) {
                 // TODO: optimize this
-                writer.putElement(STRING_PROPERTIES, ((StateAccessor<BlockState>) paletteEntry).getCodec().codec()
+                writer.putElement(STRING_PROPERTIES, ((IState<BlockState>) paletteEntry).getCodec().codec()
                         .encodeStart(NbtOps.INSTANCE, paletteEntry)
                         .getOrThrow(false, LOGGER::error));
             }
@@ -545,7 +545,7 @@ public final class ChunkDataSerializer {
     /**
      * mirror of {@link BlendingData#CODEC}
      */
-    private static void writeBlendingData(NbtWriter writer, BlendingDataAccessor blendingData) {
+    private static void writeBlendingData(NbtWriter writer, IBlendingData blendingData) {
         writer.putInt(STRING_MIN_SECTION, blendingData.getOldHeightLimit().getBottomSectionCoord());
         writer.putInt(STRING_MAX_SECTION, blendingData.getOldHeightLimit().getTopSectionCoord());
 
@@ -564,7 +564,7 @@ public final class ChunkDataSerializer {
     /**
      * mirror of {@link BelowZeroRetrogen#CODEC}
      */
-    private static void writeBelowZeroRetrogen(NbtWriter writer, BelowZeroRetrogenAccessor belowZeroRetrogen) {
+    private static void writeBelowZeroRetrogen(NbtWriter writer, IBelowZeroRetrogen belowZeroRetrogen) {
         writer.putRegistry(STRING_TARGET_STATUS, Registries.CHUNK_STATUS, belowZeroRetrogen.invokeGetTargetStatus());
 
         BitSet missingBedrock = belowZeroRetrogen.getMissingBedrock();
@@ -574,7 +574,7 @@ public final class ChunkDataSerializer {
     }
 
 
-    private static void writeUpgradeData(NbtWriter writer, UpgradeDataAccessor upgradeData) {
+    private static void writeUpgradeData(NbtWriter writer, IUpgradeData upgradeData) {
         long indicesStart = -1;
         int indicesCount = 0;
 
@@ -647,18 +647,18 @@ public final class ChunkDataSerializer {
             DefaultedRegistry<T> reg,
             byte[] key
     ) {
-        if (scheduler instanceof SimpleTickSchedulerAccessor<T> simpleTickSchedulerAccessor) {
+        if (scheduler instanceof ISimpleTickScheduler<T> simpleTickSchedulerAccessor) {
             final List<Tick<T>> scheduledTicks = simpleTickSchedulerAccessor.getScheduledTicks();
             writer.startFixedList(key, scheduledTicks.size(), NbtElement.COMPOUND_TYPE);
             for (Tick<T> scheduledTick : scheduledTicks) {
                 writeTick(writer, scheduledTick, reg);
             }
-        } else if (scheduler instanceof ChunkTickSchedulerAccessor<T> chunkTickSchedulerAccessor) {
+        } else if (scheduler instanceof IChunkTickScheduler<T> chunkTickSchedulerAccess) {
 
             int size = 0;
             long list = writer.startList(key, NbtElement.COMPOUND_TYPE);
 
-            final @Nullable List<Tick<T>> scheduledTicks = chunkTickSchedulerAccessor.getTicks();
+            final @Nullable List<Tick<T>> scheduledTicks = chunkTickSchedulerAccess.getTicks();
 
             if (scheduledTicks != null) {
                 size += scheduledTicks.size();
@@ -669,7 +669,7 @@ public final class ChunkDataSerializer {
             }
 
             if (LithiumUtil.IS_LITHIUM_TICK_QUEUE_ACTIVE) {
-                final Collection<Collection<OrderedTick<T>>> tickQueues = LithiumUtil.getTickQueueCollection(chunkTickSchedulerAccessor);
+                final Collection<Collection<OrderedTick<T>>> tickQueues = LithiumUtil.getTickQueueCollection(chunkTickSchedulerAccess);
 
                 for (Collection<OrderedTick<T>> tickQueue : tickQueues) {
                     size += tickQueue.size();
@@ -678,7 +678,7 @@ public final class ChunkDataSerializer {
                     }
                 }
             } else {
-                final Collection<OrderedTick<T>> tickQueue = chunkTickSchedulerAccessor.getTickQueue();
+                final Collection<OrderedTick<T>> tickQueue = chunkTickSchedulerAccess.getTickQueue();
                 size += tickQueue.size();
 
                 for (OrderedTick<T> orderedTick : tickQueue) {
@@ -743,7 +743,7 @@ public final class ChunkDataSerializer {
 
         for (var entry : starts.entrySet()) {
             writer.startCompound(NbtWriter.getNameBytesFromRegistry(configuredStructureFeatureRegistry, entry.getKey()));
-            StructureStartAccessor value = cast(entry.getValue());
+            IStructureStart value = cast(entry.getValue());
             writeStructureStart(writer, value, context, pos);
             writer.finishCompound();
         }
@@ -767,7 +767,7 @@ public final class ChunkDataSerializer {
      * <p>
      * section mirror of {@link StructurePiecesList#toNbt(StructureContext)}
      */
-    private static void writeStructureStart(NbtWriter writer, StructureStartAccessor structureStart, StructureContext context, ChunkPos pos) {
+    private static void writeStructureStart(NbtWriter writer, IStructureStart structureStart, StructureContext context, ChunkPos pos) {
         final StructurePiecesList children = structureStart.getChildren();
         if (children.isEmpty()) {
             writer.putString(STRING_ID, STRING_INVALID);
@@ -788,7 +788,7 @@ public final class ChunkDataSerializer {
     }
 
     @SuppressWarnings("unused")
-    private static void writeStructurePiece(NbtWriter writer, StructurePieceAccessor structurePiece, StructureContext context) {
+    private static void writeStructurePiece(NbtWriter writer, IStructurePiece structurePiece, StructureContext context) {
         writer.compoundEntryStart();
         writer.putRegistry(STRING_ID, Registries.STRUCTURE_PIECE, structurePiece.getType());
 

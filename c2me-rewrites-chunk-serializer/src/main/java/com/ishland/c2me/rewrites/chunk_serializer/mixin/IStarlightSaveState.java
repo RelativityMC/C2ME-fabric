@@ -6,7 +6,7 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Pseudo
 @Mixin(remap = false, targets = "ca.spottedleaf.starlight.common.light.SWMRNibbleArray$SaveState")
-public interface SaveStateAccessor {
+public interface IStarlightSaveState {
     @Accessor(remap = false)
     byte[] getData();
 

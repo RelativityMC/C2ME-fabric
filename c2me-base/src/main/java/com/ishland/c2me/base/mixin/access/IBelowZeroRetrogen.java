@@ -1,4 +1,4 @@
-package com.ishland.c2me.rewrites.chunk_serializer.mixin;
+package com.ishland.c2me.base.mixin.access;
 
 import net.minecraft.world.chunk.BelowZeroRetrogen;
 import net.minecraft.world.chunk.ChunkStatus;
@@ -10,7 +10,7 @@ import java.util.BitSet;
 
 
 @Mixin(value = BelowZeroRetrogen.class)
-public interface BelowZeroRetrogenAccessor {
+public interface IBelowZeroRetrogen {
     @Accessor
     BitSet getMissingBedrock();
 

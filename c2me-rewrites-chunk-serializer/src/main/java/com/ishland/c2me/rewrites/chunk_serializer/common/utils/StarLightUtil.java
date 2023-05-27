@@ -1,6 +1,6 @@
 package com.ishland.c2me.rewrites.chunk_serializer.common.utils;
 
-import com.ishland.c2me.rewrites.chunk_serializer.mixin.SaveStateAccessor;
+import com.ishland.c2me.rewrites.chunk_serializer.mixin.IStarlightSaveState;
 import net.minecraft.world.chunk.Chunk;
 
 import java.lang.invoke.MethodHandle;
@@ -51,9 +51,9 @@ public class StarLightUtil {
         }
     }
 
-    public static SaveStateAccessor getSaveState(Object nibbleArray) {
+    public static IStarlightSaveState getSaveState(Object nibbleArray) {
         try {
-            return (SaveStateAccessor) getSaveState.invoke(nibbleArray);
+            return (IStarlightSaveState) getSaveState.invoke(nibbleArray);
         } catch (Throwable e) {
             throw new RuntimeException(e);
         }

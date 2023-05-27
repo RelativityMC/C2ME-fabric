@@ -1,4 +1,4 @@
-package com.ishland.c2me.rewrites.chunk_serializer.mixin;
+package com.ishland.c2me.base.mixin.access;
 
 import net.minecraft.structure.StructurePiece;
 import net.minecraft.structure.StructurePieceType;
@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(StructurePiece.class)
-public interface StructurePieceAccessor {
+public interface IStructurePiece {
 
     @Accessor
     StructurePieceType getType();

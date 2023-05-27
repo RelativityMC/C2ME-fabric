@@ -4,23 +4,11 @@
   "package": "com.ishland.c2me.rewrites.chunk_serializer.mixin",
   "plugin": "com.ishland.c2me.base.common.ModuleMixinPlugin",
   "mixins": [
-    "BelowZeroRetrogenAccessor",
-    "BlendingDataAccessor",
-    "ChunkSectionAccessor",
     "ChunkStatusMixin",
-    "ChunkTickSchedulerAccessor",
     "GenerationStepCarverMixin",
     "HeightMapTypeMixin",
-    "MixinThreadedAnvilChunkStorage",
-    "SimpleTickSchedulerAccessor",
-    "RegionBasedStorageAccessor",
-    "StateAccessor",
-    "StorageIoWorkerAccessor",
-    "StructurePieceAccessor",
-    "StructureStartAccessor",
-    "UpgradeDataAccessor",
-    "VersionedChunkStorageAccessor",
     "IdentifierMixin",
-    "SaveStateAccessor"
+    "IStarlightSaveState",
+    "MixinThreadedAnvilChunkStorage"
   ]
 }

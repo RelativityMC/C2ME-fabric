@@ -1,4 +1,4 @@
-package com.ishland.c2me.rewrites.chunk_serializer.mixin;
+package com.ishland.c2me.base.mixin.access;
 
 import net.minecraft.util.math.EightWayDirection;
 import net.minecraft.world.chunk.UpgradeData;
@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 import java.util.EnumSet;
 
 @Mixin(UpgradeData.class)
-public interface UpgradeDataAccessor {
+public interface IUpgradeData {
     @Accessor
     int[][] getCenterIndicesToUpgrade();
 

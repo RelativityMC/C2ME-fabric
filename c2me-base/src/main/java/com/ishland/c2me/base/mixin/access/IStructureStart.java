@@ -1,4 +1,4 @@
-package com.ishland.c2me.rewrites.chunk_serializer.mixin;
+package com.ishland.c2me.base.mixin.access;
 
 import net.minecraft.structure.StructurePiecesList;
 import net.minecraft.structure.StructureStart;
@@ -7,7 +7,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(StructureStart.class)
-public interface StructureStartAccessor {
+public interface IStructureStart {
     @Accessor
     Structure getStructure();
 
