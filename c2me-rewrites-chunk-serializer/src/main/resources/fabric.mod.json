@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "id": "c2me-rewrites-chunk-serializer",
+  "version": "${version}",
+  "name": "Concurrent Chunk Management Engine (Rewrites/Chunk Serializer)",
+  "description": "Optimizations related to chunk serialization",
+  "environment": "*",
+  "mixins": [
+    "c2me-rewrites-chunk-serializer.mixins.json"
+  ],
+  "entrypoints": {
+    "main": [
+      "com.ishland.c2me.rewrites.chunk_serializer.TheMod"
+    ]
+  },
+  "depends": {
+    "minecraft": "*",
+    "fabricloader": "*",
+    "c2me-base": "*"
+  },
+  "accessWidener": "c2me-rewrites-chunk-serializer.accesswidener",
+
+  "authors": [
+    "RelativityMC",
+    "Kroppeb"
+  ],
+  "contact": {
+    "sources": "https://github.com/RelativityMC/C2ME-fabric",
+    "issues": "https://github.com/RelativityMC/C2ME-fabric/issues",
+    "discord": "https://discord.io/ishlandbukkit",
+    "homepage": "https://modrinth.com/mod/c2me-fabric"
+  },
+  "license": "MIT",
+  "custom": {
+    "modmenu": {
+      "parent": "c2me"
+    }
+  }
+}
