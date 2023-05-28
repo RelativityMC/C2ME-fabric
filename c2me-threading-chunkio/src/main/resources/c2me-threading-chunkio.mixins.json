@@ -10,6 +10,7 @@
     "MixinProtoChunk",
     "MixinSerializingRegionBasedStorage",
     "MixinStorageIoWorker",
-    "MixinThreadedAnvilChunkStorage"
+    "MixinThreadedAnvilChunkStorage",
+    "gc_free_serializer.MixinChunkDataSerializer"
   ]
 }

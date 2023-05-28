@@ -2,7 +2,10 @@ package com.ishland.c2me.threading.chunkio.mixin;
 
 import com.ibm.asyncutil.locks.AsyncNamedLock;
 import com.ishland.c2me.base.common.GlobalExecutors;
+import com.ishland.c2me.base.common.registry.SerializerAccess;
+import com.ishland.c2me.base.common.theinterface.IDirectStorage;
 import com.ishland.c2me.base.common.util.SneakyThrow;
+import com.ishland.c2me.base.mixin.access.IVersionedChunkStorage;
 import com.ishland.c2me.threading.chunkio.common.AsyncSerializationManager;
 import com.ishland.c2me.threading.chunkio.common.BlendingInfoUtil;
 import com.ishland.c2me.threading.chunkio.common.ChunkIoMainThreadTaskUtils;
@@ -352,12 +355,18 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
                                     }
                                     AsyncSerializationManager.push(scope);
                                     try {
-                                        return ChunkSerializer.serialize(this.world, chunk);
+                                        return SerializerAccess.getSerializer().serialize(world, chunk);
                                     } finally {
                                         AsyncSerializationManager.pop(scope);
                                     }
                                 }, GlobalExecutors.executor)
-                                .thenAccept(compoundTag -> this.setNbt(chunkPos, compoundTag))
+                                .thenAccept((either) -> {
+                                    if (either.left().isPresent()) {
+                                        this.setNbt(chunkPos, either.left().get());
+                                    } else {
+                                        ((IDirectStorage) ((IVersionedChunkStorage) this).getWorker()).setRawChunkData(chunkPos, either.right().get());
+                                    }
+                                })
                                 .handle((unused, throwable) -> {
                                     lockToken.releaseLock();
                                     if (throwable != null) {
