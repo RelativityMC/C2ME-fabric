@@ -2,12 +2,10 @@ package com.ishland.c2me.threading.chunkio.mixin;
 
 import com.ibm.asyncutil.locks.AsyncNamedLock;
 import com.ishland.c2me.base.common.GlobalExecutors;
+import com.ishland.c2me.base.common.registry.SerializerAccess;
 import com.ishland.c2me.base.common.theinterface.IDirectStorage;
 import com.ishland.c2me.base.common.util.SneakyThrow;
 import com.ishland.c2me.base.mixin.access.IVersionedChunkStorage;
-import com.ishland.c2me.rewrites.chunk_serializer.ModuleEntryPoint;
-import com.ishland.c2me.rewrites.chunk_serializer.common.ChunkDataSerializer;
-import com.ishland.c2me.rewrites.chunk_serializer.common.NbtWriter;
 import com.ishland.c2me.threading.chunkio.common.AsyncSerializationManager;
 import com.ishland.c2me.threading.chunkio.common.BlendingInfoUtil;
 import com.ishland.c2me.threading.chunkio.common.ChunkIoMainThreadTaskUtils;
@@ -24,7 +22,6 @@ import it.unimi.dsi.fastutil.longs.Long2ByteMaps;
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
 import net.minecraft.SharedConstants;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;
@@ -358,18 +355,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
                                     }
                                     AsyncSerializationManager.push(scope);
                                     try {
-                                        if (ModuleEntryPoint.enabled) {
-//                                            System.out.println("Saving chunk %s async with gc free serializer".formatted(chunkPos));
-                                            NbtWriter nbtWriter = new NbtWriter();
-                                            nbtWriter.start(NbtElement.COMPOUND_TYPE);
-                                            ChunkDataSerializer.write(this.world, chunk, nbtWriter);
-                                            nbtWriter.finishCompound();
-                                            final byte[] data = nbtWriter.toByteArray();
-                                            nbtWriter.release();
-                                            return com.ibm.asyncutil.util.Either.<NbtCompound, byte[]>right(data);
-                                        } else {
-                                            return com.ibm.asyncutil.util.Either.<NbtCompound, byte[]>left(ChunkSerializer.serialize(this.world, chunk));
-                                        }
+                                        return SerializerAccess.getSerializer().serialize(world, chunk);
                                     } finally {
                                         AsyncSerializationManager.pop(scope);
                                     }

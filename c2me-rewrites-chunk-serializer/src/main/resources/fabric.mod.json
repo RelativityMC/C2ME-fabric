@@ -8,6 +8,11 @@
   "mixins": [
     "c2me-rewrites-chunk-serializer.mixins.json"
   ],
+  "entrypoints": {
+    "main": [
+      "com.ishland.c2me.rewrites.chunk_serializer.TheMod"
+    ]
+  },
   "depends": {
     "minecraft": "*",
     "fabricloader": "*",
