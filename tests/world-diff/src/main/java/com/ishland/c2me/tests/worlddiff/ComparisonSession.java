@@ -44,6 +44,7 @@ import net.minecraft.util.Util;
 import net.minecraft.util.WorldSavePath;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.ChunkSectionPos;
+import net.minecraft.util.path.SymlinkValidationException;
 import net.minecraft.world.ChunkSerializer;
 import net.minecraft.world.SaveProperties;
 import net.minecraft.world.World;
@@ -258,7 +259,12 @@ public class ComparisonSession implements Closeable {
 
     private static WorldHandle getWorldHandle(File worldFolder, String description) throws IOException, TimeoutException {
         final LevelStorage levelStorage = LevelStorage.create(worldFolder.toPath());
-        final LevelStorage.Session session = levelStorage.createSession(worldFolder.getAbsolutePath());
+        final LevelStorage.Session session;
+        try {
+            session = levelStorage.createSession(worldFolder.getAbsolutePath());
+        } catch (SymlinkValidationException e) {
+            throw new IOException(e);
+        }
 
         System.out.printf("Reading world data for %s\n", description);
         ResourcePackManager resourcePackManager = new ResourcePackManager(
