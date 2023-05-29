@@ -9,14 +9,16 @@ import net.minecraft.nbt.NbtElement;
 public class TheMod implements net.fabricmc.api.ModInitializer {
     @Override
     public void onInitialize() {
-        SerializerAccess.registerSerializer((world, chunk) -> {
-            NbtWriter nbtWriter = new NbtWriter();
-            nbtWriter.start(NbtElement.COMPOUND_TYPE);
-            ChunkDataSerializer.write(world, chunk, nbtWriter);
-            nbtWriter.finishCompound();
-            final byte[] data = nbtWriter.toByteArray();
-            nbtWriter.release();
-            return Either.right(data);
-        });
+        if (ModuleEntryPoint.enabled) {
+            SerializerAccess.registerSerializer((world, chunk) -> {
+                NbtWriter nbtWriter = new NbtWriter();
+                nbtWriter.start(NbtElement.COMPOUND_TYPE);
+                ChunkDataSerializer.write(world, chunk, nbtWriter);
+                nbtWriter.finishCompound();
+                final byte[] data = nbtWriter.toByteArray();
+                nbtWriter.release();
+                return Either.right(data);
+            });
+        }
     }
 }
