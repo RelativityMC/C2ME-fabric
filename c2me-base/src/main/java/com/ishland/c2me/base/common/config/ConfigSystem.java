@@ -119,17 +119,21 @@ public class ConfigSystem {
             findModDefinedIncompatibility();
             final String systemPropertyOverride = getSystemPropertyOverride();
             final Object configured = systemPropertyOverride != null ? systemPropertyOverride : CONFIG.get(this.key);
-            boolean isDefaultValue = false;
+            boolean isDefaultValue;
             if (configured != null) {
                 if (String.valueOf(configured).equals("default")) { // default placeholder
                     isDefaultValue = true;
                 } else if (!(configured instanceof Number)) { // try to fix config
                     try {
                         CONFIG.set(this.key, Long.valueOf(String.valueOf(configured)));
+                        isDefaultValue = false;
                     } catch (NumberFormatException e) {
                         LOGGER.warn("Invalid configured value: {} -> {}", this.key, configured);
                         CONFIG.remove(this.key);
+                        isDefaultValue = true;
                     }
+                } else {
+                    isDefaultValue = false;
                 }
             } else {
                 isDefaultValue = true;
@@ -158,17 +162,21 @@ public class ConfigSystem {
             findModDefinedIncompatibility();
             final String systemPropertyOverride = getSystemPropertyOverride();
             final Object configured = systemPropertyOverride != null ? systemPropertyOverride : CONFIG.get(this.key);
-            boolean isDefaultValue = false;
+            boolean isDefaultValue;
             if (configured != null) {
                 if (String.valueOf(configured).equals("default")) { // default placeholder
                     isDefaultValue = true;
                 } else if (!(configured instanceof Boolean)) { // try to fix config
                     try {
                         CONFIG.set(this.key, BooleanUtils.parseBoolean(String.valueOf(configured)));
+                        isDefaultValue = false;
                     } catch (BooleanUtils.BooleanFormatException e) {
                         LOGGER.warn("Invalid configured value: {} -> {}", this.key, configured);
                         CONFIG.remove(this.key);
+                        isDefaultValue = true;
                     }
+                } else {
+                    isDefaultValue = false;
                 }
             } else {
                 isDefaultValue = true;
@@ -182,16 +190,18 @@ public class ConfigSystem {
             findModDefinedIncompatibility();
             final String systemPropertyOverride = getSystemPropertyOverride();
             final Object configured = systemPropertyOverride != null ? systemPropertyOverride : CONFIG.get(this.key);
-            boolean isDefaultValue = false;
+            boolean isDefaultValue;
             if (configured != null) {
                 if (String.valueOf(configured).equals("default")) {
                     isDefaultValue = true;
                 } else {
                     try {
                         CONFIG.set(this.key, Enum.valueOf(enumClass, String.valueOf(configured)));
+                        isDefaultValue = false;
                     } catch (IllegalArgumentException e) {
                         LOGGER.warn("Invalid configured value: {} -> {}", this.key, configured);
                         CONFIG.remove(this.key);
+                        isDefaultValue = true;
                     }
                 }
             } else {
@@ -206,12 +216,15 @@ public class ConfigSystem {
             findModDefinedIncompatibility();
             final String systemPropertyOverride = getSystemPropertyOverride();
             final Object configured = systemPropertyOverride != null ? systemPropertyOverride : CONFIG.get(this.key);
-            boolean isDefaultValue = false;
+            boolean isDefaultValue;
             if (configured != null) {
                 if (String.valueOf(configured).equals("default")) { // default placeholder
                     isDefaultValue = true;
                 } else if (!(configured instanceof String)) { // try to fix config
                     CONFIG.set(this.key, String.valueOf(configured));
+                    isDefaultValue = false;
+                } else {
+                    isDefaultValue = false;
                 }
             } else {
                 isDefaultValue = true;
