@@ -20,6 +20,9 @@
   "entrypoints": {
     "main": [
       "com.ishland.c2me.C2MEMod"
+    ],
+    "preLaunch": [
+      "com.ishland.c2me.PreLaunchHandler"
     ]
   },
   "depends": {
