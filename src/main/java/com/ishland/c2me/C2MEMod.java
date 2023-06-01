@@ -7,7 +7,6 @@ import net.minecraft.util.math.random.LocalRandom;
 import net.minecraft.world.storage.ChunkStreamVersion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spongepowered.asm.mixin.MixinEnvironment;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -26,9 +25,6 @@ public class C2MEMod implements ModInitializer {
 
     @Override
     public void onInitialize() {
-        if (Boolean.getBoolean("com.ishland.c2me.mixin.doAudit")) {
-            MixinEnvironment.getCurrentEnvironment().audit();
-        }
         if (Boolean.getBoolean("com.ishland.c2me.runCompressionBenchmark")) {
             LOGGER.info("Benchmarking chunk stream speed");
             LOGGER.info("Warming up");
