@@ -17,7 +17,8 @@ public class MixinPlugin extends ModuleMixinPlugin {
             return !FabricLoader.getInstance().isModLoaded("lithium");
 
         if (mixinClassName.startsWith("com.ishland.c2me.opts.allocs.mixin.surfacebuilder.")) {
-            return !FabricLoader.getInstance().isModLoaded("quilted_fabric_api");
+            return !FabricLoader.getInstance().isModLoaded("quilted_fabric_api") &&
+                   !FabricLoader.getInstance().isModLoaded("frozenlib");
         }
 
         return true;
