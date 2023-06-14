@@ -21,7 +21,6 @@ import org.slf4j.Logger;
 
 import java.util.Comparator;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Function;
 
 public class PlayerNoTickDistanceMap extends ChunkPosDistanceLevelPropagator {
 
@@ -124,8 +123,8 @@ public class PlayerNoTickDistanceMap extends ChunkPosDistanceLevelPropagator {
             final ChunkPos pos = this.pendingTicketAdds.dequeue();
             if (pos == null) break;
             if (this.managedChunkTickets.add(pos.toLong())) {
-                this.addTicket0(pos);
-                this.chunkLoadFutures.add(getChunkLoadFuture(tacs, pos));
+                final CompletableFuture<Void> ticketFuture = this.addTicket0(pos);
+                this.chunkLoadFutures.add(getChunkLoadFuture(tacs, pos, ticketFuture));
                 hasUpdates = true;
             }
         }
@@ -135,23 +134,23 @@ public class PlayerNoTickDistanceMap extends ChunkPosDistanceLevelPropagator {
     }
 
     private void removeTicket0(ChunkPos pos) {
-        this.noTickSystem.noThreadScheduler.execute(() -> this.chunkTicketManager.removeTicketWithLevel(TICKET_TYPE, pos, 33, pos));
+        this.noTickSystem.mainBeforeTicketTicks.add(() -> this.chunkTicketManager.removeTicketWithLevel(TICKET_TYPE, pos, 33, pos));
     }
 
-    private void addTicket0(ChunkPos pos) {
-        this.noTickSystem.noThreadScheduler.execute(() -> this.chunkTicketManager.addTicketWithLevel(TICKET_TYPE, pos, 33, pos));
+    private CompletableFuture<Void> addTicket0(ChunkPos pos) {
+        return CompletableFuture.runAsync(() -> this.chunkTicketManager.addTicketWithLevel(TICKET_TYPE, pos, 33, pos), this.noTickSystem.mainBeforeTicketTicks::add);
     }
 
-    private CompletableFuture<Void> getChunkLoadFuture(ThreadedAnvilChunkStorage tacs, ChunkPos pos) {
-        final CompletableFuture<Void> future = CompletableFuture.supplyAsync(() -> {
+    private CompletableFuture<Void> getChunkLoadFuture(ThreadedAnvilChunkStorage tacs, ChunkPos pos, CompletableFuture<Void> ticketFuture) {
+        final CompletableFuture<Void> future = ticketFuture.thenComposeAsync(unused -> {
             final ChunkHolder holder = ((IThreadedAnvilChunkStorage) tacs).getCurrentChunkHolders().get(pos.toLong());
             if (holder == null) {
-                return CompletableFuture.completedFuture((Void) null);
+                return CompletableFuture.completedFuture(null);
             } else {
-                return holder.getAccessibleFuture().exceptionally(unused -> null).thenAccept(unused -> {
+                return holder.getAccessibleFuture().exceptionally(unused1 -> null).thenAccept(unused1 -> {
                 });
             }
-        }, this.noTickSystem.noThreadScheduler).thenCompose(Function.identity());
+        }, this.noTickSystem.mainAfterTicketTicks::add);
         future.thenRunAsync(() -> {
             this.chunkLoadFutures.remove(future);
             final boolean hasUpdates = this.runPendingTicketUpdatesInternal(tacs);

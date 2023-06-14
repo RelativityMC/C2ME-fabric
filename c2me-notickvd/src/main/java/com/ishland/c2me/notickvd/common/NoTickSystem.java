@@ -21,7 +21,9 @@ public class NoTickSystem {
     private final NormalTicketDistanceMap normalTicketDistanceMap;
     private final ChunkTicketManager chunkTicketManager;
 
-    private final ConcurrentLinkedQueue<Runnable> pendingActions = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<Runnable> pendingActionsOnScheduler = new ConcurrentLinkedQueue<>();
+    final ConcurrentLinkedQueue<Runnable> mainBeforeTicketTicks = new ConcurrentLinkedQueue<>();
+    final ConcurrentLinkedQueue<Runnable> mainAfterTicketTicks = new ConcurrentLinkedQueue<>();
 
     final NoThreadScheduler noThreadScheduler = new NoThreadScheduler();
 
@@ -38,27 +40,35 @@ public class NoTickSystem {
     }
 
     public void onTicketAdded(long position, ChunkTicket<?> ticket) {
-        this.pendingActions.add(() -> this.normalTicketDistanceMap.addTicket(position, ticket));
+        this.pendingActionsOnScheduler.add(() -> this.normalTicketDistanceMap.addTicket(position, ticket));
     }
 
     public void onTicketRemoved(long position, ChunkTicket<?> ticket) {
-        this.pendingActions.add(() -> this.normalTicketDistanceMap.removeTicket(position, ticket));
+        this.pendingActionsOnScheduler.add(() -> this.normalTicketDistanceMap.removeTicket(position, ticket));
     }
 
     public void addPlayerSource(ChunkPos chunkPos) {
-        this.pendingActions.add(() -> this.playerNoTickDistanceMap.addSource(chunkPos));
+        this.pendingActionsOnScheduler.add(() -> this.playerNoTickDistanceMap.addSource(chunkPos));
     }
 
     public void removePlayerSource(ChunkPos chunkPos) {
-        this.pendingActions.add(() -> this.playerNoTickDistanceMap.removeSource(chunkPos));
+        this.pendingActionsOnScheduler.add(() -> this.playerNoTickDistanceMap.removeSource(chunkPos));
     }
 
     public void setNoTickViewDistance(int viewDistance) {
-        this.pendingActions.add(() -> this.playerNoTickDistanceMap.setViewDistance(viewDistance));
+        this.pendingActionsOnScheduler.add(() -> this.playerNoTickDistanceMap.setViewDistance(viewDistance));
     }
 
     public void tickScheduler() {
         this.noThreadScheduler.tick(Throwable::printStackTrace);
+    }
+
+    public void beforeTicketTicks() {
+        drainQueue(this.mainBeforeTicketTicks);
+    }
+
+    public void afterTicketTicks() {
+        drainQueue(this.mainAfterTicketTicks);
     }
 
     public void tick(ThreadedAnvilChunkStorage tacs) {
@@ -69,14 +79,7 @@ public class NoTickSystem {
     private void scheduleTick(ThreadedAnvilChunkStorage tacs) {
         if (this.isTicking.compareAndSet(false, true))
             executor.execute(() -> {
-                Runnable runnable;
-                while ((runnable = this.pendingActions.poll()) != null) {
-                    try {
-                        runnable.run();
-                    } catch (Throwable t) {
-                        t.printStackTrace();
-                    }
-                }
+                drainQueue(this.pendingActionsOnScheduler);
 
                 boolean hasNoTickTicketUpdates;
                 if (pendingPurge) {
@@ -103,6 +106,17 @@ public class NoTickSystem {
                 this.isTicking.set(false);
                 if (hasNormalTicketUpdates || hasNoTickUpdates) scheduleTick(tacs); // run more tasks
             });
+    }
+
+    private void drainQueue(ConcurrentLinkedQueue<Runnable> queue) {
+        Runnable runnable;
+        while ((runnable = queue.poll()) != null) {
+            try {
+                runnable.run();
+            } catch (Throwable t) {
+                t.printStackTrace();
+            }
+        }
     }
 
     public void runPurge(long age) {
