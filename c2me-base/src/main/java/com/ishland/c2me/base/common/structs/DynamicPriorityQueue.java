@@ -1,8 +1,8 @@
 package com.ishland.c2me.base.common.structs;
 
-import it.unimi.dsi.fastutil.objects.Reference2IntMap;
-import it.unimi.dsi.fastutil.objects.Reference2IntOpenHashMap;
-import it.unimi.dsi.fastutil.objects.ReferenceLinkedOpenHashSet;
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet;
 
 /**
  * A priority queue with fixed number of priorities and allows changing priorities of elements.
@@ -12,16 +12,16 @@ import it.unimi.dsi.fastutil.objects.ReferenceLinkedOpenHashSet;
  */
 public class DynamicPriorityQueue<E> {
 
-    private final ReferenceLinkedOpenHashSet<E>[] priorities;
-    private final Reference2IntMap<E> priorityMap = new Reference2IntOpenHashMap<>();
+    private final ObjectLinkedOpenHashSet<E>[] priorities;
+    private final Object2IntMap<E> priorityMap = new Object2IntOpenHashMap<>();
 
     private int currentMinPriority = 0;
 
     public DynamicPriorityQueue(int priorityCount) {
         //noinspection unchecked
-        this.priorities = new ReferenceLinkedOpenHashSet[priorityCount];
+        this.priorities = new ObjectLinkedOpenHashSet[priorityCount];
         for (int i = 0; i < priorityCount; i++) {
-            this.priorities[i] = new ReferenceLinkedOpenHashSet<>();
+            this.priorities[i] = new ObjectLinkedOpenHashSet<>();
         }
     }
 
@@ -54,7 +54,7 @@ public class DynamicPriorityQueue<E> {
 
     public E dequeue() {
         while (currentMinPriority < priorities.length) {
-            ReferenceLinkedOpenHashSet<E> priority = this.priorities[currentMinPriority];
+            ObjectLinkedOpenHashSet<E> priority = this.priorities[currentMinPriority];
             if (priority.isEmpty()) {
                 currentMinPriority++;
                 continue;
