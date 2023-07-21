@@ -20,16 +20,12 @@ Although it is usable in most cases and tested during build time, it doesn't mea
 So backup your worlds and practice good game modding skills.
 
 ## Branch development status
-| Branch                     | Status                               |
-|----------------------------|--------------------------------------|
-| fabric/ver/1.19            | Active, Mainline                     |
-| fabric/ver/1.18            | Bugfixes only                        |
-| fabric/backport/ver/1.18.1 | Inactive                             |
-| fabric/ver/1.17            | Inactive                             |
-| fabric/ver/1.16.5          | Inactive                             |
-| forge/ver/1.16.5           | Partial[^forge_partial116], Inactive |
+| Branch            | Status                               |
+|-------------------|--------------------------------------|
+| fabric/ver/1.20.1 | Active, Mainline                     |
+| fabric/ver/1.19.4 | Bugfixes only                        |
+| fabric/ver/1.18   | Bugfixes only                        |
 
-[^forge_partial116]: Forge doesn't appear to support Java 16 on 1.16.5, so these versions uses Java 11 and may not contain some features which is present in the fabric versions.
 
 ## Downloads
 You can find semi-stable releases here: https://github.com/RelativityMC/C2ME-fabric/releases  
