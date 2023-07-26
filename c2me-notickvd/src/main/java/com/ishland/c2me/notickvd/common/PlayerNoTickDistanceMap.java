@@ -68,6 +68,7 @@ public class PlayerNoTickDistanceMap extends ChunkPosDistanceLevelPropagator {
             }
         } else {
             if (!this.distanceFromNearestPlayer.containsKey(chunkPos)) {
+                pendingTicketRemoves.remove(chunkPos);
                 pendingTicketAdds.enqueue(new ChunkPos(chunkPos), level);
             }
             pendingTicketAdds.changePriority(new ChunkPos(chunkPos), level);

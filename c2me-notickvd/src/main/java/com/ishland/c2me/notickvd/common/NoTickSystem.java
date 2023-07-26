@@ -11,6 +11,8 @@ import net.minecraft.server.world.ThreadedAnvilChunkStorage;
 import net.minecraft.util.math.ChunkPos;
 import org.threadly.concurrent.NoThreadScheduler;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -77,9 +79,22 @@ public class NoTickSystem {
     }
 
     private void scheduleTick(ThreadedAnvilChunkStorage tacs) {
-        if (this.isTicking.compareAndSet(false, true))
+        if (this.isTicking.compareAndSet(false, true)) {
+            List<Runnable> tasks = new ArrayList<>(this.pendingActionsOnScheduler.size() + 3);
+            {
+                Runnable r;
+                while ((r = this.pendingActionsOnScheduler.poll()) != null) {
+                    tasks.add(r);
+                }
+            }
             executor.execute(() -> {
-                drainQueue(this.pendingActionsOnScheduler);
+                for (Runnable task : tasks) {
+                    try {
+                        task.run();
+                    } catch (Throwable t) {
+                        t.printStackTrace();
+                    }
+                }
 
                 boolean hasNoTickTicketUpdates;
                 if (pendingPurge) {
@@ -106,6 +121,7 @@ public class NoTickSystem {
                 this.isTicking.set(false);
                 if (hasNormalTicketUpdates || hasNoTickUpdates) scheduleTick(tacs); // run more tasks
             });
+        }
     }
 
     private void drainQueue(ConcurrentLinkedQueue<Runnable> queue) {
