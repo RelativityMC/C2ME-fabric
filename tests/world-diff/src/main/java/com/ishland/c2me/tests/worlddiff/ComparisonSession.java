@@ -44,6 +44,7 @@ import net.minecraft.util.Util;
 import net.minecraft.util.WorldSavePath;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.ChunkSectionPos;
+import net.minecraft.util.path.SymlinkFinder;
 import net.minecraft.util.path.SymlinkValidationException;
 import net.minecraft.world.ChunkSerializer;
 import net.minecraft.world.SaveProperties;
@@ -268,8 +269,8 @@ public class ComparisonSession implements Closeable {
 
         System.out.printf("Reading world data for %s\n", description);
         ResourcePackManager resourcePackManager = new ResourcePackManager(
-                new VanillaDataPackProvider(),
-                new FileResourcePackProvider(session.getDirectory(WorldSavePath.DATAPACKS), ResourceType.SERVER_DATA, ResourcePackSource.WORLD)
+                new VanillaDataPackProvider(new SymlinkFinder(path -> true)),
+                new FileResourcePackProvider(session.getDirectory(WorldSavePath.DATAPACKS), ResourceType.SERVER_DATA, ResourcePackSource.WORLD, new SymlinkFinder(path -> true))
         );
 
         SaveLoader saveLoader;

@@ -1,7 +1,7 @@
 plugins {
     id 'java-library'
     id 'fabric-loom' version '1.2-SNAPSHOT' apply false
-    id 'io.github.juuxel.loom-quiltflower' version '1.+' apply false
+    id 'io.github.juuxel.loom-vineflower' version '1.+' apply false
     id "me.champeau.jmh" version "0.7.1"
     id 'com.modrinth.minotaur' version '2.+' apply false
     id 'com.matthewprenger.cursegradle' version '1.4.0' apply false

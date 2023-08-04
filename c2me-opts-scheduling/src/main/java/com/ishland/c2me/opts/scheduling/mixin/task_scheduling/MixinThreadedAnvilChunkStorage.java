@@ -11,6 +11,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
 import java.util.concurrent.CompletableFuture;
@@ -90,17 +91,21 @@ public class MixinThreadedAnvilChunkStorage implements IThreadedAnvilChunkStorag
     }
 
     // private synthetic method_19486(Lnet/minecraft/server/world/ChunkHolder;Ljava/lang/Runnable;)V
-    /**
-     * TODO second lambda expression of makeChunkTickable
-     *
-     * @author ishland
-     * @reason reduce scheduling overhead with mainInvokingExecutor
-     */
-    @SuppressWarnings("OverwriteTarget")
-    @Dynamic
-    @Overwrite
-    private void method_19486(ChunkHolder holder, Runnable runnable) {
-        this.mainInvokingExecutor.execute(runnable);
+//    /**
+//     * TODO second lambda expression of makeChunkTickable
+//     *
+//     * @author ishland
+//     * @reason reduce scheduling overhead with mainInvokingExecutor
+//     */
+//    @SuppressWarnings("OverwriteTarget")
+//    @Dynamic
+//    @Overwrite
+//    private void method_19486(ChunkHolder holder, Runnable runnable) {
+//        this.mainInvokingExecutor.execute(runnable);
+//    }
+    @ModifyArg(method = "makeChunkTickable", at = @At(value = "INVOKE", target = "Ljava/util/concurrent/CompletableFuture;thenApplyAsync(Ljava/util/function/Function;Ljava/util/concurrent/Executor;)Ljava/util/concurrent/CompletableFuture;"))
+    private Executor redirectMainThreadExecutor2(Executor executor) {
+        return this.mainInvokingExecutor;
     }
 
     // private synthetic method_20579(Lnet/minecraft/server/world/ChunkHolder;Ljava/lang/Runnable;)V

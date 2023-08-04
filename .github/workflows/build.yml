@@ -37,7 +37,7 @@ jobs:
 
     - name: upload to modrinth and curseforge
       run: ./gradlew modrinth curseforge
-      if: github.ref == 'refs/heads/ver/1.20.1'
+      if: github.ref == 'refs/heads/ver/1.20.2'
       env:
         MODRINTH_TOKEN: ${{ secrets.MODRINTH_UPLOAD_TOKEN }}
         CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_API_TOKEN }}
