@@ -219,7 +219,7 @@ public class C2MEStorageThread extends Thread {
                                         NbtIo.scan(input, scanner);
                                         return null;
                                     } else {
-                                        final NbtCompound compound = NbtIo.read(input);
+                                        final NbtCompound compound = NbtIo.readCompound(input);
                                         return compound;
                                     }
                                 } catch (IOException e) {
@@ -285,7 +285,7 @@ public class C2MEStorageThread extends Thread {
                             NbtIo.scan(inputStream, scanner);
                             return null;
                         } else {
-                            return NbtIo.read(inputStream);
+                            return NbtIo.readCompound(inputStream);
                         }
                     }
                 } catch (Throwable t) {

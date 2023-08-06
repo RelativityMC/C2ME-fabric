@@ -4,7 +4,7 @@ import com.ishland.c2me.base.mixin.access.IServerChunkManager;
 import com.ishland.c2me.notickvd.common.Config;
 import com.ishland.c2me.notickvd.common.IChunkHolder;
 import com.ishland.c2me.notickvd.common.IChunkTicketManager;
-import com.ishland.c2me.notickvd.common.NoTickChunkSendingInterceptor;
+import com.llamalad7.mixinextras.injector.WrapWithCondition;
 import com.mojang.datafixers.util.Either;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ChunkHolder;
@@ -19,7 +19,6 @@ import org.spongepowered.asm.mixin.Dynamic;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
@@ -38,17 +37,14 @@ public abstract class MixinThreadedAnvilChunkStorage {
 
     @Shadow @Final private PlayerChunkWatchingManager playerChunkWatchingManager;
 
-    @Shadow
-    protected static void method_52348(ServerPlayerEntity serverPlayerEntity, WorldChunk worldChunk) {
-        throw new AbstractMethodError();
-    }
+    @Shadow protected abstract void sendToPlayers(WorldChunk chunk);
 
     @ModifyArg(method = "setViewDistance", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/MathHelper;clamp(III)I"), index = 2)
     private int modifyMaxVD(int max) {
         return 251;
     }
 
-    @Redirect(method = "method_52353", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ChunkHolder;getWorldChunk()Lnet/minecraft/world/chunk/WorldChunk;"))
+    @Redirect(method = "getWorldChunk", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ChunkHolder;getWorldChunk()Lnet/minecraft/world/chunk/WorldChunk;"))
     private WorldChunk redirectSendWatchPacketsGetWorldChunk(ChunkHolder chunkHolder) {
         return ((IChunkHolder) chunkHolder).getAccessibleChunk();
     }
@@ -57,9 +53,9 @@ public abstract class MixinThreadedAnvilChunkStorage {
     private void onMakeChunkAccessible(ChunkHolder chunkHolder, CallbackInfoReturnable<CompletableFuture<Either<WorldChunk, ChunkHolder.Unloaded>>> cir) {
         cir.getReturnValue().thenAccept(either -> either.left().ifPresent(worldChunk -> {
             if (Config.compatibilityMode) {
-                this.mainThreadExecutor.send(() -> c2me$interceptedChunkSending(worldChunk));
+                this.mainThreadExecutor.send(() -> this.sendToPlayers(worldChunk));
             } else {
-                c2me$interceptedChunkSending(worldChunk);
+                this.sendToPlayers(worldChunk);
             }
         }));
     }
@@ -75,22 +71,9 @@ public abstract class MixinThreadedAnvilChunkStorage {
 //            this.sendChunkDataPackets(player, mutableObject, worldChunk);
 //    }
 
-    @Redirect(method = "method_18711", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ThreadedAnvilChunkStorage;method_52349(Lnet/minecraft/world/chunk/WorldChunk;)V"))
-    private void controlDuplicateChunkSending(ThreadedAnvilChunkStorage instance, WorldChunk worldChunk) {
-        if (!Config.ensureChunkCorrectness) return;
-
-        c2me$interceptedChunkSending(worldChunk);
-    }
-
-    @Unique
-    private void c2me$interceptedChunkSending(WorldChunk worldChunk) {
-        ChunkPos chunkPos = worldChunk.getPos();
-
-        for(ServerPlayerEntity serverPlayerEntity : this.playerChunkWatchingManager.getPlayersWatchingChunk()) {
-            if (serverPlayerEntity.method_52372().method_52361(chunkPos) && NoTickChunkSendingInterceptor.onChunkSending(serverPlayerEntity, worldChunk.getPos().toLong())) {
-                method_52348(serverPlayerEntity, worldChunk);
-            }
-        }
+    @WrapWithCondition(method = "method_18711", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ThreadedAnvilChunkStorage;sendToPlayers(Lnet/minecraft/world/chunk/WorldChunk;)V"))
+    private boolean controlDuplicateChunkSending(ThreadedAnvilChunkStorage instance, WorldChunk worldChunk) {
+        return Config.ensureChunkCorrectness;
     }
 
     // private static synthetic method_20582(Lnet/minecraft/world/chunk/Chunk;)Z
