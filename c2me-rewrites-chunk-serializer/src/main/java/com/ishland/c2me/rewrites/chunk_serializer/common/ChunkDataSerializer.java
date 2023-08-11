@@ -496,7 +496,7 @@ public final class ChunkDataSerializer {
             writer.putRegistry(STRING_NAME, Registries.BLOCK, paletteEntry.getBlock());
             if (!paletteEntry.getEntries().isEmpty()) {
                 // TODO: optimize this
-                writer.putElement(STRING_PROPERTIES, ((IState<BlockState>) paletteEntry).getCodec().codec()
+                writer.putElement(STRING_PROPERTIES, BlockState.CODEC
                         .encodeStart(NbtOps.INSTANCE, paletteEntry)
                         .getOrThrow(false, LOGGER::error));
             }
