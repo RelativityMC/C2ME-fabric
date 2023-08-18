@@ -14,6 +14,7 @@
     "c2me-base": "*",
     "c2me-fixes-general-threading-issues": "*"
   },
+  "accessWidener": "c2me-threading-lighting.accesswidener",
 
   "authors": [
     "RelativityMC",

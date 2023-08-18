@@ -2,3 +2,20 @@ moduleDependencies(project, [
         "c2me-base",
 ])
 
+repositories {
+    exclusiveContent {
+        forRepository {
+            maven {
+                name = "Modrinth"
+                url = "https://api.modrinth.com/maven"
+            }
+        }
+        filter {
+            includeGroup "maven.modrinth"
+        }
+    }
+}
+
+dependencies {
+    modCompileOnly "maven.modrinth:starlight:1.1.2+1.20"
+}

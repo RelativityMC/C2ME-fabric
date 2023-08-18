@@ -4,6 +4,7 @@ import com.ishland.c2me.base.common.scheduler.ThreadLocalWorldGenSchedulingState
 import com.ishland.c2me.base.common.util.SneakyThrow;
 import com.ishland.c2me.base.mixin.access.IThreadedAnvilChunkStorage;
 import com.ishland.c2me.opts.chunk_access.common.CurrentWorldGenState;
+import com.ishland.c2me.base.common.scheduler.NeighborLockingUtils;
 import com.ishland.c2me.threading.worldgen.common.ChunkStatusUtils;
 import com.ishland.c2me.threading.worldgen.common.Config;
 import com.ishland.c2me.threading.worldgen.common.IChunkStatus;
@@ -63,18 +64,22 @@ public abstract class MixinChunkStatus implements IChunkStatus {
         if (this.taskMargin == 0) {
             this.reducedTaskRadius = 0;
         } else {
-            for (int i = 0; i <= this.taskMargin; i++) {
-                final ChunkStatus status = ChunkStatus.byDistanceFromFull(ChunkStatus.getDistanceFromFull((ChunkStatus) (Object) this) + i); // TODO [VanillaCopy] from TACS getRequiredStatusForGeneration
-                if (status.getIndex() <= ChunkStatus.BIOMES.getIndex()) {
-                    this.reducedTaskRadius = Math.min(this.taskMargin, Math.max(0, i - 1));
-                    break;
+            if ((Object) this == ChunkStatus.LIGHT) {
+                this.reducedTaskRadius = this.taskMargin;
+            } else {
+                for (int i = 0; i <= this.taskMargin; i++) {
+                    final ChunkStatus status = ChunkStatus.byDistanceFromFull(ChunkStatus.getDistanceFromFull((ChunkStatus) (Object) this) + i); // TODO [VanillaCopy] from TACS getRequiredStatusForGeneration
+                    if (status.getIndex() <= ChunkStatus.BIOMES.getIndex()) {
+                        this.reducedTaskRadius = Math.min(this.taskMargin, Math.max(0, i - 1));
+                        break;
+                    }
                 }
             }
         }
-        //noinspection ConstantConditions
-        if ((Object) this == ChunkStatus.LIGHT) {
-            this.reducedTaskRadius = 1;
-        }
+//        //noinspection ConstantConditions
+//        if ((Object) this == ChunkStatus.LIGHT) {
+//            this.reducedTaskRadius = 1;
+//        }
         System.out.printf("%s task radius: %d -> %d%n", this, this.taskMargin, this.reducedTaskRadius);
     }
 
@@ -118,21 +123,20 @@ public abstract class MixinChunkStatus implements IChunkStatus {
         } else {
             final ChunkHolder holder = ThreadLocalWorldGenSchedulingState.getChunkHolder();
             final ThreadedAnvilChunkStorage tacs = world.getChunkManager().threadedAnvilChunkStorage;
-            if (holder != null && ChunkStatusUtils.isCancelled(holder, thiz)) {
+            if (holder != null && NeighborLockingUtils.isCancelled(holder, thiz)) {
                 completableFuture = ChunkHolder.UNLOADED_CHUNK_FUTURE;
                 ((IThreadedAnvilChunkStorage) tacs).invokeReleaseLightTicket(targetChunk.getPos()); // vanilla behavior
 //                System.out.println(String.format("%s: %s is already done or cancelled, skipping generation", this, targetChunk.getPos()));
             } else {
                 int lockRadius = Config.reduceLockRadius && this.reducedTaskRadius != -1 ? this.reducedTaskRadius : this.taskMargin;
                 //noinspection ConstantConditions
-                completableFuture = ChunkStatusUtils.runChunkGenWithLock(
+                completableFuture = NeighborLockingUtils.runChunkGenWithLock(
                                 targetChunk.getPos(),
                                 thiz,
                                 holder,
                                 lockRadius,
                                 ((IVanillaChunkManager) tacs).c2me$getSchedulingManager(),
                         (Object) this == ChunkStatus.LIGHT, // lighting is async so don't hold the slot TODO make this check less dirty
-                                ((IWorldGenLockable) world).getWorldGenChunkLock(),
                                 () -> ChunkStatusUtils.getThreadingType(thiz).runTask(((IWorldGenLockable) world).getWorldGenSingleThreadedLock(), generationTask))
                         .exceptionally(t -> {
                             Throwable actual = t;
