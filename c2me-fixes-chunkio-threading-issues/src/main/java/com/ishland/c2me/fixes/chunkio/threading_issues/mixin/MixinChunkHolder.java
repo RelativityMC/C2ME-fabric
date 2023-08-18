@@ -13,7 +13,7 @@ import java.util.concurrent.Executor;
 @Mixin(ChunkHolder.class)
 public class MixinChunkHolder {
 
-    @Inject(method = "tick", at = @At("HEAD"))
+    @Inject(method = "updateFutures", at = @At("HEAD"))
     private void beforeTick(ThreadedAnvilChunkStorage chunkStorage, Executor executor, CallbackInfo ci) {
         ((IThreadedAnvilChunkStorage) chunkStorage).invokeUpdateHolderMap();
     }

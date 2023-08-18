@@ -56,12 +56,12 @@ public class MixinChunkTicketManager implements IChunkTicketManager {
         this.noTickSystem.runPurge(this.age);
     }
 
-    @Inject(method = "tick", at = @At("HEAD"))
+    @Inject(method = "update", at = @At("HEAD"))
     private void beforeTick(ThreadedAnvilChunkStorage chunkStorage, CallbackInfoReturnable<Boolean> cir) {
         this.noTickSystem.beforeTicketTicks();
     }
 
-    @Inject(method = "tick", at = @At("RETURN"))
+    @Inject(method = "update", at = @At("RETURN"))
     private void onTick(ThreadedAnvilChunkStorage chunkStorage, CallbackInfoReturnable<Boolean> cir) {
         if (this.simulationDistanceTracker instanceof NoOPTickingMap map) {
             map.setTACS(chunkStorage);

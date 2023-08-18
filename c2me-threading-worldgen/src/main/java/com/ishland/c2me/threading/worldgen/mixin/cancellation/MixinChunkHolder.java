@@ -22,7 +22,7 @@ public abstract class MixinChunkHolder {
 
     @Shadow @Final public static Either<Chunk, ChunkHolder.Unloaded> UNLOADED_CHUNK;
 
-//    @Redirect(method = "tick", at = @At(value = "INVOKE", target = "Ljava/util/concurrent/atomic/AtomicReferenceArray;get(I)Ljava/lang/Object;"))
+//    @Redirect(method = "updateChunks", at = @At(value = "INVOKE", target = "Ljava/util/concurrent/atomic/AtomicReferenceArray;get(I)Ljava/lang/Object;"))
 //    private <E> E captureWorldGenCancellation(AtomicReferenceArray<E> instance, int i, ThreadedAnvilChunkStorage chunkStorage, Executor executor) {
 //        if (instance == this.futuresByStatus) {
 //            final CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> future = this.futuresByStatus.get(i);

@@ -12,7 +12,7 @@ import java.util.function.Consumer;
 public class MixinChunkTicketManager {
 
     @SuppressWarnings("unchecked")
-    @Redirect(method = "tick", at = @At(value = "INVOKE", target = "Ljava/util/Set;forEach(Ljava/util/function/Consumer;)V"))
+    @Redirect(method = "update", at = @At(value = "INVOKE", target = "Ljava/util/Set;forEach(Ljava/util/function/Consumer;)V"))
     private <T> void replaceIterationForHolderTicking(Set<T> instance, Consumer<T> consumer) {
         if (instance.isEmpty()) return;
         for (Object object : instance.toArray()) {

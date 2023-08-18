@@ -14,7 +14,7 @@ import java.util.concurrent.CompletableFuture;
 public interface IServerChunkManager {
 
     @Invoker
-    boolean invokeTick();
+    boolean invokeUpdateChunks();
 
     @Invoker
     CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> invokeGetChunkFuture(int chunkX, int chunkZ, ChunkStatus leastStatus, boolean create);

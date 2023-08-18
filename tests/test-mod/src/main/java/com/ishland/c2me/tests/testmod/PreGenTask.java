@@ -248,7 +248,7 @@ public class PreGenTask {
     private static CompletableFuture<Void> getChunkAtAsync(ServerWorld world, ChunkPos pos) {
         CompletableFuture<Void> future = new CompletableFuture<>();
         world.getChunkManager().addTicket(TICKET, pos, 0, Unit.INSTANCE);
-        ((IServerChunkManager) world.getChunkManager()).invokeTick();
+        ((IServerChunkManager) world.getChunkManager()).invokeUpdateChunks();
         final ChunkHolder chunkHolder = ((IThreadedAnvilChunkStorage) world.getChunkManager().threadedAnvilChunkStorage).invokeGetChunkHolder(pos.toLong());
         Preconditions.checkNotNull(chunkHolder, "chunkHolder is null");
         chunkHolder.getChunkAt(ChunkStatus.FULL, world.getChunkManager().threadedAnvilChunkStorage).thenAcceptAsync(either -> {

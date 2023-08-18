@@ -52,7 +52,7 @@ public abstract class MixinServerChunkManager {
     ServerWorld world;
 
     @Shadow
-    public abstract boolean tick();
+    public abstract boolean updateChunks();
 
     @Shadow @Final public ThreadedAnvilChunkStorage threadedAnvilChunkStorage;
     @Shadow @Final public ServerChunkManager.MainThreadExecutor mainThreadExecutor;
@@ -95,7 +95,7 @@ public abstract class MixinServerChunkManager {
                 if (this.isMissingForLevel(chunkHolder, ticketLevel)) {
                     Profiler profiler = this.world.getProfiler();
                     profiler.push("chunkLoad");
-                    this.tick();
+                    this.updateChunks();
                     chunkHolder = this.getChunkHolder(chunkPosLong);
                     profiler.pop();
                     if (this.isMissingForLevel(chunkHolder, ticketLevel)) {

@@ -16,6 +16,6 @@ public interface IServerChunkManager {
     ServerChunkManager.MainThreadExecutor getMainThreadExecutor();
 
     @Invoker
-    boolean invokeTick();
+    boolean invokeUpdateChunks();
 
 }

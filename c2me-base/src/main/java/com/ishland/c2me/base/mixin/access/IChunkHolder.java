@@ -11,6 +11,6 @@ import java.util.concurrent.Executor;
 public interface IChunkHolder {
 
     @Invoker
-    void invokeTick(ThreadedAnvilChunkStorage chunkStorage, Executor executor);
+    void invokeUpdateFutures(ThreadedAnvilChunkStorage chunkStorage, Executor executor);
 
 }
