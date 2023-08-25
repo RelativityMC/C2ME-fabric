@@ -162,7 +162,7 @@ public final class StarLightQueue {
                     if (this.scheduledChunks.get(taskSet.chunkPos) != null) throw new AssertionError();
                     final CompletableFuture<Void> future = NeighborLockingUtils.runChunkGenWithLock(
                             new ChunkPos(taskSet.chunkPos),
-                            ChunkStatus.LIGHT,
+                            ChunkStatus.FULL, // only used as a hint
                             null,
                             2,
                             schedulingManager,
