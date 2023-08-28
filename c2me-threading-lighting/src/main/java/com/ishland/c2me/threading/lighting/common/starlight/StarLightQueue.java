@@ -198,7 +198,11 @@ public final class StarLightQueue {
                 skyStarLightEngine = ((IStarLightInterface) (Object) this.manager).invokeGetSkyLightEngine();
                 blockStarLightEngine = ((IStarLightInterface) (Object) this.manager).invokeGetBlockLightEngine();
                 while ((taskSet = this.removeFirstTask()) != null) {
-                    this.handleUpdateInternal(skyStarLightEngine, blockStarLightEngine, taskSet);
+                    try {
+                        this.handleUpdateInternal(skyStarLightEngine, blockStarLightEngine, taskSet);
+                    } catch (Throwable t) {
+                        taskSet.onComplete.completeExceptionally(t);
+                    }
                 }
             } finally {
                 //noinspection ConstantValue
