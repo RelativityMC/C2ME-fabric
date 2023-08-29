@@ -1,10 +1,12 @@
 package com.ishland.c2me.threading.lighting.mixin.starlight;
 
 import net.minecraft.world.Heightmap;
+import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyArgs;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 
 import java.util.EnumSet;
@@ -25,6 +27,11 @@ public class MixinChunkStatus {
         if (id.equals("light")) {
             args.set(1, 2);
         }
+    }
+
+    @Redirect(method = "getInitializeLightingFuture", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/Chunk;refreshSurfaceY()V"))
+    private static void removeUnnecessaryInit(Chunk instance) {
+        // no-op
     }
 
 }

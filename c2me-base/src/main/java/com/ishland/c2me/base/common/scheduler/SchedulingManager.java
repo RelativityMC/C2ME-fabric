@@ -37,7 +37,9 @@ public class SchedulingManager {
     public void enqueue(ScheduledTask task) {
         this.executor.execute(() -> {
             if (task.isAsync()) {
-                schedule0(task);
+                if (task.tryPrepare()) {
+                    task.runTask(this::scheduleExecution);
+                }
             } else {
                 queue.enqueue(task, prioritiesFromLevel.get(task.centerPos()));
                 pos2Tasks.computeIfAbsent(task.centerPos(), unused -> new ObjectArraySet<>()).add(task);
