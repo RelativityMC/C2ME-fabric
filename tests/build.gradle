@@ -14,7 +14,7 @@ allprojects {
         // maven { url "https://nexus.resourcefulbees.com/repository/maven-public/" }
         maven { url "https://maven.terraformersmc.com/releases/" }
         maven { url "https://maven.shedaniel.me/" }
-        maven { url "https://ladysnake.jfrog.io/artifactory/mods/" }
+//        maven { url "https://ladysnake.jfrog.io/artifactory/mods/" }
         maven { url "https://jitpack.io" }
         maven {
             url "https://api.modrinth.com/maven/"

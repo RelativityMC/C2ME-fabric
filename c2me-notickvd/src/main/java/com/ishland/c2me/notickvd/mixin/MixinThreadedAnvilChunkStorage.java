@@ -37,14 +37,14 @@ public abstract class MixinThreadedAnvilChunkStorage {
 
     @Shadow @Final private PlayerChunkWatchingManager playerChunkWatchingManager;
 
-    @Shadow protected abstract void sendToPlayers(WorldChunk chunk);
+    @Shadow(aliases = "method_53686") protected abstract void sendToPlayers(WorldChunk chunk);
 
     @ModifyArg(method = "setViewDistance", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/MathHelper;clamp(III)I"), index = 2)
     private int modifyMaxVD(int max) {
         return 251;
     }
 
-    @Redirect(method = "getWorldChunk", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ChunkHolder;getWorldChunk()Lnet/minecraft/world/chunk/WorldChunk;"))
+    @Redirect(method = "method_53688", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ChunkHolder;method_53682()Lnet/minecraft/world/chunk/WorldChunk;"))
     private WorldChunk redirectSendWatchPacketsGetWorldChunk(ChunkHolder chunkHolder) {
         return ((IChunkHolder) chunkHolder).getAccessibleChunk();
     }
@@ -71,9 +71,14 @@ public abstract class MixinThreadedAnvilChunkStorage {
 //            this.sendChunkDataPackets(player, mutableObject, worldChunk);
 //    }
 
-    @WrapWithCondition(method = "method_18711", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ThreadedAnvilChunkStorage;sendToPlayers(Lnet/minecraft/world/chunk/WorldChunk;)V"))
+    @WrapWithCondition(method = "method_53684", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ThreadedAnvilChunkStorage;method_53686(Lnet/minecraft/world/chunk/WorldChunk;)V"))
     private boolean controlDuplicateChunkSending(ThreadedAnvilChunkStorage instance, WorldChunk worldChunk) {
         return Config.ensureChunkCorrectness;
+    }
+
+    @WrapWithCondition(method = "method_53687", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ThreadedAnvilChunkStorage;method_53686(Lnet/minecraft/world/chunk/WorldChunk;)V"))
+    private boolean controlDuplicateChunkSending1(ThreadedAnvilChunkStorage instance, WorldChunk worldChunk) {
+        return Config.ensureChunkCorrectness; // TODO config set to false unfixes MC-264947
     }
 
     // private static synthetic method_20582(Lnet/minecraft/world/chunk/Chunk;)Z
