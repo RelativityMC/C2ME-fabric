@@ -48,6 +48,7 @@ public class ModuleEntryPoint {
                     This option have no effect on client-side.
                     We has historically been doing this, and this config option allows you to disable this behavior.
                     """.indent(1))
+            .incompatibleMod("textile_backup", "*")
             .getBoolean(true, false);
 
     public static final int defaultParallelism;
