@@ -2,7 +2,7 @@
   "parent": "c2me.mixins.json",
   "required": true,
   "package": "com.ishland.c2me.base.mixin",
-  "plugin": "com.ishland.c2me.base.common.ModuleMixinPlugin",
+  "plugin": "com.ishland.c2me.base.TheMixinPlugin",
   "mixins": [
     "access.IAquiferSamplerFluidLevel",
     "access.IAtomicSimpleRandomDeriver",
