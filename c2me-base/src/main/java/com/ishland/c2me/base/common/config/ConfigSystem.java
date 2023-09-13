@@ -259,8 +259,12 @@ public class ConfigSystem {
 
         private void disableConfigWithReason(String reason) {
             incompatibilityReason.append("\n ").append(reason);
-            LOGGER.info("Disabling config {}: {}", this.key, reason);
-            this.incompatibilityDetected = true;
+            if (!Boolean.getBoolean("com.ishland.c2me.base.config.ignoreIncompatibility")) {
+                LOGGER.info("Disabling config {}: {}", this.key, reason);
+                this.incompatibilityDetected = true;
+            } else {
+                LOGGER.info("Compatibility issues ignored by system property: {}: {}", this.key, reason);
+            }
         }
 
         private void generateDefaultEntry(Object def, Object incompatibleDef) {
