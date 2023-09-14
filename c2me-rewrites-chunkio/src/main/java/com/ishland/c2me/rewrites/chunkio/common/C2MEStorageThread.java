@@ -217,7 +217,7 @@ public class C2MEStorageThread extends Thread {
                                 try {
                                     final DataInputStream input = new DataInputStream(new ByteArrayInputStream(cached.right().get()));
                                     if (scanner != null) {
-                                        NbtIo.scan(input, scanner, NbtTagSizeTracker.method_53898());
+                                        NbtIo.scan(input, scanner, NbtTagSizeTracker.ofUnlimitedBytes());
                                         return null;
                                     } else {
                                         final NbtCompound compound = NbtIo.readCompound(input);
@@ -283,7 +283,7 @@ public class C2MEStorageThread extends Thread {
                 try {
                     try (DataInputStream inputStream = chunkInputStream) {
                         if (scanner != null) {
-                            NbtIo.scan(inputStream, scanner, NbtTagSizeTracker.method_53898());
+                            NbtIo.scan(inputStream, scanner, NbtTagSizeTracker.ofUnlimitedBytes());
                             return null;
                         } else {
                             return NbtIo.readCompound(inputStream);
