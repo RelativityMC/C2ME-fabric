@@ -16,6 +16,7 @@ public final class ModuleEntryPoint {
                     Whether to use the fast reduced allocation chunk serializer
                     (may cause incompatibility with other mods)
                     """)
+            .incompatibleMod("architectury", "*")
             .getBoolean(false, false);
 
 }

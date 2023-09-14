@@ -46,8 +46,8 @@ public class ReflectionUtils {
     private static Field getReflectedField(ClassField clssfild) {
         try {
             return clssfild.clss.getField(clssfild.fild());
-        } catch (NoSuchFieldException e) {
-            e.printStackTrace();
+        } catch (NoSuchFieldException ignored) {
+
         }
         return null;
     }

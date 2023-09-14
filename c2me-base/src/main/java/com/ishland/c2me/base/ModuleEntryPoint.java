@@ -39,6 +39,18 @@ public class ModuleEntryPoint {
                     """.indent(1))
             .getString(DEFAULT_EXPRESSION, DEFAULT_EXPRESSION);
 
+    public static final boolean disableLoggingShutdownHook = new ConfigSystem.ConfigAccessor()
+            .key("fixes.disableLoggingShutdownHook")
+            .comment("""
+                    
+                    Whether to disable the shutdown hook of log4j2 on dedicated servers.
+                    Enabling this also makes the JVM exit when the dedicated server is considered fully shut down.
+                    This option have no effect on client-side.
+                    We has historically been doing this, and this config option allows you to disable this behavior.
+                    """.indent(1))
+            .incompatibleMod("textile_backup", "*")
+            .getBoolean(true, false);
+
     public static final int defaultParallelism;
 
     private static int tryEvaluateExpression(String expression) {
