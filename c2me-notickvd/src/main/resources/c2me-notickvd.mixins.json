@@ -9,6 +9,7 @@
     "MixinPlayerManager",
     "MixinServerChunkManager",
     "MixinThreadedAnvilChunkStorage",
-    "MixinWorld"
+    "MixinWorld",
+    "MixinWorldChunk"
   ]
 }
