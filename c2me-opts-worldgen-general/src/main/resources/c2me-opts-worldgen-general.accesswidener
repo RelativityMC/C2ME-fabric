@@ -1,9 +1,0 @@
-accessWidener v1 named
-
-accessible    field     net/minecraft/util/math/BlockPos                                    BIT_SHIFT_X         I
-accessible    field     net/minecraft/util/math/BlockPos                                    SIZE_BITS_X         I
-accessible    field     net/minecraft/util/math/BlockPos                                    BIT_SHIFT_Z         I
-accessible    field     net/minecraft/util/math/BlockPos                                    SIZE_BITS_Z         I
-accessible    field     net/minecraft/util/math/BlockPos                                    BITS_X              J
-accessible    field     net/minecraft/util/math/BlockPos                                    BITS_Y              J
-accessible    field     net/minecraft/util/math/BlockPos                                    BITS_Z              J

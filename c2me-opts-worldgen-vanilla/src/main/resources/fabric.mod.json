@@ -14,7 +14,6 @@
     "c2me-base": "*",
     "c2me-opts-worldgen-general": "*"
   },
-  "accessWidener": "c2me-opts-worldgen-vanilla.accesswidener",
 
   "authors": [
     "RelativityMC",

@@ -1,7 +1,0 @@
-accessWidener v1 named
-
-accessible    class    net/minecraft/world/storage/StorageIoWorker$Result
-
-extendable    class    net/minecraft/world/storage/RegionBasedStorage
-
-accessible    method    net/minecraft/world/storage/RegionBasedStorage                                 <init>              (Ljava/nio/file/Path;Z)V

@@ -1,7 +1,6 @@
 plugins {
     id 'java-library'
-    id 'fabric-loom' version '1.3-SNAPSHOT' apply false
-    id 'io.github.juuxel.loom-vineflower' version '1.+' apply false
+    id 'fabric-loom' version '1.4-SNAPSHOT' apply false
     id "me.champeau.jmh" version "0.7.1"
     id 'com.modrinth.minotaur' version '2.+' apply false
     id 'com.matthewprenger.cursegradle' version '1.4.0' apply false
@@ -41,7 +40,6 @@ configure (allprojects - project(":tests")) {
     if (project != project(":") && project.parent != project(":")) return
 
     apply plugin: 'fabric-loom'
-    apply plugin: 'io.github.juuxel.loom-quiltflower'
     apply plugin: 'maven-publish'
 
     repositories {
@@ -56,10 +54,9 @@ configure (allprojects - project(":tests")) {
     }
 
     loom {
-        def awFile = file("src/main/resources/${project.name}.accesswidener")
-        if (awFile.isFile()) {
-            accessWidenerPath = awFile
-        }
+        def file = project(":c2me-base").file("src/main/resources/c2me-base.accesswidener")
+        accessWidenerPath = file
+//        logger.lifecycle(String.format("%s: Using access widener at %s", project, file.getAbsolutePath()))
         runs {
             server {
                 ideConfigGenerated project.rootProject == project
@@ -131,7 +128,7 @@ subprojects {
     afterEvaluate {
         afterEvaluate {
             genSourcesWithFernFlower.enabled = false
-            genSourcesWithQuiltflower.enabled = false
+            genSourcesWithVineflower.enabled = false
             genSourcesWithCfr.enabled = false
             downloadAssets.enabled = false
         }

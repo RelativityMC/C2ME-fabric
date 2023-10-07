@@ -18,7 +18,6 @@
     "fabricloader": "*",
     "c2me-base": "*"
   },
-  "accessWidener": "c2me-rewrites-chunk-serializer.accesswidener",
 
   "authors": [
     "RelativityMC",

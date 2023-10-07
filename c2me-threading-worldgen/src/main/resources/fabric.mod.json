@@ -16,7 +16,6 @@
     "c2me-fixes-worldgen-threading-issues": "*",
     "c2me-fixes-worldgen-vanilla-bugs": "*"
   },
-  "accessWidener": "c2me-threading-worldgen.accesswidener",
 
   "authors": [
     "RelativityMC",

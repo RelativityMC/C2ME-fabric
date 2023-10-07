@@ -13,7 +13,6 @@
     "fabricloader": "*",
     "c2me-base": "*"
   },
-  "accessWidener": "c2me-opts-chunkio.accesswidener",
 
   "authors": [
     "RelativityMC",

@@ -1,7 +1,6 @@
 allprojects {
 //    apply plugin: 'com.ishland.curseforge.modpackresolver'
     apply plugin: 'fabric-loom'
-    apply plugin: 'io.github.juuxel.loom-quiltflower'
     apply plugin: 'java-library'
 
     sourceCompatibility = JavaVersion.VERSION_17
@@ -24,6 +23,9 @@ allprojects {
             url "https://www.cursemaven.com"
             content { includeGroup "curse.maven" }
         }
+    }
+    loom {
+        accessWidenerPath = project(":c2me-base").file("src/main/resources/c2me-base.accesswidener")
     }
     afterEvaluate {
         migrateMappings.configure {
