@@ -5,15 +5,13 @@ import com.ibm.asyncutil.locks.FairAsyncSemaphore;
 import com.ishland.c2me.tests.worlddiff.mixin.IChunkSerializer;
 import com.ishland.c2me.tests.worlddiff.mixin.IStorageIoWorker;
 import com.ishland.c2me.tests.worlddiff.mixin.IWorldUpdater;
-import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Codec;
-import com.mojang.serialization.DynamicOps;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.class_8895;
 import net.minecraft.datafixer.Schemas;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.registry.DynamicRegistryManager;
@@ -21,7 +19,6 @@ import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
-import net.minecraft.registry.RegistryOps;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.resource.DataConfiguration;
 import net.minecraft.resource.DataPackSettings;
@@ -56,7 +53,6 @@ import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.PalettedContainer;
 import net.minecraft.world.chunk.ReadableContainer;
 import net.minecraft.world.dimension.DimensionOptions;
-import net.minecraft.world.dimension.DimensionOptionsRegistryHolder;
 import net.minecraft.world.gen.structure.Structure;
 import net.minecraft.world.level.storage.LevelStorage;
 import net.minecraft.world.storage.StorageIoWorker;
@@ -283,12 +279,9 @@ public class ComparisonSession implements Closeable {
                                     serverConfig,
                                     arg -> {
                                         Registry<DimensionOptions> registry = arg.dimensionsRegistryManager().get(RegistryKeys.DIMENSION);
-                                        DynamicOps<NbtElement> dynamicOps = RegistryOps.of(NbtOps.INSTANCE, arg.worldGenRegistryManager());
-                                        Pair<SaveProperties, DimensionOptionsRegistryHolder.DimensionsConfig> pair = session.readLevelProperties(
-                                                dynamicOps, arg.dataConfiguration(), registry, arg.worldGenRegistryManager().getRegistryLifecycle()
-                                        );
-                                        Objects.requireNonNull(pair);
-                                        return new SaveLoading.LoadContext<>(pair.getFirst(), pair.getSecond().toDynamicRegistryManager());
+                                        final class_8895 lv = LevelStorage.method_54523(null, arg.dataConfiguration(), registry, arg.worldGenRegistryManager());
+                                        Objects.requireNonNull(lv);
+                                        return new SaveLoading.LoadContext<>(lv.worldData(), lv.dimensions().toDynamicRegistryManager());
                                     },
                                     SaveLoader::new,
                                     Util.getMainWorkerExecutor(),
