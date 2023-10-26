@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(MinecraftServer.class)
 public class MixinMinecraftServer {
 
-    @Shadow private long timeReference;
+    @Shadow(aliases = "field_47139") private long timeReference;
 
     @Inject(method = "shutdown", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;runTasksTillTickEnd()V", shift = At.Shift.BEFORE))
     private void shutdownBeforeRunTasks(CallbackInfo ci) {

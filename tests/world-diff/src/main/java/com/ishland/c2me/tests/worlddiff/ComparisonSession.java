@@ -9,7 +9,6 @@ import com.mojang.serialization.Codec;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
-import net.minecraft.class_8895;
 import net.minecraft.datafixer.Schemas;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtList;
@@ -55,6 +54,7 @@ import net.minecraft.world.chunk.ReadableContainer;
 import net.minecraft.world.dimension.DimensionOptions;
 import net.minecraft.world.gen.structure.Structure;
 import net.minecraft.world.level.storage.LevelStorage;
+import net.minecraft.world.level.storage.ParsedSaveProperties;
 import net.minecraft.world.storage.StorageIoWorker;
 import net.minecraft.world.updater.WorldUpdater;
 import org.apache.logging.log4j.LogManager;
@@ -279,9 +279,9 @@ public class ComparisonSession implements Closeable {
                                     serverConfig,
                                     arg -> {
                                         Registry<DimensionOptions> registry = arg.dimensionsRegistryManager().get(RegistryKeys.DIMENSION);
-                                        final class_8895 lv = LevelStorage.method_54523(null, arg.dataConfiguration(), registry, arg.worldGenRegistryManager());
+                                        final ParsedSaveProperties lv = LevelStorage.parseSaveProperties(null, arg.dataConfiguration(), registry, arg.worldGenRegistryManager());
                                         Objects.requireNonNull(lv);
-                                        return new SaveLoading.LoadContext<>(lv.worldData(), lv.dimensions().toDynamicRegistryManager());
+                                        return new SaveLoading.LoadContext<>(lv.properties(), lv.dimensions().toDynamicRegistryManager());
                                     },
                                     SaveLoader::new,
                                     Util.getMainWorkerExecutor(),
