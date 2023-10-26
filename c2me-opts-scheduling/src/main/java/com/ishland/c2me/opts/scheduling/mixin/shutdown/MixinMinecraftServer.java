@@ -15,7 +15,7 @@ public class MixinMinecraftServer {
 
     @Inject(method = "shutdown", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;runTasksTillTickEnd()V", shift = At.Shift.BEFORE))
     private void shutdownBeforeRunTasks(CallbackInfo ci) {
-        this.timeReference = Util.getMeasuringTimeMs() + 100L;
+        this.timeReference = Util.getMeasuringTimeNano() + 100_000_000L; // 100ms
     }
 
 }
