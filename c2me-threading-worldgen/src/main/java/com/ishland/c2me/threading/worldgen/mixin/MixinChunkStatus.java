@@ -1,5 +1,6 @@
 package com.ishland.c2me.threading.worldgen.mixin;
 
+import com.ishland.c2me.base.common.scheduler.IVanillaChunkManager;
 import com.ishland.c2me.base.common.scheduler.ThreadLocalWorldGenSchedulingState;
 import com.ishland.c2me.base.common.util.SneakyThrow;
 import com.ishland.c2me.base.mixin.access.IThreadedAnvilChunkStorage;
@@ -7,8 +8,6 @@ import com.ishland.c2me.opts.chunk_access.common.CurrentWorldGenState;
 import com.ishland.c2me.threading.worldgen.common.ChunkStatusUtils;
 import com.ishland.c2me.threading.worldgen.common.Config;
 import com.ishland.c2me.threading.worldgen.common.IChunkStatus;
-import com.ishland.c2me.base.common.scheduler.IVanillaChunkManager;
-import com.ishland.c2me.threading.worldgen.common.IWorldGenLockable;
 import com.mojang.datafixers.util.Either;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ServerLightingProvider;
@@ -128,12 +127,10 @@ public abstract class MixinChunkStatus implements IChunkStatus {
                 completableFuture = ChunkStatusUtils.runChunkGenWithLock(
                                 targetChunk.getPos(),
                                 thiz,
-                                holder,
                                 lockRadius,
                                 ((IVanillaChunkManager) tacs).c2me$getSchedulingManager(),
-                        (Object) this == ChunkStatus.LIGHT, // lighting is async so don't hold the slot TODO make this check less dirty
-                                ((IWorldGenLockable) world).getWorldGenChunkLock(),
-                                () -> ChunkStatusUtils.getThreadingType(thiz).runTask(((IWorldGenLockable) world).getWorldGenSingleThreadedLock(), generationTask))
+                                ChunkStatusUtils.getThreadingType(thiz),
+                                generationTask)
                         .exceptionally(t -> {
                             Throwable actual = t;
                             while (actual instanceof CompletionException) actual = t.getCause();

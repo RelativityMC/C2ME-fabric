@@ -1,0 +1,3 @@
+[submodule "FlowSched"]
+	path = FlowSched
+	url = https://github.com/RelativityMC/FlowSched.git

@@ -3,6 +3,7 @@ package com.ishland.c2me.base.common;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.ishland.c2me.base.ModuleEntryPoint;
 import com.ishland.c2me.base.common.util.C2MENormalWorkerThreadFactory;
+import com.ishland.flowsched.executor.ExecutorManager;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
@@ -10,6 +11,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class GlobalExecutors {
 
@@ -23,6 +25,11 @@ public class GlobalExecutors {
 //            true
 //    );
     public static final ExecutorService executor = Executors.newFixedThreadPool(GLOBAL_EXECUTOR_PARALLELISM, factory);
+    private static final AtomicInteger prioritizedSchedulerCounter = new AtomicInteger(0);
+    public static final ExecutorManager prioritizedScheduler = new ExecutorManager(GlobalExecutors.GLOBAL_EXECUTOR_PARALLELISM, thread -> {
+        thread.setDaemon(true);
+        thread.setName("c2me-prioritized-%d".formatted(prioritizedSchedulerCounter.getAndIncrement()));
+    });
     public static final Executor invokingExecutor = r -> {
         if (Thread.currentThread().getThreadGroup() == factory.getThreadGroup()) {
             r.run();

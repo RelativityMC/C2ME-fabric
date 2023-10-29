@@ -36,6 +36,8 @@ configure(allprojects) {
 
 archivesBaseName = "${project.archives_base_name}-mc${project.minecraft_version}"
 
+clean.dependsOn gradle.includedBuild('FlowSched').task(':clean')
+
 configure (allprojects - project(":tests")) {
     if (project != project(":") && project.parent != project(":")) return
 
@@ -118,6 +120,7 @@ configure (allprojects - project(":tests")) {
         implementation "com.electronwill.night-config:toml:${night_config_version}"
         implementation "org.threadly:threadly:${threadly_version}"
         implementation "net.objecthunter:exp4j:${exp4j_version}"
+        implementation "com.ishland.flowsched:flowsched"
 
     }
 }
@@ -146,6 +149,7 @@ dependencies {
     include implementation("com.electronwill.night-config:core:${night_config_version}")
     include implementation("org.threadly:threadly:${threadly_version}")
     include implementation("net.objecthunter:exp4j:${exp4j_version}")
+    include implementation("com.ishland.flowsched:flowsched")
 
     // PSA: Some older mods, compiled on Loom 0.2.1, might have outdated Maven POMs.
     // You may need to force-disable transitiveness on them.
