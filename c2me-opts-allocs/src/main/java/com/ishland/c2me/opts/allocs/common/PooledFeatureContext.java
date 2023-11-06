@@ -1,6 +1,6 @@
 package com.ishland.c2me.opts.allocs.common;
 
-import com.ishland.c2me.base.common.structs.SimpleObjectPool;
+import com.ishland.flowsched.structs.SimpleObjectPool;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.random.Random;
 import net.minecraft.world.StructureWorldAccess;
@@ -13,7 +13,7 @@ import java.util.Optional;
 
 public class PooledFeatureContext<FC extends FeatureConfig> extends FeatureContext<FC> {
 
-    public static final ThreadLocal<SimpleObjectPool<PooledFeatureContext<?>>> POOL = ThreadLocal.withInitial(() -> new SimpleObjectPool<>(unused -> new PooledFeatureContext<>(), unused -> {}, 2048));
+    public static final ThreadLocal<SimpleObjectPool<PooledFeatureContext<?>>> POOL = ThreadLocal.withInitial(() -> new SimpleObjectPool<>(unused -> new PooledFeatureContext<>(), PooledFeatureContext::reInit, PooledFeatureContext::reInit, 2048));
 
     private Optional<ConfiguredFeature<?, ?>> feature;
     private StructureWorldAccess world;
