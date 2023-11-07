@@ -1,24 +1,18 @@
 package com.ishland.c2me.base.common.scheduler;
 
 import com.ishland.flowsched.executor.LockToken;
-import com.ishland.flowsched.executor.Task;
-import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
 
-import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
-public class ScheduledTask<T> implements Task {
+public class ScheduledTask<T> extends AbstractPosAwarePrioritizedTask {
 
-    private final long pos;
     private final Supplier<CompletableFuture<T>> action;
     private final LockToken[] lockTokens;
     private final CompletableFuture<T> future = new CompletableFuture<>();
-    private final ReferenceArrayList<Runnable> postExec = new ReferenceArrayList<>(4);
-    private int priority = Integer.MAX_VALUE;
 
     public ScheduledTask(long pos, Supplier<CompletableFuture<T>> action, LockToken[] lockTokens) {
-        this.pos = pos;
+        super(pos);
         this.action = action;
         this.lockTokens = lockTokens;
     }
@@ -46,28 +40,9 @@ public class ScheduledTask<T> implements Task {
         future.completeExceptionally(t);
     }
 
-    public void addPostExec(Runnable runnable) {
-        synchronized (this.postExec) {
-            postExec.add(Objects.requireNonNull(runnable));
-        }
-    }
-
     @Override
     public LockToken[] lockTokens() {
         return this.lockTokens;
-    }
-
-    @Override
-    public int priority() {
-        return this.priority;
-    }
-
-    public void setPriority(int priority) {
-        this.priority = priority;
-    }
-
-    public long getPos() {
-        return this.pos;
     }
 
     public CompletableFuture<T> getFuture() {

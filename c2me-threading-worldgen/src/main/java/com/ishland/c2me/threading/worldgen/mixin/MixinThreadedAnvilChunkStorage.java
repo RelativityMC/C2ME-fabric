@@ -1,6 +1,6 @@
 package com.ishland.c2me.threading.worldgen.mixin;
 
-import com.ishland.c2me.base.common.GlobalExecutors;
+import com.ishland.c2me.base.common.scheduler.IVanillaChunkManager;
 import com.ishland.c2me.base.common.scheduler.ThreadLocalWorldGenSchedulingState;
 import com.ishland.c2me.threading.worldgen.common.Config;
 import com.mojang.datafixers.util.Either;
@@ -73,7 +73,7 @@ public abstract class MixinThreadedAnvilChunkStorage {
                 .thenComposeAsync(unused -> this.getRegion(chunkHolder, margin, distanceToStatus), r -> {
                     if (Config.asyncScheduling) {
                         if (this.mainThreadExecutor.isOnThread()) {
-                            GlobalExecutors.executor.execute(r);
+                            ((IVanillaChunkManager) this).c2me$getSchedulingManager().enqueue(chunkHolder.getPos().toLong(), r);
                         } else {
                             r.run();
                         }

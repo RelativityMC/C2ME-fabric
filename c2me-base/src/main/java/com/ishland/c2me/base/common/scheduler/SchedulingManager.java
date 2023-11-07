@@ -16,8 +16,8 @@ public class SchedulingManager {
     private static final AtomicInteger COUNTER = new AtomicInteger(0);
 
     public static final int MAX_LEVEL = ChunkLevels.INACCESSIBLE + 1;
-    private final Long2ReferenceOpenHashMap<ObjectArraySet<ScheduledTask<?>>> pos2Tasks = new Long2ReferenceOpenHashMap<>();
-    private final SimpleObjectPool<ObjectArraySet<ScheduledTask<?>>> pos2TasksPool = new SimpleObjectPool<>(unused -> new ObjectArraySet<>(), ObjectArraySet::clear, ObjectArraySet::clear, 2048);
+    private final Long2ReferenceOpenHashMap<ObjectArraySet<AbstractPosAwarePrioritizedTask>> pos2Tasks = new Long2ReferenceOpenHashMap<>();
+    private final SimpleObjectPool<ObjectArraySet<AbstractPosAwarePrioritizedTask>> pos2TasksPool = new SimpleObjectPool<>(unused -> new ObjectArraySet<>(), ObjectArraySet::clear, ObjectArraySet::clear, 2048);
     private final Long2IntOpenHashMap prioritiesFromLevel = new Long2IntOpenHashMap();
     private final Object schedulingMutex = new Object();
     private final int id = COUNTER.getAndIncrement();
@@ -33,16 +33,16 @@ public class SchedulingManager {
         this.executor = executor;
     }
 
-    public void enqueue(ScheduledTask<?> task) {
+    public void enqueue(AbstractPosAwarePrioritizedTask task) {
         synchronized (this.schedulingMutex) {
             final long pos = task.getPos();
-            final ObjectArraySet<ScheduledTask<?>> locks = this.pos2Tasks.computeIfAbsent(pos, unused -> this.pos2TasksPool.alloc());
+            final ObjectArraySet<AbstractPosAwarePrioritizedTask> locks = this.pos2Tasks.computeIfAbsent(pos, unused -> this.pos2TasksPool.alloc());
             locks.add(task);
             updatePriorityInternal(pos);
         }
         task.addPostExec(() -> {
             synchronized (this.schedulingMutex) {
-                final ObjectArraySet<ScheduledTask<?>> tasks = this.pos2Tasks.get(task.getPos());
+                final ObjectArraySet<AbstractPosAwarePrioritizedTask> tasks = this.pos2Tasks.get(task.getPos());
                 if (tasks != null) {
                     tasks.remove(task);
                     if (tasks.isEmpty()) {
@@ -53,6 +53,14 @@ public class SchedulingManager {
             }
         });
         GlobalExecutors.prioritizedScheduler.schedule(task);
+    }
+
+    public void enqueue(long pos, Runnable command) {
+        this.enqueue(new WrappingTask(pos, command));
+    }
+
+    public Executor positionedExecutor(long pos) {
+        return command -> this.enqueue(pos, command);
     }
 
     public void updatePriorityFromLevel(long pos, int level) {
@@ -84,9 +92,9 @@ public class SchedulingManager {
             fromSyncLoad = MAX_LEVEL;
         }
         int priority = Math.min(fromLevel, fromSyncLoad);
-        final ObjectArraySet<ScheduledTask<?>> locks = this.pos2Tasks.get(pos);
+        final ObjectArraySet<AbstractPosAwarePrioritizedTask> locks = this.pos2Tasks.get(pos);
         if (locks != null) {
-            for (ScheduledTask<?> lock : locks) {
+            for (AbstractPosAwarePrioritizedTask lock : locks) {
                 lock.setPriority(priority);
                 GlobalExecutors.prioritizedScheduler.notifyPriorityChange(lock);
             }
@@ -107,10 +115,6 @@ public class SchedulingManager {
                 }
             }
         });
-    }
-
-    public Executor getExecutor() {
-        return executor;
     }
 
     public int getId() {
