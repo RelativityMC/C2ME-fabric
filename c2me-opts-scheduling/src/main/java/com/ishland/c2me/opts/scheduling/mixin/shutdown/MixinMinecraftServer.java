@@ -11,11 +11,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(MinecraftServer.class)
 public class MixinMinecraftServer {
 
-    @Shadow(aliases = "field_47139") private long timeReference;
+    @Shadow
+    private long tickStartTimeNanos;
 
     @Inject(method = "shutdown", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;runTasksTillTickEnd()V", shift = At.Shift.BEFORE))
     private void shutdownBeforeRunTasks(CallbackInfo ci) {
-        this.timeReference = Util.getMeasuringTimeNano() + 100_000_000L; // 100ms
+        this.tickStartTimeNanos = Util.getMeasuringTimeNano() + 50_000_000L; // 50ms
     }
 
 }
