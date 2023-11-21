@@ -327,7 +327,7 @@ public class C2MEStorageThread extends Thread {
                     out.write(ConfigConstants.CHUNK_STREAM_VERSION.getId());
                     try (DataOutputStream dataOutputStream = new DataOutputStream(ConfigConstants.CHUNK_STREAM_VERSION.wrap(out))) {
                         if (nbt.left().isPresent()) {
-                            NbtIo.write(nbt.left().get(), dataOutputStream);
+                            NbtIo.writeCompound(nbt.left().get(), dataOutputStream);
                         } else {
                             dataOutputStream.write(nbt.right().get());
                         }
