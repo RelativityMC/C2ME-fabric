@@ -1,6 +1,7 @@
 package com.ishland.c2me.threading.chunkio;
 
 import com.ishland.c2me.base.common.config.ConfigSystem;
+import com.ishland.c2me.threading.chunkio.common.Config;
 
 public class ModuleEntryPoint {
 
@@ -9,5 +10,9 @@ public class ModuleEntryPoint {
             .comment("Whether to use async chunk loading & unloading")
             .incompatibleMod("radon", "*")
             .getBoolean(true, false);
+
+    static {
+        Config.init();
+    }
 
 }

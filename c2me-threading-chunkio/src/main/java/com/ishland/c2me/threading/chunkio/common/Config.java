@@ -13,4 +13,7 @@ public class Config {
                      """)
             .getBoolean(false, false);
 
+    public static void init() {
+    }
+
 }
