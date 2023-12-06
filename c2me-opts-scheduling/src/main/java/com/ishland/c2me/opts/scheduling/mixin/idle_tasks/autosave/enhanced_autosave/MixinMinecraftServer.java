@@ -3,9 +3,11 @@ package com.ishland.c2me.opts.scheduling.mixin.idle_tasks.autosave.enhanced_auto
 import com.ishland.c2me.opts.scheduling.common.idle_tasks.IThreadedAnvilChunkStorage;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.ServerTask;
+import net.minecraft.server.ServerTickManager;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Util;
 import net.minecraft.util.thread.ReentrantThreadExecutor;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
@@ -19,6 +21,8 @@ public abstract class MixinMinecraftServer extends ReentrantThreadExecutor<Serve
     @Shadow public abstract Iterable<ServerWorld> getWorlds();
 
     @Shadow private long tickStartTimeNanos;
+
+    @Shadow @Final private ServerTickManager tickManager;
 
     public MixinMinecraftServer(String string) {
         super(string);
@@ -39,7 +43,7 @@ public abstract class MixinMinecraftServer extends ReentrantThreadExecutor<Serve
             return true;
         } else {
             boolean hasWork = false;
-            if (this.shouldKeepTicking()) {
+            if (this.tickManager.isSprinting() || this.shouldKeepTicking()) {
                 for(ServerWorld serverWorld : this.getWorlds()) {
                     if (serverWorld.getChunkManager().executeQueuedTasks()) hasWork = true;
                 }
