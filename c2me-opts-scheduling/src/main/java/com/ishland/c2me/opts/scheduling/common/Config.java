@@ -33,14 +33,6 @@ public class Config {
                     """)
             .getEnum(AutoSaveMode.class, AutoSaveMode.ENHANCED, AutoSaveMode.VANILLA);
 
-    public static final long autoSaveDelayMillis = new ConfigSystem.ConfigAccessor()
-            .key("generalOptimizations.autoSave.delay")
-            .comment("""
-                                Defines the delay in milliseconds between performing auto-save for a chunk \s
-                                This is only used when mode is set to ENHANCED
-                                """)
-            .getLong(20000,20000);
-
     public static void init() {
     }
 
