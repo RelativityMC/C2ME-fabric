@@ -4,7 +4,6 @@ import com.ishland.c2me.opts.scheduling.common.idle_tasks.IThreadedAnvilChunkSto
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.objects.ObjectBidirectionalIterator;
-import it.unimi.dsi.fastutil.objects.ObjectCollection;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;
 import net.minecraft.util.thread.ThreadExecutor;
@@ -14,11 +13,9 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.ConcurrentModificationException;
-import java.util.function.Consumer;
 
 @Mixin(ThreadedAnvilChunkStorage.class)
 public abstract class MixinThreadedAnvilChunkStorage implements IThreadedAnvilChunkStorage {
@@ -30,19 +27,6 @@ public abstract class MixinThreadedAnvilChunkStorage implements IThreadedAnvilCh
     @Shadow private volatile Long2ObjectLinkedOpenHashMap<ChunkHolder> chunkHolders;
 
     @Shadow @Final private ThreadExecutor<Runnable> mainThreadExecutor;
-
-    @Redirect(method = "save(Z)V", at = @At(value = "INVOKE", target = "Lit/unimi/dsi/fastutil/objects/ObjectCollection;forEach(Ljava/util/function/Consumer;)V", ordinal = 0))
-    private void onSaveAllChunks(ObjectCollection<ChunkHolder> instance, Consumer<ChunkHolder> consumer) {
-        int saveAllCounter = 0;
-        for (ChunkHolder holder : instance) {
-            if (this.save(holder)) {
-                System.out.println("[Save-All] Saved " + holder.getPos());
-                saveAllCounter++;
-            }
-        }
-
-        System.out.println("[Save-All] Saved " + saveAllCounter + " chunks!");
-    }
 
     @Unique
     private ObjectBidirectionalIterator<Long2ObjectMap.Entry<ChunkHolder>> c2me$saveChunksIterator;
