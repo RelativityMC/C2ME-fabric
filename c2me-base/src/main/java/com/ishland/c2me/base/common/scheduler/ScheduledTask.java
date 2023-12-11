@@ -18,8 +18,9 @@ public class ScheduledTask<T> extends AbstractPosAwarePrioritizedTask {
     }
 
     @Override
-    public void run() {
+    public void run(Runnable releaseLocks) {
         action.get().whenComplete((t, throwable) -> {
+            releaseLocks.run();
             if (throwable != null) {
                 future.completeExceptionally(throwable);
             } else {

@@ -16,10 +16,11 @@ public class WrappingTask extends AbstractPosAwarePrioritizedTask {
     }
 
     @Override
-    public void run() {
+    public void run(Runnable releaseLocks) {
         try {
             wrapped.run();
         } finally {
+            releaseLocks.run();
             for (Runnable runnable : this.postExec) {
                 try {
                     runnable.run();
