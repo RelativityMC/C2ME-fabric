@@ -143,6 +143,9 @@ public class ConfigSystem {
             if (this.incompatibilityDetected) return incompatibleDef;
             long configLong = isDefaultValue ? def : CONFIG.getLong(this.key);
             if (checkConfig(configLong, checks)) {
+                if (!isDefaultValue) {
+                    logChanged(def, configLong);
+                }
                 return configLong;
             } else {
                 CONFIG.remove(this.key);
@@ -183,7 +186,11 @@ public class ConfigSystem {
             }
             generateDefaultEntry(def, incompatibleDef);
 
-            return this.incompatibilityDetected ? incompatibleDef : (isDefaultValue ? def : CONFIG.get(this.key));
+            final boolean b = this.incompatibilityDetected ? incompatibleDef : (isDefaultValue ? def : CONFIG.get(this.key));
+            if (!isDefaultValue) {
+                logChanged(def, b);
+            }
+            return b;
         }
 
         public <T extends Enum<T>> T getEnum(Class<T> enumClass, T def, T incompatibleDef) {
@@ -209,7 +216,11 @@ public class ConfigSystem {
             }
             generateDefaultEntry(def, incompatibleDef);
 
-            return this.incompatibilityDetected ? incompatibleDef : (isDefaultValue ? def : CONFIG.getEnum(this.key, enumClass));
+            final T t = this.incompatibilityDetected ? incompatibleDef : (isDefaultValue ? def : CONFIG.getEnum(this.key, enumClass));
+            if (!isDefaultValue) {
+                logChanged(def, t);
+            }
+            return t;
         }
 
         public String getString(String def, String incompatibleDef) {
@@ -231,7 +242,11 @@ public class ConfigSystem {
             }
             generateDefaultEntry(def, incompatibleDef);
 
-            return this.incompatibilityDetected ? incompatibleDef : (isDefaultValue ? def : CONFIG.get(this.key));
+            final String s = this.incompatibilityDetected ? incompatibleDef : (isDefaultValue ? def : CONFIG.get(this.key));
+            if (!isDefaultValue) {
+                logChanged(def, s);
+            }
+            return s;
         }
 
         private void findModDefinedIncompatibility() {
@@ -277,6 +292,10 @@ public class ConfigSystem {
             } else {
                 CONFIG.setComment(this.key, comment);
             }
+        }
+
+        private void logChanged(Object def, Object config) {
+            LOGGER.info("Config {} changed from {} to {}", this.key, String.valueOf(def), String.valueOf(config));
         }
 
         private void markVisited() {
