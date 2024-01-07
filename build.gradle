@@ -4,6 +4,7 @@ plugins {
     id "me.champeau.jmh" version "0.7.1"
     id 'com.modrinth.minotaur' version '2.+' apply false
     id 'com.matthewprenger.cursegradle' version '1.4.0' apply false
+    id 'com.github.johnrengelman.shadow' version '8.1.1' apply false
 }
 
 @SuppressWarnings('unused')
@@ -149,7 +150,7 @@ dependencies {
     include implementation("com.electronwill.night-config:core:${night_config_version}")
     include implementation("org.threadly:threadly:${threadly_version}")
     include implementation("net.objecthunter:exp4j:${exp4j_version}")
-    include implementation("com.ishland.flowsched:flowsched")
+//    include implementation("com.ishland.flowsched:flowsched")
 
     // PSA: Some older mods, compiled on Loom 0.2.1, might have outdated Maven POMs.
     // You may need to force-disable transitiveness on them.
@@ -200,8 +201,9 @@ dependencies {
         (subprojects - project(":tests")).forEach {
             if (it.parent != project(":")) return
 
-            api project(path: ":${it.name}", configuration: "namedElements")
-            include project("${it.name}:")
+            def projectName = it.name
+            api project(path: ":${projectName}", configuration: "namedElements")
+            include project("${projectName}:")
         }
     }
 }

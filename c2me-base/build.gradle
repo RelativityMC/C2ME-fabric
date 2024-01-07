@@ -1,0 +1,24 @@
+apply plugin: 'com.github.johnrengelman.shadow'
+
+configurations {
+    shadowInclude
+}
+
+dependencies {
+    shadowInclude("com.ishland.flowsched:flowsched") {
+        transitive false
+    }
+}
+
+shadowJar {
+    archiveClassifier = "all-dev"
+    configurations = [ project.configurations.shadowInclude ]
+}
+
+remapJar {
+    input = shadowJar.archiveFile
+    archiveFileName = shadowJar.archiveFileName.get().replaceAll("-dev\\.jar\$", ".jar")
+    addNestedDependencies = true
+    dependsOn shadowJar
+}
+
