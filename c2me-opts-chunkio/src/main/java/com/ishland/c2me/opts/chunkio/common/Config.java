@@ -18,21 +18,6 @@ public class Config {
             .comment("Hard limit for io worker nbt cache")
             .getLong(32678, 32678, ConfigSystem.LongChecks.POSITIVE_VALUES_ONLY);
 
-    public static final long chunkStreamVersion = new ConfigSystem.ConfigAccessor()
-            .key("ioSystem.chunkStreamVersion")
-            .comment("""
-                    Defines which chunk compression should be used\s
-                    -1 for Vanilla default \s
-                    1  for GZip (RFC1952) (Vanilla compatible)\s
-                    2  for Zlib (RFC1950) (Vanilla default) (Vanilla compatible)\s
-                    3  for Uncompressed (Fastest, but higher disk usage) (Vanilla compatible)\s
-                    \s
-                    Original chunk data will still readable after modifying this option \s
-                    as this option only affects newly stored chunks\s
-                    Invalid values will fall back to vanilla default
-                    """)
-            .getLong(-1, -1);
-
     public static void init() {
     }
 

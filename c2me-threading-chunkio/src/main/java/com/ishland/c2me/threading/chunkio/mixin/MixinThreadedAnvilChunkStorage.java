@@ -10,7 +10,6 @@ import com.ishland.c2me.threading.chunkio.common.AsyncSerializationManager;
 import com.ishland.c2me.threading.chunkio.common.BlendingInfoUtil;
 import com.ishland.c2me.threading.chunkio.common.ChunkIoMainThreadTaskUtils;
 import com.ishland.c2me.threading.chunkio.common.Config;
-import com.ishland.c2me.threading.chunkio.common.IAsyncChunkStorage;
 import com.ishland.c2me.threading.chunkio.common.ISerializingRegionBasedStorage;
 import com.ishland.c2me.threading.chunkio.common.ProtoChunkExtension;
 import com.ishland.c2me.threading.chunkio.common.TaskCancellationException;
@@ -142,7 +141,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
         }
 
         final CompletableFuture<Optional<NbtCompound>> poiData =
-                ((IAsyncChunkStorage) ((com.ishland.c2me.base.mixin.access.ISerializingRegionBasedStorage) this.pointOfInterestStorage).getWorker()).getNbtAtAsync(pos)
+                ((com.ishland.c2me.base.mixin.access.ISerializingRegionBasedStorage) this.pointOfInterestStorage).getStorageAccess().read(pos)
                         .exceptionally(throwable -> {
                             //noinspection IfStatementWithIdenticalBranches
                             if (Config.recoverFromErrors) {

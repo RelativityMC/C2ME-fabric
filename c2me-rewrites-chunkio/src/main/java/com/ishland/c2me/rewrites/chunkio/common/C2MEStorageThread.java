@@ -6,7 +6,6 @@ import com.ishland.c2me.base.common.structs.RawByteArrayOutputStream;
 import com.ishland.c2me.base.common.util.SneakyThrow;
 import com.ishland.c2me.base.mixin.access.IRegionBasedStorage;
 import com.ishland.c2me.base.mixin.access.IRegionFile;
-import com.ishland.c2me.opts.chunkio.common.ConfigConstants;
 import it.unimi.dsi.fastutil.longs.Long2ReferenceLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import net.minecraft.nbt.NbtCompound;
@@ -14,6 +13,7 @@ import net.minecraft.nbt.NbtIo;
 import net.minecraft.nbt.NbtSizeTracker;
 import net.minecraft.nbt.scanner.NbtScanner;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.world.storage.ChunkCompressionFormat;
 import net.minecraft.world.storage.RegionBasedStorage;
 import net.minecraft.world.storage.RegionFile;
 import org.jetbrains.annotations.Nullable;
@@ -316,6 +316,18 @@ public class C2MEStorageThread extends Thread {
                 this.cache.remove(pos);
             }
         } else {
+            ChunkCompressionFormat compressionFormat;
+            {
+                final ChunkPos pos1 = new ChunkPos(pos);
+                try {
+                    final RegionFile regionFile = ((IRegionBasedStorage) this.storage).invokeGetRegionFile(pos1);
+                    compressionFormat = ((IRegionFile) regionFile).getCompressionFormat();
+                } catch (Throwable t) {
+                    LOGGER.warn("Failed to get compression format for chunk %s".formatted(pos1), t);
+                    compressionFormat = ChunkCompressionFormat.getCurrentFormat();
+                }
+            }
+            ChunkCompressionFormat finalCompressionFormat = compressionFormat;
             final CompletableFuture<Void> future = CompletableFuture.supplyAsync(() -> {
                 try {
                     final RawByteArrayOutputStream out = new RawByteArrayOutputStream(8096);
@@ -324,8 +336,8 @@ public class C2MEStorageThread extends Thread {
                     out.write(0);
                     out.write(0);
                     out.write(0);
-                    out.write(ConfigConstants.CHUNK_STREAM_VERSION.getId());
-                    try (DataOutputStream dataOutputStream = new DataOutputStream(ConfigConstants.CHUNK_STREAM_VERSION.wrap(out))) {
+                    out.write(finalCompressionFormat.getId());
+                    try (DataOutputStream dataOutputStream = new DataOutputStream(finalCompressionFormat.wrap(out))) {
                         if (nbt.left().isPresent()) {
                             NbtIo.writeCompound(nbt.left().get(), dataOutputStream);
                         } else {

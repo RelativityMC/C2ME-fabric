@@ -1,8 +1,8 @@
 package com.ishland.c2me.threading.chunkio.mixin;
 
 import com.ishland.c2me.threading.chunkio.common.ISerializingRegionBasedStorage;
-import com.mojang.serialization.DynamicOps;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.registry.RegistryOps;
@@ -16,14 +16,13 @@ import org.spongepowered.asm.mixin.Shadow;
 @Mixin(SerializingRegionBasedStorage.class)
 public abstract class MixinSerializingRegionBasedStorage implements ISerializingRegionBasedStorage {
 
-    @Shadow
-    protected abstract <T> void update(ChunkPos pos, DynamicOps<T> dynamicOps, @Nullable T data);
+    @Shadow @Final private DynamicRegistryManager registryManager;
 
-    @Shadow @Final private DynamicRegistryManager dynamicRegistryManager;
+    @Shadow protected abstract void update(ChunkPos pos, RegistryOps<NbtElement> ops, @Nullable NbtCompound nbt);
 
     @Override
     public void update(ChunkPos pos, NbtCompound tag) {
-        this.update(pos, RegistryOps.of(NbtOps.INSTANCE, this.dynamicRegistryManager), tag);
+        this.update(pos, RegistryOps.of(NbtOps.INSTANCE, this.registryManager), tag);
     }
 
 }

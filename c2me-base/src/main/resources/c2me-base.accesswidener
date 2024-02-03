@@ -5,7 +5,6 @@ accessible    class    net/minecraft/server/world/ChunkTicketManager$DistanceFro
 accessible    class    net/minecraft/server/world/ServerChunkManager$MainThreadExecutor
 accessible    class    net/minecraft/server/world/ThreadedAnvilChunkStorage$TicketManager
 accessible    class    net/minecraft/world/storage/StorageIoWorker$Result
-accessible    class    net/minecraft/world/storage/ChunkStreamVersion$Wrapper
 accessible    class    net/minecraft/world/gen/surfacebuilder/MaterialRules$MaterialRuleContext
 accessible    class    net/minecraft/world/gen/surfacebuilder/MaterialRules$SequenceBlockStateRule
 accessible    class    net/minecraft/world/gen/surfacebuilder/MaterialRules$SequenceMaterialRule
@@ -28,7 +27,6 @@ accessible    method    net/minecraft/util/collection/WeightedList              
 accessible    method    net/minecraft/nbt/NbtCompound                                                  <init>              (Ljava/util/Map;)V
 accessible    method    net/minecraft/nbt/NbtList                                                      <init>              (Ljava/util/List;B)V
 accessible    method    net/minecraft/world/gen/surfacebuilder/MaterialRules$SequenceBlockStateRule    <init>              (Ljava/util/List;)V
-accessible    method    net/minecraft/world/storage/ChunkStreamVersion                                 <init>              (ILnet/minecraft/world/storage/ChunkStreamVersion$Wrapper;Lnet/minecraft/world/storage/ChunkStreamVersion$Wrapper;)V
 accessible    method    net/minecraft/world/storage/RegionBasedStorage                                 <init>              (Ljava/nio/file/Path;Z)V
 
 accessible    field    net/minecraft/world/storage/StorageIoWorker$Result                   nbt                 Lnet/minecraft/nbt/NbtCompound;

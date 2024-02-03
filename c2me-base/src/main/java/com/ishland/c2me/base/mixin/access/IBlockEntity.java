@@ -8,7 +8,4 @@ import org.spongepowered.asm.mixin.gen.Invoker;
 @Mixin(BlockEntity.class)
 public interface IBlockEntity {
 
-    @Invoker
-    void invokeWriteNbt(NbtCompound nbt);
-
 }

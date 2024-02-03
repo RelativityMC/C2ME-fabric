@@ -4,7 +4,6 @@ import com.ibm.asyncutil.locks.AsyncSemaphore;
 import com.ibm.asyncutil.locks.FairAsyncSemaphore;
 import com.ishland.c2me.tests.worlddiff.mixin.IChunkSerializer;
 import com.ishland.c2me.tests.worlddiff.mixin.IStorageIoWorker;
-import com.ishland.c2me.tests.worlddiff.mixin.IWorldUpdater;
 import com.mojang.serialization.Codec;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -305,12 +304,14 @@ public class ComparisonSession implements Closeable {
             throw new FileNotFoundException();
         }
         final Set<RegistryKey<World>> worldKeys = registryManager.get(RegistryKeys.WORLD).getKeys();
-        final WorldUpdater worldUpdater = new WorldUpdater(session, Schemas.getFixer(), registryManager.get(RegistryKeys.DIMENSION), false);
+        final WorldUpdater worldUpdater = new WorldUpdater(session, Schemas.getFixer(), registryManager, false, false);
         final HashMap<RegistryKey<World>, List<ChunkPos>> chunkPosesMap = new HashMap<>();
         for (RegistryKey<World> world : worldKeys) {
             System.out.printf("%s: Counting chunks for world %s\n", description, world);
             //noinspection ConstantConditions
-            chunkPosesMap.put(world, ((IWorldUpdater) worldUpdater).invokeGetChunkPositions(world));
+            // TODO
+            throw new UnsupportedOperationException("Replace with proper implementation");
+//            chunkPosesMap.put(world, ((IWorldUpdater) worldUpdater).invokeGetChunkPositions(world));
         }
         final HashMap<RegistryKey<World>, StorageIoWorker> regionIoWorkers = new HashMap<>();
         final HashMap<RegistryKey<World>, StorageIoWorker> poiIoWorkers = new HashMap<>();

@@ -3,6 +3,7 @@ package com.ishland.c2me.threading.chunkio.mixin.gc_free_serializer;
 import com.ishland.c2me.threading.chunkio.common.AsyncSerializationManager;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.LightType;
 import net.minecraft.world.chunk.Chunk;
@@ -26,13 +27,13 @@ public class MixinChunkDataSerializer {
         return scope != null ? scope.blockEntityPositions : chunk.getBlockEntityPositions();
     }
 
-    @Redirect(method = "Lcom/ishland/c2me/rewrites/chunk_serializer/common/ChunkDataSerializer;write(Lnet/minecraft/server/world/ServerWorld;Lnet/minecraft/world/chunk/Chunk;Lcom/ishland/c2me/rewrites/chunk_serializer/common/NbtWriter;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/Chunk;getPackedBlockEntityNbt(Lnet/minecraft/util/math/BlockPos;)Lnet/minecraft/nbt/NbtCompound;"))
-    private static NbtCompound onChunkGetPackedBlockEntityNbt(Chunk chunk, BlockPos pos) {
+    @Redirect(method = "Lcom/ishland/c2me/rewrites/chunk_serializer/common/ChunkDataSerializer;write(Lnet/minecraft/server/world/ServerWorld;Lnet/minecraft/world/chunk/Chunk;Lcom/ishland/c2me/rewrites/chunk_serializer/common/NbtWriter;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/Chunk;getPackedBlockEntityNbt(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/registry/RegistryWrapper$WrapperLookup;)Lnet/minecraft/nbt/NbtCompound;"))
+    private static NbtCompound onChunkGetPackedBlockEntityNbt(Chunk chunk, BlockPos pos, RegistryWrapper.WrapperLookup wrapperLookup) {
         final AsyncSerializationManager.Scope scope = AsyncSerializationManager.getScope(chunk.getPos());
-        if (scope == null) return chunk.getPackedBlockEntityNbt(pos);
+        if (scope == null) return chunk.getPackedBlockEntityNbt(pos, wrapperLookup);
         final BlockEntity blockEntity = scope.blockEntities.get(pos);
         if (blockEntity != null) {
-            final NbtCompound nbtCompound = blockEntity.createNbtWithIdentifyingData();
+            final NbtCompound nbtCompound = blockEntity.createNbtWithIdentifyingData(wrapperLookup);
             if (chunk instanceof WorldChunk) nbtCompound.putBoolean("keepPacked", false);
             return nbtCompound;
         } else {

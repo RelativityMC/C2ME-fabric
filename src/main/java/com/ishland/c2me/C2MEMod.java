@@ -4,7 +4,7 @@ import com.ibm.asyncutil.util.Combinators;
 import net.fabricmc.api.ModInitializer;
 import net.minecraft.util.math.random.ChunkRandom;
 import net.minecraft.util.math.random.LocalRandom;
-import net.minecraft.world.storage.ChunkStreamVersion;
+import net.minecraft.world.storage.ChunkCompressionFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,20 +29,20 @@ public class C2MEMod implements ModInitializer {
             LOGGER.info("Benchmarking chunk stream speed");
             LOGGER.info("Warming up");
             for (int i = 0; i < 3; i++) {
-                runBenchmark("GZIP", ChunkStreamVersion.GZIP, true);
-                runBenchmark("DEFLATE", ChunkStreamVersion.DEFLATE, true);
-                runBenchmark("UNCOMPRESSED", ChunkStreamVersion.UNCOMPRESSED, true);
+                runBenchmark("GZIP", ChunkCompressionFormat.GZIP, true);
+                runBenchmark("DEFLATE", ChunkCompressionFormat.DEFLATE, true);
+                runBenchmark("UNCOMPRESSED", ChunkCompressionFormat.UNCOMPRESSED, true);
             }
-            runBenchmark("GZIP", ChunkStreamVersion.GZIP, false);
-            runBenchmark("DEFLATE", ChunkStreamVersion.DEFLATE, false);
-            runBenchmark("UNCOMPRESSED", ChunkStreamVersion.UNCOMPRESSED, false);
+            runBenchmark("GZIP", ChunkCompressionFormat.GZIP, false);
+            runBenchmark("DEFLATE", ChunkCompressionFormat.DEFLATE, false);
+            runBenchmark("UNCOMPRESSED", ChunkCompressionFormat.UNCOMPRESSED, false);
         }
         if (Boolean.getBoolean("com.ishland.c2me.runConsistencyTest")) {
             consistencyTest();
         }
     }
 
-    private void runBenchmark(String name, ChunkStreamVersion version, boolean suppressLog) {
+    private void runBenchmark(String name, ChunkCompressionFormat version, boolean suppressLog) {
         try {
             final DecimalFormat decimalFormat = new DecimalFormat("0.###");
             if (!suppressLog) LOGGER.info("Generating 128MB random data");

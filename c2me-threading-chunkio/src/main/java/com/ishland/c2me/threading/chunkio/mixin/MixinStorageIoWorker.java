@@ -1,7 +1,6 @@
 package com.ishland.c2me.threading.chunkio.mixin;
 
 import com.ishland.c2me.threading.chunkio.common.ChunkIoThreadingExecutorUtils;
-import com.ishland.c2me.threading.chunkio.common.IAsyncChunkStorage;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtInt;
@@ -28,7 +27,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.locks.LockSupport;
 
 @Mixin(StorageIoWorker.class)
-public abstract class MixinStorageIoWorker implements IAsyncChunkStorage {
+public abstract class MixinStorageIoWorker {
 
     @Shadow public abstract CompletableFuture<Optional<NbtCompound>> readChunkData(ChunkPos pos);
 
@@ -42,11 +41,6 @@ public abstract class MixinStorageIoWorker implements IAsyncChunkStorage {
     @Redirect(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/Util;getIoWorkerExecutor()Ljava/util/concurrent/ExecutorService;"))
     private ExecutorService redirectIoWorkerExecutor() {
         return threadExecutor = Executors.newSingleThreadExecutor(ChunkIoThreadingExecutorUtils.ioWorkerFactory);
-    }
-
-    @Override
-    public CompletableFuture<Optional<NbtCompound>> getNbtAtAsync(ChunkPos pos) {
-        return readChunkData(pos);
     }
 
     @Inject(method = "close", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/thread/TaskExecutor;close()V", shift = At.Shift.AFTER))

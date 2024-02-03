@@ -4,6 +4,7 @@ import com.ishland.c2me.threading.chunkio.common.AsyncSerializationManager;
 import com.ishland.c2me.threading.chunkio.common.ChunkIoMainThreadTaskUtils;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkSectionPos;
 import net.minecraft.world.ChunkSerializer;
@@ -39,13 +40,13 @@ public class MixinChunkSerializer {
         return scope != null ? scope.blockEntityPositions : chunk.getBlockEntityPositions();
     }
 
-    @Redirect(method = "serialize", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/Chunk;getPackedBlockEntityNbt(Lnet/minecraft/util/math/BlockPos;)Lnet/minecraft/nbt/NbtCompound;"))
-    private static NbtCompound onChunkGetPackedBlockEntityNbt(Chunk chunk, BlockPos pos) {
+    @Redirect(method = "serialize", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/Chunk;getPackedBlockEntityNbt(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/registry/RegistryWrapper$WrapperLookup;)Lnet/minecraft/nbt/NbtCompound;"))
+    private static NbtCompound onChunkGetPackedBlockEntityNbt(Chunk chunk, BlockPos pos, RegistryWrapper.WrapperLookup wrapperLookup) {
         final AsyncSerializationManager.Scope scope = AsyncSerializationManager.getScope(chunk.getPos());
-        if (scope == null) return chunk.getPackedBlockEntityNbt(pos);
+        if (scope == null) return chunk.getPackedBlockEntityNbt(pos, wrapperLookup);
         final BlockEntity blockEntity = scope.blockEntities.get(pos);
         if (blockEntity != null) {
-            final NbtCompound nbtCompound = blockEntity.createNbtWithIdentifyingData();
+            final NbtCompound nbtCompound = blockEntity.createNbtWithIdentifyingData(wrapperLookup);
             if (chunk instanceof WorldChunk) nbtCompound.putBoolean("keepPacked", false);
             return nbtCompound;
         } else {

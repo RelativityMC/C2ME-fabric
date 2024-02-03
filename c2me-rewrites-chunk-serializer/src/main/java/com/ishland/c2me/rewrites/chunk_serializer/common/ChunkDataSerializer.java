@@ -212,7 +212,7 @@ public final class ChunkDataSerializer {
         // TODO: there is already a redirect here, have to copy it over
         for (BlockPos bl2 : chunk.getBlockEntityPositions()) {
             // TODO: optimize
-            NbtCompound chunkNibbleArray = chunk.getPackedBlockEntityNbt(bl2);
+            NbtCompound chunkNibbleArray = chunk.getPackedBlockEntityNbt(bl2, world.getRegistryManager());
             if (chunkNibbleArray != null) {
                 writer.putElementEntry(chunkNibbleArray);
                 blockEntitiesCount++;
