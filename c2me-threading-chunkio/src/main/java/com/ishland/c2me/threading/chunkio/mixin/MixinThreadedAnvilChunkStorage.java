@@ -3,6 +3,7 @@ package com.ishland.c2me.threading.chunkio.mixin;
 import com.ibm.asyncutil.locks.AsyncNamedLock;
 import com.ishland.c2me.base.common.GlobalExecutors;
 import com.ishland.c2me.base.common.registry.SerializerAccess;
+import com.ishland.c2me.base.common.scheduler.IVanillaChunkManager;
 import com.ishland.c2me.base.common.theinterface.IDirectStorage;
 import com.ishland.c2me.base.common.util.SneakyThrow;
 import com.ishland.c2me.base.mixin.access.IVersionedChunkStorage;
@@ -38,6 +39,7 @@ import net.minecraft.world.gen.chunk.ChunkGenerator;
 import net.minecraft.world.poi.PointOfInterestStorage;
 import net.minecraft.world.storage.StorageIoWorker;
 import net.minecraft.world.storage.VersionedChunkStorage;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.spongepowered.asm.mixin.Dynamic;
 import org.spongepowered.asm.mixin.Final;
@@ -141,6 +143,12 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
             scheduledChunks.add(pos);
         }
 
+        return chunkLock.acquireLock(pos).toCompletableFuture()
+                .thenCompose(lockToken -> c2me$loadChunk0(pos).whenComplete((chunkUnloadedEither, throwable) -> lockToken.releaseLock()));
+    }
+
+    @NotNull
+    private CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> c2me$loadChunk0(ChunkPos pos) {
         final CompletableFuture<Optional<NbtCompound>> poiData =
                 ((IAsyncChunkStorage) ((com.ishland.c2me.base.mixin.access.ISerializingRegionBasedStorage) this.pointOfInterestStorage).getWorker()).getNbtAtAsync(pos)
                         .exceptionally(throwable -> {
@@ -176,7 +184,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
                     }
 
                     return null;
-                }, GlobalExecutors.executor)
+                }, ((IVanillaChunkManager) this).c2me$getSchedulingManager().positionedExecutor(pos.toLong()))
                 .exceptionally(throwable -> {
                     //noinspection IfStatementWithIdenticalBranches
                     if (Config.recoverFromErrors) {
@@ -192,7 +200,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
 //                    if (protoChunk != null) ((ProtoChunkExtension) protoChunk).setBlendingInfo(pos, bitSet);
 //                    return protoChunk;
 //                })
-                .thenApplyAsync(protoChunk -> {
+                .thenApply(protoChunk -> {
                     // blending
                     protoChunk = protoChunk != null ? protoChunk : (ProtoChunk) this.getProtoChunk(pos);
                     if (protoChunk.getBelowZeroRetrogen() != null || protoChunk.getStatus().getChunkType() == ChunkStatus.ChunkType.PROTOCHUNK) {
@@ -218,7 +226,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
 
                     this.mark(pos, protoChunk.getStatus().getChunkType());
                     return Either.left(protoChunk);
-                }, GlobalExecutors.invokingExecutor);
+                });
         future.exceptionally(throwable -> {
             LOGGER.error("Couldn't load chunk {}", pos, throwable);
             return null;
@@ -229,39 +237,6 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
             }
         });
         return future;
-
-        // [VanillaCopy] - for reference
-        /*
-        return CompletableFuture.supplyAsync(() -> {
-         try {
-            this.world.getProfiler().visit("chunkLoad");
-            CompoundTag compoundTag = this.getUpdatedChunkNbt(pos);
-            if (compoundTag != null) {
-               boolean bl = compoundTag.contains("Level", 10) && compoundTag.getCompound("Level").contains("Status", 8);
-               if (bl) {
-                  Chunk chunk = ChunkSerializer.deserialize(this.world, this.structureManager, this.pointOfInterestStorage, pos, compoundTag);
-                  this.method_27053(pos, chunk.getStatus().getChunkType());
-                  return Either.left(chunk);
-               }
-
-               LOGGER.error((String)"Chunk file at {} is missing level data, skipping", (Object)pos);
-            }
-         } catch (CrashException var5) {
-            Throwable throwable = var5.getCause();
-            if (!(throwable instanceof IOException)) {
-               this.method_27054(pos);
-               throw var5;
-            }
-
-            LOGGER.error((String)"Couldn't load chunk {}", (Object)pos, (Object)throwable);
-         } catch (Exception var6) {
-            LOGGER.error((String)"Couldn't load chunk {}", (Object)pos, (Object)var6);
-         }
-
-         this.method_27054(pos);
-         return Either.left(new ProtoChunk(pos, UpgradeData.NO_UPGRADE_DATA, this.world));
-      }, this.mainThreadExecutor);
-         */
     }
 
     private CompletableFuture<Optional<NbtCompound>> getUpdatedChunkNbtAtAsync(ChunkPos pos) {
@@ -359,7 +334,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
                                     } finally {
                                         AsyncSerializationManager.pop(scope);
                                     }
-                                }, GlobalExecutors.executor)
+                                }, GlobalExecutors.prioritizedScheduler.executor(16) /* boost priority as we are serializing an unloaded chunk */)
                                 .thenAccept((either) -> {
                                     if (either.left().isPresent()) {
                                         this.setNbt(chunkPos, either.left().get());
@@ -397,7 +372,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
 
     @Inject(method = "tick", at = @At("HEAD"))
     private void onTick(CallbackInfo info) {
-        GlobalExecutors.executor.execute(() -> saveFutures.removeIf(CompletableFuture::isDone));
+        GlobalExecutors.asyncScheduler.execute(() -> saveFutures.removeIf(CompletableFuture::isDone));
     }
 
     @Override

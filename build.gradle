@@ -4,6 +4,7 @@ plugins {
     id "me.champeau.jmh" version "0.7.1"
     id 'com.modrinth.minotaur' version '2.+' apply false
     id 'com.matthewprenger.cursegradle' version '1.4.0' apply false
+    id 'com.github.johnrengelman.shadow' version '8.1.1' apply false
 }
 
 @SuppressWarnings('unused')
@@ -35,6 +36,8 @@ configure(allprojects) {
 }
 
 archivesBaseName = "${project.archives_base_name}-mc${project.minecraft_version}"
+
+clean.dependsOn gradle.includedBuild('FlowSched').task(':clean')
 
 configure (allprojects - project(":tests")) {
     if (project != project(":") && project.parent != project(":")) return
@@ -118,6 +121,7 @@ configure (allprojects - project(":tests")) {
         implementation "com.electronwill.night-config:toml:${night_config_version}"
         implementation "org.threadly:threadly:${threadly_version}"
         implementation "net.objecthunter:exp4j:${exp4j_version}"
+        implementation "com.ishland.flowsched:flowsched"
 
     }
 }
@@ -146,6 +150,7 @@ dependencies {
     include implementation("com.electronwill.night-config:core:${night_config_version}")
     include implementation("org.threadly:threadly:${threadly_version}")
     include implementation("net.objecthunter:exp4j:${exp4j_version}")
+//    include implementation("com.ishland.flowsched:flowsched")
 
     // PSA: Some older mods, compiled on Loom 0.2.1, might have outdated Maven POMs.
     // You may need to force-disable transitiveness on them.
@@ -196,8 +201,9 @@ dependencies {
         (subprojects - project(":tests")).forEach {
             if (it.parent != project(":")) return
 
-            api project(path: ":${it.name}", configuration: "namedElements")
-            include project("${it.name}:")
+            def projectName = it.name
+            api project(path: ":${projectName}", configuration: "namedElements")
+            include project("${projectName}:")
         }
     }
 }

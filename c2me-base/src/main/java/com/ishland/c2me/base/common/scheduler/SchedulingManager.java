@@ -1,6 +1,7 @@
 package com.ishland.c2me.base.common.scheduler;
 
-import com.ishland.c2me.base.common.structs.DynamicPriorityQueue;
+import com.ishland.c2me.base.common.GlobalExecutors;
+import com.ishland.flowsched.structs.SimpleObjectPool;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ReferenceOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
@@ -8,53 +9,71 @@ import net.minecraft.server.world.ChunkLevels;
 import net.minecraft.util.math.ChunkPos;
 
 import java.util.concurrent.Executor;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class SchedulingManager {
 
+    private static final AtomicInteger COUNTER = new AtomicInteger(0);
+
     public static final int MAX_LEVEL = ChunkLevels.INACCESSIBLE + 1;
-    private final DynamicPriorityQueue<ScheduledTask> queue = new DynamicPriorityQueue<>(MAX_LEVEL + 1);
-    private final Long2ReferenceOpenHashMap<ObjectArraySet<ScheduledTask>> pos2Tasks = new Long2ReferenceOpenHashMap<>();
+    private final Long2ReferenceOpenHashMap<ObjectArraySet<AbstractPosAwarePrioritizedTask>> pos2Tasks = new Long2ReferenceOpenHashMap<>();
+    private final SimpleObjectPool<ObjectArraySet<AbstractPosAwarePrioritizedTask>> pos2TasksPool = new SimpleObjectPool<>(unused -> new ObjectArraySet<>(), ObjectArraySet::clear, ObjectArraySet::clear, 2048);
     private final Long2IntOpenHashMap prioritiesFromLevel = new Long2IntOpenHashMap();
-    private final NeighborLockingManager neighborLockingManager = new NeighborLockingManager();
-    private final AtomicInteger scheduledCount = new AtomicInteger(0);
-    private final AtomicBoolean scheduled = new AtomicBoolean(false);
+    private final Object schedulingMutex = new Object();
+    private final int id = COUNTER.getAndIncrement();
     private ChunkPos currentSyncLoad = null;
 
     private final Executor executor;
-    private final int maxScheduled;
 
     {
         prioritiesFromLevel.defaultReturnValue(MAX_LEVEL);
     }
 
-    public SchedulingManager(Executor executor, int maxScheduled) {
+    public SchedulingManager(Executor executor) {
         this.executor = executor;
-        this.maxScheduled = maxScheduled;
     }
 
-    public void enqueue(ScheduledTask task) {
-        this.executor.execute(() -> {
-            if (task.isAsync()) {
-                schedule0(task);
-            } else {
-                queue.enqueue(task, prioritiesFromLevel.get(task.centerPos()));
-                pos2Tasks.computeIfAbsent(task.centerPos(), unused -> new ObjectArraySet<>()).add(task);
-                scheduleExecution();
+    public void enqueue(AbstractPosAwarePrioritizedTask task) {
+        synchronized (this.schedulingMutex) {
+            final long pos = task.getPos();
+            final ObjectArraySet<AbstractPosAwarePrioritizedTask> locks = this.pos2Tasks.computeIfAbsent(pos, unused -> this.pos2TasksPool.alloc());
+            locks.add(task);
+            updatePriorityInternal(pos);
+        }
+        task.addPostExec(() -> {
+            synchronized (this.schedulingMutex) {
+                final ObjectArraySet<AbstractPosAwarePrioritizedTask> tasks = this.pos2Tasks.get(task.getPos());
+                if (tasks != null) {
+                    tasks.remove(task);
+                    if (tasks.isEmpty()) {
+                        this.pos2Tasks.remove(task.getPos());
+                        this.pos2TasksPool.release(tasks);
+                    }
+                }
             }
         });
+        GlobalExecutors.prioritizedScheduler.schedule(task);
+    }
+
+    public void enqueue(long pos, Runnable command) {
+        this.enqueue(new WrappingTask(pos, command));
+    }
+
+    public Executor positionedExecutor(long pos) {
+        return command -> this.enqueue(pos, command);
     }
 
     public void updatePriorityFromLevel(long pos, int level) {
         this.executor.execute(() -> {
-            if (prioritiesFromLevel.get(pos) == level) return;
-            if (level < MAX_LEVEL) {
-                prioritiesFromLevel.put(pos, level);
-            } else {
-                prioritiesFromLevel.remove(pos);
+            synchronized (this.schedulingMutex) {
+                if (prioritiesFromLevel.get(pos) == level) return;
+                if (level < MAX_LEVEL) {
+                    prioritiesFromLevel.put(pos, level);
+                } else {
+                    prioritiesFromLevel.remove(pos);
+                }
+                updatePriorityInternal(pos);
             }
-            updatePriorityInternal(pos);
         });
     }
 
@@ -73,34 +92,33 @@ public class SchedulingManager {
             fromSyncLoad = MAX_LEVEL;
         }
         int priority = Math.min(fromLevel, fromSyncLoad);
-        final ObjectArraySet<ScheduledTask> locks = this.pos2Tasks.get(pos);
+        final ObjectArraySet<AbstractPosAwarePrioritizedTask> locks = this.pos2Tasks.get(pos);
         if (locks != null) {
-            for (ScheduledTask lock : locks) {
-                queue.changePriority(lock, priority);
+            for (AbstractPosAwarePrioritizedTask lock : locks) {
+                lock.setPriority(priority);
+                GlobalExecutors.prioritizedScheduler.notifyPriorityChange(lock);
             }
         }
     }
 
     public void setCurrentSyncLoad(ChunkPos pos) {
         executor.execute(() -> {
-            if (this.currentSyncLoad != null) {
-                final ChunkPos lastSyncLoad = this.currentSyncLoad;
-                this.currentSyncLoad = null;
-                updateSyncLoadInternal(lastSyncLoad);
-            }
-            if (pos != null) {
-                this.currentSyncLoad = pos;
-                updateSyncLoadInternal(pos);
+            synchronized (this.schedulingMutex) {
+                if (this.currentSyncLoad != null) {
+                    final ChunkPos lastSyncLoad = this.currentSyncLoad;
+                    this.currentSyncLoad = null;
+                    updateSyncLoadInternal(lastSyncLoad);
+                }
+                if (pos != null) {
+                    this.currentSyncLoad = pos;
+                    updateSyncLoadInternal(pos);
+                }
             }
         });
     }
 
-    public NeighborLockingManager getNeighborLockingManager() {
-        return this.neighborLockingManager;
-    }
-
-    public Executor getExecutor() {
-        return executor;
+    public int getId() {
+        return this.id;
     }
 
     private void updateSyncLoadInternal(ChunkPos pos) {
@@ -111,40 +129,6 @@ public class SchedulingManager {
             }
         }
         long endTime = System.nanoTime();
-    }
-
-    private void scheduleExecution() {
-        if (scheduledCount.get() < maxScheduled && scheduled.compareAndSet(false, true)) {
-            this.executor.execute(() -> {
-                ScheduleStatus status;
-                while (scheduledCount.get() < maxScheduled && (status = scheduleExecutionInternal()).success) {
-                    if (!status.async) scheduledCount.incrementAndGet();
-                }
-                scheduled.set(false);
-            });
-        }
-    }
-
-    private ScheduleStatus scheduleExecutionInternal() {
-        final ScheduledTask task = queue.dequeue();
-        if (task != null) {
-            this.pos2Tasks.get(task.centerPos()).remove(task);
-            runPos2TasksMaintenance(task.centerPos());
-            boolean scheduled1 = schedule0(task);
-            if (scheduled1) return ScheduleStatus.SCHEDULED;
-        }
-        return ScheduleStatus.NOT_SCHEDULED;
-    }
-
-    private boolean schedule0(ScheduledTask task) {
-        if (task.tryPrepare()) {
-            task.runTask(() -> {
-                scheduledCount.decrementAndGet();
-                scheduleExecution();
-            });
-            return true;
-        }
-        return false;
     }
 
     private static int chebyshev(ChunkPos a, ChunkPos b) {
@@ -168,12 +152,5 @@ public class SchedulingManager {
             this.async = async;
         }
     };
-
-    private void runPos2TasksMaintenance(long pos) {
-        final ObjectArraySet<ScheduledTask> locks = this.pos2Tasks.get(pos);
-        if (locks != null && locks.isEmpty()) {
-            this.pos2Tasks.remove(pos);
-        }
-    }
 
 }

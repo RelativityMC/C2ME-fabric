@@ -1,7 +1,7 @@
 package com.ishland.c2me.opts.allocs.mixin.object_pooling_caching;
 
 import com.ishland.c2me.opts.allocs.common.PooledFeatureContext;
-import com.ishland.c2me.base.common.structs.SimpleObjectPool;
+import com.ishland.flowsched.structs.SimpleObjectPool;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.random.Random;
 import net.minecraft.world.StructureWorldAccess;
@@ -36,7 +36,6 @@ public class MixinConfiguredFeature<FC extends FeatureConfig, F extends Feature<
             context.reInit(Optional.empty(), world, chunkGenerator, random, origin, this.config);
             return this.feature.generate(context);
         } finally {
-            context.reInit();
             pool.release(context);
         }
     }
