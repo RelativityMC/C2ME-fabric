@@ -3,6 +3,7 @@ package com.ishland.c2me.threading.worldgen.mixin;
 import com.ishland.c2me.base.common.scheduler.IVanillaChunkManager;
 import com.ishland.c2me.base.common.scheduler.ThreadLocalWorldGenSchedulingState;
 import com.ishland.c2me.threading.worldgen.common.Config;
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.mojang.datafixers.util.Either;
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 import net.minecraft.server.world.ChunkHolder;
@@ -25,6 +26,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.function.Function;
 import java.util.function.IntFunction;
 
 @Mixin(ThreadedAnvilChunkStorage.class)
@@ -86,6 +88,15 @@ public abstract class MixinThreadedAnvilChunkStorage {
     @Redirect(method = "getRegion", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ThreadedAnvilChunkStorage;getCurrentChunkHolder(J)Lnet/minecraft/server/world/ChunkHolder;"))
     private ChunkHolder redirectGetChunkHolder(ThreadedAnvilChunkStorage instance, long pos) {
         return this.chunkHolders.get(pos); // thread-safe
+    }
+
+    @ModifyReturnValue(method = "convertToFullChunk", at = @At("RETURN"))
+    private CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> fireFullChunkPostCompleteAsync(CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> original, ChunkHolder chunkHolder) {
+        if (Config.asyncScheduling) {
+            return original.thenApplyAsync(Function.identity(), r -> ((IVanillaChunkManager) this).c2me$getSchedulingManager().enqueue(chunkHolder.getPos().toLong(), r));
+        } else {
+            return original;
+        }
     }
 
 }
