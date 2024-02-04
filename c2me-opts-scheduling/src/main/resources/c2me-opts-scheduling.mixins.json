@@ -17,7 +17,9 @@
     "shutdown.MixinMinecraftServer",
     "shutdown.MixinServerEntityManager",
     "shutdown.MixinServerWorld",
+    "task_scheduling.MixinChunkHolder",
     "task_scheduling.MixinEntityChunkDataAccess",
+    "task_scheduling.MixinServerChunkManager",
     "task_scheduling.MixinThreadedAnvilChunkStorage"
   ]
 }
