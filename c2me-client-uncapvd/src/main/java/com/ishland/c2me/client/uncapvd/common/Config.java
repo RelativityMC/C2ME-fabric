@@ -21,7 +21,7 @@ public class Config {
     }
 
     private static double memoryInMiBNeededForVD(int vd) {
-        return Math.pow(vd * 2 + 1, 2) * (PlatformDependent.isJ9Jvm() ? 0.3 : 0.6);
+        return Math.pow(vd * 2 + 1, 2) * (PlatformDependent.isJ9Jvm() ? 0.2 : 0.4);
     }
 
     private static double memoryInGiB() {
