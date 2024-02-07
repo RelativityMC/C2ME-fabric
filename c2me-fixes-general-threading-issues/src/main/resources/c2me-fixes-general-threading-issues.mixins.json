@@ -8,6 +8,7 @@
     "MixinChunkTicketManager",
     "MixinThreadedAnvilChunkStorage",
     "asynccatchers.MixinMinecraftServer",
-    "asynccatchers.MixinServerChunkManager"
+    "asynccatchers.MixinServerChunkManager",
+    "asynccatchers.MixinThreadedAnvilChunkStorage"
   ]
 }
