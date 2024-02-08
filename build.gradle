@@ -59,6 +59,7 @@ configure (allprojects - project(":tests")) {
     loom {
         def file = project(":c2me-base").file("src/main/resources/c2me-base.accesswidener")
         accessWidenerPath = file
+        enableTransitiveAccessWideners = false
 //        logger.lifecycle(String.format("%s: Using access widener at %s", project, file.getAbsolutePath()))
         runs {
             server {
