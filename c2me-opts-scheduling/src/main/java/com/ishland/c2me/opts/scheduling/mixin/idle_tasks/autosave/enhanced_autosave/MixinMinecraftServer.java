@@ -1,6 +1,7 @@
 package com.ishland.c2me.opts.scheduling.mixin.idle_tasks.autosave.enhanced_autosave;
 
 import com.ishland.c2me.opts.scheduling.common.idle_tasks.IThreadedAnvilChunkStorage;
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.ServerTask;
 import net.minecraft.server.ServerTickManager;
@@ -9,9 +10,9 @@ import net.minecraft.util.Util;
 import net.minecraft.util.thread.ReentrantThreadExecutor;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.injection.At;
 
 @Mixin(MinecraftServer.class)
 public abstract class MixinMinecraftServer extends ReentrantThreadExecutor<ServerTask> {
@@ -30,35 +31,24 @@ public abstract class MixinMinecraftServer extends ReentrantThreadExecutor<Serve
 
     @Unique
     private boolean c2me$shouldKeepSavingChunks() {
-        return this.hasRunningTasks() || Util.getMeasuringTimeNano() < this.tickStartTimeNanos;
+        return this.hasRunningTasks() || Util.getMeasuringTimeNano() < (this.tickStartTimeNanos - 1_000_000L); // reserve 1ms
     }
 
     /**
      * @author ishland
      * @reason improve task execution when waiting for next tick
      */
-    @Overwrite
-    private boolean runOneTask() {
-        if (super.runTask()) {
-            return true;
-        } else {
-            boolean hasWork = false;
-            if (this.tickManager.isSprinting() || this.shouldKeepTicking()) {
-                for(ServerWorld serverWorld : this.getWorlds()) {
-                    if (serverWorld.getChunkManager().executeQueuedTasks()) hasWork = true;
+    @ModifyReturnValue(method = "runOneTask", at = @At("RETURN"))
+    private boolean postRunTask(boolean original) {
+        if (original) return true;
+        if (this.c2me$shouldKeepSavingChunks()) {
+            for (ServerWorld serverWorld : this.getWorlds()) {
+                if (((IThreadedAnvilChunkStorage) serverWorld.getChunkManager().threadedAnvilChunkStorage).c2me$runOneChunkAutoSave()) {
+                    return true;
                 }
             }
-
-            if (!hasWork && this.c2me$shouldKeepSavingChunks()) {
-                for (ServerWorld serverWorld : this.getWorlds()) {
-                    if (this.c2me$shouldKeepSavingChunks()) {
-                        hasWork |= ((IThreadedAnvilChunkStorage) serverWorld.getChunkManager().threadedAnvilChunkStorage).c2me$runOneChunkAutoSave();
-                    }
-                }
-            }
-
-            return hasWork;
         }
+        return false;
     }
 
 }

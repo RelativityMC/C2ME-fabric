@@ -49,8 +49,10 @@ public abstract class MixinChunkStatus {
             Finishable finishable = FlightProfiler.INSTANCE.startChunkGenerationProfiling(chunk.getPos(), world.getRegistryKey(), this.toString());
             CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> completableFuture = this.generationTask.doWork(thiz, executor, world, generator, structureTemplateManager, lightingProvider, fullChunkConverter, chunks, chunk);
             return completableFuture.thenApply((either) -> {
-                if (chunk instanceof ProtoChunk protoChunk && !protoChunk.getStatus().isAtLeast(thiz)) {
-                    protoChunk.setStatus(thiz);
+                if (either.left().isPresent()) {
+                    if (either.left().get() instanceof ProtoChunk protoChunk && !protoChunk.getStatus().isAtLeast(thiz)) {
+                        protoChunk.setStatus(thiz);
+                    }
                 }
 
                 if (finishable != null) {

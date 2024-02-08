@@ -10,6 +10,12 @@ pluginManagement {
 
 rootProject.name = "c2me" // avoid weirdness when building the project using another directory name
 
+includeBuild('FlowSched') {
+    dependencySubstitution {
+        substitute module('com.ishland.flowsched:flowsched') using project(':')
+    }
+}
+
 include 'tests'
 include 'tests:test-mod'
 include 'tests:vanilla-test'

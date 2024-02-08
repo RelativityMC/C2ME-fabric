@@ -52,7 +52,7 @@ public class MixinChunkSerializer {
         } else {
             final NbtCompound nbtCompound = scope.pendingBlockEntityNbtsPacked.get(pos);
             if (nbtCompound != null && chunk instanceof WorldChunk) nbtCompound.putBoolean("keepPacked", true);
-            if (nbtCompound == null) LOGGER.warn("Block Entity at {} for block {} doesn't exist", pos, chunk.getBlockState(pos).getBlock());
+            if (nbtCompound == null && AsyncSerializationManager.DEBUG) LOGGER.warn("Block Entity at {} for block {} doesn't exist", pos, chunk.getBlockState(pos).getBlock());
             return nbtCompound;
         }
     }

@@ -46,6 +46,7 @@ JDK 17+ is required to build and use C2ME
 Run the following commands in the root directory:
 
 ```shell
+git submodule update --init --recursive
 ./gradlew clean build
 ```
 

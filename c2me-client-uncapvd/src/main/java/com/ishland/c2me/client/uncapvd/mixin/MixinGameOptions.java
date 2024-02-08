@@ -15,7 +15,7 @@ public class MixinGameOptions {
 
     @Shadow @Final private SimpleOption<Integer> viewDistance;
 
-    @Inject(method = "<init>", at = @At("RETURN"))
+    @Inject(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/option/GameOptions;load()V", shift = At.Shift.BEFORE))
     private void onInit(CallbackInfo ci) {
         final SimpleOption.ValidatingIntSliderCallbacks callbacks = new SimpleOption.ValidatingIntSliderCallbacks(2, Config.maxViewDistance);
         ((ISimpleOption<Integer>) this.viewDistance).setCallbacks(callbacks);

@@ -19,6 +19,7 @@ pipeline {
                 ) {
                     sh 'git fetch --tags'
                     sh 'git reset --hard'
+                    sh 'git submodule update --init --recursive --force'
                     sh './gradlew clean build'
                 }
             }

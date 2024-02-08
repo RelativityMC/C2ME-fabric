@@ -28,6 +28,8 @@ import java.util.stream.Collectors;
 
 public class AsyncSerializationManager {
 
+    public static final boolean DEBUG = Boolean.getBoolean("c2me.chunkio.debug");
+
     private static final Logger LOGGER = LoggerFactory.getLogger("C2ME Async Serialization Manager");
 
     private static final ThreadLocal<ArrayDeque<Scope>> scopeHolder = ThreadLocal.withInitial(ArrayDeque::new);
@@ -80,7 +82,9 @@ public class AsyncSerializationManager {
             final HashSet<BlockPos> blockPos = new HashSet<>(this.blockEntities.keySet());
             blockPos.addAll(this.pendingBlockEntityNbtsPacked.keySet());
             if (this.blockEntityPositions.size() != blockPos.size()) {
-                LOGGER.warn("Block entities size mismatch! expected {} but got {}", this.blockEntityPositions.size(), blockPos.size());
+                if (DEBUG) {
+                    LOGGER.warn("Block entities size mismatch! expected {} but got {}", this.blockEntityPositions.size(), blockPos.size());
+                }
             }
         }
 

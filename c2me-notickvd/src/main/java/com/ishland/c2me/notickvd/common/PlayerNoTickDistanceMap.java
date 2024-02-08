@@ -1,7 +1,7 @@
 package com.ishland.c2me.notickvd.common;
 
-import com.ishland.c2me.base.common.structs.DynamicPriorityQueue;
 import com.ishland.c2me.base.mixin.access.IThreadedAnvilChunkStorage;
+import com.ishland.flowsched.structs.DynamicPriorityQueue;
 import com.mojang.logging.LogUtils;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongIterator;

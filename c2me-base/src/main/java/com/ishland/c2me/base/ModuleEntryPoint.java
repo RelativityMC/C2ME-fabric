@@ -22,8 +22,8 @@ public class ModuleEntryPoint {
                                 (cpus / 1.2 - 2)
                             ),
                             if( is_j9vm,
-                                ( ( mem_gb - (if(is_client, 0.6, 0.2)) ) / 0.5 ),
-                                ( ( mem_gb - (if(is_client, 1.2, 0.6)) ) / 1.2 )
+                                ( ( mem_gb - (if(is_client, 0.6, 0.2)) ) / 0.4 ),
+                                ( ( mem_gb - (if(is_client, 1.2, 0.6)) ) / 0.6 )
                             )
                         ) - if(is_client, 2, 0)
                     )
@@ -88,12 +88,13 @@ public class ModuleEntryPoint {
     public static final long globalExecutorParallelism;
 
     static {
+        final int defaultEval = tryEvaluateExpression(DEFAULT_EXPRESSION);
         int value;
         try {
             value = tryEvaluateExpression(defaultGlobalExecutorParallelismExpression);
         } catch (Throwable t) {
             ConfigSystem.LOGGER.error("Failed to evaluate defaultGlobalExecutorParallelismExpression, falling back to default value", t);
-            value = tryEvaluateExpression(DEFAULT_EXPRESSION);
+            value = defaultEval;
         }
 
         defaultParallelism = value;
@@ -101,6 +102,8 @@ public class ModuleEntryPoint {
                 .key("globalExecutorParallelism")
                 .comment("Configures the parallelism of global executor")
                 .getLong(value, value, ConfigSystem.LongChecks.THREAD_COUNT);
+
+        ConfigSystem.LOGGER.info("Global Executor Parallelism: {} configured, {} evaluated, {} default evaluated", globalExecutorParallelism, defaultParallelism, defaultEval);
     }
 
 //    public static int getDefaultGlobalExecutorParallelism() {
