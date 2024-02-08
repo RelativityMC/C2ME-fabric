@@ -2,6 +2,7 @@ package com.ishland.c2me.rewrites.chunkio.common;
 
 import com.google.common.base.Preconditions;
 import com.ishland.c2me.base.common.theinterface.IDirectStorage;
+import net.minecraft.class_9240;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.scanner.NbtScanner;
 import net.minecraft.util.math.ChunkPos;
@@ -16,9 +17,9 @@ public class C2MEStorageVanillaInterface extends StorageIoWorker implements IDir
 
     private final C2MEStorageThread backend;
 
-    public C2MEStorageVanillaInterface(Path directory, boolean dsync, String name) {
-        super(null, dsync, name);
-        this.backend = new C2MEStorageThread(directory, dsync, name);
+    public C2MEStorageVanillaInterface(class_9240 arg, Path path, boolean dsync) {
+        super(arg, path, dsync);
+        this.backend = new C2MEStorageThread(arg, path, dsync);
     }
 
     @Override

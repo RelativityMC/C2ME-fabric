@@ -27,7 +27,7 @@ accessible    method    net/minecraft/util/collection/WeightedList              
 accessible    method    net/minecraft/nbt/NbtCompound                                                  <init>              (Ljava/util/Map;)V
 accessible    method    net/minecraft/nbt/NbtList                                                      <init>              (Ljava/util/List;B)V
 accessible    method    net/minecraft/world/gen/surfacebuilder/MaterialRules$SequenceBlockStateRule    <init>              (Ljava/util/List;)V
-accessible    method    net/minecraft/world/storage/RegionBasedStorage                                 <init>              (Ljava/nio/file/Path;Z)V
+accessible    method    net/minecraft/world/storage/RegionBasedStorage                                 <init>              (Lnet/minecraft/class_9240;Ljava/nio/file/Path;Z)V
 
 accessible    field    net/minecraft/world/storage/StorageIoWorker$Result                   nbt                 Lnet/minecraft/nbt/NbtCompound;
 accessible    field    net/minecraft/world/storage/StorageIoWorker$Result                   future              Ljava/util/concurrent/CompletableFuture;

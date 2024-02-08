@@ -8,6 +8,7 @@ import com.mojang.serialization.Codec;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.class_9240;
 import net.minecraft.datafixer.Schemas;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtList;
@@ -316,9 +317,9 @@ public class ComparisonSession implements Closeable {
         final HashMap<RegistryKey<World>, StorageIoWorker> regionIoWorkers = new HashMap<>();
         final HashMap<RegistryKey<World>, StorageIoWorker> poiIoWorkers = new HashMap<>();
         for (RegistryKey<World> world : worldKeys) {
-            regionIoWorkers.put(world, new StorageIoWorker(session.getWorldDirectory(world).resolve("region"), true, "chunk") {
+            regionIoWorkers.put(world, new StorageIoWorker(new class_9240(session.getDirectoryName(), world, "entities"), session.getWorldDirectory(world).resolve("region"), true) {
             });
-            poiIoWorkers.put(world, new StorageIoWorker(session.getWorldDirectory(world).resolve("poi"), true, "poi") {
+            poiIoWorkers.put(world, new StorageIoWorker(new class_9240(session.getDirectoryName(), world, "entities"), session.getWorldDirectory(world).resolve("poi"), true) {
             });
         }
         return new WorldHandle(

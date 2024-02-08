@@ -20,6 +20,7 @@ import it.unimi.dsi.fastutil.longs.Long2ByteMap;
 import it.unimi.dsi.fastutil.longs.Long2ByteMaps;
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
 import net.minecraft.SharedConstants;
+import net.minecraft.class_9240;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ServerWorld;
@@ -64,8 +65,8 @@ import java.util.function.Supplier;
 @Mixin(ThreadedAnvilChunkStorage.class)
 public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStorage implements ChunkHolder.PlayersWatchingChunkProvider {
 
-    public MixinThreadedAnvilChunkStorage(Path path, DataFixer dataFixer, boolean bl) {
-        super(path, dataFixer, bl);
+    public MixinThreadedAnvilChunkStorage(class_9240 arg, Path path, DataFixer dataFixer, boolean bl) {
+        super(arg, path, dataFixer, bl);
     }
 
     @Shadow
@@ -272,7 +273,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
      * @reason skip datafixer if possible
      */
     @Overwrite
-    public CompletableFuture<Optional<NbtCompound>> getUpdatedChunkNbt(ChunkPos chunkPos) {
+    private CompletableFuture<Optional<NbtCompound>> getUpdatedChunkNbt(ChunkPos chunkPos) {
 //        return this.getNbt(chunkPos).thenApplyAsync(nbt -> nbt.map(this::updateChunkNbt), Util.getMainWorkerExecutor());
         return this.getNbt(chunkPos).thenCompose(nbt -> {
             if (nbt.isPresent()) {

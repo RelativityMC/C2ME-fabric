@@ -5,6 +5,7 @@ import com.ishland.c2me.base.mixin.access.IVersionedChunkStorage;
 import com.ishland.c2me.rewrites.chunk_serializer.common.ChunkDataSerializer;
 import com.ishland.c2me.rewrites.chunk_serializer.common.NbtWriter;
 import com.mojang.datafixers.DataFixer;
+import net.minecraft.class_9240;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;
@@ -36,15 +37,17 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
     @Shadow
     ServerWorld world;
 
+    public MixinThreadedAnvilChunkStorage(class_9240 arg, Path path, DataFixer dataFixer, boolean bl) {
+        super(arg, path, dataFixer, bl);
+    }
+
     @Shadow
     private native boolean isLevelChunk(ChunkPos chunkPos);
 
     @Shadow
     private native byte mark(ChunkPos chunkPos, ChunkStatus.ChunkType chunkType);
 
-    public MixinThreadedAnvilChunkStorage(Path directory, DataFixer dataFixer, boolean dsync) {
-        super(directory, dataFixer, dsync);
-    }
+
 
     /**
      * @author Kroppeb
