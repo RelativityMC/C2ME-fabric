@@ -1,6 +1,8 @@
 package com.ishland.c2me.notickvd.common;
 
 import com.ishland.c2me.base.mixin.access.IThreadedAnvilChunkStorage;
+import com.ishland.c2me.notickvd.common.modimpl.ChunkPosDistanceLevelPropagatorExtended;
+import com.ishland.c2me.notickvd.common.modimpl.LevelPropagatorExtended;
 import com.ishland.flowsched.structs.DynamicPriorityQueue;
 import com.mojang.logging.LogUtils;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
@@ -16,20 +18,20 @@ import net.minecraft.server.world.ChunkTicketType;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.ChunkPosDistanceLevelPropagator;
 import org.slf4j.Logger;
 
 import java.util.Comparator;
 import java.util.concurrent.CompletableFuture;
 
-public class PlayerNoTickDistanceMap extends ChunkPosDistanceLevelPropagator {
+public class PlayerNoTickDistanceMap extends ChunkPosDistanceLevelPropagatorExtended {
 
     private static final Logger LOGGER = LogUtils.getLogger();
     public static final ChunkTicketType<ChunkPos> TICKET_TYPE = ChunkTicketType.create("c2me_no_tick_vd", Comparator.comparingLong(ChunkPos::toLong));
+    public static final int MAX_RENDER_DISTANCE = MathHelper.clamp((int) Config.maxViewDistance, 32, LevelPropagatorExtended.MAX_LEVEL - 10);
 
     private final LongSet sourceChunks = new LongOpenHashSet();
     private final Long2IntOpenHashMap distanceFromNearestPlayer = new Long2IntOpenHashMap();
-    private final DynamicPriorityQueue<ChunkPos> pendingTicketAdds = new DynamicPriorityQueue<>(251);
+    private final DynamicPriorityQueue<ChunkPos> pendingTicketAdds = new DynamicPriorityQueue<>(MAX_RENDER_DISTANCE + 2);
     private final LongOpenHashSet pendingTicketRemoves = new LongOpenHashSet();
     private final LongOpenHashSet managedChunkTickets = new LongOpenHashSet();
     private final ReferenceArrayList<CompletableFuture<Void>> chunkLoadFutures = new ReferenceArrayList<>();
@@ -40,17 +42,17 @@ public class PlayerNoTickDistanceMap extends ChunkPosDistanceLevelPropagator {
     private volatile int pendingTicketUpdatesCount = 0; // for easier access concurrently
 
     public PlayerNoTickDistanceMap(ChunkTicketManager chunkTicketManager, NoTickSystem noTickSystem) {
-        super(251, 16, 256);
+        super(MAX_RENDER_DISTANCE + 2, 16, 256);
         this.chunkTicketManager = chunkTicketManager;
         this.noTickSystem = noTickSystem;
-        this.distanceFromNearestPlayer.defaultReturnValue(251);
+        this.distanceFromNearestPlayer.defaultReturnValue(MAX_RENDER_DISTANCE + 2);
         this.setViewDistance(12);
     }
 
     @Override
     protected int getInitialLevel(long chunkPos) {
         final ObjectSet<ServerPlayerEntity> players = ((com.ishland.c2me.base.mixin.access.IChunkTicketManager) chunkTicketManager).getPlayersByChunkPos().get(chunkPos);
-        return players != null && !players.isEmpty() ? 249 - viewDistance : Integer.MAX_VALUE;
+        return players != null && !players.isEmpty() ? MAX_RENDER_DISTANCE - viewDistance : Integer.MAX_VALUE;
     }
 
     @Override
@@ -60,7 +62,7 @@ public class PlayerNoTickDistanceMap extends ChunkPosDistanceLevelPropagator {
 
     @Override
     protected void setLevel(long chunkPos, int level) {
-        if (level > 249) {
+        if (level > MAX_RENDER_DISTANCE) {
             if (this.distanceFromNearestPlayer.containsKey(chunkPos)) {
                 this.pendingTicketRemoves.add(chunkPos);
                 this.pendingTicketAdds.remove(new ChunkPos(chunkPos));
@@ -77,7 +79,7 @@ public class PlayerNoTickDistanceMap extends ChunkPosDistanceLevelPropagator {
     }
 
     public void addSource(ChunkPos chunkPos) {
-        this.updateLevel(chunkPos.toLong(), 249 - this.viewDistance, true);
+        this.updateLevel(chunkPos.toLong(), MAX_RENDER_DISTANCE - this.viewDistance, true);
         this.sourceChunks.add(chunkPos.toLong());
     }
 
@@ -163,7 +165,7 @@ public class PlayerNoTickDistanceMap extends ChunkPosDistanceLevelPropagator {
     }
 
     public void setViewDistance(int viewDistance) {
-        this.viewDistance = MathHelper.clamp(viewDistance, 3, 249);
+        this.viewDistance = MathHelper.clamp(viewDistance, 3, MAX_RENDER_DISTANCE);
         sourceChunks.forEach((long value) -> {
             removeSource(new ChunkPos(value));
             addSource(new ChunkPos(value));
