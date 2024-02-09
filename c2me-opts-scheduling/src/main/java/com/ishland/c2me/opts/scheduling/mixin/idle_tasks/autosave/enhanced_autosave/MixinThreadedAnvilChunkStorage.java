@@ -29,6 +29,9 @@ public abstract class MixinThreadedAnvilChunkStorage implements IThreadedAnvilCh
     @Shadow @Final private ThreadExecutor<Runnable> mainThreadExecutor;
 
     @Unique
+    private static final int c2me$maxSearchPerCall = 128;
+
+    @Unique
     private ObjectBidirectionalIterator<Long2ObjectMap.Entry<ChunkHolder>> c2me$saveChunksIterator;
     @Unique
     private int c2me$saveChunksIteratorHash = 0;
@@ -51,8 +54,9 @@ public abstract class MixinThreadedAnvilChunkStorage implements IThreadedAnvilCh
             c2me$enhancedAutoSaveUpdateIterator();
         }
 
+        int i = 0;
         final ObjectBidirectionalIterator<Long2ObjectMap.Entry<ChunkHolder>> iterator = this.c2me$saveChunksIterator;
-        while (iterator.hasNext()) {
+        while (iterator.hasNext() && (i ++) < c2me$maxSearchPerCall) {
             final Long2ObjectMap.Entry<ChunkHolder> entry = iterator.next();
             final long pos = entry.getLongKey();
             final ChunkHolder chunkHolder = entry.getValue();
