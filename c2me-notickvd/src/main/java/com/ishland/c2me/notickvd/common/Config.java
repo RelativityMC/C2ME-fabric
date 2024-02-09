@@ -9,7 +9,7 @@ public class Config {
             .key("noTickViewDistance.maxConcurrentChunkLoads")
             .comment("No-tick view distance max concurrent chunk loads \n" +
                     " Lower this for a better latency and higher this for a faster loading")
-            .getLong(GlobalExecutors.GLOBAL_EXECUTOR_PARALLELISM + 1, GlobalExecutors.GLOBAL_EXECUTOR_PARALLELISM + 1, ConfigSystem.LongChecks.POSITIVE_VALUES_ONLY);
+            .getLong(GlobalExecutors.GLOBAL_EXECUTOR_PARALLELISM * 2L, GlobalExecutors.GLOBAL_EXECUTOR_PARALLELISM * 2L, ConfigSystem.LongChecks.POSITIVE_VALUES_ONLY);
 
     public static final boolean compatibilityMode = new ConfigSystem.ConfigAccessor()
             .key("noTickViewDistance.compatibilityMode")
