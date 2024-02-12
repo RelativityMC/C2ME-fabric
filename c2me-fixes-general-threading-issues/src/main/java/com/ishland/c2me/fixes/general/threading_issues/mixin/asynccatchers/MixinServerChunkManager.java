@@ -8,6 +8,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.ConcurrentModificationException;
+
 @Mixin(ServerChunkManager.class)
 public class MixinServerChunkManager {
 
@@ -15,7 +17,11 @@ public class MixinServerChunkManager {
 
     @Inject(method = "tick(Ljava/util/function/BooleanSupplier;Z)V", at = @At("HEAD"))
     private void onTick(CallbackInfo ci) {
-        if (Thread.currentThread() != this.serverThread) throw new IllegalStateException("Async ticking server chunk manager");
+        if (Thread.currentThread() != this.serverThread) {
+            final ConcurrentModificationException e = new ConcurrentModificationException("Async ticking server chunk manager");
+            e.printStackTrace();
+            throw e;
+        }
     }
 
 }
