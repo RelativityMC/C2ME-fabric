@@ -1,7 +1,9 @@
 package com.ishland.c2me.notickvd.common;
 
+import com.ishland.c2me.base.common.C2MEConstants;
 import com.ishland.c2me.base.common.GlobalExecutors;
 import com.ishland.c2me.base.common.config.ConfigSystem;
+import com.ishland.c2me.base.common.config.ModStatuses;
 
 public class Config {
 
@@ -16,6 +18,16 @@ public class Config {
             .comment("Whether to use compatibility mode to send chunks \n" +
                     " This may fix some mod compatibility issues")
             .getBoolean(true, true);
+
+    public static final boolean enableExtRenderDistanceProtocol = new ConfigSystem.ConfigAccessor()
+            .key("noTickViewDistance.enableExtRenderDistanceProtocol")
+            .comment("""
+                    Enable server-side support for extended render distance protocol (c2me:%s)
+                    This allows requesting render distances higher than 127 chunks from the server
+                    
+                    Requires Fabric API (currently %s)
+                    """.formatted(C2MEConstants.EXT_RENDER_DISTANCE_ID, ModStatuses.fabric_networking_api_v1 ? "available" : "unavailable"))
+            .getBoolean(true, false);
 
     public static final boolean ensureChunkCorrectness = new ConfigSystem.ConfigAccessor()
             .key("noTickViewDistance.ensureChunkCorrectness")

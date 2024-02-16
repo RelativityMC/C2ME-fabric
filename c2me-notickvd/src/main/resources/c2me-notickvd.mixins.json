@@ -10,6 +10,8 @@
     "MixinServerChunkManager",
     "MixinThreadedAnvilChunkStorage",
     "MixinWorld",
-    "MixinWorldChunk"
+    "MixinWorldChunk",
+    "ext_render_distance.MixinServerConfigurationNetworkHandler",
+    "ext_render_distance.MixinServerPlayNetworkHandler"
   ]
 }

@@ -13,6 +13,11 @@
     "fabricloader": "*",
     "c2me-base": "*"
   },
+  "entrypoints": {
+    "client": [
+      "com.ishland.c2me.client.uncapvd.common.UncapVDInitializer"
+    ]
+  },
 
   "authors": [
     "RelativityMC",

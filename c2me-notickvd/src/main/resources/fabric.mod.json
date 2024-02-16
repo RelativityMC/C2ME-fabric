@@ -13,6 +13,11 @@
     "fabricloader": "*",
     "c2me-base": "*"
   },
+  "entrypoints": {
+    "main": [
+      "com.ishland.c2me.notickvd.common.NoTickVDInitializer"
+    ]
+  },
 
   "authors": [
     "RelativityMC",

@@ -54,6 +54,12 @@ configure (allprojects - project(":tests")) {
         minecraft "com.mojang:minecraft:${project.minecraft_version}"
         mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
         modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+
+        [
+                "fabric-networking-api-v1"
+        ].forEach {
+            modCompileOnly(fabricApi.module(it, "${project.fabric_version}"))
+        }
     }
 
     loom {
@@ -123,7 +129,6 @@ configure (allprojects - project(":tests")) {
         implementation "org.threadly:threadly:${threadly_version}"
         implementation "net.objecthunter:exp4j:${exp4j_version}"
         implementation "com.ishland.flowsched:flowsched"
-
     }
 }
 
