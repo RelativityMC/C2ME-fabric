@@ -6,6 +6,7 @@
   "mixins": [
     "MixinIdentifier",
     "MixinNbtCompound",
+    "MixinNbtCompound1",
     "MixinNbtList",
     "MixinUtil",
     "asm.ASMTargets",

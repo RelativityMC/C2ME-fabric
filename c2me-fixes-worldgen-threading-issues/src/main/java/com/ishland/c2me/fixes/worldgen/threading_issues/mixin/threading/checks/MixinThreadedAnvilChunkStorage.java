@@ -1,8 +1,8 @@
 package com.ishland.c2me.fixes.worldgen.threading_issues.mixin.threading.checks;
 
-import com.mojang.datafixers.util.Either;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import net.minecraft.server.world.ChunkHolder;
+import net.minecraft.server.world.OptionalChunk;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;
 import net.minecraft.world.chunk.Chunk;
 import org.slf4j.Logger;
@@ -28,7 +28,7 @@ public class MixinThreadedAnvilChunkStorage {
     @Dynamic
     @Inject(method = "method_17227", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/WorldChunk;loadEntities()V"), cancellable = false)
     // lambda expression in convertToFullChunk
-    private void afterLoadToWorld(ChunkHolder chunkHolder, Chunk protoChunk, CallbackInfoReturnable<CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>>> cir) {
+    private void afterLoadToWorld(ChunkHolder chunkHolder, Chunk protoChunk, CallbackInfoReturnable<CompletableFuture<OptionalChunk<Chunk>>> cir) {
         if (this.loadedChunks.contains(chunkHolder.getPos().toLong()))
             LOGGER.error("Double scheduling chunk loading detected on chunk {}", chunkHolder.getPos());
     }

@@ -1,7 +1,5 @@
 package com.ishland.c2me.rewrites.chunk_serializer.common;
 
-import com.ishland.c2me.rewrites.chunk_serializer.common.utils.LithiumUtil;
-import com.ishland.c2me.rewrites.chunk_serializer.common.utils.StarLightUtil;
 import com.ishland.c2me.base.mixin.access.IBelowZeroRetrogen;
 import com.ishland.c2me.base.mixin.access.IBlendingData;
 import com.ishland.c2me.base.mixin.access.IChunkSection;
@@ -11,6 +9,8 @@ import com.ishland.c2me.base.mixin.access.IState;
 import com.ishland.c2me.base.mixin.access.IStructurePiece;
 import com.ishland.c2me.base.mixin.access.IStructureStart;
 import com.ishland.c2me.base.mixin.access.IUpgradeData;
+import com.ishland.c2me.rewrites.chunk_serializer.common.utils.LithiumUtil;
+import com.ishland.c2me.rewrites.chunk_serializer.common.utils.StarLightUtil;
 import com.mojang.serialization.Codec;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.shorts.ShortList;
@@ -51,6 +51,7 @@ import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkNibbleArray;
 import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.ChunkStatus;
+import net.minecraft.world.chunk.ChunkType;
 import net.minecraft.world.chunk.PalettedContainer;
 import net.minecraft.world.chunk.ProtoChunk;
 import net.minecraft.world.chunk.ReadableContainer;
@@ -222,7 +223,7 @@ public final class ChunkDataSerializer {
         writer.finishList(blockEntitiesStart, blockEntitiesCount);
 
 
-        if (chunk.getStatus().getChunkType() == ChunkStatus.ChunkType.PROTOCHUNK) {
+        if (chunk.getStatus().getChunkType() == ChunkType.PROTOCHUNK) {
             ProtoChunk j = (ProtoChunk) chunk;
             final List<NbtCompound> entities = j.getEntities();
             writer.startFixedList(STRING_ENTITIES, entities.size(), NbtElement.COMPOUND_TYPE);
@@ -515,7 +516,7 @@ public final class ChunkDataSerializer {
      * mirror of local codec
      * created by {@link PalettedContainer#createReadableContainerCodec(IndexedIterable, Codec, PalettedContainer.PaletteProvider, Object)}
      * with: {@link Registry#getIndexedEntries()} as idList,
-     * {@link Registry#createEntryCodec()} as entryCodec,
+     * {@link Registry#getEntryCodec()} as entryCodec,
      * {@link PalettedContainer.PaletteProvider#BIOME} as paletteProvider,
      * {@link BiomeKeys#PLAINS} as defaultValue
      */

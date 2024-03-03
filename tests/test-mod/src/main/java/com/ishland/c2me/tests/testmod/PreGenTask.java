@@ -253,10 +253,10 @@ public class PreGenTask {
         Preconditions.checkNotNull(chunkHolder, "chunkHolder is null");
         chunkHolder.getChunkAt(ChunkStatus.FULL, world.getChunkManager().threadedAnvilChunkStorage).thenAcceptAsync(either -> {
             world.getChunkManager().removeTicket(TICKET, pos, 0, Unit.INSTANCE);
-            if (either.left().isPresent())
+            if (either.isPresent())
                 future.complete(null);
-            else if (either.right().isPresent())
-                future.completeExceptionally(new RuntimeException(either.right().get().toString()));
+            else
+                future.completeExceptionally(new RuntimeException(either.getError()));
         }, ((IThreadedAnvilChunkStorage) world.getChunkManager().threadedAnvilChunkStorage).getMainThreadExecutor()).exceptionally(throwable -> {
             future.completeExceptionally(throwable);
             return null;

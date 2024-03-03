@@ -1,12 +1,11 @@
 package com.ishland.c2me.fixes.general.threading_issues.mixin;
 
-import com.mojang.datafixers.util.Either;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ChunkLevels;
+import net.minecraft.server.world.OptionalChunk;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
-import org.spongepowered.asm.mixin.Dynamic;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -14,7 +13,6 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.concurrent.CompletableFuture;
@@ -25,16 +23,13 @@ public abstract class MixinChunkHolder {
 
     @Shadow
     @Final
-    public static CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> UNLOADED_CHUNK_FUTURE;
+    public static CompletableFuture<OptionalChunk<Chunk>> UNLOADED_CHUNK_FUTURE;
     @Shadow
     private int level;
 
     @Shadow
-    protected abstract void combineSavingFuture(CompletableFuture<? extends Either<? extends Chunk, ChunkHolder.Unloaded>> then, String thenDesc);
-
-    @Shadow
     @Final
-    private AtomicReferenceArray<CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>>> futuresByStatus;
+    private AtomicReferenceArray<CompletableFuture<OptionalChunk<Chunk>>> futuresByStatus;
     @Shadow private CompletableFuture<Chunk> savingFuture;
     @Unique
     private Object schedulingMutex = new Object();
@@ -49,26 +44,26 @@ public abstract class MixinChunkHolder {
      * @reason improve handling of async chunk request
      */
     @Overwrite
-    public CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> getChunkAt(ChunkStatus targetStatus, ThreadedAnvilChunkStorage chunkStorage) {
+    public CompletableFuture<OptionalChunk<Chunk>> getChunkAt(ChunkStatus targetStatus, ThreadedAnvilChunkStorage chunkStorage) {
         // TODO [VanillaCopy]
         int i = targetStatus.getIndex();
-        CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> completableFuture = this.futuresByStatus.get(i);
+        CompletableFuture<OptionalChunk<Chunk>> completableFuture = this.futuresByStatus.get(i);
         if (completableFuture != null) {
-            Either<Chunk, ChunkHolder.Unloaded> either = completableFuture.getNow(null);
-            boolean bl = either != null && either.right().isPresent();
+            OptionalChunk<Chunk> either = completableFuture.getNow(null);
+            boolean bl = either != null && !either.isPresent();
             if (!bl) {
                 return completableFuture;
             }
         }
 
-        CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> future;
+        CompletableFuture<OptionalChunk<Chunk>> future;
 
         synchronized (this.schedulingMutex) {
             // copied from above
             completableFuture = this.futuresByStatus.get(i);
             if (completableFuture != null) {
-                Either<Chunk, ChunkHolder.Unloaded> either = completableFuture.getNow(null);
-                boolean bl = either != null && either.right().isPresent();
+                OptionalChunk<Chunk> either = completableFuture.getNow(null);
+                boolean bl = either != null && !either.isPresent();
                 if (!bl) {
                     return completableFuture;
                 }
@@ -82,7 +77,7 @@ public abstract class MixinChunkHolder {
             }
         }
 
-        CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> completableFuture2 = chunkStorage.getChunk((ChunkHolder) (Object) this, targetStatus);
+        CompletableFuture<OptionalChunk<Chunk>> completableFuture2 = chunkStorage.getChunk((ChunkHolder) (Object) this, targetStatus);
         // synchronization: see below
         synchronized (this) {
             this.combineSavingFuture(completableFuture2, "schedule " + targetStatus);
@@ -98,11 +93,14 @@ public abstract class MixinChunkHolder {
         return completableFuture2;
     }
 
-    @Dynamic
-    @Redirect(method = "*", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ChunkHolder;combineSavingFuture(Ljava/util/concurrent/CompletableFuture;Ljava/lang/String;)V"))
-    private void synchronizeCombineSavingFuture(ChunkHolder holder, CompletableFuture<? extends Either<? extends Chunk, ChunkHolder.Unloaded>> then, String thenDesc) {
+    /**
+     * @author ishland
+     * @reason synchronize
+     */
+    @Overwrite
+    public void combineSavingFuture(String thenDesc, CompletableFuture<?> then) {
         synchronized (this) {
-            this.combineSavingFuture(then.exceptionally(unused -> null), thenDesc);
+            this.savingFuture = this.savingFuture.thenCombine(then, (result, thenResult) -> result);
         }
     }
 
@@ -111,9 +109,9 @@ public abstract class MixinChunkHolder {
      * @reason synchronize
      */
     @Overwrite
-    public void combineSavingFuture(String string, CompletableFuture<?> completableFuture) {
+    public void combineSavingFuture(CompletableFuture<? extends OptionalChunk<? extends Chunk>> then, String thenDesc) {
         synchronized (this) {
-            this.savingFuture = this.savingFuture.thenCombine(completableFuture.exceptionally(unused -> null), (chunk, object) -> chunk);
+            this.savingFuture = this.savingFuture.thenCombine(then, (chunk, otherChunk) -> OptionalChunk.orElse(otherChunk, chunk));
         }
     }
 

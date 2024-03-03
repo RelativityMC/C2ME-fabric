@@ -2,10 +2,10 @@ package com.ishland.c2me.opts.chunk_access.mixin.async_chunk_request;
 
 import com.ishland.c2me.base.common.util.CFUtil;
 import com.ishland.c2me.opts.chunk_access.common.CurrentWorldGenState;
-import com.mojang.datafixers.util.Either;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ChunkTicketManager;
 import net.minecraft.server.world.ChunkTicketType;
+import net.minecraft.server.world.OptionalChunk;
 import net.minecraft.server.world.ServerChunkManager;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;
@@ -104,22 +104,20 @@ public abstract class MixinServerChunkManager {
                 }
             }
 
-            final CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> future = this.isMissingForLevel(chunkHolder, ticketLevel) ? ChunkHolder.UNLOADED_CHUNK_FUTURE : chunkHolder.getChunkAt(leastStatus, this.threadedAnvilChunkStorage);
+            final CompletableFuture<OptionalChunk<Chunk>> future = this.isMissingForLevel(chunkHolder, ticketLevel) ? ChunkHolder.UNLOADED_CHUNK_FUTURE : chunkHolder.getChunkAt(leastStatus, this.threadedAnvilChunkStorage);
             if (doCreate && future != null) {
                 future.exceptionally(__ -> null).thenRunAsync(() -> {
                     this.ticketManager.removeTicketWithLevel(ASYNC_LOAD, chunkPos, ticketLevel, chunkPos);
                 }, this.mainThreadExecutor);
             }
             return future;
-        }, this.mainThreadExecutor).thenCompose(Function.identity()).thenApply(either -> either.map(Function.identity(), unloaded -> {
-            if (create) {
-                throw Util.throwOrPause(new IllegalStateException("Chunk not there when requested: " + unloaded));
-            } else {
-                return null;
+        }, this.mainThreadExecutor).thenCompose(Function.identity()).thenApply(either -> {
+            final Chunk chunk = either.orElse(null);
+            if (chunk == null && create) {
+                throw new IllegalStateException("Chunk not there when requested: " + either.getError());
             }
-        }));
+            return chunk;
+        });
     }
-
-
 
 }

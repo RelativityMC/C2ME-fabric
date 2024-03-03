@@ -1,7 +1,6 @@
 package com.ishland.c2me.tests.testmod.mixin;
 
-import com.mojang.datafixers.util.Either;
-import net.minecraft.server.world.ChunkHolder;
+import net.minecraft.server.world.OptionalChunk;
 import net.minecraft.server.world.ServerChunkManager;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
@@ -17,6 +16,6 @@ public interface IServerChunkManager {
     boolean invokeUpdateChunks();
 
     @Invoker
-    CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> invokeGetChunkFuture(int chunkX, int chunkZ, ChunkStatus leastStatus, boolean create);
+    CompletableFuture<OptionalChunk<Chunk>> invokeGetChunkFuture(int chunkX, int chunkZ, ChunkStatus leastStatus, boolean create);
 
 }

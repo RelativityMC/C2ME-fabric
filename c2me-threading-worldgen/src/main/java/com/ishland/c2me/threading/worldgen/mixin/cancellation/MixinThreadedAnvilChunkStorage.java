@@ -1,9 +1,10 @@
 package com.ishland.c2me.threading.worldgen.mixin.cancellation;
 
+import com.ishland.c2me.base.common.util.SneakyThrow;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
-import com.mojang.datafixers.util.Either;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ChunkLevels;
+import net.minecraft.server.world.OptionalChunk;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;
 import net.minecraft.util.thread.ThreadExecutor;
 import net.minecraft.world.chunk.Chunk;
@@ -15,7 +16,10 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.CompletionStage;
 import java.util.function.Function;
 
 @Mixin(ThreadedAnvilChunkStorage.class)
@@ -23,7 +27,7 @@ public abstract class MixinThreadedAnvilChunkStorage {
 
     @Shadow @Final private ThreadExecutor<Runnable> mainThreadExecutor;
 
-    @Shadow public abstract CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> getChunk(ChunkHolder holder, ChunkStatus requiredStatus);
+    @Shadow public abstract CompletableFuture<OptionalChunk<Chunk>> getChunk(ChunkHolder holder, ChunkStatus requiredStatus);
 
     @Shadow @Final private static Logger LOGGER;
 
@@ -38,9 +42,9 @@ public abstract class MixinThreadedAnvilChunkStorage {
     }
 
     @ModifyReturnValue(method = "getChunk", at = @At("RETURN"))
-    private CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> injectCancellationHook(CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> originalReturn, ChunkHolder holder, ChunkStatus requiredStatus) {
+    private CompletableFuture<OptionalChunk<Chunk>> injectCancellationHook(CompletableFuture<OptionalChunk<Chunk>> originalReturn, ChunkHolder holder, ChunkStatus requiredStatus) {
         return originalReturn.thenCompose(either -> {
-            if (either.right().isPresent()) {
+            if (!either.isPresent()) {
                 return CompletableFuture.supplyAsync(() -> {
                     if (ChunkLevels.getStatus(holder.getLevel()).isAtLeast(requiredStatus)) {
 //                        LOGGER.info("Chunk load {} raced, recovering", holder.getPos());
@@ -51,6 +55,20 @@ public abstract class MixinThreadedAnvilChunkStorage {
                 }, this.mainThreadExecutor).thenCompose(Function.identity());
             } else {
                 return CompletableFuture.completedFuture(either);
+            }
+        });
+    }
+
+    @ModifyReturnValue(method = "method_17224", at = @At("RETURN"))
+    private CompletionStage<OptionalChunk<Chunk>> handleGenCancellation(CompletionStage<OptionalChunk<Chunk>> original) {
+        return original.exceptionally(throwable -> {
+            Throwable actual = throwable;
+            while (actual instanceof CompletionException) actual = actual.getCause();
+            if (actual instanceof CancellationException) {
+                return ChunkHolder.UNLOADED_CHUNK;
+            } else {
+                SneakyThrow.sneaky(throwable);
+                return null; // unreachable
             }
         });
     }

@@ -8,7 +8,6 @@ import com.ishland.c2me.base.mixin.access.IRegionBasedStorage;
 import com.ishland.c2me.base.mixin.access.IRegionFile;
 import it.unimi.dsi.fastutil.longs.Long2ReferenceLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
-import net.minecraft.class_9240;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.nbt.NbtSizeTracker;
@@ -17,6 +16,7 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.storage.ChunkCompressionFormat;
 import net.minecraft.world.storage.RegionBasedStorage;
 import net.minecraft.world.storage.RegionFile;
+import net.minecraft.world.storage.StorageKey;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,7 +63,7 @@ public class C2MEStorageThread extends Thread {
     };
     private final ObjectArraySet<CompletableFuture<Void>> writeFutures = new ObjectArraySet<>();
 
-    public C2MEStorageThread(class_9240 arg, Path path, boolean dsync) {
+    public C2MEStorageThread(StorageKey arg, Path path, boolean dsync) {
         this.storage = new RegionBasedStorage(arg, path, dsync);
         this.setName("C2ME Storage #%d".formatted(SERIAL.incrementAndGet()));
         this.setDaemon(true);

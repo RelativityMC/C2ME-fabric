@@ -8,7 +8,6 @@ import com.mojang.serialization.Codec;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
-import net.minecraft.class_9240;
 import net.minecraft.datafixer.Schemas;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtList;
@@ -48,7 +47,7 @@ import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeKeys;
 import net.minecraft.world.chunk.ChunkSection;
-import net.minecraft.world.chunk.ChunkStatus;
+import net.minecraft.world.chunk.ChunkType;
 import net.minecraft.world.chunk.PalettedContainer;
 import net.minecraft.world.chunk.ReadableContainer;
 import net.minecraft.world.dimension.DimensionOptions;
@@ -56,6 +55,7 @@ import net.minecraft.world.gen.structure.Structure;
 import net.minecraft.world.level.storage.LevelStorage;
 import net.minecraft.world.level.storage.ParsedSaveProperties;
 import net.minecraft.world.storage.StorageIoWorker;
+import net.minecraft.world.storage.StorageKey;
 import net.minecraft.world.updater.WorldUpdater;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -126,8 +126,8 @@ public class ComparisonSession implements Closeable {
                             ((IStorageIoWorker) regionBaseIo).invokeReadChunkData(pos)
                                     .thenCombineAsync(((IStorageIoWorker) regionTargetIo).invokeReadChunkData(pos), (chunkDataBase, chunkDataTarget) -> {
                                         try {
-                                            if (ChunkSerializer.getChunkType(chunkDataBase) == ChunkStatus.ChunkType.PROTOCHUNK
-                                                    || ChunkSerializer.getChunkType(chunkDataBase) == ChunkStatus.ChunkType.PROTOCHUNK)
+                                            if (ChunkSerializer.getChunkType(chunkDataBase) == ChunkType.PROTOCHUNK
+                                                    || ChunkSerializer.getChunkType(chunkDataBase) == ChunkType.PROTOCHUNK)
                                                 return null;
 
                                             final Map<Structure, StructureStart> baseStructures = IChunkSerializer.invokeReadStructureStarts(baseStructureContext, chunkDataBase.getCompound("structures"), baseWorld.saveProperties.getGeneratorOptions().getSeed());
@@ -250,7 +250,7 @@ public class ComparisonSession implements Closeable {
 
     private static Codec<ReadableContainer<RegistryEntry<Biome>>> createCodec(Registry<Biome> biomeRegistry) {
         return PalettedContainer.createReadableContainerCodec(
-                biomeRegistry.getIndexedEntries(), biomeRegistry.createEntryCodec(), PalettedContainer.PaletteProvider.BIOME, biomeRegistry.entryOf(BiomeKeys.PLAINS)
+                biomeRegistry.getIndexedEntries(), biomeRegistry.getEntryCodec(), PalettedContainer.PaletteProvider.BIOME, biomeRegistry.entryOf(BiomeKeys.PLAINS)
         );
     }
 
@@ -317,9 +317,9 @@ public class ComparisonSession implements Closeable {
         final HashMap<RegistryKey<World>, StorageIoWorker> regionIoWorkers = new HashMap<>();
         final HashMap<RegistryKey<World>, StorageIoWorker> poiIoWorkers = new HashMap<>();
         for (RegistryKey<World> world : worldKeys) {
-            regionIoWorkers.put(world, new StorageIoWorker(new class_9240(session.getDirectoryName(), world, "entities"), session.getWorldDirectory(world).resolve("region"), true) {
+            regionIoWorkers.put(world, new StorageIoWorker(new StorageKey(session.getDirectoryName(), world, "entities"), session.getWorldDirectory(world).resolve("region"), true) {
             });
-            poiIoWorkers.put(world, new StorageIoWorker(new class_9240(session.getDirectoryName(), world, "entities"), session.getWorldDirectory(world).resolve("poi"), true) {
+            poiIoWorkers.put(world, new StorageIoWorker(new StorageKey(session.getDirectoryName(), world, "entities"), session.getWorldDirectory(world).resolve("poi"), true) {
             });
         }
         return new WorldHandle(

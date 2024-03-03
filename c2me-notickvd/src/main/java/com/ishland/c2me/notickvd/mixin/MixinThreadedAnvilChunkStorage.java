@@ -4,9 +4,9 @@ import com.ishland.c2me.base.mixin.access.IServerChunkManager;
 import com.ishland.c2me.notickvd.common.Config;
 import com.ishland.c2me.notickvd.common.IChunkTicketManager;
 import com.llamalad7.mixinextras.injector.WrapWithCondition;
-import com.mojang.datafixers.util.Either;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ChunkHolder;
+import net.minecraft.server.world.OptionalChunk;
 import net.minecraft.server.world.PlayerChunkWatchingManager;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;
@@ -45,12 +45,12 @@ public abstract class MixinThreadedAnvilChunkStorage {
 
     @Redirect(method = "getPostProcessedChunk", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ChunkHolder;getPostProcessedChunk()Lnet/minecraft/world/chunk/WorldChunk;"))
     private WorldChunk redirectSendWatchPacketsGetWorldChunk(ChunkHolder chunkHolder) {
-        return chunkHolder.getAccessibleChunk();
+        return chunkHolder.getAccessibleFuture().getNow(ChunkHolder.UNLOADED_WORLD_CHUNK).orElse(null);
     }
 
     @Inject(method = "makeChunkAccessible", at = @At("RETURN"))
-    private void onMakeChunkAccessible(ChunkHolder chunkHolder, CallbackInfoReturnable<CompletableFuture<Either<WorldChunk, ChunkHolder.Unloaded>>> cir) {
-        cir.getReturnValue().thenAccept(either -> either.left().ifPresent(worldChunk -> {
+    private void onMakeChunkAccessible(ChunkHolder chunkHolder, CallbackInfoReturnable<CompletableFuture<OptionalChunk<WorldChunk>>> cir) {
+        cir.getReturnValue().thenAccept(either -> either.ifPresent(worldChunk -> {
             if (Config.compatibilityMode) {
                 this.mainThreadExecutor.send(() -> this.sendToPlayers(worldChunk));
             } else {

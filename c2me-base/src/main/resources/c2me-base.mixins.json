@@ -32,6 +32,7 @@
     "access.IStructureStart",
     "access.IStructureWeightSampler",
     "access.IThreadedAnvilChunkStorage",
+    "access.IUpgradeData",
     "access.IVersionedChunkStorage",
     "access.IWeightedList",
     "access.IWeightedListEntry",

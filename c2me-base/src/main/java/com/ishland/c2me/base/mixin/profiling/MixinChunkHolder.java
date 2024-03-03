@@ -1,8 +1,8 @@
 package com.ishland.c2me.base.mixin.profiling;
 
 import com.ishland.c2me.base.common.profiling.IVanillaJfrProfiler;
-import com.mojang.datafixers.util.Either;
 import net.minecraft.server.world.ChunkHolder;
+import net.minecraft.server.world.OptionalChunk;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;
 import net.minecraft.util.math.ChunkPos;
@@ -29,7 +29,7 @@ public abstract class MixinChunkHolder {
     @Shadow @Final private HeightLimitView world;
 
     @Inject(method = "getChunkAt", at = @At("RETURN"))
-    private void postGetChunkAt(ChunkStatus targetStatus, ThreadedAnvilChunkStorage chunkStorage, CallbackInfoReturnable<CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>>> cir) {
+    private void postGetChunkAt(ChunkStatus targetStatus, ThreadedAnvilChunkStorage chunkStorage, CallbackInfoReturnable<CompletableFuture<OptionalChunk<Chunk>>> cir) {
         if (FlightProfiler.INSTANCE instanceof IVanillaJfrProfiler profiler && this.world instanceof ServerWorld serverWorld && !cir.getReturnValue().isDone()) {
             final Finishable finishable = profiler.startChunkLoadSchedule(this.getPos(), serverWorld.getRegistryKey(), targetStatus.toString());
             if (finishable != null) {

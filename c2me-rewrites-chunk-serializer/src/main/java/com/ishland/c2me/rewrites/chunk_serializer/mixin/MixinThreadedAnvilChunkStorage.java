@@ -5,7 +5,6 @@ import com.ishland.c2me.base.mixin.access.IVersionedChunkStorage;
 import com.ishland.c2me.rewrites.chunk_serializer.common.ChunkDataSerializer;
 import com.ishland.c2me.rewrites.chunk_serializer.common.NbtWriter;
 import com.mojang.datafixers.DataFixer;
-import net.minecraft.class_9240;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;
@@ -13,7 +12,9 @@ import net.minecraft.structure.StructureStart;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
+import net.minecraft.world.chunk.ChunkType;
 import net.minecraft.world.poi.PointOfInterestStorage;
+import net.minecraft.world.storage.StorageKey;
 import net.minecraft.world.storage.VersionedChunkStorage;
 import org.slf4j.Logger;
 import org.spongepowered.asm.mixin.Final;
@@ -37,7 +38,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
     @Shadow
     ServerWorld world;
 
-    public MixinThreadedAnvilChunkStorage(class_9240 arg, Path path, DataFixer dataFixer, boolean bl) {
+    public MixinThreadedAnvilChunkStorage(StorageKey arg, Path path, DataFixer dataFixer, boolean bl) {
         super(arg, path, dataFixer, bl);
     }
 
@@ -45,8 +46,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
     private native boolean isLevelChunk(ChunkPos chunkPos);
 
     @Shadow
-    private native byte mark(ChunkPos chunkPos, ChunkStatus.ChunkType chunkType);
-
+    private native byte mark(ChunkPos chunkPos, ChunkType chunkType);
 
 
     /**
@@ -66,7 +66,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
 
         try {
             ChunkStatus chunkStatus = chunk.getStatus();
-            if (chunkStatus.getChunkType() != ChunkStatus.ChunkType.LEVELCHUNK) {
+            if (chunkStatus.getChunkType() != ChunkType.LEVELCHUNK) {
                 if (this.isLevelChunk(chunkPos)) {
                     return false;
                 }

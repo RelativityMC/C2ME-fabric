@@ -16,14 +16,13 @@ import com.ishland.c2me.threading.chunkio.common.ProtoChunkExtension;
 import com.ishland.c2me.threading.chunkio.common.TaskCancellationException;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.mojang.datafixers.DataFixer;
-import com.mojang.datafixers.util.Either;
 import it.unimi.dsi.fastutil.longs.Long2ByteMap;
 import it.unimi.dsi.fastutil.longs.Long2ByteMaps;
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
 import net.minecraft.SharedConstants;
-import net.minecraft.class_9240;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.world.ChunkHolder;
+import net.minecraft.server.world.OptionalChunk;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;
 import net.minecraft.structure.StructureStart;
@@ -34,10 +33,12 @@ import net.minecraft.world.ChunkSerializer;
 import net.minecraft.world.PersistentStateManager;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
+import net.minecraft.world.chunk.ChunkType;
 import net.minecraft.world.chunk.ProtoChunk;
 import net.minecraft.world.gen.chunk.ChunkGenerator;
 import net.minecraft.world.poi.PointOfInterestStorage;
 import net.minecraft.world.storage.StorageIoWorker;
+import net.minecraft.world.storage.StorageKey;
 import net.minecraft.world.storage.VersionedChunkStorage;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -67,7 +68,7 @@ import java.util.function.Supplier;
 @Mixin(ThreadedAnvilChunkStorage.class)
 public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStorage implements ChunkHolder.PlayersWatchingChunkProvider {
 
-    public MixinThreadedAnvilChunkStorage(class_9240 arg, Path path, DataFixer dataFixer, boolean bl) {
+    public MixinThreadedAnvilChunkStorage(StorageKey arg, Path path, DataFixer dataFixer, boolean bl) {
         super(arg, path, dataFixer, bl);
     }
 
@@ -80,7 +81,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
     private PointOfInterestStorage pointOfInterestStorage;
 
     @Shadow
-    protected abstract byte mark(ChunkPos chunkPos, ChunkStatus.ChunkType chunkType);
+    protected abstract byte mark(ChunkPos chunkPos, ChunkType chunkType);
 
     @Shadow
     @Final
@@ -136,7 +137,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
      * @reason async io and deserialization
      */
     @Overwrite
-    private CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> loadChunk(ChunkPos pos) {
+    private CompletableFuture<Chunk> loadChunk(ChunkPos pos) {
         if (scheduledChunks == null) scheduledChunks = new HashSet<>();
         synchronized (scheduledChunks) {
             if (scheduledChunks.contains(pos)) throw new IllegalArgumentException("Already scheduled");
@@ -148,7 +149,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
     }
 
     @NotNull
-    private CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> c2me$loadChunk0(ChunkPos pos) {
+    private CompletableFuture<Chunk> c2me$loadChunk0(ChunkPos pos) {
         final CompletableFuture<Optional<NbtCompound>> poiData =
                 ((com.ishland.c2me.base.mixin.access.ISerializingRegionBasedStorage) this.pointOfInterestStorage).getStorageAccess().read(pos)
                         .exceptionally(throwable -> {
@@ -164,7 +165,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
 
         final ReferenceArrayList<Runnable> mainThreadQueue = new ReferenceArrayList<>();
 
-        final CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> future = getUpdatedChunkNbtAtAsync(pos)
+        final CompletableFuture<Chunk> future = getUpdatedChunkNbtAtAsync(pos)
                 .thenApply(optional -> optional.filter(nbtCompound -> {
                     boolean bl = containsStatus(nbtCompound);
                     if (!bl) {
@@ -203,7 +204,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
                 .thenApply(protoChunk -> {
                     // blending
                     protoChunk = protoChunk != null ? protoChunk : (ProtoChunk) this.getProtoChunk(pos);
-                    if (protoChunk.getBelowZeroRetrogen() != null || protoChunk.getStatus().getChunkType() == ChunkStatus.ChunkType.PROTOCHUNK) {
+                    if (protoChunk.getBelowZeroRetrogen() != null || protoChunk.getStatus().getChunkType() == ChunkType.PROTOCHUNK) {
                         final CompletionStage<List<BitSet>> blendingInfos = BlendingInfoUtil.getBlendingInfos((StorageIoWorker) this.getWorker(), pos);
                         ProtoChunk finalProtoChunk = protoChunk;
                         ((ProtoChunkExtension) protoChunk).setBlendingComputeFuture(
@@ -225,7 +226,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
                     }, this.mainThreadExecutor));
 
                     this.mark(pos, protoChunk.getStatus().getChunkType());
-                    return Either.left(protoChunk);
+                    return protoChunk;
                 });
         future.exceptionally(throwable -> {
             LOGGER.error("Couldn't load chunk {}", pos, throwable);
@@ -265,12 +266,12 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
     }
 
     @ModifyReturnValue(method = "getChunk", at = @At("RETURN"))
-    private CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> postGetChunk(CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>> originalReturn, ChunkHolder holder, ChunkStatus requiredStatus) {
+    private CompletableFuture<OptionalChunk<Chunk>> postGetChunk(CompletableFuture<OptionalChunk<Chunk>> originalReturn, ChunkHolder holder, ChunkStatus requiredStatus) {
         if (requiredStatus == ChunkStatus.FULL.getPrevious()) {
             // wait for initial main thread tasks before proceeding to finish full chunk
             return originalReturn.thenCompose(either -> {
-                if (either.left().isPresent()) {
-                    final Chunk chunk = either.left().get();
+                if (either.isPresent()) {
+                    final Chunk chunk = either.orElse(null);
                     if (chunk instanceof ProtoChunk protoChunk) {
                         final CompletableFuture<Void> future = ((ProtoChunkExtension) protoChunk).getInitialMainThreadComputeFuture();
                         if (future != null) {
@@ -300,7 +301,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
 
             try {
                 ChunkStatus chunkStatus = chunk.getStatus();
-                if (chunkStatus.getChunkType() != ChunkStatus.ChunkType.LEVELCHUNK) {
+                if (chunkStatus.getChunkType() != ChunkType.LEVELCHUNK) {
                     if (this.isLevelChunk(chunkPos)) {
                         return false;
                     }
