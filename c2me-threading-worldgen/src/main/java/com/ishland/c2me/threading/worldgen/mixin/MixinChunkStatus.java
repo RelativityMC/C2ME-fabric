@@ -129,11 +129,6 @@ public abstract class MixinChunkStatus implements IChunkStatus {
             }
         }
 
-        completableFuture.exceptionally(throwable -> {
-            throwable.printStackTrace();
-            return null;
-        });
-
         // TODO [VanillaCopy]
         return completableFuture.thenApply(chunkx -> {
             if (chunkx instanceof ProtoChunk protoChunk && !protoChunk.getStatus().isAtLeast((ChunkStatus) (Object) this)) {

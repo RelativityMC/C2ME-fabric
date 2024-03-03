@@ -67,6 +67,7 @@ public abstract class MixinThreadedAnvilChunkStorage {
             if (actual instanceof CancellationException) {
                 return ChunkHolder.UNLOADED_CHUNK;
             } else {
+                LOGGER.error("Unexpected exception during chunk generation", throwable);
                 SneakyThrow.sneaky(throwable);
                 return null; // unreachable
             }
