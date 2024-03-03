@@ -1,5 +1,8 @@
 package com.ishland.c2me.threading.worldgen.mixin.progresslogger;
 
+import it.unimi.dsi.fastutil.longs.Long2IntMap;
+import it.unimi.dsi.fastutil.longs.Long2IntMaps;
+import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import net.minecraft.server.WorldGenerationProgressLogger;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.MathHelper;
@@ -25,12 +28,13 @@ public class MixinWorldGenerationProgressLogger {
     private volatile ChunkPos spawnPos = null;
     private volatile int radius = 0;
     private volatile int chunkStatusTransitions = 0;
+    private Long2IntMap map = Long2IntMaps.synchronize(new Long2IntOpenHashMap(), this);
     private int chunkStatuses = 0;
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(int radius, CallbackInfo info) {
         ChunkStatus status = ChunkStatus.FULL;
-        this.radius = radius;
+        this.radius = (int) ((Math.sqrt(radius) - 1) / 2); // radius is actually total count
         chunkStatuses = 0;
         chunkStatusTransitions = 0;
         while ((status = status.getPrevious()) != ChunkStatus.EMPTY)
@@ -41,11 +45,26 @@ public class MixinWorldGenerationProgressLogger {
     @Inject(method = "start(Lnet/minecraft/util/math/ChunkPos;)V", at = @At("RETURN"))
     private void onStart(ChunkPos spawnPos, CallbackInfo ci) {
         this.spawnPos = spawnPos;
+        synchronized (this) {
+            for (Long2IntMap.Entry entry : this.map.long2IntEntrySet()) {
+                if (entry.getIntValue() > 0) {
+                    final ChunkPos pos = new ChunkPos(entry.getLongKey());
+                    if (pos.getChebyshevDistance(spawnPos) <= radius) this.chunkStatusTransitions += entry.getIntValue();
+                }
+            }
+        }
     }
 
     @Inject(method = "setChunkStatus", at = @At("HEAD"))
     private void onSetChunkStatus(ChunkPos pos, ChunkStatus status, CallbackInfo ci) {
-        if (status != null && (this.spawnPos == null || pos.getChebyshevDistance(spawnPos) <= radius)) this.chunkStatusTransitions++;
+        synchronized (this) {
+            if (this.spawnPos == null) {
+                final int i = this.map.getOrDefault(pos.toLong(), 0);
+                this.map.put(pos.toLong(), i + 1);
+            } else {
+                if (status != null && pos.getChebyshevDistance(spawnPos) <= radius) this.chunkStatusTransitions++;
+            }
+        }
     }
 
     /**
