@@ -5,6 +5,7 @@
   "plugin": "com.ishland.c2me.base.common.ModuleMixinPlugin",
   "mixins": [
     "MixinServerLightingProvider",
-    "MixinThreadedAnvilChunkStorage"
+    "MixinThreadedAnvilChunkStorage",
+    "scalablelux.MixinSchedulingUtil"
   ]
 }

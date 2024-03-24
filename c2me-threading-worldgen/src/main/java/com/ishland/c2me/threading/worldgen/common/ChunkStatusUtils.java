@@ -48,10 +48,10 @@ public class ChunkStatusUtils {
         ObjectArrayList<LockToken> lockTargets = new ObjectArrayList<>((2 * radius + 1) * (2 * radius + 1) + 1);
         for (int x = target.x - radius; x <= target.x + radius; x++)
             for (int z = target.z - radius; z <= target.z + radius; z++)
-                lockTargets.add(new LockTokenImpl(schedulingManager.getId(), ChunkPos.toLong(x, z)));
+                lockTargets.add(new LockTokenImpl(schedulingManager.getId(), ChunkPos.toLong(x, z), LockTokenImpl.Usage.WORLDGEN));
 
         if (threadingType == SINGLE_THREADED) {
-            lockTargets.add(new LockTokenImpl(schedulingManager.getId(), ChunkPos.MARKER));
+            lockTargets.add(new LockTokenImpl(schedulingManager.getId(), ChunkPos.MARKER, LockTokenImpl.Usage.WORLDGEN));
         }
 
         final ScheduledTask<T> task = new ScheduledTask<>(
