@@ -227,7 +227,7 @@ public class ComparisonSession implements Closeable {
                 if (sectionData.contains("block_states", 10)) {
                     palettedContainer = CODEC.parse(NbtOps.INSTANCE, sectionData.getCompound("block_states"))
                             .promotePartial(s -> LOGGER.error("Recoverable errors when loading section [" + pos.x + ", " + y + ", " + pos.z + "]: " + s))
-                            .getOrThrow(false, LOGGER::error);
+                            .getOrThrow(RuntimeException::new);
                 } else {
                     palettedContainer = new PalettedContainer<>(Block.STATE_IDS, Blocks.AIR.getDefaultState(), PalettedContainer.PaletteProvider.BLOCK_STATE);
                 }
@@ -236,7 +236,7 @@ public class ComparisonSession implements Closeable {
                 if (sectionData.contains("biomes", 10)) {
                     palettedContainer3 = codec.parse(NbtOps.INSTANCE, sectionData.getCompound("biomes"))
                             .promotePartial(s -> LOGGER.error("Recoverable errors when loading section [" + pos.x + ", " + y + ", " + pos.z + "]: " + s))
-                            .getOrThrow(false, LOGGER::error);
+                            .getOrThrow(RuntimeException::new);
                 } else {
                     palettedContainer3 = new PalettedContainer<>(registry.getIndexedEntries(), registry.entryOf(BiomeKeys.PLAINS), PalettedContainer.PaletteProvider.BIOME);
                 }

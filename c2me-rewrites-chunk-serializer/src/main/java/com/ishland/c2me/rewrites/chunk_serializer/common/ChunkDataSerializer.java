@@ -499,7 +499,7 @@ public final class ChunkDataSerializer {
                 // TODO: optimize this
                 writer.putElement(STRING_PROPERTIES, ((IState<BlockState>) paletteEntry).getCodec().codec()
                         .encodeStart(NbtOps.INSTANCE, paletteEntry)
-                        .getOrThrow(false, LOGGER::error));
+                        .getOrThrow(ChunkSerializer.ChunkLoadingException::new));
             }
             writer.finishCompound();
         }
