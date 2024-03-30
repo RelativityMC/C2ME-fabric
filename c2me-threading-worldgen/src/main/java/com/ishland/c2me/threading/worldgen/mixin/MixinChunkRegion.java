@@ -40,7 +40,7 @@ public class MixinChunkRegion {
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(ServerWorld world, List<Chunk> list, ChunkStatus chunkStatus, int placementRadius, CallbackInfo ci) {
-        if (Config.reduceLockRadius) {
+        if (Config.reduceLockRadius && chunkStatus != null) {
             final int reducedTaskRadius = ((IChunkStatus) chunkStatus).getReducedTaskRadius();
             lowerReducedCorner = new ChunkPos(centerPos.getPos().x - reducedTaskRadius, centerPos.getPos().z - reducedTaskRadius);
             upperReducedCorner = new ChunkPos(centerPos.getPos().x + reducedTaskRadius, centerPos.getPos().z + reducedTaskRadius);
