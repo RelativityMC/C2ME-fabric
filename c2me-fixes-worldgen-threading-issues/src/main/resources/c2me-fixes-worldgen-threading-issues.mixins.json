@@ -29,7 +29,6 @@
     "threading.checks.MixinThreadedAnvilChunkStorage",
     "threading.math.MixinAffineTransformation",
     "threading.math.MixinDirectionTransformation",
-    "threading_detections.random_instances.MixinWorld",
-    "threading_detections.random_instances.carpet.MixinEntityPlayerMPFake"
+    "threading_detections.random_instances.MixinWorld"
   ]
 }
