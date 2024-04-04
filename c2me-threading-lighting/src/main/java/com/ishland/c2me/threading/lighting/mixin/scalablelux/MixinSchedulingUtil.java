@@ -27,7 +27,7 @@ public class MixinSchedulingUtil {
                 lockTokens.add(new LockTokenImpl(ownerTag, ChunkPos.toLong(x + i, z + j), LockTokenImpl.Usage.LIGHTING));
             }
         }
-        final SimplePrioritizedTask simpleTask = new SimplePrioritizedTask(task, lockTokens.toArray(LockToken[]::new), 240);
+        final SimplePrioritizedTask simpleTask = new SimplePrioritizedTask(task, lockTokens.toArray(LockToken[]::new), 17);
         GlobalExecutors.prioritizedScheduler.schedule(simpleTask);
     }
 
