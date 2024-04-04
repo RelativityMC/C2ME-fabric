@@ -22,8 +22,8 @@ configure(allprojects) {
 
     it.archivesBaseName = "${it.name}-mc${project.minecraft_version}"
     it.group = project.maven_group
-    it.sourceCompatibility = JavaVersion.VERSION_17
-    it.targetCompatibility = JavaVersion.VERSION_17
+    it.sourceCompatibility = JavaVersion.VERSION_21
+    it.targetCompatibility = JavaVersion.VERSION_21
     it.version = project.mod_version + "." + getVersionSuffix()
 
     afterEvaluate {
@@ -188,7 +188,7 @@ if (System.getenv("CURSEFORGE_TOKEN")) {
 
             addGameVersion project.minecraft_version
             addGameVersion "Fabric"
-            addGameVersion "Java 17"
+            addGameVersion "Java 21"
 
             mainArtifact(remapJar) {
                 displayName = project.version + " devbuild for " + project.minecraft_version
