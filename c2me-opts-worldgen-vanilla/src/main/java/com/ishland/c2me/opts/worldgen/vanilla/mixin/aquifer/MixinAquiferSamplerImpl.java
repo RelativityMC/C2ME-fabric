@@ -94,8 +94,6 @@ public abstract class MixinAquiferSamplerImpl {
         throw new AbstractMethodError();
     }
 
-    @Shadow protected abstract double calculateDensity(DensityFunction.NoisePos pos, MutableDouble mutableDouble, AquiferSampler.FluidLevel fluidLevel, AquiferSampler.FluidLevel fluidLevel2);
-
     @Shadow protected abstract int getNoiseBasedFluidLevel(int blockX, int blockY, int blockZ, int surfaceHeightEstimate);
 
     @Shadow protected abstract AquiferSampler.FluidLevel getFluidLevel(int blockX, int blockY, int blockZ);
@@ -133,7 +131,7 @@ public abstract class MixinAquiferSamplerImpl {
 
     /**
      * @author ishland
-     * @reason make C2 happier by splitting method into two
+     * @reason make C2 happier by splitting method into three
      */
     @Overwrite
     public BlockState apply(DensityFunction.NoisePos pos, double density) {
@@ -149,7 +147,7 @@ public abstract class MixinAquiferSamplerImpl {
                 this.needsFluidTick = false;
                 return Blocks.LAVA.getDefaultState();
             } else {
-                final Result1 result = c2me$getResult1(i, j, k);
+                final Result1 result = aquiferExtracted$getResult1(i, j, k);
 
                 AquiferSampler.FluidLevel fluidLevel2 = this.getWaterLevel(result.r());
                 double d = maxDistance(result.o(), result.p());
@@ -168,27 +166,7 @@ public abstract class MixinAquiferSamplerImpl {
                         this.needsFluidTick = false;
                         return null;
                     } else {
-                        AquiferSampler.FluidLevel fluidLevel4 = this.getWaterLevel(result.t());
-                        double f = maxDistance(result.o(), result.q());
-                        if (f > 0.0) {
-                            double g = d * f * this.calculateDensity(pos, mutableDouble, fluidLevel2, fluidLevel4);
-                            if (density + g > 0.0) {
-                                this.needsFluidTick = false;
-                                return null;
-                            }
-                        }
-
-                        double g = maxDistance(result.p(), result.q());
-                        if (g > 0.0) {
-                            double h = d * g * this.calculateDensity(pos, mutableDouble, fluidLevel3, fluidLevel4);
-                            if (density + h > 0.0) {
-                                this.needsFluidTick = false;
-                                return null;
-                            }
-                        }
-
-                        this.needsFluidTick = true;
-                        return blockState;
+                        return aquiferExtracted$getFinalBlockState(pos, density, result, d, mutableDouble, fluidLevel2, fluidLevel3, blockState);
                     }
                 }
             }
@@ -196,11 +174,36 @@ public abstract class MixinAquiferSamplerImpl {
     }
 
     @Unique
+    private BlockState aquiferExtracted$getFinalBlockState(DensityFunction.NoisePos pos, double density, Result1 result, double d, MutableDouble mutableDouble, AquiferSampler.FluidLevel fluidLevel2, AquiferSampler.FluidLevel fluidLevel3, BlockState blockState) {
+        AquiferSampler.FluidLevel fluidLevel4 = this.getWaterLevel(result.t());
+        double f = maxDistance(result.o(), result.q());
+        if (f > 0.0) {
+            double g = d * f * this.calculateDensity(pos, mutableDouble, fluidLevel2, fluidLevel4);
+            if (density + g > 0.0) {
+                this.needsFluidTick = false;
+                return null;
+            }
+        }
+
+        double g = maxDistance(result.p(), result.q());
+        if (g > 0.0) {
+            double h = d * g * this.calculateDensity(pos, mutableDouble, fluidLevel3, fluidLevel4);
+            if (density + h > 0.0) {
+                this.needsFluidTick = false;
+                return null;
+            }
+        }
+
+        this.needsFluidTick = true;
+        return blockState;
+    }
+
+    @Unique
     @NotNull
-    private Result1 c2me$getResult1(int i, int j, int k) {
-        int l = Math.floorDiv(i - 5, 16);
+    private Result1 aquiferExtracted$getResult1(int i, int j, int k) {
+        int l = (i - 5) >> 4;
         int m = Math.floorDiv(j + 1, 12);
-        int n = Math.floorDiv(k - 5, 16);
+        int n = (k - 5) >> 4;
         int o = Integer.MAX_VALUE;
         int p = Integer.MAX_VALUE;
         int q = Integer.MAX_VALUE;
@@ -241,8 +244,7 @@ public abstract class MixinAquiferSamplerImpl {
                 }
             }
         }
-        Result1 result = new Result1(o, p, q, r, s, t);
-        return result;
+        return new Result1(o, p, q, r, s, t);
     }
 
     @SuppressWarnings("MixinInnerClass")
@@ -259,9 +261,9 @@ public abstract class MixinAquiferSamplerImpl {
         int i = BlockPos.unpackLongX(pos);
         int j = BlockPos.unpackLongY(pos);
         int k = BlockPos.unpackLongZ(pos);
-        int l = i >> 4; // C2ME - inline
+        int l = i >> 4; // C2ME - inline: floorDiv(i, 16)
         int m = Math.floorDiv(j, 12); // C2ME - inline
-        int n = k >> 4; // C2ME - inline
+        int n = k >> 4; // C2ME - inline: floorDiv(k, 16)
         int o = this.index(l, m, n);
         AquiferSampler.FluidLevel fluidLevel = this.waterLevels[o];
         if (fluidLevel != null) {
@@ -303,6 +305,89 @@ public abstract class MixinAquiferSamplerImpl {
         }
 
         return i;
+    }
+
+    /**
+     * @author ishland
+     * @reason optimize, split method into two
+     */
+    @Overwrite
+    private double calculateDensity(
+            DensityFunction.NoisePos pos, MutableDouble mutableDouble, AquiferSampler.FluidLevel fluidLevel, AquiferSampler.FluidLevel fluidLevel2
+    ) {
+        int i = pos.blockY();
+        BlockState blockState = fluidLevel.getBlockState(i);
+        BlockState blockState2 = fluidLevel2.getBlockState(i);
+        if ((!blockState.isOf(Blocks.LAVA) || !blockState2.isOf(Blocks.WATER)) && (!blockState.isOf(Blocks.WATER) || !blockState2.isOf(Blocks.LAVA))) {
+            int j = Math.abs(fluidLevel.y - fluidLevel2.y);
+            if (j == 0) {
+                return 0.0;
+            } else {
+                double d = 0.5 * (double)(fluidLevel.y + fluidLevel2.y);
+                final double q = aquiferExtracted$getQ(i, d, j);
+
+                double r;
+                if (!(q < -2.0) && !(q > 2.0)) {
+                    double s = mutableDouble.getValue();
+                    if (Double.isNaN(s)) {
+                        double t = this.barrierNoise.sample(pos);
+                        mutableDouble.setValue(t);
+                        r = t;
+                    } else {
+                        r = s;
+                    }
+                } else {
+                    r = 0.0;
+                }
+
+                return 2.0 * (r + q);
+            }
+        } else {
+            return 2.0;
+        }
+    }
+
+    @Unique
+    private static double aquiferExtracted$getQ(double i, double d, double j) {
+        double e = i + 0.5 - d;
+        double f = j / 2.0;
+        double o = f - Math.abs(e);
+        double q;
+        if (e > 0.0) {
+            if (o > 0.0) {
+                q = o / 1.5;
+            } else {
+                q = o / 2.5;
+            }
+        } else {
+            double p = 3.0 + o;
+            if (p > 0.0) {
+                q = p / 3.0;
+            } else {
+                q = p / 10.0;
+            }
+        }
+        return q;
+    }
+
+    /**
+     * @author ishland
+     * @reason optimize
+     */
+    @Overwrite
+    private BlockState getFluidBlockState(int blockX, int blockY, int blockZ, AquiferSampler.FluidLevel defaultFluidLevel, int fluidLevel) {
+        BlockState blockState = defaultFluidLevel.state;
+        if (fluidLevel <= -10 && fluidLevel != DimensionType.field_35479 && defaultFluidLevel.state != Blocks.LAVA.getDefaultState()) {
+            int k = blockX >> 6; // floorDiv(blockX, 64)
+            int l = Math.floorDiv(blockY, 40);
+            int m = blockZ >> 6; // floorDiv(blockZ, 64)
+            double d = this.fluidTypeNoise.sample(new DensityFunction.UnblendedNoisePos(k, l, m));
+            if (Math.abs(d) > 0.3) {
+                blockState = Blocks.LAVA.getDefaultState();
+            }
+        }
+
+        return blockState;
     }
 
 }
