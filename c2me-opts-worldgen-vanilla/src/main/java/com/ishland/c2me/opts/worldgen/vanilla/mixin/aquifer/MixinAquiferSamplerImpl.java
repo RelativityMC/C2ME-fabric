@@ -7,6 +7,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.random.Random;
 import net.minecraft.util.math.random.RandomSplitter;
+import net.minecraft.world.biome.source.util.VanillaBiomeParameters;
 import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.gen.chunk.AquiferSampler;
 import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
@@ -22,24 +23,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import static net.minecraft.util.math.BlockPos.SIZE_BITS_X;
-
 @Mixin(AquiferSampler.Impl.class)
 public abstract class MixinAquiferSamplerImpl {
-
-    @Unique
-    private static final int WATER_LEVEL_MAGIC_1 = 64 - BlockPos.BIT_SHIFT_X - SIZE_BITS_X;
-    @Unique
-    private static final int WATER_LEVEL_MAGIC_2 = 64 - SIZE_BITS_X;
-    @Unique
-    private static final int WATER_LEVEL_MAGIC_3 = 64 - BlockPos.SIZE_BITS_Y;
-    @Unique
-    private static final int WATER_LEVEL_MAGIC_4 = 64 - BlockPos.SIZE_BITS_Y;
-    @Unique
-    private static final int WATER_LEVEL_MAGIC_5 = 64 - BlockPos.BIT_SHIFT_Z - BlockPos.SIZE_BITS_Z;
-    @Unique
-    private static final int WATER_LEVEL_MAGIC_6 = 64 - BlockPos.SIZE_BITS_Z;
-
 
     @Shadow
     @Final
@@ -111,6 +96,14 @@ public abstract class MixinAquiferSamplerImpl {
 
     @Shadow protected abstract double calculateDensity(DensityFunction.NoisePos pos, MutableDouble mutableDouble, AquiferSampler.FluidLevel fluidLevel, AquiferSampler.FluidLevel fluidLevel2);
 
+    @Shadow protected abstract int getNoiseBasedFluidLevel(int blockX, int blockY, int blockZ, int surfaceHeightEstimate);
+
+    @Shadow protected abstract AquiferSampler.FluidLevel getFluidLevel(int blockX, int blockY, int blockZ);
+
+    @Shadow @Final private DensityFunction erosionDensityFunction;
+
+    @Shadow @Final private DensityFunction depthDensityFunction;
+
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(CallbackInfo info) {
         // preload position cache
@@ -156,7 +149,7 @@ public abstract class MixinAquiferSamplerImpl {
                 this.needsFluidTick = false;
                 return Blocks.LAVA.getDefaultState();
             } else {
-                final Result1 result = getResult1(i, j, k);
+                final Result1 result = c2me$getResult1(i, j, k);
 
                 AquiferSampler.FluidLevel fluidLevel2 = this.getWaterLevel(result.r());
                 double d = maxDistance(result.o(), result.p());
@@ -202,8 +195,9 @@ public abstract class MixinAquiferSamplerImpl {
         }
     }
 
+    @Unique
     @NotNull
-    private Result1 getResult1(int i, int j, int k) {
+    private Result1 c2me$getResult1(int i, int j, int k) {
         int l = Math.floorDiv(i - 5, 16);
         int m = Math.floorDiv(j + 1, 12);
         int n = Math.floorDiv(k - 5, 16);
@@ -262,13 +256,13 @@ public abstract class MixinAquiferSamplerImpl {
      */
     @Overwrite
     private AquiferSampler.FluidLevel getWaterLevel(long pos) {
-        int i = (int) ((pos << WATER_LEVEL_MAGIC_1) >> WATER_LEVEL_MAGIC_2); // C2ME - inline
-        int j = (int) ((pos << WATER_LEVEL_MAGIC_3) >> WATER_LEVEL_MAGIC_4); // C2ME - inline
-        int k = (int) ((pos << WATER_LEVEL_MAGIC_5) >> WATER_LEVEL_MAGIC_6); // C2ME - inline
-        int l = Math.floorDiv(i, 16); // C2ME - inline
+        int i = BlockPos.unpackLongX(pos);
+        int j = BlockPos.unpackLongY(pos);
+        int k = BlockPos.unpackLongZ(pos);
+        int l = i >> 4; // C2ME - inline
         int m = Math.floorDiv(j, 12); // C2ME - inline
-        int n = Math.floorDiv(k, 16); // C2ME - inline
-        int o = ((m - this.startY) * this.sizeZ + n - this.startZ) * this.sizeX + l - this.startX;
+        int n = k >> 4; // C2ME - inline
+        int o = this.index(l, m, n);
         AquiferSampler.FluidLevel fluidLevel = this.waterLevels[o];
         if (fluidLevel != null) {
             return fluidLevel;
@@ -284,87 +278,31 @@ public abstract class MixinAquiferSamplerImpl {
      * @reason optimize
      */
     @Overwrite
-    private AquiferSampler.FluidLevel getFluidLevel(int i, int j, int k) {
-        AquiferSampler.FluidLevel fluidLevel = this.fluidLevelSampler.getFluidLevel(i, j, k);
-        int l = Integer.MAX_VALUE;
-        int m = j + 12;
-        int n = j - 12;
-        boolean bl = false;
-
-        for (int[] is : CHUNK_POS_OFFSETS) {
-            int o = i + (is[0] << 4); // C2ME - inline
-            int p = k + (is[1] << 4); // C2ME - inline
-            int q = this.chunkNoiseSampler.estimateSurfaceHeight(o, p);
-            int r = q + 8;
-            boolean bl2 = is[0] == 0 && is[1] == 0;
-            if (bl2 && n > r) {
-                return fluidLevel;
-            }
-
-            boolean bl3 = m > r;
-            if (bl2 || bl3) {
-                AquiferSampler.FluidLevel fluidLevel2 = this.fluidLevelSampler.getFluidLevel(o, r, p);
-                if (!fluidLevel2.getBlockState(r).isAir()) {
-                    if (bl2) {
-                        bl = true;
-                    }
-
-                    if (bl3) {
-                        return fluidLevel2;
-                    }
-                }
-            }
-
-            l = Math.min(l, q);
-        }
-
-        int s = l + 8 - j;
-        double d = bl ? clampedLerpFromProgressInlined(s) : 0.0;
-        double e = MathHelper.clamp(this.fluidLevelFloodednessNoise.sample(new DensityFunction.UnblendedNoisePos(i, j, k)), -1.0, 1.0);
-        double f = lerpFromProgressInlined(d, -0.3, 0.8);
-        if (e > f) {
-            return fluidLevel;
+    private int getFluidBlockY(int blockX, int blockY, int blockZ, AquiferSampler.FluidLevel defaultFluidLevel, int surfaceHeightEstimate, boolean bl) {
+        DensityFunction.UnblendedNoisePos unblendedNoisePos = new DensityFunction.UnblendedNoisePos(blockX, blockY, blockZ);
+        double d;
+        double e;
+        if (VanillaBiomeParameters.inDeepDarkParameters(this.erosionDensityFunction, this.depthDensityFunction, unblendedNoisePos)) {
+            d = -1.0;
+            e = -1.0;
         } else {
-            double g = lerpFromProgressInlined(d, -0.8, 0.4);
-            if (e <= g) {
-                return new AquiferSampler.FluidLevel(DimensionType.field_35479, fluidLevel.state);
-            } else {
-                int w = Math.floorDiv(i, 16);
-                int x = Math.floorDiv(j, 40);
-                int y = Math.floorDiv(k, 16);
-                int z = x * 40 + 20;
-                double h = this.fluidLevelSpreadNoise.sample(new DensityFunction.UnblendedNoisePos(w, x, y)) * 10.0;
-                int ab = MathHelper.roundDownToMultiple(h, 3);
-                int ac = z + ab;
-                int ad = Math.min(l, ac);
-                if (ac <= -10) {
-                    int ag = Math.floorDiv(i, 64);
-                    int ah = Math.floorDiv(j, 40);
-                    int ai = Math.floorDiv(k, 64);
-                    double aj = this.fluidTypeNoise.sample(new DensityFunction.UnblendedNoisePos(ag, ah, ai));
-                    if (Math.abs(aj) > 0.3) {
-                        return new AquiferSampler.FluidLevel(ad, Blocks.LAVA.getDefaultState());
-                    }
-                }
-
-                return new AquiferSampler.FluidLevel(ad, fluidLevel.state);
-            }
+            int i = surfaceHeightEstimate + 8 - blockY;
+            double f = bl ? MathHelper.clampedLerp(1.0, 0.0, ((double) i) / 64.0) : 0.0; // inline
+            double g = MathHelper.clamp(this.fluidLevelFloodednessNoise.sample(unblendedNoisePos), -1.0, 1.0);
+            d = g + 0.8 + (f - 1.0) * 1.2; // inline
+            e = g + 0.3 + (f - 1.0) * 1.1; // inline
         }
-    }
 
-    @Unique
-    private static double clampedLerpFromProgressInlined(double lerpValue) {
-        final double delta = lerpValue / 64.0;
-        if (delta < 0.0) {
-            return 1.0;
+        int i;
+        if (e > 0.0) {
+            i = defaultFluidLevel.y;
+        } else if (d > 0.0) {
+            i = this.getNoiseBasedFluidLevel(blockX, blockY, blockZ, surfaceHeightEstimate);
         } else {
-            return delta > 1.0 ? 0.0 : 1.0 - delta;
+            i = DimensionType.field_35479;
         }
-    }
 
-    @Unique
-    private static double lerpFromProgressInlined(double lerpValue, double start, double end) {
-        return start - (lerpValue - 1.0) * (end - start);
+        return i;
     }
 
 }
