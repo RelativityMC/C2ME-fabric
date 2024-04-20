@@ -10,7 +10,4 @@ import java.util.Map;
 @Mixin(NbtCompound.class)
 public interface INbtCompound {
 
-    @Invoker
-    Map<String, NbtElement> invokeToMap();
-
 }
