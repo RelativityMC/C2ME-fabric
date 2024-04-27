@@ -15,6 +15,7 @@
     "access.IChunkSection",
     "access.IChunkTicket",
     "access.IChunkTicketManager",
+    "access.IChunkTicketManagerDistanceFromNearestPlayerTracker",
     "access.IChunkTicketManagerNearbyChunkTicketUpdater",
     "access.IChunkTickScheduler",
     "access.IMultiNoiseBiomeSource",

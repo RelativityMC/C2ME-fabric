@@ -6,6 +6,7 @@
   "mixins": [
     "MixinChunkHolder",
     "MixinChunkTicketManager",
+    "MixinChunkTicketManagerNearbyChunkTicketUpdater",
     "MixinPlayerManager",
     "MixinServerChunkManager",
     "MixinThreadedAnvilChunkStorage",
