@@ -18,6 +18,7 @@ public class Config {
                     This is no longer included in lithium-fabric\s
                     (may cause incompatibility with other mods)
                     """)
+            .incompatibleMod("biolith", "*")
             .getBoolean(true, false);
 
 }
