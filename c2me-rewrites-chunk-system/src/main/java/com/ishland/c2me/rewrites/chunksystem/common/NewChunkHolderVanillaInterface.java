@@ -5,9 +5,9 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.HeightLimitView;
 import net.minecraft.world.chunk.light.LightingProvider;
 
-public class NewChunkHolder extends ChunkHolder {
+public class NewChunkHolderVanillaInterface extends ChunkHolder {
 
-    public NewChunkHolder(ChunkPos pos, int level, HeightLimitView world, LightingProvider lightingProvider, LevelUpdateListener levelUpdateListener, PlayersWatchingChunkProvider playersWatchingChunkProvider) {
+    public NewChunkHolderVanillaInterface(ChunkPos pos, int level, HeightLimitView world, LightingProvider lightingProvider, LevelUpdateListener levelUpdateListener, PlayersWatchingChunkProvider playersWatchingChunkProvider) {
         super(pos, level, world, lightingProvider, levelUpdateListener, playersWatchingChunkProvider);
     }
 

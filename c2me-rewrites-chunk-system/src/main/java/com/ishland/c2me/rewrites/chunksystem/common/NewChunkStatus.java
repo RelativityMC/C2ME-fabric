@@ -6,6 +6,7 @@ import com.ishland.flowsched.scheduler.KeyStatusPair;
 import com.ishland.flowsched.util.Assertions;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
+import net.minecraft.server.world.ChunkLevels;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
@@ -18,6 +19,8 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState, ChunkLoadingContext> {
 
@@ -27,6 +30,7 @@ public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState,
     public static final NewChunkStatus SERVER_ACCESSIBLE;
     public static final NewChunkStatus BLOCK_TICKING;
     public static final NewChunkStatus ENTITY_TICKING;
+    public static final NewChunkStatus[] vanillaLevelToStatus;
 
     static {
         AtomicInteger index = new AtomicInteger(0);
@@ -53,6 +57,24 @@ public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState,
             }
         };
         VANILLA_WORLDGEN_PIPELINE = Collections.unmodifiableMap(generateFromVanillaChunkStatus(index));
+        vanillaLevelToStatus = IntStream.range(0, ChunkLevels.INACCESSIBLE + 2)
+                .mapToObj(level -> switch (ChunkLevels.getType(level)) {
+                    case INACCESSIBLE -> {
+                        final ChunkStatus vanillaStatus = ChunkLevels.getStatus(level);
+                        if (vanillaStatus == ChunkStatus.EMPTY) {
+                            if (level > ChunkLevels.INACCESSIBLE) {
+                                yield NEW;
+                            } else {
+                                yield DISK;
+                            }
+                        } else {
+                            yield VANILLA_WORLDGEN_PIPELINE.get(vanillaStatus);
+                        }
+                    }
+                    case FULL -> SERVER_ACCESSIBLE;
+                    case BLOCK_TICKING -> BLOCK_TICKING;
+                    case ENTITY_TICKING -> ENTITY_TICKING;
+                }).toArray(NewChunkStatus[]::new);
     }
 
     private static Map<ChunkStatus, NewChunkStatus> generateFromVanillaChunkStatus(AtomicInteger index) {
