@@ -4,13 +4,21 @@ import com.ishland.c2me.base.mixin.access.IThreadedAnvilChunkStorage;
 import com.ishland.flowsched.scheduler.DaemonizedStatusAdvancingScheduler;
 import com.ishland.flowsched.scheduler.ItemHolder;
 import com.ishland.flowsched.scheduler.ItemStatus;
+import com.ishland.flowsched.scheduler.KeyStatusPair;
 import com.ishland.flowsched.util.Assertions;
 import it.unimi.dsi.fastutil.longs.Long2IntMap;
 import it.unimi.dsi.fastutil.longs.Long2IntMaps;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.ChunkStatus;
+import net.minecraft.world.chunk.ProtoChunk;
+import net.minecraft.world.chunk.WorldChunk;
+import net.minecraft.world.chunk.WrapperProtoChunk;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.ThreadFactory;
 
 public class TheChunkSystem extends DaemonizedStatusAdvancingScheduler<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> {
@@ -30,9 +38,18 @@ public class TheChunkSystem extends DaemonizedStatusAdvancingScheduler<ChunkPos,
     }
 
     @Override
-    protected ChunkLoadingContext makeContext(ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> holder, ItemStatus<ChunkPos, ChunkState, ChunkLoadingContext> nextStatus, boolean isUpgrade) {
+    protected ChunkLoadingContext makeContext(ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> holder, ItemStatus<ChunkPos, ChunkState, ChunkLoadingContext> nextStatus, KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] dependencies, boolean isUpgrade) {
         Assertions.assertTrue(nextStatus instanceof NewChunkStatus);
         final NewChunkStatus nextStatus1 = (NewChunkStatus) nextStatus;
+        final List<Chunk> chunks = Arrays.stream(dependencies)
+                .map(pair -> {
+                    Chunk chunk = this.getHolder(pair.key()).getItem().get().chunk();
+                    if (nextStatus1.getEffectiveVanillaStatus() != ChunkStatus.FULL && chunk instanceof WorldChunk worldChunk) {
+                        chunk = new WrapperProtoChunk(worldChunk, false);
+                    }
+                    return chunk;
+                }).toList();
+        return new ChunkLoadingContext(holder, this.tacs, chunks);
     }
 
     @Override

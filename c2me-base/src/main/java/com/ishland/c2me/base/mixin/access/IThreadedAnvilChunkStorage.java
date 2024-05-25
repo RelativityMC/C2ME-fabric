@@ -7,6 +7,7 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.thread.ThreadExecutor;
+import net.minecraft.world.chunk.ChunkGenerationContext;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.gen.Invoker;
@@ -37,5 +38,8 @@ public interface IThreadedAnvilChunkStorage {
 
     @Accessor
     ServerLightingProvider getLightingProvider();
+
+    @Accessor("field_49171")
+    ChunkGenerationContext getChunkGenerationContext();
 
 }

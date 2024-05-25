@@ -1,5 +1,6 @@
 package com.ishland.c2me.rewrites.chunksystem.common;
 
+import com.ishland.c2me.base.mixin.access.IThreadedAnvilChunkStorage;
 import com.ishland.flowsched.scheduler.ItemHolder;
 import com.ishland.flowsched.scheduler.ItemStatus;
 import com.ishland.flowsched.scheduler.KeyStatusPair;
@@ -9,6 +10,7 @@ import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 import net.minecraft.server.world.ChunkLevels;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.ChunkGenerationContext;
 import net.minecraft.world.chunk.ChunkStatus;
 
 import java.util.ArrayList;
@@ -35,12 +37,12 @@ public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState,
         NEW = new NewChunkStatus(statuses.size(), new KeyStatusPair[0], 0, ChunkStatus.EMPTY) {
             @Override
             public CompletionStage<Void> upgradeToThis(ChunkLoadingContext context) {
-                return null;
+                throw new UnsupportedOperationException();
             }
 
             @Override
             public CompletionStage<Void> downgradeFromThis(ChunkLoadingContext context) {
-                return null;
+                throw new UnsupportedOperationException();
             }
         };
         statuses.add(NEW);
@@ -139,9 +141,10 @@ public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState,
             final NewChunkStatus newChunkStatus = new NewChunkStatus(statuses.size(), dependencies.toArray(KeyStatusPair[]::new), lockingRadius, status) {
                 @Override
                 public CompletionStage<Void> upgradeToThis(ChunkLoadingContext context) {
+                    final ChunkGenerationContext chunkGenerationContext = ((IThreadedAnvilChunkStorage) context.tacs()).getChunkGenerationContext();
                     Chunk chunk = context.chunks().get(context.chunks().size() / 2);
                     if (chunk.getStatus().isAtLeast(status)) {
-                        return status.runLoadTask(context.context(), null, chunk)
+                        return status.runLoadTask(chunkGenerationContext, null, chunk)
                                 .whenComplete((chunk1, throwable) -> {
                                     if (chunk1 != null) {
                                         context.holder().getItem().set(new ChunkState(chunk1));
@@ -149,7 +152,7 @@ public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState,
                                 }).thenAccept(__ -> {
                                 });
                     } else {
-                        return status.runGenerationTask(context.context(), Runnable::run, null, context.chunks())
+                        return status.runGenerationTask(chunkGenerationContext, Runnable::run, null, context.chunks())
                                 .whenComplete((chunk1, throwable) -> {
                                     if (chunk1 != null) {
                                         context.holder().getItem().set(new ChunkState(chunk1));
