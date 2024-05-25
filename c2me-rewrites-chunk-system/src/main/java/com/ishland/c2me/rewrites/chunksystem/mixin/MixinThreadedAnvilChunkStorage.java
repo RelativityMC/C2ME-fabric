@@ -1,15 +1,36 @@
 package com.ishland.c2me.rewrites.chunksystem.mixin;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.ishland.c2me.rewrites.chunksystem.common.TheChunkSystem;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ChunkLevels;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;
 import net.minecraft.util.math.ChunkPos;
 import org.jetbrains.annotations.Nullable;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ThreadedAnvilChunkStorage.class)
 public class MixinThreadedAnvilChunkStorage {
+
+    @Shadow @Final private ServerWorld world;
+    private TheChunkSystem newSystem;
+
+    @Inject(method = "<init>", at = @At("RETURN"))
+    private void onInit(CallbackInfo ci) {
+        newSystem = new TheChunkSystem(
+                new ThreadFactoryBuilder()
+                        .setNameFormat("chunksystem-" + this.world.getRegistryKey().getValue().toUnderscoreSeparatedString())
+                        .build(),
+                (ThreadedAnvilChunkStorage) (Object) this
+        );
+    }
 
     /**
      * @author ishland
@@ -18,7 +39,7 @@ public class MixinThreadedAnvilChunkStorage {
     @Overwrite
     @Nullable
     ChunkHolder setLevel(long pos, int level, @Nullable ChunkHolder holder, int i) {
-
+        return this.newSystem.vanillaIf$setLevel(pos, level);
     }
 
 }

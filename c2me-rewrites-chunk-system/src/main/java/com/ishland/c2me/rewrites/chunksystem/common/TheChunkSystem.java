@@ -9,6 +9,7 @@ import com.ishland.flowsched.util.Assertions;
 import it.unimi.dsi.fastutil.longs.Long2IntMap;
 import it.unimi.dsi.fastutil.longs.Long2IntMaps;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
+import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.chunk.Chunk;
@@ -63,20 +64,27 @@ public class TheChunkSystem extends DaemonizedStatusAdvancingScheduler<ChunkPos,
         super.onItemRemoval(holder);
     }
 
-    public void vanillaIf$setLevel(long pos, int level) {
+    public ChunkHolder vanillaIf$setLevel(long pos, int level) {
         synchronized (this.managedTickets) {
             final int oldLevel = this.managedTickets.put(pos, level);
             NewChunkStatus oldStatus = NewChunkStatus.fromVanillaLevel(oldLevel);
             NewChunkStatus newStatus = NewChunkStatus.fromVanillaLevel(level);
             if (oldStatus != newStatus) {
+                ChunkHolder vanillaHolder;
                 if (newStatus != this.getUnloadedStatus()) {
-                    this.addTicket(new ChunkPos(pos), newStatus, () -> {});
+                    final ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> holder = this.addTicket(new ChunkPos(pos), newStatus, () -> {
+                    });
+                    vanillaHolder = holder.getUserData().get();
                 } else {
                     this.managedTickets.remove(pos);
+                    vanillaHolder = null;
                 }
                 if (oldStatus != this.getUnloadedStatus()) {
                     this.removeTicket(new ChunkPos(pos), oldStatus);
                 }
+                return null;
+            } else {
+                return null;
             }
         }
     }
