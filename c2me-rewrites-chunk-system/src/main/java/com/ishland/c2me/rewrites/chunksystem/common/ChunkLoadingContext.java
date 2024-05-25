@@ -7,5 +7,5 @@ import net.minecraft.world.chunk.ChunkGenerationContext;
 
 import java.util.List;
 
-public record ChunkLoadingContext(ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext> holder, ChunkGenerationContext context, List<Chunk> chunks) {
+public record ChunkLoadingContext(ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> holder, ChunkGenerationContext context, List<Chunk> chunks) {
 }

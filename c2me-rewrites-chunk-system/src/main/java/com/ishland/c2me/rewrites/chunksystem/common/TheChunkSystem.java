@@ -1,16 +1,27 @@
 package com.ishland.c2me.rewrites.chunksystem.common;
 
+import com.ishland.c2me.base.mixin.access.IThreadedAnvilChunkStorage;
 import com.ishland.flowsched.scheduler.DaemonizedStatusAdvancingScheduler;
 import com.ishland.flowsched.scheduler.ItemHolder;
 import com.ishland.flowsched.scheduler.ItemStatus;
 import com.ishland.flowsched.util.Assertions;
+import it.unimi.dsi.fastutil.longs.Long2IntMap;
+import it.unimi.dsi.fastutil.longs.Long2IntMaps;
+import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
+import net.minecraft.server.world.ThreadedAnvilChunkStorage;
 import net.minecraft.util.math.ChunkPos;
 
 import java.util.concurrent.ThreadFactory;
 
-public class TheChunkSystem extends DaemonizedStatusAdvancingScheduler<ChunkPos, ChunkState, ChunkLoadingContext> {
-    public TheChunkSystem(ThreadFactory threadFactory) {
+public class TheChunkSystem extends DaemonizedStatusAdvancingScheduler<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> {
+
+    private final Long2IntMap managedTickets = Long2IntMaps.synchronize(new Long2IntOpenHashMap());
+    private final ThreadedAnvilChunkStorage tacs;
+
+    public TheChunkSystem(ThreadFactory threadFactory, ThreadedAnvilChunkStorage tacs) {
         super(threadFactory);
+        this.tacs = tacs;
+        managedTickets.defaultReturnValue(NewChunkStatus.vanillaLevelToStatus.length - 1);
     }
 
     @Override
@@ -19,18 +30,37 @@ public class TheChunkSystem extends DaemonizedStatusAdvancingScheduler<ChunkPos,
     }
 
     @Override
-    protected ChunkLoadingContext makeContext(ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext> holder, ItemStatus<ChunkPos, ChunkState, ChunkLoadingContext> nextStatus, boolean isUpgrade) {
+    protected ChunkLoadingContext makeContext(ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> holder, ItemStatus<ChunkPos, ChunkState, ChunkLoadingContext> nextStatus, boolean isUpgrade) {
         Assertions.assertTrue(nextStatus instanceof NewChunkStatus);
         final NewChunkStatus nextStatus1 = (NewChunkStatus) nextStatus;
     }
 
     @Override
-    protected void onItemCreation(ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext> holder) {
+    protected void onItemCreation(ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> holder) {
         super.onItemCreation(holder);
+        holder.getUserData().set(new NewChunkHolderVanillaInterface(holder, ((IThreadedAnvilChunkStorage) this.tacs).getWorld(), ((IThreadedAnvilChunkStorage) this.tacs).getLightingProvider(), this.tacs));
     }
 
     @Override
-    protected void onItemRemoval(ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext> holder) {
+    protected void onItemRemoval(ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> holder) {
         super.onItemRemoval(holder);
+    }
+
+    public void vanillaIf$setLevel(long pos, int level) {
+        synchronized (this.managedTickets) {
+            final int oldLevel = this.managedTickets.put(pos, level);
+            NewChunkStatus oldStatus = NewChunkStatus.fromVanillaLevel(oldLevel);
+            NewChunkStatus newStatus = NewChunkStatus.fromVanillaLevel(level);
+            if (oldStatus != newStatus) {
+                if (newStatus != this.getUnloadedStatus()) {
+                    this.addTicket(new ChunkPos(pos), newStatus, () -> {});
+                } else {
+                    this.managedTickets.remove(pos);
+                }
+                if (oldStatus != this.getUnloadedStatus()) {
+                    this.removeTicket(new ChunkPos(pos), oldStatus);
+                }
+            }
+        }
     }
 }

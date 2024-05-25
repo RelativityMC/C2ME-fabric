@@ -12,17 +12,15 @@ import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState, ChunkLoadingContext> {
+
+    public static final NewChunkStatus[] ALL_STATUSES;
 
     public static final NewChunkStatus NEW;
     public static final NewChunkStatus DISK;
@@ -33,8 +31,8 @@ public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState,
     public static final NewChunkStatus[] vanillaLevelToStatus;
 
     static {
-        AtomicInteger index = new AtomicInteger(0);
-        NEW = new NewChunkStatus(index.getAndIncrement(), new KeyStatusPair[0], 0) {
+        ArrayList<NewChunkStatus> statuses = new ArrayList<>();
+        NEW = new NewChunkStatus(statuses.size(), new KeyStatusPair[0], 0, ChunkStatus.EMPTY) {
             @Override
             public CompletionStage<Void> upgradeToThis(ChunkLoadingContext context) {
                 return null;
@@ -45,7 +43,8 @@ public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState,
                 return null;
             }
         };
-        DISK = new NewChunkStatus(index.getAndIncrement(), new KeyStatusPair[0], 0) {
+        statuses.add(NEW);
+        DISK = new NewChunkStatus(statuses.size(), new KeyStatusPair[0], 0, ChunkStatus.EMPTY) {
             @Override
             public CompletionStage<Void> upgradeToThis(ChunkLoadingContext context) {
                 return null;
@@ -56,7 +55,45 @@ public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState,
                 return null;
             }
         };
-        VANILLA_WORLDGEN_PIPELINE = Collections.unmodifiableMap(generateFromVanillaChunkStatus(index));
+        statuses.add(DISK);
+        VANILLA_WORLDGEN_PIPELINE = Collections.unmodifiableMap(generateFromVanillaChunkStatus(statuses));
+        SERVER_ACCESSIBLE = new NewChunkStatus(statuses.size(), new KeyStatusPair[0], 0, ChunkStatus.FULL) {
+            @Override
+            public CompletionStage<Void> upgradeToThis(ChunkLoadingContext context) {
+                return null;
+            }
+
+            @Override
+            public CompletionStage<Void> downgradeFromThis(ChunkLoadingContext context) {
+                return null;
+            }
+        };
+        statuses.add(SERVER_ACCESSIBLE);
+        BLOCK_TICKING = new NewChunkStatus(statuses.size(), new KeyStatusPair[0], 0, ChunkStatus.FULL) {
+            @Override
+            public CompletionStage<Void> upgradeToThis(ChunkLoadingContext context) {
+                return null;
+            }
+
+            @Override
+            public CompletionStage<Void> downgradeFromThis(ChunkLoadingContext context) {
+                return null;
+            }
+        };
+        statuses.add(BLOCK_TICKING);
+        ENTITY_TICKING = new NewChunkStatus(statuses.size(), new KeyStatusPair[0], 0, ChunkStatus.FULL) {
+            @Override
+            public CompletionStage<Void> upgradeToThis(ChunkLoadingContext context) {
+                return null;
+            }
+
+            @Override
+            public CompletionStage<Void> downgradeFromThis(ChunkLoadingContext context) {
+                return null;
+            }
+        };
+        statuses.add(ENTITY_TICKING);
+
         vanillaLevelToStatus = IntStream.range(0, ChunkLevels.INACCESSIBLE + 2)
                 .mapToObj(level -> switch (ChunkLevels.getType(level)) {
                     case INACCESSIBLE -> {
@@ -75,9 +112,10 @@ public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState,
                     case BLOCK_TICKING -> BLOCK_TICKING;
                     case ENTITY_TICKING -> ENTITY_TICKING;
                 }).toArray(NewChunkStatus[]::new);
+        ALL_STATUSES = statuses.toArray(NewChunkStatus[]::new);
     }
 
-    private static Map<ChunkStatus, NewChunkStatus> generateFromVanillaChunkStatus(AtomicInteger index) {
+    private static Map<ChunkStatus, NewChunkStatus> generateFromVanillaChunkStatus(ArrayList<NewChunkStatus> statuses) {
         Map<ChunkStatus, NewChunkStatus> map = new Reference2ReferenceOpenHashMap<>();
         ReferenceOpenHashSet<ItemStatus<ChunkPos, ChunkState, ChunkLoadingContext>> depVisited = new ReferenceOpenHashSet<>();
         for (ChunkStatus status : ChunkStatus.createOrderedList()) {
@@ -98,7 +136,7 @@ public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState,
             }
             int lockingRadius = (status == ChunkStatus.FEATURES || status == ChunkStatus.LIGHT) ? 1 : 0;
 
-            map.put(status, new NewChunkStatus(index.getAndIncrement(), dependencies.toArray(KeyStatusPair[]::new), lockingRadius) {
+            final NewChunkStatus newChunkStatus = new NewChunkStatus(statuses.size(), dependencies.toArray(KeyStatusPair[]::new), lockingRadius, status) {
                 @Override
                 public CompletionStage<Void> upgradeToThis(ChunkLoadingContext context) {
                     Chunk chunk = context.chunks().get(context.chunks().size() / 2);
@@ -108,14 +146,16 @@ public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState,
                                     if (chunk1 != null) {
                                         context.holder().getItem().set(new ChunkState(chunk1));
                                     }
-                                }).thenAccept(__ -> {});
+                                }).thenAccept(__ -> {
+                                });
                     } else {
                         return status.runGenerationTask(context.context(), Runnable::run, null, context.chunks())
                                 .whenComplete((chunk1, throwable) -> {
                                     if (chunk1 != null) {
                                         context.holder().getItem().set(new ChunkState(chunk1));
                                     }
-                                }).thenAccept(__ -> {});
+                                }).thenAccept(__ -> {
+                                });
                     }
                 }
 
@@ -123,34 +163,50 @@ public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState,
                 public CompletionStage<Void> downgradeFromThis(ChunkLoadingContext context) {
                     return CompletableFuture.completedFuture(null);
                 }
-            });
+            };
+            statuses.add(newChunkStatus);
+            map.put(status, newChunkStatus);
         }
 
         return map;
     }
 
+    public static NewChunkStatus fromVanillaLevel(int level) {
+        return vanillaLevelToStatus[Math.clamp(level, 0, vanillaLevelToStatus.length - 1)];
+    }
+
+    public static NewChunkStatus fromVanillaStatus(ChunkStatus status) {
+        return fromVanillaLevel(ChunkLevels.getLevelFromStatus(status));
+    }
+
     private final int ordinal;
     private final KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] dependencies;
     private final int lockingRadius;
+    private final ChunkStatus effectiveVanillaStatus;
 
-    protected NewChunkStatus(int ordinal, KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] dependencies, int lockingRadius) {
+    protected NewChunkStatus(int ordinal, KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] dependencies, int lockingRadius, ChunkStatus effectiveVanillaStatus) {
         this.ordinal = ordinal;
         this.dependencies = dependencies;
         this.lockingRadius = lockingRadius;
+        this.effectiveVanillaStatus = effectiveVanillaStatus;
     }
 
     @Override
     public ItemStatus<ChunkPos, ChunkState, ChunkLoadingContext>[] getAllStatuses() {
-        return new ItemStatus[0];
+        return ALL_STATUSES;
     }
 
     @Override
     public int ordinal() {
-        return 0;
+        return this.ordinal;
+    }
+
+    public ChunkStatus getEffectiveVanillaStatus() {
+        return this.effectiveVanillaStatus;
     }
 
     @Override
-    public Collection<KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>> getDependencies(ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext> holder) {
-        return List.of();
+    public KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] getDependencies(ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, ?> holder) {
+        return this.dependencies;
     }
 }

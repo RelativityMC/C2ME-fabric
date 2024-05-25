@@ -2,6 +2,7 @@ package com.ishland.c2me.base.mixin.access;
 
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 import net.minecraft.server.world.ChunkHolder;
+import net.minecraft.server.world.ServerLightingProvider;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;
 import net.minecraft.util.math.ChunkPos;
@@ -33,5 +34,8 @@ public interface IThreadedAnvilChunkStorage {
 
     @Accessor
     ThreadExecutor<Runnable> getMainThreadExecutor();
+
+    @Accessor
+    ServerLightingProvider getLightingProvider();
 
 }
