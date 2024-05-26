@@ -1,6 +1,6 @@
-package com.ishland.c2me.threading.chunkio.mixin;
+package com.ishland.c2me.rewrites.chunksystem.mixin.async_chunkio;
 
-import com.ishland.c2me.threading.chunkio.common.ISerializingRegionBasedStorage;
+import com.ishland.c2me.rewrites.chunksystem.common.async_chunkio.ISerializingRegionBasedStorage;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtOps;

@@ -1,4 +1,4 @@
-package com.ishland.c2me.threading.chunkio.mixin.gc_free_serializer;
+package com.ishland.c2me.rewrites.chunksystem.mixin.async_chunkio.gc_free_serializer;
 
 import com.ishland.c2me.threading.chunkio.common.AsyncSerializationManager;
 import net.minecraft.block.entity.BlockEntity;

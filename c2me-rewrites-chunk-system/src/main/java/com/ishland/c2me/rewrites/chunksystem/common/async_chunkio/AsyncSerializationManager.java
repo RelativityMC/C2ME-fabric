@@ -1,4 +1,4 @@
-package com.ishland.c2me.threading.chunkio.common;
+package com.ishland.c2me.rewrites.chunksystem.common.async_chunkio;
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.block.entity.BlockEntity;

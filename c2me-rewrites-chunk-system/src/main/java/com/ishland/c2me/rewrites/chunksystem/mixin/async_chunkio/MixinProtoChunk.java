@@ -1,7 +1,7 @@
-package com.ishland.c2me.threading.chunkio.mixin;
+package com.ishland.c2me.rewrites.chunksystem.mixin.async_chunkio;
 
 import com.ishland.c2me.base.mixin.access.IBlender;
-import com.ishland.c2me.threading.chunkio.common.ProtoChunkExtension;
+import com.ishland.c2me.rewrites.chunksystem.common.async_chunkio.ProtoChunkExtension;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.chunk.ProtoChunk;
 import org.spongepowered.asm.mixin.Mixin;

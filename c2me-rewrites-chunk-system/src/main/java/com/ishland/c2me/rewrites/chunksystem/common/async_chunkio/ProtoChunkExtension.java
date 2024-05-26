@@ -1,4 +1,4 @@
-package com.ishland.c2me.threading.chunkio.common;
+package com.ishland.c2me.rewrites.chunksystem.common.async_chunkio;
 
 import net.minecraft.util.math.ChunkPos;
 

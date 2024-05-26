@@ -1,4 +1,4 @@
-package com.ishland.c2me.threading.chunkio.common;
+package com.ishland.c2me.rewrites.chunksystem.common.async_chunkio;
 
 import com.mojang.logging.LogUtils;
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList;

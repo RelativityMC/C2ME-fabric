@@ -30,7 +30,6 @@ include 'tests:world-diff'
 
 include 'c2me-base'
 include 'c2me-threading-worldgen'
-include 'c2me-threading-chunkio'
 //include 'c2me-threading-scheduling'
 include 'c2me-threading-lighting'
 include 'c2me-fixes-chunkio-threading-issues'

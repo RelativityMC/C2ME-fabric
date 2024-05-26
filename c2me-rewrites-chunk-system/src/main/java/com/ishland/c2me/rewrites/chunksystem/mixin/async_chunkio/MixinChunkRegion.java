@@ -1,6 +1,6 @@
-package com.ishland.c2me.threading.chunkio.mixin;
+package com.ishland.c2me.rewrites.chunksystem.mixin.async_chunkio;
 
-import com.ishland.c2me.threading.chunkio.common.ProtoChunkExtension;
+import com.ishland.c2me.rewrites.chunksystem.common.async_chunkio.ProtoChunkExtension;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.block.BlockState;

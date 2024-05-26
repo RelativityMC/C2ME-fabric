@@ -1,6 +1,6 @@
-package com.ishland.c2me.threading.chunkio.mixin;
+package com.ishland.c2me.rewrites.chunksystem.mixin.async_chunkio;
 
-import com.ishland.c2me.threading.chunkio.common.ProtoChunkExtension;
+import com.ishland.c2me.rewrites.chunksystem.common.async_chunkio.ProtoChunkExtension;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.ChunkRegion;
 import net.minecraft.world.gen.chunk.Blender;
