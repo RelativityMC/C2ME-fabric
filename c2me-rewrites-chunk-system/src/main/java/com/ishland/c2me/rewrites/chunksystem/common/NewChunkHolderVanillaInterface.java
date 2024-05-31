@@ -47,13 +47,8 @@ public class NewChunkHolderVanillaInterface extends ChunkHolder {
     }
 
     @Override
-    public CompletableFuture<OptionalChunk<Chunk>> getFutureFor(ChunkStatus leastStatus) {
-        return wrapOptionalChunkFuture(this.newHolder.getFutureForStatus(NewChunkStatus.fromVanillaStatus(leastStatus)));
-    }
-
-    @Override
-    public CompletableFuture<OptionalChunk<Chunk>> getValidFutureFor(ChunkStatus leastStatus) {
-        return this.getFutureFor(leastStatus); // TODO
+    public CompletableFuture<OptionalChunk<Chunk>> load(ChunkStatus requestedStatus, ServerChunkLoadingManager chunkLoadingManager) {
+        return wrapOptionalChunkFuture(this.newHolder.getFutureForStatus(NewChunkStatus.fromVanillaStatus(requestedStatus)));
     }
 
     @Override
@@ -88,18 +83,6 @@ public class NewChunkHolderVanillaInterface extends ChunkHolder {
         return super.getPostProcessedChunk(); // use vanilla impl
     }
 
-    @Nullable
-    @Override
-    public ChunkStatus getCurrentStatus() {
-        return ((NewChunkStatus) this.newHolder.getStatus()).getEffectiveVanillaStatus();
-    }
-
-    @Nullable
-    @Override
-    public Chunk getCurrentChunk() {
-        return this.newHolder.getItem().get().chunk();
-    }
-
     @Override
     public CompletableFuture<Chunk> getSavingFuture() {
         return wrapChunkFuture(this.newHolder.getOpFuture());
@@ -118,16 +101,6 @@ public class NewChunkHolderVanillaInterface extends ChunkHolder {
     @Override
     public void flushUpdates(WorldChunk chunk) {
         super.flushUpdates(chunk); // use vanilla impl
-    }
-
-    @Override
-    public CompletableFuture<OptionalChunk<Chunk>> getChunkAt(ChunkStatus targetStatus, ServerChunkLoadingManager chunkStorage) {
-        return this.getFutureFor(targetStatus); // TODO ensure future is present
-    }
-
-    @Override
-    protected void combineSavingFuture(String thenDesc, CompletableFuture<?> then) {
-        this.newHolder.submitOp(then.handle((o, throwable) -> null));
     }
 
     @Override
@@ -171,23 +144,81 @@ public class NewChunkHolderVanillaInterface extends ChunkHolder {
     }
 
     @Override
+    public boolean isSavable() {
+        return this.getRefCount() == 0 && this.getSavingFuture().isDone();
+    }
+
+    @Override
     public void updateAccessibleStatus() {
         // no-op
     }
 
     @Override
-    public void setCompletedChunk(WrapperProtoChunk chunk) {
+    protected void updateStatus(ServerChunkLoadingManager chunkLoadingManager) {
         // no-op
     }
 
     @Override
-    public List<Pair<ChunkStatus, CompletableFuture<OptionalChunk<Chunk>>>> collectFuturesByStatus() {
+    public void replaceWith(WrapperProtoChunk chunk) {
+        // no-op
+    }
+
+    @Override
+    public List<Pair<ChunkStatus, CompletableFuture<OptionalChunk<Chunk>>>> enumerateFutures() {
         List<Pair<ChunkStatus, CompletableFuture<OptionalChunk<Chunk>>>> list = new ArrayList<>();
 
         for (final ChunkStatus status : CHUNK_STATUSES) {
-            list.add(Pair.of(status, this.getFutureFor(status)));
+            list.add(Pair.of(status, wrapOptionalChunkFuture(this.newHolder.getFutureForStatus(NewChunkStatus.fromVanillaStatus(status)))));
         }
 
         return list;
+    }
+
+    @Override
+    public void incrementRefCount() {
+        super.incrementRefCount(); // use vanilla impl
+    }
+
+    @Override
+    public void decrementRefCount() {
+        super.decrementRefCount(); // use vanilla impl
+    }
+
+    @Override
+    public int getRefCount() {
+        return super.getRefCount(); // use vanilla impl
+    }
+
+    @Nullable
+    @Override
+    public Chunk getUncheckedOrNull(ChunkStatus requestedStatus) {
+        return this.newHolder.getStatus().ordinal() <= NewChunkStatus.fromVanillaStatus(requestedStatus).ordinal()
+                ? this.newHolder.getItem().get().chunk() : null;
+    }
+
+    @Nullable
+    @Override
+    public Chunk getOrNull(ChunkStatus requestedStatus) {
+        return this.newHolder.getTargetStatus().ordinal() <= NewChunkStatus.fromVanillaStatus(requestedStatus).ordinal()
+                ? this.getUncheckedOrNull(requestedStatus) : null;
+    }
+
+    @Nullable
+    @Override
+    public Chunk getLatest() {
+        return this.newHolder.getItem().get().chunk();
+    }
+
+    @Nullable
+    @Override
+    public ChunkStatus getActualStatus() {
+        final Chunk chunk = this.getLatest();
+        return chunk != null ? chunk.getStatus() : null;
+    }
+
+    @Nullable
+    @Override
+    public ChunkStatus getLatestStatus() {
+        return ((NewChunkStatus) this.newHolder.getStatus()).getEffectiveVanillaStatus();
     }
 }
