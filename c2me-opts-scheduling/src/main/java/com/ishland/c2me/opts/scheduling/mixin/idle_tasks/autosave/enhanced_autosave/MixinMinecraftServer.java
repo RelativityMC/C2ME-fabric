@@ -43,7 +43,7 @@ public abstract class MixinMinecraftServer extends ReentrantThreadExecutor<Serve
         if (original) return true;
         if (this.c2me$shouldKeepSavingChunks()) {
             for (ServerWorld serverWorld : this.getWorlds()) {
-                if (((IThreadedAnvilChunkStorage) serverWorld.getChunkManager().threadedAnvilChunkStorage).c2me$runOneChunkAutoSave()) {
+                if (((IThreadedAnvilChunkStorage) serverWorld.getChunkManager().chunkLoadingManager).c2me$runOneChunkAutoSave()) {
                     return true;
                 }
             }

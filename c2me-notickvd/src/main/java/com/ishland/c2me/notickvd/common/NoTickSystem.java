@@ -7,7 +7,7 @@ import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.longs.LongSets;
 import net.minecraft.server.world.ChunkTicket;
 import net.minecraft.server.world.ChunkTicketManager;
-import net.minecraft.server.world.ThreadedAnvilChunkStorage;
+import net.minecraft.server.world.ServerChunkLoadingManager;
 import net.minecraft.util.math.ChunkPos;
 import org.threadly.concurrent.NoThreadScheduler;
 
@@ -73,12 +73,12 @@ public class NoTickSystem {
         drainQueue(this.mainAfterTicketTicks);
     }
 
-    public void tick(ThreadedAnvilChunkStorage tacs) {
+    public void tick(ServerChunkLoadingManager tacs) {
         tickScheduler();
         scheduleTick(tacs);
     }
 
-    private void scheduleTick(ThreadedAnvilChunkStorage tacs) {
+    private void scheduleTick(ServerChunkLoadingManager tacs) {
         if (this.isTicking.compareAndSet(false, true)) {
             List<Runnable> tasks = new ArrayList<>(this.pendingActionsOnScheduler.size() + 3);
             {

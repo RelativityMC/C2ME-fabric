@@ -10,7 +10,7 @@ import it.unimi.dsi.fastutil.longs.Long2IntMap;
 import it.unimi.dsi.fastutil.longs.Long2IntMaps;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import net.minecraft.server.world.ChunkHolder;
-import net.minecraft.server.world.ThreadedAnvilChunkStorage;
+import net.minecraft.server.world.ServerChunkLoadingManager;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
@@ -25,9 +25,9 @@ import java.util.concurrent.ThreadFactory;
 public class TheChunkSystem extends DaemonizedStatusAdvancingScheduler<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> {
 
     private final Long2IntMap managedTickets = Long2IntMaps.synchronize(new Long2IntOpenHashMap());
-    private final ThreadedAnvilChunkStorage tacs;
+    private final ServerChunkLoadingManager tacs;
 
-    public TheChunkSystem(ThreadFactory threadFactory, ThreadedAnvilChunkStorage tacs) {
+    public TheChunkSystem(ThreadFactory threadFactory, ServerChunkLoadingManager tacs) {
         super(threadFactory);
         this.tacs = tacs;
         managedTickets.defaultReturnValue(NewChunkStatus.vanillaLevelToStatus.length - 1);

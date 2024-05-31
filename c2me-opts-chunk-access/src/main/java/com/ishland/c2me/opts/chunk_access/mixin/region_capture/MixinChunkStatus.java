@@ -1,7 +1,7 @@
 package com.ishland.c2me.opts.chunk_access.mixin.region_capture;
 
 import com.ishland.c2me.opts.chunk_access.common.CurrentWorldGenState;
-import net.minecraft.util.profiling.jfr.Finishable;
+import net.minecraft.util.function.Finishable;
 import net.minecraft.util.profiling.jfr.FlightProfiler;
 import net.minecraft.world.ChunkRegion;
 import net.minecraft.world.chunk.Chunk;

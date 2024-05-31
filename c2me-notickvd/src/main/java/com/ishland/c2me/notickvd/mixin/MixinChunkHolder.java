@@ -17,8 +17,6 @@ public abstract class MixinChunkHolder {
 
     @Shadow @Nullable public abstract WorldChunk getWorldChunk();
 
-    @Shadow public abstract ChunkPos getPos();
-
     @Shadow public abstract CompletableFuture<OptionalChunk<WorldChunk>> getAccessibleFuture();
 
     @Redirect(method = {"markForBlockUpdate", "markForLightUpdate"}, at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ChunkHolder;getWorldChunk()Lnet/minecraft/world/chunk/WorldChunk;"), require = 2)

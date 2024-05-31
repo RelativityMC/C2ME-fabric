@@ -6,7 +6,7 @@ import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ChunkLevelType;
 import net.minecraft.server.world.ChunkLevels;
 import net.minecraft.server.world.OptionalChunk;
-import net.minecraft.server.world.ThreadedAnvilChunkStorage;
+import net.minecraft.server.world.ServerChunkLoadingManager;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.HeightLimitView;
@@ -121,7 +121,7 @@ public class NewChunkHolderVanillaInterface extends ChunkHolder {
     }
 
     @Override
-    public CompletableFuture<OptionalChunk<Chunk>> getChunkAt(ChunkStatus targetStatus, ThreadedAnvilChunkStorage chunkStorage) {
+    public CompletableFuture<OptionalChunk<Chunk>> getChunkAt(ChunkStatus targetStatus, ServerChunkLoadingManager chunkStorage) {
         return this.getFutureFor(targetStatus); // TODO ensure future is present
     }
 
@@ -161,7 +161,7 @@ public class NewChunkHolderVanillaInterface extends ChunkHolder {
     }
 
     @Override
-    protected void updateFutures(ThreadedAnvilChunkStorage chunkStorage, Executor executor) {
+    protected void updateFutures(ServerChunkLoadingManager chunkStorage, Executor executor) {
         throw new UnsupportedOperationException();
     }
 

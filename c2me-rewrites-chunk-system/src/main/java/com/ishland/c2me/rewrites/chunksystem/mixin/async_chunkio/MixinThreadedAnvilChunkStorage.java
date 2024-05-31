@@ -8,17 +8,12 @@ import com.ishland.c2me.base.common.theinterface.IDirectStorage;
 import com.ishland.c2me.base.common.util.SneakyThrow;
 import com.ishland.c2me.base.mixin.access.IVersionedChunkStorage;
 import com.ishland.c2me.rewrites.chunksystem.common.async_chunkio.AsyncSerializationManager;
+import com.ishland.c2me.rewrites.chunksystem.common.async_chunkio.BlendingInfoUtil;
 import com.ishland.c2me.rewrites.chunksystem.common.async_chunkio.ChunkIoMainThreadTaskUtils;
+import com.ishland.c2me.rewrites.chunksystem.common.async_chunkio.Config;
 import com.ishland.c2me.rewrites.chunksystem.common.async_chunkio.ISerializingRegionBasedStorage;
 import com.ishland.c2me.rewrites.chunksystem.common.async_chunkio.ProtoChunkExtension;
 import com.ishland.c2me.rewrites.chunksystem.common.async_chunkio.TaskCancellationException;
-import com.ishland.c2me.threading.chunkio.common.AsyncSerializationManager;
-import com.ishland.c2me.threading.chunkio.common.BlendingInfoUtil;
-import com.ishland.c2me.threading.chunkio.common.ChunkIoMainThreadTaskUtils;
-import com.ishland.c2me.threading.chunkio.common.Config;
-import com.ishland.c2me.threading.chunkio.common.ISerializingRegionBasedStorage;
-import com.ishland.c2me.threading.chunkio.common.ProtoChunkExtension;
-import com.ishland.c2me.threading.chunkio.common.TaskCancellationException;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.mojang.datafixers.DataFixer;
 import it.unimi.dsi.fastutil.longs.Long2ByteMap;
@@ -28,8 +23,8 @@ import net.minecraft.SharedConstants;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.OptionalChunk;
+import net.minecraft.server.world.ServerChunkLoadingManager;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.server.world.ThreadedAnvilChunkStorage;
 import net.minecraft.structure.StructureStart;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.ChunkPos;
@@ -70,7 +65,7 @@ import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Supplier;
 
-@Mixin(ThreadedAnvilChunkStorage.class)
+@Mixin(ServerChunkLoadingManager.class)
 public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStorage implements ChunkHolder.PlayersWatchingChunkProvider {
 
     public MixinThreadedAnvilChunkStorage(StorageKey arg, Path path, DataFixer dataFixer, boolean bl) {
@@ -295,7 +290,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
     @Dynamic
     @Redirect(method = "method_18843", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ThreadedAnvilChunkStorage;save(Lnet/minecraft/world/chunk/Chunk;)Z"))
     // method: consumer in tryUnloadChunk
-    private boolean asyncSave(ThreadedAnvilChunkStorage tacs, Chunk chunk, ChunkHolder holder) {
+    private boolean asyncSave(ServerChunkLoadingManager tacs, Chunk chunk, ChunkHolder holder) {
         // TODO [VanillaCopy] - check when updating minecraft version
         this.pointOfInterestStorage.saveChunk(chunk.getPos());
         if (!chunk.needsSaving()) {

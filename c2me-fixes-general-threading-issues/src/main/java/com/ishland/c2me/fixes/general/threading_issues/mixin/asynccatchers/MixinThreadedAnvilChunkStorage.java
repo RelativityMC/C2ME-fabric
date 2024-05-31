@@ -1,6 +1,6 @@
 package com.ishland.c2me.fixes.general.threading_issues.mixin.asynccatchers;
 
-import net.minecraft.server.world.ThreadedAnvilChunkStorage;
+import net.minecraft.server.world.ServerChunkLoadingManager;
 import net.minecraft.util.thread.ThreadExecutor;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.ConcurrentModificationException;
 
-@Mixin(ThreadedAnvilChunkStorage.class)
+@Mixin(ServerChunkLoadingManager.class)
 public class MixinThreadedAnvilChunkStorage {
 
     @Shadow @Final private ThreadExecutor<Runnable> mainThreadExecutor;

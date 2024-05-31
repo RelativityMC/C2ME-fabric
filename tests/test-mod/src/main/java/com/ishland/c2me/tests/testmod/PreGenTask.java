@@ -181,7 +181,7 @@ public class PreGenTask {
                                 runnable -> {
                                     if (world.getServer().isOnThread()) runnable.run();
                                     else
-                                        ((IThreadedAnvilChunkStorage) world.getChunkManager().threadedAnvilChunkStorage).getMainThreadExecutor().execute(runnable);
+                                        ((IThreadedAnvilChunkStorage) world.getChunkManager().chunkLoadingManager).getMainThreadExecutor().execute(runnable);
                                 }
                         )
                 )
@@ -249,15 +249,15 @@ public class PreGenTask {
         CompletableFuture<Void> future = new CompletableFuture<>();
         world.getChunkManager().addTicket(TICKET, pos, 0, Unit.INSTANCE);
         ((IServerChunkManager) world.getChunkManager()).invokeUpdateChunks();
-        final ChunkHolder chunkHolder = ((IThreadedAnvilChunkStorage) world.getChunkManager().threadedAnvilChunkStorage).invokeGetChunkHolder(pos.toLong());
+        final ChunkHolder chunkHolder = ((IThreadedAnvilChunkStorage) world.getChunkManager().chunkLoadingManager).invokeGetChunkHolder(pos.toLong());
         Preconditions.checkNotNull(chunkHolder, "chunkHolder is null");
-        chunkHolder.getChunkAt(ChunkStatus.FULL, world.getChunkManager().threadedAnvilChunkStorage).thenAcceptAsync(either -> {
+        chunkHolder.getAccessibleFuture().thenAcceptAsync(either -> {
             world.getChunkManager().removeTicket(TICKET, pos, 0, Unit.INSTANCE);
             if (either.isPresent())
                 future.complete(null);
             else
                 future.completeExceptionally(new RuntimeException(either.getError()));
-        }, ((IThreadedAnvilChunkStorage) world.getChunkManager().threadedAnvilChunkStorage).getMainThreadExecutor()).exceptionally(throwable -> {
+        }, ((IThreadedAnvilChunkStorage) world.getChunkManager().chunkLoadingManager).getMainThreadExecutor()).exceptionally(throwable -> {
             future.completeExceptionally(throwable);
             return null;
         });

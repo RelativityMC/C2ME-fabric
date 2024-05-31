@@ -4,7 +4,6 @@
   "package": "com.ishland.c2me.opts.scheduling.mixin",
   "plugin": "com.ishland.c2me.opts.scheduling.mixin.MixinPlugin",
   "mixins": [
-    "fix_unload.MixinThreadedAnvilChunkStorage",
     "general_overheads.MixinThreadedAnvilChunkStorage",
     "idle_tasks.autosave.disable_vanilla_mid_tick_autosave.MixinThreadedAnvilChunkStorage",
     "idle_tasks.autosave.enhanced_autosave.MixinMinecraftServer",
@@ -20,6 +19,5 @@
     "task_scheduling.MixinChunkHolder",
     "task_scheduling.MixinEntityChunkDataAccess",
     "task_scheduling.MixinServerChunkManager",
-    "task_scheduling.MixinThreadedAnvilChunkStorage"
   ]
 }

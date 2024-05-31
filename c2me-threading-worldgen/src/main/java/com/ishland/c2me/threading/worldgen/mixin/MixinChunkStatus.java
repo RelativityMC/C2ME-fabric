@@ -114,7 +114,7 @@ public abstract class MixinChunkStatus implements IChunkStatus {
             final ThreadedAnvilChunkStorage tacs = context.world().getChunkManager().threadedAnvilChunkStorage;
             if (holder != null && ChunkStatusUtils.isCancelled(holder, thiz)) {
                 completableFuture = CompletableFuture.failedFuture(new CancellationException());
-                ((IThreadedAnvilChunkStorage) tacs).invokeReleaseLightTicket(targetChunk.getPos()); // vanilla behavior
+//                ((IThreadedAnvilChunkStorage) tacs).invokeReleaseLightTicket(targetChunk.getPos()); // vanilla behavior
 //                System.out.println(String.format("%s: %s is already done or cancelled, skipping generation", this, targetChunk.getPos()));
             } else {
                 int lockRadius = Config.reduceLockRadius && this.reducedTaskRadius != -1 ? this.reducedTaskRadius : this.taskMargin;

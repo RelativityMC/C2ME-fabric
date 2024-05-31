@@ -6,9 +6,9 @@ import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ChunkTicketManager;
 import net.minecraft.server.world.ChunkTicketType;
 import net.minecraft.server.world.OptionalChunk;
+import net.minecraft.server.world.ServerChunkLoadingManager;
 import net.minecraft.server.world.ServerChunkManager;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.server.world.ThreadedAnvilChunkStorage;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.profiler.Profiler;
@@ -54,7 +54,7 @@ public abstract class MixinServerChunkManager {
     @Shadow
     public abstract boolean updateChunks();
 
-    @Shadow @Final public ThreadedAnvilChunkStorage threadedAnvilChunkStorage;
+    @Shadow @Final public ServerChunkLoadingManager chunkLoadingManager;
     @Shadow @Final public ServerChunkManager.MainThreadExecutor mainThreadExecutor;
     private static final ChunkTicketType<ChunkPos> ASYNC_LOAD = ChunkTicketType.create("async_load", Comparator.comparingLong(ChunkPos::toLong));
 
@@ -104,7 +104,7 @@ public abstract class MixinServerChunkManager {
                 }
             }
 
-            final CompletableFuture<OptionalChunk<Chunk>> future = this.isMissingForLevel(chunkHolder, ticketLevel) ? ChunkHolder.UNLOADED_CHUNK_FUTURE : chunkHolder.getChunkAt(leastStatus, this.threadedAnvilChunkStorage);
+            final CompletableFuture<OptionalChunk<Chunk>> future = this.isMissingForLevel(chunkHolder, ticketLevel) ? ChunkHolder.UNLOADED_CHUNK_FUTURE : chunkHolder.getChunkAt(leastStatus, this.chunkLoadingManager);
             if (doCreate && future != null) {
                 future.exceptionally(__ -> null).thenRunAsync(() -> {
                     this.ticketManager.removeTicketWithLevel(ASYNC_LOAD, chunkPos, ticketLevel, chunkPos);
