@@ -82,7 +82,7 @@ public class TheChunkSystem extends DaemonizedStatusAdvancingScheduler<ChunkPos,
                 if (oldStatus != this.getUnloadedStatus()) {
                     this.removeTicket(new ChunkPos(pos), oldStatus);
                 }
-                return null;
+                return vanillaHolder;
             } else {
                 return null;
             }
