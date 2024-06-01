@@ -1,4 +1,4 @@
-package com.ishland.c2me.threading.worldgen.mixin;
+package com.ishland.c2me.rewrites.chunksystem.mixin;
 
 import com.ishland.c2me.base.common.util.InvokingExecutorService;
 import net.minecraft.world.gen.chunk.NoiseChunkGenerator;

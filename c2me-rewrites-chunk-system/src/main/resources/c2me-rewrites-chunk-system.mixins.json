@@ -4,13 +4,8 @@
   "package": "com.ishland.c2me.rewrites.chunksystem.mixin",
   "plugin": "com.ishland.c2me.base.common.ModuleMixinPlugin",
   "mixins": [
-    "MixinThreadedAnvilChunkStorage",
-    "async_chunkio.MixinBlender",
-    "async_chunkio.MixinChunkRegion",
-    "async_chunkio.MixinChunkSerializer",
-    "async_chunkio.MixinProtoChunk",
-    "async_chunkio.MixinSerializingRegionBasedStorage",
-    "async_chunkio.MixinStorageIoWorker",
-    "async_chunkio.MixinThreadedAnvilChunkStorage"
+    "MixinChunkGenerator",
+    "MixinNoiseChunkGenerator",
+    "MixinThreadedAnvilChunkStorage"
   ]
 }

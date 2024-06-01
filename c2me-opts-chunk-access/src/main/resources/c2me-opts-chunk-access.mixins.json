@@ -5,7 +5,6 @@
   "plugin": "com.ishland.c2me.opts.chunk_access.MixinPlugin",
   "mixins": [
     "asm.ASMTargets",
-    "async_chunk_request.MixinServerChunkManager",
-    "region_capture.MixinChunkStatus"
+    "async_chunk_request.MixinServerChunkManager"
   ]
 }

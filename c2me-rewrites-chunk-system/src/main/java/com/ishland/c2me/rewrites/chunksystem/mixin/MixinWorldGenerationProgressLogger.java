@@ -1,4 +1,4 @@
-package com.ishland.c2me.threading.worldgen.mixin.progresslogger;
+package com.ishland.c2me.rewrites.chunksystem.mixin;
 
 import it.unimi.dsi.fastutil.longs.Long2IntMap;
 import it.unimi.dsi.fastutil.longs.Long2IntMaps;
