@@ -1,12 +1,16 @@
 package com.ishland.c2me.rewrites.chunksystem.common;
 
+import com.ishland.c2me.base.common.scheduler.SchedulingManager;
 import com.ishland.flowsched.scheduler.ItemHolder;
+import com.ishland.flowsched.scheduler.KeyStatusPair;
 import net.minecraft.server.world.ServerChunkLoadingManager;
+import net.minecraft.util.collection.BoundedRegionArray;
 import net.minecraft.util.math.ChunkPos;
-import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.chunk.ChunkGenerationContext;
+import net.minecraft.world.chunk.AbstractChunkHolder;
 
-import java.util.List;
-
-public record ChunkLoadingContext(ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> holder, ServerChunkLoadingManager tacs, List<Chunk> chunks) {
+public record ChunkLoadingContext(
+        ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> holder,
+        ServerChunkLoadingManager tacs, SchedulingManager schedulingManager,
+        BoundedRegionArray<AbstractChunkHolder> chunks,
+        KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] dependencies) {
 }

@@ -1,5 +1,7 @@
 package com.ishland.c2me.rewrites.chunksystem.common;
 
+import com.ishland.c2me.base.common.GlobalExecutors;
+import com.ishland.c2me.base.common.scheduler.SchedulingManager;
 import com.ishland.c2me.base.mixin.access.IThreadedAnvilChunkStorage;
 import com.ishland.flowsched.scheduler.DaemonizedStatusAdvancingScheduler;
 import com.ishland.flowsched.scheduler.ItemHolder;
@@ -11,20 +13,15 @@ import it.unimi.dsi.fastutil.longs.Long2IntMaps;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ServerChunkLoadingManager;
+import net.minecraft.util.collection.BoundedRegionArray;
 import net.minecraft.util.math.ChunkPos;
-import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.chunk.ChunkStatus;
-import net.minecraft.world.chunk.ProtoChunk;
-import net.minecraft.world.chunk.WorldChunk;
-import net.minecraft.world.chunk.WrapperProtoChunk;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.ThreadFactory;
 
 public class TheChunkSystem extends DaemonizedStatusAdvancingScheduler<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> {
 
     private final Long2IntMap managedTickets = Long2IntMaps.synchronize(new Long2IntOpenHashMap());
+    private final SchedulingManager schedulingManager = new SchedulingManager(GlobalExecutors.asyncScheduler);
     private final ServerChunkLoadingManager tacs;
 
     public TheChunkSystem(ThreadFactory threadFactory, ServerChunkLoadingManager tacs) {
@@ -42,15 +39,12 @@ public class TheChunkSystem extends DaemonizedStatusAdvancingScheduler<ChunkPos,
     protected ChunkLoadingContext makeContext(ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> holder, ItemStatus<ChunkPos, ChunkState, ChunkLoadingContext> nextStatus, KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] dependencies, boolean isUpgrade) {
         Assertions.assertTrue(nextStatus instanceof NewChunkStatus);
         final NewChunkStatus nextStatus1 = (NewChunkStatus) nextStatus;
-        final List<Chunk> chunks = Arrays.stream(dependencies)
-                .map(pair -> {
-                    Chunk chunk = this.getHolder(pair.key()).getItem().get().chunk();
-                    if (nextStatus1.getEffectiveVanillaStatus() != ChunkStatus.FULL && chunk instanceof WorldChunk worldChunk) {
-                        chunk = new WrapperProtoChunk(worldChunk, false);
-                    }
-                    return chunk;
-                }).toList();
-        return new ChunkLoadingContext(holder, this.tacs, chunks);
+
+        int radius = (int) ((Math.sqrt(dependencies.length) - 1) / 2);
+        Assertions.assertTrue((radius * 2 + 1) * (radius * 2 + 1) == dependencies.length);
+
+        return new ChunkLoadingContext(holder, this.tacs, this.schedulingManager, BoundedRegionArray.create(holder.getKey().x, holder.getKey().z, radius,
+                (x, z) -> this.getHolder(new ChunkPos(x, z)).getUserData().get()), dependencies);
     }
 
     @Override
@@ -65,6 +59,7 @@ public class TheChunkSystem extends DaemonizedStatusAdvancingScheduler<ChunkPos,
     }
 
     public ChunkHolder vanillaIf$setLevel(long pos, int level) {
+        this.schedulingManager.updatePriorityFromLevel(pos, level);
         synchronized (this.managedTickets) {
             final int oldLevel = this.managedTickets.put(pos, level);
             NewChunkStatus oldStatus = NewChunkStatus.fromVanillaLevel(oldLevel);

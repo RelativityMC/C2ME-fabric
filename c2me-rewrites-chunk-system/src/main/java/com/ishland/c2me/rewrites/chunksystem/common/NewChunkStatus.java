@@ -1,23 +1,30 @@
 package com.ishland.c2me.rewrites.chunksystem.common;
 
+import com.ishland.c2me.base.common.scheduler.LockTokenImpl;
+import com.ishland.c2me.base.common.scheduler.ScheduledTask;
+import com.ishland.c2me.base.common.scheduler.SchedulingManager;
 import com.ishland.c2me.base.mixin.access.IThreadedAnvilChunkStorage;
+import com.ishland.flowsched.executor.LockToken;
 import com.ishland.flowsched.scheduler.ItemHolder;
 import com.ishland.flowsched.scheduler.ItemStatus;
 import com.ishland.flowsched.scheduler.KeyStatusPair;
-import com.ishland.flowsched.util.Assertions;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
-import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 import net.minecraft.server.world.ChunkLevels;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkGenerationContext;
+import net.minecraft.world.chunk.ChunkGenerationStep;
+import net.minecraft.world.chunk.ChunkGenerationSteps;
 import net.minecraft.world.chunk.ChunkStatus;
+import net.minecraft.world.chunk.GenerationDependencies;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
 public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState, ChunkLoadingContext> {
@@ -34,7 +41,7 @@ public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState,
 
     static {
         ArrayList<NewChunkStatus> statuses = new ArrayList<>();
-        NEW = new NewChunkStatus(statuses.size(), new KeyStatusPair[0], 0, ChunkStatus.EMPTY) {
+        NEW = new NewChunkStatus(statuses.size(), 0, ChunkStatus.EMPTY) {
             @Override
             public CompletionStage<Void> upgradeToThis(ChunkLoadingContext context) {
                 throw new UnsupportedOperationException();
@@ -46,7 +53,7 @@ public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState,
             }
         };
         statuses.add(NEW);
-        DISK = new NewChunkStatus(statuses.size(), new KeyStatusPair[0], 0, ChunkStatus.EMPTY) {
+        DISK = new NewChunkStatus(statuses.size(), 0, ChunkStatus.EMPTY) {
             @Override
             public CompletionStage<Void> upgradeToThis(ChunkLoadingContext context) {
                 return null;
@@ -59,7 +66,7 @@ public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState,
         };
         statuses.add(DISK);
         VANILLA_WORLDGEN_PIPELINE = Collections.unmodifiableMap(generateFromVanillaChunkStatus(statuses));
-        SERVER_ACCESSIBLE = new NewChunkStatus(statuses.size(), new KeyStatusPair[0], 0, ChunkStatus.FULL) {
+        SERVER_ACCESSIBLE = new NewChunkStatus(statuses.size(), 0, ChunkStatus.FULL) {
             @Override
             public CompletionStage<Void> upgradeToThis(ChunkLoadingContext context) {
                 return null;
@@ -71,7 +78,7 @@ public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState,
             }
         };
         statuses.add(SERVER_ACCESSIBLE);
-        BLOCK_TICKING = new NewChunkStatus(statuses.size(), new KeyStatusPair[0], 0, ChunkStatus.FULL) {
+        BLOCK_TICKING = new NewChunkStatus(statuses.size(), 0, ChunkStatus.FULL) {
             @Override
             public CompletionStage<Void> upgradeToThis(ChunkLoadingContext context) {
                 return null;
@@ -83,7 +90,7 @@ public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState,
             }
         };
         statuses.add(BLOCK_TICKING);
-        ENTITY_TICKING = new NewChunkStatus(statuses.size(), new KeyStatusPair[0], 0, ChunkStatus.FULL) {
+        ENTITY_TICKING = new NewChunkStatus(statuses.size(), 0, ChunkStatus.FULL) {
             @Override
             public CompletionStage<Void> upgradeToThis(ChunkLoadingContext context) {
                 return null;
@@ -119,46 +126,36 @@ public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState,
 
     private static Map<ChunkStatus, NewChunkStatus> generateFromVanillaChunkStatus(ArrayList<NewChunkStatus> statuses) {
         Map<ChunkStatus, NewChunkStatus> map = new Reference2ReferenceOpenHashMap<>();
-        ReferenceOpenHashSet<ItemStatus<ChunkPos, ChunkState, ChunkLoadingContext>> depVisited = new ReferenceOpenHashSet<>();
         for (ChunkStatus status : ChunkStatus.createOrderedList()) {
             if (status == ChunkStatus.EMPTY || status == ChunkStatus.FULL) continue;
-            ArrayList<KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>> dependencies = new ArrayList<>();
-            for (int x = -status.getTaskMargin(); x <= status.getTaskMargin(); x ++) {
-                for (int z = -status.getTaskMargin(); z <= status.getTaskMargin(); z ++) {
-                    if (x == 0 && z == 0) continue;
-                    final NewChunkStatus depStatus = map.get(ChunkStatus.byDistanceFromFull(ChunkStatus.getDistanceFromFull(status) + Math.max(Math.abs(x), Math.abs(z))));
-                    Assertions.assertTrue(depStatus != null, "Dependency not found");
-                    if (!depVisited.contains(depStatus)) {
-                        dependencies.add(new KeyStatusPair<>(new ChunkPos(x, z), depStatus));
-                    }
-                }
-            }
-            for (KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext> dependency : dependencies) {
-                depVisited.add(dependency.status());
-            }
             int lockingRadius = (status == ChunkStatus.FEATURES || status == ChunkStatus.LIGHT) ? 1 : 0;
+            final KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] genDeps = getDependencyFromStep(ChunkGenerationSteps.GENERATION.get(status));
+            final KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] loadDeps = getDependencyFromStep(ChunkGenerationSteps.LOADING.get(status));
 
-            final NewChunkStatus newChunkStatus = new NewChunkStatus(statuses.size(), dependencies.toArray(KeyStatusPair[]::new), lockingRadius, status) {
+            final NewChunkStatus newChunkStatus = new NewChunkStatus(statuses.size(), lockingRadius, status) {
                 @Override
                 public CompletionStage<Void> upgradeToThis(ChunkLoadingContext context) {
-                    final ChunkGenerationContext chunkGenerationContext = ((IThreadedAnvilChunkStorage) context.tacs()).getChunkGenerationContext();
-                    Chunk chunk = context.chunks().get(context.chunks().size() / 2);
+                    final ChunkGenerationContext chunkGenerationContext = ((IThreadedAnvilChunkStorage) context.tacs()).getGenerationContext();
+                    Chunk chunk = context.holder().getItem().get().chunk();
                     if (chunk.getStatus().isAtLeast(status)) {
-                        return status.runLoadTask(chunkGenerationContext, null, chunk)
+                        return ChunkGenerationSteps.LOADING.get(status)
+                                .run(((IThreadedAnvilChunkStorage) context.tacs()).getGenerationContext(), context.chunks(), chunk)
                                 .whenComplete((chunk1, throwable) -> {
                                     if (chunk1 != null) {
                                         context.holder().getItem().set(new ChunkState(chunk1));
                                     }
-                                }).thenAccept(__ -> {
-                                });
+                                }).thenAccept(__ -> {});
                     } else {
-                        return status.runGenerationTask(chunkGenerationContext, Runnable::run, null, context.chunks())
-                                .whenComplete((chunk1, throwable) -> {
-                                    if (chunk1 != null) {
-                                        context.holder().getItem().set(new ChunkState(chunk1));
-                                    }
-                                }).thenAccept(__ -> {
-                                });
+                        final ChunkGenerationStep step = ChunkGenerationSteps.GENERATION.get(status);
+
+                        return NewChunkStatus.runTaskWithLock(chunk.getPos(), step.blockStateWriteRadius(), context.schedulingManager(),
+                                () -> step.run(chunkGenerationContext, context.chunks(), chunk)
+                                            .whenComplete((chunk1, throwable) -> {
+                                                if (chunk1 != null) {
+                                                    context.holder().getItem().set(new ChunkState(chunk1));
+                                                }
+                                            }).thenAccept(__ -> {})
+                        );
                     }
                 }
 
@@ -166,12 +163,55 @@ public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState,
                 public CompletionStage<Void> downgradeFromThis(ChunkLoadingContext context) {
                     return CompletableFuture.completedFuture(null);
                 }
+
+                @Override
+                public KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] getDependencies(ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, ?> holder) {
+                    final Chunk chunk = holder.getItem().get().chunk();
+                    if (chunk == null) return genDeps;
+                    if (chunk.getStatus().isAtLeast(status)) {
+                        return loadDeps;
+                    } else {
+                        return genDeps;
+                    }
+                }
             };
             statuses.add(newChunkStatus);
             map.put(status, newChunkStatus);
         }
 
         return map;
+    }
+
+    private static <T> CompletableFuture<T> runTaskWithLock(ChunkPos target, int radius, SchedulingManager schedulingManager, Supplier<CompletableFuture<T>> action) {
+        ObjectArrayList<LockToken> lockTargets = new ObjectArrayList<>((2 * radius + 1) * (2 * radius + 1) + 1);
+        for (int x = target.x - radius; x <= target.x + radius; x++)
+            for (int z = target.z - radius; z <= target.z + radius; z++)
+                lockTargets.add(new LockTokenImpl(schedulingManager.getId(), ChunkPos.toLong(x, z), LockTokenImpl.Usage.WORLDGEN));
+
+//        if (threadingType == SINGLE_THREADED) {
+//            lockTargets.add(new LockTokenImpl(schedulingManager.getId(), ChunkPos.MARKER, LockTokenImpl.Usage.WORLDGEN));
+//        }
+
+        final ScheduledTask<T> task = new ScheduledTask<>(
+                target.toLong(),
+                action,
+                lockTargets.toArray(LockToken[]::new));
+        schedulingManager.enqueue(task);
+        return task.getFuture();
+    }
+
+    private static KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] getDependencyFromStep(ChunkGenerationStep step) {
+        ArrayList<KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>> deps = new ArrayList<>();
+        final GenerationDependencies directDependencies = step.directDependencies();
+        for (int x = -directDependencies.getMaxLevel(); x <= directDependencies.getMaxLevel(); x++) {
+            for (int z = -directDependencies.getMaxLevel(); z <= directDependencies.getMaxLevel(); z++) {
+                if (x == 0 && z == 0) continue;
+                final KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext> dep = new KeyStatusPair<>(new ChunkPos(x, z), fromVanillaStatus(directDependencies.get(Math.max(x, z))));
+                deps.add(dep);
+            }
+        }
+
+        return deps.toArray(KeyStatusPair[]::new);
     }
 
     public static NewChunkStatus fromVanillaLevel(int level) {
@@ -183,13 +223,11 @@ public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState,
     }
 
     private final int ordinal;
-    private final KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] dependencies;
     private final int lockingRadius;
     private final ChunkStatus effectiveVanillaStatus;
 
-    protected NewChunkStatus(int ordinal, KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] dependencies, int lockingRadius, ChunkStatus effectiveVanillaStatus) {
+    protected NewChunkStatus(int ordinal, int lockingRadius, ChunkStatus effectiveVanillaStatus) {
         this.ordinal = ordinal;
-        this.dependencies = dependencies;
         this.lockingRadius = lockingRadius;
         this.effectiveVanillaStatus = effectiveVanillaStatus;
     }
@@ -210,6 +248,6 @@ public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState,
 
     @Override
     public KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] getDependencies(ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, ?> holder) {
-        return this.dependencies;
+        return new KeyStatusPair[0];
     }
 }
