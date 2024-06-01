@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
@@ -56,7 +57,12 @@ public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState,
         DISK = new NewChunkStatus(statuses.size(), 0, ChunkStatus.EMPTY) {
             @Override
             public CompletionStage<Void> upgradeToThis(ChunkLoadingContext context) {
-                return null;
+                return CompletableFuture.supplyAsync(() -> {
+                    return ((IThreadedAnvilChunkStorage) context.tacs()).invokeLoadChunk(context.holder().getKey())
+                            .thenAccept(chunk -> {
+                                context.holder().getItem().set(new ChunkState(chunk));
+                            });
+                }, ((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor()).thenCompose(Function.identity());
             }
 
             @Override

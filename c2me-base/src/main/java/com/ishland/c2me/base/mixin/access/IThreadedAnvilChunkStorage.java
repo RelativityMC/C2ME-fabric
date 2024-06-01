@@ -7,10 +7,13 @@ import net.minecraft.server.world.ServerLightingProvider;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.thread.ThreadExecutor;
+import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkGenerationContext;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.gen.Invoker;
+
+import java.util.concurrent.CompletableFuture;
 
 @Mixin(ServerChunkLoadingManager.class)
 public interface IThreadedAnvilChunkStorage {
@@ -38,5 +41,8 @@ public interface IThreadedAnvilChunkStorage {
 
     @Accessor
     ChunkGenerationContext getGenerationContext();
+
+    @Invoker
+    CompletableFuture<Chunk> invokeLoadChunk(ChunkPos pos);
 
 }
