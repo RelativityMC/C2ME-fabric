@@ -75,7 +75,13 @@ public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState,
         SERVER_ACCESSIBLE = new NewChunkStatus(statuses.size(), 0, ChunkStatus.FULL) {
             @Override
             public CompletionStage<Void> upgradeToThis(ChunkLoadingContext context) {
-                return null;
+                return ChunkGenerationSteps.LOADING.get(ChunkStatus.FULL)
+                        .run(((IThreadedAnvilChunkStorage) context.tacs()).getGenerationContext(), context.chunks(), context.holder().getItem().get().chunk())
+                        .whenComplete((chunk1, throwable) -> {
+                            if (chunk1 != null) {
+                                context.holder().getItem().set(new ChunkState(chunk1));
+                            }
+                        }).thenAccept(__ -> {});
             }
 
             @Override
