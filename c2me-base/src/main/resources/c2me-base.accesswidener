@@ -29,6 +29,19 @@ accessible    method    net/minecraft/nbt/NbtList                               
 accessible    method    net/minecraft/world/gen/surfacebuilder/MaterialRules$SequenceBlockStateRule    <init>              (Ljava/util/List;)V
 accessible    method    net/minecraft/world/storage/RegionBasedStorage                                 <init>              (Lnet/minecraft/world/storage/StorageKey;Ljava/nio/file/Path;Z)V
 
+extendable    method    net/minecraft/server/world/ChunkHolder           combineSavingFuture    (Ljava/util/concurrent/CompletableFuture;)V
+extendable    method    net/minecraft/server/world/ChunkHolder           setCompletedLevel      (I)V
+extendable    method    net/minecraft/world/chunk/AbstractChunkHolder    generate               (Lnet/minecraft/world/chunk/ChunkGenerationStep;Lnet/minecraft/world/ChunkLoadingManager;Lnet/minecraft/util/collection/BoundedRegionArray;)Ljava/util/concurrent/CompletableFuture;
+extendable    method    net/minecraft/world/chunk/AbstractChunkHolder    clearLoader            (Lnet/minecraft/world/chunk/ChunkLoader;)V
+extendable    method    net/minecraft/world/chunk/AbstractChunkHolder    createLoader           (Lnet/minecraft/server/world/ServerChunkLoadingManager;Lnet/minecraft/world/chunk/ChunkStatus;)V
+extendable    method    net/minecraft/world/chunk/AbstractChunkHolder    getOrCreateFuture      (Lnet/minecraft/world/chunk/ChunkStatus;)Ljava/util/concurrent/CompletableFuture;
+extendable    method    net/minecraft/world/chunk/AbstractChunkHolder    unload                 (Lnet/minecraft/world/chunk/ChunkStatus;Lnet/minecraft/world/chunk/ChunkStatus;)V
+extendable    method    net/minecraft/world/chunk/AbstractChunkHolder    unload                 (ILjava/util/concurrent/CompletableFuture;)V
+extendable    method    net/minecraft/world/chunk/AbstractChunkHolder    completeChunkFuture    (Lnet/minecraft/world/chunk/ChunkStatus;Lnet/minecraft/world/chunk/Chunk;)V
+extendable    method    net/minecraft/world/chunk/AbstractChunkHolder    getMaxPendingStatus    (Lnet/minecraft/world/chunk/ChunkStatus;)Lnet/minecraft/world/chunk/ChunkStatus;
+extendable    method    net/minecraft/world/chunk/AbstractChunkHolder    progressStatus         (Lnet/minecraft/world/chunk/ChunkStatus;)Z
+extendable    method    net/minecraft/world/chunk/AbstractChunkHolder    cannotBeLoaded         (Lnet/minecraft/world/chunk/ChunkStatus;)Z
+
 accessible    field    net/minecraft/world/storage/StorageIoWorker$Result                   nbt                 Lnet/minecraft/nbt/NbtCompound;
 accessible    field    net/minecraft/world/storage/StorageIoWorker$Result                   future              Ljava/util/concurrent/CompletableFuture;
 accessible    field     net/minecraft/util/math/BlockPos                                    BIT_SHIFT_X         I

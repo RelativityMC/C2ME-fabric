@@ -7,11 +7,16 @@ import net.minecraft.server.world.ChunkLevelType;
 import net.minecraft.server.world.ChunkLevels;
 import net.minecraft.server.world.OptionalChunk;
 import net.minecraft.server.world.ServerChunkLoadingManager;
+import net.minecraft.util.collection.BoundedRegionArray;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.world.ChunkLoadingManager;
 import net.minecraft.world.HeightLimitView;
 import net.minecraft.world.LightType;
+import net.minecraft.world.chunk.AbstractChunkHolder;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.ChunkGenerationStep;
+import net.minecraft.world.chunk.ChunkLoader;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.WorldChunk;
 import net.minecraft.world.chunk.WrapperProtoChunk;
@@ -36,6 +41,16 @@ public class NewChunkHolderVanillaInterface extends ChunkHolder {
 
     private CompletableFuture<OptionalChunk<Chunk>> wrapOptionalChunkFuture(CompletableFuture<?> future) {
         return future.thenApply(unused -> OptionalChunk.of(this.newHolder.getItem().get().chunk()));
+    }
+
+    private CompletableFuture<OptionalChunk<Chunk>> wrapOptionalChunkProtoFuture(CompletableFuture<?> future) {
+        return wrapOptionalChunkFuture(future).thenApply(optional -> optional.map(chunk -> {
+            if (chunk instanceof WorldChunk worldChunk) {
+                return new WrapperProtoChunk(worldChunk, false);
+            } else {
+                return chunk;
+            }
+        }));
     }
 
     private CompletableFuture<OptionalChunk<WorldChunk>> wrapOptionalWorldChunkFuture(CompletableFuture<?> future) {
@@ -135,7 +150,7 @@ public class NewChunkHolderVanillaInterface extends ChunkHolder {
 
     @Override
     protected void updateFutures(ServerChunkLoadingManager chunkStorage, Executor executor) {
-        throw new UnsupportedOperationException();
+        // no-op
     }
 
     @Override
@@ -220,5 +235,67 @@ public class NewChunkHolderVanillaInterface extends ChunkHolder {
     @Override
     public ChunkStatus getLatestStatus() {
         return ((NewChunkStatus) this.newHolder.getStatus()).getEffectiveVanillaStatus();
+    }
+
+    @Override
+    protected void combineSavingFuture(CompletableFuture<?> savingFuture) {
+        this.newHolder.submitOp(savingFuture.thenAccept(o -> {}));
+    }
+
+    @Override
+    protected void setCompletedLevel(int level) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    protected CompletableFuture<OptionalChunk<Chunk>> generate(ChunkGenerationStep step, ChunkLoadingManager chunkLoadingManager, BoundedRegionArray<AbstractChunkHolder> chunks) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    protected void clearLoader(ChunkLoader loader) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    protected void createLoader(ServerChunkLoadingManager chunkLoadingManager, @Nullable ChunkStatus requestedStatus) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    protected CompletableFuture<OptionalChunk<Chunk>> getOrCreateFuture(ChunkStatus status) {
+        return this.wrapOptionalChunkProtoFuture(this.newHolder.getFutureForStatus(NewChunkStatus.fromVanillaStatus(status)));
+    }
+
+    @Override
+    protected void unload(@Nullable ChunkStatus from, ChunkStatus to) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    protected void unload(int statusIndex, CompletableFuture<OptionalChunk<Chunk>> previousFuture) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    protected void completeChunkFuture(ChunkStatus status, Chunk chunk) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Nullable
+    @Override
+    protected ChunkStatus getMaxPendingStatus(@Nullable ChunkStatus checkUpperBound) {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    @Override
+    protected boolean progressStatus(ChunkStatus nextStatus) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    protected boolean cannotBeLoaded(ChunkStatus status) {
+        ChunkStatus chunkStatus = ((NewChunkStatus) this.newHolder.getTargetStatus()).getEffectiveVanillaStatus();
+        return chunkStatus == null || status.isLaterThan(chunkStatus);
     }
 }
