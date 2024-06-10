@@ -14,7 +14,6 @@ import com.ishland.c2me.rewrites.chunksystem.common.async_chunkio.Config;
 import com.ishland.c2me.rewrites.chunksystem.common.async_chunkio.ISerializingRegionBasedStorage;
 import com.ishland.c2me.rewrites.chunksystem.common.async_chunkio.ProtoChunkExtension;
 import com.ishland.c2me.rewrites.chunksystem.common.async_chunkio.TaskCancellationException;
-import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.mojang.datafixers.DataFixer;
 import it.unimi.dsi.fastutil.longs.Long2ByteMap;
 import it.unimi.dsi.fastutil.longs.Long2ByteMaps;
@@ -22,7 +21,6 @@ import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
 import net.minecraft.SharedConstants;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.world.ChunkHolder;
-import net.minecraft.server.world.OptionalChunk;
 import net.minecraft.server.world.ServerChunkLoadingManager;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.structure.StructureStart;
@@ -35,7 +33,6 @@ import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.ChunkType;
 import net.minecraft.world.chunk.ProtoChunk;
-import net.minecraft.world.gen.chunk.ChunkGenerator;
 import net.minecraft.world.poi.PointOfInterestStorage;
 import net.minecraft.world.storage.StorageIoWorker;
 import net.minecraft.world.storage.StorageKey;
@@ -100,9 +97,6 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
 
     @Shadow
     protected abstract boolean isLevelChunk(ChunkPos chunkPos);
-
-    @Shadow
-    private ChunkGenerator chunkGenerator;
 
     @Shadow
     protected abstract boolean save(Chunk chunk);
@@ -178,7 +172,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
                     if (optional.isPresent()) {
                         ChunkIoMainThreadTaskUtils.push(mainThreadQueue);
                         try {
-                            return ChunkSerializer.deserialize(this.world, this.pointOfInterestStorage, pos, optional.get());
+                            return ChunkSerializer.deserialize(this.world, this.pointOfInterestStorage, this.getStorageKey(), pos, optional.get());
                         } finally {
                             ChunkIoMainThreadTaskUtils.pop(mainThreadQueue);
                         }
@@ -265,25 +259,25 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
         });
     }
 
-    @ModifyReturnValue(method = "getChunk", at = @At("RETURN"))
-    private CompletableFuture<OptionalChunk<Chunk>> postGetChunk(CompletableFuture<OptionalChunk<Chunk>> originalReturn, ChunkHolder holder, ChunkStatus requiredStatus) {
-        if (requiredStatus == ChunkStatus.FULL.getPrevious()) {
-            // wait for initial main thread tasks before proceeding to finish full chunk
-            return originalReturn.thenCompose(either -> {
-                if (either.isPresent()) {
-                    final Chunk chunk = either.orElse(null);
-                    if (chunk instanceof ProtoChunk protoChunk) {
-                        final CompletableFuture<Void> future = ((ProtoChunkExtension) protoChunk).getInitialMainThreadComputeFuture();
-                        if (future != null) {
-                            return future.thenApply(v -> either);
-                        }
-                    }
-                }
-                return CompletableFuture.completedFuture(either);
-            });
-        }
-        return originalReturn;
-    }
+//    @ModifyReturnValue(method = "getChunk", at = @At("RETURN"))
+//    private CompletableFuture<OptionalChunk<Chunk>> postGetChunk(CompletableFuture<OptionalChunk<Chunk>> originalReturn, ChunkHolder holder, ChunkStatus requiredStatus) {
+//        if (requiredStatus == ChunkStatus.FULL.getPrevious()) {
+//            // wait for initial main thread tasks before proceeding to finish full chunk
+//            return originalReturn.thenCompose(either -> {
+//                if (either.isPresent()) {
+//                    final Chunk chunk = either.orElse(null);
+//                    if (chunk instanceof ProtoChunk protoChunk) {
+//                        final CompletableFuture<Void> future = ((ProtoChunkExtension) protoChunk).getInitialMainThreadComputeFuture();
+//                        if (future != null) {
+//                            return future.thenApply(v -> either);
+//                        }
+//                    }
+//                }
+//                return CompletableFuture.completedFuture(either);
+//            });
+//        }
+//        return originalReturn;
+//    }
 
     private ConcurrentLinkedQueue<CompletableFuture<Void>> saveFutures = new ConcurrentLinkedQueue<>();
 
@@ -311,7 +305,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
                     }
                 }
 
-                final CompletableFuture<Chunk> originalSavingFuture = holder.getSavingFuture();
+                final CompletableFuture<?> originalSavingFuture = holder.getSavingFuture();
                 if (!originalSavingFuture.isDone()) {
                     originalSavingFuture.handleAsync((_unused, __unused) -> asyncSave(tacs, chunk, holder), this.mainThreadExecutor);
                     return false;
@@ -350,7 +344,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
                                         while (actual instanceof CompletionException e) actual = e.getCause();
                                         if (!(actual instanceof TaskCancellationException)) {
                                             LOGGER.error("Failed to save chunk {},{} asynchronously, falling back to sync saving", chunkPos.x, chunkPos.z, throwable);
-                                            final CompletableFuture<Chunk> savingFuture = holder.getSavingFuture();
+                                            final CompletableFuture<?> savingFuture = holder.getSavingFuture();
                                             if (savingFuture != originalSavingFuture) {
                                                 savingFuture.handleAsync((_unused, __unused) -> save(chunk), this.mainThreadExecutor);
                                             } else {
