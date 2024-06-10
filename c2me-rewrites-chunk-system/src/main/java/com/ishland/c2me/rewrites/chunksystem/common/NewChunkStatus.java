@@ -4,6 +4,7 @@ import com.ishland.c2me.base.common.scheduler.LockTokenImpl;
 import com.ishland.c2me.base.common.scheduler.ScheduledTask;
 import com.ishland.c2me.base.common.scheduler.SchedulingManager;
 import com.ishland.c2me.base.mixin.access.IThreadedAnvilChunkStorage;
+import com.ishland.c2me.rewrites.chunksystem.common.statuses.ReadFromDisk;
 import com.ishland.flowsched.executor.LockToken;
 import com.ishland.flowsched.scheduler.ItemHolder;
 import com.ishland.flowsched.scheduler.ItemStatus;
@@ -24,10 +25,14 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
-import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
+/**
+ * Represents the status of a chunk in the chunk system.
+ *
+ * @implNote Subclasses should be immutable and should not have any non-final fields.
+ */
 public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState, ChunkLoadingContext> {
 
     public static final NewChunkStatus[] ALL_STATUSES;
@@ -42,7 +47,7 @@ public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState,
 
     static {
         ArrayList<NewChunkStatus> statuses = new ArrayList<>();
-        NEW = new NewChunkStatus(statuses.size(), 0, ChunkStatus.EMPTY) {
+        NEW = new NewChunkStatus(statuses.size(), ChunkStatus.EMPTY) {
             @Override
             public CompletionStage<Void> upgradeToThis(ChunkLoadingContext context) {
                 throw new UnsupportedOperationException();
@@ -54,25 +59,10 @@ public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState,
             }
         };
         statuses.add(NEW);
-        DISK = new NewChunkStatus(statuses.size(), 0, ChunkStatus.EMPTY) {
-            @Override
-            public CompletionStage<Void> upgradeToThis(ChunkLoadingContext context) {
-                return CompletableFuture.supplyAsync(() -> {
-                    return ((IThreadedAnvilChunkStorage) context.tacs()).invokeLoadChunk(context.holder().getKey())
-                            .thenAccept(chunk -> {
-                                context.holder().getItem().set(new ChunkState(chunk));
-                            });
-                }, ((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor()).thenCompose(Function.identity());
-            }
-
-            @Override
-            public CompletionStage<Void> downgradeFromThis(ChunkLoadingContext context) {
-                return null;
-            }
-        };
+        DISK = new ReadFromDisk(statuses.size());
         statuses.add(DISK);
         VANILLA_WORLDGEN_PIPELINE = Collections.unmodifiableMap(generateFromVanillaChunkStatus(statuses));
-        SERVER_ACCESSIBLE = new NewChunkStatus(statuses.size(), 0, ChunkStatus.FULL) {
+        SERVER_ACCESSIBLE = new NewChunkStatus(statuses.size(), ChunkStatus.FULL) {
             @Override
             public CompletionStage<Void> upgradeToThis(ChunkLoadingContext context) {
                 return ChunkGenerationSteps.LOADING.get(ChunkStatus.FULL)
@@ -90,7 +80,7 @@ public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState,
             }
         };
         statuses.add(SERVER_ACCESSIBLE);
-        BLOCK_TICKING = new NewChunkStatus(statuses.size(), 0, ChunkStatus.FULL) {
+        BLOCK_TICKING = new NewChunkStatus(statuses.size(), ChunkStatus.FULL) {
             @Override
             public CompletionStage<Void> upgradeToThis(ChunkLoadingContext context) {
                 return null;
@@ -102,7 +92,7 @@ public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState,
             }
         };
         statuses.add(BLOCK_TICKING);
-        ENTITY_TICKING = new NewChunkStatus(statuses.size(), 0, ChunkStatus.FULL) {
+        ENTITY_TICKING = new NewChunkStatus(statuses.size(), ChunkStatus.FULL) {
             @Override
             public CompletionStage<Void> upgradeToThis(ChunkLoadingContext context) {
                 return null;
@@ -144,7 +134,7 @@ public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState,
             final KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] genDeps = getDependencyFromStep(ChunkGenerationSteps.GENERATION.get(status));
             final KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] loadDeps = getDependencyFromStep(ChunkGenerationSteps.LOADING.get(status));
 
-            final NewChunkStatus newChunkStatus = new NewChunkStatus(statuses.size(), lockingRadius, status) {
+            final NewChunkStatus newChunkStatus = new NewChunkStatus(statuses.size(), status) {
                 @Override
                 public CompletionStage<Void> upgradeToThis(ChunkLoadingContext context) {
                     final ChunkGenerationContext chunkGenerationContext = ((IThreadedAnvilChunkStorage) context.tacs()).getGenerationContext();
@@ -235,12 +225,10 @@ public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState,
     }
 
     private final int ordinal;
-    private final int lockingRadius;
     private final ChunkStatus effectiveVanillaStatus;
 
-    protected NewChunkStatus(int ordinal, int lockingRadius, ChunkStatus effectiveVanillaStatus) {
+    protected NewChunkStatus(int ordinal, ChunkStatus effectiveVanillaStatus) {
         this.ordinal = ordinal;
-        this.lockingRadius = lockingRadius;
         this.effectiveVanillaStatus = effectiveVanillaStatus;
     }
 
