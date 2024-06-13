@@ -4,15 +4,10 @@
   "package": "com.ishland.c2me.threading.worldgen.mixin",
   "plugin": "com.ishland.c2me.base.common.ModuleMixinPlugin",
   "mixins": [
+    "MixinChunkGenerationStep",
     "MixinChunkGenerator",
-    "MixinChunkHolder",
-    "MixinChunkRegion",
-    "MixinChunkStatus",
     "MixinNoiseChunkGenerator",
     "MixinServerWorld",
-    "MixinThreadedAnvilChunkStorage",
-    "cancellation.MixinChunkHolder",
-    "cancellation.MixinThreadedAnvilChunkStorage",
     "progresslogger.MixinWorldGenerationProgressLogger"
   ]
 }

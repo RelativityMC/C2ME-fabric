@@ -26,7 +26,6 @@
     "threading.MixinStructureStart",
     "threading.MixinWeightedList",
     "threading.MixinWoodlandMansionGeneratorMansionParameters",
-    "threading.checks.MixinThreadedAnvilChunkStorage",
     "threading.math.MixinAffineTransformation",
     "threading.math.MixinDirectionTransformation",
     "threading_detections.random_instances.MixinWorld"

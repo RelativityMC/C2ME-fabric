@@ -2,8 +2,8 @@ package com.ishland.c2me.opts.scheduling.mixin.task_scheduling;
 
 import com.ishland.c2me.opts.scheduling.common.IThreadedAnvilChunkStorage;
 import net.minecraft.server.world.ChunkHolder;
+import net.minecraft.server.world.ServerChunkLoadingManager;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.server.world.ThreadedAnvilChunkStorage;
 import net.minecraft.util.thread.ThreadExecutor;
 import org.spongepowered.asm.mixin.Dynamic;
 import org.spongepowered.asm.mixin.Final;
@@ -18,7 +18,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.function.Function;
 
-@Mixin(ThreadedAnvilChunkStorage.class)
+@Mixin(ServerChunkLoadingManager.class)
 public class MixinThreadedAnvilChunkStorage implements IThreadedAnvilChunkStorage {
 
     @Shadow
@@ -26,7 +26,6 @@ public class MixinThreadedAnvilChunkStorage implements IThreadedAnvilChunkStorag
     private ServerWorld world;
     @Shadow @Final private ThreadExecutor<Runnable> mainThreadExecutor;
 
-    @Shadow @Final private ThreadedAnvilChunkStorage.TicketManager ticketManager;
     private final Executor mainInvokingExecutor = runnable -> {
         if (this.world.getServer().isOnThread()) {
             runnable.run();
@@ -61,20 +60,6 @@ public class MixinThreadedAnvilChunkStorage implements IThreadedAnvilChunkStorag
 //            return "release light ticket " + pos;
 //        }));
 //    }
-
-    // private synthetic method_17252(Lnet/minecraft/server/world/ChunkHolder;Ljava/lang/Runnable;)V
-    /**
-     * TODO lambda expression of convertToFullChunk
-     *
-     * @author ishland
-     * @reason reduce scheduling overhead with mainInvokingExecutor
-     */
-    @SuppressWarnings("OverwriteTarget")
-    @Dynamic
-    @Overwrite
-    private void method_17252(ChunkHolder holder, Runnable runnable) {
-        this.mainInvokingExecutor.execute(runnable);
-    }
 
     // private synthetic method_19487(Lnet/minecraft/server/world/ChunkHolder;Ljava/lang/Runnable;)V
     /**

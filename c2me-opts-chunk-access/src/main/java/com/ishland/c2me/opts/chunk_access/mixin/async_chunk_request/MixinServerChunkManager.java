@@ -3,16 +3,17 @@ package com.ishland.c2me.opts.chunk_access.mixin.async_chunk_request;
 import com.ishland.c2me.base.common.util.CFUtil;
 import com.ishland.c2me.opts.chunk_access.common.CurrentWorldGenState;
 import net.minecraft.server.world.ChunkHolder;
+import net.minecraft.server.world.ChunkLevels;
 import net.minecraft.server.world.ChunkTicketManager;
 import net.minecraft.server.world.ChunkTicketType;
-import net.minecraft.server.world.OptionalChunk;
+import net.minecraft.server.world.ServerChunkLoadingManager;
 import net.minecraft.server.world.ServerChunkManager;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.server.world.ThreadedAnvilChunkStorage;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.profiler.Profiler;
 import net.minecraft.world.ChunkRegion;
+import net.minecraft.world.chunk.AbstractChunkHolder;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.WrapperProtoChunk;
@@ -54,8 +55,8 @@ public abstract class MixinServerChunkManager {
     @Shadow
     public abstract boolean updateChunks();
 
-    @Shadow @Final public ThreadedAnvilChunkStorage threadedAnvilChunkStorage;
     @Shadow @Final public ServerChunkManager.MainThreadExecutor mainThreadExecutor;
+    @Shadow @Final public ServerChunkLoadingManager chunkLoadingManager;
     private static final ChunkTicketType<ChunkPos> ASYNC_LOAD = ChunkTicketType.create("async_load", Comparator.comparingLong(ChunkPos::toLong));
 
     @Inject(method = "getChunk(IILnet/minecraft/world/chunk/ChunkStatus;Z)Lnet/minecraft/world/chunk/Chunk;", at = @At("HEAD"), cancellable = true)
@@ -86,31 +87,24 @@ public abstract class MixinServerChunkManager {
         return CompletableFuture.supplyAsync(() -> {
             // TODO [VanillaCopy] getChunkFuture
             ChunkPos chunkPos = new ChunkPos(chunkX, chunkZ);
-            long chunkPosLong = chunkPos.toLong();
-            int ticketLevel = 33 + ChunkStatus.getDistanceFromFull(leastStatus);
-            ChunkHolder chunkHolder = this.getChunkHolder(chunkPosLong);
-            boolean doCreate = create && (chunkHolder == null || this.isMissingForLevel(chunkHolder, ticketLevel));
-            if (doCreate) {
-                this.ticketManager.addTicketWithLevel(ASYNC_LOAD, chunkPos, ticketLevel, chunkPos);
-                if (this.isMissingForLevel(chunkHolder, ticketLevel)) {
+            long l = chunkPos.toLong();
+            int i = ChunkLevels.getLevelFromStatus(leastStatus);
+            ChunkHolder chunkHolder = this.getChunkHolder(l);
+            if (create) {
+                this.ticketManager.addTicketWithLevel(ChunkTicketType.UNKNOWN, chunkPos, i, chunkPos);
+                if (this.isMissingForLevel(chunkHolder, i)) {
                     Profiler profiler = this.world.getProfiler();
                     profiler.push("chunkLoad");
                     this.updateChunks();
-                    chunkHolder = this.getChunkHolder(chunkPosLong);
+                    chunkHolder = this.getChunkHolder(l);
                     profiler.pop();
-                    if (this.isMissingForLevel(chunkHolder, ticketLevel)) {
+                    if (this.isMissingForLevel(chunkHolder, i)) {
                         throw Util.throwOrPause(new IllegalStateException("No chunk holder after ticket has been added"));
                     }
                 }
             }
 
-            final CompletableFuture<OptionalChunk<Chunk>> future = this.isMissingForLevel(chunkHolder, ticketLevel) ? ChunkHolder.UNLOADED_CHUNK_FUTURE : chunkHolder.getChunkAt(leastStatus, this.threadedAnvilChunkStorage);
-            if (doCreate && future != null) {
-                future.exceptionally(__ -> null).thenRunAsync(() -> {
-                    this.ticketManager.removeTicketWithLevel(ASYNC_LOAD, chunkPos, ticketLevel, chunkPos);
-                }, this.mainThreadExecutor);
-            }
-            return future;
+            return this.isMissingForLevel(chunkHolder, i) ? AbstractChunkHolder.UNLOADED_FUTURE : chunkHolder.load(leastStatus, this.chunkLoadingManager);
         }, this.mainThreadExecutor).thenCompose(Function.identity()).thenApply(either -> {
             final Chunk chunk = either.orElse(null);
             if (chunk == null && create) {

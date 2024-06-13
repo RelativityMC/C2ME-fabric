@@ -3,8 +3,8 @@ package com.ishland.c2me.base.mixin.priority;
 import com.ishland.c2me.base.common.scheduler.ISyncLoadManager;
 import com.ishland.c2me.base.common.scheduler.IVanillaChunkManager;
 import net.minecraft.server.world.ChunkHolder;
+import net.minecraft.server.world.ServerChunkLoadingManager;
 import net.minecraft.server.world.ServerChunkManager;
-import net.minecraft.server.world.ThreadedAnvilChunkStorage;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
@@ -35,7 +35,7 @@ public abstract class MixinServerChunkManager implements ISyncLoadManager {
     @Nullable
     protected abstract ChunkHolder getChunkHolder(long pos);
 
-    @Shadow @Final public ThreadedAnvilChunkStorage threadedAnvilChunkStorage;
+    @Shadow @Final public ServerChunkLoadingManager chunkLoadingManager;
     @Unique
     private volatile ChunkPos currentSyncLoadChunk = null;
     @Unique
@@ -52,7 +52,7 @@ public abstract class MixinServerChunkManager implements ISyncLoadManager {
 
         this.currentSyncLoadChunk = new ChunkPos(x, z);
         syncLoadNanos = System.nanoTime();
-        ((IVanillaChunkManager) this.threadedAnvilChunkStorage).c2me$getSchedulingManager().setCurrentSyncLoad(this.currentSyncLoadChunk);
+        ((IVanillaChunkManager) this.chunkLoadingManager).c2me$getSchedulingManager().setCurrentSyncLoad(this.currentSyncLoadChunk);
         instance.runTasks(supplier);
     }
 
@@ -63,7 +63,7 @@ public abstract class MixinServerChunkManager implements ISyncLoadManager {
         if (this.currentSyncLoadChunk != null) {
             this.currentSyncLoadChunk = null;
 //            System.out.println("Sync load took %.2fms".formatted((System.nanoTime() - syncLoadNanos) / 1e6));
-            ((IVanillaChunkManager) this.threadedAnvilChunkStorage).c2me$getSchedulingManager().setCurrentSyncLoad(null);
+            ((IVanillaChunkManager) this.chunkLoadingManager).c2me$getSchedulingManager().setCurrentSyncLoad(null);
         }
     }
 

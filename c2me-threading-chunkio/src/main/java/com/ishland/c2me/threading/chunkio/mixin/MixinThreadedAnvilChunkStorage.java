@@ -14,7 +14,6 @@ import com.ishland.c2me.threading.chunkio.common.Config;
 import com.ishland.c2me.threading.chunkio.common.ISerializingRegionBasedStorage;
 import com.ishland.c2me.threading.chunkio.common.ProtoChunkExtension;
 import com.ishland.c2me.threading.chunkio.common.TaskCancellationException;
-import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.mojang.datafixers.DataFixer;
 import it.unimi.dsi.fastutil.longs.Long2ByteMap;
 import it.unimi.dsi.fastutil.longs.Long2ByteMaps;
@@ -22,9 +21,8 @@ import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
 import net.minecraft.SharedConstants;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.world.ChunkHolder;
-import net.minecraft.server.world.OptionalChunk;
+import net.minecraft.server.world.ServerChunkLoadingManager;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.server.world.ThreadedAnvilChunkStorage;
 import net.minecraft.structure.StructureStart;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.ChunkPos;
@@ -35,14 +33,12 @@ import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.ChunkType;
 import net.minecraft.world.chunk.ProtoChunk;
-import net.minecraft.world.gen.chunk.ChunkGenerator;
 import net.minecraft.world.poi.PointOfInterestStorage;
 import net.minecraft.world.storage.StorageIoWorker;
 import net.minecraft.world.storage.StorageKey;
 import net.minecraft.world.storage.VersionedChunkStorage;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
-import org.spongepowered.asm.mixin.Dynamic;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
@@ -65,7 +61,7 @@ import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Supplier;
 
-@Mixin(ThreadedAnvilChunkStorage.class)
+@Mixin(ServerChunkLoadingManager.class)
 public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStorage implements ChunkHolder.PlayersWatchingChunkProvider {
 
     public MixinThreadedAnvilChunkStorage(StorageKey arg, Path path, DataFixer dataFixer, boolean bl) {
@@ -100,9 +96,6 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
 
     @Shadow
     protected abstract boolean isLevelChunk(ChunkPos chunkPos);
-
-    @Shadow
-    private ChunkGenerator chunkGenerator;
 
     @Shadow
     protected abstract boolean save(Chunk chunk);
@@ -178,7 +171,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
                     if (optional.isPresent()) {
                         ChunkIoMainThreadTaskUtils.push(mainThreadQueue);
                         try {
-                            return ChunkSerializer.deserialize(this.world, this.pointOfInterestStorage, pos, optional.get());
+                            return ChunkSerializer.deserialize(this.world, this.pointOfInterestStorage, this.getStorageKey(), pos, optional.get());
                         } finally {
                             ChunkIoMainThreadTaskUtils.pop(mainThreadQueue);
                         }
@@ -265,32 +258,11 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
         });
     }
 
-    @ModifyReturnValue(method = "getChunk", at = @At("RETURN"))
-    private CompletableFuture<OptionalChunk<Chunk>> postGetChunk(CompletableFuture<OptionalChunk<Chunk>> originalReturn, ChunkHolder holder, ChunkStatus requiredStatus) {
-        if (requiredStatus == ChunkStatus.FULL.getPrevious()) {
-            // wait for initial main thread tasks before proceeding to finish full chunk
-            return originalReturn.thenCompose(either -> {
-                if (either.isPresent()) {
-                    final Chunk chunk = either.orElse(null);
-                    if (chunk instanceof ProtoChunk protoChunk) {
-                        final CompletableFuture<Void> future = ((ProtoChunkExtension) protoChunk).getInitialMainThreadComputeFuture();
-                        if (future != null) {
-                            return future.thenApply(v -> either);
-                        }
-                    }
-                }
-                return CompletableFuture.completedFuture(either);
-            });
-        }
-        return originalReturn;
-    }
-
     private ConcurrentLinkedQueue<CompletableFuture<Void>> saveFutures = new ConcurrentLinkedQueue<>();
 
-    @Dynamic
-    @Redirect(method = "method_18843", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ThreadedAnvilChunkStorage;save(Lnet/minecraft/world/chunk/Chunk;)Z"))
+    @Redirect(method = "method_60440", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerChunkLoadingManager;save(Lnet/minecraft/world/chunk/Chunk;)Z"))
     // method: consumer in tryUnloadChunk
-    private boolean asyncSave(ThreadedAnvilChunkStorage tacs, Chunk chunk, ChunkHolder holder) {
+    private boolean asyncSave(ServerChunkLoadingManager tacs, Chunk chunk, ChunkHolder holder) {
         // TODO [VanillaCopy] - check when updating minecraft version
         this.pointOfInterestStorage.saveChunk(chunk.getPos());
         if (!chunk.needsSaving()) {
@@ -311,7 +283,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
                     }
                 }
 
-                final CompletableFuture<Chunk> originalSavingFuture = holder.getSavingFuture();
+                final CompletableFuture<?> originalSavingFuture = holder.getSavingFuture();
                 if (!originalSavingFuture.isDone()) {
                     originalSavingFuture.handleAsync((_unused, __unused) -> asyncSave(tacs, chunk, holder), this.mainThreadExecutor);
                     return false;
@@ -350,7 +322,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
                                         while (actual instanceof CompletionException e) actual = e.getCause();
                                         if (!(actual instanceof TaskCancellationException)) {
                                             LOGGER.error("Failed to save chunk {},{} asynchronously, falling back to sync saving", chunkPos.x, chunkPos.z, throwable);
-                                            final CompletableFuture<Chunk> savingFuture = holder.getSavingFuture();
+                                            final CompletableFuture<?> savingFuture = holder.getSavingFuture();
                                             if (savingFuture != originalSavingFuture) {
                                                 savingFuture.handleAsync((_unused, __unused) -> save(chunk), this.mainThreadExecutor);
                                             } else {

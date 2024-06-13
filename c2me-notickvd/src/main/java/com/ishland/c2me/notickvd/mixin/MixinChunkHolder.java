@@ -2,9 +2,7 @@ package com.ishland.c2me.notickvd.mixin;
 
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.OptionalChunk;
-import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.chunk.WorldChunk;
-import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -14,10 +12,6 @@ import java.util.concurrent.CompletableFuture;
 
 @Mixin(ChunkHolder.class)
 public abstract class MixinChunkHolder {
-
-    @Shadow @Nullable public abstract WorldChunk getWorldChunk();
-
-    @Shadow public abstract ChunkPos getPos();
 
     @Shadow public abstract CompletableFuture<OptionalChunk<WorldChunk>> getAccessibleFuture();
 

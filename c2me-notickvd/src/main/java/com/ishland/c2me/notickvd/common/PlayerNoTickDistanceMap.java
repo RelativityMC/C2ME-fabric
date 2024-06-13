@@ -15,7 +15,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ChunkTicketManager;
 import net.minecraft.server.world.ChunkTicketType;
-import net.minecraft.server.world.ThreadedAnvilChunkStorage;
+import net.minecraft.server.world.ServerChunkLoadingManager;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.MathHelper;
 import org.slf4j.Logger;
@@ -96,14 +96,14 @@ public class PlayerNoTickDistanceMap extends ChunkPosDistanceLevelPropagatorExte
 
     private boolean hasPendingTicketUpdatesAsync = false;
 
-    boolean runPendingTicketUpdates(ThreadedAnvilChunkStorage tacs) {
+    boolean runPendingTicketUpdates(ServerChunkLoadingManager tacs) {
         final boolean hasUpdatesNow = runPendingTicketUpdatesInternal(tacs);
         final boolean hasUpdatesEarlier = hasPendingTicketUpdatesAsync;
         hasPendingTicketUpdatesAsync = false;
         return hasUpdatesNow || hasUpdatesEarlier;
     }
 
-    private boolean runPendingTicketUpdatesInternal(ThreadedAnvilChunkStorage tacs) {
+    private boolean runPendingTicketUpdatesInternal(ServerChunkLoadingManager tacs) {
         boolean hasUpdates = false;
         // remove old tickets
         {
@@ -144,7 +144,7 @@ public class PlayerNoTickDistanceMap extends ChunkPosDistanceLevelPropagatorExte
         return CompletableFuture.runAsync(() -> this.chunkTicketManager.addTicketWithLevel(TICKET_TYPE, pos, 33, pos), this.noTickSystem.mainBeforeTicketTicks::add);
     }
 
-    private CompletableFuture<Void> getChunkLoadFuture(ThreadedAnvilChunkStorage tacs, ChunkPos pos, CompletableFuture<Void> ticketFuture) {
+    private CompletableFuture<Void> getChunkLoadFuture(ServerChunkLoadingManager tacs, ChunkPos pos, CompletableFuture<Void> ticketFuture) {
         final CompletableFuture<Void> future = ticketFuture.thenComposeAsync(unused -> {
             final ChunkHolder holder = ((IThreadedAnvilChunkStorage) tacs).getCurrentChunkHolders().get(pos.toLong());
             if (holder == null) {

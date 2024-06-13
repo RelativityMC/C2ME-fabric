@@ -3,7 +3,7 @@ package com.ishland.c2me.opts.scheduling.mixin.fix_unload;
 import com.ishland.c2me.base.common.structs.LongHashSet;
 import com.ishland.c2me.base.common.util.ShouldKeepTickingUtils;
 import it.unimi.dsi.fastutil.longs.LongSet;
-import net.minecraft.server.world.ThreadedAnvilChunkStorage;
+import net.minecraft.server.world.ServerChunkLoadingManager;
 import net.minecraft.util.thread.ThreadExecutor;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.function.BooleanSupplier;
 
-@Mixin(ThreadedAnvilChunkStorage.class)
+@Mixin(ServerChunkLoadingManager.class)
 public abstract class MixinThreadedAnvilChunkStorage {
 
     @Shadow @Final private ThreadExecutor<Runnable> mainThreadExecutor;
@@ -31,7 +31,7 @@ public abstract class MixinThreadedAnvilChunkStorage {
         return ShouldKeepTickingUtils.minimumTicks(shouldKeepTicking, 32);
     }
 
-    @ModifyArg(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ThreadedAnvilChunkStorage;unloadChunks(Ljava/util/function/BooleanSupplier;)V"))
+    @ModifyArg(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerChunkLoadingManager;unloadChunks(Ljava/util/function/BooleanSupplier;)V"))
     private BooleanSupplier redirectTickUnloadChunks(BooleanSupplier shouldKeepTicking) {
         return () -> true;
     }

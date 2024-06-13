@@ -126,7 +126,7 @@ public abstract class MixinMinecraftServer extends ReentrantThreadExecutor<Serve
             // LOGGER.warn("High GC overhead / low available heap, saving worlds...");
             this.worlds.values().forEach(world -> world.getChunkManager().tick(() -> true, false));
             this.worlds.values().forEach(world -> world.getChunkManager().save(false));
-            this.worlds.values().forEach(world -> world.getChunkManager().threadedAnvilChunkStorage.completeAll());
+            this.worlds.values().forEach(world -> world.getChunkManager().chunkLoadingManager.completeAll());
             handledGc = largeOverheadGC;
         }
     }

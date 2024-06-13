@@ -6,6 +6,6 @@
   "mixins": [
     "asm.ASMTargets",
     "async_chunk_request.MixinServerChunkManager",
-    "region_capture.MixinChunkStatus"
+    "region_capture.MixinChunkGenerationStep"
   ]
 }

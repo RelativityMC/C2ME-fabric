@@ -7,7 +7,7 @@ import it.unimi.dsi.fastutil.longs.LongSet;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ChunkTicket;
 import net.minecraft.server.world.ChunkTicketManager;
-import net.minecraft.server.world.ThreadedAnvilChunkStorage;
+import net.minecraft.server.world.ServerChunkLoadingManager;
 import net.minecraft.util.math.ChunkSectionPos;
 import net.minecraft.world.SimulationDistanceLevelPropagator;
 import org.spongepowered.asm.mixin.Final;
@@ -57,12 +57,12 @@ public class MixinChunkTicketManager implements IChunkTicketManager {
     }
 
     @Inject(method = "update", at = @At("HEAD"))
-    private void beforeTick(ThreadedAnvilChunkStorage chunkStorage, CallbackInfoReturnable<Boolean> cir) {
+    private void beforeTick(ServerChunkLoadingManager chunkStorage, CallbackInfoReturnable<Boolean> cir) {
         this.noTickSystem.beforeTicketTicks();
     }
 
     @Inject(method = "update", at = @At("RETURN"))
-    private void onTick(ThreadedAnvilChunkStorage chunkStorage, CallbackInfoReturnable<Boolean> cir) {
+    private void onTick(ServerChunkLoadingManager chunkStorage, CallbackInfoReturnable<Boolean> cir) {
         if (this.simulationDistanceTracker instanceof NoOPTickingMap map) {
             map.setTACS(chunkStorage);
         }

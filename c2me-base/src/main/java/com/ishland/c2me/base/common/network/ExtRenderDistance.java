@@ -10,7 +10,7 @@ import net.minecraft.util.Identifier;
 public record ExtRenderDistance(int renderDistance) implements CustomPayload {
 
     public static final PacketCodec<PacketByteBuf, ExtRenderDistance> CODEC = PacketCodec.of(ExtRenderDistance::write, ExtRenderDistance::new);
-    public static final Id<ExtRenderDistance> ID = new Id<>(new Identifier(C2MEConstants.MODID, C2MEConstants.EXT_RENDER_DISTANCE_ID));
+    public static final Id<ExtRenderDistance> ID = new Id<>(Identifier.of(C2MEConstants.MODID, C2MEConstants.EXT_RENDER_DISTANCE_ID));
 
     static {
         PayloadTypeRegistry.configurationC2S().register(ExtRenderDistance.ID, ExtRenderDistance.CODEC);

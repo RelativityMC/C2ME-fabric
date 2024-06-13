@@ -5,7 +5,7 @@ import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ChunkLevels;
 import net.minecraft.server.world.ChunkTicket;
 import net.minecraft.server.world.ChunkTicketType;
-import net.minecraft.server.world.ThreadedAnvilChunkStorage;
+import net.minecraft.server.world.ServerChunkLoadingManager;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.SimulationDistanceLevelPropagator;
 
@@ -13,9 +13,9 @@ import java.util.function.LongPredicate;
 
 public class NoOPTickingMap extends SimulationDistanceLevelPropagator {
 
-    private ThreadedAnvilChunkStorage tacs = null;
+    private ServerChunkLoadingManager tacs = null;
 
-    public void setTACS(ThreadedAnvilChunkStorage tacs) {
+    public void setTACS(ServerChunkLoadingManager tacs) {
         this.tacs = tacs;
     }
 

@@ -42,8 +42,6 @@
     "access.IXoroshiro128PlusPlusRandomDeriver",
     "access.IXoroshiro128PlusPlusRandomImpl",
     "priority.MixinServerChunkManager",
-    "profiling.MixinChunkHolder",
-    "profiling.MixinJfrProfiler",
     "scheduler.MixinThreadedAnvilChunkStorage",
     "theinterface.MixinStorageIoWorker",
     "util.log4j2shutdownhookisnomore.MixinMain",
