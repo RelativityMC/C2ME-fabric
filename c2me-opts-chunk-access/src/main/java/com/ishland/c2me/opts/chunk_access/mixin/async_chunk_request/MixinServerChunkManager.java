@@ -68,12 +68,23 @@ public abstract class MixinServerChunkManager {
     @Unique
     @Final
     private Chunk c2me$getChunkOffThread(int chunkX, int chunkZ, ChunkStatus leastStatus, boolean create) {
+        // shortcut for worldgen threads
         final ChunkRegion currentRegion = CurrentWorldGenState.getCurrentRegion();
         if (currentRegion != null) {
             Chunk chunk = currentRegion.getChunk(chunkX, chunkZ, leastStatus, false);
             if (chunk instanceof WrapperProtoChunk readOnlyChunk) chunk = readOnlyChunk.getWrappedChunk();
             if (chunk != null) return chunk;
         }
+
+        // shortcut if already exists
+        final ChunkHolder available = this.getChunkHolder(ChunkPos.toLong(chunkX, chunkZ)); // thread-safe
+        if (available != null) {
+            final Chunk availableChunk = available.getValidFutureFor(leastStatus).getNow(ChunkHolder.UNLOADED_CHUNK).orElse(null);
+            if (availableChunk != null) {
+                return availableChunk;
+            }
+        }
+
         final CompletableFuture<Chunk> chunkLoad = c2me$getChunkFutureOffThread(chunkX, chunkZ, leastStatus, create);
         assert chunkLoad != null;
         return CFUtil.join(chunkLoad);
