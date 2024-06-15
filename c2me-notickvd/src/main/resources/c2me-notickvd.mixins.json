@@ -14,5 +14,8 @@
     "MixinWorldChunk",
     "ext_render_distance.MixinServerConfigurationNetworkHandler",
     "ext_render_distance.MixinServerPlayNetworkHandler"
+  ],
+  "client": [
+    "client.MixinIntegratedServer"
   ]
 }
