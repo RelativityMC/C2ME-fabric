@@ -3,17 +3,14 @@ package com.ishland.c2me.opts.chunk_access.mixin.async_chunk_request;
 import com.ishland.c2me.base.common.util.CFUtil;
 import com.ishland.c2me.opts.chunk_access.common.CurrentWorldGenState;
 import net.minecraft.server.world.ChunkHolder;
-import net.minecraft.server.world.ChunkLevels;
 import net.minecraft.server.world.ChunkTicketManager;
 import net.minecraft.server.world.ChunkTicketType;
+import net.minecraft.server.world.OptionalChunk;
 import net.minecraft.server.world.ServerChunkLoadingManager;
 import net.minecraft.server.world.ServerChunkManager;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.Util;
 import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.profiler.Profiler;
 import net.minecraft.world.ChunkRegion;
-import net.minecraft.world.chunk.AbstractChunkHolder;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.WrapperProtoChunk;
@@ -57,6 +54,10 @@ public abstract class MixinServerChunkManager {
 
     @Shadow @Final public ServerChunkManager.MainThreadExecutor mainThreadExecutor;
     @Shadow @Final public ServerChunkLoadingManager chunkLoadingManager;
+
+    @Shadow
+    protected abstract CompletableFuture<OptionalChunk<Chunk>> getChunkFuture(int chunkX, int chunkZ, ChunkStatus leastStatus, boolean create);
+
     private static final ChunkTicketType<ChunkPos> ASYNC_LOAD = ChunkTicketType.create("async_load", Comparator.comparingLong(ChunkPos::toLong));
 
     @Inject(method = "getChunk(IILnet/minecraft/world/chunk/ChunkStatus;Z)Lnet/minecraft/world/chunk/Chunk;", at = @At("HEAD"), cancellable = true)
@@ -95,28 +96,8 @@ public abstract class MixinServerChunkManager {
     @Final
     @Nullable
     private CompletableFuture<Chunk> c2me$getChunkFutureOffThread(int chunkX, int chunkZ, ChunkStatus leastStatus, boolean create) {
-        return CompletableFuture.supplyAsync(() -> {
-            // TODO [VanillaCopy] getChunkFuture
-            ChunkPos chunkPos = new ChunkPos(chunkX, chunkZ);
-            long l = chunkPos.toLong();
-            int i = ChunkLevels.getLevelFromStatus(leastStatus);
-            ChunkHolder chunkHolder = this.getChunkHolder(l);
-            if (create) {
-                this.ticketManager.addTicketWithLevel(ChunkTicketType.UNKNOWN, chunkPos, i, chunkPos);
-                if (this.isMissingForLevel(chunkHolder, i)) {
-                    Profiler profiler = this.world.getProfiler();
-                    profiler.push("chunkLoad");
-                    this.updateChunks();
-                    chunkHolder = this.getChunkHolder(l);
-                    profiler.pop();
-                    if (this.isMissingForLevel(chunkHolder, i)) {
-                        throw Util.throwOrPause(new IllegalStateException("No chunk holder after ticket has been added"));
-                    }
-                }
-            }
-
-            return this.isMissingForLevel(chunkHolder, i) ? AbstractChunkHolder.UNLOADED_FUTURE : chunkHolder.load(leastStatus, this.chunkLoadingManager);
-        }, this.mainThreadExecutor).thenCompose(Function.identity()).thenApply(either -> {
+        return CompletableFuture.supplyAsync(() -> this.getChunkFuture(chunkX, chunkZ, leastStatus, create), this.mainThreadExecutor)
+                .thenCompose(Function.identity()).thenApply(either -> {
             final Chunk chunk = either.orElse(null);
             if (chunk == null && create) {
                 throw new IllegalStateException("Chunk not there when requested: " + either.getError());
