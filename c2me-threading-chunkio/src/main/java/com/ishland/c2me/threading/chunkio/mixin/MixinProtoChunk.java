@@ -15,9 +15,6 @@ import java.util.concurrent.CompletableFuture;
 public class MixinProtoChunk implements ProtoChunkExtension {
 
     @Unique
-    private CompletableFuture<Void> blendingComputeFuture = CompletableFuture.completedFuture(null);
-
-    @Unique
     private CompletableFuture<Void> initialMainThreadComputeFuture = CompletableFuture.completedFuture(null);
 
     @Unique
@@ -58,16 +55,8 @@ public class MixinProtoChunk implements ProtoChunkExtension {
     }
 
     @Override
-    public void setBlendingComputeFuture(CompletableFuture<Void> future) {
-        this.blendingComputeFuture = future;
-    }
-
-    @Override
     public boolean getNeedBlending() {
-        if (!blendingComputeFuture.isDone()) {
-            blendingComputeFuture.join();
-        }
-        return needBlending;
+        return needBlending; // blending determined early
     }
 
     @Override

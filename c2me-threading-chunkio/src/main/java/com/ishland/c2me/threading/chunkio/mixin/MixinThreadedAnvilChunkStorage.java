@@ -194,17 +194,20 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
 //                    if (protoChunk != null) ((ProtoChunkExtension) protoChunk).setBlendingInfo(pos, bitSet);
 //                    return protoChunk;
 //                })
-                .thenApply(protoChunk -> {
+                .thenCompose(protoChunk -> {
                     // blending
                     protoChunk = protoChunk != null ? protoChunk : (ProtoChunk) this.getProtoChunk(pos);
                     if (protoChunk.getBelowZeroRetrogen() != null || protoChunk.getStatus().getChunkType() == ChunkType.PROTOCHUNK) {
                         final CompletionStage<List<BitSet>> blendingInfos = BlendingInfoUtil.getBlendingInfos((StorageIoWorker) this.getWorker(), pos);
                         ProtoChunk finalProtoChunk = protoChunk;
-                        ((ProtoChunkExtension) protoChunk).setBlendingComputeFuture(
-                                blendingInfos.thenAccept(bitSet -> ((ProtoChunkExtension) finalProtoChunk).setBlendingInfo(pos, bitSet)).toCompletableFuture()
-                        );
+                        final CompletableFuture<Void> blendingFuture = blendingInfos.thenAccept(bitSet -> ((ProtoChunkExtension) finalProtoChunk).setBlendingInfo(pos, bitSet)).toCompletableFuture();
+                        ProtoChunk finalProtoChunk1 = protoChunk;
+                        return blendingFuture.thenApply(unused -> finalProtoChunk1);
+                    } else {
+                        return CompletableFuture.completedFuture(protoChunk);
                     }
-
+                })
+                .thenApply(protoChunk -> {
                     ((ProtoChunkExtension) protoChunk).setInitialMainThreadComputeFuture(poiData.thenAcceptAsync(poiDataNbt -> {
                         try {
                             ((ISerializingRegionBasedStorage) this.pointOfInterestStorage).update(pos, poiDataNbt.orElse(null));

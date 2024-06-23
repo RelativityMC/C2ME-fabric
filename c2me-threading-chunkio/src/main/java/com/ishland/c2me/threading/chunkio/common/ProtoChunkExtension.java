@@ -8,8 +8,6 @@ import java.util.concurrent.CompletableFuture;
 
 public interface ProtoChunkExtension {
 
-    void setBlendingComputeFuture(CompletableFuture<Void> future);
-
     void setBlendingInfo(ChunkPos pos, List<BitSet> bitSet);
 
     boolean getNeedBlending();
