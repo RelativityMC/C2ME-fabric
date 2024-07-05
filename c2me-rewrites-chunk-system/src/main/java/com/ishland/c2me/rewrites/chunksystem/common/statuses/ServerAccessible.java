@@ -59,7 +59,7 @@ public class ServerAccessible extends NewChunkStatus {
             worldChunk.updateAllBlockEntities();
             worldChunk.addChunkTickSchedulers(serverWorld);
             context.holder().getItem().set(new ChunkState(worldChunk));
-        });
+        }, ((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor());
     }
 
     private static WorldChunk toFullChunk(ProtoChunk protoChunk, ServerWorld serverWorld) {
@@ -86,7 +86,7 @@ public class ServerAccessible extends NewChunkStatus {
             worldChunk.setLoadedToWorld(false);
             worldChunk.removeChunkTickSchedulers(((IThreadedAnvilChunkStorage) context.tacs()).getWorld());
             context.holder().getItem().set(new ChunkState(new WrapperProtoChunk(worldChunk, false)));
-        });
+        }, ((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor());
     }
 
     @Override
