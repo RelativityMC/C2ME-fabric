@@ -1,7 +1,7 @@
 package com.ishland.c2me.rewrites.chunksystem.common;
 
-import com.ishland.c2me.base.mixin.access.IThreadedAnvilChunkStorage;
 import com.ishland.c2me.rewrites.chunksystem.common.statuses.ReadFromDisk;
+import com.ishland.c2me.rewrites.chunksystem.common.statuses.ServerAccessible;
 import com.ishland.c2me.rewrites.chunksystem.common.statuses.VanillaWorldGenerationDelegate;
 import com.ishland.flowsched.scheduler.ItemHolder;
 import com.ishland.flowsched.scheduler.ItemStatus;
@@ -10,7 +10,6 @@ import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
 import net.minecraft.server.world.ChunkLevels;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.chunk.ChunkGenerationSteps;
 import net.minecraft.world.chunk.ChunkStatus;
 
 import java.util.ArrayList;
@@ -53,23 +52,7 @@ public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState,
         DISK = new ReadFromDisk(statuses.size());
         statuses.add(DISK);
         VANILLA_WORLDGEN_PIPELINE = Collections.unmodifiableMap(generateFromVanillaChunkStatus(statuses));
-        SERVER_ACCESSIBLE = new NewChunkStatus(statuses.size(), ChunkStatus.FULL) {
-            @Override
-            public CompletionStage<Void> upgradeToThis(ChunkLoadingContext context) {
-                return ChunkGenerationSteps.LOADING.get(ChunkStatus.FULL)
-                        .run(((IThreadedAnvilChunkStorage) context.tacs()).getGenerationContext(), context.chunks(), context.holder().getItem().get().chunk())
-                        .whenComplete((chunk1, throwable) -> {
-                            if (chunk1 != null) {
-                                context.holder().getItem().set(new ChunkState(chunk1));
-                            }
-                        }).thenAccept(__ -> {});
-            }
-
-            @Override
-            public CompletionStage<Void> downgradeFromThis(ChunkLoadingContext context) {
-                return null;
-            }
-        };
+        SERVER_ACCESSIBLE = new ServerAccessible(statuses.size());
         statuses.add(SERVER_ACCESSIBLE);
         BLOCK_TICKING = new NewChunkStatus(statuses.size(), ChunkStatus.FULL) {
             @Override
