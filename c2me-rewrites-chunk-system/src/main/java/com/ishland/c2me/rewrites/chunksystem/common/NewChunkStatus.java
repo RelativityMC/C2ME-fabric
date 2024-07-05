@@ -80,24 +80,28 @@ public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState,
         statuses.add(ENTITY_TICKING);
 
         vanillaLevelToStatus = IntStream.range(0, ChunkLevels.INACCESSIBLE + 2)
-                .mapToObj(level -> switch (ChunkLevels.getType(level)) {
-                    case INACCESSIBLE -> {
-                        final ChunkStatus vanillaStatus = ChunkLevels.getStatus(level);
-                        if (vanillaStatus == ChunkStatus.EMPTY) {
-                            if (level > ChunkLevels.INACCESSIBLE) {
-                                yield NEW;
-                            } else {
-                                yield DISK;
-                            }
-                        } else {
-                            yield VANILLA_WORLDGEN_PIPELINE.get(vanillaStatus);
-                        }
-                    }
-                    case FULL -> SERVER_ACCESSIBLE;
-                    case BLOCK_TICKING -> BLOCK_TICKING;
-                    case ENTITY_TICKING -> ENTITY_TICKING;
-                }).toArray(NewChunkStatus[]::new);
+                .mapToObj(NewChunkStatus::fromVanillaStatus0).toArray(NewChunkStatus[]::new);
         ALL_STATUSES = statuses.toArray(NewChunkStatus[]::new);
+    }
+
+    private static NewChunkStatus fromVanillaStatus0(int level) {
+        return switch (ChunkLevels.getType(level)) {
+            case INACCESSIBLE -> {
+                final ChunkStatus vanillaStatus = ChunkLevels.getStatus(level);
+                if (vanillaStatus == ChunkStatus.EMPTY) {
+                    if (level > ChunkLevels.INACCESSIBLE) {
+                        yield NEW;
+                    } else {
+                        yield DISK;
+                    }
+                } else {
+                    yield VANILLA_WORLDGEN_PIPELINE.get(vanillaStatus);
+                }
+            }
+            case FULL -> SERVER_ACCESSIBLE;
+            case BLOCK_TICKING -> BLOCK_TICKING;
+            case ENTITY_TICKING -> ENTITY_TICKING;
+        };
     }
 
     private static Map<ChunkStatus, NewChunkStatus> generateFromVanillaChunkStatus(ArrayList<NewChunkStatus> statuses) {
@@ -114,6 +118,9 @@ public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState,
     }
 
     public static NewChunkStatus fromVanillaLevel(int level) {
+        if (vanillaLevelToStatus == null) { // special case for static initialization
+            return fromVanillaStatus0(level);
+        }
         return vanillaLevelToStatus[MathHelper.clamp(level, 0, vanillaLevelToStatus.length - 1)];
     }
 
