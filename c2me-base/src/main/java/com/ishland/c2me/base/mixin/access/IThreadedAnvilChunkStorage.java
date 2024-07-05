@@ -9,6 +9,7 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.thread.ThreadExecutor;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkGenerationContext;
+import net.minecraft.world.chunk.WorldChunk;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.gen.Invoker;
@@ -44,5 +45,8 @@ public interface IThreadedAnvilChunkStorage {
 
     @Invoker
     CompletableFuture<Chunk> invokeLoadChunk(ChunkPos pos);
+
+    @Invoker
+    void invokeSendToPlayers(WorldChunk chunk);
 
 }
