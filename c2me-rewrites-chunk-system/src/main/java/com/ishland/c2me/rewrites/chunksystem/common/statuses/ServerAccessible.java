@@ -5,9 +5,13 @@ import com.ishland.c2me.base.mixin.access.IThreadedAnvilChunkStorage;
 import com.ishland.c2me.rewrites.chunksystem.common.ChunkLoadingContext;
 import com.ishland.c2me.rewrites.chunksystem.common.ChunkState;
 import com.ishland.c2me.rewrites.chunksystem.common.NewChunkStatus;
+import com.ishland.flowsched.scheduler.ItemHolder;
+import com.ishland.flowsched.scheduler.KeyStatusPair;
 import net.minecraft.entity.EntityType;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.server.world.ChunkLevels;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.ProtoChunk;
@@ -19,6 +23,22 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
 public class ServerAccessible extends NewChunkStatus {
+
+    private static final KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] deps;
+
+    static {
+        final NewChunkStatus depStatus = NewChunkStatus.fromVanillaStatus(ChunkLevels.getStatusForAdditionalLevel(1));
+        deps = new KeyStatusPair[]{
+                new KeyStatusPair<>(new ChunkPos(-1, -1), depStatus),
+                new KeyStatusPair<>(new ChunkPos(-1, 0), depStatus),
+                new KeyStatusPair<>(new ChunkPos(-1, 1), depStatus),
+                new KeyStatusPair<>(new ChunkPos(0, -1), depStatus),
+                new KeyStatusPair<>(new ChunkPos(0, 1), depStatus),
+                new KeyStatusPair<>(new ChunkPos(1, -1), depStatus),
+                new KeyStatusPair<>(new ChunkPos(1, 0), depStatus),
+                new KeyStatusPair<>(new ChunkPos(1, 1), depStatus),
+        };
+    }
 
     public ServerAccessible(int ordinal) {
         super(ordinal, ChunkStatus.FULL);
@@ -67,5 +87,10 @@ public class ServerAccessible extends NewChunkStatus {
             worldChunk.removeChunkTickSchedulers(((IThreadedAnvilChunkStorage) context.tacs()).getWorld());
             context.holder().getItem().set(new ChunkState(new WrapperProtoChunk(worldChunk, false)));
         });
+    }
+
+    @Override
+    public KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] getDependencies(ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, ?> holder) {
+        return deps;
     }
 }
