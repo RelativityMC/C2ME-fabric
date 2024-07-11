@@ -16,6 +16,7 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.gen.Invoker;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Mixin(ServerChunkLoadingManager.class)
 public interface IThreadedAnvilChunkStorage {
@@ -52,5 +53,8 @@ public interface IThreadedAnvilChunkStorage {
 
     @Accessor
     WorldGenerationProgressListener getWorldGenerationProgressListener();
+
+    @Accessor
+    AtomicInteger getTotalChunksLoadedCount();
 
 }

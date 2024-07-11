@@ -46,6 +46,7 @@ public class ServerBlockTicking extends NewChunkStatus {
             } else {
                 completableFuturexx.thenAcceptAsync(v -> ((IThreadedAnvilChunkStorage) context.tacs()).invokeSendToPlayers(chunk), ((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor());
             }
+            ((IThreadedAnvilChunkStorage) context.tacs()).getTotalChunksLoadedCount().incrementAndGet(); // never decremented in vanilla
         }, ((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor());
     }
 
