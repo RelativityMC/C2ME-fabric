@@ -146,7 +146,7 @@ public class PlayerNoTickDistanceMap extends ChunkPosDistanceLevelPropagatorExte
 
     private CompletableFuture<Void> getChunkLoadFuture(ServerChunkLoadingManager tacs, ChunkPos pos, CompletableFuture<Void> ticketFuture) {
         final CompletableFuture<Void> future = ticketFuture.thenComposeAsync(unused -> {
-            final ChunkHolder holder = ((IThreadedAnvilChunkStorage) tacs).getCurrentChunkHolders().get(pos.toLong());
+            final ChunkHolder holder = ((IThreadedAnvilChunkStorage) tacs).invokeGetChunkHolder(pos.toLong());
             if (holder == null) {
                 return CompletableFuture.completedFuture(null);
             } else {

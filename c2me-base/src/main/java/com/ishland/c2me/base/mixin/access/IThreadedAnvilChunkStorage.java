@@ -1,6 +1,5 @@
 package com.ishland.c2me.base.mixin.access;
 
-import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 import net.minecraft.server.WorldGenerationProgressListener;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ServerChunkLoadingManager;
@@ -27,12 +26,6 @@ public interface IThreadedAnvilChunkStorage {
     @Invoker
     boolean invokeUpdateHolderMap();
 
-    @Accessor
-    Long2ObjectLinkedOpenHashMap<ChunkHolder> getChunkHolders();
-
-    @Accessor
-    Long2ObjectLinkedOpenHashMap<ChunkHolder> getCurrentChunkHolders();
-
     @Invoker
     boolean invokeSave(ChunkHolder chunkHolder);
 
@@ -56,5 +49,8 @@ public interface IThreadedAnvilChunkStorage {
 
     @Accessor
     AtomicInteger getTotalChunksLoadedCount();
+
+    @Invoker
+    ChunkHolder invokeGetChunkHolder(long pos);
 
 }

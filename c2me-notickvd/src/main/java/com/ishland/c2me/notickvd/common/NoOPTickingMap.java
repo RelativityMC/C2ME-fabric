@@ -52,7 +52,7 @@ public class NoOPTickingMap extends SimulationDistanceLevelPropagator {
     @Override
     protected int getLevel(long id) {
         if (tacs != null) {
-            final ChunkHolder holder = ((IThreadedAnvilChunkStorage) tacs).getCurrentChunkHolders().get(id);
+            final ChunkHolder holder = ((IThreadedAnvilChunkStorage) tacs).invokeGetChunkHolder(id);
             return holder != null ? holder.getLevel() : ChunkLevels.INACCESSIBLE + 1;
         } else {
             return 0;
