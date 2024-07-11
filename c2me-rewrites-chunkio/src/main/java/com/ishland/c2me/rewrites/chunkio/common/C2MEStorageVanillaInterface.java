@@ -60,4 +60,9 @@ public class C2MEStorageVanillaInterface extends StorageIoWorker implements IDir
         this.backend.setChunkData(pos.toLong(), data);
         return CompletableFuture.completedFuture(null);
     }
+
+    @Override
+    public StorageKey getStorageKey() {
+        return this.backend.getStorageKey();
+    }
 }

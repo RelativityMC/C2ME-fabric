@@ -1,6 +1,6 @@
 package com.ishland.c2me.fixes.worldgen.vanilla_bugs.mixin.ensure_chunk_status_before_callback;
 
-import com.llamalad7.mixinextras.injector.WrapWithCondition;
+import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ChunkLevelType;
 import net.minecraft.server.world.OptionalChunk;
@@ -25,7 +25,7 @@ public abstract class MixinChunkHolder {
 
     @Shadow public abstract CompletableFuture<OptionalChunk<WorldChunk>> getEntityTickingFuture();
 
-    @WrapWithCondition(method = "method_31412", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ThreadedAnvilChunkStorage;onChunkStatusChange(Lnet/minecraft/util/math/ChunkPos;Lnet/minecraft/server/world/ChunkLevelType;)V"))
+    @WrapWithCondition(method = "method_31412", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerChunkLoadingManager;onChunkStatusChange(Lnet/minecraft/util/math/ChunkPos;Lnet/minecraft/server/world/ChunkLevelType;)V"))
     private boolean ensureChunkStatusBeforeCallback(ServerChunkLoadingManager instance, ChunkPos chunkPos, ChunkLevelType levelType) {
         return switch (levelType) {
             case INACCESSIBLE -> true;

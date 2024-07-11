@@ -156,6 +156,10 @@ public class C2MEStorageThread extends Thread {
         }
     }
 
+    public StorageKey getStorageKey() {
+        return this.storage.getStorageKey();
+    }
+
     public CompletableFuture<Void> close() {
         this.closing.set(true);
         LockSupport.unpark(this);

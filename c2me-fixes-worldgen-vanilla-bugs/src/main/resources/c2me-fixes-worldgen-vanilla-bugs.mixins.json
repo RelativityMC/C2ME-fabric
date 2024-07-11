@@ -4,6 +4,6 @@
   "package": "com.ishland.c2me.fixes.worldgen.vanilla_bugs.mixin",
   "plugin": "com.ishland.c2me.base.common.ModuleMixinPlugin",
   "mixins": [
-    "ensure_chunk_status_before_callback.MixinChunkHolder",
+    "ensure_chunk_status_before_callback.MixinChunkHolder"
   ]
 }

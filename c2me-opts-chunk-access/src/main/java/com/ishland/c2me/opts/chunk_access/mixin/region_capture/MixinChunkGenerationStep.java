@@ -15,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.At;
 
 import java.util.concurrent.CompletableFuture;
 
-@Mixin(value = ChunkGenerationStep.class, priority = 990)
+@Mixin(value = ChunkGenerationStep.class, priority = 1200)
 public abstract class MixinChunkGenerationStep {
 
     @WrapOperation(method = "run", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/GenerationTask;doWork(Lnet/minecraft/world/chunk/ChunkGenerationContext;Lnet/minecraft/world/chunk/ChunkGenerationStep;Lnet/minecraft/util/collection/BoundedRegionArray;Lnet/minecraft/world/chunk/Chunk;)Ljava/util/concurrent/CompletableFuture;"))
