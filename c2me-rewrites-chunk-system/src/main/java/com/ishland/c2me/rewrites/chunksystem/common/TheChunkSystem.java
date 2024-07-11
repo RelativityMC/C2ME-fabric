@@ -45,8 +45,9 @@ public class TheChunkSystem extends DaemonizedStatusAdvancingScheduler<ChunkPos,
         if (dependencies.length == 0) {
             radius = 0;
         } else {
-            radius = (int) ((Math.sqrt(dependencies.length) - 1) / 2);
-            Assertions.assertTrue((radius * 2 + 1) * (radius * 2 + 1) == dependencies.length);
+            int actualDependencies = dependencies.length + 1;
+            radius = (int) ((Math.sqrt(actualDependencies) - 1) / 2);
+            Assertions.assertTrue((radius * 2 + 1) * (radius * 2 + 1) == actualDependencies);
         }
 
         return new ChunkLoadingContext(holder, this.tacs, this.schedulingManager, BoundedRegionArray.create(holder.getKey().x, holder.getKey().z, radius,

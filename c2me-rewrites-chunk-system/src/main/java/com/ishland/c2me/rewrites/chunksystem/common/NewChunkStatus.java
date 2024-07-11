@@ -14,6 +14,7 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.chunk.ChunkStatus;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.concurrent.CompletionStage;
 import java.util.stream.IntStream;
 
@@ -52,7 +53,12 @@ public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState,
         statuses.add(DISK);
         VANILLA_WORLDGEN_PIPELINE = new NewChunkStatus[ChunkStatus.FULL.getIndex() + 1];
         for (ChunkStatus status : ChunkStatus.createOrderedList()) {
-            if (status == ChunkStatus.EMPTY || status == ChunkStatus.FULL) continue;
+            if (status == ChunkStatus.EMPTY) {
+                VANILLA_WORLDGEN_PIPELINE[status.getIndex()] = DISK;
+                continue;
+            } else if (status == ChunkStatus.FULL) {
+                continue;
+            }
 
             final NewChunkStatus newChunkStatus = new VanillaWorldGenerationDelegate(statuses.size(), status);
             statuses.add(newChunkStatus);
@@ -60,6 +66,7 @@ public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState,
         }
         SERVER_ACCESSIBLE = new ServerAccessible(statuses.size());
         statuses.add(SERVER_ACCESSIBLE);
+        VANILLA_WORLDGEN_PIPELINE[ChunkStatus.FULL.getIndex()] = SERVER_ACCESSIBLE;
         BLOCK_TICKING = new ServerBlockTicking(statuses.size());
         statuses.add(BLOCK_TICKING);
         ENTITY_TICKING = new ServerEntityTicking(statuses.size());
@@ -98,7 +105,11 @@ public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState,
     }
 
     public static NewChunkStatus fromVanillaStatus(ChunkStatus status) {
-        return fromVanillaLevel(ChunkLevels.getLevelFromStatus(status));
+        if (status == null) {
+            return NEW;
+        } else {
+            return VANILLA_WORLDGEN_PIPELINE[status.getIndex()];
+        }
     }
 
     private final int ordinal;
@@ -123,8 +134,15 @@ public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState,
         return this.effectiveVanillaStatus;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] getDependencies(ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, ?> holder) {
+    public final KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] getDependencies(ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, ?> holder) {
+        return Arrays.stream(this.getRelativeDependencies(holder))
+                .map(pair -> new KeyStatusPair<>(new ChunkPos(pair.key().x + holder.getKey().x, pair.key().z + holder.getKey().z), pair.status()))
+                .toArray(KeyStatusPair[]::new);
+    }
+
+    protected KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] getRelativeDependencies(ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, ?> holder) {
         return new KeyStatusPair[0];
     }
 }

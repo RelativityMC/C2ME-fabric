@@ -3,6 +3,7 @@ package com.ishland.c2me.rewrites.chunksystem.common.statuses;
 import com.ishland.c2me.rewrites.chunksystem.common.ChunkLoadingContext;
 import com.ishland.c2me.rewrites.chunksystem.common.ChunkState;
 import com.ishland.c2me.rewrites.chunksystem.common.NewChunkStatus;
+import com.ishland.flowsched.scheduler.ItemHolder;
 import com.ishland.flowsched.scheduler.KeyStatusPair;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.chunk.ChunkStatus;
@@ -39,5 +40,10 @@ public class ServerEntityTicking extends NewChunkStatus {
     @Override
     public CompletionStage<Void> downgradeFromThis(ChunkLoadingContext context) {
         return CompletableFuture.completedStage(null);
+    }
+
+    @Override
+    protected KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] getRelativeDependencies(ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, ?> holder) {
+        return deps;
     }
 }

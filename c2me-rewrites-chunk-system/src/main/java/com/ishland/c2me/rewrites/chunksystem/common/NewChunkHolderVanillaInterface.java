@@ -207,14 +207,14 @@ public class NewChunkHolderVanillaInterface extends ChunkHolder {
     @Nullable
     @Override
     public Chunk getUncheckedOrNull(ChunkStatus requestedStatus) {
-        return this.newHolder.getStatus().ordinal() <= NewChunkStatus.fromVanillaStatus(requestedStatus).ordinal()
+        return this.newHolder.getStatus().ordinal() >= NewChunkStatus.fromVanillaStatus(requestedStatus).ordinal()
                 ? this.newHolder.getItem().get().chunk() : null;
     }
 
     @Nullable
     @Override
     public Chunk getOrNull(ChunkStatus requestedStatus) {
-        return this.newHolder.getTargetStatus().ordinal() <= NewChunkStatus.fromVanillaStatus(requestedStatus).ordinal()
+        return this.newHolder.getTargetStatus().ordinal() >= NewChunkStatus.fromVanillaStatus(requestedStatus).ordinal()
                 ? this.getUncheckedOrNull(requestedStatus) : null;
     }
 

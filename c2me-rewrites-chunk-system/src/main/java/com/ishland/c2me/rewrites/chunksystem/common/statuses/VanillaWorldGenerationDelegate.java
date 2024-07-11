@@ -102,7 +102,7 @@ public class VanillaWorldGenerationDelegate extends NewChunkStatus {
     }
 
     @Override
-    public KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] getDependencies(ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, ?> holder) {
+    public KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] getRelativeDependencies(ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, ?> holder) {
         final Chunk chunk = holder.getItem().get().chunk();
         if (chunk == null) return genDeps;
         if (chunk.getStatus().isAtLeast(status)) {
