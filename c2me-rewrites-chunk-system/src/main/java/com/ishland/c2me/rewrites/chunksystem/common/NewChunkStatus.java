@@ -51,7 +51,13 @@ public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState,
         DISK = new ReadFromDisk(statuses.size());
         statuses.add(DISK);
         VANILLA_WORLDGEN_PIPELINE = new NewChunkStatus[ChunkStatus.FULL.getIndex() + 1];
-        generateFromVanillaChunkStatus(statuses);
+        for (ChunkStatus status : ChunkStatus.createOrderedList()) {
+            if (status == ChunkStatus.EMPTY || status == ChunkStatus.FULL) continue;
+
+            final NewChunkStatus newChunkStatus = new VanillaWorldGenerationDelegate(statuses.size(), status);
+            statuses.add(newChunkStatus);
+            VANILLA_WORLDGEN_PIPELINE[status.getIndex()] = newChunkStatus;
+        }
         SERVER_ACCESSIBLE = new ServerAccessible(statuses.size());
         statuses.add(SERVER_ACCESSIBLE);
         BLOCK_TICKING = new ServerBlockTicking(statuses.size());
@@ -83,16 +89,6 @@ public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState,
             case BLOCK_TICKING -> BLOCK_TICKING;
             case ENTITY_TICKING -> ENTITY_TICKING;
         };
-    }
-
-    private static void generateFromVanillaChunkStatus(ArrayList<NewChunkStatus> statuses) {
-        for (ChunkStatus status : ChunkStatus.createOrderedList()) {
-            if (status == ChunkStatus.EMPTY || status == ChunkStatus.FULL) continue;
-
-            final NewChunkStatus newChunkStatus = new VanillaWorldGenerationDelegate(statuses.size(), status);
-            statuses.add(newChunkStatus);
-            VANILLA_WORLDGEN_PIPELINE[status.getIndex()] = newChunkStatus;
-        }
     }
 
     public static NewChunkStatus fromVanillaLevel(int level) {
