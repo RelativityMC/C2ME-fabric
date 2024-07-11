@@ -1,6 +1,7 @@
 package com.ishland.c2me.base.mixin.access;
 
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
+import net.minecraft.server.WorldGenerationProgressListener;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ServerChunkLoadingManager;
 import net.minecraft.server.world.ServerLightingProvider;
@@ -48,5 +49,8 @@ public interface IThreadedAnvilChunkStorage {
 
     @Invoker
     void invokeSendToPlayers(WorldChunk chunk);
+
+    @Accessor
+    WorldGenerationProgressListener getWorldGenerationProgressListener();
 
 }

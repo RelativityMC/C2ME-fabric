@@ -11,6 +11,7 @@ import com.ishland.flowsched.util.Assertions;
 import it.unimi.dsi.fastutil.longs.Long2IntMap;
 import it.unimi.dsi.fastutil.longs.Long2IntMaps;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
+import net.minecraft.server.WorldGenerationProgressListener;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ServerChunkLoadingManager;
 import net.minecraft.util.collection.BoundedRegionArray;
@@ -56,6 +57,32 @@ public class TheChunkSystem extends DaemonizedStatusAdvancingScheduler<ChunkPos,
     @Override
     protected void onItemRemoval(ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> holder) {
         super.onItemRemoval(holder);
+        final WorldGenerationProgressListener listener = ((IThreadedAnvilChunkStorage) this.tacs).getWorldGenerationProgressListener();
+        if (listener != null) {
+            listener.setChunkStatus(holder.getKey(), null);
+        }
+    }
+
+    @Override
+    protected void onItemUpgrade(ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> holder, ItemStatus<ChunkPos, ChunkState, ChunkLoadingContext> statusReached) {
+        super.onItemUpgrade(holder, statusReached);
+        final NewChunkStatus statusReached1 = (NewChunkStatus) statusReached;
+        final NewChunkStatus prevStatus = (NewChunkStatus) statusReached.getPrev();
+        final WorldGenerationProgressListener listener = ((IThreadedAnvilChunkStorage) this.tacs).getWorldGenerationProgressListener();
+        if (listener != null && prevStatus.getEffectiveVanillaStatus() != statusReached1.getEffectiveVanillaStatus()) {
+            listener.setChunkStatus(holder.getKey(), statusReached1.getEffectiveVanillaStatus());
+        }
+    }
+
+    @Override
+    protected void onItemDowngrade(ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> holder, ItemStatus<ChunkPos, ChunkState, ChunkLoadingContext> statusReached) {
+        super.onItemDowngrade(holder, statusReached);
+        final NewChunkStatus statusReached1 = (NewChunkStatus) statusReached;
+        final NewChunkStatus prevStatus = (NewChunkStatus) statusReached.getNext();
+        final WorldGenerationProgressListener listener = ((IThreadedAnvilChunkStorage) this.tacs).getWorldGenerationProgressListener();
+        if (listener != null && prevStatus.getEffectiveVanillaStatus() != statusReached1.getEffectiveVanillaStatus()) {
+            listener.setChunkStatus(holder.getKey(), statusReached1.getEffectiveVanillaStatus());
+        }
     }
 
     public ChunkHolder vanillaIf$setLevel(long pos, int level) {
