@@ -32,7 +32,10 @@ public class VanillaWorldGenerationDelegate extends NewChunkStatus {
         for (int x = -directDependencies.getMaxLevel(); x <= directDependencies.getMaxLevel(); x++) {
             for (int z = -directDependencies.getMaxLevel(); z <= directDependencies.getMaxLevel(); z++) {
                 if (x == 0 && z == 0) continue;
-                final KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext> dep = new KeyStatusPair<>(new ChunkPos(x, z), fromVanillaStatus(directDependencies.get(Math.max(x, z))));
+                final KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext> dep =
+                        new KeyStatusPair<>(
+                                new ChunkPos(x, z), fromVanillaStatus(directDependencies.get(Math.max(Math.abs(x), Math.abs(z))))
+                        );
                 deps.add(dep);
             }
         }

@@ -8,15 +8,12 @@ import com.ishland.c2me.rewrites.chunksystem.common.statuses.VanillaWorldGenerat
 import com.ishland.flowsched.scheduler.ItemHolder;
 import com.ishland.flowsched.scheduler.ItemStatus;
 import com.ishland.flowsched.scheduler.KeyStatusPair;
-import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
 import net.minecraft.server.world.ChunkLevels;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.chunk.ChunkStatus;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Map;
 import java.util.concurrent.CompletionStage;
 import java.util.stream.IntStream;
 
@@ -31,7 +28,7 @@ public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState,
 
     public static final NewChunkStatus NEW;
     public static final NewChunkStatus DISK;
-    public static final Map<ChunkStatus, NewChunkStatus> VANILLA_WORLDGEN_PIPELINE;
+    private static final NewChunkStatus[] VANILLA_WORLDGEN_PIPELINE;
     public static final NewChunkStatus SERVER_ACCESSIBLE;
     public static final NewChunkStatus BLOCK_TICKING;
     public static final NewChunkStatus ENTITY_TICKING;
@@ -53,7 +50,8 @@ public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState,
         statuses.add(NEW);
         DISK = new ReadFromDisk(statuses.size());
         statuses.add(DISK);
-        VANILLA_WORLDGEN_PIPELINE = Collections.unmodifiableMap(generateFromVanillaChunkStatus(statuses));
+        VANILLA_WORLDGEN_PIPELINE = new NewChunkStatus[ChunkStatus.FULL.getIndex() + 1];
+        generateFromVanillaChunkStatus(statuses);
         SERVER_ACCESSIBLE = new ServerAccessible(statuses.size());
         statuses.add(SERVER_ACCESSIBLE);
         BLOCK_TICKING = new ServerBlockTicking(statuses.size());
@@ -70,6 +68,7 @@ public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState,
         return switch (ChunkLevels.getType(level)) {
             case INACCESSIBLE -> {
                 final ChunkStatus vanillaStatus = ChunkLevels.getStatus(level);
+                if (vanillaStatus == null) yield null;
                 if (vanillaStatus == ChunkStatus.EMPTY) {
                     if (level > ChunkLevels.INACCESSIBLE) {
                         yield NEW;
@@ -77,7 +76,7 @@ public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState,
                         yield DISK;
                     }
                 } else {
-                    yield VANILLA_WORLDGEN_PIPELINE.get(vanillaStatus);
+                    yield VANILLA_WORLDGEN_PIPELINE[vanillaStatus.getIndex()];
                 }
             }
             case FULL -> SERVER_ACCESSIBLE;
@@ -86,17 +85,14 @@ public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState,
         };
     }
 
-    private static Map<ChunkStatus, NewChunkStatus> generateFromVanillaChunkStatus(ArrayList<NewChunkStatus> statuses) {
-        Map<ChunkStatus, NewChunkStatus> map = new Reference2ReferenceOpenHashMap<>();
+    private static void generateFromVanillaChunkStatus(ArrayList<NewChunkStatus> statuses) {
         for (ChunkStatus status : ChunkStatus.createOrderedList()) {
             if (status == ChunkStatus.EMPTY || status == ChunkStatus.FULL) continue;
 
             final NewChunkStatus newChunkStatus = new VanillaWorldGenerationDelegate(statuses.size(), status);
             statuses.add(newChunkStatus);
-            map.put(status, newChunkStatus);
+            VANILLA_WORLDGEN_PIPELINE[status.getIndex()] = newChunkStatus;
         }
-
-        return map;
     }
 
     public static NewChunkStatus fromVanillaLevel(int level) {
