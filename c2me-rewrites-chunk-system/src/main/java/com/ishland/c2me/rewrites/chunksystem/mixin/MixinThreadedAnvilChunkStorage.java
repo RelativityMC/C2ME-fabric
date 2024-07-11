@@ -1,10 +1,15 @@
 package com.ishland.c2me.rewrites.chunksystem.mixin;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.ishland.c2me.rewrites.chunksystem.common.ChunkLoadingContext;
+import com.ishland.c2me.rewrites.chunksystem.common.ChunkState;
+import com.ishland.c2me.rewrites.chunksystem.common.NewChunkHolderVanillaInterface;
 import com.ishland.c2me.rewrites.chunksystem.common.TheChunkSystem;
+import com.ishland.flowsched.scheduler.ItemHolder;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ServerChunkLoadingManager;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.math.ChunkPos;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -38,6 +43,27 @@ public class MixinThreadedAnvilChunkStorage {
     @Nullable
     public ChunkHolder setLevel(long pos, int level, @Nullable ChunkHolder holder, int i) {
         return this.newSystem.vanillaIf$setLevel(pos, level);
+    }
+
+    /**
+     * @author ishlan
+     * @reason replace chunk system
+     */
+    @Overwrite
+    @Nullable
+    public ChunkHolder getCurrentChunkHolder(long pos) {
+        final ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> holder = this.newSystem.getHolder(new ChunkPos(pos));
+        return holder != null ? holder.getUserData().get() : null;
+    }
+
+    /**
+     * @author ishlan
+     * @reason replace chunk system
+     */
+    @Overwrite
+    @Nullable
+    public ChunkHolder getChunkHolder(long pos) {
+        return this.getCurrentChunkHolder(pos);
     }
 
 }
