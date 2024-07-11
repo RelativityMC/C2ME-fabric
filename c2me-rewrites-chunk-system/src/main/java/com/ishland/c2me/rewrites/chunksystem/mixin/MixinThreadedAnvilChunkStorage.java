@@ -36,7 +36,7 @@ public class MixinThreadedAnvilChunkStorage {
      */
     @Overwrite
     @Nullable
-    ChunkHolder setLevel(long pos, int level, @Nullable ChunkHolder holder, int i) {
+    public ChunkHolder setLevel(long pos, int level, @Nullable ChunkHolder holder, int i) {
         return this.newSystem.vanillaIf$setLevel(pos, level);
     }
 
