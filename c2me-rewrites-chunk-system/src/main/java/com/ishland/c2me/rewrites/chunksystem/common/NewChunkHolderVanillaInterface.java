@@ -40,6 +40,9 @@ public class NewChunkHolderVanillaInterface extends ChunkHolder {
     }
 
     private CompletableFuture<OptionalChunk<Chunk>> wrapOptionalChunkFuture(CompletableFuture<?> future) {
+        if (future.isCompletedExceptionally() && future.exceptionNow() == ItemHolder.UNLOADED_EXCEPTION) {
+            return ChunkHolder.UNLOADED_FUTURE;
+        }
         return future.thenApply(unused -> OptionalChunk.of(this.newHolder.getItem().get().chunk()));
     }
 
@@ -54,6 +57,9 @@ public class NewChunkHolderVanillaInterface extends ChunkHolder {
     }
 
     private CompletableFuture<OptionalChunk<WorldChunk>> wrapOptionalWorldChunkFuture(CompletableFuture<?> future) {
+        if (future.isCompletedExceptionally() && future.exceptionNow() == ItemHolder.UNLOADED_EXCEPTION) {
+            return ChunkHolder.UNLOADED_WORLD_CHUNK_FUTURE;
+        }
         return future.thenApply(unused -> OptionalChunk.of((WorldChunk) this.newHolder.getItem().get().chunk()));
     }
 

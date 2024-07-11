@@ -42,6 +42,7 @@ extendable    method    net/minecraft/world/chunk/AbstractChunkHolder    getMaxP
 extendable    method    net/minecraft/world/chunk/AbstractChunkHolder    progressStatus         (Lnet/minecraft/world/chunk/ChunkStatus;)Z
 extendable    method    net/minecraft/world/chunk/AbstractChunkHolder    cannotBeLoaded         (Lnet/minecraft/world/chunk/ChunkStatus;)Z
 
+accessible    field    net/minecraft/server/world/ChunkHolder                               UNLOADED_WORLD_CHUNK_FUTURE Ljava/util/concurrent/CompletableFuture;
 accessible    field    net/minecraft/world/storage/StorageIoWorker$Result                   nbt                 Lnet/minecraft/nbt/NbtCompound;
 accessible    field    net/minecraft/world/storage/StorageIoWorker$Result                   future              Ljava/util/concurrent/CompletableFuture;
 accessible    field     net/minecraft/util/math/BlockPos                                    BIT_SHIFT_X         I
