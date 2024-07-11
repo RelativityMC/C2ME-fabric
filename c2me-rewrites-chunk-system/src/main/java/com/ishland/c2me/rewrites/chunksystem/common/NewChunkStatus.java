@@ -2,6 +2,8 @@ package com.ishland.c2me.rewrites.chunksystem.common;
 
 import com.ishland.c2me.rewrites.chunksystem.common.statuses.ReadFromDisk;
 import com.ishland.c2me.rewrites.chunksystem.common.statuses.ServerAccessible;
+import com.ishland.c2me.rewrites.chunksystem.common.statuses.ServerBlockTicking;
+import com.ishland.c2me.rewrites.chunksystem.common.statuses.ServerEntityTicking;
 import com.ishland.c2me.rewrites.chunksystem.common.statuses.VanillaWorldGenerationDelegate;
 import com.ishland.flowsched.scheduler.ItemHolder;
 import com.ishland.flowsched.scheduler.ItemStatus;
@@ -54,29 +56,9 @@ public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState,
         VANILLA_WORLDGEN_PIPELINE = Collections.unmodifiableMap(generateFromVanillaChunkStatus(statuses));
         SERVER_ACCESSIBLE = new ServerAccessible(statuses.size());
         statuses.add(SERVER_ACCESSIBLE);
-        BLOCK_TICKING = new NewChunkStatus(statuses.size(), ChunkStatus.FULL) {
-            @Override
-            public CompletionStage<Void> upgradeToThis(ChunkLoadingContext context) {
-                return null;
-            }
-
-            @Override
-            public CompletionStage<Void> downgradeFromThis(ChunkLoadingContext context) {
-                return null;
-            }
-        };
+        BLOCK_TICKING = new ServerBlockTicking(statuses.size());
         statuses.add(BLOCK_TICKING);
-        ENTITY_TICKING = new NewChunkStatus(statuses.size(), ChunkStatus.FULL) {
-            @Override
-            public CompletionStage<Void> upgradeToThis(ChunkLoadingContext context) {
-                return null;
-            }
-
-            @Override
-            public CompletionStage<Void> downgradeFromThis(ChunkLoadingContext context) {
-                return null;
-            }
-        };
+        ENTITY_TICKING = new ServerEntityTicking(statuses.size());
         statuses.add(ENTITY_TICKING);
 
         vanillaLevelToStatus = IntStream.range(0, ChunkLevels.INACCESSIBLE + 2)
