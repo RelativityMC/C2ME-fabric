@@ -59,7 +59,7 @@ public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState,
         ENTITY_TICKING = new ServerEntityTicking(statuses.size());
         statuses.add(ENTITY_TICKING);
 
-        vanillaLevelToStatus = IntStream.range(0, ChunkLevels.INACCESSIBLE + 2)
+        vanillaLevelToStatus = IntStream.range(0, ChunkLevels.INACCESSIBLE)
                 .mapToObj(NewChunkStatus::fromVanillaStatus0).toArray(NewChunkStatus[]::new);
         ALL_STATUSES = statuses.toArray(NewChunkStatus[]::new);
     }
@@ -68,7 +68,7 @@ public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState,
         return switch (ChunkLevels.getType(level)) {
             case INACCESSIBLE -> {
                 final ChunkStatus vanillaStatus = ChunkLevels.getStatus(level);
-                if (vanillaStatus == null) yield null;
+                if (vanillaStatus == null) throw new NullPointerException();
                 if (vanillaStatus == ChunkStatus.EMPTY) {
                     if (level > ChunkLevels.INACCESSIBLE) {
                         yield NEW;
