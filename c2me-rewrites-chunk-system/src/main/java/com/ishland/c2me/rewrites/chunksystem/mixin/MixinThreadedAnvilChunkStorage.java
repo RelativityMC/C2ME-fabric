@@ -6,6 +6,7 @@ import com.ishland.c2me.rewrites.chunksystem.common.ChunkState;
 import com.ishland.c2me.rewrites.chunksystem.common.NewChunkHolderVanillaInterface;
 import com.ishland.c2me.rewrites.chunksystem.common.TheChunkSystem;
 import com.ishland.flowsched.scheduler.ItemHolder;
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ServerChunkLoadingManager;
 import net.minecraft.server.world.ServerWorld;
@@ -64,6 +65,11 @@ public class MixinThreadedAnvilChunkStorage {
     @Nullable
     public ChunkHolder getChunkHolder(long pos) {
         return this.getCurrentChunkHolder(pos);
+    }
+
+    @ModifyReturnValue(method = "shouldDelayShutdown", at = @At("RETURN"))
+    private boolean delayShutdown(boolean original) {
+        return original || this.newSystem.itemCount() != 0;
     }
 
 }
