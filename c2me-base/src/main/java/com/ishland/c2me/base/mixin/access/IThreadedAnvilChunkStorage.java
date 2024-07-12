@@ -2,6 +2,7 @@ package com.ishland.c2me.base.mixin.access;
 
 import net.minecraft.server.WorldGenerationProgressListener;
 import net.minecraft.server.world.ChunkHolder;
+import net.minecraft.server.world.ChunkLevelType;
 import net.minecraft.server.world.ServerChunkLoadingManager;
 import net.minecraft.server.world.ServerLightingProvider;
 import net.minecraft.server.world.ServerWorld;
@@ -52,5 +53,8 @@ public interface IThreadedAnvilChunkStorage {
 
     @Invoker
     ChunkHolder invokeGetChunkHolder(long pos);
+
+    @Invoker
+    void invokeOnChunkStatusChange(ChunkPos chunkPos, ChunkLevelType levelType);
 
 }

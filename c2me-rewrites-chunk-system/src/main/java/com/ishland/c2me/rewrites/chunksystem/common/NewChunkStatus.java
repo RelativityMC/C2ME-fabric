@@ -8,6 +8,7 @@ import com.ishland.c2me.rewrites.chunksystem.common.statuses.VanillaWorldGenerat
 import com.ishland.flowsched.scheduler.ItemHolder;
 import com.ishland.flowsched.scheduler.ItemStatus;
 import com.ishland.flowsched.scheduler.KeyStatusPair;
+import net.minecraft.server.world.ChunkLevelType;
 import net.minecraft.server.world.ChunkLevels;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.MathHelper;
@@ -132,6 +133,14 @@ public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState,
 
     public ChunkStatus getEffectiveVanillaStatus() {
         return this.effectiveVanillaStatus;
+    }
+
+    public ChunkLevelType toChunkLevelType() {
+        if (this.ordinal() < SERVER_ACCESSIBLE.ordinal()) return ChunkLevelType.INACCESSIBLE;
+        if (this.ordinal() <= SERVER_ACCESSIBLE.ordinal()) return ChunkLevelType.FULL;
+        if (this.ordinal() <= BLOCK_TICKING.ordinal()) return ChunkLevelType.BLOCK_TICKING;
+        if (this.ordinal() <= ENTITY_TICKING.ordinal()) return ChunkLevelType.ENTITY_TICKING;
+        throw new IncompatibleClassChangeError();
     }
 
     @SuppressWarnings("unchecked")

@@ -78,6 +78,10 @@ public class TheChunkSystem extends DaemonizedStatusAdvancingScheduler<ChunkPos,
         if (listener != null && prevStatus.getEffectiveVanillaStatus() != statusReached1.getEffectiveVanillaStatus()) {
             listener.setChunkStatus(holder.getKey(), statusReached1.getEffectiveVanillaStatus());
         }
+        if (prevStatus.toChunkLevelType() != statusReached1.toChunkLevelType()) {
+            ((IThreadedAnvilChunkStorage) this.tacs).getMainThreadExecutor().execute(
+                    () -> ((IThreadedAnvilChunkStorage) this.tacs).invokeOnChunkStatusChange(holder.getKey(), statusReached1.toChunkLevelType()));
+        }
     }
 
     @Override
@@ -88,6 +92,10 @@ public class TheChunkSystem extends DaemonizedStatusAdvancingScheduler<ChunkPos,
         final WorldGenerationProgressListener listener = ((IThreadedAnvilChunkStorage) this.tacs).getWorldGenerationProgressListener();
         if (listener != null && prevStatus.getEffectiveVanillaStatus() != statusReached1.getEffectiveVanillaStatus()) {
             listener.setChunkStatus(holder.getKey(), statusReached1.getEffectiveVanillaStatus());
+        }
+        if (prevStatus.toChunkLevelType() != statusReached1.toChunkLevelType()) {
+            ((IThreadedAnvilChunkStorage) this.tacs).getMainThreadExecutor().execute(
+                    () -> ((IThreadedAnvilChunkStorage) this.tacs).invokeOnChunkStatusChange(holder.getKey(), statusReached1.toChunkLevelType()));
         }
     }
 
