@@ -25,6 +25,7 @@
     "access.ISerializingRegionBasedStorage",
     "access.IServerChunkManager",
     "access.IServerEntityManager",
+    "access.IServerLightingProvider",
     "access.ISimpleRandom",
     "access.ISimpleTickScheduler",
     "access.IState",

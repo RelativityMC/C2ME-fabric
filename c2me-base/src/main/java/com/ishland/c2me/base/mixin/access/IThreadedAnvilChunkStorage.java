@@ -1,5 +1,6 @@
 package com.ishland.c2me.base.mixin.access;
 
+import it.unimi.dsi.fastutil.longs.Long2LongMap;
 import net.minecraft.server.WorldGenerationProgressListener;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ChunkLevelType;
@@ -28,7 +29,7 @@ public interface IThreadedAnvilChunkStorage {
     boolean invokeUpdateHolderMap();
 
     @Invoker
-    boolean invokeSave(ChunkHolder chunkHolder);
+    boolean invokeSave(Chunk chunk);
 
     @Accessor
     ThreadExecutor<Runnable> getMainThreadExecutor();
@@ -56,5 +57,8 @@ public interface IThreadedAnvilChunkStorage {
 
     @Invoker
     void invokeOnChunkStatusChange(ChunkPos chunkPos, ChunkLevelType levelType);
+
+    @Accessor
+    Long2LongMap getChunkToNextSaveTimeMs();
 
 }
