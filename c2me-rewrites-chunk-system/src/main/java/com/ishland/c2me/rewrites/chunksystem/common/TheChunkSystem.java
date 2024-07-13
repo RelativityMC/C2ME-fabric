@@ -101,6 +101,7 @@ public class TheChunkSystem extends DaemonizedStatusAdvancingScheduler<ChunkPos,
 
     public ChunkHolder vanillaIf$setLevel(long pos, int level) {
         this.schedulingManager.updatePriorityFromLevel(pos, level);
+        Assertions.assertTrue(!Thread.holdsLock(this.managedTickets));
         synchronized (this.managedTickets) {
             final int oldLevel = this.managedTickets.put(pos, level);
             NewChunkStatus oldStatus = NewChunkStatus.fromVanillaLevel(oldLevel);

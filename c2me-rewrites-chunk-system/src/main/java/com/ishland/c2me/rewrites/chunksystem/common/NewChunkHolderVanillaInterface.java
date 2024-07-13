@@ -74,17 +74,23 @@ public class NewChunkHolderVanillaInterface extends ChunkHolder {
 
     @Override
     public CompletableFuture<OptionalChunk<WorldChunk>> getTickingFuture() {
-        return wrapOptionalWorldChunkFuture(this.newHolder.getFutureForStatus(NewChunkStatus.BLOCK_TICKING));
+        synchronized (this.newHolder) {
+            return wrapOptionalWorldChunkFuture(this.newHolder.getFutureForStatus(NewChunkStatus.BLOCK_TICKING));
+        }
     }
 
     @Override
     public CompletableFuture<OptionalChunk<WorldChunk>> getEntityTickingFuture() {
-        return wrapOptionalWorldChunkFuture(this.newHolder.getFutureForStatus(NewChunkStatus.ENTITY_TICKING));
+        synchronized (this.newHolder) {
+            return wrapOptionalWorldChunkFuture(this.newHolder.getFutureForStatus(NewChunkStatus.ENTITY_TICKING));
+        }
     }
 
     @Override
     public CompletableFuture<OptionalChunk<WorldChunk>> getAccessibleFuture() {
-        return wrapOptionalWorldChunkFuture(this.newHolder.getFutureForStatus(NewChunkStatus.SERVER_ACCESSIBLE));
+        synchronized (this.newHolder) {
+            return wrapOptionalWorldChunkFuture(this.newHolder.getFutureForStatus(NewChunkStatus.SERVER_ACCESSIBLE));
+        }
     }
 
     @Nullable

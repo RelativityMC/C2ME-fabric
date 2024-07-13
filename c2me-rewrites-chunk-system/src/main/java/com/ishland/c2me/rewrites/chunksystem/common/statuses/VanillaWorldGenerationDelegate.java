@@ -111,4 +111,11 @@ public class VanillaWorldGenerationDelegate extends NewChunkStatus {
             return genDeps;
         }
     }
+
+    @Override
+    public String toString() {
+        return "VanillaWorldGenerationDelegate{" +
+               "status=" + status +
+               '}';
+    }
 }
