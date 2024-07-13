@@ -1,5 +1,6 @@
 package com.ishland.c2me.rewrites.chunksystem.common;
 
+import com.ishland.c2me.base.common.util.SneakyThrow;
 import com.ishland.flowsched.scheduler.ItemHolder;
 import com.mojang.datafixers.util.Pair;
 import net.minecraft.server.world.ChunkHolder;
@@ -26,6 +27,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.Executor;
 
 public class NewChunkHolderVanillaInterface extends ChunkHolder {
@@ -43,10 +45,22 @@ public class NewChunkHolderVanillaInterface extends ChunkHolder {
         if (future.isCompletedExceptionally() && future.exceptionNow() == ItemHolder.UNLOADED_EXCEPTION) {
             return ChunkHolder.UNLOADED_FUTURE;
         }
-        return future.thenApply(unused -> OptionalChunk.of(this.newHolder.getItem().get().chunk()));
+        return future.handle((unused, throwable) -> {
+            while (throwable instanceof CompletionException) {
+                throwable = throwable.getCause();
+            }
+            if (throwable == ItemHolder.UNLOADED_EXCEPTION) {
+                return ChunkHolder.UNLOADED;
+            } else if (throwable != null) {
+                SneakyThrow.sneaky(throwable);
+                return null;
+            } else {
+                return OptionalChunk.of(this.newHolder.getItem().get().chunk());
+            }
+        });
     }
 
-    private CompletableFuture<OptionalChunk<Chunk>> wrapOptionalChunkProtoFuture(CompletableFuture<?> future) {
+    private CompletableFuture<OptionalChunk<Chunk>> wrapOptionalChunkProtoFuture(CompletableFuture<Void> future) {
         return wrapOptionalChunkFuture(future).thenApply(optional -> optional.map(chunk -> {
             if (chunk instanceof WorldChunk worldChunk) {
                 return new WrapperProtoChunk(worldChunk, false);
@@ -56,11 +70,28 @@ public class NewChunkHolderVanillaInterface extends ChunkHolder {
         }));
     }
 
-    private CompletableFuture<OptionalChunk<WorldChunk>> wrapOptionalWorldChunkFuture(CompletableFuture<?> future) {
+    private CompletableFuture<OptionalChunk<WorldChunk>> wrapOptionalWorldChunkFuture(CompletableFuture<Void> future) {
         if (future.isCompletedExceptionally() && future.exceptionNow() == ItemHolder.UNLOADED_EXCEPTION) {
             return ChunkHolder.UNLOADED_WORLD_CHUNK_FUTURE;
         }
-        return future.thenApply(unused -> OptionalChunk.of((WorldChunk) this.newHolder.getItem().get().chunk()));
+        return future.handle((unused, throwable) -> {
+            while (throwable instanceof CompletionException) {
+                throwable = throwable.getCause();
+            }
+            if (throwable == ItemHolder.UNLOADED_EXCEPTION) {
+                return ChunkHolder.UNLOADED_WORLD_CHUNK;
+            } else if (throwable != null) {
+                SneakyThrow.sneaky(throwable);
+                return null;
+            } else {
+                final Chunk chunk = this.newHolder.getItem().get().chunk();
+                if (chunk instanceof WorldChunk worldChunk) {
+                    return OptionalChunk.of(worldChunk);
+                } else {
+                    return ChunkHolder.UNLOADED_WORLD_CHUNK; // might have unloaded at this point
+                }
+            }
+        });
     }
 
     private CompletableFuture<Chunk> wrapChunkFuture(CompletableFuture<?> future) {
