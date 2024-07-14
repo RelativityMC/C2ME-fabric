@@ -2,6 +2,7 @@ package com.ishland.c2me.rewrites.chunksystem.common.statuses;
 
 import com.google.common.base.Preconditions;
 import com.ishland.c2me.base.mixin.access.IThreadedAnvilChunkStorage;
+import com.ishland.c2me.base.mixin.access.IWorldChunk;
 import com.ishland.c2me.rewrites.chunksystem.common.ChunkLoadingContext;
 import com.ishland.c2me.rewrites.chunksystem.common.ChunkState;
 import com.ishland.c2me.rewrites.chunksystem.common.NewChunkStatus;
@@ -54,10 +55,12 @@ public class ServerAccessible extends NewChunkStatus {
             final WorldChunk worldChunk = toFullChunk(protoChunk, serverWorld);
 
             worldChunk.setLevelTypeProvider(context.holder().getUserData().get()::getLevelType);
-            worldChunk.loadEntities();
-            worldChunk.setLoadedToWorld(true);
-            worldChunk.updateAllBlockEntities();
-            worldChunk.addChunkTickSchedulers(serverWorld);
+            if (!((IWorldChunk) worldChunk).isLoadedToWorld()) {
+                worldChunk.loadEntities();
+                worldChunk.setLoadedToWorld(true);
+                worldChunk.updateAllBlockEntities();
+                worldChunk.addChunkTickSchedulers(serverWorld);
+            }
             context.holder().getItem().set(new ChunkState(worldChunk));
         }, ((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor());
     }
@@ -83,8 +86,8 @@ public class ServerAccessible extends NewChunkStatus {
         Preconditions.checkState(chunk instanceof WorldChunk, "Chunk must be a full chunk");
         final WorldChunk worldChunk = (WorldChunk) chunk;
         return CompletableFuture.runAsync(() -> {
-            worldChunk.setLoadedToWorld(false);
-            worldChunk.removeChunkTickSchedulers(((IThreadedAnvilChunkStorage) context.tacs()).getWorld());
+//            worldChunk.setLoadedToWorld(false);
+//            worldChunk.removeChunkTickSchedulers(((IThreadedAnvilChunkStorage) context.tacs()).getWorld());
             context.holder().getItem().set(new ChunkState(new WrapperProtoChunk(worldChunk, false)));
         }, ((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor());
     }
