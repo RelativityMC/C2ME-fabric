@@ -86,7 +86,7 @@ public class PreGenTask {
                         .collect(Collectors.toCollection(HashSet::new));
         final Registry<Structure> structureFeatureRegistry = world.getRegistryManager().get(RegistryKeys.STRUCTURE);
         final Set<RegistryEntryList<Structure>> structureFeatures;
-        if (!isLocateStructureSlowAF(world)) {
+        if (false) {
             structureFeatures = structureFeatureRegistry.getEntrySet().stream()
                     .filter(entry -> world.getChunkManager().getChunkGenerator().getBiomeSource().getBiomes().stream().anyMatch(entry.getValue().getValidBiomes()::contains))
                     .flatMap(entry -> structureFeatureRegistry.getEntry(entry.getKey()).map(RegistryEntryList::of).stream())
