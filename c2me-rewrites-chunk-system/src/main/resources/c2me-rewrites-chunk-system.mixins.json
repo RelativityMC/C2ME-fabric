@@ -8,6 +8,7 @@
     "MixinChunkHolder",
     "MixinChunkTicketManagerTicketDistanceLevelPropagator",
     "MixinNoiseChunkGenerator",
+    "MixinServerChunkManager",
     "MixinThreadedAnvilChunkStorage"
   ]
 }
