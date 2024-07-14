@@ -6,7 +6,6 @@ import com.ishland.c2me.notickvd.common.IChunkTicketManager;
 import com.llamalad7.mixinextras.injector.WrapWithCondition;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ChunkHolder;
-import net.minecraft.server.world.OptionalChunk;
 import net.minecraft.server.world.PlayerChunkWatchingManager;
 import net.minecraft.server.world.ServerChunkLoadingManager;
 import net.minecraft.server.world.ServerWorld;
@@ -25,7 +24,6 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
 @Mixin(ServerChunkLoadingManager.class)
 public abstract class MixinThreadedAnvilChunkStorage {
@@ -48,16 +46,17 @@ public abstract class MixinThreadedAnvilChunkStorage {
         return chunkHolder.getAccessibleFuture().getNow(ChunkHolder.UNLOADED_WORLD_CHUNK).orElse(null);
     }
 
-    @Inject(method = "makeChunkAccessible", at = @At("RETURN"))
-    private void onMakeChunkAccessible(ChunkHolder chunkHolder, CallbackInfoReturnable<CompletableFuture<OptionalChunk<WorldChunk>>> cir) {
-        cir.getReturnValue().thenAccept(either -> either.ifPresent(worldChunk -> {
-            if (Config.compatibilityMode) {
-                this.mainThreadExecutor.send(() -> this.sendToPlayers(worldChunk));
-            } else {
-                this.sendToPlayers(worldChunk);
-            }
-        }));
-    }
+    // TODO ensureChunkCorrectness
+//    @Inject(method = "makeChunkAccessible", at = @At("RETURN"))
+//    private void onMakeChunkAccessible(ChunkHolder chunkHolder, CallbackInfoReturnable<CompletableFuture<OptionalChunk<WorldChunk>>> cir) {
+//        cir.getReturnValue().thenAccept(either -> either.ifPresent(worldChunk -> {
+//            if (Config.compatibilityMode) {
+//                this.mainThreadExecutor.send(() -> this.sendToPlayers(worldChunk));
+//            } else {
+//                this.sendToPlayers(worldChunk);
+//            }
+//        }));
+//    }
 
     // private synthetic method_17243(Lorg/apache/commons/lang3/mutable/MutableObject;Lnet/minecraft/world/chunk/WorldChunk;Lnet/minecraft/server/network/ServerPlayerEntity;)V
 //    /**

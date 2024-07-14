@@ -15,9 +15,11 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ChunkTicketManager;
 import net.minecraft.server.world.ChunkTicketType;
+import net.minecraft.server.world.OptionalChunk;
 import net.minecraft.server.world.ServerChunkLoadingManager;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.world.chunk.WorldChunk;
 import org.slf4j.Logger;
 
 import java.util.Comparator;
@@ -150,7 +152,16 @@ public class PlayerNoTickDistanceMap extends ChunkPosDistanceLevelPropagatorExte
             if (holder == null) {
                 return CompletableFuture.completedFuture(null);
             } else {
-                return holder.getAccessibleFuture().exceptionally(unused1 -> null).thenAccept(unused1 -> {
+                final CompletableFuture<OptionalChunk<WorldChunk>> accessibleFuture = holder.getAccessibleFuture();
+                accessibleFuture.whenCompleteAsync((worldChunkOptionalChunk, throwable) -> {
+                    if (throwable != null) {
+                        LOGGER.error("Failed to load chunk {}", pos);
+                    } else if (worldChunkOptionalChunk != null) {
+                        final WorldChunk worldChunk = worldChunkOptionalChunk.orElse(null);
+                        ((IThreadedAnvilChunkStorage) tacs).invokeSendToPlayers(worldChunk);
+                    }
+                }, ((IThreadedAnvilChunkStorage) tacs).getMainThreadExecutor());
+                return accessibleFuture.exceptionally(throwable -> null).thenAccept(unused1 -> {
                 });
             }
         }, this.noTickSystem.mainAfterTicketTicks::add);
