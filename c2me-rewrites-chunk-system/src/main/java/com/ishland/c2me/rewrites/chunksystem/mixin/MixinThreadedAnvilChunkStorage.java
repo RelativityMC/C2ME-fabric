@@ -67,6 +67,11 @@ public class MixinThreadedAnvilChunkStorage {
         return this.getCurrentChunkHolder(pos);
     }
 
+    @Inject(method = "close", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/poi/PointOfInterestStorage;close()V", shift = At.Shift.AFTER))
+    private void closeNewSystem(CallbackInfo ci) {
+        this.newSystem.shutdown();
+    }
+
     @ModifyReturnValue(method = "shouldDelayShutdown", at = @At("RETURN"))
     private boolean delayShutdown(boolean original) {
         return original || this.newSystem.itemCount() != 0;
