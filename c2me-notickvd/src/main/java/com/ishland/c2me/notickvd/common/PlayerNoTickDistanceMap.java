@@ -158,7 +158,9 @@ public class PlayerNoTickDistanceMap extends ChunkPosDistanceLevelPropagatorExte
                         LOGGER.error("Failed to load chunk {}", pos);
                     } else if (worldChunkOptionalChunk != null) {
                         final WorldChunk worldChunk = worldChunkOptionalChunk.orElse(null);
-                        ((IThreadedAnvilChunkStorage) tacs).invokeSendToPlayers(worldChunk);
+                        if (worldChunk != null) {
+                            ((IThreadedAnvilChunkStorage) tacs).invokeSendToPlayers(worldChunk);
+                        }
                     }
                 }, ((IThreadedAnvilChunkStorage) tacs).getMainThreadExecutor());
                 return accessibleFuture.exceptionally(throwable -> null).thenAccept(unused1 -> {
