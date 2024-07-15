@@ -2,12 +2,14 @@ package com.ishland.c2me.rewrites.chunksystem.common.statuses;
 
 import com.ishland.c2me.base.mixin.access.IServerLightingProvider;
 import com.ishland.c2me.base.mixin.access.IThreadedAnvilChunkStorage;
+import com.ishland.c2me.base.mixin.access.IWorldChunk;
 import com.ishland.c2me.rewrites.chunksystem.common.ChunkLoadingContext;
 import com.ishland.c2me.rewrites.chunksystem.common.ChunkState;
 import com.ishland.c2me.rewrites.chunksystem.common.NewChunkStatus;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.WorldChunk;
+import net.minecraft.world.chunk.WrapperProtoChunk;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -31,14 +33,19 @@ public class ReadFromDisk extends NewChunkStatus {
     @Override
     public CompletionStage<Void> downgradeFromThis(ChunkLoadingContext context) {
         return CompletableFuture.runAsync(() -> {
-            final Chunk chunk = context.holder().getItem().get().chunk();
+            Chunk chunk = context.holder().getItem().get().chunk();
+            if (chunk instanceof WrapperProtoChunk protoChunk) chunk = protoChunk.getWrappedChunk();
 
+            final boolean loadedToWorld;
             if (chunk instanceof WorldChunk worldChunk) {
+                loadedToWorld = ((IWorldChunk) worldChunk).isLoadedToWorld();
                 worldChunk.setLoadedToWorld(false);
+            } else {
+                loadedToWorld = false;
             }
 
             ((IThreadedAnvilChunkStorage) context.tacs()).invokeSave(chunk);
-            if (chunk instanceof WorldChunk worldChunk) {
+            if (loadedToWorld && chunk instanceof WorldChunk worldChunk) {
                 ((IThreadedAnvilChunkStorage) context.tacs()).getWorld().unloadEntities(worldChunk);
             }
 
