@@ -143,6 +143,15 @@ public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState,
         throw new IncompatibleClassChangeError();
     }
 
+    public int toVanillaLevel() {
+        final ChunkLevelType chunkLevelType = this.toChunkLevelType();
+        if (chunkLevelType == ChunkLevelType.INACCESSIBLE) {
+            return ChunkLevels.getLevelFromStatus(this.getEffectiveVanillaStatus());
+        } else {
+            return ChunkLevels.getLevelFromType(chunkLevelType);
+        }
+    }
+
     @SuppressWarnings("unchecked")
     @Override
     public final KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] getDependencies(ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, ?> holder) {

@@ -178,12 +178,12 @@ public class NewChunkHolderVanillaInterface extends ChunkHolder {
 
     @Override
     public int getLevel() {
-        return ChunkLevels.getLevelFromStatus(((NewChunkStatus) this.newHolder.getTargetStatus()).getEffectiveVanillaStatus());
+        return ((NewChunkStatus) this.newHolder.getTargetStatus()).toVanillaLevel();
     }
 
     @Override
     public int getCompletedLevel() {
-        return ChunkLevels.getLevelFromStatus(((NewChunkStatus) this.newHolder.getStatus()).getEffectiveVanillaStatus());
+        return ((NewChunkStatus) this.newHolder.getStatus()).toVanillaLevel();
     }
 
     @Override
