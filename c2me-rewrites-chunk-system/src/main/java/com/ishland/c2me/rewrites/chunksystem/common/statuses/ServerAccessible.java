@@ -62,6 +62,9 @@ public class ServerAccessible extends NewChunkStatus {
                 worldChunk.addChunkTickSchedulers(serverWorld);
             }
             context.holder().getItem().set(new ChunkState(worldChunk));
+
+            ((IThreadedAnvilChunkStorage) context.tacs()).getCurrentChunkHolders().put(context.holder().getKey().toLong(), context.holder().getUserData().get());
+            ((IThreadedAnvilChunkStorage) context.tacs()).setChunkHolderListDirty(true);
         }, ((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor());
     }
 
@@ -86,6 +89,8 @@ public class ServerAccessible extends NewChunkStatus {
         Preconditions.checkState(chunk instanceof WorldChunk, "Chunk must be a full chunk");
         final WorldChunk worldChunk = (WorldChunk) chunk;
         return CompletableFuture.runAsync(() -> {
+            ((IThreadedAnvilChunkStorage) context.tacs()).getCurrentChunkHolders().remove(context.holder().getKey().toLong());
+            ((IThreadedAnvilChunkStorage) context.tacs()).setChunkHolderListDirty(true);
 //            worldChunk.setLoadedToWorld(false);
 //            worldChunk.removeChunkTickSchedulers(((IThreadedAnvilChunkStorage) context.tacs()).getWorld());
             context.holder().getItem().set(new ChunkState(new WrapperProtoChunk(worldChunk, false)));

@@ -1,6 +1,7 @@
 package com.ishland.c2me.base.mixin.access;
 
 import it.unimi.dsi.fastutil.longs.Long2LongMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 import net.minecraft.server.WorldGenerationProgressListener;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ChunkLevelType;
@@ -60,5 +61,11 @@ public interface IThreadedAnvilChunkStorage {
 
     @Accessor
     Long2LongMap getChunkToNextSaveTimeMs();
+
+    @Accessor
+    Long2ObjectLinkedOpenHashMap<ChunkHolder> getCurrentChunkHolders();
+
+    @Accessor
+    void setChunkHolderListDirty(boolean value);
 
 }
