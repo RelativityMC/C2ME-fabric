@@ -50,7 +50,7 @@ public class MixinThreadedAnvilChunkStorage {
     }
 
     /**
-     * @author ishlan
+     * @author ishland
      * @reason replace chunk system
      */
     @Overwrite
@@ -61,7 +61,7 @@ public class MixinThreadedAnvilChunkStorage {
     }
 
     /**
-     * @author ishlan
+     * @author ishland
      * @reason replace chunk system
      */
     @Overwrite
