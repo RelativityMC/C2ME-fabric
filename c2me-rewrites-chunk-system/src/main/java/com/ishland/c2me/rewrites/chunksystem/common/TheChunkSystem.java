@@ -121,6 +121,12 @@ public class TheChunkSystem extends DaemonizedStatusAdvancingScheduler<ChunkPos,
                 }
                 return vanillaHolder;
             } else {
+                if (newStatus != this.getUnloadedStatus()) {
+                    final ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> holder = this.getHolder(new ChunkPos(pos));
+                    if (holder != null) {
+                        return holder.getUserData().get();
+                    }
+                }
                 return null;
             }
         }
