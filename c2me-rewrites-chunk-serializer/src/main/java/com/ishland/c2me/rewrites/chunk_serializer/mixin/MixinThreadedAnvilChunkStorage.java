@@ -8,6 +8,7 @@ import com.mojang.datafixers.DataFixer;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.server.world.ServerChunkLoadingManager;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.structure.StructureStart;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
@@ -23,7 +24,7 @@ import org.spongepowered.asm.mixin.Shadow;
 
 import java.nio.file.Path;
 
-@Mixin(ServerChunkLoadingManager.class)
+@Mixin(value = ServerChunkLoadingManager.class, priority = 1099)
 public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStorage {
     @Final
     @Shadow
@@ -65,15 +66,15 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
 
         try {
             ChunkStatus chunkStatus = chunk.getStatus();
-//            if (chunkStatus.getChunkType() != ChunkType.LEVELCHUNK) {
-//                if (this.isLevelChunk(chunkPos)) {
-//                    return false;
-//                }
-//
-//                if (chunkStatus == ChunkStatus.EMPTY && chunk.getStructureStarts().values().stream().noneMatch(StructureStart::hasChildren)) {
-//                    return false;
-//                }
-//            }
+            if (chunkStatus.getChunkType() != ChunkType.LEVELCHUNK) {
+                if (this.isLevelChunk(chunkPos)) {
+                    return false;
+                }
+
+                if (chunkStatus == ChunkStatus.EMPTY && chunk.getStructureStarts().values().stream().noneMatch(StructureStart::hasChildren)) {
+                    return false;
+                }
+            }
 
             this.world.getProfiler().visit("chunkSave");
 
