@@ -1,6 +1,7 @@
 package com.ishland.c2me.rewrites.chunksystem.common;
 
 import com.ishland.c2me.rewrites.chunksystem.common.statuses.ReadFromDisk;
+import com.ishland.c2me.rewrites.chunksystem.common.statuses.ReadFromDiskAsync;
 import com.ishland.c2me.rewrites.chunksystem.common.statuses.ServerAccessible;
 import com.ishland.c2me.rewrites.chunksystem.common.statuses.ServerBlockTicking;
 import com.ishland.c2me.rewrites.chunksystem.common.statuses.ServerEntityTicking;
@@ -50,7 +51,7 @@ public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState,
             }
         };
         statuses.add(NEW);
-        DISK = new ReadFromDisk(statuses.size());
+        DISK = Config.asyncSerialization ? new ReadFromDiskAsync(statuses.size()) : new ReadFromDisk(statuses.size());
         statuses.add(DISK);
         VANILLA_WORLDGEN_PIPELINE = new NewChunkStatus[ChunkStatus.FULL.getIndex() + 1];
         for (ChunkStatus status : ChunkStatus.createOrderedList()) {

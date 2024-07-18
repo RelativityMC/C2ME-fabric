@@ -9,6 +9,14 @@
     "MixinChunkTicketManagerTicketDistanceLevelPropagator",
     "MixinNoiseChunkGenerator",
     "MixinServerChunkManager",
-    "MixinThreadedAnvilChunkStorage"
+    "MixinThreadedAnvilChunkStorage",
+    "async_serialization.MixinBlender",
+    "async_serialization.MixinChunkRegion",
+    "async_serialization.MixinChunkSerializer",
+    "async_serialization.MixinProtoChunk",
+    "async_serialization.MixinSerializingRegionBasedStorage",
+    "async_serialization.MixinStorageIoWorker",
+    "async_serialization.MixinThreadedAnvilChunkStorage",
+    "async_serialization.gc_free_serializer.MixinChunkDataSerializer"
   ]
 }

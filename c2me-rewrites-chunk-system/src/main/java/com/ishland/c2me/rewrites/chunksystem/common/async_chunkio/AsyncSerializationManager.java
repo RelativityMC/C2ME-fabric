@@ -44,7 +44,7 @@ public class AsyncSerializationManager {
         if (scope != null) {
             if (scope.pos.equals(pos))
                 return scope;
-            LOGGER.error("Scope position mismatch! Expected: {} but got {}. This will impact stability. Incompatible mods?", scope.pos, pos, new Throwable());
+            LOGGER.error("Scope position mismatch! Expected: {} but got {}.", scope.pos, pos, new Throwable());
         }
         return null;
     }

@@ -1,6 +1,6 @@
-package com.ishland.c2me.rewrites.chunksystem.mixin.async_chunkio;
+package com.ishland.c2me.rewrites.chunksystem.mixin.async_serialization;
 
-import com.ishland.c2me.rewrites.chunksystem.common.async_chunkio.ISerializingRegionBasedStorage;
+import com.ishland.c2me.rewrites.chunksystem.common.async_chunkio.SerializingRegionBasedStorageExtension;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtOps;
@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(SerializingRegionBasedStorage.class)
-public abstract class MixinSerializingRegionBasedStorage implements ISerializingRegionBasedStorage {
+public abstract class MixinSerializingRegionBasedStorage implements SerializingRegionBasedStorageExtension {
 
     @Shadow @Final private DynamicRegistryManager registryManager;
 

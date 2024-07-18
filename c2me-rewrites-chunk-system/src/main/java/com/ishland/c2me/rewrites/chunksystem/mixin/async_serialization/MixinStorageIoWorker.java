@@ -1,4 +1,4 @@
-package com.ishland.c2me.rewrites.chunksystem.mixin.async_chunkio;
+package com.ishland.c2me.rewrites.chunksystem.mixin.async_serialization;
 
 import com.ishland.c2me.rewrites.chunksystem.common.async_chunkio.ChunkIoThreadingExecutorUtils;
 import net.minecraft.nbt.NbtCompound;

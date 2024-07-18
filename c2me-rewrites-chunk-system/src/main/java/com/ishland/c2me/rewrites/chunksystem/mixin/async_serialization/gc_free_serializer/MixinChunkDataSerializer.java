@@ -1,46 +1,33 @@
-package com.ishland.c2me.rewrites.chunksystem.mixin.async_chunkio;
+package com.ishland.c2me.rewrites.chunksystem.mixin.async_serialization.gc_free_serializer;
 
 import com.ishland.c2me.rewrites.chunksystem.common.async_chunkio.AsyncSerializationManager;
-import com.ishland.c2me.rewrites.chunksystem.common.async_chunkio.ChunkIoMainThreadTaskUtils;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkSectionPos;
-import net.minecraft.world.ChunkSerializer;
 import net.minecraft.world.LightType;
 import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.WorldChunk;
 import net.minecraft.world.chunk.light.ChunkLightingView;
 import net.minecraft.world.chunk.light.LightingProvider;
-import net.minecraft.world.poi.PointOfInterestStorage;
-import org.slf4j.Logger;
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
 import java.util.Set;
 
-@Mixin(ChunkSerializer.class)
-public class MixinChunkSerializer {
+@Pseudo
+@Mixin(targets = "com.ishland.c2me.rewrites.chunk_serializer.common.ChunkDataSerializer")
+public class MixinChunkDataSerializer {
 
-    @Shadow @Final private static Logger LOGGER;
-
-    @Redirect(method = "deserialize", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/poi/PointOfInterestStorage;initForPalette(Lnet/minecraft/util/math/ChunkSectionPos;Lnet/minecraft/world/chunk/ChunkSection;)V"))
-    private static void onPoiStorageInitForPalette(PointOfInterestStorage instance, ChunkSectionPos chunkSectionPos, ChunkSection chunkSection) {
-        ChunkIoMainThreadTaskUtils.executeMain(() -> instance.initForPalette(chunkSectionPos, chunkSection));
-    }
-
-    @Redirect(method = "serialize", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/Chunk;getBlockEntityPositions()Ljava/util/Set;"))
+    @Redirect(method = "Lcom/ishland/c2me/rewrites/chunk_serializer/common/ChunkDataSerializer;write(Lnet/minecraft/server/world/ServerWorld;Lnet/minecraft/world/chunk/Chunk;Lcom/ishland/c2me/rewrites/chunk_serializer/common/NbtWriter;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/Chunk;getBlockEntityPositions()Ljava/util/Set;"))
     private static Set<BlockPos> onChunkGetBlockEntityPositions(Chunk chunk) {
         final AsyncSerializationManager.Scope scope = AsyncSerializationManager.getScope(chunk.getPos());
         return scope != null ? scope.blockEntityPositions : chunk.getBlockEntityPositions();
     }
 
-    @Redirect(method = "serialize", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/Chunk;getPackedBlockEntityNbt(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/registry/RegistryWrapper$WrapperLookup;)Lnet/minecraft/nbt/NbtCompound;"))
+    @Redirect(method = "Lcom/ishland/c2me/rewrites/chunk_serializer/common/ChunkDataSerializer;write(Lnet/minecraft/server/world/ServerWorld;Lnet/minecraft/world/chunk/Chunk;Lcom/ishland/c2me/rewrites/chunk_serializer/common/NbtWriter;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/Chunk;getPackedBlockEntityNbt(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/registry/RegistryWrapper$WrapperLookup;)Lnet/minecraft/nbt/NbtCompound;"))
     private static NbtCompound onChunkGetPackedBlockEntityNbt(Chunk chunk, BlockPos pos, RegistryWrapper.WrapperLookup wrapperLookup) {
         final AsyncSerializationManager.Scope scope = AsyncSerializationManager.getScope(chunk.getPos());
         if (scope == null) return chunk.getPackedBlockEntityNbt(pos, wrapperLookup);
@@ -52,12 +39,12 @@ public class MixinChunkSerializer {
         } else {
             final NbtCompound nbtCompound = scope.pendingBlockEntityNbtsPacked.get(pos);
             if (nbtCompound != null && chunk instanceof WorldChunk) nbtCompound.putBoolean("keepPacked", true);
-            if (nbtCompound == null && AsyncSerializationManager.DEBUG) LOGGER.warn("Block Entity at {} for block {} doesn't exist", pos, chunk.getBlockState(pos).getBlock());
+//            if (nbtCompound == null) LOGGER.warn("Block Entity at {} for block {} doesn't exist", pos, chunk.getBlockState(pos).getBlock());
             return nbtCompound;
         }
     }
 
-    @Redirect(method = "serialize", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/light/LightingProvider;get(Lnet/minecraft/world/LightType;)Lnet/minecraft/world/chunk/light/ChunkLightingView;"))
+    @Redirect(method = "Lcom/ishland/c2me/rewrites/chunk_serializer/common/ChunkDataSerializer;writeSectionDataVanilla(Lcom/ishland/c2me/rewrites/chunk_serializer/common/NbtWriter;Lnet/minecraft/world/chunk/Chunk;Lnet/minecraft/util/math/ChunkPos;[Lcom/ishland/c2me/base/mixin/access/IChunkSection;Lnet/minecraft/world/chunk/light/LightingProvider;Lnet/minecraft/registry/Registry;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/light/LightingProvider;get(Lnet/minecraft/world/LightType;)Lnet/minecraft/world/chunk/light/ChunkLightingView;"))
     private static ChunkLightingView onLightingProviderGet(LightingProvider lightingProvider, LightType lightType) {
         final AsyncSerializationManager.Scope scope = AsyncSerializationManager.getScope(null);
         return scope != null ? scope.lighting.get(lightType) : lightingProvider.get(lightType);
