@@ -9,6 +9,7 @@ loom {
             server()
             runDir project.getProjectDir().toPath().relativize(project.getBuildDir().toPath()).resolve("testServer").toString()
             vmArgs "-Dc2me.base.config.override.asyncScheduling.enabled=true",
+                    "-Dc2me.base.config.override.ioSystem.replaceImpl=true",
                     "-Dc2me.base.config.override.ioSystem.gcFreeChunkSerializer=true",
                     "-Dcom.ishland.c2me.mixin.doAudit=true"
             if (System.getenv("GITHUB_WORKFLOW") != null) {

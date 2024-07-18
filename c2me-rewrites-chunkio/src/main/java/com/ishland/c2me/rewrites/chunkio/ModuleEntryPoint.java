@@ -7,6 +7,6 @@ public class ModuleEntryPoint {
     private static final boolean enabled = new ConfigSystem.ConfigAccessor()
             .key("ioSystem.replaceImpl")
             .comment("Whether to use the optimized implementation of IO system")
-            .getBoolean(false, false);
+            .getBoolean(true, false);
 
 }
