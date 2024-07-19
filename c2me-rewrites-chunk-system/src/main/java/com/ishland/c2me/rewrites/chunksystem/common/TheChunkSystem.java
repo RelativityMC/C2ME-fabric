@@ -4,6 +4,7 @@ import com.ishland.c2me.base.common.GlobalExecutors;
 import com.ishland.c2me.base.common.scheduler.SchedulingManager;
 import com.ishland.c2me.base.mixin.access.IThreadedAnvilChunkStorage;
 import com.ishland.flowsched.scheduler.DaemonizedStatusAdvancingScheduler;
+import com.ishland.flowsched.scheduler.ExceptionHandlingAction;
 import com.ishland.flowsched.scheduler.ItemHolder;
 import com.ishland.flowsched.scheduler.ItemStatus;
 import com.ishland.flowsched.scheduler.KeyStatusPair;
@@ -16,10 +17,14 @@ import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ServerChunkLoadingManager;
 import net.minecraft.util.collection.BoundedRegionArray;
 import net.minecraft.util.math.ChunkPos;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.ThreadFactory;
 
 public class TheChunkSystem extends DaemonizedStatusAdvancingScheduler<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> {
+
+    private final Logger LOGGER;
 
     private final Long2IntMap managedTickets = Long2IntMaps.synchronize(new Long2IntOpenHashMap());
     private final SchedulingManager schedulingManager = new SchedulingManager(GlobalExecutors.asyncScheduler);
@@ -28,6 +33,7 @@ public class TheChunkSystem extends DaemonizedStatusAdvancingScheduler<ChunkPos,
     public TheChunkSystem(ThreadFactory threadFactory, ServerChunkLoadingManager tacs) {
         super(threadFactory);
         this.tacs = tacs;
+        this.LOGGER = LoggerFactory.getLogger("Chunk System of %s".formatted(((IThreadedAnvilChunkStorage) tacs).getWorld().getRegistryKey().getValue()));
         managedTickets.defaultReturnValue(NewChunkStatus.vanillaLevelToStatus.length - 1);
     }
 
@@ -52,6 +58,16 @@ public class TheChunkSystem extends DaemonizedStatusAdvancingScheduler<ChunkPos,
 
         return new ChunkLoadingContext(holder, this.tacs, this.schedulingManager, BoundedRegionArray.create(holder.getKey().x, holder.getKey().z, radius,
                 (x, z) -> this.getHolder(new ChunkPos(x, z)).getUserData().get()), dependencies);
+    }
+
+    @Override
+    protected ExceptionHandlingAction handleTransactionException(ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> holder, ItemStatus<ChunkPos, ChunkState, ChunkLoadingContext> nextStatus, boolean isUpgrade, Throwable throwable) {
+        if (isUpgrade) {
+            LOGGER.error("Error upgrading chunk {} to \"{}\"", holder.getKey(), nextStatus, throwable);
+        } else {
+            LOGGER.error("Error downgrading chunk {} to \"{}\"", holder.getKey(), nextStatus, throwable);
+        }
+        return ExceptionHandlingAction.MARK_BROKEN;
     }
 
     @Override

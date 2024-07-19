@@ -7,6 +7,7 @@ import com.ishland.c2me.base.mixin.access.IWorldChunk;
 import com.ishland.c2me.rewrites.chunksystem.common.ChunkLoadingContext;
 import com.ishland.c2me.rewrites.chunksystem.common.ChunkState;
 import com.ishland.c2me.rewrites.chunksystem.common.NewChunkStatus;
+import com.ishland.flowsched.scheduler.ItemHolder;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.server.world.ServerWorld;
@@ -83,7 +84,11 @@ public class ReadFromDisk extends NewChunkStatus {
                 loadedToWorld = false;
             }
 
-            ((IThreadedAnvilChunkStorage) context.tacs()).invokeSave(chunk);
+            if ((context.holder().getFlags() & ItemHolder.FLAG_BROKEN) == 0 || chunk instanceof WorldChunk) { // do not save broken ProtoChunks
+                ((IThreadedAnvilChunkStorage) context.tacs()).invokeSave(chunk);
+            } else {
+                LOGGER.warn("Not saving partially generated broken chunk {}", context.holder().getKey());
+            }
             if (loadedToWorld && chunk instanceof WorldChunk worldChunk) {
                 ((IThreadedAnvilChunkStorage) context.tacs()).getWorld().unloadEntities(worldChunk);
             }
@@ -95,5 +100,10 @@ public class ReadFromDisk extends NewChunkStatus {
 
             context.holder().getItem().set(new ChunkState(null));
         }, ((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor());
+    }
+
+    @Override
+    public String toString() {
+        return "minecraft:empty";
     }
 }

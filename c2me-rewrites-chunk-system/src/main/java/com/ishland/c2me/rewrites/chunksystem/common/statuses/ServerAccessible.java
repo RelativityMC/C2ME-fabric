@@ -101,4 +101,9 @@ public class ServerAccessible extends NewChunkStatus {
     public KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] getRelativeDependencies(ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, ?> holder) {
         return deps;
     }
+
+    @Override
+    public String toString() {
+        return "minecraft:full, Border";
+    }
 }

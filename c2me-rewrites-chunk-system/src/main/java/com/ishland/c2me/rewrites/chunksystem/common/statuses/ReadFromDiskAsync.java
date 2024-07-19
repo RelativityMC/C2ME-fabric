@@ -12,13 +12,13 @@ import com.ishland.c2me.base.mixin.access.IVersionedChunkStorage;
 import com.ishland.c2me.base.mixin.access.IWorldChunk;
 import com.ishland.c2me.rewrites.chunksystem.common.ChunkLoadingContext;
 import com.ishland.c2me.rewrites.chunksystem.common.ChunkState;
-import com.ishland.c2me.rewrites.chunksystem.common.NewChunkStatus;
 import com.ishland.c2me.rewrites.chunksystem.common.async_chunkio.AsyncSerializationManager;
 import com.ishland.c2me.rewrites.chunksystem.common.async_chunkio.BlendingInfoUtil;
 import com.ishland.c2me.rewrites.chunksystem.common.async_chunkio.ChunkIoMainThreadTaskUtils;
 import com.ishland.c2me.rewrites.chunksystem.common.async_chunkio.Config;
 import com.ishland.c2me.rewrites.chunksystem.common.async_chunkio.ProtoChunkExtension;
 import com.ishland.c2me.rewrites.chunksystem.common.async_chunkio.SerializingRegionBasedStorageExtension;
+import com.ishland.flowsched.scheduler.ItemHolder;
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
@@ -28,7 +28,6 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.ChunkSerializer;
 import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.ChunkType;
 import net.minecraft.world.chunk.ProtoChunk;
 import net.minecraft.world.chunk.UpgradeData;
@@ -45,12 +44,12 @@ import java.util.concurrent.CompletionStage;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 
-public class ReadFromDiskAsync extends NewChunkStatus {
+public class ReadFromDiskAsync extends ReadFromDisk {
 
     private static final Logger LOGGER = LoggerFactory.getLogger("ReadFromDisk");
 
     public ReadFromDiskAsync(int ordinal) {
-        super(ordinal, ChunkStatus.EMPTY);
+        super(ordinal);
     }
 
     @Override
@@ -159,7 +158,12 @@ public class ReadFromDiskAsync extends NewChunkStatus {
                         worldChunk.setLoadedToWorld(false);
                     }
 
-                    return asyncSave(context.tacs(), chunk);
+                    if ((context.holder().getFlags() & ItemHolder.FLAG_BROKEN) == 0 || chunk instanceof WorldChunk) { // do not save broken ProtoChunks
+                        return asyncSave(context.tacs(), chunk);
+                    } else {
+                        LOGGER.warn("Not saving partially generated broken chunk {}", context.holder().getKey());
+                        return CompletableFuture.completedStage((Void) null);
+                    }
                 }, ((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor())
                 .thenCompose(Function.identity())
                 .thenAcceptAsync(unused -> {

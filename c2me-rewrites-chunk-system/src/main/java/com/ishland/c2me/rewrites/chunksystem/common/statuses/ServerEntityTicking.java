@@ -46,4 +46,9 @@ public class ServerEntityTicking extends NewChunkStatus {
     protected KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] getRelativeDependencies(ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, ?> holder) {
         return deps;
     }
+
+    @Override
+    public String toString() {
+        return "Entity Ticking";
+    }
 }

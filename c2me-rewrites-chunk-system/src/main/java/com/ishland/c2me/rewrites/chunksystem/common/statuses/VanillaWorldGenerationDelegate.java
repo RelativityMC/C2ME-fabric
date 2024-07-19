@@ -114,8 +114,6 @@ public class VanillaWorldGenerationDelegate extends NewChunkStatus {
 
     @Override
     public String toString() {
-        return "VanillaWorldGenerationDelegate{" +
-               "status=" + status +
-               '}';
+        return this.status.toString();
     }
 }
