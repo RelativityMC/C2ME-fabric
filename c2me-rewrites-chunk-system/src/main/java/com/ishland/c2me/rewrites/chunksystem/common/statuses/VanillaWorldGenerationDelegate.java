@@ -72,6 +72,9 @@ public class VanillaWorldGenerationDelegate extends NewChunkStatus {
 
     @Override
     public CompletionStage<Void> upgradeToThis(ChunkLoadingContext context) {
+//        if (context.holder().getKey().equals(new ChunkPos(100, 100)) && this.status == ChunkStatus.FEATURES) {
+//            throw new RuntimeException("boom");
+//        }
         final ChunkGenerationContext chunkGenerationContext = ((IThreadedAnvilChunkStorage) context.tacs()).getGenerationContext();
         Chunk chunk = context.holder().getItem().get().chunk();
         if (chunk.getStatus().isAtLeast(status)) {

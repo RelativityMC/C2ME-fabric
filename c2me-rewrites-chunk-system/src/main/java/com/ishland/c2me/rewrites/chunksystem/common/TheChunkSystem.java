@@ -12,14 +12,19 @@ import com.ishland.flowsched.util.Assertions;
 import it.unimi.dsi.fastutil.longs.Long2IntMap;
 import it.unimi.dsi.fastutil.longs.Long2IntMaps;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.WorldGenerationProgressListener;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ServerChunkLoadingManager;
+import net.minecraft.util.Util;
 import net.minecraft.util.collection.BoundedRegionArray;
+import net.minecraft.util.crash.CrashException;
+import net.minecraft.util.crash.ReportType;
 import net.minecraft.util.math.ChunkPos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.file.Path;
 import java.util.concurrent.ThreadFactory;
 
 public class TheChunkSystem extends DaemonizedStatusAdvancingScheduler<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> {
@@ -66,6 +71,13 @@ public class TheChunkSystem extends DaemonizedStatusAdvancingScheduler<ChunkPos,
             LOGGER.error("Error upgrading chunk {} to \"{}\"", holder.getKey(), nextStatus, throwable);
         } else {
             LOGGER.error("Error downgrading chunk {} to \"{}\"", holder.getKey(), nextStatus, throwable);
+        }
+        if (throwable instanceof CrashException crashException) {
+            final MinecraftServer server = ((IThreadedAnvilChunkStorage) this.tacs).getWorld().getServer();
+            server.execute(() -> {
+                final Path path = server.getRunDirectory().resolve("crash-reports").resolve("crash-" + Util.getFormattedCurrentTime() + "-server.txt");
+                crashException.getReport().writeToFile(path, ReportType.MINECRAFT_CHUNK_IO_ERROR_REPORT);
+            });
         }
         return ExceptionHandlingAction.MARK_BROKEN;
     }
