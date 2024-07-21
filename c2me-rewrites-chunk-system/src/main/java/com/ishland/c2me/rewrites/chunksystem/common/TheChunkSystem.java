@@ -137,8 +137,7 @@ public class TheChunkSystem extends DaemonizedStatusAdvancingScheduler<ChunkPos,
             if (oldStatus != newStatus) {
                 ChunkHolder vanillaHolder;
                 if (newStatus != this.getUnloadedStatus()) {
-                    final ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> holder = this.addTicket(new ChunkPos(pos), newStatus, () -> {
-                    });
+                    final ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> holder = this.addTicket(new ChunkPos(pos), newStatus, NO_OP);
                     vanillaHolder = holder.getUserData().get();
                 } else {
                     this.managedTickets.remove(pos);
