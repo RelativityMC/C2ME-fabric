@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
 
-@Mixin(World.class)
+@Mixin(value = World.class, priority = 1101)
 public class MixinWorld {
 
     @Shadow @Final public boolean isClient;
