@@ -1,5 +1,8 @@
 package com.ishland.c2me.rewrites.chunksystem.mixin;
 
+import com.ishland.c2me.base.mixin.access.IThreadedAnvilChunkStorage;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.OptionalChunk;
 import net.minecraft.server.world.ServerChunkLoadingManager;
@@ -12,8 +15,10 @@ import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.concurrent.CompletableFuture;
@@ -24,6 +29,9 @@ public abstract class MixinServerChunkManager {
     @Shadow @Final private Thread serverThread;
 
     @Shadow @Final public ServerChunkLoadingManager chunkLoadingManager;
+
+    @Unique
+    private long c2me$lastHolderUpdate = System.nanoTime();
 
     @Shadow
     protected abstract @Nullable ChunkHolder getChunkHolder(long pos);
@@ -42,6 +50,20 @@ public abstract class MixinServerChunkManager {
                 }
             }
         }
+    }
+
+    @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerChunkManager;updateChunks()Z", shift = At.Shift.AFTER))
+    private void updateHolderMapAfterTick(CallbackInfo ci) {
+        ((IThreadedAnvilChunkStorage) this.chunkLoadingManager).invokeUpdateHolderMap();
+    }
+
+    @WrapOperation(method = "updateChunks", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerChunkLoadingManager;updateHolderMap()Z"))
+    private boolean disableUpdateHolderMapOnTask(ServerChunkLoadingManager instance, Operation<Boolean> original) { // holder map only used for compatibility layer
+        if (System.nanoTime() - c2me$lastHolderUpdate > 50_000_000L) { // 50ms
+            c2me$lastHolderUpdate = System.nanoTime();
+            return original.call(instance);
+        }
+        return false;
     }
 
 }

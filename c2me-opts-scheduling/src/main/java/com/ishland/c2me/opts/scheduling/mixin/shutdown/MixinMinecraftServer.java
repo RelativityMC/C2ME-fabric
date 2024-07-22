@@ -14,9 +14,11 @@ public class MixinMinecraftServer {
     @Shadow
     private long tickStartTimeNanos;
 
+    @Shadow private long tickEndTimeNanos;
+
     @Inject(method = "shutdown", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;runTasksTillTickEnd()V", shift = At.Shift.BEFORE))
     private void shutdownBeforeRunTasks(CallbackInfo ci) {
-        this.tickStartTimeNanos = Util.getMeasuringTimeNano() + 50_000_000L; // 50ms
+        this.tickEndTimeNanos = this.tickStartTimeNanos = Util.getMeasuringTimeNano() + 50_000_000L; // 50ms
     }
 
 }
