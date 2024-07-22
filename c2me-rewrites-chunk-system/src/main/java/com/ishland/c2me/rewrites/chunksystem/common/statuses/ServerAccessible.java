@@ -93,6 +93,7 @@ public class ServerAccessible extends NewChunkStatus {
             ((IThreadedAnvilChunkStorage) context.tacs()).setChunkHolderListDirty(true);
 //            worldChunk.setLoadedToWorld(false);
 //            worldChunk.removeChunkTickSchedulers(((IThreadedAnvilChunkStorage) context.tacs()).getWorld());
+            worldChunk.setLevelTypeProvider(null);
             context.holder().getItem().set(new ChunkState(new WrapperProtoChunk(worldChunk, false)));
         }, ((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor());
     }
