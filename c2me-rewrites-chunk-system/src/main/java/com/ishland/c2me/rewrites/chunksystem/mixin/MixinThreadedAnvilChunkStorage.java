@@ -57,7 +57,17 @@ public class MixinThreadedAnvilChunkStorage {
     @Nullable
     public ChunkHolder getCurrentChunkHolder(long pos) {
         final ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> holder = this.newSystem.getHolder(new ChunkPos(pos));
-        return holder != null ? holder.getUserData().get() : null;
+        if (holder != null) {
+            synchronized (holder) {
+                if ((holder.getFlags() & ItemHolder.FLAG_REMOVED) != 0) {
+                    return null;
+                } else {
+                    return holder.getUserData().get();
+                }
+            }
+        } else {
+            return null;
+        }
     }
 
     /**
