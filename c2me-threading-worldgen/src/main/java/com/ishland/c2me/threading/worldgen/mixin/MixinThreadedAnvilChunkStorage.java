@@ -3,11 +3,11 @@ package com.ishland.c2me.threading.worldgen.mixin;
 import com.ishland.c2me.base.common.GlobalExecutors;
 import com.ishland.c2me.base.common.scheduler.ThreadLocalWorldGenSchedulingState;
 import com.ishland.c2me.threading.worldgen.common.Config;
+import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.datafixers.util.Either;
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;
-import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.thread.ThreadExecutor;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
@@ -24,7 +24,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
 import java.util.function.IntFunction;
 
 @Mixin(ThreadedAnvilChunkStorage.class)
@@ -51,17 +50,20 @@ public abstract class MixinThreadedAnvilChunkStorage {
         runnable.run();
     }
 
-    @Inject(method = "method_17225", at = @At("HEAD"))
-    private void captureUpgradingChunkHolder(ChunkPos chunkPos, ChunkHolder chunkHolder, ChunkStatus chunkStatus, Executor executor, List<Chunk> chunks, CallbackInfoReturnable<CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>>> cir) {
+    @Dynamic
+    @Inject(method = {"method_17225", "lambda$scheduleChunkGeneration$27"}, at = @At("HEAD"))
+    private void captureUpgradingChunkHolder(CallbackInfoReturnable<CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>>> cir, @Local(argsOnly = true) ChunkHolder chunkHolder) {
         ThreadLocalWorldGenSchedulingState.setChunkHolder(chunkHolder);
     }
 
-    @Inject(method = "method_17225", at = @At("RETURN"))
+    @Dynamic
+    @Inject(method = {"method_17225", "lambda$scheduleChunkGeneration$27"}, at = @At("RETURN"))
     private void resetUpgradingChunkHolder(CallbackInfoReturnable<CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>>> cir) {
         ThreadLocalWorldGenSchedulingState.clearChunkHolder();
     }
 
-    @Inject(method = "method_17225", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/crash/CrashReport;create(Ljava/lang/Throwable;Ljava/lang/String;)Lnet/minecraft/util/crash/CrashReport;", shift = At.Shift.BEFORE))
+    @Dynamic
+    @Inject(method = {"method_17225", "lambda$scheduleChunkGeneration$27"}, at = @At(value = "INVOKE", target = "Lnet/minecraft/util/crash/CrashReport;create(Ljava/lang/Throwable;Ljava/lang/String;)Lnet/minecraft/util/crash/CrashReport;", shift = At.Shift.BEFORE))
     private void resetUpgradingChunkHolderExceptionally(CallbackInfoReturnable<CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>>> cir) {
         ThreadLocalWorldGenSchedulingState.clearChunkHolder();
     }
