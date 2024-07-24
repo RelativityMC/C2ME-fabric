@@ -10,7 +10,6 @@ import com.ishland.flowsched.scheduler.ItemHolder;
 import com.ishland.flowsched.scheduler.KeyStatusPair;
 import net.minecraft.entity.EntityType;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.server.world.ChunkLevelType;
 import net.minecraft.server.world.ChunkLevels;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.ChunkPos;
@@ -66,8 +65,6 @@ public class ServerAccessible extends NewChunkStatus {
 
             ((IThreadedAnvilChunkStorage) context.tacs()).getCurrentChunkHolders().put(context.holder().getKey().toLong(), context.holder().getUserData().get());
             ((IThreadedAnvilChunkStorage) context.tacs()).setChunkHolderListDirty(true);
-
-            ((IThreadedAnvilChunkStorage) context.tacs()).invokeOnChunkStatusChange(context.holder().getKey(), ChunkLevelType.FULL);
         }, ((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor());
     }
 
@@ -98,7 +95,6 @@ public class ServerAccessible extends NewChunkStatus {
 //            worldChunk.removeChunkTickSchedulers(((IThreadedAnvilChunkStorage) context.tacs()).getWorld());
             worldChunk.setLevelTypeProvider(null);
             context.holder().getItem().set(new ChunkState(new WrapperProtoChunk(worldChunk, false)));
-            ((IThreadedAnvilChunkStorage) context.tacs()).invokeOnChunkStatusChange(context.holder().getKey(), ChunkLevelType.INACCESSIBLE);
         }, ((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor());
     }
 
