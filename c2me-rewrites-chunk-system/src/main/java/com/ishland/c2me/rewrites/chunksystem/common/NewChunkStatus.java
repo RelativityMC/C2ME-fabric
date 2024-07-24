@@ -16,7 +16,6 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.chunk.ChunkStatus;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.concurrent.CompletionStage;
 import java.util.stream.IntStream;
 
@@ -156,9 +155,13 @@ public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState,
     @SuppressWarnings("unchecked")
     @Override
     public final KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] getDependencies(ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, ?> holder) {
-        return Arrays.stream(this.getRelativeDependencies(holder))
-                .map(pair -> new KeyStatusPair<>(new ChunkPos(pair.key().x + holder.getKey().x, pair.key().z + holder.getKey().z), pair.status()))
-                .toArray(KeyStatusPair[]::new);
+        final KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] relativeDependencies = this.getRelativeDependencies(holder);
+        final KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] dependencies = new KeyStatusPair[relativeDependencies.length];
+        for (int i = 0; i < relativeDependencies.length; i++) {
+            final KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext> pair = relativeDependencies[i];
+            dependencies[i] = new KeyStatusPair<>(new ChunkPos(pair.key().x + holder.getKey().x, pair.key().z + holder.getKey().z), pair.status());
+        }
+        return dependencies;
     }
 
     protected KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] getRelativeDependencies(ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, ?> holder) {
