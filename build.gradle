@@ -39,15 +39,23 @@ archivesBaseName = "${project.archives_base_name}-mc${project.minecraft_version}
 
 clean.dependsOn gradle.includedBuild('FlowSched').task(':clean')
 
+allprojects {
+    repositories {
+        maven { url 'https://jitpack.io' }
+        maven {
+            url "https://maven.bawnorton.com/releases"
+            content {
+                includeGroup "com.bawnorton.mixinsquared"
+            }
+        }
+    }
+}
+
 configure (allprojects - project(":tests")) {
     if (project != project(":") && project.parent != project(":")) return
 
     apply plugin: 'fabric-loom'
     apply plugin: 'maven-publish'
-
-    repositories {
-        maven { url 'https://jitpack.io' }
-    }
 
     dependencies {
         //to change the versions see the gradle.properties file
@@ -128,6 +136,7 @@ configure (allprojects - project(":tests")) {
         implementation "com.electronwill.night-config:toml:${night_config_version}"
         implementation "org.threadly:threadly:${threadly_version}"
         implementation "net.objecthunter:exp4j:${exp4j_version}"
+        implementation annotationProcessor("com.bawnorton.mixinsquared:mixinsquared-fabric:${mixinsquared_version}")
         api "com.ishland.flowsched:flowsched"
     }
 }
@@ -156,6 +165,7 @@ dependencies {
     include implementation("com.electronwill.night-config:core:${night_config_version}")
     include implementation("org.threadly:threadly:${threadly_version}")
     include implementation("net.objecthunter:exp4j:${exp4j_version}")
+    include implementation(annotationProcessor("com.bawnorton.mixinsquared:mixinsquared-fabric:${mixinsquared_version}"))
     include "io.reactivex.rxjava3:rxjava:${rxjava_version}"
     include "org.reactivestreams:reactive-streams:${reactive_streams_version}"
 //    include implementation("com.ishland.flowsched:flowsched")

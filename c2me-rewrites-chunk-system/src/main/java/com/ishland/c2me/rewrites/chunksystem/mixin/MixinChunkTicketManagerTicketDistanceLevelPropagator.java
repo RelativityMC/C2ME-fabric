@@ -2,6 +2,7 @@ package com.ishland.c2me.rewrites.chunksystem.mixin;
 
 import it.unimi.dsi.fastutil.longs.Long2IntMap;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
+import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ChunkTicketManager;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -9,6 +10,7 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ChunkTicketManager.TicketDistanceLevelPropagator.class)
@@ -40,6 +42,11 @@ public class MixinChunkTicketManagerTicketDistanceLevelPropagator {
         } else {
             this.levels.put(id, level);
         }
+    }
+
+    @Redirect(method = "setLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ChunkHolder;getLevel()I"))
+    private int fakeLevel(ChunkHolder instance) {
+        return Integer.MAX_VALUE;
     }
 
 }
