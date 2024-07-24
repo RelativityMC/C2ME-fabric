@@ -169,6 +169,7 @@ public class ReadFromDiskAsync extends ReadFromDisk {
                 .thenCompose(Function.identity())
                 .thenAcceptAsync(unused -> {
                     Chunk chunk = context.holder().getItem().get().chunk();
+                    if (chunk instanceof WrapperProtoChunk protoChunk) chunk = protoChunk.getWrappedChunk();
                     if (loadedToWorld.get() && chunk instanceof WorldChunk worldChunk) {
                         ((IThreadedAnvilChunkStorage) context.tacs()).getWorld().unloadEntities(worldChunk);
                     }
