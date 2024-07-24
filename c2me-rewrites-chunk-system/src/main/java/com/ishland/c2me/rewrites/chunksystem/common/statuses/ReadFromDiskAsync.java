@@ -19,6 +19,7 @@ import com.ishland.c2me.rewrites.chunksystem.common.async_chunkio.Config;
 import com.ishland.c2me.rewrites.chunksystem.common.async_chunkio.ProtoChunkExtension;
 import com.ishland.c2me.rewrites.chunksystem.common.async_chunkio.SerializingRegionBasedStorageExtension;
 import com.ishland.flowsched.scheduler.ItemHolder;
+import com.ishland.flowsched.scheduler.KeyStatusPair;
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
@@ -214,5 +215,15 @@ public class ReadFromDiskAsync extends ReadFromDisk {
                         }, ((IThreadedAnvilChunkStorage) tacs).getMainThreadExecutor());
                     });
         }
+    }
+
+    @Override
+    public KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] getDependenciesToRemove(ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, ?> holder) {
+        return EMPTY_DEPENDENCIES;
+    }
+
+    @Override
+    public KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] getDependenciesToAdd(ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, ?> holder) {
+        return EMPTY_DEPENDENCIES;
     }
 }

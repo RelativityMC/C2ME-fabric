@@ -11,6 +11,7 @@ import com.ishland.flowsched.executor.LockToken;
 import com.ishland.flowsched.scheduler.ItemHolder;
 import com.ishland.flowsched.scheduler.KeyStatusPair;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkGenerationContext;
@@ -18,13 +19,20 @@ import net.minecraft.world.chunk.ChunkGenerationStep;
 import net.minecraft.world.chunk.ChunkGenerationSteps;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.GenerationDependencies;
+import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Supplier;
 
 public class VanillaWorldGenerationDelegate extends NewChunkStatus {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger("VanillaWorldGenerationDelegate");
 
     private static KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] getDependencyFromStep(ChunkGenerationStep step) {
         ArrayList<KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>> deps = new ArrayList<>();
@@ -60,6 +68,10 @@ public class VanillaWorldGenerationDelegate extends NewChunkStatus {
     private final ChunkStatus status;
     private final KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] genDeps;
     private final KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] loadDeps;
+    @Nullable
+    private final KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] toRemove;
+    @Nullable
+    private final KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] toAdd;
 
     public VanillaWorldGenerationDelegate(int ordinal, ChunkStatus status) {
         super(ordinal, status);
@@ -68,6 +80,25 @@ public class VanillaWorldGenerationDelegate extends NewChunkStatus {
         final ChunkGenerationStep loadStep = ChunkGenerationSteps.LOADING.get(status);
         this.genDeps = getDependencyFromStep(genStep);
         this.loadDeps = getDependencyFromStep(loadStep);
+
+        if (this.genDeps.length != this.loadDeps.length) {
+            ObjectOpenHashSet<KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>> toRemove = new ObjectOpenHashSet<>(genDeps);
+            toRemove.removeAll(List.of(loadDeps));
+            this.toRemove = toRemove.toArray(KeyStatusPair[]::new);
+
+            ObjectOpenHashSet<KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>> toAdd = new ObjectOpenHashSet<>(loadDeps);
+            toAdd.removeAll(List.of(genDeps));
+            this.toAdd = toAdd.toArray(KeyStatusPair[]::new);
+        } else {
+            if (Arrays.equals(this.genDeps, this.loadDeps)) {
+                this.toRemove = EMPTY_DEPENDENCIES;
+                this.toAdd = EMPTY_DEPENDENCIES;
+            } else {
+                LOGGER.warn("VanillaWorldGenerationDelegate with status {} has the same dependencies length for generation and loading", status);
+                this.toRemove = null;
+                this.toAdd = null;
+            }
+        }
     }
 
     @Override
@@ -105,14 +136,44 @@ public class VanillaWorldGenerationDelegate extends NewChunkStatus {
     }
 
     @Override
-    public KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] getRelativeDependencies(ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, ?> holder) {
+    public KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] getDependencies(ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, ?> holder) {
         final Chunk chunk = holder.getItem().get().chunk();
         if (chunk == null) return genDeps;
         if (chunk.getStatus().isAtLeast(status)) {
-            return loadDeps;
+            return relativeToAbsoluteDependencies(holder, loadDeps);
         } else {
-            return genDeps;
+            return relativeToAbsoluteDependencies(holder, genDeps);
         }
+    }
+
+    @Override
+    public KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] getDependenciesToRemove(ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, ?> holder) {
+        if (this.toRemove == null) return super.getDependenciesToRemove(holder);
+        final KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] curDep = holder.getDependencies(this);
+        if (curDep.length == this.loadDeps.length) return EMPTY_DEPENDENCIES;
+        if (curDep.length == this.genDeps.length) {
+            final Chunk chunk = holder.getItem().get().chunk();
+            if (chunk == null) return EMPTY_DEPENDENCIES;
+            if (!chunk.getStatus().isAtLeast(status)) return EMPTY_DEPENDENCIES;
+            return relativeToAbsoluteDependencies(holder, toRemove);
+        }
+        LOGGER.warn("Suspicious dependencies length for VanillaWorldGenerationDelegate with status {} on holder {}", this.status, holder.getKey());
+        return super.getDependenciesToRemove(holder);
+    }
+
+    @Override
+    public KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] getDependenciesToAdd(ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, ?> holder) {
+        if (this.toAdd == null) return super.getDependenciesToAdd(holder);
+        final KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] curDep = holder.getDependencies(this);
+        if (curDep.length == this.loadDeps.length) return EMPTY_DEPENDENCIES;
+        if (curDep.length == this.genDeps.length) {
+            final Chunk chunk = holder.getItem().get().chunk();
+            if (chunk == null) return EMPTY_DEPENDENCIES;
+            if (!chunk.getStatus().isAtLeast(status)) return EMPTY_DEPENDENCIES;
+            return relativeToAbsoluteDependencies(holder, toAdd);
+        }
+        LOGGER.warn("Suspicious dependencies length for VanillaWorldGenerationDelegate with status {} on holder {}", this.status, holder.getKey());
+        return super.getDependenciesToAdd(holder);
     }
 
     @Override

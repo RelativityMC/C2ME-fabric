@@ -154,17 +154,17 @@ public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState,
 
     @SuppressWarnings("unchecked")
     @Override
-    public final KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] getDependencies(ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, ?> holder) {
-        final KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] relativeDependencies = this.getRelativeDependencies(holder);
+    public KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] getDependencies(ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, ?> holder) {
+        return EMPTY_DEPENDENCIES;
+    }
+
+    protected static KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] relativeToAbsoluteDependencies(ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, ?> holder, KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] relativeDependencies) {
+        if (relativeDependencies.length == 0) return EMPTY_DEPENDENCIES;
         final KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] dependencies = new KeyStatusPair[relativeDependencies.length];
         for (int i = 0; i < relativeDependencies.length; i++) {
             final KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext> pair = relativeDependencies[i];
             dependencies[i] = new KeyStatusPair<>(new ChunkPos(pair.key().x + holder.getKey().x, pair.key().z + holder.getKey().z), pair.status());
         }
         return dependencies;
-    }
-
-    protected KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] getRelativeDependencies(ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, ?> holder) {
-        return new KeyStatusPair[0];
     }
 }
