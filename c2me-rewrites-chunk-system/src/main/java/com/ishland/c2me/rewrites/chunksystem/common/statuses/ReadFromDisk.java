@@ -11,6 +11,7 @@ import com.ishland.flowsched.scheduler.ItemHolder;
 import com.ishland.flowsched.scheduler.KeyStatusPair;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.registry.RegistryKeys;
+import net.minecraft.server.WorldGenerationProgressListener;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.ChunkSerializer;
@@ -99,6 +100,11 @@ public class ReadFromDisk extends NewChunkStatus {
             ((IThreadedAnvilChunkStorage) context.tacs()).getLightingProvider().tick();
             ((IThreadedAnvilChunkStorage) context.tacs()).getWorldGenerationProgressListener().setChunkStatus(chunk.getPos(), null);
             ((IThreadedAnvilChunkStorage) context.tacs()).getChunkToNextSaveTimeMs().remove(chunk.getPos().toLong());
+
+            final WorldGenerationProgressListener listener = ((IThreadedAnvilChunkStorage) context.tacs()).getWorldGenerationProgressListener();
+            if (listener != null) {
+                listener.setChunkStatus(context.holder().getKey(), null);
+            }
 
             context.holder().getItem().set(new ChunkState(null));
         }, ((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor());

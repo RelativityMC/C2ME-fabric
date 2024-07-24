@@ -106,10 +106,6 @@ public class TheChunkSystem extends DaemonizedStatusAdvancingScheduler<ChunkPos,
     @Override
     protected void onItemRemoval(ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> holder) {
         super.onItemRemoval(holder);
-        final WorldGenerationProgressListener listener = ((IThreadedAnvilChunkStorage) this.tacs).getWorldGenerationProgressListener();
-        if (listener != null) {
-            listener.setChunkStatus(holder.getKey(), null);
-        }
     }
 
     @Override
