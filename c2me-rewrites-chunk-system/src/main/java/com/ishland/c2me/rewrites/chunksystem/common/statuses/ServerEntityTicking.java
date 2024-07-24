@@ -1,10 +1,12 @@
 package com.ishland.c2me.rewrites.chunksystem.common.statuses;
 
+import com.ishland.c2me.base.mixin.access.IThreadedAnvilChunkStorage;
 import com.ishland.c2me.rewrites.chunksystem.common.ChunkLoadingContext;
 import com.ishland.c2me.rewrites.chunksystem.common.ChunkState;
 import com.ishland.c2me.rewrites.chunksystem.common.NewChunkStatus;
 import com.ishland.flowsched.scheduler.ItemHolder;
 import com.ishland.flowsched.scheduler.KeyStatusPair;
+import net.minecraft.server.world.ChunkLevelType;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.chunk.ChunkStatus;
 
@@ -34,12 +36,16 @@ public class ServerEntityTicking extends NewChunkStatus {
 
     @Override
     public CompletionStage<Void> upgradeToThis(ChunkLoadingContext context) {
-        return CompletableFuture.completedStage(null);
+        return CompletableFuture.runAsync(() -> {
+            ((IThreadedAnvilChunkStorage) context.tacs()).invokeOnChunkStatusChange(context.holder().getKey(), ChunkLevelType.ENTITY_TICKING);
+        }, ((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor());
     }
 
     @Override
     public CompletionStage<Void> downgradeFromThis(ChunkLoadingContext context) {
-        return CompletableFuture.completedStage(null);
+        return CompletableFuture.runAsync(() -> {
+            ((IThreadedAnvilChunkStorage) context.tacs()).invokeOnChunkStatusChange(context.holder().getKey(), ChunkLevelType.BLOCK_TICKING);
+        }, ((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor());
     }
 
     @Override
