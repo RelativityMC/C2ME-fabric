@@ -9,6 +9,7 @@ import com.ishland.flowsched.scheduler.ItemHolder;
 import com.ishland.flowsched.scheduler.ItemStatus;
 import com.ishland.flowsched.scheduler.KeyStatusPair;
 import com.ishland.flowsched.util.Assertions;
+import io.netty.util.internal.PlatformDependent;
 import io.reactivex.rxjava3.core.Scheduler;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import it.unimi.dsi.fastutil.longs.Long2IntMap;
@@ -27,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
+import java.util.Queue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadFactory;
 
@@ -45,6 +47,16 @@ public class TheChunkSystem extends DaemonizedStatusAdvancingScheduler<ChunkPos,
         this.tacs = tacs;
         this.LOGGER = LoggerFactory.getLogger("Chunk System of %s".formatted(((IThreadedAnvilChunkStorage) tacs).getWorld().getRegistryKey().getValue()));
         managedTickets.defaultReturnValue(NewChunkStatus.vanillaLevelToStatus.length - 1);
+    }
+
+    @Override
+    protected Queue<ChunkPos> createPendingUpdatesQueue() {
+        return PlatformDependent.newMpscQueue();
+    }
+
+    @Override
+    protected Queue<Runnable> createTaskQueue() {
+        return PlatformDependent.newMpscQueue();
     }
 
     @Override
