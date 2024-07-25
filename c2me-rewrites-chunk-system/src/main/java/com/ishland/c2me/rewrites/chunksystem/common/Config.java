@@ -11,4 +11,8 @@ public class Config {
                     """)
             .getBoolean(true, false);
 
+    public static void init() {
+        // intentionally empty
+    }
+
 }
