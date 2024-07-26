@@ -14,6 +14,7 @@ import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
 import org.apache.commons.lang3.mutable.MutableDouble;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -131,7 +132,7 @@ public abstract class MixinAquiferSamplerImpl {
 
     /**
      * @author ishland
-     * @reason make C2 happier by splitting method into three
+     * @reason make C2 happier by splitting method into four
      */
     @Overwrite
     public BlockState apply(DensityFunction.NoisePos pos, double density) {
@@ -149,26 +150,31 @@ public abstract class MixinAquiferSamplerImpl {
             } else {
                 final Result1 result = aquiferExtracted$getResult1(i, j, k);
 
-                AquiferSampler.FluidLevel fluidLevel2 = this.getWaterLevel(result.r());
-                double d = maxDistance(result.o(), result.p());
-                BlockState blockState = fluidLevel2.getBlockState(j);
-                if (d <= 0.0) {
-                    this.needsFluidTick = d >= NEEDS_FLUID_TICK_DISTANCE_THRESHOLD;
-                    return blockState;
-                } else if (blockState.isOf(Blocks.WATER) && this.fluidLevelSampler.getFluidLevel(i, j - 1, k).getBlockState(j - 1).isOf(Blocks.LAVA)) {
-                    this.needsFluidTick = true;
-                    return blockState;
-                } else {
-                    MutableDouble mutableDouble = new MutableDouble(Double.NaN);
-                    AquiferSampler.FluidLevel fluidLevel3 = this.getWaterLevel(result.s());
-                    double e = d * this.calculateDensity(pos, mutableDouble, fluidLevel2, fluidLevel3);
-                    if (density + e > 0.0) {
-                        this.needsFluidTick = false;
-                        return null;
-                    } else {
-                        return aquiferExtracted$getFinalBlockState(pos, density, result, d, mutableDouble, fluidLevel2, fluidLevel3, blockState);
-                    }
-                }
+                return aquiferExtracted$applyPost(pos, density, result, j, i, k);
+            }
+        }
+    }
+
+    @Unique
+    private @Nullable BlockState aquiferExtracted$applyPost(DensityFunction.NoisePos pos, double density, Result1 result, int j, int i, int k) {
+        AquiferSampler.FluidLevel fluidLevel2 = this.getWaterLevel(result.r());
+        double d = maxDistance(result.o(), result.p());
+        BlockState blockState = fluidLevel2.getBlockState(j);
+        if (d <= 0.0) {
+            this.needsFluidTick = d >= NEEDS_FLUID_TICK_DISTANCE_THRESHOLD;
+            return blockState;
+        } else if (blockState.isOf(Blocks.WATER) && this.fluidLevelSampler.getFluidLevel(i, j - 1, k).getBlockState(j - 1).isOf(Blocks.LAVA)) {
+            this.needsFluidTick = true;
+            return blockState;
+        } else {
+            MutableDouble mutableDouble = new MutableDouble(Double.NaN);
+            AquiferSampler.FluidLevel fluidLevel3 = this.getWaterLevel(result.s());
+            double e = d * this.calculateDensity(pos, mutableDouble, fluidLevel2, fluidLevel3);
+            if (density + e > 0.0) {
+                this.needsFluidTick = false;
+                return null;
+            } else {
+                return aquiferExtracted$getFinalBlockState(pos, density, result, d, mutableDouble, fluidLevel2, fluidLevel3, blockState);
             }
         }
     }
