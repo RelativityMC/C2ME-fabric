@@ -39,7 +39,15 @@ public class TheChunkSystem extends DaemonizedStatusAdvancingScheduler<ChunkPos,
     private final Long2IntMap managedTickets = Long2IntMaps.synchronize(new Long2IntOpenHashMap());
     private final SchedulingManager schedulingManager = new SchedulingManager(GlobalExecutors.asyncScheduler);
     private final Executor backingBackgroundExecutor = GlobalExecutors.prioritizedScheduler.executor(15);
-    private final Scheduler backgroundScheduler = Schedulers.from(this.backingBackgroundExecutor);
+    private Queue<Runnable> backgroundTaskQueue = PlatformDependent.newSpscQueue();
+    private final Executor backgroundExecutor = command -> {
+        if (Thread.currentThread() != this.thread) {
+            command.run();
+        } else {
+            backgroundTaskQueue.add(command);
+        }
+    };
+    private final Scheduler backgroundScheduler = Schedulers.from(this.backgroundExecutor);
     private final ServerChunkLoadingManager tacs;
 
     public TheChunkSystem(ThreadFactory threadFactory, ServerChunkLoadingManager tacs) {
@@ -47,6 +55,7 @@ public class TheChunkSystem extends DaemonizedStatusAdvancingScheduler<ChunkPos,
         this.tacs = tacs;
         this.LOGGER = LoggerFactory.getLogger("Chunk System of %s".formatted(((IThreadedAnvilChunkStorage) tacs).getWorld().getRegistryKey().getValue()));
         managedTickets.defaultReturnValue(NewChunkStatus.vanillaLevelToStatus.length - 1);
+        this.thread.start();
     }
 
     @Override
@@ -61,7 +70,7 @@ public class TheChunkSystem extends DaemonizedStatusAdvancingScheduler<ChunkPos,
 
     @Override
     protected Executor getBackgroundExecutor() {
-        return this.backingBackgroundExecutor;
+        return this.backgroundExecutor;
     }
 
     @Override
@@ -180,5 +189,25 @@ public class TheChunkSystem extends DaemonizedStatusAdvancingScheduler<ChunkPos,
                 return null;
             }
         }
+    }
+
+    @Override
+    public boolean tick() {
+        boolean tick = super.tick();
+        if (!this.backgroundTaskQueue.isEmpty()) {
+            Queue<Runnable> queue = this.backgroundTaskQueue;
+            this.backgroundTaskQueue = PlatformDependent.newSpscQueue();
+            this.backingBackgroundExecutor.execute(() -> {
+                Runnable runnable;
+                while ((runnable = queue.poll()) != null) {
+                    try {
+                        runnable.run();
+                    } catch (Throwable t) {
+                        t.printStackTrace();
+                    }
+                }
+            });
+        }
+        return tick;
     }
 }
