@@ -1,7 +1,8 @@
 package com.ishland.c2me.rewrites.chunksystem.common.async_chunkio;
 
+import it.unimi.dsi.fastutil.Pair;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import net.minecraft.block.entity.BlockEntity;
+import it.unimi.dsi.fastutil.objects.Object2ReferenceLinkedOpenHashMap;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
@@ -17,14 +18,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayDeque;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 public class AsyncSerializationManager {
 
@@ -57,35 +52,28 @@ public class AsyncSerializationManager {
     public static class Scope {
         public final ChunkPos pos;
         public final Map<LightType, ChunkLightingView> lighting;
-        public final Set<BlockPos> blockEntityPositions;
-        public final Map<BlockPos, BlockEntity> blockEntities;
-        public final Map<BlockPos, NbtCompound> pendingBlockEntityNbtsPacked;
+        public final Map<BlockPos, NbtCompound> blockEntities;
         private final AtomicBoolean isOpen = new AtomicBoolean(false);
 
         @SuppressWarnings("unchecked")
         public Scope(Chunk chunk, ServerWorld world) {
             this.pos = chunk.getPos();
-            this.lighting = Arrays.stream(LightType.values()).map(type -> new CachedLightingView(world.getLightingProvider(), chunk.getPos(), type)).collect(Collectors.toMap(CachedLightingView::getLightType, Function.identity()));
-            this.blockEntityPositions = chunk.getBlockEntityPositions();
-            this.blockEntities = this.blockEntityPositions.stream().map(chunk::getBlockEntity).filter(Objects::nonNull).filter(blockEntity -> !blockEntity.isRemoved()).collect(Collectors.toMap(BlockEntity::getPos, Function.identity()));
-            {
-                Map<BlockPos, NbtCompound> pendingBlockEntitiesNbtPacked = new Object2ObjectOpenHashMap<>();
-                for (BlockPos blockPos : this.blockEntityPositions) {
-                    final NbtCompound blockEntityNbt = chunk.getBlockEntityNbt(blockPos);
-                    if (blockEntityNbt == null) continue;
-                    final NbtCompound copy = blockEntityNbt.copy();
-                    copy.putBoolean("keepPacked", true);
-                    pendingBlockEntitiesNbtPacked.put(blockPos, copy);
-                }
-                this.pendingBlockEntityNbtsPacked = pendingBlockEntitiesNbtPacked;
-            }
-            final HashSet<BlockPos> blockPos = new HashSet<>(this.blockEntities.keySet());
-            blockPos.addAll(this.pendingBlockEntityNbtsPacked.keySet());
-            if (this.blockEntityPositions.size() != blockPos.size()) {
-                if (DEBUG) {
-                    LOGGER.warn("Block entities size mismatch! expected {} but got {}", this.blockEntityPositions.size(), blockPos.size());
+            Map<LightType, ChunkLightingView> lighting = new Object2ObjectOpenHashMap<>();
+            for (LightType type : LightType.values()) {
+                CachedLightingView cachedLightingView = new CachedLightingView(world.getLightingProvider(), chunk.getPos(), type);
+                if (lighting.put(cachedLightingView.getLightType(), cachedLightingView) != null) {
+                    throw new IllegalStateException("Duplicate key");
                 }
             }
+            this.lighting = lighting;
+            Map<BlockPos, NbtCompound> blockEntities = new Object2ReferenceLinkedOpenHashMap<>();
+            for (BlockPos blockPos : chunk.getBlockEntityPositions()) {
+                Pair<BlockPos, NbtCompound> blockPosNbtCompoundPair = Pair.of(blockPos, chunk.getPackedBlockEntityNbt(blockPos, world.getRegistryManager()));
+                if (blockEntities.put(blockPosNbtCompoundPair.left(), blockPosNbtCompoundPair.right()) != null) {
+                    LOGGER.warn("Duplicate block entity at {} in chunk {}", blockPos, chunk.getPos());
+                }
+            }
+            this.blockEntities = blockEntities;
         }
 
         public void open() {
