@@ -64,7 +64,8 @@ configure (allprojects - project(":tests")) {
         modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
         [
-                "fabric-networking-api-v1"
+                "fabric-networking-api-v1",
+                "fabric-lifecycle-events-v1",
         ].forEach {
             modCompileOnly(fabricApi.module(it, "${project.fabric_version}"))
         }

@@ -1,11 +1,13 @@
 package com.ishland.c2me.rewrites.chunksystem.common.statuses;
 
 import com.google.common.base.Preconditions;
+import com.ishland.c2me.base.common.config.ModStatuses;
 import com.ishland.c2me.base.mixin.access.IThreadedAnvilChunkStorage;
 import com.ishland.c2me.base.mixin.access.IWorldChunk;
 import com.ishland.c2me.rewrites.chunksystem.common.ChunkLoadingContext;
 import com.ishland.c2me.rewrites.chunksystem.common.ChunkState;
 import com.ishland.c2me.rewrites.chunksystem.common.NewChunkStatus;
+import com.ishland.c2me.rewrites.chunksystem.common.fapi.LifecycleEventInvoker;
 import com.ishland.flowsched.scheduler.ItemHolder;
 import com.ishland.flowsched.scheduler.KeyStatusPair;
 import net.minecraft.entity.EntityType;
@@ -55,13 +57,16 @@ public class ServerAccessible extends NewChunkStatus {
             final WorldChunk worldChunk = toFullChunk(protoChunk, serverWorld);
 
             worldChunk.setLevelTypeProvider(context.holder().getUserData().get()::getLevelType);
+            context.holder().getItem().set(new ChunkState(worldChunk));
             if (!((IWorldChunk) worldChunk).isLoadedToWorld()) {
                 worldChunk.loadEntities();
                 worldChunk.setLoadedToWorld(true);
                 worldChunk.updateAllBlockEntities();
                 worldChunk.addChunkTickSchedulers(serverWorld);
+                if (ModStatuses.fabric_lifecycle_events_v1) {
+                    LifecycleEventInvoker.invokeChunkLoaded(serverWorld, worldChunk);
+                }
             }
-            context.holder().getItem().set(new ChunkState(worldChunk));
 
             ((IThreadedAnvilChunkStorage) context.tacs()).getCurrentChunkHolders().put(context.holder().getKey().toLong(), context.holder().getUserData().get());
             ((IThreadedAnvilChunkStorage) context.tacs()).setChunkHolderListDirty(true);

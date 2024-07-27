@@ -1,5 +1,6 @@
 package com.ishland.c2me.rewrites.chunksystem.common.statuses;
 
+import com.ishland.c2me.base.common.config.ModStatuses;
 import com.ishland.c2me.base.mixin.access.IServerLightingProvider;
 import com.ishland.c2me.base.mixin.access.IThreadedAnvilChunkStorage;
 import com.ishland.c2me.base.mixin.access.IVersionedChunkStorage;
@@ -7,6 +8,7 @@ import com.ishland.c2me.base.mixin.access.IWorldChunk;
 import com.ishland.c2me.rewrites.chunksystem.common.ChunkLoadingContext;
 import com.ishland.c2me.rewrites.chunksystem.common.ChunkState;
 import com.ishland.c2me.rewrites.chunksystem.common.NewChunkStatus;
+import com.ishland.c2me.rewrites.chunksystem.common.fapi.LifecycleEventInvoker;
 import com.ishland.flowsched.scheduler.ItemHolder;
 import com.ishland.flowsched.scheduler.KeyStatusPair;
 import net.minecraft.nbt.NbtElement;
@@ -85,6 +87,10 @@ public class ReadFromDisk extends NewChunkStatus {
                 worldChunk.setLoadedToWorld(false);
             } else {
                 loadedToWorld = false;
+            }
+
+            if (loadedToWorld && ModStatuses.fabric_lifecycle_events_v1 && chunk instanceof WorldChunk worldChunk) {
+                LifecycleEventInvoker.invokeChunkUnload(((IThreadedAnvilChunkStorage) context.tacs()).getWorld(), worldChunk);
             }
 
             if ((context.holder().getFlags() & ItemHolder.FLAG_BROKEN) == 0 || chunk instanceof WorldChunk) { // do not save broken ProtoChunks

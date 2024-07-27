@@ -1,6 +1,7 @@
 package com.ishland.c2me.rewrites.chunksystem.common.statuses;
 
 import com.ishland.c2me.base.common.GlobalExecutors;
+import com.ishland.c2me.base.common.config.ModStatuses;
 import com.ishland.c2me.base.common.registry.SerializerAccess;
 import com.ishland.c2me.base.common.scheduler.IVanillaChunkManager;
 import com.ishland.c2me.base.common.theinterface.IDirectStorage;
@@ -18,6 +19,7 @@ import com.ishland.c2me.rewrites.chunksystem.common.async_chunkio.ChunkIoMainThr
 import com.ishland.c2me.rewrites.chunksystem.common.async_chunkio.Config;
 import com.ishland.c2me.rewrites.chunksystem.common.async_chunkio.ProtoChunkExtension;
 import com.ishland.c2me.rewrites.chunksystem.common.async_chunkio.SerializingRegionBasedStorageExtension;
+import com.ishland.c2me.rewrites.chunksystem.common.fapi.LifecycleEventInvoker;
 import com.ishland.flowsched.scheduler.ItemHolder;
 import com.ishland.flowsched.scheduler.KeyStatusPair;
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
@@ -157,6 +159,10 @@ public class ReadFromDiskAsync extends ReadFromDisk {
                     if (chunk instanceof WorldChunk worldChunk) {
                         loadedToWorld.set(((IWorldChunk) worldChunk).isLoadedToWorld());
                         worldChunk.setLoadedToWorld(false);
+                    }
+
+                    if (loadedToWorld.get() && ModStatuses.fabric_lifecycle_events_v1 && chunk instanceof WorldChunk worldChunk) {
+                        LifecycleEventInvoker.invokeChunkUnload(((IThreadedAnvilChunkStorage) context.tacs()).getWorld(), worldChunk);
                     }
 
                     if ((context.holder().getFlags() & ItemHolder.FLAG_BROKEN) == 0 || chunk instanceof WorldChunk) { // do not save broken ProtoChunks
