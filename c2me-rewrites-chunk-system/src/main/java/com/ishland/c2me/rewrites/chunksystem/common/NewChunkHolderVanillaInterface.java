@@ -100,7 +100,8 @@ public class NewChunkHolderVanillaInterface extends ChunkHolder {
 
     @Override
     public CompletableFuture<OptionalChunk<Chunk>> load(ChunkStatus requestedStatus, ServerChunkLoadingManager chunkLoadingManager) {
-        return wrapOptionalChunkFuture(this.newHolder.getFutureForStatus(NewChunkStatus.fromVanillaStatus(requestedStatus)));
+        final CompletableFuture<Void> futureForStatus = this.newHolder.getFutureForStatus(NewChunkStatus.fromVanillaStatus(requestedStatus));
+        return requestedStatus == ChunkStatus.FULL ? wrapOptionalChunkFuture(futureForStatus) : wrapOptionalChunkProtoFuture(futureForStatus);
     }
 
     @Override
@@ -226,7 +227,8 @@ public class NewChunkHolderVanillaInterface extends ChunkHolder {
         List<Pair<ChunkStatus, CompletableFuture<OptionalChunk<Chunk>>>> list = new ArrayList<>();
 
         for (final ChunkStatus status : CHUNK_STATUSES) {
-            list.add(Pair.of(status, wrapOptionalChunkFuture(this.newHolder.getFutureForStatus(NewChunkStatus.fromVanillaStatus(status)))));
+            final CompletableFuture<Void> futureForStatus = this.newHolder.getFutureForStatus(NewChunkStatus.fromVanillaStatus(status));
+            list.add(Pair.of(status, status == ChunkStatus.FULL ? wrapOptionalChunkFuture(futureForStatus) : wrapOptionalChunkProtoFuture(futureForStatus)));
         }
 
         return list;
@@ -307,7 +309,8 @@ public class NewChunkHolderVanillaInterface extends ChunkHolder {
 
     @Override
     protected CompletableFuture<OptionalChunk<Chunk>> getOrCreateFuture(ChunkStatus status) {
-        return this.wrapOptionalChunkProtoFuture(this.newHolder.getFutureForStatus(NewChunkStatus.fromVanillaStatus(status)));
+        final CompletableFuture<Void> futureForStatus = this.newHolder.getFutureForStatus(NewChunkStatus.fromVanillaStatus(status));
+        return status == ChunkStatus.FULL ? this.wrapOptionalChunkFuture(futureForStatus) : this.wrapOptionalChunkProtoFuture(futureForStatus);
     }
 
     @Override
