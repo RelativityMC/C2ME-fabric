@@ -123,7 +123,9 @@ public class VanillaWorldGenerationDelegate extends NewChunkStatus {
         } else {
             final ChunkGenerationStep step = ChunkGenerationSteps.GENERATION.get(status);
 
-            return runTaskWithLock(chunk.getPos(), step.blockStateWriteRadius(), context.schedulingManager(),
+            int radius = Math.max(0, step.blockStateWriteRadius());
+            if (this.status == ChunkStatus.LIGHT) radius = 1;
+            return runTaskWithLock(chunk.getPos(), radius, context.schedulingManager(),
                     () -> step.run(chunkGenerationContext, context.chunks(), chunk)
                             .whenComplete((chunk1, throwable) -> {
                                 if (chunk1 != null) {
