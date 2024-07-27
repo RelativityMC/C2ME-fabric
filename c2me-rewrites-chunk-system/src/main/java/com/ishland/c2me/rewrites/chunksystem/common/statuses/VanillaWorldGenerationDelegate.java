@@ -106,14 +106,18 @@ public class VanillaWorldGenerationDelegate extends NewChunkStatus {
 //        if (context.holder().getKey().equals(new ChunkPos(100, 100)) && this.status == ChunkStatus.FEATURES) {
 //            throw new RuntimeException("boom");
 //        }
+        final ChunkState state = context.holder().getItem().get();
+        if (state.reachedStatus().isAtLeast(this.status)) {
+            return CompletableFuture.completedStage(null);
+        }
         final ChunkGenerationContext chunkGenerationContext = ((IThreadedAnvilChunkStorage) context.tacs()).getGenerationContext();
-        Chunk chunk = context.holder().getItem().get().chunk();
+        Chunk chunk = state.chunk();
         if (chunk.getStatus().isAtLeast(status)) {
             return ChunkGenerationSteps.LOADING.get(status)
                     .run(((IThreadedAnvilChunkStorage) context.tacs()).getGenerationContext(), context.chunks(), chunk)
                     .whenComplete((chunk1, throwable) -> {
                         if (chunk1 != null) {
-                            context.holder().getItem().set(new ChunkState(chunk1));
+                            context.holder().getItem().set(new ChunkState(chunk1, this.status));
                         }
                     }).thenAccept(__ -> {});
         } else {
@@ -123,7 +127,7 @@ public class VanillaWorldGenerationDelegate extends NewChunkStatus {
                     () -> step.run(chunkGenerationContext, context.chunks(), chunk)
                             .whenComplete((chunk1, throwable) -> {
                                 if (chunk1 != null) {
-                                    context.holder().getItem().set(new ChunkState(chunk1));
+                                    context.holder().getItem().set(new ChunkState(chunk1, this.status));
                                 }
                             }).thenAccept(__ -> {})
             );

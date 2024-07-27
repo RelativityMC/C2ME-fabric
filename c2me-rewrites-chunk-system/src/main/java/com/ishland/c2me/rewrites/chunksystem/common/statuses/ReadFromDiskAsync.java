@@ -31,6 +31,7 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.ChunkSerializer;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.ChunkType;
 import net.minecraft.world.chunk.ProtoChunk;
 import net.minecraft.world.chunk.UpgradeData;
@@ -146,7 +147,7 @@ public class ReadFromDiskAsync extends ReadFromDisk {
             LOGGER.error("Couldn't load chunk {}", context.holder().getKey(), throwable);
             return null;
         });
-        return future.thenAccept(chunk -> context.holder().getItem().set(new ChunkState(chunk)));
+        return future.thenAccept(chunk -> context.holder().getItem().set(new ChunkState(chunk, ChunkStatus.EMPTY)));
     }
 
     @Override
@@ -185,7 +186,7 @@ public class ReadFromDiskAsync extends ReadFromDisk {
                     ((IThreadedAnvilChunkStorage) context.tacs()).getWorldGenerationProgressListener().setChunkStatus(chunk.getPos(), null);
                     ((IThreadedAnvilChunkStorage) context.tacs()).getChunkToNextSaveTimeMs().remove(chunk.getPos().toLong());
 
-                    context.holder().getItem().set(new ChunkState(null));
+                    context.holder().getItem().set(new ChunkState(null, null));
                 }, ((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor());
     }
 

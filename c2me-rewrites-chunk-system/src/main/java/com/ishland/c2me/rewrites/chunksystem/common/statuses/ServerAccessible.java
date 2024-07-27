@@ -57,7 +57,7 @@ public class ServerAccessible extends NewChunkStatus {
             final WorldChunk worldChunk = toFullChunk(protoChunk, serverWorld);
 
             worldChunk.setLevelTypeProvider(context.holder().getUserData().get()::getLevelType);
-            context.holder().getItem().set(new ChunkState(worldChunk));
+            context.holder().getItem().set(new ChunkState(worldChunk, ChunkStatus.FULL));
             if (!((IWorldChunk) worldChunk).isLoadedToWorld()) {
                 worldChunk.loadEntities();
                 worldChunk.setLoadedToWorld(true);
@@ -99,7 +99,7 @@ public class ServerAccessible extends NewChunkStatus {
 //            worldChunk.setLoadedToWorld(false);
 //            worldChunk.removeChunkTickSchedulers(((IThreadedAnvilChunkStorage) context.tacs()).getWorld());
             worldChunk.setLevelTypeProvider(null);
-            context.holder().getItem().set(new ChunkState(new WrapperProtoChunk(worldChunk, false)));
+            context.holder().getItem().set(new ChunkState(new WrapperProtoChunk(worldChunk, false), ChunkStatus.FULL));
         }, ((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor());
     }
 

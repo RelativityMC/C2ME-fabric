@@ -72,7 +72,7 @@ public class ReadFromDisk extends NewChunkStatus {
                         return chunk;
                     }
                 })
-                .thenAccept(chunk -> context.holder().getItem().set(new ChunkState(chunk)));
+                .thenAccept(chunk -> context.holder().getItem().set(new ChunkState(chunk, ChunkStatus.EMPTY)));
     }
 
     @Override
@@ -112,7 +112,7 @@ public class ReadFromDisk extends NewChunkStatus {
                 listener.setChunkStatus(context.holder().getKey(), null);
             }
 
-            context.holder().getItem().set(new ChunkState(null));
+            context.holder().getItem().set(new ChunkState(null, null));
         }, ((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor());
     }
 
