@@ -4,10 +4,7 @@ import com.ishland.c2me.rewrites.chunksystem.common.async_chunkio.AsyncSerializa
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.LightType;
 import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.chunk.light.ChunkLightingView;
-import net.minecraft.world.chunk.light.LightingProvider;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.injection.At;
@@ -30,12 +27,6 @@ public class MixinChunkDataSerializer {
         final AsyncSerializationManager.Scope scope = AsyncSerializationManager.getScope(chunk.getPos());
         if (scope == null) return chunk.getPackedBlockEntityNbt(pos, wrapperLookup);
         return scope.blockEntities.get(pos);
-    }
-
-    @Redirect(method = "Lcom/ishland/c2me/rewrites/chunk_serializer/common/ChunkDataSerializer;writeSectionDataVanilla(Lcom/ishland/c2me/rewrites/chunk_serializer/common/NbtWriter;Lnet/minecraft/world/chunk/Chunk;Lnet/minecraft/util/math/ChunkPos;[Lcom/ishland/c2me/base/mixin/access/IChunkSection;Lnet/minecraft/world/chunk/light/LightingProvider;Lnet/minecraft/registry/Registry;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/light/LightingProvider;get(Lnet/minecraft/world/LightType;)Lnet/minecraft/world/chunk/light/ChunkLightingView;"))
-    private static ChunkLightingView onLightingProviderGet(LightingProvider lightingProvider, LightType lightType) {
-        final AsyncSerializationManager.Scope scope = AsyncSerializationManager.getScope(null);
-        return scope != null ? scope.lighting.get(lightType) : lightingProvider.get(lightType);
     }
 
 }

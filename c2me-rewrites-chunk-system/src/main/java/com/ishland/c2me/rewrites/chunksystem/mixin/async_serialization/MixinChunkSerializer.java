@@ -7,11 +7,8 @@ import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkSectionPos;
 import net.minecraft.world.ChunkSerializer;
-import net.minecraft.world.LightType;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkSection;
-import net.minecraft.world.chunk.light.ChunkLightingView;
-import net.minecraft.world.chunk.light.LightingProvider;
 import net.minecraft.world.poi.PointOfInterestStorage;
 import org.slf4j.Logger;
 import org.spongepowered.asm.mixin.Final;
@@ -43,12 +40,6 @@ public class MixinChunkSerializer {
         final AsyncSerializationManager.Scope scope = AsyncSerializationManager.getScope(chunk.getPos());
         if (scope == null) return chunk.getPackedBlockEntityNbt(pos, wrapperLookup);
         return scope.blockEntities.get(pos);
-    }
-
-    @Redirect(method = "serialize", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/light/LightingProvider;get(Lnet/minecraft/world/LightType;)Lnet/minecraft/world/chunk/light/ChunkLightingView;"))
-    private static ChunkLightingView onLightingProviderGet(LightingProvider lightingProvider, LightType lightType) {
-        final AsyncSerializationManager.Scope scope = AsyncSerializationManager.getScope(null);
-        return scope != null ? scope.lighting.get(lightType) : lightingProvider.get(lightType);
     }
 
 }
