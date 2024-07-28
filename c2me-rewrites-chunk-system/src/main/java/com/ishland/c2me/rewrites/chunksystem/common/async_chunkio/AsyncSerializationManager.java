@@ -1,6 +1,5 @@
 package com.ishland.c2me.rewrites.chunksystem.common.async_chunkio;
 
-import it.unimi.dsi.fastutil.Pair;
 import it.unimi.dsi.fastutil.objects.Object2ReferenceLinkedOpenHashMap;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.world.ServerWorld;
@@ -52,9 +51,14 @@ public class AsyncSerializationManager {
             this.pos = chunk.getPos();
             Map<BlockPos, NbtCompound> blockEntities = new Object2ReferenceLinkedOpenHashMap<>();
             for (BlockPos blockPos : chunk.getBlockEntityPositions()) {
-                Pair<BlockPos, NbtCompound> blockPosNbtCompoundPair = Pair.of(blockPos, chunk.getPackedBlockEntityNbt(blockPos, world.getRegistryManager()));
-                if (blockEntities.put(blockPosNbtCompoundPair.left(), blockPosNbtCompoundPair.right()) != null) {
+                final NbtCompound nbt = chunk.getPackedBlockEntityNbt(blockPos, world.getRegistryManager());
+                if (nbt == null) {
+                    LOGGER.warn("Block entity at {} for block {} in chunk {} is missing", blockPos, chunk.getBlockState(blockPos), chunk.getPos());
+                }
+                if (blockEntities.containsKey(blockPos)) {
                     LOGGER.warn("Duplicate block entity at {} in chunk {}", blockPos, chunk.getPos());
+                } else {
+                    blockEntities.put(blockPos, nbt);
                 }
             }
             this.blockEntities = blockEntities;
