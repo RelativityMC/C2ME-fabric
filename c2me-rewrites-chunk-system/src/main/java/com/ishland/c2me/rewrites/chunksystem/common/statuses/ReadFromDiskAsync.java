@@ -115,7 +115,7 @@ public class ReadFromDiskAsync extends ReadFromDisk {
 //                    if (protoChunk != null) ((ProtoChunkExtension) protoChunk).setBlendingInfo(pos, bitSet);
 //                    return protoChunk;
 //                })
-                .thenApply(protoChunk -> {
+                .thenCompose(protoChunk -> {
                     final ServerWorld world = ((IThreadedAnvilChunkStorage) context.tacs()).getWorld();
                     // blending
                     final ChunkPos pos = context.holder().getKey();
@@ -123,20 +123,20 @@ public class ReadFromDiskAsync extends ReadFromDisk {
                     if (protoChunk.getBelowZeroRetrogen() != null || protoChunk.getStatus().getChunkType() == ChunkType.PROTOCHUNK) {
                         final CompletionStage<List<BitSet>> blendingInfos = BlendingInfoUtil.getBlendingInfos(((IVersionedChunkStorage) context.tacs()).getWorker(), pos);
                         ProtoChunk finalProtoChunk = protoChunk;
-                        ((ProtoChunkExtension) protoChunk).setBlendingComputeFuture(
-                                blendingInfos.thenAccept(bitSet -> ((ProtoChunkExtension) finalProtoChunk).setBlendingInfo(pos, bitSet)).toCompletableFuture()
-                        );
+                        final CompletableFuture<Void> blendingFuture = blendingInfos.thenAccept(bitSet -> ((ProtoChunkExtension) finalProtoChunk).setBlendingInfo(pos, bitSet)).toCompletableFuture();
+                        ProtoChunk finalProtoChunk1 = protoChunk;
+                        return blendingFuture.thenApply(unused -> finalProtoChunk1);
+                    } else {
+                        return CompletableFuture.completedFuture(protoChunk);
                     }
-
+                })
+                .thenApply(protoChunk -> {
+                    final ChunkPos pos = context.holder().getKey();
                     ((ProtoChunkExtension) protoChunk).setInitialMainThreadComputeFuture(poiData.thenAcceptAsync(poiDataNbt -> {
                         try {
                             ((SerializingRegionBasedStorageExtension) ((IThreadedAnvilChunkStorage) context.tacs()).getPointOfInterestStorage()).update(pos, poiDataNbt.orElse(null));
                         } catch (Throwable t) {
-                            if (Config.recoverFromErrors) {
-                                LOGGER.error("Couldn't load poi data for chunk {}, poi data will be lost!", pos, t);
-                            } else {
-                                SneakyThrow.sneaky(t);
-                            }
+                            LOGGER.error("Couldn't load poi data for chunk {}, poi data will be lost!", pos, t);
                         }
                         ChunkIoMainThreadTaskUtils.drainQueue(mainThreadQueue);
                     }, ((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor()));
