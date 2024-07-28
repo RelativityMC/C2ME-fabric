@@ -14,6 +14,7 @@ import com.ishland.flowsched.scheduler.KeyStatusPair;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.server.WorldGenerationProgressListener;
+import net.minecraft.server.world.ServerLightingProvider;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.ChunkSerializer;
@@ -77,7 +78,7 @@ public class ReadFromDisk extends NewChunkStatus {
 
     @Override
     public CompletionStage<Void> downgradeFromThis(ChunkLoadingContext context) {
-        return CompletableFuture.runAsync(() -> {
+        return syncWithLightEngine(context).thenRunAsync(() -> {
             Chunk chunk = context.holder().getItem().get().chunk();
             if (chunk instanceof WrapperProtoChunk protoChunk) chunk = protoChunk.getWrappedChunk();
 
@@ -114,6 +115,18 @@ public class ReadFromDisk extends NewChunkStatus {
 
             context.holder().getItem().set(new ChunkState(null, null));
         }, ((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor());
+    }
+
+    protected CompletionStage<Void> syncWithLightEngine(ChunkLoadingContext context) {
+        final CompletableFuture<Void> future = new CompletableFuture<>();
+        ((IServerLightingProvider) ((IThreadedAnvilChunkStorage) context.tacs()).getLightingProvider()).invokeEnqueue(
+                context.holder().getKey().x,
+                context.holder().getKey().z,
+                () -> 0,
+                ServerLightingProvider.Stage.POST_UPDATE,
+                () -> future.complete(null)
+        );
+        return future;
     }
 
     @Override
