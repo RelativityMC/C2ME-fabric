@@ -79,7 +79,8 @@ public class ReadFromDisk extends NewChunkStatus {
     @Override
     public CompletionStage<Void> downgradeFromThis(ChunkLoadingContext context) {
         return syncWithLightEngine(context).thenRunAsync(() -> {
-            Chunk chunk = context.holder().getItem().get().chunk();
+            final ChunkState chunkState = context.holder().getItem().get();
+            Chunk chunk = chunkState.chunk();
             if (chunk instanceof WrapperProtoChunk protoChunk) chunk = protoChunk.getWrappedChunk();
 
             final boolean loadedToWorld;
@@ -94,11 +95,15 @@ public class ReadFromDisk extends NewChunkStatus {
                 LifecycleEventInvoker.invokeChunkUnload(((IThreadedAnvilChunkStorage) context.tacs()).getWorld(), worldChunk);
             }
 
-            if ((context.holder().getFlags() & ItemHolder.FLAG_BROKEN) == 0 || chunk instanceof WorldChunk) { // do not save broken ProtoChunks
-                ((IThreadedAnvilChunkStorage) context.tacs()).invokeSave(chunk);
-            } else {
+            if ((context.holder().getFlags() & ItemHolder.FLAG_BROKEN) != 0 && chunk instanceof ProtoChunk) { // do not save broken ProtoChunks
                 LOGGER.warn("Not saving partially generated broken chunk {}", context.holder().getKey());
+            } else if (chunk instanceof WorldChunk && !chunkState.reachedStatus().isAtLeast(ChunkStatus.FULL)) {
+                // do not save WorldChunks that doesn't reach full status: Vanilla behavior
+                // If saved, block entities will be lost
+            } else {
+                ((IThreadedAnvilChunkStorage) context.tacs()).invokeSave(chunk);
             }
+
             if (loadedToWorld && chunk instanceof WorldChunk worldChunk) {
                 ((IThreadedAnvilChunkStorage) context.tacs()).getWorld().unloadEntities(worldChunk);
             }

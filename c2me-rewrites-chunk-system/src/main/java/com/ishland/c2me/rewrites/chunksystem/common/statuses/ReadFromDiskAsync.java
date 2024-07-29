@@ -50,7 +50,7 @@ import java.util.function.Function;
 
 public class ReadFromDiskAsync extends ReadFromDisk {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger("ReadFromDisk");
+    private static final Logger LOGGER = LoggerFactory.getLogger("ReadFromDiskAsync");
 
     public ReadFromDiskAsync(int ordinal) {
         super(ordinal);
@@ -154,7 +154,8 @@ public class ReadFromDiskAsync extends ReadFromDisk {
     public CompletionStage<Void> downgradeFromThis(ChunkLoadingContext context) {
         final AtomicBoolean loadedToWorld = new AtomicBoolean(false);
         return syncWithLightEngine(context).thenApplyAsync(unused -> {
-                    Chunk chunk = context.holder().getItem().get().chunk();
+                    final ChunkState chunkState = context.holder().getItem().get();
+                    Chunk chunk = chunkState.chunk();
                     if (chunk instanceof WrapperProtoChunk protoChunk) chunk = protoChunk.getWrappedChunk();
 
                     if (chunk instanceof WorldChunk worldChunk) {
@@ -166,11 +167,15 @@ public class ReadFromDiskAsync extends ReadFromDisk {
                         LifecycleEventInvoker.invokeChunkUnload(((IThreadedAnvilChunkStorage) context.tacs()).getWorld(), worldChunk);
                     }
 
-                    if ((context.holder().getFlags() & ItemHolder.FLAG_BROKEN) == 0 || chunk instanceof WorldChunk) { // do not save broken ProtoChunks
-                        return asyncSave(context.tacs(), chunk);
-                    } else {
+                    if ((context.holder().getFlags() & ItemHolder.FLAG_BROKEN) != 0 && chunk instanceof ProtoChunk) { // do not save broken ProtoChunks
                         LOGGER.warn("Not saving partially generated broken chunk {}", context.holder().getKey());
                         return CompletableFuture.completedStage((Void) null);
+                    } else if (chunk instanceof WorldChunk && !chunkState.reachedStatus().isAtLeast(ChunkStatus.FULL)) {
+                        // do not save WorldChunks that doesn't reach full status: Vanilla behavior
+                        // If saved, block entities will be lost
+                        return CompletableFuture.completedStage((Void) null);
+                    } else {
+                        return asyncSave(context.tacs(), chunk);
                     }
                 }, ((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor())
                 .thenCompose(Function.identity())
