@@ -78,7 +78,7 @@ public class ReadFromDisk extends NewChunkStatus {
 
     @Override
     public CompletionStage<Void> downgradeFromThis(ChunkLoadingContext context) {
-        return syncWithLightEngine(context).thenRunAsync(() -> {
+        return CompletableFuture.runAsync(() -> {
             final ChunkState chunkState = context.holder().getItem().get();
             Chunk chunk = chunkState.chunk();
             if (chunk instanceof WrapperProtoChunk protoChunk) chunk = protoChunk.getWrappedChunk();
