@@ -39,12 +39,12 @@ public final class LockTokenImpl implements LockToken {
 
     @Override
     public int hashCode() {
-        // inlined Objects.hash(ownerTag, pos, usage)
+        // inlined Objects.hash(ownerTag, usage, pos)
         int result = 1;
 
         result = 31 * result + Integer.hashCode(ownerTag);
-        result = 31 * result + Long.hashCode(ownerTag);
         result = 31 * result + usage.hashCode();
+        result = 31 * result + Long.hashCode(pos);
 
         return result;
     }
