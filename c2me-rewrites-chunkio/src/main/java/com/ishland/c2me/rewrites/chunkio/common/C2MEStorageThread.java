@@ -31,8 +31,6 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.LockSupport;
@@ -114,12 +112,12 @@ public class C2MEStorageThread extends Thread {
         }
         this.pendingReadRequests.add(new ReadRequest(pos, future, scanner));
         LockSupport.unpark(this);
-        future.thenApply(Function.identity()).orTimeout(60, TimeUnit.SECONDS).exceptionally(throwable -> {
-            if (throwable instanceof TimeoutException) {
-                LOGGER.warn("Chunk read at pos {} took too long (> 1min)", new ChunkPos(pos).toLong());
-            }
-            return null;
-        });
+//        future.thenApply(Function.identity()).orTimeout(60, TimeUnit.SECONDS).exceptionally(throwable -> {
+//            if (throwable instanceof TimeoutException) {
+//                LOGGER.warn("Chunk read at pos {} took too long (> 1min)", new ChunkPos(pos).toLong());
+//            }
+//            return null;
+//        });
         return future
                 .thenApply(Function.identity());
     }
