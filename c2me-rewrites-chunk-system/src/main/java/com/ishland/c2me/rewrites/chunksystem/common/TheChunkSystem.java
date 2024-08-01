@@ -1,6 +1,7 @@
 package com.ishland.c2me.rewrites.chunksystem.common;
 
 import com.ishland.c2me.base.common.GlobalExecutors;
+import com.ishland.c2me.base.common.scheduler.IVanillaChunkManager;
 import com.ishland.c2me.base.common.scheduler.SchedulingManager;
 import com.ishland.c2me.base.mixin.access.IThreadedAnvilChunkStorage;
 import com.ishland.flowsched.scheduler.DaemonizedStatusAdvancingScheduler;
@@ -37,7 +38,7 @@ public class TheChunkSystem extends DaemonizedStatusAdvancingScheduler<ChunkPos,
     private final Logger LOGGER;
 
     private final Long2IntMap managedTickets = Long2IntMaps.synchronize(new Long2IntOpenHashMap());
-    private final SchedulingManager schedulingManager = new SchedulingManager(GlobalExecutors.asyncScheduler);
+    private final SchedulingManager schedulingManager;
     private final Executor backingBackgroundExecutor = GlobalExecutors.prioritizedScheduler.executor(15);
     private Queue<Runnable> backgroundTaskQueue = PlatformDependent.newSpscQueue();
     private final Executor backgroundExecutor = command -> {
@@ -53,6 +54,7 @@ public class TheChunkSystem extends DaemonizedStatusAdvancingScheduler<ChunkPos,
     public TheChunkSystem(ThreadFactory threadFactory, ServerChunkLoadingManager tacs) {
         super(threadFactory);
         this.tacs = tacs;
+        this.schedulingManager =  ((IVanillaChunkManager) tacs).c2me$getSchedulingManager();
         this.LOGGER = LoggerFactory.getLogger("Chunk System of %s".formatted(((IThreadedAnvilChunkStorage) tacs).getWorld().getRegistryKey().getValue()));
         managedTickets.defaultReturnValue(NewChunkStatus.vanillaLevelToStatus.length - 1);
         this.thread.start();
@@ -160,7 +162,6 @@ public class TheChunkSystem extends DaemonizedStatusAdvancingScheduler<ChunkPos,
     }
 
     public ChunkHolder vanillaIf$setLevel(long pos, int level) {
-        this.schedulingManager.updatePriorityFromLevel(pos, level);
         Assertions.assertTrue(!Thread.holdsLock(this.managedTickets));
         synchronized (this.managedTickets) {
             final int oldLevel = this.managedTickets.put(pos, level);

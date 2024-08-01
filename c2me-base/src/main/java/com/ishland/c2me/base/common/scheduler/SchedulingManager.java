@@ -1,27 +1,27 @@
 package com.ishland.c2me.base.common.scheduler;
 
 import com.ishland.c2me.base.common.GlobalExecutors;
-import com.ishland.flowsched.structs.SimpleObjectPool;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
-import it.unimi.dsi.fastutil.longs.Long2ReferenceOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import net.minecraft.server.world.ChunkLevels;
 import net.minecraft.util.math.ChunkPos;
 
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.StampedLock;
 
 public class SchedulingManager {
 
     private static final AtomicInteger COUNTER = new AtomicInteger(0);
 
     public static final int MAX_LEVEL = ChunkLevels.INACCESSIBLE + 1;
-    private final Long2ReferenceOpenHashMap<ObjectArraySet<AbstractPosAwarePrioritizedTask>> pos2Tasks = new Long2ReferenceOpenHashMap<>();
-    private final SimpleObjectPool<ObjectArraySet<AbstractPosAwarePrioritizedTask>> pos2TasksPool = new SimpleObjectPool<>(unused -> new ObjectArraySet<>(), ObjectArraySet::clear, ObjectArraySet::clear, 2048);
+    private final ConcurrentMap<Long, FreeableTaskList> pos2Tasks = new ConcurrentHashMap<>();
     private final Long2IntOpenHashMap prioritiesFromLevel = new Long2IntOpenHashMap();
-    private final Object schedulingMutex = new Object();
+    private final StampedLock prioritiesLock = new StampedLock();
     private final int id = COUNTER.getAndIncrement();
-    private ChunkPos currentSyncLoad = null;
+    private volatile ChunkPos currentSyncLoad = null;
 
     private final Executor executor;
 
@@ -34,25 +34,33 @@ public class SchedulingManager {
     }
 
     public void enqueue(AbstractPosAwarePrioritizedTask task) {
-        synchronized (this.schedulingMutex) {
+        retry:
+        while (true) {
             final long pos = task.getPos();
-            final ObjectArraySet<AbstractPosAwarePrioritizedTask> locks = this.pos2Tasks.computeIfAbsent(pos, unused -> this.pos2TasksPool.alloc());
-            locks.add(task);
-            updatePriorityInternal(pos);
-        }
-        task.addPostExec(() -> {
-            synchronized (this.schedulingMutex) {
-                final ObjectArraySet<AbstractPosAwarePrioritizedTask> tasks = this.pos2Tasks.get(task.getPos());
+            final FreeableTaskList locks = this.pos2Tasks.computeIfAbsent(pos, unused -> new FreeableTaskList());
+            synchronized (locks) {
+                if (locks.freed) continue retry;
+                locks.add(task);
+            }
+            task.setPriority(this.getPriority(pos));
+            task.addPostExec(() -> {
+                final FreeableTaskList tasks = this.pos2Tasks.get(task.getPos());
                 if (tasks != null) {
-                    tasks.remove(task);
-                    if (tasks.isEmpty()) {
+                    synchronized (tasks) {
+                        if (tasks.freed) return;
+                        tasks.remove(task);
+                        if (tasks.isEmpty()) {
+                            tasks.freed = true;
+                        }
+                    }
+                    if (tasks.freed) {
                         this.pos2Tasks.remove(task.getPos());
-                        this.pos2TasksPool.release(tasks);
                     }
                 }
-            }
-        });
-        GlobalExecutors.prioritizedScheduler.schedule(task);
+            });
+            GlobalExecutors.prioritizedScheduler.schedule(task);
+            return;
+        }
     }
 
     public void enqueue(long pos, Runnable command) {
@@ -65,20 +73,37 @@ public class SchedulingManager {
 
     public void updatePriorityFromLevel(long pos, int level) {
         this.executor.execute(() -> {
-            synchronized (this.schedulingMutex) {
-                if (prioritiesFromLevel.get(pos) == level) return;
+            if (this.getPriorityFromMap(pos) == level) return;
+            final long stamp = this.prioritiesLock.writeLock();
+            try {
                 if (level < MAX_LEVEL) {
-                    prioritiesFromLevel.put(pos, level);
+                    this.prioritiesFromLevel.put(pos, level);
                 } else {
-                    prioritiesFromLevel.remove(pos);
+                    this.prioritiesFromLevel.remove(pos);
                 }
-                updatePriorityInternal(pos);
+            } finally {
+                this.prioritiesLock.unlockWrite(stamp);
             }
+            updatePriorityInternal(pos);
         });
     }
 
     private void updatePriorityInternal(long pos) {
-        int fromLevel = prioritiesFromLevel.get(pos);
+        final int priority = getPriority(pos);
+        final FreeableTaskList locks = this.pos2Tasks.get(pos);
+        if (locks != null) {
+            synchronized (locks) {
+                if (locks.freed) return;
+                for (AbstractPosAwarePrioritizedTask lock : locks) {
+                    lock.setPriority(priority);
+                    GlobalExecutors.prioritizedScheduler.notifyPriorityChange(lock);
+                }
+            }
+        }
+    }
+
+    private int getPriority(long pos) {
+        final int fromLevel = getPriorityFromMap(pos);
         int fromSyncLoad;
         if (currentSyncLoad != null) {
             final int chebyshevDistance = chebyshev(new ChunkPos(pos), currentSyncLoad);
@@ -91,28 +116,37 @@ public class SchedulingManager {
         } else {
             fromSyncLoad = MAX_LEVEL;
         }
-        int priority = Math.min(fromLevel, fromSyncLoad);
-        final ObjectArraySet<AbstractPosAwarePrioritizedTask> locks = this.pos2Tasks.get(pos);
-        if (locks != null) {
-            for (AbstractPosAwarePrioritizedTask lock : locks) {
-                lock.setPriority(priority);
-                GlobalExecutors.prioritizedScheduler.notifyPriorityChange(lock);
+        return Math.min(fromLevel, fromSyncLoad);
+    }
+
+    private int getPriorityFromMap(long pos) {
+        int fromLevel = MAX_LEVEL;
+        long stamp = this.prioritiesLock.tryOptimisticRead();
+        try {
+            fromLevel = this.prioritiesFromLevel.get(pos);
+        } catch (Throwable t) {
+        }
+        if (!this.prioritiesLock.validate(stamp)) {
+            stamp = this.prioritiesLock.readLock();
+            try {
+                fromLevel = this.prioritiesFromLevel.get(pos);
+            } finally {
+                this.prioritiesLock.unlockRead(stamp);
             }
         }
+        return fromLevel;
     }
 
     public void setCurrentSyncLoad(ChunkPos pos) {
         executor.execute(() -> {
-            synchronized (this.schedulingMutex) {
-                if (this.currentSyncLoad != null) {
-                    final ChunkPos lastSyncLoad = this.currentSyncLoad;
-                    this.currentSyncLoad = null;
-                    updateSyncLoadInternal(lastSyncLoad);
-                }
-                if (pos != null) {
-                    this.currentSyncLoad = pos;
-                    updateSyncLoadInternal(pos);
-                }
+            if (this.currentSyncLoad != null) {
+                final ChunkPos lastSyncLoad = this.currentSyncLoad;
+                this.currentSyncLoad = null;
+                updateSyncLoadInternal(lastSyncLoad);
+            }
+            if (pos != null) {
+                this.currentSyncLoad = pos;
+                updateSyncLoadInternal(pos);
             }
         });
     }
@@ -139,18 +173,10 @@ public class SchedulingManager {
         return Math.max(Math.abs(ChunkPos.getPackedX(a) - ChunkPos.getPackedX(b)), Math.abs(ChunkPos.getPackedZ(a) - ChunkPos.getPackedZ(b)));
     }
 
-    private enum ScheduleStatus {
-        SCHEDULED(true, false),
-        SCHEDULED_ASYNC(true, true),
-        NOT_SCHEDULED(false, false);
+    private static class FreeableTaskList extends ObjectArraySet<AbstractPosAwarePrioritizedTask> {
 
-        public final boolean success;
-        public final boolean async;
+        private boolean freed = false;
 
-        ScheduleStatus(boolean success, boolean async) {
-            this.success = success;
-            this.async = async;
-        }
-    };
+    }
 
 }
