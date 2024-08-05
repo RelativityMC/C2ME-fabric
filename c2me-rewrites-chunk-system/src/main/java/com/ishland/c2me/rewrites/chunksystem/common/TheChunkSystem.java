@@ -52,22 +52,12 @@ public class TheChunkSystem extends DaemonizedStatusAdvancingScheduler<ChunkPos,
     private final ServerChunkLoadingManager tacs;
 
     public TheChunkSystem(ThreadFactory threadFactory, ServerChunkLoadingManager tacs) {
-        super(threadFactory);
+        super(threadFactory, TheSpeedyObjectFactory.INSTANCE);
         this.tacs = tacs;
         this.schedulingManager =  ((IVanillaChunkManager) tacs).c2me$getSchedulingManager();
         this.LOGGER = LoggerFactory.getLogger("Chunk System of %s".formatted(((IThreadedAnvilChunkStorage) tacs).getWorld().getRegistryKey().getValue()));
         managedTickets.defaultReturnValue(NewChunkStatus.vanillaLevelToStatus.length - 1);
         this.thread.start();
-    }
-
-    @Override
-    protected Queue<ChunkPos> createPendingUpdatesQueue() {
-        return PlatformDependent.newMpscQueue();
-    }
-
-    @Override
-    protected Queue<Runnable> createTaskQueue() {
-        return PlatformDependent.newMpscQueue();
     }
 
     @Override

@@ -137,6 +137,7 @@ configure (allprojects - project(":tests")) {
         implementation "com.electronwill.night-config:toml:${night_config_version}"
         implementation "org.threadly:threadly:${threadly_version}"
         implementation "net.objecthunter:exp4j:${exp4j_version}"
+        implementation "org.jctools:jctools-core:${jctools_version}"
         implementation annotationProcessor("com.bawnorton.mixinsquared:mixinsquared-fabric:${mixinsquared_version}")
         api "com.ishland.flowsched:flowsched"
     }
@@ -166,6 +167,7 @@ dependencies {
     include implementation("com.electronwill.night-config:core:${night_config_version}")
     include implementation("org.threadly:threadly:${threadly_version}")
     include implementation("net.objecthunter:exp4j:${exp4j_version}")
+    include implementation("org.jctools:jctools-core:${jctools_version}")
     include implementation(annotationProcessor("com.bawnorton.mixinsquared:mixinsquared-fabric:${mixinsquared_version}"))
     include "io.reactivex.rxjava3:rxjava:${rxjava_version}"
     include "org.reactivestreams:reactive-streams:${reactive_streams_version}"
