@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.Executor;
+import java.util.function.Function;
 
 public class NewChunkHolderVanillaInterface extends ChunkHolder {
 
@@ -42,8 +43,20 @@ public class NewChunkHolderVanillaInterface extends ChunkHolder {
     }
 
     private CompletableFuture<OptionalChunk<Chunk>> wrapOptionalChunkFuture(CompletableFuture<?> future) {
-        if (future.isCompletedExceptionally() && future.exceptionNow() == ItemHolder.UNLOADED_EXCEPTION) {
-            return ChunkHolder.UNLOADED_FUTURE;
+        if (future.isDone()) {
+            if (future.isCompletedExceptionally()) {
+                Throwable throwable = future.exceptionNow();
+                while (throwable instanceof CompletionException) {
+                    throwable = throwable.getCause();
+                }
+                if (throwable == ItemHolder.UNLOADED_EXCEPTION) {
+                    return ChunkHolder.UNLOADED_FUTURE;
+                } else {
+                    return (CompletableFuture<OptionalChunk<Chunk>>) future; // it's fine to cast here
+                }
+            } else {
+                return CompletableFuture.completedFuture(OptionalChunk.of(this.newHolder.getItem().get().chunk()));
+            }
         }
         return future.handle((unused, throwable) -> {
             while (throwable instanceof CompletionException) {
@@ -60,19 +73,59 @@ public class NewChunkHolderVanillaInterface extends ChunkHolder {
         });
     }
 
-    private CompletableFuture<OptionalChunk<Chunk>> wrapOptionalChunkProtoFuture(CompletableFuture<Void> future) {
-        return wrapOptionalChunkFuture(future).thenApply(optional -> optional.map(chunk -> {
-            if (chunk instanceof WorldChunk worldChunk) {
-                return new WrapperProtoChunk(worldChunk, false);
+    private CompletableFuture<OptionalChunk<Chunk>> wrapOptionalChunkProtoFuture(CompletableFuture<?> future) {
+        if (future.isDone()) {
+            if (future.isCompletedExceptionally()) {
+                Throwable throwable = future.exceptionNow();
+                while (throwable instanceof CompletionException) {
+                    throwable = throwable.getCause();
+                }
+                if (throwable == ItemHolder.UNLOADED_EXCEPTION) {
+                    return ChunkHolder.UNLOADED_FUTURE;
+                } else {
+                    return (CompletableFuture<OptionalChunk<Chunk>>) future; // it's fine to cast here
+                }
             } else {
-                return chunk;
+                final Chunk chunk = this.newHolder.getItem().get().chunk();
+                return CompletableFuture.completedFuture(OptionalChunk.of(chunk instanceof WorldChunk worldChunk ? new WrapperProtoChunk(worldChunk, false) : chunk));
             }
-        }));
+        }
+        return future.handle((unused, throwable) -> {
+            while (throwable instanceof CompletionException) {
+                throwable = throwable.getCause();
+            }
+            if (throwable == ItemHolder.UNLOADED_EXCEPTION) {
+                return ChunkHolder.UNLOADED;
+            } else if (throwable != null) {
+                SneakyThrow.sneaky(throwable);
+                return null;
+            } else {
+                final Chunk chunk = this.newHolder.getItem().get().chunk();
+                return OptionalChunk.of(chunk instanceof WorldChunk worldChunk ? new WrapperProtoChunk(worldChunk, false) : chunk);
+            }
+        });
     }
 
-    private CompletableFuture<OptionalChunk<WorldChunk>> wrapOptionalWorldChunkFuture(CompletableFuture<Void> future) {
-        if (future.isCompletedExceptionally() && future.exceptionNow() == ItemHolder.UNLOADED_EXCEPTION) {
-            return ChunkHolder.UNLOADED_WORLD_CHUNK_FUTURE;
+    private CompletableFuture<OptionalChunk<WorldChunk>> wrapOptionalWorldChunkFuture(CompletableFuture<?> future) {
+        if (future.isDone()) {
+            if (future.isCompletedExceptionally()) {
+                Throwable throwable = future.exceptionNow();
+                while (throwable instanceof CompletionException) {
+                    throwable = throwable.getCause();
+                }
+                if (throwable == ItemHolder.UNLOADED_EXCEPTION) {
+                    return ChunkHolder.UNLOADED_WORLD_CHUNK_FUTURE;
+                } else {
+                    return (CompletableFuture<OptionalChunk<WorldChunk>>) future; // it's fine to cast here
+                }
+            } else {
+                final Chunk chunk = this.newHolder.getItem().get().chunk();
+                if (chunk instanceof WorldChunk worldChunk) {
+                    return CompletableFuture.completedFuture(OptionalChunk.of(worldChunk));
+                } else {
+                    return ChunkHolder.UNLOADED_WORLD_CHUNK_FUTURE; // might have unloaded at this point
+                }
+            }
         }
         return future.handle((unused, throwable) -> {
             while (throwable instanceof CompletionException) {
@@ -94,34 +147,30 @@ public class NewChunkHolderVanillaInterface extends ChunkHolder {
         });
     }
 
-    private CompletableFuture<Chunk> wrapChunkFuture(CompletableFuture<?> future) {
-        return future.thenApply(unused -> this.newHolder.getItem().get().chunk());
-    }
-
     @Override
     public CompletableFuture<OptionalChunk<Chunk>> load(ChunkStatus requestedStatus, ServerChunkLoadingManager chunkLoadingManager) {
-        final CompletableFuture<Void> futureForStatus = this.newHolder.getFutureForStatus(NewChunkStatus.fromVanillaStatus(requestedStatus));
+        final CompletableFuture<Void> futureForStatus = this.newHolder.getFutureForStatus0(NewChunkStatus.fromVanillaStatus(requestedStatus));
         return requestedStatus == ChunkStatus.FULL ? wrapOptionalChunkFuture(futureForStatus) : wrapOptionalChunkProtoFuture(futureForStatus);
     }
 
     @Override
     public CompletableFuture<OptionalChunk<WorldChunk>> getTickingFuture() {
         synchronized (this.newHolder) {
-            return wrapOptionalWorldChunkFuture(this.newHolder.getFutureForStatus(NewChunkStatus.BLOCK_TICKING));
+            return wrapOptionalWorldChunkFuture(this.newHolder.getFutureForStatus0(NewChunkStatus.BLOCK_TICKING));
         }
     }
 
     @Override
     public CompletableFuture<OptionalChunk<WorldChunk>> getEntityTickingFuture() {
         synchronized (this.newHolder) {
-            return wrapOptionalWorldChunkFuture(this.newHolder.getFutureForStatus(NewChunkStatus.ENTITY_TICKING));
+            return wrapOptionalWorldChunkFuture(this.newHolder.getFutureForStatus0(NewChunkStatus.ENTITY_TICKING));
         }
     }
 
     @Override
     public CompletableFuture<OptionalChunk<WorldChunk>> getAccessibleFuture() {
         synchronized (this.newHolder) {
-            return wrapOptionalWorldChunkFuture(this.newHolder.getFutureForStatus(NewChunkStatus.SERVER_ACCESSIBLE));
+            return wrapOptionalWorldChunkFuture(this.newHolder.getFutureForStatus0(NewChunkStatus.SERVER_ACCESSIBLE));
         }
     }
 
@@ -143,8 +192,8 @@ public class NewChunkHolderVanillaInterface extends ChunkHolder {
     }
 
     @Override
-    public CompletableFuture<Chunk> getSavingFuture() {
-        return wrapChunkFuture(this.newHolder.getOpFuture());
+    public CompletableFuture<?> getSavingFuture() {
+        return this.newHolder.getOpFuture().thenApply(Function.identity());
     }
 
     @Override
@@ -227,7 +276,7 @@ public class NewChunkHolderVanillaInterface extends ChunkHolder {
         List<Pair<ChunkStatus, CompletableFuture<OptionalChunk<Chunk>>>> list = new ArrayList<>();
 
         for (final ChunkStatus status : CHUNK_STATUSES) {
-            final CompletableFuture<Void> futureForStatus = this.newHolder.getFutureForStatus(NewChunkStatus.fromVanillaStatus(status));
+            final CompletableFuture<Void> futureForStatus = this.newHolder.getFutureForStatus0(NewChunkStatus.fromVanillaStatus(status));
             list.add(Pair.of(status, status == ChunkStatus.FULL ? wrapOptionalChunkFuture(futureForStatus) : wrapOptionalChunkProtoFuture(futureForStatus)));
         }
 
@@ -309,7 +358,7 @@ public class NewChunkHolderVanillaInterface extends ChunkHolder {
 
     @Override
     protected CompletableFuture<OptionalChunk<Chunk>> getOrCreateFuture(ChunkStatus status) {
-        final CompletableFuture<Void> futureForStatus = this.newHolder.getFutureForStatus(NewChunkStatus.fromVanillaStatus(status));
+        final CompletableFuture<Void> futureForStatus = this.newHolder.getFutureForStatus0(NewChunkStatus.fromVanillaStatus(status));
         return status == ChunkStatus.FULL ? this.wrapOptionalChunkFuture(futureForStatus) : this.wrapOptionalChunkProtoFuture(futureForStatus);
     }
 
