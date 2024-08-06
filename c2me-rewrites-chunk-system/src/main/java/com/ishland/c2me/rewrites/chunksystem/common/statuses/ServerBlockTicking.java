@@ -40,14 +40,19 @@ public class ServerBlockTicking extends NewChunkStatus {
             final WorldChunk chunk = (WorldChunk) context.holder().getItem().get().chunk();
             chunk.runPostProcessing();
             ((IThreadedAnvilChunkStorage) context.tacs()).getWorld().disableTickSchedulers(chunk);
-            CompletableFuture<?> completableFuturexx = context.holder().getUserData().get().getPostProcessingFuture();
-            if (completableFuturexx.isDone()) {
-                ((IThreadedAnvilChunkStorage) context.tacs()).invokeSendToPlayers(chunk);
-            } else {
-                completableFuturexx.thenAcceptAsync(v -> ((IThreadedAnvilChunkStorage) context.tacs()).invokeSendToPlayers(chunk), ((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor());
-            }
+            sendChunkToPlayer(context);
             ((IThreadedAnvilChunkStorage) context.tacs()).getTotalChunksLoadedCount().incrementAndGet(); // never decremented in vanilla
         }, ((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor());
+    }
+
+    private static void sendChunkToPlayer(ChunkLoadingContext context) {
+        final WorldChunk chunk = (WorldChunk) context.holder().getItem().get().chunk();
+        CompletableFuture<?> completableFuturexx = context.holder().getUserData().get().getPostProcessingFuture();
+        if (completableFuturexx.isDone()) {
+            ((IThreadedAnvilChunkStorage) context.tacs()).invokeSendToPlayers(chunk);
+        } else {
+            completableFuturexx.thenAcceptAsync(v -> ((IThreadedAnvilChunkStorage) context.tacs()).invokeSendToPlayers(chunk), ((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor());
+        }
     }
 
     @Override
