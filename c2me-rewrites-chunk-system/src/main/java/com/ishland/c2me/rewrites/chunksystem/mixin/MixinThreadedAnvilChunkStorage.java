@@ -3,6 +3,7 @@ package com.ishland.c2me.rewrites.chunksystem.mixin;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.ishland.c2me.rewrites.chunksystem.common.ChunkLoadingContext;
 import com.ishland.c2me.rewrites.chunksystem.common.ChunkState;
+import com.ishland.c2me.rewrites.chunksystem.common.IChunkSystemAccess;
 import com.ishland.c2me.rewrites.chunksystem.common.NewChunkHolderVanillaInterface;
 import com.ishland.c2me.rewrites.chunksystem.common.TheChunkSystem;
 import com.ishland.flowsched.scheduler.ItemHolder;
@@ -24,7 +25,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ServerChunkLoadingManager.class)
-public class MixinThreadedAnvilChunkStorage {
+public class MixinThreadedAnvilChunkStorage implements IChunkSystemAccess {
 
     @Shadow @Final private ServerWorld world;
     private TheChunkSystem newSystem;
@@ -95,4 +96,8 @@ public class MixinThreadedAnvilChunkStorage {
         return original || this.newSystem.itemCount() != 0;
     }
 
+    @Override
+    public TheChunkSystem c2me$getTheChunkSystem() {
+        return this.newSystem;
+    }
 }
