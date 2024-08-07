@@ -45,9 +45,6 @@ public interface IThreadedAnvilChunkStorage {
     ChunkGenerationContext getGenerationContext();
 
     @Invoker
-    CompletableFuture<Chunk> invokeLoadChunk(ChunkPos pos);
-
-    @Invoker
     void invokeSendToPlayers(WorldChunk chunk);
 
     @Accessor

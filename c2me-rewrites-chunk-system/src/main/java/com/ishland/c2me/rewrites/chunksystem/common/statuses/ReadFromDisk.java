@@ -1,20 +1,24 @@
 package com.ishland.c2me.rewrites.chunksystem.common.statuses;
 
 import com.ishland.c2me.base.common.config.ModStatuses;
+import com.ishland.c2me.base.common.util.RxJavaUtils;
 import com.ishland.c2me.base.mixin.access.IServerLightingProvider;
 import com.ishland.c2me.base.mixin.access.IThreadedAnvilChunkStorage;
 import com.ishland.c2me.base.mixin.access.IVersionedChunkStorage;
 import com.ishland.c2me.base.mixin.access.IWorldChunk;
 import com.ishland.c2me.rewrites.chunksystem.common.ChunkLoadingContext;
 import com.ishland.c2me.rewrites.chunksystem.common.ChunkState;
+import com.ishland.c2me.rewrites.chunksystem.common.Config;
 import com.ishland.c2me.rewrites.chunksystem.common.NewChunkStatus;
 import com.ishland.c2me.rewrites.chunksystem.common.fapi.LifecycleEventInvoker;
 import com.ishland.flowsched.scheduler.ItemHolder;
 import com.ishland.flowsched.scheduler.KeyStatusPair;
+import io.reactivex.rxjava3.annotations.NonNull;
+import io.reactivex.rxjava3.core.Single;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.server.WorldGenerationProgressListener;
-import net.minecraft.server.world.ServerLightingProvider;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.ChunkSerializer;
@@ -24,6 +28,7 @@ import net.minecraft.world.chunk.ProtoChunk;
 import net.minecraft.world.chunk.UpgradeData;
 import net.minecraft.world.chunk.WorldChunk;
 import net.minecraft.world.chunk.WrapperProtoChunk;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,9 +45,30 @@ public class ReadFromDisk extends NewChunkStatus {
 
     @Override
     public CompletionStage<Void> upgradeToThis(ChunkLoadingContext context) {
-        return ((IThreadedAnvilChunkStorage) context.tacs())
-                .invokeGetUpdatedChunkNbt(context.holder().getKey())
-                .thenApply(nbt -> nbt.filter(nbt2 -> {
+        final Single<Chunk> single = invokeSyncRead(context)
+                .retryWhen(RxJavaUtils.retryWithExponentialBackoff(5, 100));
+        return finalizeLoading(context, single);
+    }
+
+    protected static @NotNull CompletionStage<Void> finalizeLoading(ChunkLoadingContext context, Single<Chunk> single) {
+        return single
+                .doOnError(throwable -> ((IThreadedAnvilChunkStorage) context.tacs()).getWorld().getServer().onChunkLoadFailure(throwable, ((IVersionedChunkStorage) context.tacs()).invokeGetStorageKey(), context.holder().getKey()))
+                .onErrorResumeNext(throwable -> {
+                    if (Config.recoverFromErrors) {
+                        return Single.just(createEmptyProtoChunk(context));
+                    } else {
+                        return Single.error(throwable);
+                    }
+                })
+                .doOnSuccess(chunk -> context.holder().getItem().set(new ChunkState(chunk, ChunkStatus.EMPTY)))
+                .ignoreElement()
+                .cache()
+                .toCompletionStage(null);
+    }
+
+    protected static @NonNull Single<Chunk> invokeSyncRead(ChunkLoadingContext context) {
+        return Single.defer(() -> Single.fromCompletionStage(((IThreadedAnvilChunkStorage) context.tacs()).invokeGetUpdatedChunkNbt(context.holder().getKey())))
+                .map(nbt -> nbt.filter(nbt2 -> {
                     boolean bl = nbt2.contains("Status", NbtElement.STRING_TYPE);
                     if (!bl) {
                         LOGGER.error("Chunk file at {} is missing level data, skipping", context.holder().getKey());
@@ -50,7 +76,8 @@ public class ReadFromDisk extends NewChunkStatus {
 
                     return bl;
                 }))
-                .thenApplyAsync(nbt -> {
+                .observeOn(Schedulers.from(((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor()))
+                .map(nbt -> {
                     if (nbt.isPresent()) {
                         Chunk chunk = ChunkSerializer.deserialize(
                                 ((IThreadedAnvilChunkStorage) context.tacs()).getWorld(),
@@ -61,19 +88,15 @@ public class ReadFromDisk extends NewChunkStatus {
                         );
                         return chunk;
                     } else {
-                        return null;
-                    }
-                }, ((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor())
-//                .exceptionallyAsync(throwable -> this.recoverFromException(throwable, pos), ((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor())
-                .thenApply(chunk -> {
-                    if (chunk == null) {
-                        final ServerWorld world = ((IThreadedAnvilChunkStorage) context.tacs()).getWorld();
-                        return new ProtoChunk(context.holder().getKey(), UpgradeData.NO_UPGRADE_DATA, world, world.getRegistryManager().get(RegistryKeys.BIOME), null);
-                    } else {
-                        return chunk;
+                        return createEmptyProtoChunk(context);
                     }
                 })
-                .thenAccept(chunk -> context.holder().getItem().set(new ChunkState(chunk, ChunkStatus.EMPTY)));
+                .doOnError(throwable -> LOGGER.warn("Failed to load chunk at {}", context.holder().getKey(), throwable));
+    }
+
+    protected static @NotNull ProtoChunk createEmptyProtoChunk(ChunkLoadingContext context) {
+        final ServerWorld world = ((IThreadedAnvilChunkStorage) context.tacs()).getWorld();
+        return new ProtoChunk(context.holder().getKey(), UpgradeData.NO_UPGRADE_DATA, world, world.getRegistryManager().get(RegistryKeys.BIOME), null);
     }
 
     @Override
@@ -120,18 +143,6 @@ public class ReadFromDisk extends NewChunkStatus {
 
             context.holder().getItem().set(new ChunkState(null, null));
         }, ((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor());
-    }
-
-    protected CompletionStage<Void> syncWithLightEngine(ChunkLoadingContext context) {
-        final CompletableFuture<Void> future = new CompletableFuture<>();
-        ((IServerLightingProvider) ((IThreadedAnvilChunkStorage) context.tacs()).getLightingProvider()).invokeEnqueue(
-                context.holder().getKey().x,
-                context.holder().getKey().z,
-                () -> 0,
-                ServerLightingProvider.Stage.POST_UPDATE,
-                () -> future.complete(null)
-        );
-        return future;
     }
 
     @Override

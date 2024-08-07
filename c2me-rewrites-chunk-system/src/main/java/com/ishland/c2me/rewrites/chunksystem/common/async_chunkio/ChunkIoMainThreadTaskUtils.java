@@ -5,6 +5,7 @@ import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
 import org.slf4j.Logger;
 
 import java.util.ArrayDeque;
+import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class ChunkIoMainThreadTaskUtils {
@@ -36,14 +37,20 @@ public class ChunkIoMainThreadTaskUtils {
     }
 
     public static void drainQueue(ReferenceArrayList<Runnable> queue) {
+        List<Throwable> throwableList = new ReferenceArrayList<>();
         for (Runnable command : queue) {
             try {
                 command.run();
             } catch (Throwable t) {
-                LOGGER.error("Error while executing main thread task", t);
+                throwableList.add(t);
             }
         }
         queue.clear();
+        if (!throwableList.isEmpty()) {
+            final RuntimeException exception = new RuntimeException("Exception occurred while executing main thread tasks");
+            throwableList.forEach(exception::addSuppressed);
+            throw exception;
+        }
     }
 
 }
