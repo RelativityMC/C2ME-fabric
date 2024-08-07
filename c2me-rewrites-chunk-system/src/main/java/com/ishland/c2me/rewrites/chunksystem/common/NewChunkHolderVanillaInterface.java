@@ -1,5 +1,6 @@
 package com.ishland.c2me.rewrites.chunksystem.common;
 
+import com.ishland.c2me.base.common.theinterface.IFastChunkHolder;
 import com.ishland.c2me.base.common.util.SneakyThrow;
 import com.ishland.flowsched.scheduler.ItemHolder;
 import com.mojang.datafixers.util.Pair;
@@ -31,7 +32,7 @@ import java.util.concurrent.CompletionException;
 import java.util.concurrent.Executor;
 import java.util.function.Function;
 
-public class NewChunkHolderVanillaInterface extends ChunkHolder {
+public class NewChunkHolderVanillaInterface extends ChunkHolder implements IFastChunkHolder {
 
     private static final List<ChunkStatus> CHUNK_STATUSES = ChunkStatus.createOrderedList();
 
@@ -392,5 +393,15 @@ public class NewChunkHolderVanillaInterface extends ChunkHolder {
     protected boolean cannotBeLoaded(ChunkStatus status) {
         ChunkStatus chunkStatus = ((NewChunkStatus) this.newHolder.getTargetStatus()).getEffectiveVanillaStatus();
         return chunkStatus == null || status.isLaterThan(chunkStatus);
+    }
+
+    @Override
+    public WorldChunk c2me$immediateWorldChunk() {
+        final Chunk chunk = this.newHolder.getItem().get().chunk();
+        if (chunk instanceof WorldChunk worldChunk) {
+            return worldChunk;
+        } else {
+            return null;
+        }
     }
 }
