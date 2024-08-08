@@ -25,13 +25,6 @@ public class C2MEMod implements ModInitializer {
 
     @Override
     public void onInitialize() {
-        LOGGER.warn("=================================================================");
-        LOGGER.warn("Here be dragons!");
-        LOGGER.warn("You are running C2ME 0.3 branch which is in heavy development");
-        LOGGER.warn("If you have no idea what you are doing, please use the current");
-        LOGGER.warn("Modrinth or CurseForge version of C2ME");
-        LOGGER.warn("=================================================================");
-
         if (Boolean.getBoolean("com.ishland.c2me.runCompressionBenchmark")) {
             LOGGER.info("Benchmarking chunk stream speed");
             LOGGER.info("Warming up");
