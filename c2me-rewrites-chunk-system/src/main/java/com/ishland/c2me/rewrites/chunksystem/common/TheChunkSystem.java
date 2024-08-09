@@ -157,22 +157,23 @@ public class TheChunkSystem extends DaemonizedStatusAdvancingScheduler<ChunkPos,
             final int oldLevel = this.managedTickets.put(pos, level);
             NewChunkStatus oldStatus = NewChunkStatus.fromVanillaLevel(oldLevel);
             NewChunkStatus newStatus = NewChunkStatus.fromVanillaLevel(level);
+            final ChunkPos key = new ChunkPos(pos);
             if (oldStatus != newStatus) {
                 ChunkHolder vanillaHolder;
                 if (newStatus != this.getUnloadedStatus()) {
-                    final ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> holder = this.addTicket(new ChunkPos(pos), newStatus, NO_OP);
+                    final ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> holder = this.addTicket(key, TicketTypeExtension.VANILLA_LEVEL, key, newStatus, NO_OP);
                     vanillaHolder = holder.getUserData().get();
                 } else {
                     this.managedTickets.remove(pos);
                     vanillaHolder = null;
                 }
                 if (oldStatus != this.getUnloadedStatus()) {
-                    this.removeTicket(new ChunkPos(pos), oldStatus);
+                    this.removeTicket(key, TicketTypeExtension.VANILLA_LEVEL, key, oldStatus);
                 }
                 return vanillaHolder;
             } else {
                 if (newStatus != this.getUnloadedStatus()) {
-                    final ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> holder = this.getHolder(new ChunkPos(pos));
+                    final ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> holder = this.getHolder(key);
                     if (holder != null) {
                         return holder.getUserData().get();
                     }
