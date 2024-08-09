@@ -6,6 +6,7 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.objects.ObjectBidirectionalIterator;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ServerChunkLoadingManager;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.thread.ThreadExecutor;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -28,6 +29,7 @@ public abstract class MixinThreadedAnvilChunkStorage implements IThreadedAnvilCh
 
     @Shadow @Final private ThreadExecutor<Runnable> mainThreadExecutor;
 
+    @Shadow @Final private ServerWorld world;
     @Unique
     private static final int c2me$maxSearchPerCall = 128;
 
@@ -48,6 +50,10 @@ public abstract class MixinThreadedAnvilChunkStorage implements IThreadedAnvilCh
     public boolean c2me$runOneChunkAutoSave() {
         if (!this.mainThreadExecutor.isOnThread()) {
             throw new ConcurrentModificationException("runOneChunkAutoSave called async");
+        }
+
+        if (this.world.isSavingDisabled()) {
+            return false;
         }
 
         if (this.c2me$saveChunksIteratorHash != System.identityHashCode(this.chunkHolders) || this.c2me$saveChunksIterator == null) {
