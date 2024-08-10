@@ -9,7 +9,6 @@ import net.minecraft.server.world.ChunkTicket;
 import net.minecraft.server.world.ChunkTicketManager;
 import net.minecraft.server.world.ServerChunkLoadingManager;
 import net.minecraft.util.math.ChunkPos;
-import org.threadly.concurrent.NoThreadScheduler;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,8 +25,6 @@ public class NoTickSystem {
     private final ConcurrentLinkedQueue<Runnable> pendingActionsOnScheduler = new ConcurrentLinkedQueue<>();
     final ConcurrentLinkedQueue<Runnable> mainBeforeTicketTicks = new ConcurrentLinkedQueue<>();
     final ConcurrentLinkedQueue<Runnable> mainAfterTicketTicks = new ConcurrentLinkedQueue<>();
-
-    final NoThreadScheduler noThreadScheduler = new NoThreadScheduler();
 
     private final AtomicBoolean isTicking = new AtomicBoolean();
     final Executor executor = GlobalExecutors.asyncScheduler;
@@ -61,10 +58,6 @@ public class NoTickSystem {
         this.pendingActionsOnScheduler.add(() -> this.playerNoTickDistanceMap.setViewDistance(viewDistance));
     }
 
-    public void tickScheduler() {
-        this.noThreadScheduler.tick(Throwable::printStackTrace);
-    }
-
     public void beforeTicketTicks() {
         drainQueue(this.mainBeforeTicketTicks);
     }
@@ -74,7 +67,6 @@ public class NoTickSystem {
     }
 
     public void tick(ServerChunkLoadingManager tacs) {
-        tickScheduler();
         scheduleTick(tacs);
     }
 
