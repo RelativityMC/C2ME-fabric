@@ -4,7 +4,7 @@
 
 [![Github-CI](https://github.com/RelativityMC/C2ME-fabric/workflows/C2ME%20Build%20Script/badge.svg)](https://github.com/RelativityMC/C2ME-fabric/actions?query=workflow%3ACI)
 [![Build Status](https://ci.codemc.io/job/RelativityMC/job/C2ME-fabric/job/ver%252F1.18/badge/icon)](https://ci.codemc.io/job/RelativityMC/job/C2ME-fabric/job/ver%252F1.18/)
-[![Discord](https://img.shields.io/discord/756715786747248641?logo=discord&logoColor=white)](https://discord.io/ishlandbukkit)
+[![Discord](https://img.shields.io/discord/756715786747248641?logo=discord&logoColor=white)](https://discord.gg/Kdy8NM5HW4)
 <h3>A Fabric mod designed to improve the chunk performance of Minecraft.</h3>
 </div>
 
@@ -19,30 +19,21 @@ Concurrent chunk management engine, it's about making the game better threaded a
 Although it is usable in most cases and tested during build time, it doesn't mean that it is fully stable for a production server.  
 So backup your worlds and practice good game modding skills.
 
-## Branch development status
-| Branch            | Status                               |
-|-------------------|--------------------------------------|
-| fabric/ver/1.20.1 | Active, Mainline                     |
-| fabric/ver/1.19.4 | Bugfixes only                        |
-| fabric/ver/1.18   | Bugfixes only                        |
-
-
 ## Downloads
-You can find semi-stable releases here: https://github.com/RelativityMC/C2ME-fabric/releases  
+Modrinth: https://modrinth.com/mod/c2me-fabric
+CurseForge: https://www.curseforge.com/minecraft/mc-mods/c2me-fabric
 
-### Development builds
-**Note: Development builds may modify the config files in a way unreadable by previous versions. You may encounter crashes or config reset when rolling back to previous versions. Please always backup your config.**
-
-You can find development builds here: https://ci.codemc.io/job/RelativityMC/job/C2ME-fabric  
-Note that these builds may contain more bugfixes and performance improvements but are less tested.  
-If you have encountered any problems in release builds, give development builds a try before reporting.
+## Support status for Minecraft versions
+Only the latest Minecraft release and the latest Minecraft snapshot are fully supported. 
+Older Minecraft releases are in long-term support and will receive critical bug fixes.
+Older Minecraft snapshots are not supported. 
 
 ## Support
 Our issue tracker: [link](https://github.com/RelativityMC/C2ME-fabric/issues)  
-Our discord server: [link](https://discord.io/ishlandbukkit)
+Our discord server: [link](https://discord.gg/Kdy8NM5HW4)
 
 ## Building and setting up
-JDK 17+ is required to build and use C2ME  
+JDK 21+ is required to build and use C2ME  
 Run the following commands in the root directory:
 
 ```shell
