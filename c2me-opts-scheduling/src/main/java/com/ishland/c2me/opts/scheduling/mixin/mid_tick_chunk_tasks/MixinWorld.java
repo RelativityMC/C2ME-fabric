@@ -2,6 +2,7 @@ package com.ishland.c2me.opts.scheduling.mixin.mid_tick_chunk_tasks;
 
 import com.ishland.c2me.opts.scheduling.common.ServerMidTickTask;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
@@ -22,7 +23,7 @@ public abstract class MixinWorld {
     private void onPostTickEntity(CallbackInfo ci) {
         final MinecraftServer server = this.getServer();
         if (!this.isClient && server != null) {
-            ((ServerMidTickTask) server).executeTasksMidTick();
+            ((ServerMidTickTask) server).executeTasksMidTick((ServerWorld) (Object) this);
         }
     }
 
