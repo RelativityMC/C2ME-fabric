@@ -55,11 +55,13 @@ public class C2MEStorageThread extends Thread {
         if (Thread.currentThread() == this) {
             command.run();
         } else {
+            final boolean empty = pendingTasks.isEmpty();
             pendingTasks.add(command);
-            LockSupport.unpark(this);
+            if (empty) this.wakeUp();
         }
     };
     private final ObjectArraySet<CompletableFuture<Void>> writeFutures = new ObjectArraySet<>();
+    private final Object sync = new Object();
 
     public C2MEStorageThread(Path directory, boolean dsync, String name) {
         this.storage = new RegionBasedStorage(directory, dsync);
@@ -71,12 +73,10 @@ public class C2MEStorageThread extends Thread {
 
     @Override
     public void run() {
+        main_loop:
         while (true) {
             boolean hasWork = false;
-            hasWork = handleTasks() || hasWork;
-            hasWork = handlePendingWrites() || hasWork;
-            hasWork = handlePendingReads() || hasWork;
-            hasWork = writeBacklog() || hasWork;
+            hasWork |= pollTasks();
 
             runWriteFutureGC();
 
@@ -91,11 +91,44 @@ public class C2MEStorageThread extends Thread {
                     this.closeFuture.complete(null);
                     break;
                 } else {
-                    LockSupport.parkNanos("Waiting for tasks", 10_000_000);
+                    // attempt to spin-wait before sleeping
+                    if (!pollTasks()) {
+                        Thread.interrupted(); // clear interrupt flag
+                        for (int i = 0; i < 5000; i ++) {
+                            if (pollTasks()) continue main_loop;
+                            LockSupport.parkNanos("Spin-waiting for tasks", 10_000); // 100us
+                        }
+                    }
+                    synchronized (sync) {
+                        if (this.hasPendingTasks() || this.closing.get()) continue main_loop;
+                        try {
+                            sync.wait();
+                        } catch (InterruptedException ignored) {
+                        }
+                    }
                 }
             }
         }
         LOGGER.info("Storage thread {} stopped", this);
+    }
+
+    private boolean pollTasks() {
+        boolean hasWork = false;
+        hasWork = handleTasks() || hasWork;
+        hasWork = handlePendingWrites() || hasWork;
+        hasWork = handlePendingReads() || hasWork;
+        hasWork = writeBacklog() || hasWork;
+        return hasWork;
+    }
+
+    private boolean hasPendingTasks() {
+        return !this.pendingTasks.isEmpty() || !this.pendingReadRequests.isEmpty() || !this.pendingWriteRequests.isEmpty() || !this.writeBacklog.isEmpty();
+    }
+
+    private void wakeUp() {
+        synchronized (sync) {
+            sync.notifyAll();
+        }
     }
 
     /**
@@ -110,8 +143,9 @@ public class C2MEStorageThread extends Thread {
             future.completeExceptionally(new CancellationException());
             return future.thenApply(Function.identity());
         }
+        final boolean empty = this.pendingReadRequests.isEmpty();
         this.pendingReadRequests.add(new ReadRequest(pos, future, scanner));
-        LockSupport.unpark(this);
+        if (empty) this.wakeUp();
         future.thenApply(Function.identity()).orTimeout(60, TimeUnit.SECONDS).exceptionally(throwable -> {
             if (throwable instanceof TimeoutException) {
                 LOGGER.warn("Chunk read at pos {} took too long (> 1min)", new ChunkPos(pos).toLong());
@@ -123,13 +157,15 @@ public class C2MEStorageThread extends Thread {
     }
 
     public void setChunkData(long pos, @Nullable NbtCompound nbt) {
+        final boolean empty = this.pendingWriteRequests.isEmpty();
         this.pendingWriteRequests.add(new WriteRequest(pos, nbt != null ? Either.left(nbt) : null));
-        LockSupport.unpark(this);
+        if (empty) this.wakeUp();
     }
 
     public void setChunkData(long pos, @Nullable byte[] data) {
+        final boolean empty = this.pendingWriteRequests.isEmpty();
         this.pendingWriteRequests.add(new WriteRequest(pos, data != null ? Either.right(data) : null));
-        LockSupport.unpark(this);
+        if (empty) this.wakeUp();
     }
 
     public CompletableFuture<Void> flush(boolean sync) {
@@ -156,7 +192,7 @@ public class C2MEStorageThread extends Thread {
 
     public CompletableFuture<Void> close() {
         this.closing.set(true);
-        LockSupport.unpark(this);
+        this.wakeUp();
         return this.closeFuture.thenApply(Function.identity());
     }
 

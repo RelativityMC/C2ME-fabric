@@ -45,7 +45,7 @@ public class C2MEStorageVanillaInterface extends StorageIoWorker implements IDir
 
     @Override
     public void close() {
-        this.backend.close().join();
+        this.backend.close();
     }
 
     @Override
