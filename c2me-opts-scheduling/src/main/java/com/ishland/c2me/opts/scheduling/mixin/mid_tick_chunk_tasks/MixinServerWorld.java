@@ -17,7 +17,7 @@ public class MixinServerWorld {
 
     @Inject(method = {"tickBlock", "tickFluid"}, at = @At("RETURN"), require = 2)
     private void onPostTickBlockAndFluid(CallbackInfo info) {
-        ((ServerMidTickTask) this.server).executeTasksMidTick();
+        ((ServerMidTickTask) this.server).executeTasksMidTick((ServerWorld) (Object) this);
     }
 
 }
