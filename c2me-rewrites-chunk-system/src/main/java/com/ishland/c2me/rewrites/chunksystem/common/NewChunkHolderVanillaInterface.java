@@ -87,8 +87,7 @@ public class NewChunkHolderVanillaInterface extends ChunkHolder implements IFast
                     return (CompletableFuture<OptionalChunk<Chunk>>) future; // it's fine to cast here
                 }
             } else {
-                final Chunk chunk = this.newHolder.getItem().get().chunk();
-                return CompletableFuture.completedFuture(OptionalChunk.of(chunk instanceof WorldChunk worldChunk ? new WrapperProtoChunk(worldChunk, false) : chunk));
+                return CompletableFuture.completedFuture(OptionalChunk.of(this.newHolder.getItem().get().protoChunk()));
             }
         }
         return future.handle((unused, throwable) -> {
@@ -101,8 +100,7 @@ public class NewChunkHolderVanillaInterface extends ChunkHolder implements IFast
                 SneakyThrow.sneaky(throwable);
                 return null;
             } else {
-                final Chunk chunk = this.newHolder.getItem().get().chunk();
-                return OptionalChunk.of(chunk instanceof WorldChunk worldChunk ? new WrapperProtoChunk(worldChunk, false) : chunk);
+                return OptionalChunk.of(this.newHolder.getItem().get().protoChunk());
             }
         });
     }

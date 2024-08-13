@@ -13,12 +13,7 @@ import com.ishland.flowsched.scheduler.KeyStatusPair;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.minecraft.util.math.ChunkPos;
-import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.chunk.ChunkGenerationContext;
-import net.minecraft.world.chunk.ChunkGenerationStep;
-import net.minecraft.world.chunk.ChunkGenerationSteps;
-import net.minecraft.world.chunk.ChunkStatus;
-import net.minecraft.world.chunk.GenerationDependencies;
+import net.minecraft.world.chunk.*;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -117,7 +112,7 @@ public class VanillaWorldGenerationDelegate extends NewChunkStatus {
                     .run(((IThreadedAnvilChunkStorage) context.tacs()).getGenerationContext(), context.chunks(), chunk)
                     .whenComplete((chunk1, throwable) -> {
                         if (chunk1 != null) {
-                            context.holder().getItem().set(new ChunkState(chunk1, this.status));
+                            context.holder().getItem().set(new ChunkState(chunk1, (ProtoChunk) chunk1, this.status));
                         }
                     }).thenAccept(__ -> {});
         } else {
@@ -128,7 +123,7 @@ public class VanillaWorldGenerationDelegate extends NewChunkStatus {
                     () -> step.run(chunkGenerationContext, context.chunks(), chunk)
                             .whenComplete((chunk1, throwable) -> {
                                 if (chunk1 != null) {
-                                    context.holder().getItem().set(new ChunkState(chunk1, this.status));
+                                    context.holder().getItem().set(new ChunkState(chunk1, (ProtoChunk) chunk1, this.status));
                                 }
                             }).thenAccept(__ -> {})
             );

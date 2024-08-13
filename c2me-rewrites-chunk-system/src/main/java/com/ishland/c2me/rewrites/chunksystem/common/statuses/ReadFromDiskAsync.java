@@ -56,7 +56,7 @@ public class ReadFromDiskAsync extends ReadFromDisk {
 
     @Override
     public CompletionStage<Void> upgradeToThis(ChunkLoadingContext context) {
-        final Single<Chunk> single = invokeAsyncLoad(context)
+        final Single<ProtoChunk> single = invokeAsyncLoad(context)
                 .retryWhen(RxJavaUtils.retryWithExponentialBackoff(3, 200))
                 .cache()
                 .onErrorResumeNext(throwable -> {
@@ -67,7 +67,7 @@ public class ReadFromDiskAsync extends ReadFromDisk {
         return finalizeLoading(context, single);
     }
 
-    protected static Single<Chunk> invokeAsyncLoad(ChunkLoadingContext context) {
+    protected static Single<ProtoChunk> invokeAsyncLoad(ChunkLoadingContext context) {
         return Single.defer(() -> Single.fromCompletionStage(((IThreadedAnvilChunkStorage) context.tacs()).invokeGetUpdatedChunkNbt(context.holder().getKey())))
                 .map(nbt -> nbt.filter(nbt2 -> {
                     boolean bl = nbt2.contains("Status", NbtElement.STRING_TYPE);
@@ -167,7 +167,7 @@ public class ReadFromDiskAsync extends ReadFromDisk {
                     ((IThreadedAnvilChunkStorage) context.tacs()).getWorldGenerationProgressListener().setChunkStatus(chunk.getPos(), null);
                     ((IThreadedAnvilChunkStorage) context.tacs()).getChunkToNextSaveTimeMs().remove(chunk.getPos().toLong());
 
-                    context.holder().getItem().set(new ChunkState(null, null));
+                    context.holder().getItem().set(new ChunkState(null, null, null));
                 }, ((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor());
     }
 

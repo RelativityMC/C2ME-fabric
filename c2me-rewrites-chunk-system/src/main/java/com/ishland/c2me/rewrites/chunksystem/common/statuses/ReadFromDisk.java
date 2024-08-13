@@ -45,12 +45,12 @@ public class ReadFromDisk extends NewChunkStatus {
 
     @Override
     public CompletionStage<Void> upgradeToThis(ChunkLoadingContext context) {
-        final Single<Chunk> single = invokeSyncRead(context)
+        final Single<ProtoChunk> single = invokeSyncRead(context)
                 .retryWhen(RxJavaUtils.retryWithExponentialBackoff(5, 100));
         return finalizeLoading(context, single);
     }
 
-    protected static @NotNull CompletionStage<Void> finalizeLoading(ChunkLoadingContext context, Single<Chunk> single) {
+    protected static @NotNull CompletionStage<Void> finalizeLoading(ChunkLoadingContext context, Single<ProtoChunk> single) {
         return single
                 .doOnError(throwable -> ((IThreadedAnvilChunkStorage) context.tacs()).getWorld().getServer().onChunkLoadFailure(throwable, ((IVersionedChunkStorage) context.tacs()).invokeGetStorageKey(), context.holder().getKey()))
                 .onErrorResumeNext(throwable -> {
@@ -60,13 +60,13 @@ public class ReadFromDisk extends NewChunkStatus {
                         return Single.error(throwable);
                     }
                 })
-                .doOnSuccess(chunk -> context.holder().getItem().set(new ChunkState(chunk, ChunkStatus.EMPTY)))
+                .doOnSuccess(chunk -> context.holder().getItem().set(new ChunkState(chunk, chunk, ChunkStatus.EMPTY)))
                 .ignoreElement()
                 .cache()
                 .toCompletionStage(null);
     }
 
-    protected static @NonNull Single<Chunk> invokeSyncRead(ChunkLoadingContext context) {
+    protected static @NonNull Single<ProtoChunk> invokeSyncRead(ChunkLoadingContext context) {
         return Single.defer(() -> Single.fromCompletionStage(((IThreadedAnvilChunkStorage) context.tacs()).invokeGetUpdatedChunkNbt(context.holder().getKey())))
                 .map(nbt -> nbt.filter(nbt2 -> {
                     boolean bl = nbt2.contains("Status", NbtElement.STRING_TYPE);
@@ -79,7 +79,7 @@ public class ReadFromDisk extends NewChunkStatus {
                 .observeOn(Schedulers.from(((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor()))
                 .map(nbt -> {
                     if (nbt.isPresent()) {
-                        Chunk chunk = ChunkSerializer.deserialize(
+                        ProtoChunk chunk = ChunkSerializer.deserialize(
                                 ((IThreadedAnvilChunkStorage) context.tacs()).getWorld(),
                                 ((IThreadedAnvilChunkStorage) context.tacs()).getPointOfInterestStorage(),
                                 ((IVersionedChunkStorage) context.tacs()).invokeGetStorageKey(),
@@ -141,7 +141,7 @@ public class ReadFromDisk extends NewChunkStatus {
                 listener.setChunkStatus(context.holder().getKey(), null);
             }
 
-            context.holder().getItem().set(new ChunkState(null, null));
+            context.holder().getItem().set(new ChunkState(null, null, null));
         }, ((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor());
     }
 

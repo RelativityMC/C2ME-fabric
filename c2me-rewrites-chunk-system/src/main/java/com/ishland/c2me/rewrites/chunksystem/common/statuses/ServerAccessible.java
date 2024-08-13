@@ -57,7 +57,7 @@ public class ServerAccessible extends NewChunkStatus {
             final WorldChunk worldChunk = toFullChunk(protoChunk, serverWorld);
 
             worldChunk.setLevelTypeProvider(context.holder().getUserData().get()::getLevelType);
-            context.holder().getItem().set(new ChunkState(worldChunk, ChunkStatus.FULL));
+            context.holder().getItem().set(new ChunkState(worldChunk, new WrapperProtoChunk(worldChunk, false), ChunkStatus.FULL));
             if (!((IWorldChunk) worldChunk).isLoadedToWorld()) {
                 worldChunk.loadEntities();
                 worldChunk.setLoadedToWorld(true);
@@ -90,16 +90,17 @@ public class ServerAccessible extends NewChunkStatus {
 
     @Override
     public CompletionStage<Void> downgradeFromThis(ChunkLoadingContext context) {
-        final Chunk chunk = context.holder().getItem().get().chunk();
+        ChunkState state = context.holder().getItem().get();
+        final Chunk chunk = state.chunk();
         Preconditions.checkState(chunk instanceof WorldChunk, "Chunk must be a full chunk");
-        final WorldChunk worldChunk = (WorldChunk) chunk;
         return CompletableFuture.runAsync(() -> {
             ((IThreadedAnvilChunkStorage) context.tacs()).getCurrentChunkHolders().remove(context.holder().getKey().toLong());
             ((IThreadedAnvilChunkStorage) context.tacs()).setChunkHolderListDirty(true);
+            final WorldChunk worldChunk = (WorldChunk) chunk;
 //            worldChunk.setLoadedToWorld(false);
 //            worldChunk.removeChunkTickSchedulers(((IThreadedAnvilChunkStorage) context.tacs()).getWorld());
             worldChunk.setLevelTypeProvider(null);
-            context.holder().getItem().set(new ChunkState(new WrapperProtoChunk(worldChunk, false), ChunkStatus.FULL));
+            context.holder().getItem().set(new ChunkState(state.protoChunk(), state.protoChunk(), ChunkStatus.FULL));
         }, ((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor());
     }
 
