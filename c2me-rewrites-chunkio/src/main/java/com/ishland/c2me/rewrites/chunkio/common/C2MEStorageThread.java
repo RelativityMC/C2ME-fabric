@@ -32,6 +32,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.LockSupport;
 import java.util.function.Function;
@@ -46,6 +47,7 @@ public class C2MEStorageThread extends Thread {
     private final CompletableFuture<Void> closeFuture = new CompletableFuture<>();
 
     private final RegionBasedStorage storage;
+    private final AtomicInteger taskSize = new AtomicInteger();
     private final Long2ReferenceLinkedOpenHashMap<Either<NbtCompound, byte[]>> writeBacklog = new Long2ReferenceLinkedOpenHashMap<>();
     private final Long2ReferenceLinkedOpenHashMap<Either<NbtCompound, byte[]>> cache = new Long2ReferenceLinkedOpenHashMap<>();
     private final ConcurrentLinkedQueue<ReadRequest> pendingReadRequests = new ConcurrentLinkedQueue<>();
@@ -55,7 +57,7 @@ public class C2MEStorageThread extends Thread {
         if (Thread.currentThread() == this) {
             command.run();
         } else {
-            final boolean empty = pendingTasks.isEmpty();
+            final boolean empty = this.taskSize.getAndIncrement() == 0;
             pendingTasks.add(command);
             if (empty) this.wakeUp();
         }
@@ -100,7 +102,7 @@ public class C2MEStorageThread extends Thread {
                         }
                     }
                     synchronized (sync) {
-                        if (this.hasPendingTasks() || this.closing.get()) continue main_loop;
+                        if (this.taskSize.get() != 0 || this.closing.get()) continue main_loop;
                         try {
                             sync.wait();
                         } catch (InterruptedException ignored) {
@@ -143,7 +145,7 @@ public class C2MEStorageThread extends Thread {
             future.completeExceptionally(new CancellationException());
             return future.thenApply(Function.identity());
         }
-        final boolean empty = this.pendingReadRequests.isEmpty();
+        final boolean empty = this.taskSize.getAndIncrement() == 0;
         this.pendingReadRequests.add(new ReadRequest(pos, future, scanner));
         if (empty) this.wakeUp();
 //        future.thenApply(Function.identity()).orTimeout(60, TimeUnit.SECONDS).exceptionally(throwable -> {
@@ -157,13 +159,13 @@ public class C2MEStorageThread extends Thread {
     }
 
     public void setChunkData(long pos, @Nullable NbtCompound nbt) {
-        final boolean empty = this.pendingWriteRequests.isEmpty();
+        final boolean empty = this.taskSize.getAndIncrement() == 0;
         this.pendingWriteRequests.add(new WriteRequest(pos, nbt != null ? Either.left(nbt) : null));
         if (empty) this.wakeUp();
     }
 
     public void setChunkData(long pos, @Nullable byte[] data) {
-        final boolean empty = this.pendingWriteRequests.isEmpty();
+        final boolean empty = this.taskSize.getAndIncrement() == 0;
         this.pendingWriteRequests.add(new WriteRequest(pos, data != null ? Either.right(data) : null));
         if (empty) this.wakeUp();
     }
@@ -205,6 +207,7 @@ public class C2MEStorageThread extends Thread {
         Runnable runnable;
         while ((runnable = this.pendingTasks.poll()) != null) {
             hasWork = true;
+            this.taskSize.decrementAndGet();
             try {
                 runnable.run();
             } catch (Throwable t) {
@@ -218,6 +221,7 @@ public class C2MEStorageThread extends Thread {
         boolean hasWork = false;
         WriteRequest writeRequest;
         while ((writeRequest = this.pendingWriteRequests.poll()) != null) {
+            this.taskSize.decrementAndGet();
             hasWork = true;
             this.cache.put(writeRequest.pos, writeRequest.nbt);
             this.writeBacklog.put(writeRequest.pos, writeRequest.nbt);
@@ -227,8 +231,9 @@ public class C2MEStorageThread extends Thread {
 
     private boolean handlePendingReads() {
         boolean hasWork = false;
-        while (!pendingReadRequests.isEmpty()) {
-            ReadRequest readRequest = this.pendingReadRequests.poll();
+        ReadRequest readRequest;
+        while ((readRequest = this.pendingReadRequests.poll()) != null) {
+            this.taskSize.decrementAndGet();
             hasWork = true;
             assert readRequest != null;
             final long pos = readRequest.pos;
