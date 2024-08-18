@@ -6,6 +6,7 @@ import com.ishland.c2me.base.common.structs.RawByteArrayOutputStream;
 import com.ishland.c2me.base.common.util.SneakyThrow;
 import com.ishland.c2me.base.mixin.access.IRegionBasedStorage;
 import com.ishland.c2me.base.mixin.access.IRegionFile;
+import io.netty.util.internal.PlatformDependent;
 import it.unimi.dsi.fastutil.longs.Long2ReferenceLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import net.minecraft.nbt.NbtCompound;
@@ -27,9 +28,9 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
+import java.util.Queue;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -50,9 +51,7 @@ public class C2MEStorageThread extends Thread {
     private final AtomicInteger taskSize = new AtomicInteger();
     private final Long2ReferenceLinkedOpenHashMap<Either<NbtCompound, byte[]>> writeBacklog = new Long2ReferenceLinkedOpenHashMap<>();
     private final Long2ReferenceLinkedOpenHashMap<Either<NbtCompound, byte[]>> cache = new Long2ReferenceLinkedOpenHashMap<>();
-    private final ConcurrentLinkedQueue<ReadRequest> pendingReadRequests = new ConcurrentLinkedQueue<>();
-    private final ConcurrentLinkedQueue<WriteRequest> pendingWriteRequests = new ConcurrentLinkedQueue<>();
-    private final ConcurrentLinkedQueue<Runnable> pendingTasks = new ConcurrentLinkedQueue<>();
+    private final Queue<Runnable> pendingTasks = PlatformDependent.newMpscQueue();
     private final Executor executor = command -> {
         if (Thread.currentThread() == this) {
             command.run();
@@ -117,14 +116,12 @@ public class C2MEStorageThread extends Thread {
     private boolean pollTasks() {
         boolean hasWork = false;
         hasWork = handleTasks() || hasWork;
-        hasWork = handlePendingWrites() || hasWork;
-        hasWork = handlePendingReads() || hasWork;
         hasWork = writeBacklog() || hasWork;
         return hasWork;
     }
 
     private boolean hasPendingTasks() {
-        return !this.pendingTasks.isEmpty() || !this.pendingReadRequests.isEmpty() || !this.pendingWriteRequests.isEmpty() || !this.writeBacklog.isEmpty();
+        return !this.pendingTasks.isEmpty() || !this.writeBacklog.isEmpty();
     }
 
     private void wakeUp() {
@@ -145,9 +142,7 @@ public class C2MEStorageThread extends Thread {
             future.completeExceptionally(new CancellationException());
             return future.thenApply(Function.identity());
         }
-        final boolean empty = this.taskSize.getAndIncrement() == 0;
-        this.pendingReadRequests.add(new ReadRequest(pos, future, scanner));
-        if (empty) this.wakeUp();
+        this.executor.execute(() -> this.read0(pos, future, scanner));
 //        future.thenApply(Function.identity()).orTimeout(60, TimeUnit.SECONDS).exceptionally(throwable -> {
 //            if (throwable instanceof TimeoutException) {
 //                LOGGER.warn("Chunk read at pos {} took too long (> 1min)", new ChunkPos(pos).toLong());
@@ -159,15 +154,11 @@ public class C2MEStorageThread extends Thread {
     }
 
     public void setChunkData(long pos, @Nullable NbtCompound nbt) {
-        final boolean empty = this.taskSize.getAndIncrement() == 0;
-        this.pendingWriteRequests.add(new WriteRequest(pos, nbt != null ? Either.left(nbt) : null));
-        if (empty) this.wakeUp();
+        this.executor.execute(() -> this.write0(pos, nbt != null ? Either.left(nbt) : null));
     }
 
     public void setChunkData(long pos, @Nullable byte[] data) {
-        final boolean empty = this.taskSize.getAndIncrement() == 0;
-        this.pendingWriteRequests.add(new WriteRequest(pos, data != null ? Either.right(data) : null));
-        if (empty) this.wakeUp();
+        this.executor.execute(() -> this.write0(pos, data != null ? Either.right(data) : null));
     }
 
     public CompletableFuture<Void> flush(boolean sync) {
@@ -179,8 +170,6 @@ public class C2MEStorageThread extends Thread {
             while (true) {
                 runWriteFutureGC();
                 if (handleTasks()) continue;
-                if (handlePendingReads()) continue;
-                if (handlePendingWrites()) continue;
                 if (writeBacklog()) continue;
 
                 break;
@@ -217,72 +206,54 @@ public class C2MEStorageThread extends Thread {
         return hasWork;
     }
 
-    private boolean handlePendingWrites() {
-        boolean hasWork = false;
-        WriteRequest writeRequest;
-        while ((writeRequest = this.pendingWriteRequests.poll()) != null) {
-            this.taskSize.decrementAndGet();
-            hasWork = true;
-            this.cache.put(writeRequest.pos, writeRequest.nbt);
-            this.writeBacklog.put(writeRequest.pos, writeRequest.nbt);
-        }
-        return hasWork;
+    private void write0(long pos, Either<NbtCompound, byte[]> nbt) {
+        this.cache.put(pos, nbt);
+        this.writeBacklog.put(pos, nbt);
     }
 
-    private boolean handlePendingReads() {
-        boolean hasWork = false;
-        ReadRequest readRequest;
-        while ((readRequest = this.pendingReadRequests.poll()) != null) {
-            this.taskSize.decrementAndGet();
-            hasWork = true;
-            assert readRequest != null;
-            final long pos = readRequest.pos;
-            final CompletableFuture<NbtCompound> future = readRequest.future;
-            final NbtScanner scanner = readRequest.scanner;
-            if (this.cache.containsKey(pos)) {
-                final Either<NbtCompound, byte[]> cached = this.cache.get(pos);
-                if (cached == null) {
-                    future.complete(null);
-                } else if (cached.left().isPresent()) {
-                    if (scanner != null) {
-                        GlobalExecutors.prioritizedScheduler.schedule(() -> {
-                            try {
-                                cached.left().get().accept(scanner);
-                                future.complete(null);
-                            } catch (Throwable t) {
-                                future.completeExceptionally(t);
-                            }
-                        }, 16);
-                    } else {
-                        future.complete(cached.left().get());
-                    }
+    private void read0(long pos, CompletableFuture<NbtCompound> future, NbtScanner scanner) {
+        if (this.cache.containsKey(pos)) {
+            final Either<NbtCompound, byte[]> cached = this.cache.get(pos);
+            if (cached == null) {
+                future.complete(null);
+            } else if (cached.left().isPresent()) {
+                if (scanner != null) {
+                    GlobalExecutors.prioritizedScheduler.schedule(() -> {
+                        try {
+                            cached.left().get().accept(scanner);
+                            future.complete(null);
+                        } catch (Throwable t) {
+                            future.completeExceptionally(t);
+                        }
+                    }, 16);
                 } else {
-                    CompletableFuture.supplyAsync(() -> {
-                                try {
-                                    final DataInputStream input = new DataInputStream(new ByteArrayInputStream(cached.right().get()));
-                                    if (scanner != null) {
-                                        NbtIo.scan(input, scanner, NbtSizeTracker.ofUnlimitedBytes());
-                                        return null;
-                                    } else {
-                                        final NbtCompound compound = NbtIo.readCompound(input);
-                                        return compound;
-                                    }
-                                } catch (IOException e) {
-                                    SneakyThrow.sneaky(e);
-                                    return null; // unreachable
-                                }
-                            }, GlobalExecutors.prioritizedScheduler.executor(16))
-                            .thenAccept(future::complete)
-                            .exceptionally(throwable -> {
-                                future.completeExceptionally(throwable);
-                                return null;
-                            });
+                    future.complete(cached.left().get());
                 }
-                continue;
+            } else {
+                CompletableFuture.supplyAsync(() -> {
+                            try {
+                                final DataInputStream input = new DataInputStream(new ByteArrayInputStream(cached.right().get()));
+                                if (scanner != null) {
+                                    NbtIo.scan(input, scanner, NbtSizeTracker.ofUnlimitedBytes());
+                                    return null;
+                                } else {
+                                    final NbtCompound compound = NbtIo.readCompound(input);
+                                    return compound;
+                                }
+                            } catch (IOException e) {
+                                SneakyThrow.sneaky(e);
+                                return null; // unreachable
+                            }
+                        }, GlobalExecutors.prioritizedScheduler.executor(16))
+                        .thenAccept(future::complete)
+                        .exceptionally(throwable -> {
+                            future.completeExceptionally(throwable);
+                            return null;
+                        });
             }
+        } else {
             scheduleChunkRead(pos, future, scanner);
         }
-        return hasWork;
     }
 
     private boolean writeBacklog() {
