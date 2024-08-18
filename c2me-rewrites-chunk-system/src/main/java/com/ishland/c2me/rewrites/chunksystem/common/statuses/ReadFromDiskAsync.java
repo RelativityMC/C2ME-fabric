@@ -129,7 +129,7 @@ public class ReadFromDiskAsync extends ReadFromDisk {
     @Override
     public CompletionStage<Void> downgradeFromThis(ChunkLoadingContext context) {
         final AtomicBoolean loadedToWorld = new AtomicBoolean(false);
-        return CompletableFuture.supplyAsync(() -> {
+        return syncWithLightEngine(context).thenApplyAsync(unused -> {
                     final ChunkState chunkState = context.holder().getItem().get();
                     Chunk chunk = chunkState.chunk();
                     if (chunk instanceof WrapperProtoChunk protoChunk) chunk = protoChunk.getWrappedChunk();
