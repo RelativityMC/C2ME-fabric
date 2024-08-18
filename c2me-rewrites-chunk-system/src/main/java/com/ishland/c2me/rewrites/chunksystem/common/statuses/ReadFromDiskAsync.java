@@ -115,7 +115,7 @@ public class ReadFromDiskAsync extends ReadFromDisk {
                 .zipWith(
                         Single.defer(() -> Single.fromCompletionStage(((ISerializingRegionBasedStorage) ((IThreadedAnvilChunkStorage) context.tacs()).getPointOfInterestStorage()).getStorageAccess().read(context.holder().getKey()))),
                         (pair, poiNbt) -> {
-                            pair.left().add(() -> ((SerializingRegionBasedStorageExtension) ((IThreadedAnvilChunkStorage) context.tacs()).getPointOfInterestStorage()).update(context.holder().getKey(), poiNbt.orElse(null)));
+                            pair.left().addFirst(() -> ((SerializingRegionBasedStorageExtension) ((IThreadedAnvilChunkStorage) context.tacs()).getPointOfInterestStorage()).update(context.holder().getKey(), poiNbt.orElse(null)));
                             return pair;
                         }
                 )
