@@ -11,7 +11,7 @@ import net.minecraft.world.chunk.Chunk;
  */
 public class SerializerAccess {
 
-    private final static Serializer VANILLA = (world, chunk) -> Either.left(ChunkSerializer.serialize(world, chunk));
+    private final static Serializer VANILLA = serializable -> Either.left(serializable.serialize());
 
     private static Serializer activeSerializer = null;
 
@@ -31,7 +31,7 @@ public class SerializerAccess {
 
     public interface Serializer {
 
-        com.ibm.asyncutil.util.Either<NbtCompound, byte[]> serialize(ServerWorld world, Chunk chunk);
+        com.ibm.asyncutil.util.Either<NbtCompound, byte[]> serialize(ChunkSerializer serializable);
 
     }
 

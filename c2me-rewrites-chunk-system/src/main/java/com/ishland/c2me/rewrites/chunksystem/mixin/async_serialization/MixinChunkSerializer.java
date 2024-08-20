@@ -2,6 +2,8 @@ package com.ishland.c2me.rewrites.chunksystem.mixin.async_serialization;
 
 import com.ishland.c2me.rewrites.chunksystem.common.async_chunkio.AsyncSerializationManager;
 import com.ishland.c2me.rewrites.chunksystem.common.async_chunkio.ChunkIoMainThreadTaskUtils;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.util.math.BlockPos;
@@ -24,22 +26,9 @@ public class MixinChunkSerializer {
 
     @Shadow @Final private static Logger LOGGER;
 
-    @Redirect(method = "deserialize", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/poi/PointOfInterestStorage;initForPalette(Lnet/minecraft/util/math/ChunkSectionPos;Lnet/minecraft/world/chunk/ChunkSection;)V"))
-    private static void onPoiStorageInitForPalette(PointOfInterestStorage instance, ChunkSectionPos chunkSectionPos, ChunkSection chunkSection) {
-        ChunkIoMainThreadTaskUtils.executeMain(() -> instance.initForPalette(chunkSectionPos, chunkSection));
-    }
-
-    @Redirect(method = "serialize", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/Chunk;getBlockEntityPositions()Ljava/util/Set;"))
-    private static Set<BlockPos> onChunkGetBlockEntityPositions(Chunk chunk) {
-        final AsyncSerializationManager.Scope scope = AsyncSerializationManager.getScope(chunk.getPos());
-        return scope != null ? scope.blockEntities.keySet() : chunk.getBlockEntityPositions();
-    }
-
-    @Redirect(method = "serialize", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/Chunk;getPackedBlockEntityNbt(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/registry/RegistryWrapper$WrapperLookup;)Lnet/minecraft/nbt/NbtCompound;"))
-    private static NbtCompound onChunkGetPackedBlockEntityNbt(Chunk chunk, BlockPos pos, RegistryWrapper.WrapperLookup wrapperLookup) {
-        final AsyncSerializationManager.Scope scope = AsyncSerializationManager.getScope(chunk.getPos());
-        if (scope == null) return chunk.getPackedBlockEntityNbt(pos, wrapperLookup);
-        return scope.blockEntities.get(pos);
+    @WrapOperation(method = "deserialize", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/poi/PointOfInterestStorage;initForPalette(Lnet/minecraft/util/math/ChunkSectionPos;Lnet/minecraft/world/chunk/ChunkSection;)V"))
+    private void onPoiStorageInitForPalette(PointOfInterestStorage instance, ChunkSectionPos sectionPos, ChunkSection chunkSection, Operation<Void> original) {
+        ChunkIoMainThreadTaskUtils.executeMain(() -> original.call(instance, sectionPos, chunkSection));
     }
 
 }

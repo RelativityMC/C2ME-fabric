@@ -5,7 +5,6 @@
   "plugin": "com.ishland.c2me.base.common.ModuleMixinPlugin",
   "mixins": [
     "ChunkStatusMixin",
-    "GenerationStepCarverMixin",
     "HeightMapTypeMixin",
     "IdentifierMixin",
     "IStarlightSaveState",

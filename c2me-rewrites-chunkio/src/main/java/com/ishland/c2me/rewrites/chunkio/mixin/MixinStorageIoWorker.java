@@ -15,13 +15,14 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Map;
+import java.util.SequencedMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @Mixin(StorageIoWorker.class)
 public class MixinStorageIoWorker {
 
     @Mutable
-    @Shadow @Final private Map<ChunkPos, StorageIoWorker.Result> results;
+    @Shadow @Final private SequencedMap<ChunkPos, StorageIoWorker.Result> results;
 
     @Mutable
     @Shadow @Final private RegionBasedStorage storage;

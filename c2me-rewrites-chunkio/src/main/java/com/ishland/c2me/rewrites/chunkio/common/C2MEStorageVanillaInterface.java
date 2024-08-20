@@ -12,6 +12,8 @@ import org.jetbrains.annotations.Nullable;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 public class C2MEStorageVanillaInterface extends StorageIoWorker implements IDirectStorage {
 
@@ -26,6 +28,14 @@ public class C2MEStorageVanillaInterface extends StorageIoWorker implements IDir
     public CompletableFuture<Void> setResult(ChunkPos pos, @Nullable NbtCompound nbt) {
         this.backend.setChunkData(pos.toLong(), nbt);
         return CompletableFuture.completedFuture(null);
+    }
+
+    @Override
+    public CompletableFuture<Void> setResult(ChunkPos pos, Supplier<NbtCompound> nbtSupplier) {
+        return CompletableFuture.supplyAsync(() -> {
+            NbtCompound nbtCompound = nbtSupplier.get();
+            return this.setResult(pos, nbtCompound);
+        }, Thread::startVirtualThread).thenCompose(Function.identity());
     }
 
     @Override

@@ -10,25 +10,22 @@ import com.ishland.c2me.rewrites.chunksystem.common.ChunkLoadingContext;
 import com.ishland.c2me.rewrites.chunksystem.common.ChunkState;
 import com.ishland.c2me.rewrites.chunksystem.common.Config;
 import com.ishland.c2me.rewrites.chunksystem.common.NewChunkStatus;
+import com.ishland.c2me.rewrites.chunksystem.common.async_chunkio.BlendingInfoUtil;
+import com.ishland.c2me.rewrites.chunksystem.common.async_chunkio.ProtoChunkExtension;
 import com.ishland.c2me.rewrites.chunksystem.common.fapi.LifecycleEventInvoker;
 import com.ishland.flowsched.scheduler.ItemHolder;
 import com.ishland.flowsched.scheduler.KeyStatusPair;
 import io.reactivex.rxjava3.annotations.NonNull;
+import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.schedulers.Schedulers;
-import net.minecraft.nbt.NbtElement;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.server.WorldGenerationProgressListener;
 import net.minecraft.server.world.ServerLightingProvider;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.ChunkSerializer;
-import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.chunk.ChunkStatus;
-import net.minecraft.world.chunk.ProtoChunk;
-import net.minecraft.world.chunk.UpgradeData;
-import net.minecraft.world.chunk.WorldChunk;
-import net.minecraft.world.chunk.WrapperProtoChunk;
+import net.minecraft.world.chunk.*;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,7 +43,7 @@ public class ReadFromDisk extends NewChunkStatus {
 
     @Override
     public CompletionStage<Void> upgradeToThis(ChunkLoadingContext context) {
-        final Single<ProtoChunk> single = invokeSyncRead(context)
+        final Single<ProtoChunk> single = invokeVanillaRead(context)
                 .retryWhen(RxJavaUtils.retryWithExponentialBackoff(5, 100));
         return finalizeLoading(context, single);
     }
@@ -67,32 +64,45 @@ public class ReadFromDisk extends NewChunkStatus {
                 .toCompletionStage(null);
     }
 
-    protected static @NonNull Single<ProtoChunk> invokeSyncRead(ChunkLoadingContext context) {
+    protected static @NonNull Single<ProtoChunk> invokeVanillaRead(ChunkLoadingContext context) {
         return Single.defer(() -> Single.fromCompletionStage(((IThreadedAnvilChunkStorage) context.tacs()).invokeGetUpdatedChunkNbt(context.holder().getKey())))
-                .map(nbt -> nbt.filter(nbt2 -> {
-                    boolean bl = nbt2.contains("Status", NbtElement.STRING_TYPE);
-                    if (!bl) {
+                .map(optional -> optional.map(nbtCompound -> {
+                    ServerWorld world = ((IThreadedAnvilChunkStorage) context.tacs()).getWorld();
+                    ChunkSerializer chunkSerializer = ChunkSerializer.fromNbt(world, world.getRegistryManager(), nbtCompound);
+                    if (chunkSerializer == null) {
                         LOGGER.error("Chunk file at {} is missing level data, skipping", context.holder().getKey());
                     }
 
-                    return bl;
+                    return chunkSerializer;
                 }))
+                .zipWith(
+                        Completable.defer(() -> Completable.fromCompletionStage(((IThreadedAnvilChunkStorage) context.tacs()).getPointOfInterestStorage().load(context.holder().getKey()))).toSingleDefault(ReadFromDisk.class),
+                        (chunkSerializer, o) -> chunkSerializer
+                )
                 .observeOn(Schedulers.from(((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor()))
-                .map(nbt -> {
-                    if (nbt.isPresent()) {
-                        ProtoChunk chunk = ChunkSerializer.deserialize(
-                                ((IThreadedAnvilChunkStorage) context.tacs()).getWorld(),
-                                ((IThreadedAnvilChunkStorage) context.tacs()).getPointOfInterestStorage(),
-                                ((IVersionedChunkStorage) context.tacs()).invokeGetStorageKey(),
-                                context.holder().getKey(),
-                                nbt.get()
-                        );
+                .map(chunkSerializer -> {
+                    if (chunkSerializer.isPresent()) {
+                        ProtoChunk chunk = chunkSerializer.get().deserialize(((IThreadedAnvilChunkStorage) context.tacs()).getWorld(), ((IThreadedAnvilChunkStorage) context.tacs()).getPointOfInterestStorage(), ((IVersionedChunkStorage) context.tacs()).invokeGetStorageKey(), context.holder().getKey());
+//                        this.mark(pos, chunk.getStatus().getChunkType());
                         return chunk;
                     } else {
                         return createEmptyProtoChunk(context);
                     }
                 })
-                .doOnError(throwable -> LOGGER.warn("Failed to load chunk at {}", context.holder().getKey(), throwable));
+                .flatMap(protoChunk -> {
+                    final ServerWorld world = ((IThreadedAnvilChunkStorage) context.tacs()).getWorld();
+                    // blending
+                    final ChunkPos pos = context.holder().getKey();
+                    protoChunk = protoChunk != null ? protoChunk : new ProtoChunk(pos, UpgradeData.NO_UPGRADE_DATA, world, world.getRegistryManager().get(RegistryKeys.BIOME), null);
+                    if (protoChunk.getBelowZeroRetrogen() != null || protoChunk.getStatus().getChunkType() == ChunkType.PROTOCHUNK) {
+                        ProtoChunk finalProtoChunk = protoChunk;
+                        return Single.defer(() -> Single.fromCompletionStage(BlendingInfoUtil.getBlendingInfos(((IVersionedChunkStorage) context.tacs()).getWorker(), pos)))
+                                .doOnSuccess(bitSets -> ((ProtoChunkExtension) finalProtoChunk).setBlendingInfo(pos, bitSets))
+                                .map(unused -> finalProtoChunk);
+                    } else {
+                        return Single.just(protoChunk);
+                    }
+                });
     }
 
     protected static @NotNull ProtoChunk createEmptyProtoChunk(ChunkLoadingContext context) {

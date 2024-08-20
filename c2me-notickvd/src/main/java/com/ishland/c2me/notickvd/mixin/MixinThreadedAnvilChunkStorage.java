@@ -70,7 +70,7 @@ public abstract class MixinThreadedAnvilChunkStorage {
 //            this.sendChunkDataPackets(player, mutableObject, worldChunk);
 //    }
 
-    @WrapWithCondition(method = "method_53684", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerChunkLoadingManager;sendToPlayers(Lnet/minecraft/world/chunk/WorldChunk;)V"))
+    @WrapWithCondition(method = "method_61257", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerChunkLoadingManager;sendToPlayers(Lnet/minecraft/world/chunk/WorldChunk;)V"))
     private boolean controlDuplicateChunkSending(ServerChunkLoadingManager instance, WorldChunk worldChunk) {
         return Config.ensureChunkCorrectness;
     }

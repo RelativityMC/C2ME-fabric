@@ -10,7 +10,6 @@
     "MixinNbtList",
     "MixinUtil",
     "asm.ASMTargets",
-    "noise.MixinChainedBlockSource",
     "object_pooling_caching.MixinConfiguredFeature",
     "object_pooling_caching.MixinOreFeature",
     "surfacebuilder.MixinMaterialRuleContext",

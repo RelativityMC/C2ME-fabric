@@ -14,6 +14,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.Map;
+import java.util.SequencedMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
@@ -23,9 +24,7 @@ public abstract class MixinStorageIoWorker implements IDirectStorage {
 
     @Shadow protected abstract <T> CompletableFuture<T> run(Supplier<Either<T, Exception>> task);
 
-    @Shadow @Final private Map<ChunkPos, StorageIoWorker.Result> results;
-
-    @Shadow protected abstract void write(ChunkPos pos, StorageIoWorker.Result result);
+    @Shadow @Final private SequencedMap<ChunkPos, StorageIoWorker.Result> results;
 
     @Shadow @Final private RegionBasedStorage storage;
 

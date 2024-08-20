@@ -196,13 +196,13 @@ public class NewChunkHolderVanillaInterface extends ChunkHolder implements IFast
     }
 
     @Override
-    public void markForBlockUpdate(BlockPos pos) {
-        super.markForBlockUpdate(pos); // use vanilla impl
+    public boolean markForBlockUpdate(BlockPos pos) {
+        return super.markForBlockUpdate(pos); // use vanilla impl
     }
 
     @Override
-    public void markForLightUpdate(LightType lightType, int y) {
-        super.markForLightUpdate(lightType, y); // use vanilla impl
+    public boolean markForLightUpdate(LightType lightType, int y) {
+        return super.markForLightUpdate(lightType, y); // use vanilla impl
     }
 
     @Override

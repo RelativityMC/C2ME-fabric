@@ -19,7 +19,7 @@ import java.util.concurrent.atomic.AtomicIntegerArray;
 @Mixin(ChunkHolder.class)
 public abstract class MixinChunkHolder implements DuckChunkHolder {
 
-    @Shadow public abstract void markForLightUpdate(LightType lightType, int y);
+    @Shadow public abstract boolean markForLightUpdate(LightType lightType, int y);
 
     @Shadow @Final private LightingProvider lightingProvider;
     private AtomicIntegerArray[] c2me$dirtyLightSections;
@@ -45,10 +45,11 @@ public abstract class MixinChunkHolder implements DuckChunkHolder {
     }
 
     @Override
-    public void c2me$undirtyLight() {
+    public boolean c2me$undirtyLight() {
         if (!this.c2me$scheduledLightUndirty.compareAndSet(true, false)) {
-            return;
+            return false;
         }
+        boolean hasDirtyLight = false;
         AtomicIntegerArray[] me$dirtyLightSections = this.c2me$dirtyLightSections;
         final int bottomY = this.lightingProvider.getBottomY();
         for (int __i = 0, me$dirtyLightSectionsLength = me$dirtyLightSections.length; __i < me$dirtyLightSectionsLength; __i++) {
@@ -56,11 +57,11 @@ public abstract class MixinChunkHolder implements DuckChunkHolder {
             LightType lightType = LightType.values()[__i];
             for (int j = 0; j < section.length(); j++) {
                 if (section.compareAndSet(j, 1, 0)) {
-                    this.markForLightUpdate(lightType, j + bottomY);
+                    hasDirtyLight |= this.markForLightUpdate(lightType, j + bottomY);
                 }
             }
         }
-
+        return hasDirtyLight;
     }
 
 }

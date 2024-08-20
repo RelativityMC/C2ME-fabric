@@ -1,8 +1,6 @@
 package com.ishland.c2me.rewrites.chunk_serializer.common;
 
 import com.ishland.c2me.base.mixin.access.IBelowZeroRetrogen;
-import com.ishland.c2me.base.mixin.access.IBlendingData;
-import com.ishland.c2me.base.mixin.access.IChunkSection;
 import com.ishland.c2me.base.mixin.access.IChunkTickScheduler;
 import com.ishland.c2me.base.mixin.access.ISimpleTickScheduler;
 import com.ishland.c2me.base.mixin.access.IState;
@@ -38,32 +36,23 @@ import net.minecraft.util.collection.IndexedIterable;
 import net.minecraft.util.math.BlockBox;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.math.ChunkSectionPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.EightWayDirection;
 import net.minecraft.world.ChunkSerializer;
 import net.minecraft.world.Heightmap;
-import net.minecraft.world.LightType;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeKeys;
 import net.minecraft.world.chunk.BelowZeroRetrogen;
 import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.chunk.ChunkNibbleArray;
-import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.ChunkType;
 import net.minecraft.world.chunk.PalettedContainer;
-import net.minecraft.world.chunk.ProtoChunk;
 import net.minecraft.world.chunk.ReadableContainer;
 import net.minecraft.world.chunk.UpgradeData;
-import net.minecraft.world.chunk.light.LightingProvider;
-import net.minecraft.world.gen.GenerationStep;
-import net.minecraft.world.gen.carver.CarvingMask;
 import net.minecraft.world.gen.chunk.BlendingData;
 import net.minecraft.world.gen.structure.Structure;
 import net.minecraft.world.tick.ChunkTickScheduler;
 import net.minecraft.world.tick.OrderedTick;
-import net.minecraft.world.tick.SerializableTickScheduler;
 import net.minecraft.world.tick.SimpleTickScheduler;
 import net.minecraft.world.tick.Tick;
 import net.minecraft.world.tick.TickPriority;
@@ -112,7 +101,7 @@ public final class ChunkDataSerializer {
     private static final byte[] STRING_SIDES = NbtWriter.getAsciiStringBytes("Sides");
     private static final byte[] STRING_ENTITIES = NbtWriter.getAsciiStringBytes("entities");
     private static final byte[] STRING_LIGHTS = NbtWriter.getAsciiStringBytes("Lights");
-    private static final byte[] STRING_CARVING_MASKS = NbtWriter.getAsciiStringBytes("CarvingMasks");
+    private static final byte[] STRING_CARVING_MASK = NbtWriter.getAsciiStringBytes("carving_mask");
     private static final byte[] STRING_HEIGHTMAPS = NbtWriter.getAsciiStringBytes("Heightmaps");
     private static final byte[] STRING_POST_PROCESSING = NbtWriter.getAsciiStringBytes("PostProcessing");
     private static final byte[] STRING_BLOCK_TICKS = NbtWriter.getAsciiStringBytes("block_ticks");
@@ -160,29 +149,29 @@ public final class ChunkDataSerializer {
     /**
      * Mirror of {@link ChunkSerializer#serialize(ServerWorld, Chunk)}
      */
-    public static void write(ServerWorld world, Chunk chunk, NbtWriter writer) {
-        ChunkPos chunkPos = chunk.getPos();
+    public static void write(ChunkSerializer serializable, NbtWriter writer) {
+        ChunkPos chunkPos = serializable.chunkPos();
 
 //        System.out.printf("Serializing chunk at: %d %d%n", chunkPos.x, chunkPos.z);
 
         writer.putString(STRING_C2ME, STRING_KROPPEB);
         writer.putInt(STRING_DATA_VERSION, SharedConstants.getGameVersion().getSaveVersion().getId());
         writer.putInt(STRING_X_POS, chunkPos.x);
-        writer.putInt(STRING_Y_POS, chunk.getBottomSectionCoord());
+        writer.putInt(STRING_Y_POS, serializable.minSectionY());
         writer.putInt(STRING_Z_POS, chunkPos.z);
-        writer.putLong(STRING_LAST_UPDATE, world.getTime());
-        writer.putLong(STRING_INHABITED_TIME, chunk.getInhabitedTime());
-        writer.putString(STRING_STATUS, ((ChunkStatusAccessor) chunk.getStatus()).getIdBytes());
+        writer.putLong(STRING_LAST_UPDATE, serializable.lastUpdateTime());
+        writer.putLong(STRING_INHABITED_TIME, serializable.inhabitedTime());
+        writer.putString(STRING_STATUS, ((ChunkStatusAccessor) serializable.chunkStatus()).getIdBytes());
 
-        BlendingData blendingData = chunk.getBlendingData();
+        BlendingData.Serialized blendingData = serializable.blendingData();
         if (blendingData != null) {
             // Inline codec
             writer.startCompound(STRING_BLENDING_DATA);
-            writeBlendingData(writer, (IBlendingData) blendingData);
+            writeBlendingData(writer, blendingData);
             writer.finishCompound();
         }
 
-        BelowZeroRetrogen belowZeroRetrogen = chunk.getBelowZeroRetrogen();
+        BelowZeroRetrogen belowZeroRetrogen = serializable.belowZeroRetrogen();
         if (belowZeroRetrogen != null) {
             // Inline codec
             writer.startCompound(STRING_BELOW_ZERO_RETROGEN);
@@ -190,7 +179,7 @@ public final class ChunkDataSerializer {
             writer.finishCompound();
         }
 
-        UpgradeData upgradeData = chunk.getUpgradeData();
+        UpgradeData upgradeData = serializable.upgradeData();
         if (!upgradeData.isDone()) {
             // Inline serialization
             writer.startCompound(STRING_UPGRADE_DATA);
@@ -198,34 +187,24 @@ public final class ChunkDataSerializer {
             writer.finishCompound();
         }
 
-        ChunkSection[] chunkSections = chunk.getSectionArray();
-        LightingProvider lightingProvider = world.getChunkManager().getLightingProvider();
-        Registry<Biome> biomeRegistry = world.getRegistryManager().get(RegistryKeys.BIOME);
+        List<ChunkSerializer.SectionData> sectionData = serializable.sectionData();
 
-        checkLightFlag(chunk, writer, world);
+        Registry<Biome> biomeRegistry = serializable.biomeRegistry();
 
-        writeSectionData(writer, chunk, chunkPos, (IChunkSection[]) chunkSections, lightingProvider, biomeRegistry);
+        checkLightFlag(serializable.lightCorrect(), writer);
+
+        writeSectionData(writer, chunkPos, sectionData, biomeRegistry);
 
 
-        long blockEntitiesStart = writer.startList(STRING_BLOCK_ENTITIES, NbtElement.COMPOUND_TYPE);
-        int blockEntitiesCount = 0;
+        writer.startFixedList(STRING_BLOCK_ENTITIES, serializable.blockEntities().size(), NbtElement.COMPOUND_TYPE);
 
-        // TODO: there is already a redirect here, have to copy it over
-        for (BlockPos bl2 : chunk.getBlockEntityPositions()) {
-            // TODO: optimize
-            NbtCompound chunkNibbleArray = chunk.getPackedBlockEntityNbt(bl2, world.getRegistryManager());
-            if (chunkNibbleArray != null) {
-                writer.putElementEntry(chunkNibbleArray);
-                blockEntitiesCount++;
-            }
+        for (NbtCompound blockEntity : serializable.blockEntities()) {
+            writer.putElementEntry(blockEntity);
         }
 
-        writer.finishList(blockEntitiesStart, blockEntitiesCount);
 
-
-        if (chunk.getStatus().getChunkType() == ChunkType.PROTOCHUNK) {
-            ProtoChunk j = (ProtoChunk) chunk;
-            final List<NbtCompound> entities = j.getEntities();
+        if (serializable.chunkStatus().getChunkType() == ChunkType.PROTOCHUNK) {
+            final List<NbtCompound> entities = serializable.entities();
             writer.startFixedList(STRING_ENTITIES, entities.size(), NbtElement.COMPOUND_TYPE);
             for (NbtCompound entity : entities) {
                 //noinspection deprecation
@@ -234,55 +213,44 @@ public final class ChunkDataSerializer {
 
 //            putShortListArray(j.getLightSourcesBySection(), writer, STRING_LIGHTS); // no longer exists after lighting update
 
-            writer.startCompound(STRING_CARVING_MASKS);
-
-            for (GenerationStep.Carver carver : GenerationStep.Carver.values()) {
-                CarvingMask carvingMask = j.getCarvingMask(carver);
-                if (carvingMask != null) {
-                    writer.putLongArray(
-                            ((GenerationStepCarverAccessor) (Object) carver).getNameBytes(),
-                            carvingMask.getMask());
-                }
+            if (serializable.carvingMask() != null) {
+                writer.putLongArray(STRING_CARVING_MASK, serializable.carvingMask());
             }
-
-            writer.finishCompound();
         }
 
-        serializeTicks(writer, world, chunk.getTickSchedulers());
-        ShortList[] postProcessingLists = chunk.getPostProcessingLists();
+        serializeTicks(writer, serializable.packedTicks());
+        ShortList[] postProcessingLists = serializable.postProcessingSections();
         putShortListArray(postProcessingLists, writer, STRING_POST_PROCESSING);
 
 
         writer.startCompound(STRING_HEIGHTMAPS);
-        for (Map.Entry<Heightmap.Type, Heightmap> entry : chunk.getHeightmaps()) {
-            if (chunk.getStatus().getHeightmapTypes().contains(entry.getKey())) {
-                writer.putLongArray(
-                        ((HeightMapTypeAccessor) (Object) entry.getKey()).getNameBytes(),
-                        entry.getValue().asLongArray());
-
-            }
+        for (Map.Entry<Heightmap.Type, long[]> entry : serializable.heightmaps().entrySet()) {
+            writer.putLongArray(
+                    ((HeightMapTypeAccessor) (Object) entry.getKey()).getNameBytes(),
+                    entry.getValue()
+            );
         }
         writer.finishCompound();
 
-
-        writeStructures(writer, StructureContext.from(world), chunkPos, chunk.getStructureStarts(), chunk.getStructureReferences());
+        writer.getVisitor().visit(STRING_STRUCTURES, serializable.structureData());
     }
 
-    private static void checkLightFlag(Chunk chunk, NbtWriter writer, ServerWorld world) {
+    private static void checkLightFlag(boolean lightCorrect, NbtWriter writer) {
         if (STARLIGHT) {
             // starlight also has a check to see if the "level" isn't a "serverlevel"???
-            if (chunk.isLightOn()) {
+            if (lightCorrect) {
                 writer.putBoolean(STRING_IS_LIGHT_ON, false);
             }
         } else {
-            if (chunk.isLightOn()) {
+            if (lightCorrect) {
                 writer.putBoolean(STRING_IS_LIGHT_ON, true);
             }
         }
     }
 
     private static void putShortListArray(ShortList[] data, NbtWriter writer, byte[] name) {
-        writer.startFixedList(name, data.length, NbtElement.LIST_TYPE);
+        long start = writer.startList(name, NbtElement.LIST_TYPE);
+        int count = 0;
 
         for (ShortList shortList : data) {
             if (shortList != null) {
@@ -290,26 +258,24 @@ public final class ChunkDataSerializer {
                 for (Short short_ : shortList) {
                     writer.putShortEntry(short_);
                 }
-            } else {
-                writer.startFixedListEntry(0, NbtElement.END_TYPE);
+                count ++;
             }
-
         }
+
+        writer.finishList(start, count);
     }
 
     private static void writeSectionData(
             NbtWriter writer,
-            Chunk chunk,
             ChunkPos chunkPos,
-            IChunkSection[] chunkSections,
-            LightingProvider lightingProvider,
+            List<ChunkSerializer.SectionData> sectionData,
             Registry<Biome> biomeRegistry
     ) {
-        if (STARLIGHT) {
-            writeSectionDataStarlight(writer, chunk, chunkPos, chunkSections, lightingProvider, biomeRegistry);
-        } else {
-            writeSectionDataVanilla(writer, chunk, chunkPos, chunkSections, lightingProvider, biomeRegistry);
-        }
+//        if (STARLIGHT) {
+//            writeSectionDataStarlight(writer, chunkPos, sectionData, biomeRegistry);
+//        } else {
+            writeSectionDataVanilla(writer, chunkPos, sectionData, biomeRegistry);
+//        }
     }
 
     /**
@@ -317,160 +283,150 @@ public final class ChunkDataSerializer {
      */
     private static void writeSectionDataVanilla(
             NbtWriter writer,
-            Chunk chunk,
             ChunkPos chunkPos,
-            IChunkSection[] chunkSections,
-            LightingProvider lightingProvider,
+            List<ChunkSerializer.SectionData> sectionData,
             Registry<Biome> biomeRegistry
     ) {
         long sectionsStart = writer.startList(STRING_SECTIONS, NbtElement.COMPOUND_TYPE);
         int sectionCount = 0;
 
-        for (int i = lightingProvider.getBottomY(); i < lightingProvider.getTopY(); ++i) {
-            int index = chunk.sectionCoordToIndex(i);
-            boolean bl2 = index >= 0 && index < chunkSections.length;
-
-            ChunkNibbleArray blockLight = lightingProvider.get(LightType.BLOCK)
-                    .getLightSection(ChunkSectionPos.from(chunkPos, i));
-            ChunkNibbleArray skyLight = lightingProvider.get(LightType.SKY)
-                    .getLightSection(ChunkSectionPos.from(chunkPos, i));
-
-            if (bl2 || blockLight != null || skyLight != null) {
-                boolean hasInner = false;
-                if (bl2) {
+        for (int __i = 0, sectionDataSize = sectionData.size(); __i < sectionDataSize; __i++) {
+            ChunkSerializer.SectionData sectionDatum = sectionData.get(__i);
+            boolean hasInner = false;
+            if (sectionDatum.chunkSection() != null) {
+                if (!hasInner) {
                     hasInner = true;
                     writer.compoundEntryStart();
-                    IChunkSection chunkSection = chunkSections[index];
-
-                    writeBlockStates(writer, chunkSection.getBlockStateContainer());
-                    writeBiomes(writer, chunkSection.getBiomeContainer(), biomeRegistry);
                 }
 
-                if (blockLight != null && !blockLight.isUninitialized()) {
-                    if (!hasInner) {
-                        writer.compoundEntryStart();
-                        hasInner = true;
-                    }
-                    writer.putByteArray(STRING_BLOCK_LIGHT, blockLight.asByteArray());
+                writeBlockStates(writer, sectionDatum.chunkSection().getBlockStateContainer());
+                writeBiomes(writer, sectionDatum.chunkSection().getBiomeContainer(), biomeRegistry);
+            }
+            
+            if (sectionDatum.blockLight() != null) {
+                if (!hasInner) {
+                    hasInner = true;
+                    writer.compoundEntryStart();
                 }
-
-                if (skyLight != null && !skyLight.isUninitialized()) {
-                    if (!hasInner) {
-                        writer.compoundEntryStart();
-                        hasInner = true;
-                    }
-                    writer.putByteArray(STRING_SKY_LIGHT, skyLight.asByteArray());
+                
+                writer.putByteArray(STRING_BLOCK_LIGHT, sectionDatum.blockLight().asByteArray());
+            }
+            
+            if (sectionDatum.skyLight() != null) {
+                if (!hasInner) {
+                    hasInner = true;
+                    writer.compoundEntryStart();
                 }
-
-                if (hasInner) {
-                    writer.putByte(STRING_CHAR_BIG_Y, (byte) i);
-                    writer.finishCompound();
-                    sectionCount++;
-                }
+                
+                writer.putByteArray(STRING_SKY_LIGHT, sectionDatum.skyLight().asByteArray());
+            }
+            
+            if (hasInner) {
+                writer.putByte(STRING_CHAR_BIG_Y, (byte) sectionDatum.y());
+                writer.finishCompound();
+                sectionCount ++;
             }
         }
 
         writer.finishList(sectionsStart, sectionCount);
     }
 
-    /**
-     * Mirror section of {@link ChunkSerializer#serialize(ServerWorld, Chunk)}
-     * with the changes by StarLight applied inline
-     */
-    private static void writeSectionDataStarlight(
-            NbtWriter writer,
-            Chunk chunk,
-            ChunkPos chunkPos,
-            IChunkSection[] chunkSections,
-            LightingProvider lightingProvider,
-            Registry<Biome> biomeRegistry
-    ) {
-        // START DIFF
-        boolean lit = chunk.isLightOn();
-        ChunkStatus status = chunk.getStatus();
-        boolean shouldWrite = lit && status.isAtLeast(ChunkStatus.LIGHT);
-        var blockNibbles = StarLightUtil.getBlockNibbles(chunk);
-        var skyNibbles = StarLightUtil.getSkyNibbles(chunk);
-        int minSection;
-        // END DIFF
-
-        long sectionsStart = writer.startList(STRING_SECTIONS, NbtElement.COMPOUND_TYPE);
-        int sectionCount = 0;
-
-        for (int i = minSection = lightingProvider.getBottomY(); i < lightingProvider.getTopY(); ++i) {
-            int index = chunk.sectionCoordToIndex(i);
-            boolean bl2 = index >= 0 && index < chunkSections.length;
-
-            // START DIFF
+//    /**
+//     * Mirror section of {@link ChunkSerializer#serialize(ServerWorld, Chunk)}
+//     * with the changes by StarLight applied inline
+//     */
+//    private static void writeSectionDataStarlight(
+//            NbtWriter writer,
+//            ChunkPos chunkPos,
+//            List<ChunkSerializer.SectionData> sectionData,
+//            Registry<Biome> biomeRegistry
+//    ) {
+//        // START DIFF
+//        boolean lit = chunk.isLightOn();
+//        ChunkStatus status = chunk.getStatus();
+//        boolean shouldWrite = lit && status.isAtLeast(ChunkStatus.LIGHT);
+//        var blockNibbles = StarLightUtil.getBlockNibbles(chunk);
+//        var skyNibbles = StarLightUtil.getSkyNibbles(chunk);
+//        int minSection;
+//        // END DIFF
 //
-//            ChunkNibbleArray blockLight = lightingProvider.get(LightType.BLOCK)
-//                    .getLightSection(ChunkSectionPos.from(chunkPos, i));
-//            ChunkNibbleArray skyLight = lightingProvider.get(LightType.SKY)
-//                    .getLightSection(ChunkSectionPos.from(chunkPos, i));
-
-            var blockNibble = shouldWrite ? StarLightUtil.getSaveState(blockNibbles[i - minSection]) : null;
-            var skyNibble = shouldWrite ? StarLightUtil.getSaveState(skyNibbles[i - minSection]) : null;
-
-            if (bl2 || blockNibble != null || skyNibble != null) {
-                // END DIFF
-                boolean hasInner = false;
-                if (bl2) {
-                    hasInner = true;
-                    writer.compoundEntryStart();
-                    IChunkSection chunkSection = chunkSections[index];
-
-                    writeBlockStates(writer, chunkSection.getBlockStateContainer());
-                    writeBiomes(writer, chunkSection.getBiomeContainer(), biomeRegistry);
-                }
-
-                // START DIFF
-//                if (blockLight != null && !blockLight.isUninitialized()) {
-//                    if (!hasInner) {
-//                        writer.compoundEntryStart();
-//                        hasInner = true;
-//                    }
-//                    writer.putByteArray(STRING_BLOCK_LIGHT, blockLight.asByteArray());
+//        long sectionsStart = writer.startList(STRING_SECTIONS, NbtElement.COMPOUND_TYPE);
+//        int sectionCount = 0;
+//
+//        for (int i = minSection = lightingProvider.getBottomY(); i < lightingProvider.getTopY(); ++i) {
+//            int index = chunk.sectionCoordToIndex(i);
+//            boolean bl2 = index >= 0 && index < chunkSections.length;
+//
+//            // START DIFF
+////
+////            ChunkNibbleArray blockLight = lightingProvider.get(LightType.BLOCK)
+////                    .getLightSection(ChunkSectionPos.from(chunkPos, i));
+////            ChunkNibbleArray skyLight = lightingProvider.get(LightType.SKY)
+////                    .getLightSection(ChunkSectionPos.from(chunkPos, i));
+//
+//            var blockNibble = shouldWrite ? StarLightUtil.getSaveState(blockNibbles[i - minSection]) : null;
+//            var skyNibble = shouldWrite ? StarLightUtil.getSaveState(skyNibbles[i - minSection]) : null;
+//
+//            if (bl2 || blockNibble != null || skyNibble != null) {
+//                // END DIFF
+//                boolean hasInner = false;
+//                if (bl2) {
+//                    hasInner = true;
+//                    writer.compoundEntryStart();
+//                    IChunkSection chunkSection = chunkSections[index];
+//
+//                    writeBlockStates(writer, chunkSection.getBlockStateContainer());
+//                    writeBiomes(writer, chunkSection.getBiomeContainer(), biomeRegistry);
 //                }
-
-//                if (skyLight != null && !skyLight.isUninitialized()) {
-//                    if (!hasInner) {
-//                        writer.compoundEntryStart();
-//                        hasInner = true;
+//
+//                // START DIFF
+////                if (blockLight != null && !blockLight.isUninitialized()) {
+////                    if (!hasInner) {
+////                        writer.compoundEntryStart();
+////                        hasInner = true;
+////                    }
+////                    writer.putByteArray(STRING_BLOCK_LIGHT, blockLight.asByteArray());
+////                }
+//
+////                if (skyLight != null && !skyLight.isUninitialized()) {
+////                    if (!hasInner) {
+////                        writer.compoundEntryStart();
+////                        hasInner = true;
+////                    }
+////                    writer.putByteArray(STRING_SKY_LIGHT, skyLight.asByteArray());
+////                }
+//
+//                if (blockNibble != null) {
+//                    if (blockNibble.getData() != null) {
+//                        writer.putByteArray(STRING_BLOCK_LIGHT, blockNibble.getData());
 //                    }
-//                    writer.putByteArray(STRING_SKY_LIGHT, skyLight.asByteArray());
+//                    writer.putInt(STRING_BLOCKLIGHT_STATE_TAG, blockNibble.getState());
 //                }
-
-                if (blockNibble != null) {
-                    if (blockNibble.getData() != null) {
-                        writer.putByteArray(STRING_BLOCK_LIGHT, blockNibble.getData());
-                    }
-                    writer.putInt(STRING_BLOCKLIGHT_STATE_TAG, blockNibble.getState());
-                }
-
-                if (skyNibble != null) {
-                    if (skyNibble.getData() != null) {
-                        writer.putByteArray(STRING_SKY_LIGHT, skyNibble.getData());
-                    }
-                    writer.putInt(STRING_SKYLIGHT_STATE_TAG, skyNibble.getState());
-                }
-
-                // END DIFF
-
-
-                if (hasInner) {
-                    writer.putByte(STRING_CHAR_BIG_Y, (byte) i);
-                    writer.finishCompound();
-                    sectionCount++;
-                }
-            }
-        }
-
-        writer.finishList(sectionsStart, sectionCount);
-
-        if (lit) {
-            writer.putInt(STRING_STARLIGHT_VERSION_TAG, STARLIGHT_LIGHT_VERSION);
-        }
-    }
+//
+//                if (skyNibble != null) {
+//                    if (skyNibble.getData() != null) {
+//                        writer.putByteArray(STRING_SKY_LIGHT, skyNibble.getData());
+//                    }
+//                    writer.putInt(STRING_SKYLIGHT_STATE_TAG, skyNibble.getState());
+//                }
+//
+//                // END DIFF
+//
+//
+//                if (hasInner) {
+//                    writer.putByte(STRING_CHAR_BIG_Y, (byte) i);
+//                    writer.finishCompound();
+//                    sectionCount++;
+//                }
+//            }
+//        }
+//
+//        writer.finishList(sectionsStart, sectionCount);
+//
+//        if (lit) {
+//            writer.putInt(STRING_STARLIGHT_VERSION_TAG, STARLIGHT_LIGHT_VERSION);
+//        }
+//    }
 
     /**
      * mirror of {@link ChunkSerializer#CODEC}
@@ -546,15 +502,17 @@ public final class ChunkDataSerializer {
     /**
      * mirror of {@link BlendingData#CODEC}
      */
-    private static void writeBlendingData(NbtWriter writer, IBlendingData blendingData) {
-        writer.putInt(STRING_MIN_SECTION, blendingData.getOldHeightLimit().getBottomSectionCoord());
-        writer.putInt(STRING_MAX_SECTION, blendingData.getOldHeightLimit().getTopSectionCoord());
+    private static void writeBlendingData(NbtWriter writer, BlendingData.Serialized blendingData) {
+        writer.putInt(STRING_MIN_SECTION, blendingData.minSection());
+        writer.putInt(STRING_MAX_SECTION, blendingData.maxSection());
 
-        double[] heights = blendingData.getSurfaceHeights();
-        for (double d : heights) {
-            if (d != Double.MAX_VALUE) {
-                writer.putDoubles(STRING_HEIGHTS, heights);
-                return;
+        double[] heights = blendingData.heights().orElse(null);
+        if (heights != null) {
+            for (double d : heights) {
+                if (d != Double.MAX_VALUE) {
+                    writer.putDoubles(STRING_HEIGHTS, heights);
+                    return;
+                }
             }
         }
 
@@ -628,11 +586,9 @@ public final class ChunkDataSerializer {
     /**
      * mirror of {@link ChunkSerializer#serializeTicks(ServerWorld, NbtCompound, Chunk.TickSchedulers)}
      */
-    private static void serializeTicks(NbtWriter writer, ServerWorld world, Chunk.TickSchedulers tickSchedulers) {
-        long time = world.getLevelProperties().getTime();
-
-        writeTicks(writer, time, tickSchedulers.blocks(), Registries.BLOCK, STRING_BLOCK_TICKS);
-        writeTicks(writer, time, tickSchedulers.fluids(), Registries.FLUID, STRING_FLUID_TICKS);
+    private static void serializeTicks(NbtWriter writer, Chunk.TickSchedulers tickSchedulers) {
+        writeTicks(writer, tickSchedulers.blocks(), Registries.BLOCK, STRING_BLOCK_TICKS);
+        writeTicks(writer, tickSchedulers.fluids(), Registries.FLUID, STRING_FLUID_TICKS);
     }
 
 
@@ -643,55 +599,13 @@ public final class ChunkDataSerializer {
      */
     private static <T> void writeTicks(
             NbtWriter writer,
-            long time,
-            SerializableTickScheduler<T> scheduler,
+            List<Tick<T>> scheduledTicks,
             DefaultedRegistry<T> reg,
             byte[] key
     ) {
-        if (scheduler instanceof ISimpleTickScheduler<T> simpleTickSchedulerAccessor) {
-            final List<Tick<T>> scheduledTicks = simpleTickSchedulerAccessor.getScheduledTicks();
-            writer.startFixedList(key, scheduledTicks.size(), NbtElement.COMPOUND_TYPE);
-            for (Tick<T> scheduledTick : scheduledTicks) {
-                writeTick(writer, scheduledTick, reg);
-            }
-        } else if (scheduler instanceof IChunkTickScheduler<T> chunkTickSchedulerAccess) {
-
-            int size = 0;
-            long list = writer.startList(key, NbtElement.COMPOUND_TYPE);
-
-            final @Nullable List<Tick<T>> scheduledTicks = chunkTickSchedulerAccess.getTicks();
-
-            if (scheduledTicks != null) {
-                size += scheduledTicks.size();
-
-                for (Tick<T> scheduledTick : scheduledTicks) {
-                    writeTick(writer, scheduledTick, reg);
-                }
-            }
-
-            if (LithiumUtil.IS_LITHIUM_TICK_QUEUE_ACTIVE) {
-                final Collection<Collection<OrderedTick<T>>> tickQueues = LithiumUtil.getTickQueueCollection(chunkTickSchedulerAccess);
-
-                for (Collection<OrderedTick<T>> tickQueue : tickQueues) {
-                    size += tickQueue.size();
-                    for (OrderedTick<T> orderedTick : tickQueue) {
-                        writeOrderedTick(writer, orderedTick, time, reg);
-                    }
-                }
-            } else {
-                final Collection<OrderedTick<T>> tickQueue = chunkTickSchedulerAccess.getTickQueue();
-                size += tickQueue.size();
-
-                for (OrderedTick<T> orderedTick : tickQueue) {
-                    writeOrderedTick(writer, orderedTick, time, reg);
-                }
-            }
-
-            writer.finishList(list, size);
-        } else {
-            // FALLBACK?
-            //noinspection deprecation
-            writer.putElement(key, scheduler.toNbt(time, block -> reg.getId(block).toString()));
+        writer.startFixedList(key, scheduledTicks.size(), NbtElement.COMPOUND_TYPE);
+        for (Tick<T> scheduledTick : scheduledTicks) {
+            writeTick(writer, scheduledTick, reg);
         }
     }
 

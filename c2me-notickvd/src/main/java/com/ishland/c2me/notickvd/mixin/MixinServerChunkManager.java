@@ -23,16 +23,7 @@ public class MixinServerChunkManager {
 
     @Shadow @Final private ChunkTicketManager ticketManager;
 
-    @Redirect(method = "tickChunks", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ChunkHolder;getWorldChunk()Lnet/minecraft/world/chunk/WorldChunk;"))
-    private WorldChunk includeAccessibleChunks(ChunkHolder instance) {
-        if (instance instanceof IFastChunkHolder fastChunkHolder) {
-            return fastChunkHolder.c2me$immediateWorldChunk();
-        } else {
-            return instance.getAccessibleFuture().getNow(ChunkHolder.UNLOADED_WORLD_CHUNK).orElse(null);
-        }
-    }
-
-    @WrapOperation(method = "tickChunks", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerWorld;iterateEntities()Ljava/lang/Iterable;"))
+    @WrapOperation(method = "tickChunks(Lnet/minecraft/util/profiler/Profiler;JLjava/util/List;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerWorld;iterateEntities()Ljava/lang/Iterable;"))
     private Iterable<Entity> redirectIterateEntities(ServerWorld serverWorld, Operation<Iterable<Entity>> op) {
         final LongSet noTickOnlyChunks = ((IChunkTicketManager) this.ticketManager).getNoTickOnlyChunks();
         if (noTickOnlyChunks == null) return op.call(serverWorld);

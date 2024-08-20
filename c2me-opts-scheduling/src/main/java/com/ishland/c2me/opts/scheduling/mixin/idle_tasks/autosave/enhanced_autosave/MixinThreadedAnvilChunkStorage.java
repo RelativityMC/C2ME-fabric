@@ -7,6 +7,7 @@ import it.unimi.dsi.fastutil.objects.ObjectBidirectionalIterator;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ServerChunkLoadingManager;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.Util;
 import net.minecraft.util.thread.ThreadExecutor;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -23,13 +24,14 @@ public abstract class MixinThreadedAnvilChunkStorage implements IThreadedAnvilCh
 
     @Shadow @Final private Long2ObjectLinkedOpenHashMap<ChunkHolder> currentChunkHolders;
 
-    @Shadow protected abstract boolean save(ChunkHolder chunkHolder);
-
     @Shadow private volatile Long2ObjectLinkedOpenHashMap<ChunkHolder> chunkHolders;
 
     @Shadow @Final private ThreadExecutor<Runnable> mainThreadExecutor;
 
     @Shadow @Final private ServerWorld world;
+
+    @Shadow protected abstract boolean save(ChunkHolder chunkHolder, long currentTime);
+
     @Unique
     private static final int c2me$maxSearchPerCall = 128;
 
@@ -60,6 +62,7 @@ public abstract class MixinThreadedAnvilChunkStorage implements IThreadedAnvilCh
             c2me$enhancedAutoSaveUpdateIterator();
         }
 
+        long measuringTimeMs = Util.getMeasuringTimeMs();
         int i = 0;
         final ObjectBidirectionalIterator<Long2ObjectMap.Entry<ChunkHolder>> iterator = this.c2me$saveChunksIterator;
         while (iterator.hasNext() && (i ++) < c2me$maxSearchPerCall) {
@@ -68,7 +71,7 @@ public abstract class MixinThreadedAnvilChunkStorage implements IThreadedAnvilCh
             final ChunkHolder chunkHolder = entry.getValue();
             if (chunkHolder == null) continue;
             if (!this.currentChunkHolders.containsKey(pos)) continue;
-            if (this.save(chunkHolder)) {
+            if (this.save(chunkHolder, measuringTimeMs)) {
                 return true;
             }
         }

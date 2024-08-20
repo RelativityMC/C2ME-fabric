@@ -11,12 +11,16 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
+import java.util.Set;
+
 @Mixin(ServerChunkManager.class)
 public abstract class MixinServerChunkManager {
 
     @Shadow @Nullable protected abstract ChunkHolder getChunkHolder(long pos);
 
     @Shadow @Final private ServerChunkManager.MainThreadExecutor mainThreadExecutor;
+
+    @Shadow @Final private Set<ChunkHolder> chunksToBroadcastUpdate;
 
     /**
      * @author ishland
@@ -28,7 +32,11 @@ public abstract class MixinServerChunkManager {
         if (chunkHolder != null) {
             ((DuckChunkHolder) chunkHolder).c2me$queueLightSectionDirty(type, pos.getSectionY());
             if (((DuckChunkHolder) chunkHolder).c2me$shouldScheduleUndirty()) {
-                this.mainThreadExecutor.execute(((DuckChunkHolder) chunkHolder)::c2me$undirtyLight);
+                this.mainThreadExecutor.execute(() -> {
+                    if (((DuckChunkHolder) chunkHolder).c2me$undirtyLight()) {
+                        this.chunksToBroadcastUpdate.add(chunkHolder);
+                    }
+                });
             }
         }
     }

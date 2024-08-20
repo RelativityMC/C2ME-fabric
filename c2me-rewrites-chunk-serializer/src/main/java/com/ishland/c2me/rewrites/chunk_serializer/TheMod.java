@@ -10,10 +10,10 @@ public class TheMod implements net.fabricmc.api.ModInitializer {
     @Override
     public void onInitialize() {
         if (ModuleEntryPoint.enabled) {
-            SerializerAccess.registerSerializer((world, chunk) -> {
+            SerializerAccess.registerSerializer(serializable -> {
                 NbtWriter nbtWriter = new NbtWriter();
                 nbtWriter.start(NbtElement.COMPOUND_TYPE);
-                ChunkDataSerializer.write(world, chunk, nbtWriter);
+                ChunkDataSerializer.write(serializable, nbtWriter);
                 nbtWriter.finishCompound();
                 final byte[] data = nbtWriter.toByteArray();
                 nbtWriter.release();

@@ -17,7 +17,6 @@ import com.ishland.c2me.rewrites.chunksystem.common.async_chunkio.AsyncSerializa
 import com.ishland.c2me.rewrites.chunksystem.common.async_chunkio.BlendingInfoUtil;
 import com.ishland.c2me.rewrites.chunksystem.common.async_chunkio.ChunkIoMainThreadTaskUtils;
 import com.ishland.c2me.rewrites.chunksystem.common.async_chunkio.ProtoChunkExtension;
-import com.ishland.c2me.rewrites.chunksystem.common.async_chunkio.SerializingRegionBasedStorageExtension;
 import com.ishland.c2me.rewrites.chunksystem.common.fapi.LifecycleEventInvoker;
 import com.ishland.flowsched.scheduler.ItemHolder;
 import com.ishland.flowsched.scheduler.KeyStatusPair;
@@ -25,6 +24,7 @@ import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import it.unimi.dsi.fastutil.Pair;
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.server.world.ServerChunkLoadingManager;
@@ -52,78 +52,6 @@ public class ReadFromDiskAsync extends ReadFromDisk {
 
     public ReadFromDiskAsync(int ordinal) {
         super(ordinal);
-    }
-
-    @Override
-    public CompletionStage<Void> upgradeToThis(ChunkLoadingContext context) {
-        final Single<ProtoChunk> single = invokeAsyncLoad(context)
-                .retryWhen(RxJavaUtils.retryWithExponentialBackoff(3, 200))
-                .cache()
-                .onErrorResumeNext(throwable -> {
-                    LOGGER.error("Failed to load chunk {} asynchronously, falling back to sync loading", context.holder().getKey(), throwable);
-                    return invokeSyncRead(context)
-                            .retryWhen(RxJavaUtils.retryWithExponentialBackoff(3, 200));
-                });
-        return finalizeLoading(context, single);
-    }
-
-    protected static Single<ProtoChunk> invokeAsyncLoad(ChunkLoadingContext context) {
-        return Single.defer(() -> Single.fromCompletionStage(((IThreadedAnvilChunkStorage) context.tacs()).invokeGetUpdatedChunkNbt(context.holder().getKey())))
-                .map(nbt -> nbt.filter(nbt2 -> {
-                    boolean bl = nbt2.contains("Status", NbtElement.STRING_TYPE);
-                    if (!bl) {
-                        LOGGER.error("Chunk file at {} is missing level data, skipping", context.holder().getKey());
-                    }
-
-                    return bl;
-                }))
-                .observeOn(Schedulers.from(((IVanillaChunkManager) context.tacs()).c2me$getSchedulingManager().positionedExecutor(context.holder().getKey().toLong())))
-                .map(nbt -> {
-                    final ReferenceArrayList<Runnable> mainThreadQueue = new ReferenceArrayList<>();
-                    if (nbt.isPresent()) {
-                        ChunkIoMainThreadTaskUtils.push(mainThreadQueue);
-                        try {
-                            return Pair.of(mainThreadQueue, ChunkSerializer.deserialize(
-                                    ((IThreadedAnvilChunkStorage) context.tacs()).getWorld(),
-                                    ((IThreadedAnvilChunkStorage) context.tacs()).getPointOfInterestStorage(),
-                                    ((IVersionedChunkStorage) context.tacs()).invokeGetStorageKey(),
-                                    context.holder().getKey(),
-                                    nbt.get()
-                            ));
-                        } finally {
-                            ChunkIoMainThreadTaskUtils.pop(mainThreadQueue);
-                        }
-                    } else {
-                        return Pair.of(mainThreadQueue, createEmptyProtoChunk(context));
-                    }
-                })
-                .flatMap(pair -> {
-                    final ServerWorld world = ((IThreadedAnvilChunkStorage) context.tacs()).getWorld();
-                    ProtoChunk protoChunk = pair.right();
-                    // blending
-                    final ChunkPos pos = context.holder().getKey();
-                    protoChunk = protoChunk != null ? protoChunk : new ProtoChunk(pos, UpgradeData.NO_UPGRADE_DATA, world, world.getRegistryManager().get(RegistryKeys.BIOME), null);
-                    if (protoChunk.getBelowZeroRetrogen() != null || protoChunk.getStatus().getChunkType() == ChunkType.PROTOCHUNK) {
-                        ProtoChunk finalProtoChunk = protoChunk;
-                        return Single.defer(() -> Single.fromCompletionStage(BlendingInfoUtil.getBlendingInfos(((IVersionedChunkStorage) context.tacs()).getWorker(), pos)))
-                                .doOnSuccess(bitSets -> ((ProtoChunkExtension) finalProtoChunk).setBlendingInfo(pos, bitSets))
-                                .map(unused -> pair);
-                    } else {
-                        return Single.just(pair);
-                    }
-                })
-                .zipWith(
-                        Single.defer(() -> Single.fromCompletionStage(((ISerializingRegionBasedStorage) ((IThreadedAnvilChunkStorage) context.tacs()).getPointOfInterestStorage()).getStorageAccess().read(context.holder().getKey()))),
-                        (pair, poiNbt) -> {
-                            pair.left().addFirst(() -> ((SerializingRegionBasedStorageExtension) ((IThreadedAnvilChunkStorage) context.tacs()).getPointOfInterestStorage()).update(context.holder().getKey(), poiNbt.orElse(null)));
-                            return pair;
-                        }
-                )
-                .observeOn(Schedulers.from(((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor()))
-                .map(pair -> {
-                    ChunkIoMainThreadTaskUtils.drainQueue(pair.left());
-                    return pair.right();
-                });
     }
 
     @Override
@@ -179,19 +107,14 @@ public class ReadFromDiskAsync extends ReadFromDisk {
             chunk.setNeedsSaving(false);
             ChunkPos chunkPos = chunk.getPos();
 
-            AsyncSerializationManager.Scope scope = new AsyncSerializationManager.Scope(chunk, ((IThreadedAnvilChunkStorage) tacs).getWorld());
+            ChunkSerializer serializer = ChunkSerializer.fromChunk(((IThreadedAnvilChunkStorage) tacs).getWorld(), chunk);
             return CompletableFuture.supplyAsync(() -> {
-                        scope.open();
-                        AsyncSerializationManager.push(scope);
-                        try {
-                            return SerializerAccess.getSerializer().serialize(((IThreadedAnvilChunkStorage) tacs).getWorld(), chunk);
-                        } finally {
-                            AsyncSerializationManager.pop(scope);
-                        }
+                        return SerializerAccess.getSerializer().serialize(serializer);
                     }, GlobalExecutors.prioritizedScheduler.executor(16) /* boost priority as we are serializing an unloaded chunk */)
                     .thenAccept((either) -> {
                         if (either.left().isPresent()) {
-                            tacs.setNbt(chunkPos, either.left().get());
+                            NbtCompound nbtCompound = either.left().get();
+                            tacs.setNbt(chunkPos, () -> nbtCompound);
                         } else {
                             ((IDirectStorage) ((IVersionedChunkStorage) tacs).getWorker()).setRawChunkData(chunkPos, either.right().get());
                         }

@@ -8,6 +8,6 @@ public interface DuckChunkHolder {
 
     boolean c2me$shouldScheduleUndirty();
 
-    void c2me$undirtyLight();
+    boolean c2me$undirtyLight();
 
 }

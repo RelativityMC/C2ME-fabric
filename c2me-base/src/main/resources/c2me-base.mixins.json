@@ -12,7 +12,6 @@
     "access.IBlockEntity",
     "access.IChunkGenerator",
     "access.IChunkHolder",
-    "access.IChunkSection",
     "access.IChunkTicket",
     "access.IChunkTicketManager",
     "access.IChunkTicketManagerDistanceFromNearestPlayerTracker",

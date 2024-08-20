@@ -11,6 +11,7 @@ import com.ishland.c2me.rewrites.chunksystem.common.fapi.LifecycleEventInvoker;
 import com.ishland.flowsched.scheduler.ItemHolder;
 import com.ishland.flowsched.scheduler.KeyStatusPair;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.SpawnReason;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.world.ChunkLevels;
 import net.minecraft.server.world.ServerWorld;
@@ -81,7 +82,7 @@ public class ServerAccessible extends NewChunkStatus {
             worldChunk = new WorldChunk(serverWorld, protoChunk, worldChunkx -> {
                 final List<NbtCompound> entities = protoChunk.getEntities();
                 if (!entities.isEmpty()) {
-                    serverWorld.addEntities(EntityType.streamFromNbt(entities, serverWorld));
+                    serverWorld.addEntities(EntityType.streamFromNbt(entities, serverWorld, SpawnReason.LOAD));
                 }
             });
         }

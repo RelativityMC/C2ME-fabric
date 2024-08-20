@@ -14,11 +14,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Iterator;
 import java.util.Map;
+import java.util.SequencedMap;
 
 @Mixin(value = StorageIoWorker.class, priority = 990)
 public abstract class MixinStorageIoWorker {
 
-    @Shadow @Final private Map<ChunkPos, StorageIoWorker.Result> results;
+    @Shadow @Final private SequencedMap<ChunkPos, StorageIoWorker.Result> results;
 
     @Shadow protected abstract void write(ChunkPos pos, StorageIoWorker.Result result);
 
