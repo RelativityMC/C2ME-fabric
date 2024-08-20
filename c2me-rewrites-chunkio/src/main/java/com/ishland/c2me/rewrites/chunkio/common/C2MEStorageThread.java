@@ -96,7 +96,7 @@ public class C2MEStorageThread extends Thread {
                     if (!pollTasks()) {
                         Thread.interrupted(); // clear interrupt flag
                         for (int i = 0; i < 5000; i ++) {
-                            if (pollTasks()) continue main_loop;
+                            if (pollTasks() || this.closing.get()) continue main_loop;
                             LockSupport.parkNanos("Spin-waiting for tasks", 10_000); // 100us
                         }
                     }
