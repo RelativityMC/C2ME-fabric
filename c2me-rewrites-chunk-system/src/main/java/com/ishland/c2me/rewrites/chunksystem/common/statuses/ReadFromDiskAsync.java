@@ -30,11 +30,11 @@ import net.minecraft.registry.RegistryKeys;
 import net.minecraft.server.world.ServerChunkLoadingManager;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.ChunkPos;
-import net.minecraft.world.ChunkSerializer;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.ChunkType;
 import net.minecraft.world.chunk.ProtoChunk;
+import net.minecraft.world.chunk.SerializedChunk;
 import net.minecraft.world.chunk.UpgradeData;
 import net.minecraft.world.chunk.WorldChunk;
 import net.minecraft.world.chunk.WrapperProtoChunk;
@@ -107,7 +107,7 @@ public class ReadFromDiskAsync extends ReadFromDisk {
             chunk.setNeedsSaving(false);
             ChunkPos chunkPos = chunk.getPos();
 
-            ChunkSerializer serializer = ChunkSerializer.fromChunk(((IThreadedAnvilChunkStorage) tacs).getWorld(), chunk);
+            SerializedChunk serializer = SerializedChunk.fromChunk(((IThreadedAnvilChunkStorage) tacs).getWorld(), chunk);
             return CompletableFuture.supplyAsync(() -> {
                         return SerializerAccess.getSerializer().serialize(serializer);
                     }, GlobalExecutors.prioritizedScheduler.executor(16) /* boost priority as we are serializing an unloaded chunk */)

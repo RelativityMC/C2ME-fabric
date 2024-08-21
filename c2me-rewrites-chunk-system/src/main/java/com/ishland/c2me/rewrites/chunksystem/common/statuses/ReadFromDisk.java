@@ -24,7 +24,6 @@ import net.minecraft.server.WorldGenerationProgressListener;
 import net.minecraft.server.world.ServerLightingProvider;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.ChunkPos;
-import net.minecraft.world.ChunkSerializer;
 import net.minecraft.world.chunk.*;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -68,7 +67,7 @@ public class ReadFromDisk extends NewChunkStatus {
         return Single.defer(() -> Single.fromCompletionStage(((IThreadedAnvilChunkStorage) context.tacs()).invokeGetUpdatedChunkNbt(context.holder().getKey())))
                 .map(optional -> optional.map(nbtCompound -> {
                     ServerWorld world = ((IThreadedAnvilChunkStorage) context.tacs()).getWorld();
-                    ChunkSerializer chunkSerializer = ChunkSerializer.fromNbt(world, world.getRegistryManager(), nbtCompound);
+                    SerializedChunk chunkSerializer = SerializedChunk.fromNbt(world, world.getRegistryManager(), nbtCompound);
                     if (chunkSerializer == null) {
                         LOGGER.error("Chunk file at {} is missing level data, skipping", context.holder().getKey());
                     }
@@ -82,7 +81,7 @@ public class ReadFromDisk extends NewChunkStatus {
                 .observeOn(Schedulers.from(((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor()))
                 .map(chunkSerializer -> {
                     if (chunkSerializer.isPresent()) {
-                        ProtoChunk chunk = chunkSerializer.get().deserialize(((IThreadedAnvilChunkStorage) context.tacs()).getWorld(), ((IThreadedAnvilChunkStorage) context.tacs()).getPointOfInterestStorage(), ((IVersionedChunkStorage) context.tacs()).invokeGetStorageKey(), context.holder().getKey());
+                        ProtoChunk chunk = chunkSerializer.get().convert(((IThreadedAnvilChunkStorage) context.tacs()).getWorld(), ((IThreadedAnvilChunkStorage) context.tacs()).getPointOfInterestStorage(), ((IVersionedChunkStorage) context.tacs()).invokeGetStorageKey(), context.holder().getKey());
 //                        this.mark(pos, chunk.getStatus().getChunkType());
                         return chunk;
                     } else {

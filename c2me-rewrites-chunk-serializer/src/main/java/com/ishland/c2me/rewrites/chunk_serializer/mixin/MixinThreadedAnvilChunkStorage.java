@@ -10,10 +10,10 @@ import net.minecraft.server.world.ServerChunkLoadingManager;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.structure.StructureStart;
 import net.minecraft.util.math.ChunkPos;
-import net.minecraft.world.ChunkSerializer;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.ChunkType;
+import net.minecraft.world.chunk.SerializedChunk;
 import net.minecraft.world.poi.PointOfInterestStorage;
 import net.minecraft.world.storage.StorageKey;
 import net.minecraft.world.storage.VersionedChunkStorage;
@@ -81,7 +81,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
 
             //region start replaced code
             // NbtCompound nbtCompound = ChunkSerializer.serialize(this.world, chunk);
-            ChunkSerializer chunkSerializer = ChunkSerializer.fromChunk(this.world, chunk);
+            SerializedChunk chunkSerializer = SerializedChunk.fromChunk(this.world, chunk);
             NbtWriter nbtWriter = new NbtWriter();
             nbtWriter.start(NbtElement.COMPOUND_TYPE);
             ChunkDataSerializer.write(chunkSerializer, nbtWriter);

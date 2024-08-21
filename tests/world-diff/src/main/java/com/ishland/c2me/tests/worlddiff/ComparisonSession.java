@@ -41,7 +41,6 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.ChunkSectionPos;
 import net.minecraft.util.path.SymlinkFinder;
 import net.minecraft.util.path.SymlinkValidationException;
-import net.minecraft.world.ChunkSerializer;
 import net.minecraft.world.SaveProperties;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
@@ -50,6 +49,7 @@ import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.ChunkType;
 import net.minecraft.world.chunk.PalettedContainer;
 import net.minecraft.world.chunk.ReadableContainer;
+import net.minecraft.world.chunk.SerializedChunk;
 import net.minecraft.world.dimension.DimensionOptions;
 import net.minecraft.world.gen.structure.Structure;
 import net.minecraft.world.level.storage.LevelStorage;
@@ -126,8 +126,8 @@ public class ComparisonSession implements Closeable {
                             ((IStorageIoWorker) regionBaseIo).invokeReadChunkData(pos)
                                     .thenCombineAsync(((IStorageIoWorker) regionTargetIo).invokeReadChunkData(pos), (chunkDataBase, chunkDataTarget) -> {
                                         try {
-                                            if (ChunkSerializer.getChunkType(chunkDataBase) == ChunkType.PROTOCHUNK
-                                                    || ChunkSerializer.getChunkType(chunkDataBase) == ChunkType.PROTOCHUNK)
+                                            if (SerializedChunk.getChunkType(chunkDataBase) == ChunkType.PROTOCHUNK
+                                                    || SerializedChunk.getChunkType(chunkDataBase) == ChunkType.PROTOCHUNK)
                                                 return null;
 
                                             final Map<Structure, StructureStart> baseStructures = IChunkSerializer.invokeReadStructureStarts(baseStructureContext, chunkDataBase.getCompound("structures"), baseWorld.saveProperties.getGeneratorOptions().getSeed());

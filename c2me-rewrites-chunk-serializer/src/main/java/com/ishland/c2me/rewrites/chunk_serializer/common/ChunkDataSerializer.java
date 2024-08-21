@@ -38,7 +38,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.EightWayDirection;
-import net.minecraft.world.ChunkSerializer;
 import net.minecraft.world.Heightmap;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeKeys;
@@ -48,6 +47,8 @@ import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.ChunkType;
 import net.minecraft.world.chunk.PalettedContainer;
 import net.minecraft.world.chunk.ReadableContainer;
+import net.minecraft.world.chunk.ReadableContainer.Serialized;
+import net.minecraft.world.chunk.SerializedChunk;
 import net.minecraft.world.chunk.UpgradeData;
 import net.minecraft.world.gen.chunk.BlendingData;
 import net.minecraft.world.gen.structure.Structure;
@@ -65,6 +66,7 @@ import java.util.BitSet;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.LongStream;
@@ -147,9 +149,9 @@ public final class ChunkDataSerializer {
     private static final boolean STARLIGHT = FabricLoader.getInstance().isModLoaded("starlight");
 
     /**
-     * Mirror of {@link ChunkSerializer#serialize(ServerWorld, Chunk)}
+     * Mirror of {@link SerializedChunk#serialize(ServerWorld, Chunk)}
      */
-    public static void write(ChunkSerializer serializable, NbtWriter writer) {
+    public static void write(SerializedChunk serializable, NbtWriter writer) {
         ChunkPos chunkPos = serializable.chunkPos();
 
 //        System.out.printf("Serializing chunk at: %d %d%n", chunkPos.x, chunkPos.z);
@@ -187,7 +189,7 @@ public final class ChunkDataSerializer {
             writer.finishCompound();
         }
 
-        List<ChunkSerializer.SectionData> sectionData = serializable.sectionData();
+        List<SerializedChunk.SectionData> sectionData = serializable.sectionData();
 
         Registry<Biome> biomeRegistry = serializable.biomeRegistry();
 
@@ -268,7 +270,7 @@ public final class ChunkDataSerializer {
     private static void writeSectionData(
             NbtWriter writer,
             ChunkPos chunkPos,
-            List<ChunkSerializer.SectionData> sectionData,
+            List<SerializedChunk.SectionData> sectionData,
             Registry<Biome> biomeRegistry
     ) {
 //        if (STARLIGHT) {
@@ -279,19 +281,19 @@ public final class ChunkDataSerializer {
     }
 
     /**
-     * Mirror section of {@link ChunkSerializer#serialize(ServerWorld, Chunk)}
+     * Mirror section of {@link SerializedChunk#serialize(ServerWorld, Chunk)}
      */
     private static void writeSectionDataVanilla(
             NbtWriter writer,
             ChunkPos chunkPos,
-            List<ChunkSerializer.SectionData> sectionData,
+            List<SerializedChunk.SectionData> sectionData,
             Registry<Biome> biomeRegistry
     ) {
         long sectionsStart = writer.startList(STRING_SECTIONS, NbtElement.COMPOUND_TYPE);
         int sectionCount = 0;
 
         for (int __i = 0, sectionDataSize = sectionData.size(); __i < sectionDataSize; __i++) {
-            ChunkSerializer.SectionData sectionDatum = sectionData.get(__i);
+            SerializedChunk.SectionData sectionDatum = sectionData.get(__i);
             boolean hasInner = false;
             if (sectionDatum.chunkSection() != null) {
                 if (!hasInner) {
@@ -429,7 +431,7 @@ public final class ChunkDataSerializer {
 //    }
 
     /**
-     * mirror of {@link ChunkSerializer#CODEC}
+     * mirror of {@link SerializedChunk#CODEC}
      * created by {@link PalettedContainer#createPalettedContainerCodec(IndexedIterable, Codec, PalettedContainer.PaletteProvider, Object)}
      * with: {@link Block#STATE_IDS} as idList,
      * {@link BlockState#CODEC} as entryCodec,
@@ -455,7 +457,7 @@ public final class ChunkDataSerializer {
                 // TODO: optimize this
                 writer.putElement(STRING_PROPERTIES, ((IState<BlockState>) paletteEntry).getCodec().codec()
                         .encodeStart(NbtOps.INSTANCE, paletteEntry)
-                        .getOrThrow(ChunkSerializer.ChunkLoadingException::new));
+                        .getOrThrow(SerializedChunk.ChunkLoadingException::new));
             }
             writer.finishCompound();
         }
@@ -584,7 +586,7 @@ public final class ChunkDataSerializer {
 
 
     /**
-     * mirror of {@link ChunkSerializer#serializeTicks(ServerWorld, NbtCompound, Chunk.TickSchedulers)}
+     * mirror of {@link SerializedChunk#serializeTicks(ServerWorld, NbtCompound, Chunk.TickSchedulers)}
      */
     private static void serializeTicks(NbtWriter writer, Chunk.TickSchedulers tickSchedulers) {
         writeTicks(writer, tickSchedulers.blocks(), Registries.BLOCK, STRING_BLOCK_TICKS);
@@ -642,7 +644,7 @@ public final class ChunkDataSerializer {
     }
 
     /**
-     * mirror of {@link ChunkSerializer#writeStructures(StructureContext, ChunkPos, Map, Map)}
+     * mirror of {@link SerializedChunk#writeStructures(StructureContext, ChunkPos, Map, Map)}
      */
     private static void writeStructures(
             NbtWriter writer,

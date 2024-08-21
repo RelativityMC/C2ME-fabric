@@ -3,8 +3,8 @@ package com.ishland.c2me.base.common.registry;
 import com.ibm.asyncutil.util.Either;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.world.ChunkSerializer;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.SerializedChunk;
 
 /**
  * Only used for c2me-threading-chunkio
@@ -31,7 +31,7 @@ public class SerializerAccess {
 
     public interface Serializer {
 
-        com.ibm.asyncutil.util.Either<NbtCompound, byte[]> serialize(ChunkSerializer serializable);
+        com.ibm.asyncutil.util.Either<NbtCompound, byte[]> serialize(SerializedChunk serializable);
 
     }
 
