@@ -1,0 +1,9 @@
+{
+  "parent": "c2me.mixins.json",
+  "required": true,
+  "package": "com.ishland.c2me.opts.natives_math.mixin",
+  "plugin": "com.ishland.c2me.base.common.ModuleMixinPlugin",
+  "mixins": [
+    "MixinDoublePerlinNoiseSampler"
+  ]
+}

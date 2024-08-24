@@ -1,0 +1,48 @@
+package com.ishland.c2me.opts.natives_math.mixin;
+
+import com.ishland.c2me.opts.natives_math.common.Bindings;
+import com.ishland.c2me.opts.natives_math.common.BindingsTemplate;
+import net.minecraft.util.math.noise.DoublePerlinNoiseSampler;
+import net.minecraft.util.math.noise.OctavePerlinNoiseSampler;
+import net.minecraft.util.math.random.Random;
+import org.spongepowered.asm.mixin.*;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import java.lang.foreign.Arena;
+import java.lang.foreign.MemorySegment;
+
+@Mixin(DoublePerlinNoiseSampler.class)
+public class MixinDoublePerlinNoiseSampler {
+
+    @Shadow @Final private double amplitude;
+    @Shadow @Final private OctavePerlinNoiseSampler firstSampler;
+    @Shadow @Final private OctavePerlinNoiseSampler secondSampler;
+    @Unique
+    private final Arena c2me$arena = Arena.ofAuto();
+    @Unique
+    private MemorySegment c2me$samplerData = null;
+
+    @Inject(method = "<init>", at = @At("RETURN"))
+    private void postInit(CallbackInfo ci) {
+        this.c2me$samplerData = BindingsTemplate.double_octave_sampler_data$create(this.c2me$arena, this.firstSampler, this.secondSampler);
+    }
+
+    /**
+     * @author ishland
+     * @reason replace impl
+     */
+    @Overwrite
+    public double sample(double x, double y, double z) {
+        if (this.c2me$samplerData != null) {
+            return Bindings.c2me_natives_noise_perlin_double_octave_sample(this.c2me$samplerData, x, y, z) * this.amplitude;
+        } else {
+            double d = x * 1.0181268882175227;
+            double e = y * 1.0181268882175227;
+            double f = z * 1.0181268882175227;
+            return (this.firstSampler.sample(x, y, z) + this.secondSampler.sample(d, e, f)) * this.amplitude;
+        }
+    }
+
+}

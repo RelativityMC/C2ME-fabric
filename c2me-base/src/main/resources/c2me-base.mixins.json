@@ -20,6 +20,8 @@
     "access.IChunkTickScheduler",
     "access.IMultiNoiseBiomeSource",
     "access.INbtCompound",
+    "access.IOctavePerlinNoiseSampler",
+    "access.IPerlinNoiseSampler",
     "access.IRegionBasedStorage",
     "access.IRegionFile",
     "access.ISerializingRegionBasedStorage",
