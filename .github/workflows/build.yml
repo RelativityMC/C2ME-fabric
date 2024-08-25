@@ -28,7 +28,7 @@ jobs:
         version: "18.1.8"
 
     - name: Install MinGW and other required dependencies
-      run: sudo apt install mingw-w64 libtinfo5 libc6-dev
+      run: sudo apt install mingw-w64 libtinfo5 crossbuild-essential-arm64
 
     - uses: actions/cache@v4
       with:
