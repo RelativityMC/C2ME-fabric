@@ -23,6 +23,7 @@ public class MixinDoublePerlinNoiseSampler {
     private final Arena c2me$arena = Arena.ofAuto();
     @Unique
     private MemorySegment c2me$samplerData = null;
+    @Unique
     private long c2me$samplerDataPtr;
 
     @Inject(method = "<init>", at = @At("RETURN"))

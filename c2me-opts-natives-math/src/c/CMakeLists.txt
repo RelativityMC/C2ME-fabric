@@ -24,4 +24,4 @@ endif()
 
 target_include_directories(c2me-opts-natives-math PRIVATE includes/)
 target_compile_options(c2me-opts-natives-math PRIVATE $<$<COMPILE_LANGUAGE:C>:-Wall -Wextra -Wpedantic -ffreestanding -ffile-prefix-map=${CMAKE_SOURCE_DIR}=. -mprefer-vector-width=512 -Rpass-missed=loop-vectorize -Rpass-analysis=loop-vectorize>)
-target_link_options(c2me-opts-natives-math PRIVATE -nostdlib -fuse-ld=lld -nodefaultlibs -v)
+target_link_options(c2me-opts-natives-math PRIVATE -nostdlib -fuse-ld=lld)

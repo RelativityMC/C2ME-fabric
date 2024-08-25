@@ -12,3 +12,8 @@ TARGET_IMPL(c2me_natives_noise_perlin_double_octave_sample, double, (const doubl
                                                                      const double x, const double y, const double z) {
     return math_noise_perlin_double_octave_sample(data, x, y, z);
 })
+
+TARGET_IMPL(c2me_natives_noise_perlin_interpolated_sample, double, (const interpolated_noise_sampler_t *const data,
+                                                                    const double x, const double y, const double z) {
+    return math_noise_perlin_interpolated_sample(data, x, y, z);
+})

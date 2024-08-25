@@ -18,6 +18,7 @@
     "access.IChunkTicketManagerDistanceFromNearestPlayerTracker",
     "access.IChunkTicketManagerNearbyChunkTicketUpdater",
     "access.IChunkTickScheduler",
+    "access.IInterpolatedNoiseSampler",
     "access.IMultiNoiseBiomeSource",
     "access.INbtCompound",
     "access.IOctavePerlinNoiseSampler",
