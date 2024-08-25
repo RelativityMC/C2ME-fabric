@@ -1,7 +1,6 @@
 #ifdef __x86_64__
 
 #include <stdint.h>
-#include <stdlib.h>
 
 static void __cpuid(int info[4], int infoType) {
     __asm__ __volatile__("cpuid" : "=a"(info[0]), "=b"(info[1]), "=c"(info[2]), "=d"(info[3]) : "0"(infoType));
@@ -11,7 +10,7 @@ static void __cpuidex(int info[4], int level, int count) {
     __asm__ __volatile__("cpuid" : "=a"(info[0]), "=b"(info[1]), "=c"(info[2]), "=d"(info[3]) : "0"(level), "2"(count));
 }
 
-static int __os_has_avx_support() {
+static int __os_has_avx_support(void) {
     // Check xgetbv; this uses a .byte sequence instead of the instruction
     // directly because older assemblers do not include support for xgetbv and
     // there is no easy way to conditionally compile based on the assembler used.
@@ -21,7 +20,7 @@ static int __os_has_avx_support() {
 }
 
 #if !defined(__APPLE__)
-static int __os_has_avx512_support() {
+static int __os_has_avx512_support(void) {
     // Check if the OS saves the XMM, YMM and ZMM registers, i.e. it supports AVX2 and AVX512.
     // See section 2.1 of software.intel.com/sites/default/files/managed/0d/53/319433-022.pdf
     // Check xgetbv; this uses a .byte sequence instead of the instruction
@@ -36,7 +35,7 @@ static int __os_has_avx512_support() {
 // __get_system_isa should return a value corresponding to one of the
 // Target::ISA enumerant values that gives the most capable ISA that the
 // current system can run.
-int32_t c2me_natives_get_system_isa() {
+int32_t c2me_natives_get_system_isa(void) {
     int info[4];
     __cpuid(info, 1);
 
@@ -146,7 +145,7 @@ int32_t c2me_natives_get_system_isa() {
     } else if (sse2) {
         return 0; // SSE2
     } else {
-        abort();
+        __builtin_trap();
     }
 }
 

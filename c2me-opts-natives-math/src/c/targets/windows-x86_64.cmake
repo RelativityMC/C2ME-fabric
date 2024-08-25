@@ -8,3 +8,4 @@ set(CMAKE_C_COMPILER_TARGET ${triple})
 set(CMAKE_CXX_COMPILER clang++)
 set(CMAKE_CXX_COMPILER_TARGET ${triple})
 
+set(CMAKE_C_FLAGS -march=x86-64)

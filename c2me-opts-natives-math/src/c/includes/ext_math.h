@@ -17,11 +17,16 @@ static const double FLAT_SIMPLEX_GRAD[] = {
     0, -1, -1, 0,
 };
 
-#include <assert.h>
-#include <stdlib.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <math.h>
+
+#define fminf(x, y) __builtin_fminf(x, y)
+#define fmaxf(x, y) __builtin_fmaxf(x, y)
+#define fmodf(x, y) __builtin_fmodf(x, y)
+#define fabsf(x) __builtin_fabsf(x)
+#define floor(x) __builtin_floor(x)
+#define sqrtf(x) __builtin_sqrtf(x)
+#define labs(x) __builtin_labs(x)
 
 static const double SQRT_3 = 1.7320508075688772;
 // 0.5 * (SQRT_3 - 1.0)
@@ -402,9 +407,9 @@ math_noise_perlin_interpolated_sample(const interpolated_noise_sampler_t *const 
 static inline __attribute__((const)) double
 math_noise_perlin_interpolated_sample_specializedBase3dNoiseFunction(const interpolated_noise_sampler_t *const data,
                                                                      const double x, const double y, const double z) {
-    assert(data->upperNoiseOffset == 16);
-    assert(data->normalNoiseOffset == 32);
-    assert(data->endOffset == 40);
+//    assert(data->upperNoiseOffset == 16);
+//    assert(data->normalNoiseOffset == 32);
+//    assert(data->endOffset == 40);
 
     const double d = x * data->scaledXzScale;
     const double e = y * data->scaledYScale;
