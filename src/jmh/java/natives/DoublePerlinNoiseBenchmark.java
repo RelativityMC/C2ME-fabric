@@ -101,6 +101,7 @@ public class DoublePerlinNoiseBenchmark extends Base_x86_64 {
     private final double[] sampleZ = new double[invocations];
     private DoublePerlinNoiseSampler vanillaSampler;
     private MemorySegment nativeSamplerData;
+    private long nativeSamplerDataPtr;
 
     @Param({"1", "2", "3", "4", "6", "8", "12", "16", "32", "64"})
     private int scale;
@@ -124,6 +125,7 @@ public class DoublePerlinNoiseBenchmark extends Base_x86_64 {
         }
         vanillaSampler = DoublePerlinNoiseSampler.create(minecraftRandom, minecraftRandom.nextInt(128), octaves);
         nativeSamplerData = create(vanillaSampler);
+        nativeSamplerDataPtr = nativeSamplerData.address();
     }
 
     @Override

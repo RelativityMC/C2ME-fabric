@@ -10,10 +10,19 @@ public class Bindings {
     }
 
     private static final MethodHandle MH_c2me_natives_noise_perlin_double_octave_sample = bind(BindingsTemplate.c2me_natives_noise_perlin_double_octave_sample, "c2me_natives_noise_perlin_double_octave_sample");
+    private static final MethodHandle MH_c2me_natives_noise_perlin_double_octave_sample_ptr = bind(BindingsTemplate.c2me_natives_noise_perlin_double_octave_sample_ptr, "c2me_natives_noise_perlin_double_octave_sample");
 
     public static double c2me_natives_noise_perlin_double_octave_sample(MemorySegment data, double x, double y, double z) {
         try {
             return (double) MH_c2me_natives_noise_perlin_double_octave_sample.invokeExact(data, x, y, z);
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static double c2me_natives_noise_perlin_double_octave_sample(long data_ptr, double x, double y, double z) {
+        try {
+            return (double) MH_c2me_natives_noise_perlin_double_octave_sample_ptr.invokeExact(data_ptr, x, y, z);
         } catch (Throwable e) {
             throw new RuntimeException(e);
         }

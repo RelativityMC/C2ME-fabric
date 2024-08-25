@@ -39,6 +39,16 @@ public class BindingsTemplate {
             ),
             Linker.Option.critical(false)
     );
+    public static final MethodHandle c2me_natives_noise_perlin_double_octave_sample_ptr = NativeLoader.linker.downcallHandle(
+            FunctionDescriptor.of(
+                    ValueLayout.JAVA_DOUBLE,
+                    ValueLayout.JAVA_LONG,
+                    ValueLayout.JAVA_DOUBLE,
+                    ValueLayout.JAVA_DOUBLE,
+                    ValueLayout.JAVA_DOUBLE
+            ),
+            Linker.Option.critical(false)
+    );
 
     public static final StructLayout double_octave_sampler_data = MemoryLayout.structLayout(
             ValueLayout.JAVA_LONG.withName("length"),

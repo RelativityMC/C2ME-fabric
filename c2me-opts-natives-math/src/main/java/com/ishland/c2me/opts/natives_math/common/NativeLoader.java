@@ -11,7 +11,7 @@ import java.nio.file.StandardCopyOption;
 
 public class NativeLoader {
 
-    private static final Arena arena = Arena.ofShared();
+    private static final Arena arena = Arena.ofAuto();
     public static final SymbolLookup lookup;
     public static final Linker linker = Linker.nativeLinker();
     public static final ISATarget currentMachineTarget;
@@ -27,7 +27,9 @@ public class NativeLoader {
                         lookup.find("c2me_natives_get_system_isa").get(),
                         FunctionDescriptor.of(ValueLayout.JAVA_INT)
                 ).invokeExact();
-                currentMachineTarget = (ISATarget) ISATarget.getInstance().getEnumConstants()[level];
+                ISATarget target = (ISATarget) ISATarget.getInstance().getEnumConstants()[level];
+                while (!target.isNativelySupported()) target = (ISATarget) ISATarget.getInstance().getEnumConstants()[target.ordinal() - 1];
+                currentMachineTarget = target;
                 System.out.println(String.format("Detected maximum supported ISA target: %s", currentMachineTarget));
             } catch (Throwable e) {
                 throw new RuntimeException(e);

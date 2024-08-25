@@ -120,11 +120,11 @@ int32_t c2me_natives_get_system_isa(void) {
             return 8; // ICL
         }
 #endif // !__APPLE__
-        if (skx) {
-            return 7; // SKX
-        } else if (knl) {
-            return 6; // KNL
-        }
+        // if (skx) {
+        //     return 7; // SKX
+        // } else if (knl) {
+        //     return 6; // KNL
+        // }
         // If it's unknown AVX512 target, fall through and use AVX2
         // or whatever is available in the machine.
     }

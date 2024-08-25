@@ -10,7 +10,7 @@ public enum ISA_x86_64 implements ISATarget {
     AVX2("_avx2", true), // 4
     AVX2ADL("_avx2adl", true), // 5
     AVX512KNL("_avx2", false), // 6, not implemented
-    AVX512SKX("_avx512skx", true), // 7
+    AVX512SKX("_avx512skx", true), // 7, disabled
     AVX512ICL("_avx512icl", true), // 8
     AVX512SPR("_avx512spr", true), // 9
     ;
