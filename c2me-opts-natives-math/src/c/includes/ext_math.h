@@ -351,7 +351,7 @@ math_noise_perlin_interpolated_sample(const interpolated_noise_sampler_t *const 
     double m = 0.0;
     double n = 0.0;
 
-#pragma clang loop vectorize(enable)
+#pragma clang loop vectorize(enable) interleave(enable) interleave_count(2)
     for (uint32_t offset = data->normalNoiseOffset; offset < data->endOffset; offset++) {
         n += math_noise_perlin_sample(
             data->sampler_permutations + 256 * offset,
@@ -371,7 +371,7 @@ math_noise_perlin_interpolated_sample(const interpolated_noise_sampler_t *const 
     const uint8_t bl3 = q <= 0.0;
 
     if (!bl2) {
-#pragma clang loop vectorize(enable)
+#pragma clang loop vectorize(enable) interleave(enable) interleave_count(2)
         for (uint32_t offset = 0; offset < data->upperNoiseOffset; offset++) {
             l += math_noise_perlin_sample(
                 data->sampler_permutations + 256 * offset,
@@ -388,7 +388,7 @@ math_noise_perlin_interpolated_sample(const interpolated_noise_sampler_t *const 
     }
 
     if (!bl3) {
-#pragma clang loop vectorize(enable)
+#pragma clang loop vectorize(enable) interleave(enable) interleave_count(2)
         for (uint32_t offset = data->upperNoiseOffset; offset < data->normalNoiseOffset; offset++) {
             m += math_noise_perlin_sample(
                 data->sampler_permutations + 256 * offset,
@@ -426,7 +426,7 @@ math_noise_perlin_interpolated_sample_specializedBase3dNoiseFunction(const inter
     double m = 0.0;
     double n = 0.0;
 
-#pragma clang loop vectorize(enable) interleave(enable)
+#pragma clang loop vectorize(enable) interleave(enable) interleave_count(2)
     for (uint32_t offset = 32; offset < 40; offset++) {
         n += math_noise_perlin_sample(
             data->sampler_permutations + 256 * offset,
@@ -446,7 +446,7 @@ math_noise_perlin_interpolated_sample_specializedBase3dNoiseFunction(const inter
     const uint8_t bl3 = q <= 0.0;
 
     if (!bl2) {
-#pragma clang loop vectorize(enable) interleave(enable)
+#pragma clang loop vectorize(enable) interleave(enable) interleave_count(2)
         for (uint32_t offset = 0; offset < 16; offset++) {
             l += math_noise_perlin_sample(
                 data->sampler_permutations + 256 * offset,
@@ -463,7 +463,7 @@ math_noise_perlin_interpolated_sample_specializedBase3dNoiseFunction(const inter
     }
 
     if (!bl3) {
-#pragma clang loop vectorize(enable) interleave(enable)
+#pragma clang loop vectorize(enable) interleave(enable) interleave_count(2)
         for (uint32_t offset = 16; offset < 32; offset++) {
             m += math_noise_perlin_sample(
                 data->sampler_permutations + 256 * offset,
