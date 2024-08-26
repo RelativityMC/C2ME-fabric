@@ -23,5 +23,5 @@ if(CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)|(amd64)|(AMD64)")
 endif()
 
 target_include_directories(c2me-opts-natives-math PRIVATE includes/)
-target_compile_options(c2me-opts-natives-math PRIVATE $<$<COMPILE_LANGUAGE:C>:-Wall -Wextra -Wpedantic -ffreestanding -ffile-prefix-map=${CMAKE_SOURCE_DIR}=. -mprefer-vector-width=512 -Rpass-missed=loop-vectorize -Rpass-analysis=loop-vectorize>)
+target_compile_options(c2me-opts-natives-math PRIVATE $<$<COMPILE_LANGUAGE:C>:-Wall -Wextra -Wpedantic -ffreestanding -fno-math-errno -ffile-prefix-map=${CMAKE_SOURCE_DIR}=. -mprefer-vector-width=512 -Rpass-missed=loop-vectorize -Rpass-analysis=loop-vectorize -mno-stack-arg-probe "SHELL:-mllvm -polly" "SHELL:-mllvm -polly-vectorizer=stripmine">)
 target_link_options(c2me-opts-natives-math PRIVATE -nostdlib -fuse-ld=lld)

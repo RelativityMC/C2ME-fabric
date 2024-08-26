@@ -1,3 +1,15 @@
+#pragma once
+#include <stdbool.h>
+#include <stdint.h>
+
+#define fminf(x, y) __builtin_fminf(x, y)
+#define fmaxf(x, y) __builtin_fmaxf(x, y)
+#define fmodf(x, y) __builtin_fmodf(x, y)
+#define fabsf(x) __builtin_fabsf(x)
+#define floor(x) __builtin_floor(x)
+#define sqrtf(x) __builtin_sqrtf(x)
+#define labs(x) __builtin_labs(x)
+
 static const double FLAT_SIMPLEX_GRAD[] = {
     1, 1, 0, 0,
     -1, 1, 0, 0,
@@ -17,22 +29,13 @@ static const double FLAT_SIMPLEX_GRAD[] = {
     0, -1, -1, 0,
 };
 
-#include <stdbool.h>
-#include <stdint.h>
-
-#define fminf(x, y) __builtin_fminf(x, y)
-#define fmaxf(x, y) __builtin_fmaxf(x, y)
-#define fmodf(x, y) __builtin_fmodf(x, y)
-#define fabsf(x) __builtin_fabsf(x)
-#define floor(x) __builtin_floor(x)
-#define sqrtf(x) __builtin_sqrtf(x)
-#define labs(x) __builtin_labs(x)
-
 static const double SQRT_3 = 1.7320508075688772;
 // 0.5 * (SQRT_3 - 1.0)
 static const double SKEW_FACTOR_2D = 0.3660254037844386;
 // (3.0 - SQRT_3) / 6.0
 static const double UNSKEW_FACTOR_2D = 0.21132486540518713;
+
+typedef double *aligned_double_ptr __attribute__((align_value(64)));
 
 #pragma clang attribute push (__attribute__((always_inline)), apply_to = function)
 
@@ -204,38 +207,38 @@ static inline __attribute__((const)) double math_perlinFade(const double value) 
     return value * value * value * (value * (value * 6.0 - 15.0) + 10.0);
 }
 
-static inline __attribute__((const)) double __math_perlin_grad(const uint32_t hash, const double x, const double y,
+static inline __attribute__((const)) double __math_perlin_grad(const uint8_t hash, const double x, const double y,
                                                                const double z) {
-    const int32_t loc = (hash & 15) << 2;
+    const uint8_t loc = (hash & 15) << 2;
     return FLAT_SIMPLEX_GRAD[loc | 0] * x + FLAT_SIMPLEX_GRAD[loc | 1] * y + FLAT_SIMPLEX_GRAD[loc | 2] * z;
 }
 
-static inline __attribute__((const)) int32_t __math_perlin_map(const uint8_t *const permutations, const int32_t input) {
-    return permutations[input & 0xFF] & 0xFF;
+static inline __attribute__((const)) uint8_t __math_perlin_map(const uint8_t *const permutations, const uint8_t input) {
+    return permutations[input];
 }
 
 static inline __attribute__((const)) double
 math_noise_perlin_sampleScalar(const uint8_t *const permutations,
-                               const int32_t sectionX, const int32_t sectionY, const int32_t sectionZ,
+                               const uint8_t sectionXu8, const uint8_t sectionYu8, const uint8_t sectionZu8,
                                const double localX, const double localY, const double localZ, const double fadeLocalY) {
-    const int32_t i = __math_perlin_map(permutations, sectionX);
-    const int32_t j = __math_perlin_map(permutations, sectionX + 1);
-    const int32_t k = __math_perlin_map(permutations, i + sectionY);
-    const int32_t l = __math_perlin_map(permutations, i + sectionY + 1);
-    const int32_t m = __math_perlin_map(permutations, j + sectionY);
-    const int32_t n = __math_perlin_map(permutations, j + sectionY + 1);
-    const double d = __math_perlin_grad(__math_perlin_map(permutations, k + sectionZ), localX, localY, localZ);
-    const double e = __math_perlin_grad(__math_perlin_map(permutations, m + sectionZ), localX - 1.0, localY, localZ);
-    const double f = __math_perlin_grad(__math_perlin_map(permutations, l + sectionZ), localX, localY - 1.0, localZ);
-    const double g = __math_perlin_grad(__math_perlin_map(permutations, n + sectionZ), localX - 1.0, localY - 1.0,
+    const uint8_t i = __math_perlin_map(permutations, sectionXu8);
+    const uint8_t j = __math_perlin_map(permutations, sectionXu8 + 1);
+    const uint8_t k = __math_perlin_map(permutations, i + sectionYu8);
+    const uint8_t l = __math_perlin_map(permutations, i + sectionYu8 + 1);
+    const uint8_t m = __math_perlin_map(permutations, j + sectionYu8);
+    const uint8_t n = __math_perlin_map(permutations, j + sectionYu8 + 1);
+    const double d = __math_perlin_grad(__math_perlin_map(permutations, k + sectionZu8), localX, localY, localZ);
+    const double e = __math_perlin_grad(__math_perlin_map(permutations, m + sectionZu8), localX - 1.0, localY, localZ);
+    const double f = __math_perlin_grad(__math_perlin_map(permutations, l + sectionZu8), localX, localY - 1.0, localZ);
+    const double g = __math_perlin_grad(__math_perlin_map(permutations, n + sectionZu8), localX - 1.0, localY - 1.0,
                                         localZ);
-    const double h = __math_perlin_grad(__math_perlin_map(permutations, k + sectionZ + 1), localX, localY,
+    const double h = __math_perlin_grad(__math_perlin_map(permutations, k + sectionZu8 + 1), localX, localY,
                                         localZ - 1.0);
-    const double o = __math_perlin_grad(__math_perlin_map(permutations, m + sectionZ + 1), localX - 1.0, localY,
+    const double o = __math_perlin_grad(__math_perlin_map(permutations, m + sectionZu8 + 1), localX - 1.0, localY,
                                         localZ - 1.0);
-    const double p = __math_perlin_grad(__math_perlin_map(permutations, l + sectionZ + 1), localX, localY - 1.0,
+    const double p = __math_perlin_grad(__math_perlin_map(permutations, l + sectionZu8 + 1), localX, localY - 1.0,
                                         localZ - 1.0);
-    const double q = __math_perlin_grad(__math_perlin_map(permutations, n + sectionZ + 1), localX - 1.0, localY - 1.0,
+    const double q = __math_perlin_grad(__math_perlin_map(permutations, n + sectionZu8 + 1), localX - 1.0, localY - 1.0,
                                         localZ - 1.0);
     const double r = math_perlinFade(localX);
     const double s = math_perlinFade(fadeLocalY);
@@ -260,20 +263,20 @@ math_noise_perlin_sample(const uint8_t *const permutations,
     const double l = f - k;
     const double o = yScale != 0 ? floor(((yMax >= 0.0 && yMax < h) ? yMax : h) / yScale + 1.0E-7) * yScale : 0;
 
-    return math_noise_perlin_sampleScalar(permutations, (int64_t) i, (int64_t) j, (int64_t) k, g, h - o, l, h);
+    return math_noise_perlin_sampleScalar(permutations, (int32_t) i, (int32_t) j, (int32_t) k, g, h - o, l, h);
 }
 
 
 typedef const struct double_octave_sampler_data {
     const uint64_t length;
-    const bool *const need_shift __attribute__((align_value(64)));
-    const double *const lacunarity_powd __attribute__((align_value(64)));
-    const double *const persistence_powd __attribute__((align_value(64)));
-    const uint8_t *const sampler_permutations __attribute__((align_value(64)));
-    const double *const sampler_originX __attribute__((align_value(64)));
-    const double *const sampler_originY __attribute__((align_value(64)));
-    const double *const sampler_originZ __attribute__((align_value(64)));
-    const double *const amplitudes __attribute__((align_value(64)));
+    const bool *const need_shift;
+    const aligned_double_ptr lacunarity_powd;
+    const aligned_double_ptr persistence_powd;
+    const uint8_t *const sampler_permutations;
+    const aligned_double_ptr sampler_originX;
+    const aligned_double_ptr sampler_originY;
+    const aligned_double_ptr sampler_originZ;
+    const aligned_double_ptr amplitudes;
 } double_octave_sampler_data_t;
 
 static inline __attribute__((const)) double
@@ -321,11 +324,11 @@ typedef const struct interpolated_noise_sampler {
     const double xzScale;
     const double yScale;
 
-    const uint8_t *const sampler_permutations __attribute__((align_value(64)));
-    const double *const sampler_originX __attribute__((align_value(64)));
-    const double *const sampler_originY __attribute__((align_value(64)));
-    const double *const sampler_originZ __attribute__((align_value(64)));
-    const double *const sampler_mulFactor __attribute__((align_value(64)));
+    const uint8_t *const sampler_permutations;
+    const aligned_double_ptr sampler_originX;
+    const aligned_double_ptr sampler_originY;
+    const aligned_double_ptr sampler_originZ;
+    const aligned_double_ptr sampler_mulFactor;
 
     const uint32_t upperNoiseOffset;
     const uint32_t normalNoiseOffset;
@@ -348,7 +351,7 @@ math_noise_perlin_interpolated_sample(const interpolated_noise_sampler_t *const 
     double m = 0.0;
     double n = 0.0;
 
-#pragma clang loop vectorize(enable) interleave(enable)
+#pragma clang loop vectorize(enable)
     for (uint32_t offset = data->normalNoiseOffset; offset < data->endOffset; offset++) {
         n += math_noise_perlin_sample(
             data->sampler_permutations + 256 * offset,
@@ -368,7 +371,7 @@ math_noise_perlin_interpolated_sample(const interpolated_noise_sampler_t *const 
     const uint8_t bl3 = q <= 0.0;
 
     if (!bl2) {
-#pragma clang loop vectorize(enable) interleave(enable)
+#pragma clang loop vectorize(enable)
         for (uint32_t offset = 0; offset < data->upperNoiseOffset; offset++) {
             l += math_noise_perlin_sample(
                 data->sampler_permutations + 256 * offset,
@@ -385,7 +388,7 @@ math_noise_perlin_interpolated_sample(const interpolated_noise_sampler_t *const 
     }
 
     if (!bl3) {
-#pragma clang loop vectorize(enable) interleave(enable)
+#pragma clang loop vectorize(enable)
         for (uint32_t offset = data->upperNoiseOffset; offset < data->normalNoiseOffset; offset++) {
             m += math_noise_perlin_sample(
                 data->sampler_permutations + 256 * offset,
@@ -407,9 +410,9 @@ math_noise_perlin_interpolated_sample(const interpolated_noise_sampler_t *const 
 static inline __attribute__((const)) double
 math_noise_perlin_interpolated_sample_specializedBase3dNoiseFunction(const interpolated_noise_sampler_t *const data,
                                                                      const double x, const double y, const double z) {
-//    assert(data->upperNoiseOffset == 16);
-//    assert(data->normalNoiseOffset == 32);
-//    assert(data->endOffset == 40);
+    //    assert(data->upperNoiseOffset == 16);
+    //    assert(data->normalNoiseOffset == 32);
+    //    assert(data->endOffset == 40);
 
     const double d = x * data->scaledXzScale;
     const double e = y * data->scaledYScale;
