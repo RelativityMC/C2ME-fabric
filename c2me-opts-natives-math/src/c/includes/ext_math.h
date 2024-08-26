@@ -266,14 +266,14 @@ math_noise_perlin_sample(const uint8_t *const permutations,
 
 typedef const struct double_octave_sampler_data {
     const uint64_t length;
-    const double *const need_shift;
-    const double *const lacunarity_powd;
-    const double *const persistence_powd;
-    const uint8_t *const sampler_permutations;
-    const double *const sampler_originX;
-    const double *const sampler_originY;
-    const double *const sampler_originZ;
-    const double *const amplitudes;
+    const double *const need_shift __attribute__((align_value(64)));
+    const double *const lacunarity_powd __attribute__((align_value(64)));
+    const double *const persistence_powd __attribute__((align_value(64)));
+    const uint8_t *const sampler_permutations __attribute__((align_value(64)));
+    const double *const sampler_originX __attribute__((align_value(64)));
+    const double *const sampler_originY __attribute__((align_value(64)));
+    const double *const sampler_originZ __attribute__((align_value(64)));
+    const double *const amplitudes __attribute__((align_value(64)));
 } double_octave_sampler_data_t;
 
 static inline __attribute__((const)) double
@@ -282,7 +282,7 @@ math_noise_perlin_double_octave_sample_impl(const double_octave_sampler_data_t *
                                             const double yScale, const double yMax, const uint8_t useOrigin) {
     double d = 0.0;
 
-#pragma clang loop vectorize(enable) interleave(enable)
+#pragma clang loop vectorize(enable) interleave(enable) interleave_count(2)
     for (uint32_t i = 0; i < data->length; i++) {
         const double e = data->lacunarity_powd[i];
         const double f = data->persistence_powd[i];
@@ -321,11 +321,11 @@ typedef const struct interpolated_noise_sampler {
     const double xzScale;
     const double yScale;
 
-    const uint8_t *const sampler_permutations;
-    const double *const sampler_originX;
-    const double *const sampler_originY;
-    const double *const sampler_originZ;
-    const double *const sampler_mulFactor;
+    const uint8_t *const sampler_permutations __attribute__((align_value(64)));
+    const double *const sampler_originX __attribute__((align_value(64)));
+    const double *const sampler_originY __attribute__((align_value(64)));
+    const double *const sampler_originZ __attribute__((align_value(64)));
+    const double *const sampler_mulFactor __attribute__((align_value(64)));
 
     const uint32_t upperNoiseOffset;
     const uint32_t normalNoiseOffset;
