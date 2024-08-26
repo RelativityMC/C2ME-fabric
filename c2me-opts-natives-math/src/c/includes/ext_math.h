@@ -266,7 +266,7 @@ math_noise_perlin_sample(const uint8_t *const permutations,
 
 typedef const struct double_octave_sampler_data {
     const uint64_t length;
-    const double *const need_shift __attribute__((align_value(64)));
+    const bool *const need_shift __attribute__((align_value(64)));
     const double *const lacunarity_powd __attribute__((align_value(64)));
     const double *const persistence_powd __attribute__((align_value(64)));
     const uint8_t *const sampler_permutations __attribute__((align_value(64)));
