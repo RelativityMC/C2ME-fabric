@@ -142,6 +142,9 @@ public class BindingsTemplate {
                 }
             }
         }
+
+        VarHandle.fullFence();
+
         return data;
     }
 
@@ -167,7 +170,25 @@ public class BindingsTemplate {
             Linker.Option.critical(false)
     );
 
-    // typedef struct interpolated_noise_sampler {
+    // typedef const struct interpolated_noise_sub_sampler {
+    //     const aligned_uint8_ptr sampler_permutations;
+    //     const aligned_double_ptr sampler_originX;
+    //     const aligned_double_ptr sampler_originY;
+    //     const aligned_double_ptr sampler_originZ;
+    //     const aligned_double_ptr sampler_mulFactor;
+    //     const uint32_t length;
+    // } interpolated_noise_sub_sampler_t;
+    public static final StructLayout interpolated_noise_sub_sampler = MemoryLayout.structLayout(
+            ValueLayout.ADDRESS.withName("sampler_permutations"),
+            ValueLayout.ADDRESS.withName("sampler_originX"),
+            ValueLayout.ADDRESS.withName("sampler_originY"),
+            ValueLayout.ADDRESS.withName("sampler_originZ"),
+            ValueLayout.ADDRESS.withName("sampler_mulFactor"),
+            ValueLayout.JAVA_INT.withName("length"),
+            MemoryLayout.paddingLayout(4)
+    ).withName("interpolated_noise_sub_sampler_t");
+
+    // typedef const struct interpolated_noise_sampler {
     //     const double scaledXzScale;
     //     const double scaledYScale;
     //     const double xzFactor;
@@ -176,15 +197,9 @@ public class BindingsTemplate {
     //     const double xzScale;
     //     const double yScale;
     //
-    //     const uint8 *sampler_permutations;
-    //     const double *sampler_originX;
-    //     const double *sampler_originY;
-    //     const double *sampler_originZ;
-    //     const double *sampler_mulFactor;
-    //
-    //     const int32 upperNoiseOffset;
-    //     const int32 normalNoiseOffset;
-    //     const int32 endOffset;
+    //     const interpolated_noise_sub_sampler_t lower;
+    //     const interpolated_noise_sub_sampler_t upper;
+    //     const interpolated_noise_sub_sampler_t normal;
     // } interpolated_noise_sampler_t;
     public static final StructLayout interpolated_noise_sampler = MemoryLayout.structLayout(
             ValueLayout.JAVA_DOUBLE.withName("scaledXzScale"),
@@ -195,15 +210,9 @@ public class BindingsTemplate {
             ValueLayout.JAVA_DOUBLE.withName("xzScale"),
             ValueLayout.JAVA_DOUBLE.withName("yScale"),
 
-            ValueLayout.ADDRESS.withName("sampler_permutations"),
-            ValueLayout.ADDRESS.withName("sampler_originX"),
-            ValueLayout.ADDRESS.withName("sampler_originY"),
-            ValueLayout.ADDRESS.withName("sampler_originZ"),
-            ValueLayout.ADDRESS.withName("sampler_mulFactor"),
-
-            ValueLayout.JAVA_INT.withName("upperNoiseOffset"),
-            ValueLayout.JAVA_INT.withName("normalNoiseOffset"),
-            ValueLayout.JAVA_INT.withName("endOffset")
+            interpolated_noise_sub_sampler.withName("lower"),
+            interpolated_noise_sub_sampler.withName("upper"),
+            interpolated_noise_sub_sampler.withName("normal")
     ).withByteAlignment(32).withName("interpolated_noise_sampler_t");
 
     public static final VarHandle interpolated_noise_sampler$scaledXzScale = interpolated_noise_sampler.varHandle(MemoryLayout.PathElement.groupElement("scaledXzScale"));
@@ -213,14 +222,24 @@ public class BindingsTemplate {
     public static final VarHandle interpolated_noise_sampler$smearScaleMultiplier = interpolated_noise_sampler.varHandle(MemoryLayout.PathElement.groupElement("smearScaleMultiplier"));
     public static final VarHandle interpolated_noise_sampler$xzScale = interpolated_noise_sampler.varHandle(MemoryLayout.PathElement.groupElement("xzScale"));
     public static final VarHandle interpolated_noise_sampler$yScale = interpolated_noise_sampler.varHandle(MemoryLayout.PathElement.groupElement("yScale"));
-    public static final VarHandle interpolated_noise_sampler$sampler_permutations = interpolated_noise_sampler.varHandle(MemoryLayout.PathElement.groupElement("sampler_permutations"));
-    public static final VarHandle interpolated_noise_sampler$sampler_originX = interpolated_noise_sampler.varHandle(MemoryLayout.PathElement.groupElement("sampler_originX"));
-    public static final VarHandle interpolated_noise_sampler$sampler_originY = interpolated_noise_sampler.varHandle(MemoryLayout.PathElement.groupElement("sampler_originY"));
-    public static final VarHandle interpolated_noise_sampler$sampler_originZ = interpolated_noise_sampler.varHandle(MemoryLayout.PathElement.groupElement("sampler_originZ"));
-    public static final VarHandle interpolated_noise_sampler$sampler_mulFactor = interpolated_noise_sampler.varHandle(MemoryLayout.PathElement.groupElement("sampler_mulFactor"));
-    public static final VarHandle interpolated_noise_sampler$upperNoiseOffset = interpolated_noise_sampler.varHandle(MemoryLayout.PathElement.groupElement("upperNoiseOffset"));
-    public static final VarHandle interpolated_noise_sampler$normalNoiseOffset = interpolated_noise_sampler.varHandle(MemoryLayout.PathElement.groupElement("normalNoiseOffset"));
-    public static final VarHandle interpolated_noise_sampler$endOffset = interpolated_noise_sampler.varHandle(MemoryLayout.PathElement.groupElement("endOffset"));
+    public static final VarHandle interpolated_noise_sampler$lower$sampler_permutations = interpolated_noise_sampler.varHandle(MemoryLayout.PathElement.groupElement("lower"), MemoryLayout.PathElement.groupElement("sampler_permutations"));
+    public static final VarHandle interpolated_noise_sampler$lower$sampler_originX = interpolated_noise_sampler.varHandle(MemoryLayout.PathElement.groupElement("lower"), MemoryLayout.PathElement.groupElement("sampler_originX"));
+    public static final VarHandle interpolated_noise_sampler$lower$sampler_originY = interpolated_noise_sampler.varHandle(MemoryLayout.PathElement.groupElement("lower"), MemoryLayout.PathElement.groupElement("sampler_originY"));
+    public static final VarHandle interpolated_noise_sampler$lower$sampler_originZ = interpolated_noise_sampler.varHandle(MemoryLayout.PathElement.groupElement("lower"), MemoryLayout.PathElement.groupElement("sampler_originZ"));
+    public static final VarHandle interpolated_noise_sampler$lower$sampler_mulFactor = interpolated_noise_sampler.varHandle(MemoryLayout.PathElement.groupElement("lower"), MemoryLayout.PathElement.groupElement("sampler_mulFactor"));
+    public static final VarHandle interpolated_noise_sampler$lower$length = interpolated_noise_sampler.varHandle(MemoryLayout.PathElement.groupElement("lower"), MemoryLayout.PathElement.groupElement("length"));
+    public static final VarHandle interpolated_noise_sampler$upper$sampler_permutations = interpolated_noise_sampler.varHandle(MemoryLayout.PathElement.groupElement("upper"), MemoryLayout.PathElement.groupElement("sampler_permutations"));
+    public static final VarHandle interpolated_noise_sampler$upper$sampler_originX = interpolated_noise_sampler.varHandle(MemoryLayout.PathElement.groupElement("upper"), MemoryLayout.PathElement.groupElement("sampler_originX"));
+    public static final VarHandle interpolated_noise_sampler$upper$sampler_originY = interpolated_noise_sampler.varHandle(MemoryLayout.PathElement.groupElement("upper"), MemoryLayout.PathElement.groupElement("sampler_originY"));
+    public static final VarHandle interpolated_noise_sampler$upper$sampler_originZ = interpolated_noise_sampler.varHandle(MemoryLayout.PathElement.groupElement("upper"), MemoryLayout.PathElement.groupElement("sampler_originZ"));
+    public static final VarHandle interpolated_noise_sampler$upper$sampler_mulFactor = interpolated_noise_sampler.varHandle(MemoryLayout.PathElement.groupElement("upper"), MemoryLayout.PathElement.groupElement("sampler_mulFactor"));
+    public static final VarHandle interpolated_noise_sampler$upper$length = interpolated_noise_sampler.varHandle(MemoryLayout.PathElement.groupElement("upper"), MemoryLayout.PathElement.groupElement("length"));
+    public static final VarHandle interpolated_noise_sampler$normal$sampler_permutations = interpolated_noise_sampler.varHandle(MemoryLayout.PathElement.groupElement("normal"), MemoryLayout.PathElement.groupElement("sampler_permutations"));
+    public static final VarHandle interpolated_noise_sampler$normal$sampler_originX = interpolated_noise_sampler.varHandle(MemoryLayout.PathElement.groupElement("normal"), MemoryLayout.PathElement.groupElement("sampler_originX"));
+    public static final VarHandle interpolated_noise_sampler$normal$sampler_originY = interpolated_noise_sampler.varHandle(MemoryLayout.PathElement.groupElement("normal"), MemoryLayout.PathElement.groupElement("sampler_originY"));
+    public static final VarHandle interpolated_noise_sampler$normal$sampler_originZ = interpolated_noise_sampler.varHandle(MemoryLayout.PathElement.groupElement("normal"), MemoryLayout.PathElement.groupElement("sampler_originZ"));
+    public static final VarHandle interpolated_noise_sampler$normal$sampler_mulFactor = interpolated_noise_sampler.varHandle(MemoryLayout.PathElement.groupElement("normal"), MemoryLayout.PathElement.groupElement("sampler_mulFactor"));
+    public static final VarHandle interpolated_noise_sampler$normal$length = interpolated_noise_sampler.varHandle(MemoryLayout.PathElement.groupElement("normal"), MemoryLayout.PathElement.groupElement("length"));
 
     public static boolean interpolated_noise_sampler$isSpecializedBase3dNoiseFunction(InterpolatedNoiseSampler interpolated) {
         return IntStream.range(0, 16).mapToObj(((IInterpolatedNoiseSampler) interpolated).getLowerInterpolatedNoise()::getOctave).filter(Objects::nonNull).count() == 16 &&
@@ -237,11 +256,6 @@ public class BindingsTemplate {
         interpolated_noise_sampler$smearScaleMultiplier.set(data, 0L, ((IInterpolatedNoiseSampler) interpolated).getSmearScaleMultiplier());
         interpolated_noise_sampler$xzScale.set(data, 0L, ((IInterpolatedNoiseSampler) interpolated).getXzScale());
         interpolated_noise_sampler$yScale.set(data, 0L, ((IInterpolatedNoiseSampler) interpolated).getYScale());
-        int countNonNull = Math.toIntExact(Stream.of(
-                IntStream.range(0, 8).mapToObj(((IInterpolatedNoiseSampler) interpolated).getInterpolationNoise()::getOctave),
-                IntStream.range(0, 16).mapToObj(((IInterpolatedNoiseSampler) interpolated).getLowerInterpolatedNoise()::getOctave),
-                IntStream.range(0, 16).mapToObj(((IInterpolatedNoiseSampler) interpolated).getUpperInterpolatedNoise()::getOctave)
-        ).flatMap(Function.identity()).filter(Objects::nonNull).count());
 
 //        if (true) {
 //            System.out.println(String.format("Interpolated total: %d", countNonNull));
@@ -250,63 +264,89 @@ public class BindingsTemplate {
 //            System.out.println(String.format("normal: %d", IntStream.range(0, 8).mapToObj(((IInterpolatedNoiseSampler) interpolated).getInterpolationNoise()::getOctave).filter(Objects::nonNull).count()));
 //        }
 
-        final MemorySegment sampler_permutations = arena.allocate(countNonNull * 256L, 64);
-        final MemorySegment sampler_originX = arena.allocate(countNonNull * 8L, 64);
-        final MemorySegment sampler_originY = arena.allocate(countNonNull * 8L, 64);
-        final MemorySegment sampler_originZ = arena.allocate(countNonNull * 8L, 64);
-        final MemorySegment sampler_mulFactor = arena.allocate(countNonNull * 8L, 64);
+        {
+            final MemorySegment sampler_permutations = arena.allocate(16 * 256L, 64);
+            final MemorySegment sampler_originX = arena.allocate(16 * 8L, 64);
+            final MemorySegment sampler_originY = arena.allocate(16 * 8L, 64);
+            final MemorySegment sampler_originZ = arena.allocate(16 * 8L, 64);
+            final MemorySegment sampler_mulFactor = arena.allocate(16 * 8L, 64);
 
-        int index = 0;
-        for (int i = 0; i < 16; i++) {
-            PerlinNoiseSampler sampler = ((IInterpolatedNoiseSampler) interpolated).getLowerInterpolatedNoise().getOctave(i);
-            if (sampler != null) {
-                MemorySegment.copy(MemorySegment.ofArray(((IPerlinNoiseSampler) (Object) sampler).getPermutation()), 0, sampler_permutations, index * 256L, 256);
-                sampler_originX.set(ValueLayout.JAVA_DOUBLE, index * 8L, sampler.originX);
-                sampler_originY.set(ValueLayout.JAVA_DOUBLE, index * 8L, sampler.originY);
-                sampler_originZ.set(ValueLayout.JAVA_DOUBLE, index * 8L, sampler.originZ);
-                sampler_mulFactor.set(ValueLayout.JAVA_DOUBLE, index * 8L, Math.pow(2, -i));
-                index++;
+            int index = 0;
+            for (int i = 0; i < 16; i++) {
+                PerlinNoiseSampler sampler = ((IInterpolatedNoiseSampler) interpolated).getLowerInterpolatedNoise().getOctave(i);
+                if (sampler != null) {
+                    MemorySegment.copy(MemorySegment.ofArray(((IPerlinNoiseSampler) (Object) sampler).getPermutation()), 0, sampler_permutations, index * 256L, 256);
+                    sampler_originX.set(ValueLayout.JAVA_DOUBLE, index * 8L, sampler.originX);
+                    sampler_originY.set(ValueLayout.JAVA_DOUBLE, index * 8L, sampler.originY);
+                    sampler_originZ.set(ValueLayout.JAVA_DOUBLE, index * 8L, sampler.originZ);
+                    sampler_mulFactor.set(ValueLayout.JAVA_DOUBLE, index * 8L, Math.pow(2, -i));
+                    index ++;
+                }
             }
+
+            interpolated_noise_sampler$lower$sampler_permutations.set(data, 0L, sampler_permutations);
+            interpolated_noise_sampler$lower$sampler_originX.set(data, 0L, sampler_originX);
+            interpolated_noise_sampler$lower$sampler_originY.set(data, 0L, sampler_originY);
+            interpolated_noise_sampler$lower$sampler_originZ.set(data, 0L, sampler_originZ);
+            interpolated_noise_sampler$lower$sampler_mulFactor.set(data, 0L, sampler_mulFactor);
+            interpolated_noise_sampler$lower$length.set(data, 0L, index);
         }
 
-        interpolated_noise_sampler$upperNoiseOffset.set(data, 0L, index);
+        {
+            final MemorySegment sampler_permutations = arena.allocate(16 * 256L, 64);
+            final MemorySegment sampler_originX = arena.allocate(16 * 8L, 64);
+            final MemorySegment sampler_originY = arena.allocate(16 * 8L, 64);
+            final MemorySegment sampler_originZ = arena.allocate(16 * 8L, 64);
+            final MemorySegment sampler_mulFactor = arena.allocate(16 * 8L, 64);
 
-        for (int i = 0; i < 16; i++) {
-            PerlinNoiseSampler sampler = ((IInterpolatedNoiseSampler) interpolated).getUpperInterpolatedNoise().getOctave(i);
-            if (sampler != null) {
-                MemorySegment.copy(MemorySegment.ofArray(((IPerlinNoiseSampler) (Object) sampler).getPermutation()), 0, sampler_permutations, index * 256L, 256);
-                sampler_originX.set(ValueLayout.JAVA_DOUBLE, index * 8L, sampler.originX);
-                sampler_originY.set(ValueLayout.JAVA_DOUBLE, index * 8L, sampler.originY);
-                sampler_originZ.set(ValueLayout.JAVA_DOUBLE, index * 8L, sampler.originZ);
-                sampler_mulFactor.set(ValueLayout.JAVA_DOUBLE, index * 8L, Math.pow(2, -i));
-                index++;
+            int index = 0;
+            for (int i = 0; i < 16; i++) {
+                PerlinNoiseSampler sampler = ((IInterpolatedNoiseSampler) interpolated).getUpperInterpolatedNoise().getOctave(i);
+                if (sampler != null) {
+                    MemorySegment.copy(MemorySegment.ofArray(((IPerlinNoiseSampler) (Object) sampler).getPermutation()), 0, sampler_permutations, index * 256L, 256);
+                    sampler_originX.set(ValueLayout.JAVA_DOUBLE, index * 8L, sampler.originX);
+                    sampler_originY.set(ValueLayout.JAVA_DOUBLE, index * 8L, sampler.originY);
+                    sampler_originZ.set(ValueLayout.JAVA_DOUBLE, index * 8L, sampler.originZ);
+                    sampler_mulFactor.set(ValueLayout.JAVA_DOUBLE, index * 8L, Math.pow(2, -i));
+                    index ++;
+                }
             }
+
+            interpolated_noise_sampler$upper$sampler_permutations.set(data, 0L, sampler_permutations);
+            interpolated_noise_sampler$upper$sampler_originX.set(data, 0L, sampler_originX);
+            interpolated_noise_sampler$upper$sampler_originY.set(data, 0L, sampler_originY);
+            interpolated_noise_sampler$upper$sampler_originZ.set(data, 0L, sampler_originZ);
+            interpolated_noise_sampler$upper$sampler_mulFactor.set(data, 0L, sampler_mulFactor);
+            interpolated_noise_sampler$upper$length.set(data, 0L, index);
         }
 
-        interpolated_noise_sampler$normalNoiseOffset.set(data, 0L, index);
 
-        for (int i = 0; i < 8; i++) {
-            PerlinNoiseSampler sampler = ((IInterpolatedNoiseSampler) interpolated).getInterpolationNoise().getOctave(i);
-            if (sampler != null) {
-                MemorySegment.copy(MemorySegment.ofArray(((IPerlinNoiseSampler) (Object) sampler).getPermutation()), 0, sampler_permutations, index * 256L, 256);
-                sampler_originX.set(ValueLayout.JAVA_DOUBLE, index * 8L, sampler.originX);
-                sampler_originY.set(ValueLayout.JAVA_DOUBLE, index * 8L, sampler.originY);
-                sampler_originZ.set(ValueLayout.JAVA_DOUBLE, index * 8L, sampler.originZ);
-                sampler_mulFactor.set(ValueLayout.JAVA_DOUBLE, index * 8L, Math.pow(2, -i));
-                index++;
+        {
+            final MemorySegment sampler_permutations = arena.allocate(8 * 256L, 64);
+            final MemorySegment sampler_originX = arena.allocate(8 * 8L, 64);
+            final MemorySegment sampler_originY = arena.allocate(8 * 8L, 64);
+            final MemorySegment sampler_originZ = arena.allocate(8 * 8L, 64);
+            final MemorySegment sampler_mulFactor = arena.allocate(8 * 8L, 64);
+
+            int index = 0;
+            for (int i = 0; i < 8; i++) {
+                PerlinNoiseSampler sampler = ((IInterpolatedNoiseSampler) interpolated).getInterpolationNoise().getOctave(i);
+                if (sampler != null) {
+                    MemorySegment.copy(MemorySegment.ofArray(((IPerlinNoiseSampler) (Object) sampler).getPermutation()), 0, sampler_permutations, index * 256L, 256);
+                    sampler_originX.set(ValueLayout.JAVA_DOUBLE, index * 8L, sampler.originX);
+                    sampler_originY.set(ValueLayout.JAVA_DOUBLE, index * 8L, sampler.originY);
+                    sampler_originZ.set(ValueLayout.JAVA_DOUBLE, index * 8L, sampler.originZ);
+                    sampler_mulFactor.set(ValueLayout.JAVA_DOUBLE, index * 8L, Math.pow(2, -i));
+                    index ++;
+                }
             }
-        }
 
-        interpolated_noise_sampler$endOffset.set(data, 0L, index);
-
-        interpolated_noise_sampler$sampler_permutations.set(data, 0L, sampler_permutations);
-        interpolated_noise_sampler$sampler_originX.set(data, 0L, sampler_originX);
-        interpolated_noise_sampler$sampler_originY.set(data, 0L, sampler_originY);
-        interpolated_noise_sampler$sampler_originZ.set(data, 0L, sampler_originZ);
-        interpolated_noise_sampler$sampler_mulFactor.set(data, 0L, sampler_mulFactor);
-
-        if (index != countNonNull) {
-            throw new AssertionError("index != countNonNull");
+            interpolated_noise_sampler$normal$sampler_permutations.set(data, 0L, sampler_permutations);
+            interpolated_noise_sampler$normal$sampler_originX.set(data, 0L, sampler_originX);
+            interpolated_noise_sampler$normal$sampler_originY.set(data, 0L, sampler_originY);
+            interpolated_noise_sampler$normal$sampler_originZ.set(data, 0L, sampler_originZ);
+            interpolated_noise_sampler$normal$sampler_mulFactor.set(data, 0L, sampler_mulFactor);
+            interpolated_noise_sampler$normal$length.set(data, 0L, index);
         }
 
         VarHandle.fullFence();

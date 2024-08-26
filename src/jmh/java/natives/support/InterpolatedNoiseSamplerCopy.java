@@ -21,81 +21,107 @@ public class InterpolatedNoiseSamplerCopy {
     public static MemorySegment interpolated_noise_sampler$create(InterpolatedNoiseSamplerCopy interpolated) {
         final Arena arena = Arena.ofShared(); // this is fine
         final MemorySegment data = arena.allocate(BindingsTemplate.interpolated_noise_sampler.byteSize(), 64);
-        BindingsTemplate.interpolated_noise_sampler$scaledXzScale.set(data, 0L, ReflectUtils.getField(InterpolatedNoiseSamplerCopy.class, interpolated, "scaledXzScale"));
-        BindingsTemplate.interpolated_noise_sampler$scaledYScale.set(data, 0L, ReflectUtils.getField(InterpolatedNoiseSamplerCopy.class, interpolated, "scaledYScale"));
-        BindingsTemplate.interpolated_noise_sampler$xzFactor.set(data, 0L, ReflectUtils.getField(InterpolatedNoiseSamplerCopy.class, interpolated, "xzFactor"));
-        BindingsTemplate.interpolated_noise_sampler$yFactor.set(data, 0L, ReflectUtils.getField(InterpolatedNoiseSamplerCopy.class, interpolated, "yFactor"));
-        BindingsTemplate.interpolated_noise_sampler$smearScaleMultiplier.set(data, 0L, ReflectUtils.getField(InterpolatedNoiseSamplerCopy.class, interpolated, "smearScaleMultiplier"));
-        BindingsTemplate.interpolated_noise_sampler$xzScale.set(data, 0L, ReflectUtils.getField(InterpolatedNoiseSamplerCopy.class, interpolated, "xzScale"));
-        BindingsTemplate.interpolated_noise_sampler$yScale.set(data, 0L, ReflectUtils.getField(InterpolatedNoiseSamplerCopy.class, interpolated, "yScale"));
+        BindingsTemplate.interpolated_noise_sampler$scaledXzScale.set(data, 0L, interpolated.scaledXzScale);
+        BindingsTemplate.interpolated_noise_sampler$scaledYScale.set(data, 0L, interpolated.scaledYScale);
+        BindingsTemplate.interpolated_noise_sampler$xzFactor.set(data, 0L, interpolated.xzFactor);
+        BindingsTemplate.interpolated_noise_sampler$yFactor.set(data, 0L, interpolated.yFactor);
+        BindingsTemplate.interpolated_noise_sampler$smearScaleMultiplier.set(data, 0L, interpolated.smearScaleMultiplier);
+        BindingsTemplate.interpolated_noise_sampler$xzScale.set(data, 0L, interpolated.xzScale);
+        BindingsTemplate.interpolated_noise_sampler$yScale.set(data, 0L, interpolated.yScale);
         int countNonNull = Math.toIntExact(Stream.of(
-                IntStream.range(0, 8).mapToObj(((OctavePerlinNoiseSampler) ReflectUtils.getField(InterpolatedNoiseSamplerCopy.class, interpolated, "interpolationNoise"))::getOctave),
-                IntStream.range(0, 16).mapToObj(((OctavePerlinNoiseSampler) ReflectUtils.getField(InterpolatedNoiseSamplerCopy.class, interpolated, "lowerInterpolatedNoise"))::getOctave),
-                IntStream.range(0, 16).mapToObj(((OctavePerlinNoiseSampler) ReflectUtils.getField(InterpolatedNoiseSamplerCopy.class, interpolated, "upperInterpolatedNoise"))::getOctave)
+                IntStream.range(0, 8).mapToObj(interpolated.interpolationNoise::getOctave),
+                IntStream.range(0, 16).mapToObj(interpolated.lowerInterpolatedNoise::getOctave),
+                IntStream.range(0, 16).mapToObj(interpolated.upperInterpolatedNoise::getOctave)
         ).flatMap(Function.identity()).filter(Objects::nonNull).count());
 
         System.out.println(String.format("Interpolated total: %d", countNonNull));
-        System.out.println(String.format("lower: %d", IntStream.range(0, 16).mapToObj(((OctavePerlinNoiseSampler) ReflectUtils.getField(InterpolatedNoiseSamplerCopy.class, interpolated, "lowerInterpolatedNoise"))::getOctave).filter(Objects::nonNull).count()));
-        System.out.println(String.format("upper: %d", IntStream.range(0, 16).mapToObj(((OctavePerlinNoiseSampler) ReflectUtils.getField(InterpolatedNoiseSamplerCopy.class, interpolated, "upperInterpolatedNoise"))::getOctave).filter(Objects::nonNull).count()));
-        System.out.println(String.format("normal: %d", IntStream.range(0, 8).mapToObj(((OctavePerlinNoiseSampler) ReflectUtils.getField(InterpolatedNoiseSamplerCopy.class, interpolated, "interpolationNoise"))::getOctave).filter(Objects::nonNull).count()));
+        System.out.println(String.format("lower: %d", IntStream.range(0, 16).mapToObj(interpolated.lowerInterpolatedNoise::getOctave).filter(Objects::nonNull).count()));
+        System.out.println(String.format("upper: %d", IntStream.range(0, 16).mapToObj(interpolated.upperInterpolatedNoise::getOctave).filter(Objects::nonNull).count()));
+        System.out.println(String.format("normal: %d", IntStream.range(0, 8).mapToObj(interpolated.interpolationNoise::getOctave).filter(Objects::nonNull).count()));
 
-        final MemorySegment sampler_permutations = arena.allocate(countNonNull * 256L, 64);
-        final MemorySegment sampler_originX = arena.allocate(countNonNull * 8L, 64);
-        final MemorySegment sampler_originY = arena.allocate(countNonNull * 8L, 64);
-        final MemorySegment sampler_originZ = arena.allocate(countNonNull * 8L, 64);
-        final MemorySegment sampler_mulFactor = arena.allocate(countNonNull * 8L, 64);
+        {
+            final MemorySegment sampler_permutations = arena.allocate(16 * 256L, 64);
+            final MemorySegment sampler_originX = arena.allocate(16 * 8L, 64);
+            final MemorySegment sampler_originY = arena.allocate(16 * 8L, 64);
+            final MemorySegment sampler_originZ = arena.allocate(16 * 8L, 64);
+            final MemorySegment sampler_mulFactor = arena.allocate(16 * 8L, 64);
 
-        int index = 0;
-        for (int i = 0; i < 16; i++) {
-            PerlinNoiseSampler sampler = ((OctavePerlinNoiseSampler) ReflectUtils.getField(InterpolatedNoiseSamplerCopy.class, interpolated, "lowerInterpolatedNoise")).getOctave(i);
-            if (sampler != null) {
-                MemorySegment.copy(MemorySegment.ofArray((byte[]) ReflectUtils.getField(PerlinNoiseSampler.class, sampler, "permutation")), 0, sampler_permutations, index * 256L, 256);
-                sampler_originX.set(ValueLayout.JAVA_DOUBLE, index * 8L, sampler.originX);
-                sampler_originY.set(ValueLayout.JAVA_DOUBLE, index * 8L, sampler.originY);
-                sampler_originZ.set(ValueLayout.JAVA_DOUBLE, index * 8L, sampler.originZ);
-                sampler_mulFactor.set(ValueLayout.JAVA_DOUBLE, index * 8L, Math.pow(2, -i));
-                index++;
+            int index = 0;
+            for (int i = 0; i < 16; i++) {
+                PerlinNoiseSampler sampler = interpolated.lowerInterpolatedNoise.getOctave(i);
+                if (sampler != null) {
+                    MemorySegment.copy(MemorySegment.ofArray((byte[]) ReflectUtils.getField(PerlinNoiseSampler.class, sampler, "permutation")), 0, sampler_permutations, index * 256L, 256);
+                    sampler_originX.set(ValueLayout.JAVA_DOUBLE, index * 8L, sampler.originX);
+                    sampler_originY.set(ValueLayout.JAVA_DOUBLE, index * 8L, sampler.originY);
+                    sampler_originZ.set(ValueLayout.JAVA_DOUBLE, index * 8L, sampler.originZ);
+                    sampler_mulFactor.set(ValueLayout.JAVA_DOUBLE, index * 8L, Math.pow(2, -i));
+                    index ++;
+                }
             }
+
+            BindingsTemplate.interpolated_noise_sampler$lower$sampler_permutations.set(data, 0L, sampler_permutations);
+            BindingsTemplate.interpolated_noise_sampler$lower$sampler_originX.set(data, 0L, sampler_originX);
+            BindingsTemplate.interpolated_noise_sampler$lower$sampler_originY.set(data, 0L, sampler_originY);
+            BindingsTemplate.interpolated_noise_sampler$lower$sampler_originZ.set(data, 0L, sampler_originZ);
+            BindingsTemplate.interpolated_noise_sampler$lower$sampler_mulFactor.set(data, 0L, sampler_mulFactor);
+            BindingsTemplate.interpolated_noise_sampler$lower$length.set(data, 0L, index);
         }
 
-        BindingsTemplate.interpolated_noise_sampler$upperNoiseOffset.set(data, 0L, index);
+        {
+            final MemorySegment sampler_permutations = arena.allocate(16 * 256L, 64);
+            final MemorySegment sampler_originX = arena.allocate(16 * 8L, 64);
+            final MemorySegment sampler_originY = arena.allocate(16 * 8L, 64);
+            final MemorySegment sampler_originZ = arena.allocate(16 * 8L, 64);
+            final MemorySegment sampler_mulFactor = arena.allocate(16 * 8L, 64);
 
-        for (int i = 0; i < 16; i++) {
-            PerlinNoiseSampler sampler = ((OctavePerlinNoiseSampler) ReflectUtils.getField(InterpolatedNoiseSamplerCopy.class, interpolated, "upperInterpolatedNoise")).getOctave(i);
-            if (sampler != null) {
-                MemorySegment.copy(MemorySegment.ofArray((byte[]) ReflectUtils.getField(PerlinNoiseSampler.class, sampler, "permutation")), 0, sampler_permutations, index * 256L, 256);
-                sampler_originX.set(ValueLayout.JAVA_DOUBLE, index * 8L, sampler.originX);
-                sampler_originY.set(ValueLayout.JAVA_DOUBLE, index * 8L, sampler.originY);
-                sampler_originZ.set(ValueLayout.JAVA_DOUBLE, index * 8L, sampler.originZ);
-                sampler_mulFactor.set(ValueLayout.JAVA_DOUBLE, index * 8L, Math.pow(2, -i));
-                index++;
+            int index = 0;
+            for (int i = 0; i < 16; i++) {
+                PerlinNoiseSampler sampler = interpolated.upperInterpolatedNoise.getOctave(i);
+                if (sampler != null) {
+                    MemorySegment.copy(MemorySegment.ofArray((byte[]) ReflectUtils.getField(PerlinNoiseSampler.class, sampler, "permutation")), 0, sampler_permutations, index * 256L, 256);
+                    sampler_originX.set(ValueLayout.JAVA_DOUBLE, index * 8L, sampler.originX);
+                    sampler_originY.set(ValueLayout.JAVA_DOUBLE, index * 8L, sampler.originY);
+                    sampler_originZ.set(ValueLayout.JAVA_DOUBLE, index * 8L, sampler.originZ);
+                    sampler_mulFactor.set(ValueLayout.JAVA_DOUBLE, index * 8L, Math.pow(2, -i));
+                    index ++;
+                }
             }
+
+            BindingsTemplate.interpolated_noise_sampler$upper$sampler_permutations.set(data, 0L, sampler_permutations);
+            BindingsTemplate.interpolated_noise_sampler$upper$sampler_originX.set(data, 0L, sampler_originX);
+            BindingsTemplate.interpolated_noise_sampler$upper$sampler_originY.set(data, 0L, sampler_originY);
+            BindingsTemplate.interpolated_noise_sampler$upper$sampler_originZ.set(data, 0L, sampler_originZ);
+            BindingsTemplate.interpolated_noise_sampler$upper$sampler_mulFactor.set(data, 0L, sampler_mulFactor);
+            BindingsTemplate.interpolated_noise_sampler$upper$length.set(data, 0L, index);
         }
 
-        BindingsTemplate.interpolated_noise_sampler$normalNoiseOffset.set(data, 0L, index);
 
-        for (int i = 0; i < 8; i++) {
-            PerlinNoiseSampler sampler = ((OctavePerlinNoiseSampler) ReflectUtils.getField(InterpolatedNoiseSamplerCopy.class, interpolated, "interpolationNoise")).getOctave(i);
-            if (sampler != null) {
-                MemorySegment.copy(MemorySegment.ofArray((byte[]) ReflectUtils.getField(PerlinNoiseSampler.class, sampler, "permutation")), 0, sampler_permutations, index * 256L, 256);
-                sampler_originX.set(ValueLayout.JAVA_DOUBLE, index * 8L, sampler.originX);
-                sampler_originY.set(ValueLayout.JAVA_DOUBLE, index * 8L, sampler.originY);
-                sampler_originZ.set(ValueLayout.JAVA_DOUBLE, index * 8L, sampler.originZ);
-                sampler_mulFactor.set(ValueLayout.JAVA_DOUBLE, index * 8L, Math.pow(2, -i));
-                index++;
+        {
+            final MemorySegment sampler_permutations = arena.allocate(8 * 256L, 64);
+            final MemorySegment sampler_originX = arena.allocate(8 * 8L, 64);
+            final MemorySegment sampler_originY = arena.allocate(8 * 8L, 64);
+            final MemorySegment sampler_originZ = arena.allocate(8 * 8L, 64);
+            final MemorySegment sampler_mulFactor = arena.allocate(8 * 8L, 64);
+
+            int index = 0;
+            for (int i = 0; i < 8; i++) {
+                PerlinNoiseSampler sampler = interpolated.interpolationNoise.getOctave(i);
+                if (sampler != null) {
+                    MemorySegment.copy(MemorySegment.ofArray((byte[]) ReflectUtils.getField(PerlinNoiseSampler.class, sampler, "permutation")), 0, sampler_permutations, index * 256L, 256);
+                    sampler_originX.set(ValueLayout.JAVA_DOUBLE, index * 8L, sampler.originX);
+                    sampler_originY.set(ValueLayout.JAVA_DOUBLE, index * 8L, sampler.originY);
+                    sampler_originZ.set(ValueLayout.JAVA_DOUBLE, index * 8L, sampler.originZ);
+                    sampler_mulFactor.set(ValueLayout.JAVA_DOUBLE, index * 8L, Math.pow(2, -i));
+                    index ++;
+                }
             }
-        }
 
-        BindingsTemplate.interpolated_noise_sampler$endOffset.set(data, 0L, index);
-
-        BindingsTemplate.interpolated_noise_sampler$sampler_permutations.set(data, 0L, sampler_permutations);
-        BindingsTemplate.interpolated_noise_sampler$sampler_originX.set(data, 0L, sampler_originX);
-        BindingsTemplate.interpolated_noise_sampler$sampler_originY.set(data, 0L, sampler_originY);
-        BindingsTemplate.interpolated_noise_sampler$sampler_originZ.set(data, 0L, sampler_originZ);
-        BindingsTemplate.interpolated_noise_sampler$sampler_mulFactor.set(data, 0L, sampler_mulFactor);
-
-        if (index != countNonNull) {
-            throw new AssertionError("index != countNonNull");
+            BindingsTemplate.interpolated_noise_sampler$normal$sampler_permutations.set(data, 0L, sampler_permutations);
+            BindingsTemplate.interpolated_noise_sampler$normal$sampler_originX.set(data, 0L, sampler_originX);
+            BindingsTemplate.interpolated_noise_sampler$normal$sampler_originY.set(data, 0L, sampler_originY);
+            BindingsTemplate.interpolated_noise_sampler$normal$sampler_originZ.set(data, 0L, sampler_originZ);
+            BindingsTemplate.interpolated_noise_sampler$normal$sampler_mulFactor.set(data, 0L, sampler_mulFactor);
+            BindingsTemplate.interpolated_noise_sampler$normal$length.set(data, 0L, index);
         }
 
         VarHandle.fullFence();

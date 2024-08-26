@@ -1,7 +1,7 @@
 #include <ext_math.h>
 #include <target_macros.h>
 
-TARGET_IMPL(c2me_natives_noise_perlin_sample, double, (const uint8_t *const permutations, const double originX,
+TARGET_IMPL(c2me_natives_noise_perlin_sample, double, (const aligned_uint8_ptr permutations, const double originX,
                                                        const double originY, const double originZ, const double x,
                                                        const double y, const double z, const double yScale,
                                                        const double yMax) {

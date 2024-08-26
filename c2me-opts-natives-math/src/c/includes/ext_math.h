@@ -10,7 +10,7 @@
 #define sqrtf(x) __builtin_sqrtf(x)
 #define labs(x) __builtin_labs(x)
 
-static const double FLAT_SIMPLEX_GRAD[] = {
+__attribute__((aligned(64))) static const double FLAT_SIMPLEX_GRAD[] = {
     1, 1, 0, 0,
     -1, 1, 0, 0,
     1, -1, 0, 0,
@@ -36,6 +36,7 @@ static const double SKEW_FACTOR_2D = 0.3660254037844386;
 static const double UNSKEW_FACTOR_2D = 0.21132486540518713;
 
 typedef double *aligned_double_ptr __attribute__((align_value(64)));
+typedef uint8_t *aligned_uint8_ptr __attribute__((align_value(64)));
 
 #pragma clang attribute push (__attribute__((always_inline)), apply_to = function)
 
@@ -213,12 +214,12 @@ static inline __attribute__((const)) double __math_perlin_grad(const uint8_t has
     return FLAT_SIMPLEX_GRAD[loc | 0] * x + FLAT_SIMPLEX_GRAD[loc | 1] * y + FLAT_SIMPLEX_GRAD[loc | 2] * z;
 }
 
-static inline __attribute__((const)) uint8_t __math_perlin_map(const uint8_t *const permutations, const uint8_t input) {
+static inline __attribute__((const)) uint8_t __math_perlin_map(const aligned_uint8_ptr permutations, const uint8_t input) {
     return permutations[input];
 }
 
 static inline __attribute__((const)) double
-math_noise_perlin_sampleScalar(const uint8_t *const permutations,
+math_noise_perlin_sampleScalar(const aligned_uint8_ptr permutations,
                                const uint8_t sectionXu8, const uint8_t sectionYu8, const uint8_t sectionZu8,
                                const double localX, const double localY, const double localZ, const double fadeLocalY) {
     const uint8_t i = __math_perlin_map(permutations, sectionXu8);
@@ -248,7 +249,7 @@ math_noise_perlin_sampleScalar(const uint8_t *const permutations,
 
 
 static inline __attribute__((const)) double
-math_noise_perlin_sample(const uint8_t *const permutations,
+math_noise_perlin_sample(const aligned_uint8_ptr permutations,
                          const double originX, const double originY, const double originZ,
                          const double x, const double y, const double z,
                          const double yScale, const double yMax) {
@@ -272,7 +273,7 @@ typedef const struct double_octave_sampler_data {
     const bool *const need_shift;
     const aligned_double_ptr lacunarity_powd;
     const aligned_double_ptr persistence_powd;
-    const uint8_t *const sampler_permutations;
+    const aligned_uint8_ptr sampler_permutations;
     const aligned_double_ptr sampler_originX;
     const aligned_double_ptr sampler_originY;
     const aligned_double_ptr sampler_originZ;
@@ -289,7 +290,7 @@ math_noise_perlin_double_octave_sample_impl(const double_octave_sampler_data_t *
     for (uint32_t i = 0; i < data->length; i++) {
         const double e = data->lacunarity_powd[i];
         const double f = data->persistence_powd[i];
-        const uint8_t *permutations = data->sampler_permutations + 256 * i;
+        const aligned_uint8_ptr permutations = data->sampler_permutations + 256 * i;
         const double sampleX = data->need_shift[i] ? x * 1.0181268882175227 : x;
         const double sampleY = data->need_shift[i] ? y * 1.0181268882175227 : y;
         const double sampleZ = data->need_shift[i] ? z * 1.0181268882175227 : z;
@@ -315,6 +316,15 @@ math_noise_perlin_double_octave_sample(const double_octave_sampler_data_t *const
     return math_noise_perlin_double_octave_sample_impl(data, x, y, z, 0.0, 0.0, 0);
 }
 
+typedef const struct interpolated_noise_sub_sampler {
+    const aligned_uint8_ptr sampler_permutations;
+    const aligned_double_ptr sampler_originX;
+    const aligned_double_ptr sampler_originY;
+    const aligned_double_ptr sampler_originZ;
+    const aligned_double_ptr sampler_mulFactor;
+    const uint32_t length;
+} interpolated_noise_sub_sampler_t;
+
 typedef const struct interpolated_noise_sampler {
     const double scaledXzScale;
     const double scaledYScale;
@@ -324,15 +334,9 @@ typedef const struct interpolated_noise_sampler {
     const double xzScale;
     const double yScale;
 
-    const uint8_t *const sampler_permutations;
-    const aligned_double_ptr sampler_originX;
-    const aligned_double_ptr sampler_originY;
-    const aligned_double_ptr sampler_originZ;
-    const aligned_double_ptr sampler_mulFactor;
-
-    const uint32_t upperNoiseOffset;
-    const uint32_t normalNoiseOffset;
-    const uint32_t endOffset;
+    const interpolated_noise_sub_sampler_t lower;
+    const interpolated_noise_sub_sampler_t upper;
+    const interpolated_noise_sub_sampler_t normal;
 } interpolated_noise_sampler_t;
 
 
@@ -351,19 +355,19 @@ math_noise_perlin_interpolated_sample(const interpolated_noise_sampler_t *const 
     double m = 0.0;
     double n = 0.0;
 
-#pragma clang loop vectorize(enable) interleave(enable) interleave_count(2)
-    for (uint32_t offset = data->normalNoiseOffset; offset < data->endOffset; offset++) {
+#pragma clang loop vectorize(enable) interleave(disable)
+    for (uint32_t offset = 0; offset < data->normal.length; offset++) {
         n += math_noise_perlin_sample(
-            data->sampler_permutations + 256 * offset,
-            data->sampler_originX[offset],
-            data->sampler_originY[offset],
-            data->sampler_originZ[offset],
-            math_octave_maintainPrecision(g * data->sampler_mulFactor[offset]),
-            math_octave_maintainPrecision(h * data->sampler_mulFactor[offset]),
-            math_octave_maintainPrecision(i * data->sampler_mulFactor[offset]),
-            k * data->sampler_mulFactor[offset],
-            h * data->sampler_mulFactor[offset]
-        ) / data->sampler_mulFactor[offset];
+            data->normal.sampler_permutations + 256 * offset,
+            data->normal.sampler_originX[offset],
+            data->normal.sampler_originY[offset],
+            data->normal.sampler_originZ[offset],
+            math_octave_maintainPrecision(g * data->normal.sampler_mulFactor[offset]),
+            math_octave_maintainPrecision(h * data->normal.sampler_mulFactor[offset]),
+            math_octave_maintainPrecision(i * data->normal.sampler_mulFactor[offset]),
+            k * data->normal.sampler_mulFactor[offset],
+            h * data->normal.sampler_mulFactor[offset]
+        ) / data->normal.sampler_mulFactor[offset];
     }
 
     const double q = (n / 10.0 + 1.0) / 2.0;
@@ -371,111 +375,36 @@ math_noise_perlin_interpolated_sample(const interpolated_noise_sampler_t *const 
     const uint8_t bl3 = q <= 0.0;
 
     if (!bl2) {
-#pragma clang loop vectorize(enable) interleave(enable) interleave_count(2)
-        for (uint32_t offset = 0; offset < data->upperNoiseOffset; offset++) {
+#pragma clang loop vectorize(enable) interleave(disable)
+        for (uint32_t offset = 0; offset < data->lower.length; offset++) {
             l += math_noise_perlin_sample(
-                data->sampler_permutations + 256 * offset,
-                data->sampler_originX[offset],
-                data->sampler_originY[offset],
-                data->sampler_originZ[offset],
-                math_octave_maintainPrecision(d * data->sampler_mulFactor[offset]),
-                math_octave_maintainPrecision(e * data->sampler_mulFactor[offset]),
-                math_octave_maintainPrecision(f * data->sampler_mulFactor[offset]),
-                j * data->sampler_mulFactor[offset],
-                e * data->sampler_mulFactor[offset]
-            ) / data->sampler_mulFactor[offset];
+                data->lower.sampler_permutations + 256 * offset,
+                data->lower.sampler_originX[offset],
+                data->lower.sampler_originY[offset],
+                data->lower.sampler_originZ[offset],
+                math_octave_maintainPrecision(d * data->lower.sampler_mulFactor[offset]),
+                math_octave_maintainPrecision(e * data->lower.sampler_mulFactor[offset]),
+                math_octave_maintainPrecision(f * data->lower.sampler_mulFactor[offset]),
+                j * data->lower.sampler_mulFactor[offset],
+                e * data->lower.sampler_mulFactor[offset]
+            ) / data->lower.sampler_mulFactor[offset];
         }
     }
 
     if (!bl3) {
-#pragma clang loop vectorize(enable) interleave(enable) interleave_count(2)
-        for (uint32_t offset = data->upperNoiseOffset; offset < data->normalNoiseOffset; offset++) {
+#pragma clang loop vectorize(enable) interleave(disable)
+        for (uint32_t offset = 0; offset < data->upper.length; offset++) {
             m += math_noise_perlin_sample(
-                data->sampler_permutations + 256 * offset,
-                data->sampler_originX[offset],
-                data->sampler_originY[offset],
-                data->sampler_originZ[offset],
-                math_octave_maintainPrecision(d * data->sampler_mulFactor[offset]),
-                math_octave_maintainPrecision(e * data->sampler_mulFactor[offset]),
-                math_octave_maintainPrecision(f * data->sampler_mulFactor[offset]),
-                j * data->sampler_mulFactor[offset],
-                e * data->sampler_mulFactor[offset]
-            ) / data->sampler_mulFactor[offset];
-        }
-    }
-
-    return math_clampedLerp(l / 512.0, m / 512.0, q) / 128.0;
-}
-
-static inline __attribute__((const)) double
-math_noise_perlin_interpolated_sample_specializedBase3dNoiseFunction(const interpolated_noise_sampler_t *const data,
-                                                                     const double x, const double y, const double z) {
-    //    assert(data->upperNoiseOffset == 16);
-    //    assert(data->normalNoiseOffset == 32);
-    //    assert(data->endOffset == 40);
-
-    const double d = x * data->scaledXzScale;
-    const double e = y * data->scaledYScale;
-    const double f = z * data->scaledXzScale;
-    const double g = d / data->xzFactor;
-    const double h = e / data->yFactor;
-    const double i = f / data->xzFactor;
-    const double j = data->scaledYScale * data->smearScaleMultiplier;
-    const double k = j / data->yFactor;
-    double l = 0.0;
-    double m = 0.0;
-    double n = 0.0;
-
-#pragma clang loop vectorize(enable) interleave(enable) interleave_count(2)
-    for (uint32_t offset = 32; offset < 40; offset++) {
-        n += math_noise_perlin_sample(
-            data->sampler_permutations + 256 * offset,
-            data->sampler_originX[offset],
-            data->sampler_originY[offset],
-            data->sampler_originZ[offset],
-            math_octave_maintainPrecision(g * data->sampler_mulFactor[offset]),
-            math_octave_maintainPrecision(h * data->sampler_mulFactor[offset]),
-            math_octave_maintainPrecision(i * data->sampler_mulFactor[offset]),
-            k * data->sampler_mulFactor[offset],
-            h * data->sampler_mulFactor[offset]
-        ) / data->sampler_mulFactor[offset];
-    }
-
-    const double q = (n / 10.0 + 1.0) / 2.0;
-    const uint8_t bl2 = q >= 1.0;
-    const uint8_t bl3 = q <= 0.0;
-
-    if (!bl2) {
-#pragma clang loop vectorize(enable) interleave(enable) interleave_count(2)
-        for (uint32_t offset = 0; offset < 16; offset++) {
-            l += math_noise_perlin_sample(
-                data->sampler_permutations + 256 * offset,
-                data->sampler_originX[offset],
-                data->sampler_originY[offset],
-                data->sampler_originZ[offset],
-                math_octave_maintainPrecision(d * data->sampler_mulFactor[offset]),
-                math_octave_maintainPrecision(e * data->sampler_mulFactor[offset]),
-                math_octave_maintainPrecision(f * data->sampler_mulFactor[offset]),
-                j * data->sampler_mulFactor[offset],
-                e * data->sampler_mulFactor[offset]
-            ) / data->sampler_mulFactor[offset];
-        }
-    }
-
-    if (!bl3) {
-#pragma clang loop vectorize(enable) interleave(enable) interleave_count(2)
-        for (uint32_t offset = 16; offset < 32; offset++) {
-            m += math_noise_perlin_sample(
-                data->sampler_permutations + 256 * offset,
-                data->sampler_originX[offset],
-                data->sampler_originY[offset],
-                data->sampler_originZ[offset],
-                math_octave_maintainPrecision(d * data->sampler_mulFactor[offset]),
-                math_octave_maintainPrecision(e * data->sampler_mulFactor[offset]),
-                math_octave_maintainPrecision(f * data->sampler_mulFactor[offset]),
-                j * data->sampler_mulFactor[offset],
-                e * data->sampler_mulFactor[offset]
-            ) / data->sampler_mulFactor[offset];
+                data->upper.sampler_permutations + 256 * offset,
+                data->upper.sampler_originX[offset],
+                data->upper.sampler_originY[offset],
+                data->upper.sampler_originZ[offset],
+                math_octave_maintainPrecision(d * data->upper.sampler_mulFactor[offset]),
+                math_octave_maintainPrecision(e * data->upper.sampler_mulFactor[offset]),
+                math_octave_maintainPrecision(f * data->upper.sampler_mulFactor[offset]),
+                j * data->upper.sampler_mulFactor[offset],
+                e * data->upper.sampler_mulFactor[offset]
+            ) / data->upper.sampler_mulFactor[offset];
         }
     }
 
