@@ -107,7 +107,7 @@ public class DoublePerlinNoiseBenchmark extends Base_x86_64 {
     private int scale;
 
     public DoublePerlinNoiseBenchmark() {
-        super(BindingsTemplate.c2me_natives_noise_perlin_double_octave_sample, "c2me_natives_noise_perlin_double_octave_sample");
+        super(BindingsTemplate.c2me_natives_noise_perlin_double_octave_sample_ptr, "c2me_natives_noise_perlin_double_octave_sample");
     }
 
     @Setup(Level.Trial)
@@ -132,7 +132,7 @@ public class DoublePerlinNoiseBenchmark extends Base_x86_64 {
     protected void doInvocation(MethodHandle handle, Blackhole bh) {
         for (int i = 0; i < invocations; i ++) {
             try {
-                bh.consume((double) handle.invokeExact(nativeSamplerData, sampleX[i], sampleY[i], sampleZ[i]));
+                bh.consume((double) handle.invokeExact(nativeSamplerDataPtr, sampleX[i], sampleY[i], sampleZ[i]));
             } catch (Throwable e) {
                 throw new RuntimeException(e);
             }
