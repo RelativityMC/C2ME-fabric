@@ -1,32 +1,26 @@
 #pragma once
+
 #include <stdbool.h>
 #include <stdint.h>
-
-#define fminf(x, y) __builtin_fminf(x, y)
-#define fmaxf(x, y) __builtin_fmaxf(x, y)
-#define fmodf(x, y) __builtin_fmodf(x, y)
-#define fabsf(x) __builtin_fabsf(x)
-#define floor(x) __builtin_floor(x)
-#define sqrtf(x) __builtin_sqrtf(x)
-#define labs(x) __builtin_labs(x)
+#include <stddef.h>
 
 __attribute__((aligned(64))) static const double FLAT_SIMPLEX_GRAD[] = {
-    1, 1, 0, 0,
-    -1, 1, 0, 0,
-    1, -1, 0, 0,
-    -1, -1, 0, 0,
-    1, 0, 1, 0,
-    -1, 0, 1, 0,
-    1, 0, -1, 0,
-    -1, 0, -1, 0,
-    0, 1, 1, 0,
-    0, -1, 1, 0,
-    0, 1, -1, 0,
-    0, -1, -1, 0,
-    1, 1, 0, 0,
-    0, -1, 1, 0,
-    -1, 1, 0, 0,
-    0, -1, -1, 0,
+        1, 1, 0, 0,
+        -1, 1, 0, 0,
+        1, -1, 0, 0,
+        -1, -1, 0, 0,
+        1, 0, 1, 0,
+        -1, 0, 1, 0,
+        1, 0, -1, 0,
+        -1, 0, -1, 0,
+        0, 1, 1, 0,
+        0, -1, 1, 0,
+        0, 1, -1, 0,
+        0, -1, -1, 0,
+        1, 1, 0, 0,
+        0, -1, 1, 0,
+        -1, 1, 0, 0,
+        0, -1, -1, 0,
 };
 
 static const double SQRT_3 = 1.7320508075688772;
@@ -39,6 +33,39 @@ typedef double *aligned_double_ptr __attribute__((align_value(64)));
 typedef uint8_t *aligned_uint8_ptr __attribute__((align_value(64)));
 
 #pragma clang attribute push (__attribute__((always_inline)), apply_to = function)
+
+static inline __attribute__((const)) float fminf(const float x, const float y) {
+    return __builtin_fminf(x, y);
+}
+
+static inline __attribute__((const)) float fmaxf(const float x, const float y) {
+    return __builtin_fmaxf(x, y);
+}
+
+static inline __attribute__((const)) float fabsf(const float x) {
+    union {
+        float f;
+        uint32_t i;
+    } u = {x};
+    u.i &= 0x7fffffff;
+    return u.f;
+}
+
+static inline __attribute__((const)) int64_t labs(const int64_t x) {
+    return __builtin_labs(x);
+}
+
+static inline __attribute__((const)) double floor(double x) {
+    return __builtin_floor(x);
+}
+
+static inline __attribute__((const)) float sqrtf(float x) {
+    return __builtin_sqrtf(x);
+}
+
+static inline __attribute__((const)) float fmodf(float x, float y) {
+    return __builtin_fmodf(x, y);
+}
 
 static inline __attribute__((const)) int32_t math_floorDiv(const int32_t x, const int32_t y) {
     int r = x / y;
@@ -97,17 +124,17 @@ static inline __attribute__((const)) double math_lerp2(const double deltaX, cons
 }
 
 static inline __attribute__((const)) double math_lerp3(
-    const double deltaX,
-    const double deltaY,
-    const double deltaZ,
-    const double x0y0z0,
-    const double x1y0z0,
-    const double x0y1z0,
-    const double x1y1z0,
-    const double x0y0z1,
-    const double x1y0z1,
-    const double x0y1z1,
-    const double x1y1z1
+        const double deltaX,
+        const double deltaY,
+        const double deltaZ,
+        const double x0y0z0,
+        const double x1y0z0,
+        const double x0y1z0,
+        const double x1y1z0,
+        const double x0y0z1,
+        const double x1y0z1,
+        const double x0y1z1,
+        const double x1y1z1
 ) {
     return math_lerp(deltaZ, math_lerp2(deltaX, deltaY, x0y0z0, x1y0z0, x0y1z0, x1y1z0),
                      math_lerp2(deltaX, deltaY, x0y0z1, x1y0z1, x0y1z1, x1y1z1));
@@ -149,7 +176,7 @@ __math_simplex_map(const int32_t *const permutations, const int32_t input) {
 static inline __attribute__((const)) double math_simplex_dot(const int32_t hash, const double x, const double y,
                                                              const double z) {
     const int32_t loc = hash << 2;
-    return FLAT_SIMPLEX_GRAD[loc | 0] * x + FLAT_SIMPLEX_GRAD[loc | 1] * y + FLAT_SIMPLEX_GRAD[loc | 2] * z;
+    return FLAT_SIMPLEX_GRAD[loc + 0] * x + FLAT_SIMPLEX_GRAD[loc + 1] * y + FLAT_SIMPLEX_GRAD[loc + 2] * z;
 }
 
 static inline __attribute__((const)) double __math_simplex_grad(const int32_t hash, const double x, const double y,
@@ -174,8 +201,8 @@ math_noise_simplex_sample2d(const int32_t *const permutations, const double x, c
     const int32_t i = floor(x + d);
     const int32_t j = floor(y + d);
     const double e = ((double) (i + j)) * UNSKEW_FACTOR_2D;
-    const double f = i - e;
-    const double g = j - e;
+    const double f = (double) i - e;
+    const double g = (double) j - e;
     const double h = x - f;
     const double k = y - g;
     int32_t l;
@@ -188,8 +215,8 @@ math_noise_simplex_sample2d(const int32_t *const permutations, const double x, c
         m = 1;
     }
 
-    const double n = h - l + UNSKEW_FACTOR_2D;
-    const double o = k - m + UNSKEW_FACTOR_2D;
+    const double n = h - (double) l + UNSKEW_FACTOR_2D;
+    const double o = k - (double) m + UNSKEW_FACTOR_2D;
     const double p = h - 1.0 + 2.0 * UNSKEW_FACTOR_2D;
     const double q = k - 1.0 + 2.0 * UNSKEW_FACTOR_2D;
     const int32_t r = i & 0xFF;
@@ -211,8 +238,8 @@ static inline __attribute__((const)) double __math_perlin_grad(const aligned_uin
                                                                const int32_t py, const int32_t pz, const double fx,
                                                                const double fy, const double fz) {
     const double f[3] = {fx, fy, fz};
-    const int32_t p[3] = { px, py, pz };
-    const int32_t q[3] = { p[0] & 0xFF, p[1] & 0xFF, p[2] & 0xFF };
+    const int32_t p[3] = {px, py, pz};
+    const int32_t q[3] = {p[0] & 0xFF, p[1] & 0xFF, p[2] & 0xFF};
     const uint8_t hash = permutations[(permutations[(permutations[q[0]] + q[1]) & 0xFF] + q[2]) & 0xFF] & 0xF;
     const double *const grad = FLAT_SIMPLEX_GRAD + (hash << 2);
     return grad[0] * f[0] + grad[1] * f[1] + grad[2] * f[2];
@@ -292,15 +319,15 @@ math_noise_perlin_double_octave_sample_impl(const double_octave_sampler_data_t *
         const double sampleY = data->need_shift[i] ? y * 1.0181268882175227 : y;
         const double sampleZ = data->need_shift[i] ? z * 1.0181268882175227 : z;
         const double g = math_noise_perlin_sample(
-            permutations,
-            data->sampler_originX[i],
-            data->sampler_originY[i],
-            data->sampler_originZ[i],
-            math_octave_maintainPrecision(sampleX * e),
-            useOrigin ? -(data->sampler_originY[i]) : math_octave_maintainPrecision(sampleY * e),
-            math_octave_maintainPrecision(sampleZ * e),
-            yScale * e,
-            yMax * e);
+                permutations,
+                data->sampler_originX[i],
+                data->sampler_originY[i],
+                data->sampler_originZ[i],
+                math_octave_maintainPrecision(sampleX * e),
+                useOrigin ? -(data->sampler_originY[i]) : math_octave_maintainPrecision(sampleY * e),
+                math_octave_maintainPrecision(sampleZ * e),
+                yScale * e,
+                yMax * e);
         d += data->amplitudes[i] * g * f;
     }
 
@@ -355,15 +382,15 @@ math_noise_perlin_interpolated_sample(const interpolated_noise_sampler_t *const 
 #pragma clang loop vectorize(enable) interleave(disable)
     for (uint32_t offset = 0; offset < data->normal.length; offset++) {
         n += math_noise_perlin_sample(
-            data->normal.sampler_permutations + 256 * offset,
-            data->normal.sampler_originX[offset],
-            data->normal.sampler_originY[offset],
-            data->normal.sampler_originZ[offset],
-            math_octave_maintainPrecision(g * data->normal.sampler_mulFactor[offset]),
-            math_octave_maintainPrecision(h * data->normal.sampler_mulFactor[offset]),
-            math_octave_maintainPrecision(i * data->normal.sampler_mulFactor[offset]),
-            k * data->normal.sampler_mulFactor[offset],
-            h * data->normal.sampler_mulFactor[offset]
+                data->normal.sampler_permutations + 256 * offset,
+                data->normal.sampler_originX[offset],
+                data->normal.sampler_originY[offset],
+                data->normal.sampler_originZ[offset],
+                math_octave_maintainPrecision(g * data->normal.sampler_mulFactor[offset]),
+                math_octave_maintainPrecision(h * data->normal.sampler_mulFactor[offset]),
+                math_octave_maintainPrecision(i * data->normal.sampler_mulFactor[offset]),
+                k * data->normal.sampler_mulFactor[offset],
+                h * data->normal.sampler_mulFactor[offset]
         ) / data->normal.sampler_mulFactor[offset];
     }
 
@@ -375,15 +402,15 @@ math_noise_perlin_interpolated_sample(const interpolated_noise_sampler_t *const 
 #pragma clang loop vectorize(enable) interleave(disable)
         for (uint32_t offset = 0; offset < data->lower.length; offset++) {
             l += math_noise_perlin_sample(
-                data->lower.sampler_permutations + 256 * offset,
-                data->lower.sampler_originX[offset],
-                data->lower.sampler_originY[offset],
-                data->lower.sampler_originZ[offset],
-                math_octave_maintainPrecision(d * data->lower.sampler_mulFactor[offset]),
-                math_octave_maintainPrecision(e * data->lower.sampler_mulFactor[offset]),
-                math_octave_maintainPrecision(f * data->lower.sampler_mulFactor[offset]),
-                j * data->lower.sampler_mulFactor[offset],
-                e * data->lower.sampler_mulFactor[offset]
+                    data->lower.sampler_permutations + 256 * offset,
+                    data->lower.sampler_originX[offset],
+                    data->lower.sampler_originY[offset],
+                    data->lower.sampler_originZ[offset],
+                    math_octave_maintainPrecision(d * data->lower.sampler_mulFactor[offset]),
+                    math_octave_maintainPrecision(e * data->lower.sampler_mulFactor[offset]),
+                    math_octave_maintainPrecision(f * data->lower.sampler_mulFactor[offset]),
+                    j * data->lower.sampler_mulFactor[offset],
+                    e * data->lower.sampler_mulFactor[offset]
             ) / data->lower.sampler_mulFactor[offset];
         }
     }
@@ -392,15 +419,15 @@ math_noise_perlin_interpolated_sample(const interpolated_noise_sampler_t *const 
 #pragma clang loop vectorize(enable) interleave(disable)
         for (uint32_t offset = 0; offset < data->upper.length; offset++) {
             m += math_noise_perlin_sample(
-                data->upper.sampler_permutations + 256 * offset,
-                data->upper.sampler_originX[offset],
-                data->upper.sampler_originY[offset],
-                data->upper.sampler_originZ[offset],
-                math_octave_maintainPrecision(d * data->upper.sampler_mulFactor[offset]),
-                math_octave_maintainPrecision(e * data->upper.sampler_mulFactor[offset]),
-                math_octave_maintainPrecision(f * data->upper.sampler_mulFactor[offset]),
-                j * data->upper.sampler_mulFactor[offset],
-                e * data->upper.sampler_mulFactor[offset]
+                    data->upper.sampler_permutations + 256 * offset,
+                    data->upper.sampler_originX[offset],
+                    data->upper.sampler_originY[offset],
+                    data->upper.sampler_originZ[offset],
+                    math_octave_maintainPrecision(d * data->upper.sampler_mulFactor[offset]),
+                    math_octave_maintainPrecision(e * data->upper.sampler_mulFactor[offset]),
+                    math_octave_maintainPrecision(f * data->upper.sampler_mulFactor[offset]),
+                    j * data->upper.sampler_mulFactor[offset],
+                    e * data->upper.sampler_mulFactor[offset]
             ) / data->upper.sampler_mulFactor[offset];
         }
     }
@@ -414,60 +441,66 @@ math_end_islands_sample(const int32_t *const simplex_permutations, const int32_t
     const int32_t j = z / 2;
     const int32_t k = x % 2;
     const int32_t l = z % 2;
-    const int32_t muld = x * x + z * z;
+    const int32_t muld = x * x + z * z; // int32_t intentionally
     if (muld < 0) {
         return __builtin_nanf("");
     }
     float f = 100.0F - sqrtf((float) muld) * 8.0F;
     f = clampf(f, -100.0F, 80.0F);
 
-    uint32_t hit_count = 0;
-    int8_t ms[25 * 25], ns[25 * 25];
+    int8_t ms[25 * 25], ns[25 * 25], hit[25 * 25];
     const int64_t omin = labs(i) - 12LL;
     const int64_t pmin = labs(j) - 12LL;
+    const int64_t omax = labs(i) + 12LL;
+    const int64_t pmax = labs(j) + 12LL;
 
-    if (omin * omin + pmin * pmin > 4096) {
+    {
+        uint32_t idx = 0;
+#pragma clang loop vectorize(enable)
         for (int8_t m = -12; m < 13; m++) {
-#pragma clang loop vectorize(enable) interleave(enable)
             for (int8_t n = -12; n < 13; n++) {
-                const int64_t o = (int64_t) i + m;
-                const int64_t p = (int64_t) j + n;
-                if (math_noise_simplex_sample2d(simplex_permutations, (double) o, (double) p) < -0.9F) {
-                    const uint32_t slot = hit_count++;
-                    ms[slot] = m;
-                    ns[slot] = n;
-                }
+                ms[idx] = m;
+                ns[idx] = n;
+                idx++;
             }
         }
+        if (idx != 25 * 25) {
+            __builtin_trap();
+        }
+    }
+
+    if (omin * omin + pmin * pmin > 4096LL) {
+#pragma clang loop vectorize(enable)
+        for (uint32_t idx = 0; idx < 25 * 25; idx++) {
+            const int64_t o = (int64_t) i + (int64_t) ms[idx];
+            const int64_t p = (int64_t) j + (int64_t) ns[idx];
+            hit[idx] = math_noise_simplex_sample2d(simplex_permutations, (double) o, (double) p) < -0.9F;
+        }
     } else {
-        for (int8_t m = -12; m < 13; m++) {
-#pragma clang loop vectorize(enable) interleave(enable)
-            for (int8_t n = -12; n < 13; n++) {
-                const int64_t o = (int64_t) i + m;
-                const int64_t p = (int64_t) j + n;
-                if (o * o + p * p > 4096LL) {
-                    if (math_noise_simplex_sample2d(simplex_permutations, (double) o, (double) p) < -0.9F) {
-                        const uint32_t slot = hit_count++;
-                        ms[slot] = m;
-                        ns[slot] = n;
-                    }
-                }
-            }
+        for (uint32_t idx = 0; idx < 25 * 25; idx++) {
+            const int64_t o = (int64_t) i + (int64_t) ms[idx];
+            const int64_t p = (int64_t) j + (int64_t) ns[idx];
+            hit[idx] = o * o + p * p > 4096LL && math_noise_simplex_sample2d(
+                    simplex_permutations, (double) o, (double) p) < -0.9F;
         }
     }
 
 #pragma clang loop vectorize(enable) interleave(enable)
-    for (uint32_t slot = 0; slot < hit_count; slot++) {
-        const int32_t m = ms[slot];
-        const int32_t n = ns[slot];
-        const int64_t o = (int64_t) i + (int64_t) m;
-        const int64_t p = (int64_t) j + (int64_t) n;
-        const float g = fmodf((fabsf((float) o) * 3439.0F + fabsf((float) p) * 147.0F), 13.0F) + 9.0F;
-        const float h = (float) (k - m * 2);
-        const float q = (float) (l - n * 2);
-        float r = 100.0F - sqrtf(h * h + q * q) * g;
-        r = clampf(r, -100.0F, 80.0F);
-        f = fmaxf(f, r);
+    for (uint32_t idx = 0; idx < 25 * 25; idx++) {
+        if (hit[idx]) {
+            const int32_t m = ms[idx];
+            const int32_t n = ns[idx];
+            const int64_t o = (int64_t) i + (int64_t) m;
+            const int64_t p = (int64_t) j + (int64_t) n;
+            const float g1 = fabsf((float) o) * 3439.0F;
+            const float g2 = fabsf((float) p) * 147.0F;
+            const float g = fmodf((g1 + g2), 13.0F) + 9.0F;
+            const float h = (float) (k - m * 2);
+            const float q = (float) (l - n * 2);
+            float r = 100.0F - sqrtf(h * h + q * q) * g;
+            r = clampf(r, -100.0F, 80.0F);
+            f = fmaxf(f, r);
+        }
     }
 
     return f;

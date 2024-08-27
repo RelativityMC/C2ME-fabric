@@ -15,7 +15,7 @@ add_library(c2me-opts-natives-math SHARED
         system_isa_x86_64.c
         exports_x86_64_nogather.c
         system_isa_aarch64.c
-        freestanding_workarounds.c
+        flibc.c
 )
 
 if(CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)|(amd64)|(AMD64)")
