@@ -208,43 +208,41 @@ static inline __attribute__((const)) double math_perlinFade(const double value) 
     return value * value * value * (value * (value * 6.0 - 15.0) + 10.0);
 }
 
-static inline __attribute__((const)) double __math_perlin_grad(const uint8_t hash, const double x, const double y,
-                                                               const double z) {
-    const uint8_t loc = (hash & 15) << 2;
-    return FLAT_SIMPLEX_GRAD[loc | 0] * x + FLAT_SIMPLEX_GRAD[loc | 1] * y + FLAT_SIMPLEX_GRAD[loc | 2] * z;
-}
-
-static inline __attribute__((const)) uint8_t __math_perlin_map(const aligned_uint8_ptr permutations, const uint8_t input) {
-    return permutations[input];
+static inline __attribute__((const)) double __math_perlin_grad(const aligned_uint8_ptr permutations, const int32_t px,
+                                                               const int32_t py, const int32_t pz, const double fx,
+                                                               const double fy, const double fz) {
+    const double f[3] = {fx, fy, fz};
+    const int32_t p[3] = { px, py, pz };
+    const int32_t q[3] = { p[0] & 0xFF, p[1] & 0xFF, p[2] & 0xFF };
+    const uint8_t hash = permutations[(permutations[(permutations[q[0]] + q[1]) & 0xFF] + q[2]) & 0xFF] & 0xF;
+    const double *const grad = FLAT_SIMPLEX_GRAD + (hash << 2);
+    return grad[0] * f[0] + grad[1] * f[1] + grad[2] * f[2];
 }
 
 static inline __attribute__((const)) double
 math_noise_perlin_sampleScalar(const aligned_uint8_ptr permutations,
-                               const uint8_t sectionXu8, const uint8_t sectionYu8, const uint8_t sectionZu8,
-                               const double localX, const double localY, const double localZ, const double fadeLocalY) {
-    const uint8_t i = __math_perlin_map(permutations, sectionXu8);
-    const uint8_t j = __math_perlin_map(permutations, sectionXu8 + 1);
-    const uint8_t k = __math_perlin_map(permutations, i + sectionYu8);
-    const uint8_t l = __math_perlin_map(permutations, i + sectionYu8 + 1);
-    const uint8_t m = __math_perlin_map(permutations, j + sectionYu8);
-    const uint8_t n = __math_perlin_map(permutations, j + sectionYu8 + 1);
-    const double d = __math_perlin_grad(__math_perlin_map(permutations, k + sectionZu8), localX, localY, localZ);
-    const double e = __math_perlin_grad(__math_perlin_map(permutations, m + sectionZu8), localX - 1.0, localY, localZ);
-    const double f = __math_perlin_grad(__math_perlin_map(permutations, l + sectionZu8), localX, localY - 1.0, localZ);
-    const double g = __math_perlin_grad(__math_perlin_map(permutations, n + sectionZu8), localX - 1.0, localY - 1.0,
-                                        localZ);
-    const double h = __math_perlin_grad(__math_perlin_map(permutations, k + sectionZu8 + 1), localX, localY,
-                                        localZ - 1.0);
-    const double o = __math_perlin_grad(__math_perlin_map(permutations, m + sectionZu8 + 1), localX - 1.0, localY,
-                                        localZ - 1.0);
-    const double p = __math_perlin_grad(__math_perlin_map(permutations, l + sectionZu8 + 1), localX, localY - 1.0,
-                                        localZ - 1.0);
-    const double q = __math_perlin_grad(__math_perlin_map(permutations, n + sectionZu8 + 1), localX - 1.0, localY - 1.0,
-                                        localZ - 1.0);
-    const double r = math_perlinFade(localX);
-    const double s = math_perlinFade(fadeLocalY);
-    const double t = math_perlinFade(localZ);
-    return math_lerp3(r, s, t, d, e, f, g, h, o, p, q);
+                               const int32_t px0, const int32_t py0, const int32_t pz0,
+                               const double fx0, const double fy0, const double fz0, const double fadeLocalY) {
+    const int32_t px1 = px0 + 1;
+    const int32_t py1 = py0 + 1;
+    const int32_t pz1 = pz0 + 1;
+    const double fx1 = fx0 - 1;
+    const double fy1 = fy0 - 1;
+    const double fz1 = fz0 - 1;
+
+    const double f000 = __math_perlin_grad(permutations, px0, py0, pz0, fx0, fy0, fz0);
+    const double f100 = __math_perlin_grad(permutations, px1, py0, pz0, fx1, fy0, fz0);
+    const double f010 = __math_perlin_grad(permutations, px0, py1, pz0, fx0, fy1, fz0);
+    const double f110 = __math_perlin_grad(permutations, px1, py1, pz0, fx1, fy1, fz0);
+    const double f001 = __math_perlin_grad(permutations, px0, py0, pz1, fx0, fy0, fz1);
+    const double f101 = __math_perlin_grad(permutations, px1, py0, pz1, fx1, fy0, fz1);
+    const double f011 = __math_perlin_grad(permutations, px0, py1, pz1, fx0, fy1, fz1);
+    const double f111 = __math_perlin_grad(permutations, px1, py1, pz1, fx1, fy1, fz1);
+
+    const double dx = math_perlinFade(fx0);
+    const double dy = math_perlinFade(fadeLocalY);
+    const double dz = math_perlinFade(fz0);
+    return math_lerp3(dx, dy, dz, f000, f100, f010, f110, f001, f101, f011, f111);
 }
 
 
