@@ -17,3 +17,7 @@ TARGET_IMPL(c2me_natives_noise_perlin_interpolated_sample, double, (const interp
                                                                     const double x, const double y, const double z) {
     return math_noise_perlin_interpolated_sample(data, x, y, z);
 })
+
+TARGET_IMPL(c2me_natives_end_islands_sample, float, (const int32_t *const simplex_permutations, const int32_t x, const int32_t z) {
+    return math_end_islands_sample(simplex_permutations, x, z);
+})

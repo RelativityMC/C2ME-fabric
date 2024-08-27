@@ -47,4 +47,23 @@ public class Bindings {
         }
     }
 
+    private static final MethodHandle MH_c2me_natives_end_islands_sample = bind(BindingsTemplate.c2me_natives_end_islands_sample, "c2me_natives_end_islands_sample");
+    private static final MethodHandle MH_c2me_natives_end_islands_sample_ptr = bind(BindingsTemplate.c2me_natives_end_islands_sample_ptr, "c2me_natives_end_islands_sample");
+
+    public static float c2me_natives_end_islands_sample(MemorySegment data, int x, int z) {
+        try {
+            return (float) MH_c2me_natives_end_islands_sample.invokeExact(data, x, z);
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static float c2me_natives_end_islands_sample(long data_ptr, int x, int z) {
+        try {
+            return (float) MH_c2me_natives_end_islands_sample_ptr.invokeExact(data_ptr, x, z);
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 }

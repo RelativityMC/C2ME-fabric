@@ -29,7 +29,10 @@ float truncf(float x)
 #endif // WIN32
 
 // ld.lld: error: undefined symbol: floor
-double floor(double x)
-{
+double floor(double x) {
   return __builtin_floor(x);
+}
+
+double fmodf(float x, float y) {
+  return __builtin_fmodf(x, y);
 }

@@ -170,8 +170,7 @@ static inline __attribute__((const)) double __math_simplex_grad(const int32_t ha
 
 static inline double __attribute__((const))
 math_noise_simplex_sample2d(const int32_t *const permutations, const double x, const double y) {
-    const double aaaaa = SKEW_FACTOR_2D;
-    const double d = (x + y) * aaaaa;
+    const double d = (x + y) * SKEW_FACTOR_2D;
     const int32_t i = floor(x + d);
     const int32_t j = floor(y + d);
     const double e = ((double) (i + j)) * UNSKEW_FACTOR_2D;
@@ -428,8 +427,8 @@ math_end_islands_sample(const int32_t *const simplex_permutations, const int32_t
     const int64_t pmin = labs(j) - 12LL;
 
     if (omin * omin + pmin * pmin > 4096) {
-#pragma clang loop vectorize(enable) interleave(enable)
         for (int8_t m = -12; m < 13; m++) {
+#pragma clang loop vectorize(enable) interleave(enable)
             for (int8_t n = -12; n < 13; n++) {
                 const int64_t o = (int64_t) i + m;
                 const int64_t p = (int64_t) j + n;
@@ -441,8 +440,8 @@ math_end_islands_sample(const int32_t *const simplex_permutations, const int32_t
             }
         }
     } else {
-#pragma clang loop vectorize(enable) interleave(enable)
         for (int8_t m = -12; m < 13; m++) {
+#pragma clang loop vectorize(enable) interleave(enable)
             for (int8_t n = -12; n < 13; n++) {
                 const int64_t o = (int64_t) i + m;
                 const int64_t p = (int64_t) j + n;

@@ -31,6 +31,7 @@
     "access.IServerLightingProvider",
     "access.ISimpleRandom",
     "access.ISimpleTickScheduler",
+    "access.ISimplexNoiseSampler",
     "access.IState",
     "access.IStorageIoWorker",
     "access.IStructurePiece",

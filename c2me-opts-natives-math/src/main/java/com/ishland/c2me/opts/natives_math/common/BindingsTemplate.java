@@ -354,4 +354,23 @@ public class BindingsTemplate {
         return data;
     }
 
+    // c2me_natives_end_islands_sample, float, (const int32_t *const simplex_permutations, const int32_t x, const int32_t z)
+    public static final MethodHandle c2me_natives_end_islands_sample = NativeLoader.linker.downcallHandle(
+            FunctionDescriptor.of(
+                    ValueLayout.JAVA_FLOAT,
+                    ValueLayout.ADDRESS,
+                    ValueLayout.JAVA_INT,
+                    ValueLayout.JAVA_INT
+            ),
+            Linker.Option.critical(true)
+    );
+    public static final MethodHandle c2me_natives_end_islands_sample_ptr = NativeLoader.linker.downcallHandle(
+            FunctionDescriptor.of(
+                    ValueLayout.JAVA_FLOAT,
+                    ValueLayout.JAVA_LONG,
+                    ValueLayout.JAVA_INT,
+                    ValueLayout.JAVA_INT
+            )
+    );
+
 }
