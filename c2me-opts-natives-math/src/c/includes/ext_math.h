@@ -31,6 +31,7 @@ static const double UNSKEW_FACTOR_2D = 0.21132486540518713;
 
 typedef double *aligned_double_ptr __attribute__((align_value(64)));
 typedef uint8_t *aligned_uint8_ptr __attribute__((align_value(64)));
+typedef uint32_t *aligned_uint32_ptr __attribute__((align_value(64)));
 
 #pragma clang attribute push (__attribute__((always_inline)), apply_to = function)
 
@@ -169,7 +170,7 @@ static inline __attribute__((const)) int32_t math_block2biome(const int32_t bloc
 }
 
 static inline __attribute__((const)) int32_t
-__math_simplex_map(const int32_t *const permutations, const int32_t input) {
+__math_simplex_map(const aligned_uint32_ptr permutations, const int32_t input) {
     return permutations[input & 0xFF];
 }
 
@@ -196,7 +197,7 @@ static inline __attribute__((const)) double __math_simplex_grad(const int32_t ha
 }
 
 static inline double __attribute__((const))
-math_noise_simplex_sample2d(const int32_t *const permutations, const double x, const double y) {
+math_noise_simplex_sample2d(const aligned_uint32_ptr permutations, const double x, const double y) {
     const double d = (x + y) * SKEW_FACTOR_2D;
     const int32_t i = floor(x + d);
     const int32_t j = floor(y + d);
@@ -436,7 +437,7 @@ math_noise_perlin_interpolated_sample(const interpolated_noise_sampler_t *const 
 }
 
 static inline __attribute__((const)) float
-math_end_islands_sample(const int32_t *const simplex_permutations, const int32_t x, const int32_t z) {
+math_end_islands_sample(const aligned_uint32_ptr simplex_permutations, const int32_t x, const int32_t z) {
     const int32_t i = x / 2;
     const int32_t j = z / 2;
     const int32_t k = x % 2;
