@@ -370,7 +370,8 @@ public class BindingsTemplate {
                     ValueLayout.JAVA_LONG,
                     ValueLayout.JAVA_INT,
                     ValueLayout.JAVA_INT
-            )
+            ),
+            Linker.Option.critical(false)
     );
 
 }
