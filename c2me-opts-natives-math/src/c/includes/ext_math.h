@@ -200,31 +200,37 @@ static inline __attribute__((const)) double __math_simplex_grad(const int32_t ha
 static inline double __attribute__((const))
 math_noise_simplex_sample2d(const aligned_uint32_ptr permutations, const double x, const double y) {
     const double d = (x + y) * SKEW_FACTOR_2D;
-    const int32_t i = floor(x + d);
-    const int32_t j = floor(y + d);
-    const double e = ((double) (i + j)) * UNSKEW_FACTOR_2D;
-    const double f = (double) i - e;
-    const double g = (double) j - e;
+    const double i = floor(x + d);
+    const double j = floor(y + d);
+    const double e = (i + j) * UNSKEW_FACTOR_2D;
+    const double f = i - e;
+    const double g = j - e;
     const double h = x - f;
     const double k = y - g;
-    int32_t l;
-    int32_t m;
+    double l;
+    int32_t li;
+    double m;
+    int32_t mi;
     if (h > k) {
         l = 1;
+        li = 1;
         m = 0;
+        mi = 0;
     } else {
         l = 0;
+        li = 1;
         m = 1;
+        mi = 1;
     }
 
     const double n = h - (double) l + UNSKEW_FACTOR_2D;
     const double o = k - (double) m + UNSKEW_FACTOR_2D;
     const double p = h - 1.0 + 2.0 * UNSKEW_FACTOR_2D;
     const double q = k - 1.0 + 2.0 * UNSKEW_FACTOR_2D;
-    const int32_t r = i & 0xFF;
-    const int32_t s = j & 0xFF;
+    const int32_t r = (int32_t) i & 0xFF;
+    const int32_t s = (int32_t) j & 0xFF;
     const int32_t t = __math_simplex_map(permutations, r + __math_simplex_map(permutations, s)) % 12;
-    const int32_t u = __math_simplex_map(permutations, r + l + __math_simplex_map(permutations, s + m)) % 12;
+    const int32_t u = __math_simplex_map(permutations, r + li + __math_simplex_map(permutations, s + mi)) % 12;
     const int32_t v = __math_simplex_map(permutations, r + 1 + __math_simplex_map(permutations, s + 1)) % 12;
     const double w = __math_simplex_grad(t, h, k, 0.0, 0.5);
     const double z = __math_simplex_grad(u, n, o, 0.0, 0.5);
