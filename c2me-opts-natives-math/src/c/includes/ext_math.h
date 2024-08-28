@@ -470,7 +470,6 @@ math_end_islands_sample(const int32_t *const simplex_permutations, const int32_t
     }
 
     if (omin * omin + pmin * pmin > 4096LL) {
-#pragma clang loop vectorize(enable)
         for (uint32_t idx = 0; idx < 25 * 25; idx++) {
             const int64_t o = (int64_t) i + (int64_t) ms[idx];
             const int64_t p = (int64_t) j + (int64_t) ns[idx];
@@ -480,7 +479,7 @@ math_end_islands_sample(const int32_t *const simplex_permutations, const int32_t
         for (uint32_t idx = 0; idx < 25 * 25; idx++) {
             const int64_t o = (int64_t) i + (int64_t) ms[idx];
             const int64_t p = (int64_t) j + (int64_t) ns[idx];
-            hit[idx] = o * o + p * p > 4096LL && math_noise_simplex_sample2d(
+            hit[idx] = (o * o + p * p > 4096LL) && math_noise_simplex_sample2d(
                     simplex_permutations, (double) o, (double) p) < -0.9F;
         }
     }
