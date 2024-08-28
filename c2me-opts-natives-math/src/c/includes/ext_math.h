@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
+#include <float.h>
 
 __attribute__((aligned(64))) static const double FLAT_SIMPLEX_GRAD[] = {
         1, 1, 0, 0,
@@ -504,6 +505,61 @@ math_end_islands_sample(const aligned_uint32_ptr simplex_permutations, const int
     }
 
     return f;
+}
+
+static inline __attribute__((const)) uint32_t
+math_biome_access_sample(const int64_t theSeed, const int32_t x, const int32_t y, const int32_t z) {
+    const int32_t var0 = x - 2;
+    const int32_t var1 = y - 2;
+    const int32_t var2 = z - 2;
+    const int32_t var3 = var0 >> 2;
+    const int32_t var4 = var1 >> 2;
+    const int32_t var5 = var2 >> 2;
+    const double var6 = (double) (var0 & 3) / 4.0;
+    const double var7 = (double) (var1 & 3) / 4.0;
+    const double var8 = (double) (var2 & 3) / 4.0;
+    uint32_t var9 = 0;
+    double var10 = DBL_MAX;
+
+    double var28s[8];
+
+#pragma clang loop interleave_count(2)
+    for (uint32_t var11 = 0; var11 < 8; ++var11) {
+        uint32_t var12 = var11 & 4;
+        uint32_t var13 = var11 & 2;
+        uint32_t var14 = var11 & 1;
+        int64_t var15 = var12 ? var3 + 1 : var3;
+        int64_t var16 = var13 ? var4 + 1 : var4;
+        int64_t var17 = var14 ? var5 + 1 : var5;
+        double var18 = var12 ? var6 - 1.0 : var6;
+        double var19 = var13 ? var7 - 1.0 : var7;
+        double var20 = var14 ? var8 - 1.0 : var8;
+        int64_t var21 = theSeed * (theSeed * 6364136223846793005L + 1442695040888963407L) + var15;
+        var21 = var21 * (var21 * 6364136223846793005L + 1442695040888963407L) + var16;
+        var21 = var21 * (var21 * 6364136223846793005L + 1442695040888963407L) + var17;
+        var21 = var21 * (var21 * 6364136223846793005L + 1442695040888963407L) + var15;
+        var21 = var21 * (var21 * 6364136223846793005L + 1442695040888963407L) + var16;
+        var21 = var21 * (var21 * 6364136223846793005L + 1442695040888963407L) + var17;
+        double var22 = (double) ((var21 >> 24) & 1023) / 1024.0;
+        double var23 = (var22 - 0.5) * 0.9;
+        var21 = var21 * (var21 * 6364136223846793005L + 1442695040888963407L) + theSeed;
+        double var24 = (double) ((var21 >> 24) & 1023) / 1024.0;
+        double var25 = (var24 - 0.5) * 0.9;
+        var21 = var21 * (var21 * 6364136223846793005L + 1442695040888963407L) + theSeed;
+        double var26 = (double) ((var21 >> 24) & 1023) / 1024.0;
+        double var27 = (var26 - 0.5) * 0.9;
+        double var28 = math_square(var20 + var27) + math_square(var19 + var25) + math_square(var18 + var23);
+        var28s[var11] = var28;
+    }
+
+    for (int i = 0; i < 8; ++i) {
+        if (var10 > var28s[i]) {
+            var9 = i;
+            var10 = var28s[i];
+        }
+    }
+
+    return var9;
 }
 
 #pragma clang attribute pop

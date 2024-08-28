@@ -374,4 +374,16 @@ public class BindingsTemplate {
             Linker.Option.critical(false)
     );
 
+    // c2me_natives_biome_access_sample, uint32_t, (const int64_t theSeed, const int32_t x, const int32_t y, const int32_t z)
+    public static final MethodHandle c2me_natives_biome_access_sample = NativeLoader.linker.downcallHandle(
+            FunctionDescriptor.of(
+                    ValueLayout.JAVA_INT,
+                    ValueLayout.JAVA_LONG,
+                    ValueLayout.JAVA_INT,
+                    ValueLayout.JAVA_INT,
+                    ValueLayout.JAVA_INT
+            ),
+            Linker.Option.critical(false)
+    );
+
 }

@@ -66,4 +66,14 @@ public class Bindings {
         }
     }
 
+    private static final MethodHandle MH_c2me_natives_biome_access_sample = bind(BindingsTemplate.c2me_natives_biome_access_sample, "c2me_natives_biome_access_sample");
+
+    public static int c2me_natives_biome_access_sample(long seed, int x, int y, int z) {
+        try {
+            return (int) MH_c2me_natives_biome_access_sample.invokeExact(seed, x, y, z);
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 }

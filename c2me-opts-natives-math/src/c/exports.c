@@ -21,3 +21,7 @@ TARGET_IMPL(c2me_natives_noise_perlin_interpolated_sample, double, (const interp
 TARGET_IMPL(c2me_natives_end_islands_sample, float, (const aligned_uint32_ptr simplex_permutations, const int32_t x, const int32_t z) {
     return math_end_islands_sample(simplex_permutations, x, z);
 })
+
+TARGET_IMPL(c2me_natives_biome_access_sample, uint32_t, (const int64_t theSeed, const int32_t x, const int32_t y, const int32_t z) {
+    return math_biome_access_sample(theSeed, x, y, z);
+})
