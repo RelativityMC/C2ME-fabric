@@ -398,9 +398,10 @@ math_noise_perlin_interpolated_sample(const interpolated_noise_sampler_t *const 
     double m = 0.0;
     double n = 0.0;
 
-#pragma clang loop vectorize(enable) interleave(disable)
+    double ns[data->normal.length];
+#pragma clang loop vectorize(enable)
     for (uint32_t offset = 0; offset < data->normal.length; offset++) {
-        n += math_noise_perlin_sample(
+        ns[offset] = math_noise_perlin_sample(
                 data->normal.sampler_permutations + 256 * offset,
                 data->normal.sampler_originX[offset],
                 data->normal.sampler_originY[offset],
@@ -413,14 +414,19 @@ math_noise_perlin_interpolated_sample(const interpolated_noise_sampler_t *const 
         ) / data->normal.sampler_mulFactor[offset];
     }
 
+    for (uint32_t offset = 0; offset < data->normal.length; offset ++) {
+        n += ns[offset];
+    }
+
     const double q = (n / 10.0 + 1.0) / 2.0;
     const uint8_t bl2 = q >= 1.0;
     const uint8_t bl3 = q <= 0.0;
 
     if (!bl2) {
-#pragma clang loop vectorize(enable) interleave(disable)
+        double ls[data->lower.length];
+#pragma clang loop vectorize(enable)
         for (uint32_t offset = 0; offset < data->lower.length; offset++) {
-            l += math_noise_perlin_sample(
+            ls[offset] = math_noise_perlin_sample(
                     data->lower.sampler_permutations + 256 * offset,
                     data->lower.sampler_originX[offset],
                     data->lower.sampler_originY[offset],
@@ -432,12 +438,17 @@ math_noise_perlin_interpolated_sample(const interpolated_noise_sampler_t *const 
                     e * data->lower.sampler_mulFactor[offset]
             ) / data->lower.sampler_mulFactor[offset];
         }
+
+        for (uint32_t offset = 0; offset < data->lower.length; offset++) {
+            l += ls[offset];
+        }
     }
 
     if (!bl3) {
-#pragma clang loop vectorize(enable) interleave(disable)
+        double ms[data->upper.length];
+#pragma clang loop vectorize(enable)
         for (uint32_t offset = 0; offset < data->upper.length; offset++) {
-            m += math_noise_perlin_sample(
+            ms[offset] = math_noise_perlin_sample(
                     data->upper.sampler_permutations + 256 * offset,
                     data->upper.sampler_originX[offset],
                     data->upper.sampler_originY[offset],
@@ -448,6 +459,9 @@ math_noise_perlin_interpolated_sample(const interpolated_noise_sampler_t *const 
                     j * data->upper.sampler_mulFactor[offset],
                     e * data->upper.sampler_mulFactor[offset]
             ) / data->upper.sampler_mulFactor[offset];
+        }
+        for (uint32_t offset = 0; offset < data->upper.length; offset++) {
+            m += ms[offset];
         }
     }
 
