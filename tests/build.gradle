@@ -3,8 +3,10 @@ allprojects {
     apply plugin: 'fabric-loom'
     apply plugin: 'java-library'
 
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+    java {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
 
     group = project.maven_group + ".tests"
     repositories {

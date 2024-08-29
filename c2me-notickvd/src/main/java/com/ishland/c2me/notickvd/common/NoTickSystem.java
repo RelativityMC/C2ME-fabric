@@ -71,7 +71,7 @@ public class NoTickSystem {
     }
 
     private void scheduleTick(ServerChunkLoadingManager tacs) {
-        if (this.isTicking.compareAndSet(false, true)) {
+        if (!this.pendingActionsOnScheduler.isEmpty() && this.isTicking.compareAndSet(false, true)) {
             List<Runnable> tasks = new ArrayList<>(this.pendingActionsOnScheduler.size() + 3);
             {
                 Runnable r;

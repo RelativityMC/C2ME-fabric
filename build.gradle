@@ -4,7 +4,7 @@ plugins {
     id "me.champeau.jmh" version "0.7.1"
     id 'com.modrinth.minotaur' version '2.+' apply false
     id 'com.matthewprenger.cursegradle' version '1.4.0' apply false
-    id 'com.github.johnrengelman.shadow' version '8.1.1' apply false
+    id 'com.gradleup.shadow' version '8.3.0' apply false
 }
 
 @SuppressWarnings('unused')
@@ -20,11 +20,15 @@ configure(allprojects) {
     apply plugin: 'java'
     apply plugin: 'java-library'
 
-    it.archivesBaseName = "${it.name}-mc${project.minecraft_version}"
+    base {
+        archivesName = "${project.name}-mc${project.minecraft_version}"
+    }
     it.group = project.maven_group
-    it.sourceCompatibility = JavaVersion.VERSION_21
-    it.targetCompatibility = JavaVersion.VERSION_21
     it.version = project.mod_version + "." + getVersionSuffix()
+    java {
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
+    }
 
     afterEvaluate {
         if (it.plugins.hasPlugin("fabric-loom")) {
@@ -35,7 +39,9 @@ configure(allprojects) {
     }
 }
 
-archivesBaseName = "${project.archives_base_name}-mc${project.minecraft_version}"
+base {
+    archivesName = "${project.archives_base_name}-mc${project.minecraft_version}"
+}
 
 clean.dependsOn gradle.includedBuild('FlowSched').task(':clean')
 

@@ -67,10 +67,7 @@ public class MixinChunkTicketManager implements IChunkTicketManager {
             map.setTACS(chunkStorage);
         }
         this.noTickSystem.afterTicketTicks();
-        if (this.lastNoTickSystemTick != this.age) {
-            this.noTickSystem.tick(chunkStorage);
-            this.lastNoTickSystemTick = this.age;
-        }
+        this.noTickSystem.tick(chunkStorage);
     }
 
     @Inject(method = "addTicket(JLnet/minecraft/server/world/ChunkTicket;)V", at = @At("RETURN"))
