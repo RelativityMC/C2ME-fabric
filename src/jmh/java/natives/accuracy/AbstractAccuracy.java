@@ -29,6 +29,15 @@ public abstract class AbstractAccuracy {
         return dist;
     }
 
+    protected static int ulpDistance(float original, float that) {
+        int dist = 0;
+        while (that > original) {
+            that = Math.nextAfter(that, original);
+            dist ++;
+        }
+        return dist;
+    }
+
     protected void printUlps() {
         for (int i = 0; i < this.maxUlp.length; i++) {
             System.out.println(String.format("%s: max error %d ulps", this.targets[i], this.maxUlp[i]));
