@@ -21,7 +21,7 @@ public class PerlinNoiseBenchmark extends Base_x86_64 {
     protected static final int seed = 0xcafe;
     protected static final int invocations = 1 << 16;
 
-    private final PerlinNoiseSampler vanillaSampler = new PerlinNoiseSampler(new LocalRandom(0xFF));
+    private final PerlinNoiseSampler vanillaSampler = new PerlinNoiseSampler(new LocalRandom(seed));
 
     private final byte[] permutations;
     private final MemorySegment permutationsSegment;

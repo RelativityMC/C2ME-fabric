@@ -24,7 +24,7 @@ public class EndIslandsBenchmark extends Base_x86_64 {
     protected static final int seed = 0xcafe;
     protected static final int invocations = 1 << 16;
 
-    private static float sampleVanilla(SimplexNoiseSampler sampler, int x, int z) {
+    public static float sampleVanilla(SimplexNoiseSampler sampler, int x, int z) {
         int i = x / 2;
         int j = z / 2;
         int k = x % 2;

@@ -39,19 +39,16 @@ public abstract class Base_x86_64 {
     public abstract void vanilla(Blackhole bh);
 
     @Benchmark
-    @Warmup(iterations = 1, time = 10)
     public void sse2(Blackhole bh) {
         doInvocation(sse2, bh);
     }
 
     @Benchmark
-    @Warmup(iterations = 1, time = 10)
     public void sse4_2(Blackhole bh) {
         doInvocation(sse4_2, bh);
     }
 
     @Benchmark
-    @Warmup(iterations = 1, time = 10)
     public void avx(Blackhole bh) {
         doInvocation(avx, bh);
     }
@@ -63,25 +60,21 @@ public abstract class Base_x86_64 {
     }
 
     @Benchmark
-    @Warmup(iterations = 1, time = 10)
     public void avx2adl(Blackhole bh) {
         doInvocation(avx2adl, bh);
     }
 
     @Benchmark
-    @Warmup(iterations = 1, time = 10)
     public void avx512skx(Blackhole bh) {
         doInvocation(avx512skx, bh);
     }
 
     @Benchmark
-    @Warmup(iterations = 1, time = 10)
     public void avx512icl(Blackhole bh) {
         doInvocation(avx512icl, bh);
     }
 
     @Benchmark
-    @Warmup(iterations = 1, time = 10)
     public void avx512spr(Blackhole bh) {
         doInvocation(avx512spr, bh);
     }
