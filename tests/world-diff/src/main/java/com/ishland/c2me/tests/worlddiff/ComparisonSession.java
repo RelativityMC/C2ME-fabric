@@ -116,8 +116,8 @@ public class ComparisonSession implements Closeable {
 //            final Function<ChunkPos, ArrayList<StructureStart>> newArrayList = k -> new ArrayList<>();
 //            ConcurrentHashMap<ConfiguredStructureFeature<?, ?>, ConcurrentHashMap<ChunkPos, ArrayList<StructureStart>>> baseStructureStarts = new ConcurrentHashMap<>();
 //            ConcurrentHashMap<ConfiguredStructureFeature<?, ?>, ConcurrentHashMap<ChunkPos, ArrayList<StructureStart>>> targetStructureStarts = new ConcurrentHashMap<>();
-            final Registry<Structure> baseStructureFeatureRegistry = baseWorld.dynamicRegistryManager.get(RegistryKeys.STRUCTURE);
-            final Registry<Structure> targetStructureFeatureRegistry = targetWorld.dynamicRegistryManager.get(RegistryKeys.STRUCTURE);
+            final Registry<Structure> baseStructureFeatureRegistry = baseWorld.dynamicRegistryManager.getOrThrow(RegistryKeys.STRUCTURE);
+            final Registry<Structure> targetStructureFeatureRegistry = targetWorld.dynamicRegistryManager.getOrThrow(RegistryKeys.STRUCTURE);
             AtomicLong completedChunks = new AtomicLong();
             AtomicLong completedBlocks = new AtomicLong();
             AtomicLong differenceBlocks = new AtomicLong();
@@ -137,19 +137,19 @@ public class ComparisonSession implements Closeable {
 
                                             baseStructures.forEach((configuredStructureFeature, baseStructureStart) -> {
                                                 final Identifier id = baseStructureFeatureRegistry.getId(configuredStructureFeature);
-                                                final StructureStart targetStructureStart = targetStructures.get(targetStructureFeatureRegistry.get(id));
+                                                final StructureStart targetStructureStart = targetStructures.get(targetStructureFeatureRegistry.getEntry(id));
                                                 if (targetStructureStart == null)
                                                     System.out.printf("%s not found in target world in chunk %s\n", id, pos);
                                             });
                                             targetStructures.forEach((configuredStructureFeature, targetStructureStart) -> {
                                                 final Identifier id = targetStructureFeatureRegistry.getId(configuredStructureFeature);
-                                                final StructureStart baseStructureStart = baseStructures.get(baseStructureFeatureRegistry.get(id));
+                                                final StructureStart baseStructureStart = baseStructures.get(baseStructureFeatureRegistry.getEntry(id));
                                                 if (baseStructureStart == null)
                                                     System.out.printf("%s not found in base world in chunk %s\n", id, pos);
                                             });
 
-                                            final Map<ChunkSectionPos, ChunkSection> sectionsBase = readSections(pos, chunkDataBase, baseWorld.dynamicRegistryManager.get(RegistryKeys.BIOME));
-                                            final Map<ChunkSectionPos, ChunkSection> sectionsTarget = readSections(pos, chunkDataTarget, baseWorld.dynamicRegistryManager.get(RegistryKeys.BIOME));
+                                            final Map<ChunkSectionPos, ChunkSection> sectionsBase = readSections(pos, chunkDataBase, baseWorld.dynamicRegistryManager.getOrThrow(RegistryKeys.BIOME));
+                                            final Map<ChunkSectionPos, ChunkSection> sectionsTarget = readSections(pos, chunkDataTarget, baseWorld.dynamicRegistryManager.getOrThrow(RegistryKeys.BIOME));
                                             sectionsBase.forEach((chunkSectionPos, chunkSectionBase) -> {
                                                 final ChunkSection chunkSectionTarget = sectionsTarget.get(chunkSectionPos);
                                                 if (chunkSectionBase == null || chunkSectionTarget == null) {
@@ -238,7 +238,7 @@ public class ComparisonSession implements Closeable {
                             .promotePartial(s -> LOGGER.error("Recoverable errors when loading section [" + pos.x + ", " + y + ", " + pos.z + "]: " + s))
                             .getOrThrow(RuntimeException::new);
                 } else {
-                    palettedContainer3 = new PalettedContainer<>(registry.getIndexedEntries(), registry.entryOf(BiomeKeys.PLAINS), PalettedContainer.PaletteProvider.BIOME);
+                    palettedContainer3 = new PalettedContainer<>(registry.getIndexedEntries(), BiomeKeys.PLAINS, PalettedContainer.PaletteProvider.BIOME);
                 }
                 ChunkSection chunkSection = new ChunkSection(palettedContainer, palettedContainer3);
                 chunkSection.calculateCounts();
@@ -278,7 +278,7 @@ public class ComparisonSession implements Closeable {
                             applyExecutor -> SaveLoading.load(
                                     serverConfig,
                                     arg -> {
-                                        Registry<DimensionOptions> registry = arg.dimensionsRegistryManager().get(RegistryKeys.DIMENSION);
+                                        Registry<DimensionOptions> registry = arg.dimensionsRegistryManager().getOrThrow(RegistryKeys.DIMENSION);
                                         final ParsedSaveProperties lv = LevelStorage.parseSaveProperties(null, arg.dataConfiguration(), registry, arg.worldGenRegistryManager());
                                         Objects.requireNonNull(lv);
                                         return new SaveLoading.LoadContext<>(lv.properties(), lv.dimensions().toDynamicRegistryManager());
@@ -304,7 +304,7 @@ public class ComparisonSession implements Closeable {
         if (saveProperties == null) {
             throw new FileNotFoundException();
         }
-        final Set<RegistryKey<World>> worldKeys = registryManager.get(RegistryKeys.WORLD).getKeys();
+        final Set<RegistryKey<World>> worldKeys = registryManager.getOrThrow(RegistryKeys.WORLD).getKeys();
         final WorldUpdater worldUpdater = new WorldUpdater(session, Schemas.getFixer(), registryManager, false, false);
         final HashMap<RegistryKey<World>, List<ChunkPos>> chunkPosesMap = new HashMap<>();
         for (RegistryKey<World> world : worldKeys) {
@@ -330,7 +330,7 @@ public class ComparisonSession implements Closeable {
                 new StructureTemplateManager(saveLoader.resourceManager(), session, Schemas.getFixer(),
                         saveLoader.combinedDynamicRegistries()
                                 .getCombinedRegistryManager()
-                                .get(RegistryKeys.BLOCK)
+                                .getOrThrow(RegistryKeys.BLOCK)
                                 .getReadOnlyWrapper()
                                 .withFeatureFilter(saveProperties.getEnabledFeatures())),
                 saveLoader.resourceManager(),

@@ -656,7 +656,7 @@ public final class ChunkDataSerializer {
         writer.startCompound(STRING_STRUCTURES);
         writer.startCompound(STRING_STARTS);
 
-        Registry<Structure> configuredStructureFeatureRegistry = context.registryManager().get(RegistryKeys.STRUCTURE);
+        Registry<Structure> configuredStructureFeatureRegistry = context.registryManager().getOrThrow(RegistryKeys.STRUCTURE);
 
         for (var entry : starts.entrySet()) {
             writer.startCompound(NbtWriter.getNameBytesFromRegistry(configuredStructureFeatureRegistry, entry.getKey()));
@@ -691,7 +691,7 @@ public final class ChunkDataSerializer {
             return;
         }
 
-        writer.putRegistry(STRING_ID, context.registryManager().get(RegistryKeys.STRUCTURE), structureStart.getStructure());
+        writer.putRegistry(STRING_ID, context.registryManager().getOrThrow(RegistryKeys.STRUCTURE), structureStart.getStructure());
         writer.putInt(STRING_CHUNK_X, pos.x);
         writer.putInt(STRING_CHUNK_Z, pos.z);
         writer.putInt(STRING_SMALL_REFERENCES, structureStart.getReferences());

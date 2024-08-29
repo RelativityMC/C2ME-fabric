@@ -78,23 +78,23 @@ public class PreGenTask {
         final AtomicInteger locatedBiomes = new AtomicInteger();
         final AtomicInteger locatedStructures = new AtomicInteger();
         System.err.printf("Fetching structure and biome list\n");
-        final Registry<Biome> biomeRegistry = world.getRegistryManager().get(RegistryKeys.BIOME);
+        final Registry<Biome> biomeRegistry = world.getRegistryManager().getOrThrow(RegistryKeys.BIOME);
         final Set<RegistryEntry<Biome>> biomes =
                 world.getChunkManager().getChunkGenerator().getBiomeSource().getBiomes()
                         .stream()
                         .filter(biomeclass_6880 -> biomeRegistry.getKey(biomeclass_6880.value()).isPresent())
                         .collect(Collectors.toCollection(HashSet::new));
-        final Registry<Structure> structureFeatureRegistry = world.getRegistryManager().get(RegistryKeys.STRUCTURE);
+        final Registry<Structure> structureFeatureRegistry = world.getRegistryManager().getOrThrow(RegistryKeys.STRUCTURE);
         final Set<RegistryEntryList<Structure>> structureFeatures;
-        if (false) {
-            structureFeatures = structureFeatureRegistry.getEntrySet().stream()
-                    .filter(entry -> world.getChunkManager().getChunkGenerator().getBiomeSource().getBiomes().stream().anyMatch(entry.getValue().getValidBiomes()::contains))
-                    .flatMap(entry -> structureFeatureRegistry.getEntry(entry.getKey()).map(RegistryEntryList::of).stream())
-                    .collect(Collectors.toSet());
-        } else {
+//        if (false) {
+//            structureFeatures = structureFeatureRegistry.getEntrySet().stream()
+//                    .filter(entry -> world.getChunkManager().getChunkGenerator().getBiomeSource().getBiomes().stream().anyMatch(entry.getValue().getValidBiomes()::contains))
+//                    .flatMap(entry -> structureFeatureRegistry.getEntry(entry.getKey()).map(RegistryEntryList::of).stream())
+//                    .collect(Collectors.toSet());
+//        } else {
             LOGGER.warn("locateStructure() is too slow, disabling structure locating");
             structureFeatures = Collections.emptySet();
-        }
+//        }
         System.err.printf("Submitting tasks\n");
 
 //        final CompletableFuture<Void> biomeFuture = CompletableFuture.allOf(biomes.stream()
@@ -275,7 +275,7 @@ public class PreGenTask {
             Executor executor
     ) {
         int i = Math.floorDiv(radius, horizontalBlockCheckInterval);
-        int[] is = MathHelper.stream(origin.getY(), world.getBottomY() + 1, world.getTopY(), verticalBlockCheckInterval).toArray();
+        int[] is = MathHelper.stream(origin.getY(), world.getBottomY() + 1, world.getTopYInclusive(), verticalBlockCheckInterval).toArray();
 
         final int permits = Runtime.getRuntime().availableProcessors() * 4;
         Semaphore semaphore = new Semaphore(permits);
@@ -304,34 +304,6 @@ public class PreGenTask {
                 return;
             }
         }
-    }
-
-    private static boolean isLocateStructureSlowAF(ServerWorld world) {
-        final Registry<Structure> structureFeatureRegistry = world.getRegistryManager().get(RegistryKeys.STRUCTURE);
-        final Set<RegistryEntry<Structure>> entries = structureFeatureRegistry.getEntrySet().stream()
-                .flatMap(thing -> structureFeatureRegistry.getEntry(thing.getKey()).stream())
-                .collect(Collectors.toSet());
-        for (RegistryEntry<Structure> entry : entries) {
-            long startTime = System.nanoTime();
-            final CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
-                world.getChunkManager().getChunkGenerator().locateStructure(
-                        world,
-                        RegistryEntryList.of(entry),
-                        BlockPos.ORIGIN,
-                        24,
-                        false
-                );
-            }, EXECUTOR);
-            while (!future.isDone() && System.nanoTime() - startTime <= 1_000_000_000L) {
-                if (!((IMinecraftServer) world.getServer()).c2metest$runAsyncTask())
-                    LockSupport.parkNanos("waiting for tasks", 100000L);
-            }
-            long endTime = System.nanoTime();
-            LOGGER.info("locateStructure() took {}ms", (endTime - startTime) / 1_000_000);
-            if (endTime - startTime > 1_000_000_000L) return true;
-        }
-
-        return false;
     }
 
     private interface LocateCallback {

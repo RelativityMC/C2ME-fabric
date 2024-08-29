@@ -92,7 +92,7 @@ public class ReadFromDisk extends NewChunkStatus {
                     final ServerWorld world = ((IThreadedAnvilChunkStorage) context.tacs()).getWorld();
                     // blending
                     final ChunkPos pos = context.holder().getKey();
-                    protoChunk = protoChunk != null ? protoChunk : new ProtoChunk(pos, UpgradeData.NO_UPGRADE_DATA, world, world.getRegistryManager().get(RegistryKeys.BIOME), null);
+                    protoChunk = protoChunk != null ? protoChunk : new ProtoChunk(pos, UpgradeData.NO_UPGRADE_DATA, world, world.getRegistryManager().getOrThrow(RegistryKeys.BIOME), null);
                     if (protoChunk.getBelowZeroRetrogen() != null || protoChunk.getStatus().getChunkType() == ChunkType.PROTOCHUNK) {
                         ProtoChunk finalProtoChunk = protoChunk;
                         return Single.defer(() -> Single.fromCompletionStage(BlendingInfoUtil.getBlendingInfos(((IVersionedChunkStorage) context.tacs()).getWorker(), pos)))
@@ -106,7 +106,7 @@ public class ReadFromDisk extends NewChunkStatus {
 
     protected static @NotNull ProtoChunk createEmptyProtoChunk(ChunkLoadingContext context) {
         final ServerWorld world = ((IThreadedAnvilChunkStorage) context.tacs()).getWorld();
-        return new ProtoChunk(context.holder().getKey(), UpgradeData.NO_UPGRADE_DATA, world, world.getRegistryManager().get(RegistryKeys.BIOME), null);
+        return new ProtoChunk(context.holder().getKey(), UpgradeData.NO_UPGRADE_DATA, world, world.getRegistryManager().getOrThrow(RegistryKeys.BIOME), null);
     }
 
     @Override
