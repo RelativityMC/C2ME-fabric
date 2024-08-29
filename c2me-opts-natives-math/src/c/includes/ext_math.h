@@ -317,7 +317,7 @@ static inline __attribute__((const)) double
 math_noise_perlin_double_octave_sample_impl(const double_octave_sampler_data_t *const data,
                                             const double x, const double y, const double z,
                                             const double yScale, const double yMax, const uint8_t useOrigin) {
-    double d = 0.0;
+    double ds[data->length];
 
 #pragma clang loop vectorize(enable) interleave(enable) interleave_count(2)
     for (uint32_t i = 0; i < data->length; i++) {
@@ -337,10 +337,20 @@ math_noise_perlin_double_octave_sample_impl(const double_octave_sampler_data_t *
                 math_octave_maintainPrecision(sampleZ * e),
                 yScale * e,
                 yMax * e);
-        d += data->amplitudes[i] * g * f;
+        ds[i] = data->amplitudes[i] * g * f;
     }
 
-    return d * data->amplitude;
+    double d1 = 0.0;
+    double d2 = 0.0;
+    for (uint32_t i = 0; i < data->length; i ++) {
+        if (!data->need_shift[i]) {
+            d1 += ds[i];
+        } else {
+            d2 += ds[i];
+        }
+    }
+
+    return (d1 + d2) * data->amplitude;
 }
 
 static inline __attribute__((const)) double
