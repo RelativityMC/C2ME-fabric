@@ -41,6 +41,14 @@ public class NativeLoader {
         }
     }
 
+    public static String getAvailabilityString() {
+        if (lookup != null) {
+            return String.format("Available, with ISA target %s", currentMachineTarget);
+        } else {
+            return "Unavailable";
+        }
+    }
+
     private static SymbolLookup load0(String libName) {
         // load from resources
         try (final InputStream in = NativeLoader.class.getClassLoader().getResourceAsStream(libName)) {
