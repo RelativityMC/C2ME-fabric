@@ -12,9 +12,9 @@ import java.util.concurrent.TimeUnit;
 
 @State(Scope.Benchmark)
 @BenchmarkMode({Mode.AverageTime})
-@OperationsPerInvocation(InterpolatedNoiseSamplerBenchmark.invocations)
+@OperationsPerInvocation(InterpolatedNoiseBenchmark.invocations)
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
-public class InterpolatedNoiseSamplerBenchmark extends Base_x86_64 {
+public class InterpolatedNoiseBenchmark extends Base_x86_64 {
 
     protected static final int seed = 0xcafe;
     protected static final int invocations = 1 << 16;
@@ -26,7 +26,7 @@ public class InterpolatedNoiseSamplerBenchmark extends Base_x86_64 {
     private MemorySegment nativeSamplerData;
     private long nativeSamplerDataPtr;
 
-    public InterpolatedNoiseSamplerBenchmark() {
+    public InterpolatedNoiseBenchmark() {
         super(BindingsTemplate.c2me_natives_noise_perlin_interpolated_sample_ptr, "c2me_natives_noise_perlin_interpolated_sample");
     }
 
