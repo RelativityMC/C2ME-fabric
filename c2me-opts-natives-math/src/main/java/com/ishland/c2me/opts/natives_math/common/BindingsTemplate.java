@@ -11,9 +11,7 @@ import java.lang.foreign.*;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
 import java.util.Objects;
-import java.util.function.Function;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 public class BindingsTemplate {
 
@@ -58,6 +56,7 @@ public class BindingsTemplate {
 
     public static final StructLayout double_octave_sampler_data = MemoryLayout.structLayout(
             ValueLayout.JAVA_LONG.withName("length"),
+            ValueLayout.JAVA_DOUBLE.withName("amplitude"),
             ValueLayout.ADDRESS.withName("need_shift"),
             ValueLayout.ADDRESS.withName("lacunarity_powd"),
             ValueLayout.ADDRESS.withName("persistence_powd"),
@@ -68,6 +67,7 @@ public class BindingsTemplate {
             ValueLayout.ADDRESS.withName("amplitudes")
     ).withByteAlignment(32).withName("double_double_octave_sampler_data");
     public static final VarHandle double_octave_sampler_data$length = double_octave_sampler_data.varHandle(MemoryLayout.PathElement.groupElement("length"));
+    public static final VarHandle double_octave_sampler_data$amplitude = double_octave_sampler_data.varHandle(MemoryLayout.PathElement.groupElement("amplitude"));
     public static final VarHandle double_octave_sampler_data$need_shift = double_octave_sampler_data.varHandle(MemoryLayout.PathElement.groupElement("need_shift"));
     public static final VarHandle double_octave_sampler_data$lacunarity_powd = double_octave_sampler_data.varHandle(MemoryLayout.PathElement.groupElement("lacunarity_powd"));
     public static final VarHandle double_octave_sampler_data$persistence_powd = double_octave_sampler_data.varHandle(MemoryLayout.PathElement.groupElement("persistence_powd"));
@@ -77,7 +77,7 @@ public class BindingsTemplate {
     public static final VarHandle double_octave_sampler_data$sampler_originZ = double_octave_sampler_data.varHandle(MemoryLayout.PathElement.groupElement("sampler_originZ"));
     public static final VarHandle double_octave_sampler_data$amplitudes = double_octave_sampler_data.varHandle(MemoryLayout.PathElement.groupElement("amplitudes"));
 
-    public static MemorySegment double_octave_sampler_data$create(Arena arena, OctavePerlinNoiseSampler firstSampler, OctavePerlinNoiseSampler secondSampler) {
+    public static MemorySegment double_octave_sampler_data$create(Arena arena, OctavePerlinNoiseSampler firstSampler, OctavePerlinNoiseSampler secondSampler, double amplitude) {
         long nonNullSamplerCount = 0;
         for (PerlinNoiseSampler sampler : ((IOctavePerlinNoiseSampler) firstSampler).getOctaveSamplers()) {
             if (sampler != null) {
@@ -99,6 +99,7 @@ public class BindingsTemplate {
         final MemorySegment sampler_originZ = arena.allocate(nonNullSamplerCount * 8, 64);
         final MemorySegment amplitudes = arena.allocate(nonNullSamplerCount * 8, 64);
         double_octave_sampler_data$length.set(data, 0L, nonNullSamplerCount);
+        double_octave_sampler_data$amplitude.set(data, 0L, amplitude);
         double_octave_sampler_data$need_shift.set(data, 0L, need_shift);
         double_octave_sampler_data$lacunarity_powd.set(data, 0L, lacunarity_powd);
         double_octave_sampler_data$persistence_powd.set(data, 0L, persistence_powd);

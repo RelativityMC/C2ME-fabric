@@ -25,7 +25,8 @@ public class DoublePerlinNoiseBenchmark extends Base_x86_64 {
     protected static final int seed = 0xcafe;
     protected static final int invocations = 1 << 16;
 
-    private static MemorySegment create(DoublePerlinNoiseSampler o) {
+    public static MemorySegment create(DoublePerlinNoiseSampler o) {
+        double amplitude = (double) ReflectUtils.getField(DoublePerlinNoiseSampler.class, o, "amplitude");
         OctavePerlinNoiseSampler firstSampler = (OctavePerlinNoiseSampler) ReflectUtils.getField(DoublePerlinNoiseSampler.class, o, "firstSampler");
         OctavePerlinNoiseSampler secondSampler = (OctavePerlinNoiseSampler) ReflectUtils.getField(DoublePerlinNoiseSampler.class, o, "secondSampler");
         long nonNullSamplerCount = 0;
@@ -50,6 +51,7 @@ public class DoublePerlinNoiseBenchmark extends Base_x86_64 {
         final MemorySegment sampler_originZ = arena.allocate(nonNullSamplerCount * 8, 64);
         final MemorySegment amplitudes = arena.allocate(nonNullSamplerCount * 8, 64);
         BindingsTemplate.double_octave_sampler_data$length.set(data, 0L, nonNullSamplerCount);
+        BindingsTemplate.double_octave_sampler_data$amplitude.set(data, 0L, amplitude);
         BindingsTemplate.double_octave_sampler_data$need_shift.set(data, 0L, need_shift);
         BindingsTemplate.double_octave_sampler_data$lacunarity_powd.set(data, 0L, lacunarity_powd);
         BindingsTemplate.double_octave_sampler_data$persistence_powd.set(data, 0L, persistence_powd);

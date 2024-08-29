@@ -302,6 +302,7 @@ math_noise_perlin_sample(const aligned_uint8_ptr permutations,
 
 typedef const struct double_octave_sampler_data {
     const uint64_t length;
+    const double amplitude;
     const bool *const need_shift;
     const aligned_double_ptr lacunarity_powd;
     const aligned_double_ptr persistence_powd;
@@ -339,7 +340,7 @@ math_noise_perlin_double_octave_sample_impl(const double_octave_sampler_data_t *
         d += data->amplitudes[i] * g * f;
     }
 
-    return d;
+    return d * data->amplitude;
 }
 
 static inline __attribute__((const)) double

@@ -28,7 +28,7 @@ public class MixinDoublePerlinNoiseSampler {
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void postInit(CallbackInfo ci) {
-        this.c2me$samplerData = BindingsTemplate.double_octave_sampler_data$create(this.c2me$arena, this.firstSampler, this.secondSampler);
+        this.c2me$samplerData = BindingsTemplate.double_octave_sampler_data$create(this.c2me$arena, this.firstSampler, this.secondSampler, this.amplitude);
         this.c2me$samplerDataPtr = this.c2me$samplerData.address();
     }
 
@@ -39,7 +39,7 @@ public class MixinDoublePerlinNoiseSampler {
     @Overwrite
     public double sample(double x, double y, double z) {
         if (this.c2me$samplerDataPtr != 0L) {
-            return Bindings.c2me_natives_noise_perlin_double_octave_sample(this.c2me$samplerDataPtr, x, y, z) * this.amplitude;
+            return Bindings.c2me_natives_noise_perlin_double_octave_sample(this.c2me$samplerDataPtr, x, y, z);
         } else {
             double d = x * 1.0181268882175227;
             double e = y * 1.0181268882175227;
