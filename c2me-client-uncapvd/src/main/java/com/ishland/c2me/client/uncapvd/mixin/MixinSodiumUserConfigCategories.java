@@ -11,6 +11,7 @@ import org.spongepowered.asm.mixin.injection.ModifyConstant;
 @Mixin(targets = {
         "me.jellysquid.mods.sodium.client.gui.SodiumGameOptionPages",
         "net.caffeinemc.sodium.config.user.UserConfigCategories",
+        "net.caffeinemc.mods.sodium.client.gui.SodiumGameOptionPages",
 })
 public class MixinSodiumUserConfigCategories {
 
