@@ -17,6 +17,7 @@ public class ModuleEntryPoint {
     private static final boolean enabled;
 
     static {
+        System.setProperty("com.ishland.c2me.opts.natives_math.duringGameInit", "true");
         boolean configured = new ConfigSystem.ConfigAccessor()
                 .key("vanillaWorldGenOptimizations.nativeAcceleration.enabled")
                 .comment("""

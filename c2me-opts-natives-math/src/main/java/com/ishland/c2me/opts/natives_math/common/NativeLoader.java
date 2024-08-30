@@ -39,7 +39,7 @@ public class NativeLoader {
                                 ValueLayout.JAVA_INT,
                                 ValueLayout.JAVA_BOOLEAN
                         )
-                ).invokeExact(ModuleEntryPoint.allowAVX512);
+                ).invokeExact(Boolean.getBoolean("com.ishland.c2me.opts.natives_math.duringGameInit") ? ModuleEntryPoint.allowAVX512 : true);
                 ISATarget target = (ISATarget) ISATarget.getInstance().getEnumConstants()[level];
                 while (!target.isNativelySupported()) target = (ISATarget) ISATarget.getInstance().getEnumConstants()[target.ordinal() - 1];
                 currentMachineTarget = target;
