@@ -35,7 +35,7 @@ static int __os_has_avx512_support(void) {
 // __get_system_isa should return a value corresponding to one of the
 // Target::ISA enumerant values that gives the most capable ISA that the
 // current system can run.
-int32_t c2me_natives_get_system_isa(void) {
+int32_t c2me_natives_get_system_isa(_Bool allowAVX512) {
     int info[4];
     __cpuid(info, 1);
 
@@ -64,7 +64,7 @@ int32_t c2me_natives_get_system_isa(void) {
 
     // NOTE: the values returned below must be the same as the
     // corresponding enumerant values in Target::ISA.
-    if (osxsave && avx2 && avx512_f
+    if (allowAVX512 && osxsave && avx2 && avx512_f
 #if !defined(__APPLE__)
         && __os_has_avx512_support()
 #endif // !__APPLE__
@@ -120,19 +120,19 @@ int32_t c2me_natives_get_system_isa(void) {
             return 8; // ICL
         }
 #endif // !__APPLE__
-        // if (skx) {
-        //     return 7; // SKX
-        // } else if (knl) {
-        //     return 6; // KNL
-        // }
+         if (skx) {
+             return 7; // SKX
+         } else if (knl) {
+             return 6; // KNL
+         }
         // If it's unknown AVX512 target, fall through and use AVX2
         // or whatever is available in the machine.
     }
 
     if (osxsave && avx && __os_has_avx_support()) {
-        if (avx_vnni) {
-            return 5; // ADL
-        }
+//        if (avx_vnni) {
+//            return 5; // ADL
+//        }
         if (avx_f16c && avx_rdrand && avx2) {
             return 4;
         }

@@ -1,5 +1,6 @@
 package com.ishland.c2me.opts.natives_math.common;
 
+import com.ishland.c2me.opts.natives_math.ModuleEntryPoint;
 import io.netty.util.internal.SystemPropertyUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,8 +35,11 @@ public class NativeLoader {
                 LOGGER.info("Attempting to call native library. If your game crashes right after this point, native acceleration may not be available for your system.");
                 int level = (int) linker.downcallHandle(
                         lookup.find("c2me_natives_get_system_isa").get(),
-                        FunctionDescriptor.of(ValueLayout.JAVA_INT)
-                ).invokeExact();
+                        FunctionDescriptor.of(
+                                ValueLayout.JAVA_INT,
+                                ValueLayout.JAVA_BOOLEAN
+                        )
+                ).invokeExact(ModuleEntryPoint.allowAVX512);
                 ISATarget target = (ISATarget) ISATarget.getInstance().getEnumConstants()[level];
                 while (!target.isNativelySupported()) target = (ISATarget) ISATarget.getInstance().getEnumConstants()[target.ordinal() - 1];
                 currentMachineTarget = target;
