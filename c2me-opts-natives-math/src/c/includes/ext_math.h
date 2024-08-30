@@ -30,9 +30,9 @@ static const double SKEW_FACTOR_2D = 0.3660254037844386;
 // (3.0 - SQRT_3) / 6.0
 static const double UNSKEW_FACTOR_2D = 0.21132486540518713;
 
-typedef double *aligned_double_ptr __attribute__((align_value(64)));
-typedef uint8_t *aligned_uint8_ptr __attribute__((align_value(64)));
-typedef uint32_t *aligned_uint32_ptr __attribute__((align_value(64)));
+typedef const double *aligned_double_ptr __attribute__((align_value(64)));
+typedef const uint8_t *aligned_uint8_ptr __attribute__((align_value(64)));
+typedef const uint32_t *aligned_uint32_ptr __attribute__((align_value(64)));
 
 #pragma clang attribute push (__attribute__((always_inline)), apply_to = function)
 
@@ -242,19 +242,19 @@ static inline __attribute__((const)) double math_perlinFade(const double value) 
     return value * value * value * (value * (value * 6.0 - 15.0) + 10.0);
 }
 
-static inline __attribute__((const)) double __math_perlin_grad(const aligned_uint8_ptr permutations, const int32_t px,
+static inline __attribute__((const)) double __math_perlin_grad(const aligned_uint32_ptr permutations, const int32_t px,
                                                                const int32_t py, const int32_t pz, const double fx,
                                                                const double fy, const double fz) {
     const double f[3] = {fx, fy, fz};
     const int32_t p[3] = {px, py, pz};
     const int32_t q[3] = {p[0] & 0xFF, p[1] & 0xFF, p[2] & 0xFF};
-    const uint8_t hash = permutations[(permutations[(permutations[q[0]] + q[1]) & 0xFF] + q[2]) & 0xFF] & 0xF;
+    const int32_t hash = permutations[(permutations[(permutations[q[0]] + q[1]) & 0xFF] + q[2]) & 0xFF] & 0xF;
     const double *const grad = FLAT_SIMPLEX_GRAD + (hash << 2);
     return grad[0] * f[0] + grad[1] * f[1] + grad[2] * f[2];
 }
 
 static inline __attribute__((const)) double
-math_noise_perlin_sampleScalar(const aligned_uint8_ptr permutations,
+math_noise_perlin_sampleScalar(const aligned_uint32_ptr permutations,
                                const int32_t px0, const int32_t py0, const int32_t pz0,
                                const double fx0, const double fy0, const double fz0, const double fadeLocalY) {
     const int32_t px1 = px0 + 1;
@@ -281,7 +281,7 @@ math_noise_perlin_sampleScalar(const aligned_uint8_ptr permutations,
 
 
 static inline __attribute__((const)) double
-math_noise_perlin_sample(const aligned_uint8_ptr permutations,
+math_noise_perlin_sample(const aligned_uint32_ptr permutations,
                          const double originX, const double originY, const double originZ,
                          const double x, const double y, const double z,
                          const double yScale, const double yMax) {
@@ -306,7 +306,7 @@ typedef const struct double_octave_sampler_data {
     const bool *const need_shift;
     const aligned_double_ptr lacunarity_powd;
     const aligned_double_ptr persistence_powd;
-    const aligned_uint8_ptr sampler_permutations;
+    const aligned_uint32_ptr sampler_permutations;
     const aligned_double_ptr sampler_originX;
     const aligned_double_ptr sampler_originY;
     const aligned_double_ptr sampler_originZ;
@@ -323,7 +323,7 @@ math_noise_perlin_double_octave_sample_impl(const double_octave_sampler_data_t *
     for (uint32_t i = 0; i < data->length; i++) {
         const double e = data->lacunarity_powd[i];
         const double f = data->persistence_powd[i];
-        const aligned_uint8_ptr permutations = data->sampler_permutations + 256 * i;
+        const aligned_uint32_ptr permutations = data->sampler_permutations + 256 * i;
         const double sampleX = data->need_shift[i] ? x * 1.0181268882175227 : x;
         const double sampleY = data->need_shift[i] ? y * 1.0181268882175227 : y;
         const double sampleZ = data->need_shift[i] ? z * 1.0181268882175227 : z;
@@ -360,7 +360,7 @@ math_noise_perlin_double_octave_sample(const double_octave_sampler_data_t *const
 }
 
 typedef const struct interpolated_noise_sub_sampler {
-    const aligned_uint8_ptr sampler_permutations;
+    const aligned_uint32_ptr sampler_permutations;
     const aligned_double_ptr sampler_originX;
     const aligned_double_ptr sampler_originY;
     const aligned_double_ptr sampler_originZ;

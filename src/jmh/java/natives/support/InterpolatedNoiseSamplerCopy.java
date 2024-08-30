@@ -10,6 +10,7 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import com.ishland.c2me.opts.natives_math.common.BindingsTemplate;
+import com.ishland.c2me.opts.natives_math.common.util.MemoryUtil;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.noise.OctavePerlinNoiseSampler;
 import net.minecraft.util.math.noise.PerlinNoiseSampler;
@@ -40,7 +41,7 @@ public class InterpolatedNoiseSamplerCopy {
         System.out.println(String.format("normal: %d", IntStream.range(0, 8).mapToObj(interpolated.interpolationNoise::getOctave).filter(Objects::nonNull).count()));
 
         {
-            final MemorySegment sampler_permutations = arena.allocate(16 * 256L, 64);
+            final MemorySegment sampler_permutations = arena.allocate(16 * 256L * 4L, 64);
             final MemorySegment sampler_originX = arena.allocate(16 * 8L, 64);
             final MemorySegment sampler_originY = arena.allocate(16 * 8L, 64);
             final MemorySegment sampler_originZ = arena.allocate(16 * 8L, 64);
@@ -50,7 +51,7 @@ public class InterpolatedNoiseSamplerCopy {
             for (int i = 0; i < 16; i++) {
                 PerlinNoiseSampler sampler = interpolated.lowerInterpolatedNoise.getOctave(i);
                 if (sampler != null) {
-                    MemorySegment.copy(MemorySegment.ofArray((byte[]) ReflectUtils.getField(PerlinNoiseSampler.class, sampler, "permutation")), 0, sampler_permutations, index * 256L, 256);
+                    MemorySegment.copy(MemorySegment.ofArray(MemoryUtil.byte2int((byte[]) ReflectUtils.getField(PerlinNoiseSampler.class, sampler, "permutation"))), 0, sampler_permutations, index * 256L * 4L, 256 * 4);
                     sampler_originX.set(ValueLayout.JAVA_DOUBLE, index * 8L, sampler.originX);
                     sampler_originY.set(ValueLayout.JAVA_DOUBLE, index * 8L, sampler.originY);
                     sampler_originZ.set(ValueLayout.JAVA_DOUBLE, index * 8L, sampler.originZ);
@@ -68,7 +69,7 @@ public class InterpolatedNoiseSamplerCopy {
         }
 
         {
-            final MemorySegment sampler_permutations = arena.allocate(16 * 256L, 64);
+            final MemorySegment sampler_permutations = arena.allocate(16 * 256L * 4L, 64);
             final MemorySegment sampler_originX = arena.allocate(16 * 8L, 64);
             final MemorySegment sampler_originY = arena.allocate(16 * 8L, 64);
             final MemorySegment sampler_originZ = arena.allocate(16 * 8L, 64);
@@ -78,7 +79,7 @@ public class InterpolatedNoiseSamplerCopy {
             for (int i = 0; i < 16; i++) {
                 PerlinNoiseSampler sampler = interpolated.upperInterpolatedNoise.getOctave(i);
                 if (sampler != null) {
-                    MemorySegment.copy(MemorySegment.ofArray((byte[]) ReflectUtils.getField(PerlinNoiseSampler.class, sampler, "permutation")), 0, sampler_permutations, index * 256L, 256);
+                    MemorySegment.copy(MemorySegment.ofArray(MemoryUtil.byte2int((byte[]) ReflectUtils.getField(PerlinNoiseSampler.class, sampler, "permutation"))), 0, sampler_permutations, index * 256L * 4L, 256 * 4);
                     sampler_originX.set(ValueLayout.JAVA_DOUBLE, index * 8L, sampler.originX);
                     sampler_originY.set(ValueLayout.JAVA_DOUBLE, index * 8L, sampler.originY);
                     sampler_originZ.set(ValueLayout.JAVA_DOUBLE, index * 8L, sampler.originZ);
@@ -97,7 +98,7 @@ public class InterpolatedNoiseSamplerCopy {
 
 
         {
-            final MemorySegment sampler_permutations = arena.allocate(8 * 256L, 64);
+            final MemorySegment sampler_permutations = arena.allocate(8 * 256L * 4L, 64);
             final MemorySegment sampler_originX = arena.allocate(8 * 8L, 64);
             final MemorySegment sampler_originY = arena.allocate(8 * 8L, 64);
             final MemorySegment sampler_originZ = arena.allocate(8 * 8L, 64);
@@ -107,7 +108,7 @@ public class InterpolatedNoiseSamplerCopy {
             for (int i = 0; i < 8; i++) {
                 PerlinNoiseSampler sampler = interpolated.interpolationNoise.getOctave(i);
                 if (sampler != null) {
-                    MemorySegment.copy(MemorySegment.ofArray((byte[]) ReflectUtils.getField(PerlinNoiseSampler.class, sampler, "permutation")), 0, sampler_permutations, index * 256L, 256);
+                    MemorySegment.copy(MemorySegment.ofArray((MemoryUtil.byte2int((byte[]) ReflectUtils.getField(PerlinNoiseSampler.class, sampler, "permutation")))), 0, sampler_permutations, index * 256L * 4L, 256 * 4L);
                     sampler_originX.set(ValueLayout.JAVA_DOUBLE, index * 8L, sampler.originX);
                     sampler_originY.set(ValueLayout.JAVA_DOUBLE, index * 8L, sampler.originY);
                     sampler_originZ.set(ValueLayout.JAVA_DOUBLE, index * 8L, sampler.originZ);

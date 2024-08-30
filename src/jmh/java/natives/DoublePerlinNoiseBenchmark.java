@@ -1,6 +1,7 @@
 package natives;
 
 import com.ishland.c2me.opts.natives_math.common.BindingsTemplate;
+import com.ishland.c2me.opts.natives_math.common.util.MemoryUtil;
 import it.unimi.dsi.fastutil.doubles.DoubleList;
 import natives.support.ReflectUtils;
 import net.minecraft.util.math.noise.DoublePerlinNoiseSampler;
@@ -45,7 +46,7 @@ public class DoublePerlinNoiseBenchmark extends Base_x86_64 {
         final MemorySegment need_shift = arena.allocate(nonNullSamplerCount, 64);
         final MemorySegment lacunarity_powd = arena.allocate(nonNullSamplerCount * 8, 64);
         final MemorySegment persistence_powd = arena.allocate(nonNullSamplerCount * 8, 64);
-        final MemorySegment sampler_permutations = arena.allocate(nonNullSamplerCount * 256, 64);
+        final MemorySegment sampler_permutations = arena.allocate(nonNullSamplerCount * 256 * 4, 64);
         final MemorySegment sampler_originX = arena.allocate(nonNullSamplerCount * 8, 64);
         final MemorySegment sampler_originY = arena.allocate(nonNullSamplerCount * 8, 64);
         final MemorySegment sampler_originZ = arena.allocate(nonNullSamplerCount * 8, 64);
@@ -69,7 +70,7 @@ public class DoublePerlinNoiseBenchmark extends Base_x86_64 {
                     need_shift.set(ValueLayout.JAVA_BOOLEAN, index, false);
                     lacunarity_powd.set(ValueLayout.JAVA_DOUBLE, index * 8, (double) ReflectUtils.getField(OctavePerlinNoiseSampler.class, firstSampler, "lacunarity") * Math.pow(2.0, i));
                     persistence_powd.set(ValueLayout.JAVA_DOUBLE, index * 8, (double) ReflectUtils.getField(OctavePerlinNoiseSampler.class, firstSampler, "persistence") * Math.pow(2.0, -i));
-                    MemorySegment.copy(MemorySegment.ofArray((byte[]) ReflectUtils.getField(PerlinNoiseSampler.class, sampler, "permutation")), 0, sampler_permutations, index * 256L, 256);
+                    MemorySegment.copy(MemorySegment.ofArray(MemoryUtil.byte2int((byte[]) ReflectUtils.getField(PerlinNoiseSampler.class, sampler, "permutation"))), 0, sampler_permutations, index * 256L * 4L, 256 * 4);
                     sampler_originX.set(ValueLayout.JAVA_DOUBLE, index * 8, sampler.originX);
                     sampler_originY.set(ValueLayout.JAVA_DOUBLE, index * 8, sampler.originY);
                     sampler_originZ.set(ValueLayout.JAVA_DOUBLE, index * 8, sampler.originZ);
@@ -86,7 +87,7 @@ public class DoublePerlinNoiseBenchmark extends Base_x86_64 {
                     need_shift.set(ValueLayout.JAVA_BOOLEAN, index, true);
                     lacunarity_powd.set(ValueLayout.JAVA_DOUBLE, index * 8, (double) ReflectUtils.getField(OctavePerlinNoiseSampler.class, secondSampler, "lacunarity") * Math.pow(2.0, i));
                     persistence_powd.set(ValueLayout.JAVA_DOUBLE, index * 8, (double) ReflectUtils.getField(OctavePerlinNoiseSampler.class, secondSampler, "persistence") * Math.pow(2.0, -i));
-                    MemorySegment.copy(MemorySegment.ofArray((byte[]) ReflectUtils.getField(PerlinNoiseSampler.class, sampler, "permutation")), 0, sampler_permutations, index * 256L, 256);
+                    MemorySegment.copy(MemorySegment.ofArray(MemoryUtil.byte2int((byte[]) ReflectUtils.getField(PerlinNoiseSampler.class, sampler, "permutation"))), 0, sampler_permutations, index * 256L * 4L, 256 * 4);
                     sampler_originX.set(ValueLayout.JAVA_DOUBLE, index * 8, sampler.originX);
                     sampler_originY.set(ValueLayout.JAVA_DOUBLE, index * 8, sampler.originY);
                     sampler_originZ.set(ValueLayout.JAVA_DOUBLE, index * 8, sampler.originZ);

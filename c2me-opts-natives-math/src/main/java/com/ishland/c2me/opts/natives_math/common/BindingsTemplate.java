@@ -3,6 +3,7 @@ package com.ishland.c2me.opts.natives_math.common;
 import com.ishland.c2me.base.mixin.access.IInterpolatedNoiseSampler;
 import com.ishland.c2me.base.mixin.access.IOctavePerlinNoiseSampler;
 import com.ishland.c2me.base.mixin.access.IPerlinNoiseSampler;
+import com.ishland.c2me.opts.natives_math.common.util.MemoryUtil;
 import net.minecraft.util.math.noise.InterpolatedNoiseSampler;
 import net.minecraft.util.math.noise.OctavePerlinNoiseSampler;
 import net.minecraft.util.math.noise.PerlinNoiseSampler;
@@ -93,7 +94,7 @@ public class BindingsTemplate {
         final MemorySegment need_shift = arena.allocate(nonNullSamplerCount, 64);
         final MemorySegment lacunarity_powd = arena.allocate(nonNullSamplerCount * 8, 64);
         final MemorySegment persistence_powd = arena.allocate(nonNullSamplerCount * 8, 64);
-        final MemorySegment sampler_permutations = arena.allocate(nonNullSamplerCount * 256, 64);
+        final MemorySegment sampler_permutations = arena.allocate(nonNullSamplerCount * 256 * 4, 64);
         final MemorySegment sampler_originX = arena.allocate(nonNullSamplerCount * 8, 64);
         final MemorySegment sampler_originY = arena.allocate(nonNullSamplerCount * 8, 64);
         final MemorySegment sampler_originZ = arena.allocate(nonNullSamplerCount * 8, 64);
@@ -117,7 +118,7 @@ public class BindingsTemplate {
                     need_shift.set(ValueLayout.JAVA_BOOLEAN, index, false);
                     lacunarity_powd.set(ValueLayout.JAVA_DOUBLE, index * 8, ((IOctavePerlinNoiseSampler) firstSampler).getLacunarity() * Math.pow(2.0, i));
                     persistence_powd.set(ValueLayout.JAVA_DOUBLE, index * 8, ((IOctavePerlinNoiseSampler) firstSampler).getPersistence() * Math.pow(2.0, -i));
-                    MemorySegment.copy(MemorySegment.ofArray(((IPerlinNoiseSampler) (Object) sampler).getPermutation()), 0, sampler_permutations, index * 256L, 256);
+                    MemorySegment.copy(MemorySegment.ofArray(MemoryUtil.byte2int(((IPerlinNoiseSampler) (Object) sampler).getPermutation())), 0, sampler_permutations, index * 256L * 4L, 256 * 4);
                     sampler_originX.set(ValueLayout.JAVA_DOUBLE, index * 8, sampler.originX);
                     sampler_originY.set(ValueLayout.JAVA_DOUBLE, index * 8, sampler.originY);
                     sampler_originZ.set(ValueLayout.JAVA_DOUBLE, index * 8, sampler.originZ);
@@ -134,7 +135,7 @@ public class BindingsTemplate {
                     need_shift.set(ValueLayout.JAVA_BOOLEAN, index, true);
                     lacunarity_powd.set(ValueLayout.JAVA_DOUBLE, index * 8, ((IOctavePerlinNoiseSampler) secondSampler).getLacunarity() * Math.pow(2.0, i));
                     persistence_powd.set(ValueLayout.JAVA_DOUBLE, index * 8, ((IOctavePerlinNoiseSampler) secondSampler).getPersistence() * Math.pow(2.0, -i));
-                    MemorySegment.copy(MemorySegment.ofArray(((IPerlinNoiseSampler) (Object) sampler).getPermutation()), 0, sampler_permutations, index * 256L, 256);
+                    MemorySegment.copy(MemorySegment.ofArray(MemoryUtil.byte2int(((IPerlinNoiseSampler) (Object) sampler).getPermutation())), 0, sampler_permutations, index * 256L * 4L, 256 * 4);
                     sampler_originX.set(ValueLayout.JAVA_DOUBLE, index * 8, sampler.originX);
                     sampler_originY.set(ValueLayout.JAVA_DOUBLE, index * 8, sampler.originY);
                     sampler_originZ.set(ValueLayout.JAVA_DOUBLE, index * 8, sampler.originZ);
@@ -266,7 +267,7 @@ public class BindingsTemplate {
 //        }
 
         {
-            final MemorySegment sampler_permutations = arena.allocate(16 * 256L, 64);
+            final MemorySegment sampler_permutations = arena.allocate(16 * 256L * 4L, 64);
             final MemorySegment sampler_originX = arena.allocate(16 * 8L, 64);
             final MemorySegment sampler_originY = arena.allocate(16 * 8L, 64);
             final MemorySegment sampler_originZ = arena.allocate(16 * 8L, 64);
@@ -276,7 +277,7 @@ public class BindingsTemplate {
             for (int i = 0; i < 16; i++) {
                 PerlinNoiseSampler sampler = ((IInterpolatedNoiseSampler) interpolated).getLowerInterpolatedNoise().getOctave(i);
                 if (sampler != null) {
-                    MemorySegment.copy(MemorySegment.ofArray(((IPerlinNoiseSampler) (Object) sampler).getPermutation()), 0, sampler_permutations, index * 256L, 256);
+                    MemorySegment.copy(MemorySegment.ofArray(MemoryUtil.byte2int(((IPerlinNoiseSampler) (Object) sampler).getPermutation())), 0, sampler_permutations, index * 256L * 4L, 256 * 4);
                     sampler_originX.set(ValueLayout.JAVA_DOUBLE, index * 8L, sampler.originX);
                     sampler_originY.set(ValueLayout.JAVA_DOUBLE, index * 8L, sampler.originY);
                     sampler_originZ.set(ValueLayout.JAVA_DOUBLE, index * 8L, sampler.originZ);
@@ -294,7 +295,7 @@ public class BindingsTemplate {
         }
 
         {
-            final MemorySegment sampler_permutations = arena.allocate(16 * 256L, 64);
+            final MemorySegment sampler_permutations = arena.allocate(16 * 256L * 4L, 64);
             final MemorySegment sampler_originX = arena.allocate(16 * 8L, 64);
             final MemorySegment sampler_originY = arena.allocate(16 * 8L, 64);
             final MemorySegment sampler_originZ = arena.allocate(16 * 8L, 64);
@@ -304,7 +305,7 @@ public class BindingsTemplate {
             for (int i = 0; i < 16; i++) {
                 PerlinNoiseSampler sampler = ((IInterpolatedNoiseSampler) interpolated).getUpperInterpolatedNoise().getOctave(i);
                 if (sampler != null) {
-                    MemorySegment.copy(MemorySegment.ofArray(((IPerlinNoiseSampler) (Object) sampler).getPermutation()), 0, sampler_permutations, index * 256L, 256);
+                    MemorySegment.copy(MemorySegment.ofArray(MemoryUtil.byte2int(((IPerlinNoiseSampler) (Object) sampler).getPermutation())), 0, sampler_permutations, index * 256L * 4L, 256 * 4);
                     sampler_originX.set(ValueLayout.JAVA_DOUBLE, index * 8L, sampler.originX);
                     sampler_originY.set(ValueLayout.JAVA_DOUBLE, index * 8L, sampler.originY);
                     sampler_originZ.set(ValueLayout.JAVA_DOUBLE, index * 8L, sampler.originZ);
@@ -323,7 +324,7 @@ public class BindingsTemplate {
 
 
         {
-            final MemorySegment sampler_permutations = arena.allocate(8 * 256L, 64);
+            final MemorySegment sampler_permutations = arena.allocate(8 * 256L * 4L, 64);
             final MemorySegment sampler_originX = arena.allocate(8 * 8L, 64);
             final MemorySegment sampler_originY = arena.allocate(8 * 8L, 64);
             final MemorySegment sampler_originZ = arena.allocate(8 * 8L, 64);
@@ -333,7 +334,7 @@ public class BindingsTemplate {
             for (int i = 0; i < 8; i++) {
                 PerlinNoiseSampler sampler = ((IInterpolatedNoiseSampler) interpolated).getInterpolationNoise().getOctave(i);
                 if (sampler != null) {
-                    MemorySegment.copy(MemorySegment.ofArray(((IPerlinNoiseSampler) (Object) sampler).getPermutation()), 0, sampler_permutations, index * 256L, 256);
+                    MemorySegment.copy(MemorySegment.ofArray(MemoryUtil.byte2int(((IPerlinNoiseSampler) (Object) sampler).getPermutation())), 0, sampler_permutations, index * 256L * 4L, 256 * 4);
                     sampler_originX.set(ValueLayout.JAVA_DOUBLE, index * 8L, sampler.originX);
                     sampler_originY.set(ValueLayout.JAVA_DOUBLE, index * 8L, sampler.originY);
                     sampler_originZ.set(ValueLayout.JAVA_DOUBLE, index * 8L, sampler.originZ);
