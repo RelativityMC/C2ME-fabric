@@ -1,6 +1,8 @@
 package com.ishland.c2me.opts.natives_math.common;
 
 import io.netty.util.internal.SystemPropertyUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -11,6 +13,8 @@ import java.nio.file.StandardCopyOption;
 import java.util.Locale;
 
 public class NativeLoader {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(NativeLoader.class);
 
     public static final String NORMALIZED_ARCH = normalizeArch(SystemPropertyUtil.get("os.arch", ""));
     public static final String NORMALIZED_OS = normalizeOs(SystemPropertyUtil.get("os.name", ""));
@@ -34,7 +38,7 @@ public class NativeLoader {
                 ISATarget target = (ISATarget) ISATarget.getInstance().getEnumConstants()[level];
                 while (!target.isNativelySupported()) target = (ISATarget) ISATarget.getInstance().getEnumConstants()[target.ordinal() - 1];
                 currentMachineTarget = target;
-                System.out.println(String.format("Detected maximum supported ISA target: %s", currentMachineTarget));
+                LOGGER.info("Detected maximum supported ISA target: {}", currentMachineTarget);
             } catch (Throwable e) {
                 throw new RuntimeException(e);
             }
@@ -65,7 +69,7 @@ public class NativeLoader {
             Files.copy(in, tempFile, StandardCopyOption.REPLACE_EXISTING);
             return SymbolLookup.libraryLookup(tempFile, arena);
         } catch (Throwable e) {
-            e.printStackTrace();
+            LOGGER.warn("Failed to load native library", e);
             return null;
         }
     }
