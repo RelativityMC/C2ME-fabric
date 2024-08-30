@@ -31,6 +31,7 @@ public class NativeLoader {
             currentMachineTarget = null;
         } else {
             try {
+                LOGGER.info("Attempting to call native library. If your game crashes right after this point, native acceleration may not be available for your system.");
                 int level = (int) linker.downcallHandle(
                         lookup.find("c2me_natives_get_system_isa").get(),
                         FunctionDescriptor.of(ValueLayout.JAVA_INT)
