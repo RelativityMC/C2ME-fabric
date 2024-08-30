@@ -19,7 +19,7 @@ add_library(c2me-opts-natives-math SHARED
 )
 
 if(CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)|(amd64)|(AMD64)")
-    set_source_files_properties(exports_x86_64_nogather.c PROPERTIES COMPILE_FLAGS -mno-gather)
+    set_source_files_properties(exports_x86_64_nogather.c PROPERTIES COMPILE_FLAGS "-mno-gather -mno-scatter")
 endif()
 
 target_include_directories(c2me-opts-natives-math PRIVATE includes/)

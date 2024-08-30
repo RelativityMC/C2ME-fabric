@@ -424,7 +424,7 @@ math_noise_perlin_interpolated_sample(const interpolated_noise_sampler_t *const 
 
     if (!bl2) {
         double ls[data->lower.length];
-#pragma clang loop vectorize(enable)
+#pragma clang loop vectorize(enable) interleave_count(2)
         for (uint32_t offset = 0; offset < data->lower.length; offset++) {
             ls[offset] = math_noise_perlin_sample(
                     data->lower.sampler_permutations + 256 * offset,
@@ -446,7 +446,7 @@ math_noise_perlin_interpolated_sample(const interpolated_noise_sampler_t *const 
 
     if (!bl3) {
         double ms[data->upper.length];
-#pragma clang loop vectorize(enable)
+#pragma clang loop vectorize(enable) interleave_count(2)
         for (uint32_t offset = 0; offset < data->upper.length; offset++) {
             ms[offset] = math_noise_perlin_sample(
                     data->upper.sampler_permutations + 256 * offset,

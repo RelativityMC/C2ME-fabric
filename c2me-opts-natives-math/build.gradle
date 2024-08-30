@@ -45,7 +45,7 @@ tasks.withType(com.github.tomtzook.gcmake.tasks.CmakeBuildTask).configureEach {
 }
 tasks.withType(com.github.tomtzook.gcmake.tasks.MakeBuildTask).configureEach {
     it.inputs.dir(project.layout.projectDirectory.dir('src/c'))
-    it.args.add("-j${Runtime.getRuntime().availableProcessors()}")
+    it.args = [ "-j${Runtime.getRuntime().availableProcessors()}" ]
 }
 
 clean.dependsOn tasks.cmakeClean
