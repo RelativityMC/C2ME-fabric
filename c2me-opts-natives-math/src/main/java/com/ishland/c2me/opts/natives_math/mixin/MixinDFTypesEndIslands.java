@@ -49,12 +49,7 @@ public abstract class MixinDFTypesEndIslands {
     @Overwrite
     public double sample(DensityFunction.NoisePos pos) {
         if (this.c2me$samplerDataPtr != 0L) {
-            double v = ((double) Bindings.c2me_natives_end_islands_sample(this.c2me$samplerDataPtr, pos.blockX() / 8, pos.blockZ() / 8) - 8.0) / 128.0;
-            double vanilla = ((double)sample(this.sampler, pos.blockX() / 8, pos.blockZ() / 8) - 8.0) / 128.0;
-//            if (v != vanilla) {
-//                System.out.println(String.format("%f %f", v, vanilla));
-//            }
-            return v;
+            return ((double) Bindings.c2me_natives_end_islands_sample(this.c2me$samplerDataPtr, pos.blockX() / 8, pos.blockZ() / 8) - 8.0) / 128.0;
         } else {
             return ((double)sample(this.sampler, pos.blockX() / 8, pos.blockZ() / 8) - 8.0) / 128.0;
         }
