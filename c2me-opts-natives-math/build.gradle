@@ -27,7 +27,7 @@ def addTarget(String target, String outputName, String packagedName) {
 
 addTarget("linux-x86_64", "libc2me-opts-natives-math.so")
 addTarget("linux-aarch_64", "libc2me-opts-natives-math.so")
-addTarget("darwin-x86_64", "libc2me-opts-natives-math.dylib")
+//addTarget("darwin-x86_64", "libc2me-opts-natives-math.dylib")
 addTarget("windows-x86_64", "libc2me-opts-natives-math.dll", "c2me-opts-natives-math.dll")
 
 cmake {
