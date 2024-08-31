@@ -5,8 +5,6 @@ set(CMAKE_TRY_COMPILE_TARGET_TYPE "STATIC_LIBRARY")
 project(c2me-opts-natives-math C)
 
 set(CMAKE_C_STANDARD 11)
-set(CMAKE_C_COMPILER clang)
-set(CMAKE_CXX_COMPILER clang++)
 
 SET(CMAKE_C_FLAGS_RELWITHDEBINFO "-O3 -g")
 
@@ -23,5 +21,5 @@ if(CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)|(amd64)|(AMD64)")
 endif()
 
 target_include_directories(c2me-opts-natives-math PRIVATE includes/)
-target_compile_options(c2me-opts-natives-math PRIVATE $<$<COMPILE_LANGUAGE:C>:-Wall -Wextra -Wpedantic -ffreestanding -fno-math-errno -mprefer-vector-width=512 -ffp-contract=off -Rpass-analysis=loop-vectorize -mno-stack-arg-probe -fsave-optimization-record "SHELL:-mllvm -polly" "SHELL:-mllvm -polly-vectorizer=stripmine" "SHELL:-mllvm -extra-vectorizer-passes" "SHELL:-mllvm -slp-vectorize-hor-store" "SHELL:-mllvm -slp-min-tree-size=1" "SHELL:-mllvm -slp-min-reg-size=64" "SHELL:-mllvm -slp-threshold=-1" "SHELL:-mllvm -enable-epilogue-vectorization">)
+target_compile_options(c2me-opts-natives-math PRIVATE $<$<COMPILE_LANGUAGE:C>:-Wall -Wextra -Wpedantic -ffreestanding -ffile-prefix-map=${CMAKE_SOURCE_DIR}=. -fno-math-errno -mprefer-vector-width=512 -ffp-contract=off -Rpass-analysis=loop-vectorize -mno-stack-arg-probe -fsave-optimization-record "SHELL:-mllvm -polly" "SHELL:-mllvm -polly-vectorizer=stripmine" "SHELL:-mllvm -extra-vectorizer-passes" "SHELL:-mllvm -slp-vectorize-hor-store" "SHELL:-mllvm -slp-min-tree-size=1" "SHELL:-mllvm -slp-min-reg-size=64" "SHELL:-mllvm -slp-threshold=-1" "SHELL:-mllvm -enable-epilogue-vectorization">)
 target_link_options(c2me-opts-natives-math PRIVATE -nostdlib -fuse-ld=lld)
