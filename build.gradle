@@ -1,10 +1,11 @@
 plugins {
     id 'java-library'
     id 'fabric-loom' version '1.7-SNAPSHOT' apply false
-    id "me.champeau.jmh" version "0.7.1"
+    id "me.champeau.jmh" version "0.7.2"
     id 'com.modrinth.minotaur' version '2.+' apply false
     id 'com.matthewprenger.cursegradle' version '1.4.0' apply false
     id 'com.gradleup.shadow' version '8.3.0' apply false
+    id 'io.github.tomtzook.gradle-cmake' version '1.2.2' apply false
 }
 
 @SuppressWarnings('unused')
@@ -254,6 +255,11 @@ String getVersionSuffix() {
     }
     def split = stdout.split('-')
     return split[split.length - 2] + suffix
+}
+
+compileJmhJava {
+    sourceCompatibility = JavaVersion.VERSION_22
+    targetCompatibility = JavaVersion.VERSION_22
 }
 
 jmh {

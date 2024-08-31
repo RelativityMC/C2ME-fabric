@@ -23,9 +23,17 @@ jobs:
       uses: actions/setup-java@v2
       with:
         distribution: 'zulu'
-        java-version: 21
+        java-version: 22
         java-package: jdk
-        
+
+    - name: Install LLVM
+      uses: KyleMayes/install-llvm-action@v2
+      with:
+        version: "18.1.8"
+
+    - name: Install MinGW and other required dependencies
+      run: sudo apt install mingw-w64 libtinfo5 crossbuild-essential-arm64
+
     - uses: actions/cache@v4
       with:
         path: |
