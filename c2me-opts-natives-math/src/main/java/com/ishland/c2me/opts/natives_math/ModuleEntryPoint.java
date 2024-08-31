@@ -32,7 +32,7 @@ public class ModuleEntryPoint {
                 t.printStackTrace();
             }
         }
-        enabled = false;
+        enabled = actuallyEnabled;
     }
 
 }
