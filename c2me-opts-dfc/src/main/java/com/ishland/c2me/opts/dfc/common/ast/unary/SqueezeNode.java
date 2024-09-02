@@ -26,7 +26,7 @@ public class SqueezeNode extends AbstractUnaryNode {
         this.operand.evalMulti(res, x, y, z, type);
         for (int i = 0; i < res.length; i++) {
             double v = MathHelper.clamp(res[i], -1.0, 1.0);
-            res[i] *= v / 2.0 - v * v * v / 24.0;
+            res[i] = v / 2.0 - v * v * v / 24.0;
         }
     }
 

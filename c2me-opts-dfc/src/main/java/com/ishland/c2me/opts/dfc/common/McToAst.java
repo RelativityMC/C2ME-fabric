@@ -26,9 +26,9 @@ public class McToAst {
         Objects.requireNonNull(df);
         return switch (df) {
             case ChunkNoiseSampler.BlendAlphaDensityFunction f -> new ConstantNode(1.0);
-            case ChunkNoiseSampler.BlendOffsetDensityFunction f -> new ConstantNode(1.0);
+            case ChunkNoiseSampler.BlendOffsetDensityFunction f -> new ConstantNode(0.0);
             case DensityFunctionTypes.BlendAlpha f -> new ConstantNode(1.0);
-            case DensityFunctionTypes.BlendOffset f -> new ConstantNode(1.0);
+            case DensityFunctionTypes.BlendOffset f -> new ConstantNode(0.0);
             case DensityFunctionTypes.BinaryOperationLike f -> switch (f.type()) {
                 case ADD -> new AddNode(toAst(f.argument1()), toAst(f.argument2()));
                 case MUL -> new MulNode(toAst(f.argument1()), toAst(f.argument2()));
