@@ -32,66 +32,74 @@ public class RangeChoiceNode implements AstNode {
     public void evalMulti(double[] res, int[] x, int[] y, int[] z, EvalType type) {
         this.input.evalMulti(res, x, y, z, type);
 
-        for (int i = 0; i < res.length; i ++) {
-            double v = res[i];
-            if (v >= this.minInclusive && v < this.maxExclusive) {
-                res[i] = this.whenInRange.evalSingle(x[i], y[i], z[i], type);
-            } else {
-                res[i] = this.whenOutOfRange.evalSingle(x[i], y[i], z[i], type);
-            }
-        }
-
-//        int numInRange = 0;
-//        for (int i = 0; i < x.length; i++) {
+//        for (int i = 0; i < res.length; i ++) {
 //            double v = res[i];
 //            if (v >= this.minInclusive && v < this.maxExclusive) {
-//                numInRange++;
+//                res[i] = this.whenInRange.evalSingle(x[i], y[i], z[i], type);
+//            } else {
+//                res[i] = this.whenOutOfRange.evalSingle(x[i], y[i], z[i], type);
 //            }
 //        }
-//        int numOutOfRange = res.length - numInRange;
-//
-//        if (numInRange == 0) {
-//            this.whenOutOfRange.evalMulti(res, x, y, z);
-//        } else if (numInRange == res.length) {
-//            this.whenInRange.evalMulti(res, x, y, z);
-//        } else {
-//            int idx1 = 0;
-//            int[] i1 = new int[numInRange];
-//            double[] res1 = new double[numInRange];
-//            int[] x1 = new int[numInRange];
-//            int[] y1 = new int[numInRange];
-//            int[] z1 = new int[numInRange];
-//            int idx2 = 0;
-//            int[] i2 = new int[numOutOfRange];
-//            double[] res2 = new double[numOutOfRange];
-//            int[] x2 = new int[numOutOfRange];
-//            int[] y2 = new int[numOutOfRange];
-//            int[] z2 = new int[numOutOfRange];
-//            for (int i = 0; i < res.length; i++) {
-//                double v = res[i];
-//                if (v >= this.minInclusive && v < this.maxExclusive) {
-//                    int index = idx1++;
-//                    i1[index] = i;
-//                    x1[index] = x[i];
-//                    y1[index] = y[i];
-//                    z1[index] = z[i];
-//                } else {
-//                    int index = idx2++;
-//                    i2[index] = i;
-//                    x2[index] = x[i];
-//                    y2[index] = y[i];
-//                    z2[index] = z[i];
-//                }
-//            }
-//            this.whenInRange.evalMulti(res1, x1, y1, z1);
-//            this.whenOutOfRange.evalMulti(res2, x2, y2, z2);
-//            for (int i = 0; i < numInRange; i++) {
-//                res[i1[i]] = res1[i];
-//            }
-//            for (int i = 0; i < numOutOfRange; i++) {
-//                res2[i2[i]] = res2[i];
-//            }
-//        }
+
+        int numInRange = 0;
+        for (int i = 0; i < x.length; i++) {
+            double v = res[i];
+            if (v >= this.minInclusive && v < this.maxExclusive) {
+                numInRange++;
+            }
+        }
+        int numOutOfRange = res.length - numInRange;
+
+        if (numInRange == 0) {
+            evalChildMulti(this.whenOutOfRange, res, x, y, z, type);
+        } else if (numInRange == res.length) {
+            evalChildMulti(this.whenInRange, res, x, y, z, type);
+        } else {
+            int idx1 = 0;
+            int[] i1 = new int[numInRange];
+            double[] res1 = new double[numInRange];
+            int[] x1 = new int[numInRange];
+            int[] y1 = new int[numInRange];
+            int[] z1 = new int[numInRange];
+            int idx2 = 0;
+            int[] i2 = new int[numOutOfRange];
+            double[] res2 = new double[numOutOfRange];
+            int[] x2 = new int[numOutOfRange];
+            int[] y2 = new int[numOutOfRange];
+            int[] z2 = new int[numOutOfRange];
+            for (int i = 0; i < res.length; i++) {
+                double v = res[i];
+                if (v >= this.minInclusive && v < this.maxExclusive) {
+                    int index = idx1++;
+                    i1[index] = i;
+                    x1[index] = x[i];
+                    y1[index] = y[i];
+                    z1[index] = z[i];
+                } else {
+                    int index = idx2++;
+                    i2[index] = i;
+                    x2[index] = x[i];
+                    y2[index] = y[i];
+                    z2[index] = z[i];
+                }
+            }
+            evalChildMulti(this.whenInRange, res1, x1, y1, z1, type);
+            evalChildMulti(this.whenOutOfRange, res2, x2, y2, z2, type);
+            for (int i = 0; i < numInRange; i++) {
+                res[i1[i]] = res1[i];
+            }
+            for (int i = 0; i < numOutOfRange; i++) {
+                res[i2[i]] = res2[i];
+            }
+        }
+    }
+
+    private void evalChildMulti(AstNode child, double[] res, int[] x, int[] y, int[] z, EvalType type) {
+        if (res.length == 1) {
+            res[0] = child.evalSingle(x[0], y[0], z[0], type);
+        } else {
+            child.evalMulti(res, x, y, z, type);
+        }
     }
 
     @Override

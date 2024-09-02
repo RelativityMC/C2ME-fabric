@@ -62,10 +62,10 @@ public class MixinChunkNoiseSamplerCacheOnce {
                 System.arraycopy(c2me$lastValuea, 0, densities, 0, c2me$lastValuea.length);
             } else {
                 this.delegate.fill(densities, applier);
-                this.c2me$lastValuea = Arrays.copyOf(densities, c2me$lastValuea.length);
-                this.c2me$lastXa = Arrays.copyOf(ap.getX(), c2me$lastXa.length);
-                this.c2me$lastYa = Arrays.copyOf(ap.getY(), c2me$lastYa.length);
-                this.c2me$lastZa = Arrays.copyOf(ap.getY(), c2me$lastZa.length);
+                this.c2me$lastValuea = Arrays.copyOf(densities, densities.length);
+                this.c2me$lastXa = ap.getX();
+                this.c2me$lastYa = ap.getY();
+                this.c2me$lastZa = ap.getZ();
             }
             return;
         }
