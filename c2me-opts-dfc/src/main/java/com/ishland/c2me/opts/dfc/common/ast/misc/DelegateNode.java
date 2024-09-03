@@ -24,6 +24,10 @@ public class DelegateNode implements AstNode {
 
     @Override
     public void evalMulti(double[] res, int[] x, int[] y, int[] z, EvalType type) {
+        if (res.length == 1) {
+            res[0] = this.evalSingle(x[0], y[0], z[0], type);
+            return;
+        }
         densityFunction.fill(res, new EachApplierVanillaInterface(x, y, z, type));
     }
 

@@ -18,7 +18,7 @@ public class DoublePerlinNoiseAccuracy extends AbstractAccuracy {
     private final long nativeSamplerPtr;
 
     protected DoublePerlinNoiseAccuracy() {
-        super(Arrays.stream(ISATarget.getInstance().getEnumConstants()).toArray(ISATarget[]::new), BindingsTemplate.c2me_natives_noise_perlin_double_octave_sample_ptr, "c2me_natives_noise_perlin_double_octave_sample");
+        super(Arrays.stream(ISATarget.getInstance().getEnumConstants()).toArray(ISATarget[]::new), BindingsTemplate.c2me_natives_noise_perlin_double_ptr, "c2me_natives_noise_perlin_double");
         final net.minecraft.util.math.random.Random minecraftRandom = net.minecraft.util.math.random.Random.create(0xcafe);
         double[] octaves = new double[16];
         for (int i = 0, octavesLength = octaves.length; i < octavesLength; i++) {

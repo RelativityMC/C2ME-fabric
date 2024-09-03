@@ -7,6 +7,10 @@
     "MixinBiomeAccess",
     "MixinDFTypesEndIslands",
     "MixinDoublePerlinNoiseSampler",
-    "MixinInterpolatedNoiseSampler"
+    "MixinInterpolatedNoiseSampler",
+    "df.MixinDFTNoise",
+    "df.MixinDFTShift",
+    "df.MixinDFTShiftA",
+    "df.MixinDFTShiftB"
   ]
 }

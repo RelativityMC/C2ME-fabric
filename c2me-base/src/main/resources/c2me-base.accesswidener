@@ -46,6 +46,7 @@ accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTy
 accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$Positional
 accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$RangeChoice
 accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$WeirdScaledSampler
+accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$Offset
 accessible    class    net/minecraft/world/gen/chunk/ChunkNoiseSampler$FlatCache
 accessible    class    net/minecraft/world/gen/chunk/ChunkNoiseSampler$Cache2D
 accessible    class    net/minecraft/world/gen/chunk/ChunkNoiseSampler$CacheOnce
