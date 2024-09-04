@@ -1,22 +1,23 @@
-package com.ishland.c2me.opts.dfc.common.vif;
+package com.ishland.c2me.opts.dfc.common.gen;
 
-import com.ishland.c2me.opts.dfc.common.ast.AstNode;
 import com.ishland.c2me.opts.dfc.common.ast.EvalType;
-import com.ishland.c2me.opts.dfc.common.ast.misc.DelegateNode;
+import com.ishland.c2me.opts.dfc.common.vif.EachApplierVanillaInterface;
 import net.minecraft.util.dynamic.CodecHolder;
 import net.minecraft.world.gen.chunk.Blender;
 import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
 
+import java.util.List;
+import java.util.ListIterator;
 import java.util.Objects;
 
-public class AstVanillaInterface implements DensityFunction {
+public class CompiledDensityFunction implements DensityFunction {
 
-    private final AstNode astNode;
+    private final CompiledEntry compiledEntry;
     private final DensityFunction blendingFallback;
 
-    public AstVanillaInterface(AstNode astNode, DensityFunction blendingFallback) {
-        this.astNode = Objects.requireNonNull(astNode);
+    public CompiledDensityFunction(CompiledEntry compiledEntry, DensityFunction blendingFallback) {
+        this.compiledEntry = Objects.requireNonNull(compiledEntry);
         this.blendingFallback = blendingFallback;
     }
 
@@ -28,7 +29,7 @@ public class AstVanillaInterface implements DensityFunction {
             }
             return this.blendingFallback.sample(pos);
         } else {
-            return this.astNode.evalSingle(pos.blockX(), pos.blockY(), pos.blockZ(), EvalType.from(pos));
+            return this.compiledEntry.evalSingle(pos.blockX(), pos.blockY(), pos.blockZ(), EvalType.from(pos));
         }
     }
 
@@ -44,7 +45,7 @@ public class AstVanillaInterface implements DensityFunction {
             }
         }
         if (applier instanceof EachApplierVanillaInterface vanillaInterface) {
-            this.astNode.evalMulti(densities, vanillaInterface.getX(), vanillaInterface.getY(), vanillaInterface.getZ(), EvalType.from(applier));
+            this.compiledEntry.evalMulti(densities, vanillaInterface.getX(), vanillaInterface.getY(), vanillaInterface.getZ(), EvalType.from(applier));
             return;
         }
 
@@ -57,20 +58,33 @@ public class AstVanillaInterface implements DensityFunction {
             y[i] = pos.blockY();
             z[i] = pos.blockZ();
         }
-        this.astNode.evalMulti(densities, x, y, z, EvalType.from(applier));
+        this.compiledEntry.evalMulti(densities, x, y, z, EvalType.from(applier));
     }
 
     @Override
     public DensityFunction apply(DensityFunctionVisitor visitor) {
-        return new AstVanillaInterface(
-                this.astNode.transform(astNode -> {
-                    if (astNode instanceof DelegateNode delegateNode) {
-                        return new DelegateNode(delegateNode.getDelegate().apply(visitor));
-                    }
-                    return astNode;
-                }),
-                this.blendingFallback != null ? this.blendingFallback.apply(visitor) : null
-        );
+        boolean modified = false;
+        List<Object> args = this.compiledEntry.getArgs();
+        ListIterator<Object> iterator = args.listIterator();
+        while (iterator.hasNext()) {
+            Object next = iterator.next();
+            if (next instanceof DensityFunction df) {
+                DensityFunction applied = df.apply(visitor);
+                if (df != applied) {
+                    iterator.set(applied);
+                    modified = true;
+                }
+            }
+        }
+        DensityFunction fallback = this.blendingFallback.apply(visitor);
+        if (fallback != this.blendingFallback) {
+            modified = true;
+        }
+        if (modified) {
+            return new CompiledDensityFunction(this.compiledEntry.newInstance(args), fallback);
+        } else {
+            return this;
+        }
     }
 
     @Override
@@ -86,13 +100,5 @@ public class AstVanillaInterface implements DensityFunction {
     @Override
     public CodecHolder<? extends DensityFunction> getCodecHolder() {
         throw new UnsupportedOperationException();
-    }
-
-    public AstNode getAstNode() {
-        return astNode;
-    }
-
-    public DensityFunction getBlendingFallback() {
-        return blendingFallback;
     }
 }

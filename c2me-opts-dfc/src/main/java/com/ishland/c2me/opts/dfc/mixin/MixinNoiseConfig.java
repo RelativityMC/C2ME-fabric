@@ -1,6 +1,7 @@
 package com.ishland.c2me.opts.dfc.mixin;
 
-import com.ishland.c2me.opts.dfc.common.McToAst;
+import com.ishland.c2me.opts.dfc.common.ast.McToAst;
+import com.ishland.c2me.opts.dfc.common.gen.BytecodeGen;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.world.gen.noise.NoiseConfig;
@@ -21,21 +22,21 @@ public class MixinNoiseConfig {
     @WrapOperation(method = "<init>", at = @At(value = "FIELD", target = "Lnet/minecraft/world/gen/noise/NoiseConfig;noiseRouter:Lnet/minecraft/world/gen/noise/NoiseRouter;", opcode = Opcodes.PUTFIELD))
     private void postCreate(NoiseConfig instance, NoiseRouter value, Operation<Void> original) {
         original.call(instance, new NoiseRouter(
-                McToAst.wrapVanilla(value.barrierNoise()),
-                McToAst.wrapVanilla(value.fluidLevelFloodednessNoise()),
-                McToAst.wrapVanilla(value.fluidLevelSpreadNoise()),
-                McToAst.wrapVanilla(value.lavaNoise()),
-                McToAst.wrapVanilla(value.temperature()),
-                McToAst.wrapVanilla(value.vegetation()),
-                McToAst.wrapVanilla(value.continents()),
-                McToAst.wrapVanilla(value.erosion()),
-                McToAst.wrapVanilla(value.depth()),
-                McToAst.wrapVanilla(value.ridges()),
-                McToAst.wrapVanilla(value.initialDensityWithoutJaggedness()),
-                McToAst.wrapVanilla(value.finalDensity()),
-                McToAst.wrapVanilla(value.veinToggle()),
-                McToAst.wrapVanilla(value.veinRidged()),
-                McToAst.wrapVanilla(value.veinGap())
+                BytecodeGen.compile(value.barrierNoise()),
+                BytecodeGen.compile(value.fluidLevelFloodednessNoise()),
+                BytecodeGen.compile(value.fluidLevelSpreadNoise()),
+                BytecodeGen.compile(value.lavaNoise()),
+                BytecodeGen.compile(value.temperature()),
+                BytecodeGen.compile(value.vegetation()),
+                BytecodeGen.compile(value.continents()),
+                BytecodeGen.compile(value.erosion()),
+                BytecodeGen.compile(value.depth()),
+                BytecodeGen.compile(value.ridges()),
+                BytecodeGen.compile(value.initialDensityWithoutJaggedness()),
+                BytecodeGen.compile(value.finalDensity()),
+                BytecodeGen.compile(value.veinToggle()),
+                BytecodeGen.compile(value.veinRidged()),
+                BytecodeGen.compile(value.veinGap())
         ));
     }
 

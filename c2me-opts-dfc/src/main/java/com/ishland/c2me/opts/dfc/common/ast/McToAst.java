@@ -1,6 +1,5 @@
-package com.ishland.c2me.opts.dfc.common;
+package com.ishland.c2me.opts.dfc.common.ast;
 
-import com.ishland.c2me.opts.dfc.common.ast.AstNode;
 import com.ishland.c2me.opts.dfc.common.ast.binary.AddNode;
 import com.ishland.c2me.opts.dfc.common.ast.binary.MaxNode;
 import com.ishland.c2me.opts.dfc.common.ast.binary.MinNode;
@@ -25,6 +24,8 @@ public class McToAst {
     public static AstNode toAst(DensityFunction df) {
         Objects.requireNonNull(df);
         return switch (df) {
+            case AstVanillaInterface f -> f.getAstNode();
+
             case ChunkNoiseSampler.BlendAlphaDensityFunction f -> new ConstantNode(1.0);
             case ChunkNoiseSampler.BlendOffsetDensityFunction f -> new ConstantNode(0.0);
             case DensityFunctionTypes.BlendAlpha f -> new ConstantNode(1.0);

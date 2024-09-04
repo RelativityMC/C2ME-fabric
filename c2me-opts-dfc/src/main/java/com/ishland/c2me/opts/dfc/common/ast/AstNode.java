@@ -1,6 +1,7 @@
 package com.ishland.c2me.opts.dfc.common.ast;
 
-import com.ishland.c2me.opts.dfc.common.AstTransformer;
+import com.ishland.c2me.opts.dfc.common.gen.BytecodeGen;
+import org.objectweb.asm.commons.InstructionAdapter;
 
 public interface AstNode {
 
@@ -11,5 +12,9 @@ public interface AstNode {
     AstNode[] getChildren();
 
     AstNode transform(AstTransformer transformer);
+
+    void doBytecodeGenSingle(BytecodeGen.Context context, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer);
+
+    void doBytecodeGenMulti(BytecodeGen.Context context, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer);
 
 }

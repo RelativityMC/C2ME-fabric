@@ -64,6 +64,7 @@ accessible    method    net/minecraft/nbt/NbtList                               
 accessible    method    net/minecraft/world/gen/surfacebuilder/MaterialRules$SequenceBlockStateRule    <init>              (Ljava/util/List;)V
 accessible    method    net/minecraft/world/storage/RegionBasedStorage                                 <init>              (Lnet/minecraft/world/storage/StorageKey;Ljava/nio/file/Path;Z)V
 accessible    method    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$Wrapping          <init>              (Lnet/minecraft/world/gen/densityfunction/DensityFunctionTypes$Wrapping$Type;Lnet/minecraft/world/gen/densityfunction/DensityFunction;)V
+accessible    method    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$RangeChoice       <init>              (Lnet/minecraft/world/gen/densityfunction/DensityFunction;DDLnet/minecraft/world/gen/densityfunction/DensityFunction;Lnet/minecraft/world/gen/densityfunction/DensityFunction;)V
 
 extendable    method    net/minecraft/server/world/ChunkHolder           combineSavingFuture    (Ljava/util/concurrent/CompletableFuture;)V
 extendable    method    net/minecraft/server/world/ChunkHolder           setCompletedLevel      (I)V
