@@ -39,8 +39,7 @@ public class CompiledDensityFunction implements DensityFunction {
             }
             return fallback.sample(pos);
         } else {
-            ArrayCache cache = pos instanceof IArrayCacheCapable cacheCapable ? cacheCapable.c2me$getArrayCache() : new ArrayCache();
-            return this.compiledEntry.evalSingle(pos.blockX(), pos.blockY(), pos.blockZ(), EvalType.from(pos), cache);
+            return this.compiledEntry.evalSingle(pos.blockX(), pos.blockY(), pos.blockZ(), EvalType.from(pos));
         }
     }
 

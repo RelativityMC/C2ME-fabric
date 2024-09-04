@@ -265,7 +265,7 @@ public class BytecodeGen {
     }
 
     public static class Context {
-        public static final String SINGLE_DESC = Type.getMethodDescriptor(Type.getType(double.class), Type.getType(int.class), Type.getType(int.class), Type.getType(int.class), Type.getType(EvalType.class), Type.getType(ArrayCache.class));
+        public static final String SINGLE_DESC = Type.getMethodDescriptor(Type.getType(double.class), Type.getType(int.class), Type.getType(int.class), Type.getType(int.class), Type.getType(EvalType.class));
         public static final String MULTI_DESC = Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(double[].class), Type.getType(int[].class), Type.getType(int[].class), Type.getType(int[].class), Type.getType(EvalType.class), Type.getType(ArrayCache.class));
         private final ClassWriter classWriter;
         public final String className;
@@ -323,7 +323,7 @@ public class BytecodeGen {
             Label end = new Label();
             adapter.visitLabel(start);
             generator.accept(adapter, (localName, localDesc) -> {
-                int ordinal = extraLocals.size() + 6;
+                int ordinal = extraLocals.size() + 5;
                 extraLocals.add(IntObjectPair.of(ordinal, Pair.of(localName, localDesc)));
                 return ordinal;
             });
@@ -333,7 +333,6 @@ public class BytecodeGen {
             adapter.visitLocalVariable("y", Type.INT_TYPE.getDescriptor(), null, start, end, 2);
             adapter.visitLocalVariable("z", Type.INT_TYPE.getDescriptor(), null, start, end, 3);
             adapter.visitLocalVariable("evalType", Type.getType(EvalType.class).getDescriptor(), null, start, end, 4);
-            adapter.visitLocalVariable("arrayCache", Type.getType(ArrayCache.class).getDescriptor(), null, start, end, 5);
             for (IntObjectPair<Pair<String, String>> local : extraLocals) {
                 adapter.visitLocalVariable(local.right().left(), local.right().right(), null, start, end, local.leftInt());
             }
@@ -398,7 +397,6 @@ public class BytecodeGen {
             m.load(2, Type.INT_TYPE);
             m.load(3, Type.INT_TYPE);
             m.load(4, InstructionAdapter.OBJECT_TYPE);
-            m.load(5, InstructionAdapter.OBJECT_TYPE);
             m.invokevirtual(this.className, target, SINGLE_DESC, false);
         }
 

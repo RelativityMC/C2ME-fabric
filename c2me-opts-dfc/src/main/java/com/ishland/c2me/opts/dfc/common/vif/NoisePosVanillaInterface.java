@@ -7,24 +7,18 @@ import net.minecraft.world.gen.densityfunction.DensityFunction;
 
 import java.util.Objects;
 
-public class NoisePosVanillaInterface implements DensityFunction.NoisePos, IArrayCacheCapable {
+public class NoisePosVanillaInterface implements DensityFunction.NoisePos {
 
     private final int x;
     private final int y;
     private final int z;
     private final EvalType type;
-    private final ArrayCache cache;
 
     public NoisePosVanillaInterface(int x, int y, int z, EvalType type) {
-        this(x, y, z, type, new ArrayCache());
-    }
-
-    public NoisePosVanillaInterface(int x, int y, int z, EvalType type, ArrayCache cache) {
         this.x = x;
         this.y = y;
         this.z = z;
         this.type = Objects.requireNonNull(type);
-        this.cache = Objects.requireNonNull(cache);
     }
 
     @Override
@@ -46,8 +40,4 @@ public class NoisePosVanillaInterface implements DensityFunction.NoisePos, IArra
         return type;
     }
 
-    @Override
-    public ArrayCache c2me$getArrayCache() {
-        return this.cache;
-    }
 }

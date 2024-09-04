@@ -58,8 +58,7 @@ public class DelegateNode implements AstNode {
         m.load(2, Type.INT_TYPE);
         m.load(3, Type.INT_TYPE);
         m.load(4, InstructionAdapter.OBJECT_TYPE);
-        m.load(5, InstructionAdapter.OBJECT_TYPE);
-        m.invokespecial(Type.getInternalName(NoisePosVanillaInterface.class), "<init>", Type.getMethodDescriptor(Type.VOID_TYPE, Type.INT_TYPE, Type.INT_TYPE, Type.INT_TYPE, Type.getType(EvalType.class), Type.getType(ArrayCache.class)), false);
+        m.invokespecial(Type.getInternalName(NoisePosVanillaInterface.class), "<init>", Type.getMethodDescriptor(Type.VOID_TYPE, Type.INT_TYPE, Type.INT_TYPE, Type.INT_TYPE, Type.getType(EvalType.class)), false);
         m.invokeinterface(
                 Type.getInternalName(DensityFunction.class),
                 FabricLoader.getInstance().getMappingResolver().mapMethodName("intermediary", "net.minecraft.class_6910", "method_40464", "(Lnet/minecraft/class_6910$class_6912;)D"),
@@ -96,8 +95,7 @@ public class DelegateNode implements AstNode {
         m.iconst(0);
         m.aload(Type.INT_TYPE);
         m.load(5, InstructionAdapter.OBJECT_TYPE);
-        m.load(6, InstructionAdapter.OBJECT_TYPE);
-        m.invokespecial(Type.getInternalName(NoisePosVanillaInterface.class), "<init>", Type.getMethodDescriptor(Type.VOID_TYPE, Type.INT_TYPE, Type.INT_TYPE, Type.INT_TYPE, Type.getType(EvalType.class), Type.getType(ArrayCache.class)), false);
+        m.invokespecial(Type.getInternalName(NoisePosVanillaInterface.class), "<init>", Type.getMethodDescriptor(Type.VOID_TYPE, Type.INT_TYPE, Type.INT_TYPE, Type.INT_TYPE, Type.getType(EvalType.class)), false);
         m.invokeinterface(
                 Type.getInternalName(DensityFunction.class),
                 FabricLoader.getInstance().getMappingResolver().mapMethodName("intermediary", "net.minecraft.class_6910", "method_40464", "(Lnet/minecraft/class_6910$class_6912;)D"),
