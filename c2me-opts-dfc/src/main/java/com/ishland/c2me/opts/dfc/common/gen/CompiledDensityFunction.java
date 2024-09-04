@@ -2,6 +2,8 @@ package com.ishland.c2me.opts.dfc.common.gen;
 
 import com.google.common.base.Suppliers;
 import com.ishland.c2me.opts.dfc.common.ast.EvalType;
+import com.ishland.c2me.opts.dfc.common.ducks.IArrayCacheCapable;
+import com.ishland.c2me.opts.dfc.common.util.ArrayCache;
 import com.ishland.c2me.opts.dfc.common.vif.EachApplierVanillaInterface;
 import net.minecraft.util.dynamic.CodecHolder;
 import net.minecraft.world.gen.chunk.Blender;
@@ -37,7 +39,8 @@ public class CompiledDensityFunction implements DensityFunction {
             }
             return fallback.sample(pos);
         } else {
-            return this.compiledEntry.evalSingle(pos.blockX(), pos.blockY(), pos.blockZ(), EvalType.from(pos));
+            ArrayCache cache = pos instanceof IArrayCacheCapable cacheCapable ? cacheCapable.c2me$getArrayCache() : new ArrayCache();
+            return this.compiledEntry.evalSingle(pos.blockX(), pos.blockY(), pos.blockZ(), EvalType.from(pos), cache);
         }
     }
 
@@ -54,20 +57,21 @@ public class CompiledDensityFunction implements DensityFunction {
             }
         }
         if (applier instanceof EachApplierVanillaInterface vanillaInterface) {
-            this.compiledEntry.evalMulti(densities, vanillaInterface.getX(), vanillaInterface.getY(), vanillaInterface.getZ(), EvalType.from(applier));
+            this.compiledEntry.evalMulti(densities, vanillaInterface.getX(), vanillaInterface.getY(), vanillaInterface.getZ(), EvalType.from(applier), vanillaInterface.c2me$getArrayCache());
             return;
         }
 
-        int[] x = new int[densities.length];
-        int[] y = new int[densities.length];
-        int[] z = new int[densities.length];
+        ArrayCache cache = applier instanceof IArrayCacheCapable cacheCapable ? cacheCapable.c2me$getArrayCache() : new ArrayCache();
+        int[] x = cache.getIntArray(densities.length, false);
+        int[] y = cache.getIntArray(densities.length, false);
+        int[] z = cache.getIntArray(densities.length, false);
         for (int i = 0; i < densities.length; i ++) {
             NoisePos pos = applier.at(i);
             x[i] = pos.blockX();
             y[i] = pos.blockY();
             z[i] = pos.blockZ();
         }
-        this.compiledEntry.evalMulti(densities, x, y, z, EvalType.from(applier));
+        this.compiledEntry.evalMulti(densities, x, y, z, EvalType.from(applier), cache);
     }
 
     @Override

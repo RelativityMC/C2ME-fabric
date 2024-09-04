@@ -276,6 +276,7 @@ public class RangeChoiceNode implements AstNode {
             m.load(idx, Type.INT_TYPE);
             m.aload(Type.INT_TYPE);
             m.load(5, InstructionAdapter.OBJECT_TYPE);
+            m.load(6, InstructionAdapter.OBJECT_TYPE);
             m.invokevirtual(context.className, whenInRangeSingle, BytecodeGen.Context.SINGLE_DESC, false);
             m.goTo(end);
 
@@ -291,6 +292,7 @@ public class RangeChoiceNode implements AstNode {
             m.load(idx, Type.INT_TYPE);
             m.aload(Type.INT_TYPE);
             m.load(5, InstructionAdapter.OBJECT_TYPE);
+            m.load(6, InstructionAdapter.OBJECT_TYPE);
             m.invokevirtual(context.className, whenOutOfRangeSingle, BytecodeGen.Context.SINGLE_DESC, false);
 
             m.visitLabel(end);

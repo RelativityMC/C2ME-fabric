@@ -5,6 +5,8 @@
   "plugin": "com.ishland.c2me.base.common.ModuleMixinPlugin",
   "mixins": [
     "IChunkNoiseSamplerDensityInterpolator",
+    "MixinChunkNoiseSampler",
+    "MixinChunkNoiseSampler1",
     "MixinChunkNoiseSamplerCacheOnce",
     "MixinChunkNoiseSamplerCellCache",
     "MixinNoiseConfig"

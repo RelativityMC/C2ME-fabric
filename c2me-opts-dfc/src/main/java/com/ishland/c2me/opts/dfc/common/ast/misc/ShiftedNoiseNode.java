@@ -4,6 +4,7 @@ import com.ishland.c2me.opts.dfc.common.ast.AstNode;
 import com.ishland.c2me.opts.dfc.common.ast.AstTransformer;
 import com.ishland.c2me.opts.dfc.common.ast.EvalType;
 import com.ishland.c2me.opts.dfc.common.gen.BytecodeGen;
+import com.ishland.c2me.opts.dfc.common.util.ArrayCache;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.util.math.noise.DoublePerlinNoiseSampler;
 import net.minecraft.world.gen.densityfunction.DensityFunction.Noise;
@@ -125,14 +126,18 @@ public class ShiftedNoiseNode implements AstNode {
         int res1 = localVarConsumer.createLocalVariable("res1", Type.getDescriptor(double[].class));
         int res2 = localVarConsumer.createLocalVariable("res2", Type.getDescriptor(double[].class));
 
+        m.load(6, InstructionAdapter.OBJECT_TYPE);
         m.load(1, InstructionAdapter.OBJECT_TYPE);
         m.arraylength();
-        m.newarray(Type.DOUBLE_TYPE);
+        m.iconst(0);
+        m.invokevirtual(Type.getInternalName(ArrayCache.class), "getDoubleArray", Type.getMethodDescriptor(Type.getType(double[].class), Type.INT_TYPE, Type.BOOLEAN_TYPE), false);
         m.store(res1, InstructionAdapter.OBJECT_TYPE);
 
+        m.load(6, InstructionAdapter.OBJECT_TYPE);
         m.load(1, InstructionAdapter.OBJECT_TYPE);
         m.arraylength();
-        m.newarray(Type.DOUBLE_TYPE);
+        m.iconst(0);
+        m.invokevirtual(Type.getInternalName(ArrayCache.class), "getDoubleArray", Type.getMethodDescriptor(Type.getType(double[].class), Type.INT_TYPE, Type.BOOLEAN_TYPE), false);
         m.store(res2, InstructionAdapter.OBJECT_TYPE);
 
         context.callDelegateMulti(m, shiftXMethod);
@@ -143,6 +148,7 @@ public class ShiftedNoiseNode implements AstNode {
         m.load(3, InstructionAdapter.OBJECT_TYPE);
         m.load(4, InstructionAdapter.OBJECT_TYPE);
         m.load(5, InstructionAdapter.OBJECT_TYPE);
+        m.load(6, InstructionAdapter.OBJECT_TYPE);
         m.invokevirtual(context.className, shiftYMethod, BytecodeGen.Context.MULTI_DESC, false);
 
         m.load(0, InstructionAdapter.OBJECT_TYPE);
@@ -151,6 +157,7 @@ public class ShiftedNoiseNode implements AstNode {
         m.load(3, InstructionAdapter.OBJECT_TYPE);
         m.load(4, InstructionAdapter.OBJECT_TYPE);
         m.load(5, InstructionAdapter.OBJECT_TYPE);
+        m.load(6, InstructionAdapter.OBJECT_TYPE);
         m.invokevirtual(context.className, shiftZMethod, BytecodeGen.Context.MULTI_DESC, false);
 
         context.doCountedLoop(m, localVarConsumer, idx -> {
@@ -205,6 +212,14 @@ public class ShiftedNoiseNode implements AstNode {
             m.astore(Type.DOUBLE_TYPE);
 
         });
+
+        m.load(6, InstructionAdapter.OBJECT_TYPE);
+        m.load(res1, InstructionAdapter.OBJECT_TYPE);
+        m.invokevirtual(Type.getInternalName(ArrayCache.class), "recycle", Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(double[].class)), false);
+
+        m.load(6, InstructionAdapter.OBJECT_TYPE);
+        m.load(res2, InstructionAdapter.OBJECT_TYPE);
+        m.invokevirtual(Type.getInternalName(ArrayCache.class), "recycle", Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(double[].class)), false);
 
         m.areturn(Type.VOID_TYPE);
     }
