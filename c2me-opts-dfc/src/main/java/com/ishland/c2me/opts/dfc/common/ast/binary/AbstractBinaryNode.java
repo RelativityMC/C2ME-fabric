@@ -74,7 +74,7 @@ public abstract class AbstractBinaryNode implements AstNode {
 
         m.load(1, InstructionAdapter.OBJECT_TYPE);
         m.arraylength();
-        m.newarray(Type.getType(double.class));
+        m.newarray(Type.DOUBLE_TYPE);
         m.store(res1, InstructionAdapter.OBJECT_TYPE);
         context.callDelegateMulti(m, leftMethod);
         m.load(0, InstructionAdapter.OBJECT_TYPE);

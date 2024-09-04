@@ -7,6 +7,7 @@ import com.ishland.c2me.opts.dfc.common.ast.binary.MulNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.DelegateNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.RangeChoiceNode;
+import com.ishland.c2me.opts.dfc.common.ast.misc.ShiftedNoiseNode;
 import com.ishland.c2me.opts.dfc.common.ast.unary.AbsNode;
 import com.ishland.c2me.opts.dfc.common.ast.unary.CubeNode;
 import com.ishland.c2me.opts.dfc.common.ast.unary.NegMulNode;
@@ -50,6 +51,7 @@ public class McToAst {
             };
             case DensityFunctionTypes.RangeChoice f -> new RangeChoiceNode(toAst(f.input()), f.minInclusive(), f.maxExclusive(), toAst(f.whenInRange()), toAst(f.whenOutOfRange()));
             case DensityFunctionTypes.Wrapping f -> new DelegateNode(new DensityFunctionTypes.Wrapping(f.type(), new AstVanillaInterface(toAst(f.wrapped()), null)));
+            case DensityFunctionTypes.ShiftedNoise f -> new ShiftedNoiseNode(toAst(f.shiftX()), toAst(f.shiftY()), toAst(f.shiftZ()), f.xzScale(), f.yScale(), f.noise());
 
             default -> new DelegateNode(df);
         };

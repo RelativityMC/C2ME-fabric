@@ -1,5 +1,6 @@
 package com.ishland.c2me.opts.dfc.common.gen;
 
+import com.google.common.base.Suppliers;
 import com.ishland.c2me.opts.dfc.common.ast.EvalType;
 import com.ishland.c2me.opts.dfc.common.vif.EachApplierVanillaInterface;
 import net.minecraft.util.dynamic.CodecHolder;
@@ -10,13 +11,19 @@ import net.minecraft.world.gen.densityfunction.DensityFunction;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Objects;
+import java.util.function.Supplier;
 
 public class CompiledDensityFunction implements DensityFunction {
 
     private final CompiledEntry compiledEntry;
-    private final DensityFunction blendingFallback;
+    private final Supplier<DensityFunction> blendingFallback;
 
     public CompiledDensityFunction(CompiledEntry compiledEntry, DensityFunction blendingFallback) {
+        this.compiledEntry = Objects.requireNonNull(compiledEntry);
+        this.blendingFallback = blendingFallback != null ? () -> blendingFallback : null;
+    }
+
+    private CompiledDensityFunction(CompiledEntry compiledEntry, Supplier<DensityFunction> blendingFallback) {
         this.compiledEntry = Objects.requireNonNull(compiledEntry);
         this.blendingFallback = blendingFallback;
     }
@@ -24,10 +31,11 @@ public class CompiledDensityFunction implements DensityFunction {
     @Override
     public double sample(NoisePos pos) {
         if (pos.getBlender() != Blender.getNoBlending()) {
-            if (this.blendingFallback == null) {
+            DensityFunction fallback = this.getFallback();
+            if (fallback == null) {
                 throw new IllegalStateException("blendingFallback is no more");
             }
-            return this.blendingFallback.sample(pos);
+            return fallback.sample(pos);
         } else {
             return this.compiledEntry.evalSingle(pos.blockX(), pos.blockY(), pos.blockZ(), EvalType.from(pos));
         }
@@ -37,10 +45,11 @@ public class CompiledDensityFunction implements DensityFunction {
     public void fill(double[] densities, EachApplier applier) {
         if (applier instanceof ChunkNoiseSampler sampler) {
             if (sampler.getBlender() != Blender.getNoBlending()) {
-                if (this.blendingFallback == null) {
+                DensityFunction fallback = this.getFallback();
+                if (fallback == null) {
                     throw new IllegalStateException("blendingFallback is no more");
                 }
-                this.blendingFallback.fill(densities, applier);
+                fallback.fill(densities, applier);
                 return;
             }
         }
@@ -75,8 +84,18 @@ public class CompiledDensityFunction implements DensityFunction {
                     modified = true;
                 }
             }
+            if (next instanceof Noise noise) {
+                Noise applied = visitor.apply(noise);
+                if (noise != applied) {
+                    iterator.set(applied);
+                    modified = true;
+                }
+            }
         }
-        DensityFunction fallback = this.blendingFallback != null ? this.blendingFallback.apply(visitor) : null;
+        Supplier<DensityFunction> fallback = this.blendingFallback != null ? Suppliers.memoize(() -> {
+            DensityFunction densityFunction = this.blendingFallback.get();
+            return densityFunction != null ? densityFunction.apply(visitor) : null;
+        }) : null;
         if (fallback != this.blendingFallback) {
             modified = true;
         }
@@ -89,16 +108,24 @@ public class CompiledDensityFunction implements DensityFunction {
 
     @Override
     public double minValue() {
-        return this.blendingFallback.minValue();
+//        DensityFunction fallback = this.getFallback();
+//        return fallback != null ? fallback.minValue() : Double.MIN_VALUE;
+        return Double.MIN_VALUE;
     }
 
     @Override
     public double maxValue() {
-        return this.blendingFallback.maxValue();
+//        DensityFunction fallback = this.getFallback();
+//        return fallback != null ? fallback.maxValue() : Double.MAX_VALUE;
+        return Double.MAX_VALUE;
     }
 
     @Override
     public CodecHolder<? extends DensityFunction> getCodecHolder() {
         throw new UnsupportedOperationException();
+    }
+
+    private DensityFunction getFallback() {
+        return this.blendingFallback != null ? this.blendingFallback.get() : null;
     }
 }

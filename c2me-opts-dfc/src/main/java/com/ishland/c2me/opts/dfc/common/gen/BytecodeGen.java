@@ -4,6 +4,7 @@ import com.ishland.c2me.opts.dfc.common.ast.AstNode;
 import com.ishland.c2me.opts.dfc.common.ast.EvalType;
 import com.ishland.c2me.opts.dfc.common.ast.McToAst;
 import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantNode;
+import com.ishland.c2me.opts.dfc.common.ast.misc.RootNode;
 import com.ishland.c2me.opts.dfc.common.vif.AstVanillaInterface;
 import it.unimi.dsi.fastutil.Pair;
 import it.unimi.dsi.fastutil.ints.IntObjectPair;
@@ -62,9 +63,11 @@ public class BytecodeGen {
         String name = String.format("DfcCompiled_%d", ordinal.getAndIncrement());
         writer.visit(Opcodes.V21, Opcodes.ACC_PUBLIC | Opcodes.ACC_FINAL, name, null, Type.getInternalName(Object.class), new String[]{Type.getInternalName(CompiledEntry.class)});
 
+        RootNode rootNode = new RootNode(node);
+
         Context genContext = new Context(writer, name);
-        genContext.newSingleMethod0((adapter, localVarConsumer) -> node.doBytecodeGenSingle(genContext, adapter, localVarConsumer), "evalSingle", true);
-        genContext.newMultiMethod0((adapter, localVarConsumer) -> node.doBytecodeGenMulti(genContext, adapter, localVarConsumer), "evalMulti", true);
+        genContext.newSingleMethod0((adapter, localVarConsumer) -> rootNode.doBytecodeGenSingle(genContext, adapter, localVarConsumer), "evalSingle", true);
+        genContext.newMultiMethod0((adapter, localVarConsumer) -> rootNode.doBytecodeGenMulti(genContext, adapter, localVarConsumer), "evalMulti", true);
 
         genConstructor(genContext);
         genGetArgs(genContext);
