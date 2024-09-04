@@ -62,15 +62,21 @@ public class AstVanillaInterface implements DensityFunction {
 
     @Override
     public DensityFunction apply(DensityFunctionVisitor visitor) {
-        return new AstVanillaInterface(
-                this.astNode.transform(astNode -> {
-                    if (astNode instanceof DelegateNode delegateNode) {
-                        return new DelegateNode(delegateNode.getDelegate().apply(visitor));
-                    }
-                    return astNode;
-                }),
-                this.blendingFallback != null ? this.blendingFallback.apply(visitor) : null
-        );
+        AstNode transformed = this.astNode.transform(astNode -> {
+            if (astNode instanceof DelegateNode delegateNode) {
+                return new DelegateNode(delegateNode.getDelegate().apply(visitor));
+            }
+            return astNode;
+        });
+        DensityFunction blendingFallback1 = this.blendingFallback != null ? this.blendingFallback.apply(visitor) : null;
+        if (transformed == this.astNode && blendingFallback1 == this.blendingFallback) {
+            return this;
+        } else {
+            return new AstVanillaInterface(
+                    transformed,
+                    blendingFallback1
+            );
+        }
     }
 
     @Override

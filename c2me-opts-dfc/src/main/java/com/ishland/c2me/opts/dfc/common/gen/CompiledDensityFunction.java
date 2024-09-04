@@ -76,7 +76,7 @@ public class CompiledDensityFunction implements DensityFunction {
                 }
             }
         }
-        DensityFunction fallback = this.blendingFallback.apply(visitor);
+        DensityFunction fallback = this.blendingFallback != null ? this.blendingFallback.apply(visitor) : null;
         if (fallback != this.blendingFallback) {
             modified = true;
         }

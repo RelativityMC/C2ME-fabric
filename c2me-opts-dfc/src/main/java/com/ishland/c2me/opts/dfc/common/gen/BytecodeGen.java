@@ -3,6 +3,7 @@ package com.ishland.c2me.opts.dfc.common.gen;
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
 import com.ishland.c2me.opts.dfc.common.ast.EvalType;
 import com.ishland.c2me.opts.dfc.common.ast.McToAst;
+import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantNode;
 import com.ishland.c2me.opts.dfc.common.vif.AstVanillaInterface;
 import it.unimi.dsi.fastutil.Pair;
 import it.unimi.dsi.fastutil.ints.IntObjectPair;
@@ -47,9 +48,12 @@ public class BytecodeGen {
     public static DensityFunction compile(DensityFunction densityFunction) {
         if (densityFunction instanceof AstVanillaInterface vif) {
             AstNode ast = vif.getAstNode();
-            return new CompiledDensityFunction(compile0(ast), densityFunction);
+            return new CompiledDensityFunction(compile0(ast), vif.getBlendingFallback());
         }
         AstNode ast = McToAst.toAst(densityFunction);
+        if (ast instanceof ConstantNode constantNode) {
+            return DensityFunctionTypes.constant(constantNode.getValue());
+        }
         return new CompiledDensityFunction(compile0(ast), densityFunction);
     }
 
