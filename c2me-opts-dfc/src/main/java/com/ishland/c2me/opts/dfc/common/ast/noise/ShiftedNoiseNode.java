@@ -1,4 +1,4 @@
-package com.ishland.c2me.opts.dfc.common.ast.misc;
+package com.ishland.c2me.opts.dfc.common.ast.noise;
 
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
 import com.ishland.c2me.opts.dfc.common.ast.AstTransformer;
@@ -6,9 +6,7 @@ import com.ishland.c2me.opts.dfc.common.ast.EvalType;
 import com.ishland.c2me.opts.dfc.common.gen.BytecodeGen;
 import com.ishland.c2me.opts.dfc.common.util.ArrayCache;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.util.math.noise.DoublePerlinNoiseSampler;
 import net.minecraft.world.gen.densityfunction.DensityFunction.Noise;
-import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.InstructionAdapter;
 

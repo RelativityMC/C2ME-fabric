@@ -14,13 +14,18 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.InstructionAdapter;
 
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.LongAdder;
 
 public class DelegateNode implements AstNode {
+
+//    private static final ConcurrentHashMap<Class<?>, LongAdder> statistics = new ConcurrentHashMap<>();
 
     private final DensityFunction densityFunction;
 
     public DelegateNode(DensityFunction densityFunction) {
         this.densityFunction = Objects.requireNonNull(densityFunction);
+//        statistics.computeIfAbsent(densityFunction.getClass(), unused -> new LongAdder()).increment();
     }
 
     @Override
