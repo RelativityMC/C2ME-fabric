@@ -27,7 +27,7 @@ public abstract class MixinStorageIoWorker {
 
     @Shadow @Final private static Logger LOGGER;
 
-    @Inject(method = "method_27939", at = @At("HEAD"))
+    @Inject(method = "method_64029", at = @At("HEAD"))
     private void preTask(CallbackInfo ci) {
         checkHardLimit();
     }

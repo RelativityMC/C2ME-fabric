@@ -1,8 +1,8 @@
 package com.ishland.c2me.rewrites.chunkio.mixin;
 
 import com.ishland.c2me.rewrites.chunkio.common.C2MEStorageVanillaInterface;
+import net.minecraft.class_10177;
 import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.thread.TaskExecutor;
 import net.minecraft.util.thread.TaskQueue;
 import net.minecraft.world.storage.RegionBasedStorage;
 import net.minecraft.world.storage.StorageIoWorker;
@@ -31,7 +31,7 @@ public class MixinStorageIoWorker {
     @Shadow @Final private AtomicBoolean closed;
 
     @Mutable
-    @Shadow @Final private TaskExecutor<TaskQueue.PrioritizedTask> executor;
+    @Shadow @Final private class_10177 field_54149;
 
     @SuppressWarnings("ConstantConditions")
     @Inject(method = "<init>", at = @At("RETURN"))
@@ -41,7 +41,7 @@ public class MixinStorageIoWorker {
             this.results = null;
             this.storage = null;
             this.closed = null;
-            this.executor = null;
+            this.field_54149 = null;
         }
     }
 

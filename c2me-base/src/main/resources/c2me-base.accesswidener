@@ -31,7 +31,6 @@ accessible    method    net/minecraft/nbt/NbtList                               
 accessible    method    net/minecraft/world/gen/surfacebuilder/MaterialRules$SequenceBlockStateRule    <init>              (Ljava/util/List;)V
 accessible    method    net/minecraft/world/storage/RegionBasedStorage                                 <init>              (Lnet/minecraft/world/storage/StorageKey;Ljava/nio/file/Path;Z)V
 
-extendable    method    net/minecraft/server/world/ChunkHolder           combineSavingFuture    (Ljava/util/concurrent/CompletableFuture;)V
 extendable    method    net/minecraft/server/world/ChunkHolder           setCompletedLevel      (I)V
 extendable    method    net/minecraft/world/chunk/AbstractChunkHolder    generate               (Lnet/minecraft/world/chunk/ChunkGenerationStep;Lnet/minecraft/world/ChunkLoadingManager;Lnet/minecraft/util/collection/BoundedRegionArray;)Ljava/util/concurrent/CompletableFuture;
 extendable    method    net/minecraft/world/chunk/AbstractChunkHolder    clearLoader            (Lnet/minecraft/world/chunk/ChunkLoader;)V

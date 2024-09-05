@@ -252,7 +252,7 @@ public class NewChunkHolderVanillaInterface extends ChunkHolder implements IFast
 
     @Override
     public boolean isSavable() {
-        return this.getRefCount() == 0 && this.getSavingFuture().isDone();
+        return this.getSavingFuture().isDone();
     }
 
     @Override
@@ -292,11 +292,6 @@ public class NewChunkHolderVanillaInterface extends ChunkHolder implements IFast
         super.decrementRefCount(); // use vanilla impl
     }
 
-    @Override
-    public int getRefCount() {
-        return super.getRefCount(); // use vanilla impl
-    }
-
     @Nullable
     @Override
     public Chunk getUncheckedOrNull(ChunkStatus requestedStatus) {
@@ -331,8 +326,8 @@ public class NewChunkHolderVanillaInterface extends ChunkHolder implements IFast
     }
 
     @Override
-    protected void combineSavingFuture(CompletableFuture<?> savingFuture) {
-        this.newHolder.submitOp(savingFuture.thenAccept(o -> {}));
+    protected void method_39967(CompletableFuture<?> completableFuture) {
+        this.newHolder.submitOp(completableFuture.thenAccept(o -> {}));
     }
 
     @Override

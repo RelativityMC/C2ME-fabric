@@ -43,7 +43,7 @@ public abstract class MixinStorageIoWorker {
         return threadExecutor = Executors.newSingleThreadExecutor(ChunkIoThreadingExecutorUtils.ioWorkerFactory);
     }
 
-    @Inject(method = "close", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/thread/TaskExecutor;close()V", shift = At.Shift.AFTER))
+    @Inject(method = "close", at = @At(value = "INVOKE", target = "Lnet/minecraft/class_10177;close()V", shift = At.Shift.AFTER))
     private void onClose(CallbackInfo ci) {
         threadExecutor.shutdown();
         while (!threadExecutor.isTerminated()) {
