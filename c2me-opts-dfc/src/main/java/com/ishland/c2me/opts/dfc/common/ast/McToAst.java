@@ -7,6 +7,7 @@ import com.ishland.c2me.opts.dfc.common.ast.binary.MulNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.DelegateNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.RangeChoiceNode;
+import com.ishland.c2me.opts.dfc.common.ast.misc.YClampedGradientNode;
 import com.ishland.c2me.opts.dfc.common.ast.noise.DFTNoiseNode;
 import com.ishland.c2me.opts.dfc.common.ast.noise.DFTShiftANode;
 import com.ishland.c2me.opts.dfc.common.ast.noise.DFTShiftBNode;
@@ -60,6 +61,7 @@ public class McToAst {
             case DensityFunctionTypes.Shift f -> new DFTShiftNode(f.offsetNoise());
             case DensityFunctionTypes.ShiftA f -> new DFTShiftANode(f.offsetNoise());
             case DensityFunctionTypes.ShiftB f -> new DFTShiftBNode(f.offsetNoise());
+            case DensityFunctionTypes.YClampedGradient f -> new YClampedGradientNode(f.fromY(), f.toY(), f.fromValue(), f.toValue());
 
             default -> new DelegateNode(df);
         };
