@@ -20,6 +20,7 @@ accessible    class    net/minecraft/client/option/SimpleOption$Callbacks
 accessible    class    net/minecraft/server/world/ServerChunkLoadingManager$TicketManager
 accessible    class    net/minecraft/server/world/ChunkTicketManager$TicketDistanceLevelPropagator
 accessible    class    net/minecraft/server/world/ServerLightingProvider$Stage
+accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$EndIslands
 
 extendable    class    net/minecraft/client/option/SimpleOption
 extendable    class    net/minecraft/world/storage/RegionBasedStorage

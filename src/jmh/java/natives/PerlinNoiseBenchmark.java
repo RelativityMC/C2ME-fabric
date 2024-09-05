@@ -1,26 +1,30 @@
-package noise;
+package natives;
 
+import com.ishland.c2me.opts.natives_math.common.BindingsTemplate;
 import net.minecraft.util.math.noise.PerlinNoiseSampler;
 import net.minecraft.util.math.random.LocalRandom;
-import org.openjdk.jmh.annotations.Benchmark;
-import org.openjdk.jmh.annotations.BenchmarkMode;
-import org.openjdk.jmh.annotations.Mode;
-import org.openjdk.jmh.annotations.OutputTimeUnit;
-import org.openjdk.jmh.annotations.Param;
-import org.openjdk.jmh.annotations.Scope;
-import org.openjdk.jmh.annotations.State;
+import org.openjdk.jmh.annotations.*;
+import org.openjdk.jmh.infra.Blackhole;
 
+import java.lang.foreign.MemorySegment;
+import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Field;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 @State(Scope.Benchmark)
-@BenchmarkMode({Mode.Throughput, Mode.AverageTime})
+@BenchmarkMode({Mode.AverageTime})
+@OperationsPerInvocation(PerlinNoiseBenchmark.invocations)
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
-public class PerlinNoiseBenchmark {
+public class PerlinNoiseBenchmark extends Base_x86_64 {
 
-    private final PerlinNoiseSampler vanillaSampler = new PerlinNoiseSampler(new LocalRandom(0xFF));
+    protected static final int seed = 0xcafe;
+    protected static final int invocations = 1 << 16;
+
+    private final PerlinNoiseSampler vanillaSampler = new PerlinNoiseSampler(new LocalRandom(seed));
 
     private final byte[] permutations;
+    private final MemorySegment permutationsSegment;
     private static final double[] FLAT_SIMPLEX_GRAD = new double[]{
             1, 1, 0, 0,
             -1, 1, 0, 0,
@@ -133,28 +137,69 @@ public class PerlinNoiseBenchmark {
 
     {
         try {
-            final Field permutationsField = PerlinNoiseSampler.class.getDeclaredField("permutations");
+            final Field permutationsField = PerlinNoiseSampler.class.getDeclaredField("permutation");
             permutationsField.setAccessible(true);
             permutations = (byte[]) permutationsField.get(vanillaSampler);
+            permutationsSegment = MemorySegment.ofArray(permutations);
         } catch (Throwable t) {
             throw new RuntimeException(t);
         }
     }
 
-    @Param({"0.0", "0.5", "1.0", "8.0"})
-    private double yScale;
-    @Param({"-1.0", "0.0", "1.0", "2.0", "16.0"})
-    private double yMax;
+    public PerlinNoiseBenchmark() {
+        super(BindingsTemplate.c2me_natives_noise_perlin_sample, "c2me_natives_noise_perlin_sample");
+    }
 
-    @SuppressWarnings("deprecation")
+    private final double[] sampleX = new double[invocations];
+    private final double[] sampleY = new double[invocations];
+    private final double[] sampleZ = new double[invocations];
+    private final double[] yScale = new double[invocations];
+    private final double[] yMax = new double[invocations];
+
+    @Setup(Level.Trial)
+    public void setup() {
+        Random random = new Random(seed);
+        for (int i = 0; i < invocations; i++) {
+            sampleX[i] = random.nextDouble(-30000000.0D, 30000000.0D);
+            sampleY[i] = random.nextDouble(-2048.0D, 2048.0D);
+            sampleZ[i] = random.nextDouble(-30000000.0D, 30000000.0D);
+            yScale[i] = random.nextDouble(-1.0D, 1.0D) * (random.nextBoolean() ? 1 : 0);
+            yMax[i] = random.nextDouble(-2048.0D, 2048.0D);
+        }
+    }
+
+    @Override
     @Benchmark
-    public double vanillaSampler() {
-        return vanillaSampler.sample(4096, 128, 4096, yScale, yMax);
+    public void vanilla(Blackhole bh) {
+        for (int i = 0; i < invocations; i ++) {
+            bh.consume(vanillaSampler.sample(sampleX[i], sampleY[i], sampleZ[i], yScale[i], yMax[i]));
+        }
     }
 
     @Benchmark
-    public double optimizedSampler() {
-        return optimizedSample(4096, 128, 4096, yScale, yMax);
+    public void optimizedSampler(Blackhole bh) {
+        for (int i = 0; i < invocations; i ++) {
+            bh.consume(optimizedSample(sampleX[i], sampleY[i], sampleZ[i], yScale[i], yMax[i]));
+        }
+    }
+
+    @Override
+    protected void doInvocation(MethodHandle handle, Blackhole bh) {
+        for (int i = 0; i < invocations; i ++) {
+            try {
+                bh.consume((double) handle.invokeExact(permutationsSegment, originX, originY, originZ, sampleX[i], sampleY[i], sampleZ[i], yScale[i], yMax[i]));
+            } catch (Throwable t) {
+                throw new RuntimeException(t);
+            }
+        }
+    }
+
+    @Override
+    @Benchmark
+    public void spinning(Blackhole bh) {
+        for (int i = 0; i < invocations; i ++) {
+            bh.consume(sampleX[i] + sampleY[i] + sampleZ[i] + yScale[i] + yMax[i]);
+        }
     }
 
 }
