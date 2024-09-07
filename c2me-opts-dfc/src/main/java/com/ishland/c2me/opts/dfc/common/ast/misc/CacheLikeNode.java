@@ -3,12 +3,20 @@ package com.ishland.c2me.opts.dfc.common.ast.misc;
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
 import com.ishland.c2me.opts.dfc.common.ast.AstTransformer;
 import com.ishland.c2me.opts.dfc.common.ast.EvalType;
+import com.ishland.c2me.opts.dfc.common.ast.binary.MulNode;
 import com.ishland.c2me.opts.dfc.common.ducks.IFastCacheLike;
 import com.ishland.c2me.opts.dfc.common.gen.BytecodeGen;
+import com.ishland.c2me.opts.dfc.common.gen.IMultiMethod;
+import com.ishland.c2me.opts.dfc.common.gen.ISingleMethod;
+import com.ishland.c2me.opts.dfc.common.gen.SubCompiledDensityFunction;
+import net.minecraft.world.gen.densityfunction.DensityFunction;
+import org.objectweb.asm.Handle;
 import org.objectweb.asm.Label;
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.InstructionAdapter;
 
+import java.lang.invoke.LambdaMetafactory;
 import java.util.Objects;
 
 public class CacheLikeNode implements AstNode {
@@ -68,6 +76,8 @@ public class CacheLikeNode implements AstNode {
     public void doBytecodeGenSingle(BytecodeGen.Context context, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
         String delegateMethod = context.newSingleMethod(this.delegate);
         String cacheLikeField = context.newField(IFastCacheLike.class, this.cacheLike);
+        genPostprocessingMethod(context, cacheLikeField);
+
         int eval = localVarConsumer.createLocalVariable("eval", Type.DOUBLE_TYPE.getDescriptor());
 
         Label cacheExists = new Label();
@@ -117,6 +127,8 @@ public class CacheLikeNode implements AstNode {
         String delegateMethod = context.newMultiMethod(this.delegate);
         String cacheLikeField = context.newField(IFastCacheLike.class, this.cacheLike);
 
+        genPostprocessingMethod(context, cacheLikeField);
+
         Label cacheExists = new Label();
         Label cacheMiss = new Label();
 
@@ -149,6 +161,98 @@ public class CacheLikeNode implements AstNode {
         m.load(5, InstructionAdapter.OBJECT_TYPE);
         m.invokeinterface(Type.getInternalName(IFastCacheLike.class), "c2me$cache", Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(double[].class), Type.getType(int[].class), Type.getType(int[].class), Type.getType(int[].class), Type.getType(EvalType.class)));
         m.areturn(Type.VOID_TYPE);
+    }
+
+    private void genPostprocessingMethod(BytecodeGen.Context context, String cacheLikeField) {
+        String methodName = String.format("postProcessing_%s", cacheLikeField);
+        String delegateSingle = context.newSingleMethod(this.delegate);
+        String delegateMulti = context.newMultiMethod(this.delegate);
+        context.genPostprocessingMethod(methodName, m -> {
+            Label cacheExists = new Label();
+
+            m.load(0, InstructionAdapter.OBJECT_TYPE);
+            m.getfield(context.className, cacheLikeField, Type.getDescriptor(IFastCacheLike.class));
+            m.dup();
+            m.ifnonnull(cacheExists);
+            m.pop();
+            m.areturn(Type.VOID_TYPE);
+
+            m.visitLabel(cacheExists);
+
+            {
+                m.anew(Type.getType(SubCompiledDensityFunction.class));
+                m.dup();
+
+                m.load(0, InstructionAdapter.OBJECT_TYPE);
+                m.invokedynamic(
+                        "evalSingle",
+                        Type.getMethodDescriptor(Type.getType(ISingleMethod.class), Type.getType(context.classDesc)),
+                        new Handle(
+                                Opcodes.H_INVOKESTATIC,
+                                "java/lang/invoke/LambdaMetafactory",
+                                "metafactory",
+                                "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;",
+                                false
+                        ),
+                        new Object[]{
+                                Type.getMethodType(BytecodeGen.Context.SINGLE_DESC),
+                                new Handle(
+                                        Opcodes.H_INVOKEVIRTUAL,
+                                        context.className,
+                                        delegateSingle,
+                                        BytecodeGen.Context.SINGLE_DESC,
+                                        false
+                                ),
+                                Type.getMethodType(BytecodeGen.Context.SINGLE_DESC)
+                        }
+                );
+
+                m.load(0, InstructionAdapter.OBJECT_TYPE);
+                m.invokedynamic(
+                        "evalMulti",
+                        Type.getMethodDescriptor(Type.getType(IMultiMethod.class), Type.getType(context.classDesc)),
+                        new Handle(
+                                Opcodes.H_INVOKESTATIC,
+                                "java/lang/invoke/LambdaMetafactory",
+                                "metafactory",
+                                "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;",
+                                false
+                        ),
+                        new Object[]{
+                                Type.getMethodType(BytecodeGen.Context.MULTI_DESC),
+                                new Handle(
+                                        Opcodes.H_INVOKEVIRTUAL,
+                                        context.className,
+                                        delegateMulti,
+                                        BytecodeGen.Context.MULTI_DESC,
+                                        false
+                                ),
+                                Type.getMethodType(BytecodeGen.Context.MULTI_DESC)
+                        }
+                );
+
+                m.load(0, InstructionAdapter.OBJECT_TYPE);
+                m.getfield(context.className, cacheLikeField, Type.getDescriptor(IFastCacheLike.class));
+                m.checkcast(Type.getType(DensityFunction.class));
+
+                m.invokespecial(
+                        Type.getInternalName(SubCompiledDensityFunction.class),
+                        "<init>",
+                        Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(ISingleMethod.class), Type.getType(IMultiMethod.class), Type.getType(DensityFunction.class)),
+                        false
+                );
+
+                m.checkcast(Type.getType(DensityFunction.class));
+            }
+
+            m.invokeinterface(
+                    Type.getInternalName(IFastCacheLike.class),
+                    "c2me$setDelegate",
+                    Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(DensityFunction.class))
+            );
+
+            m.areturn(Type.VOID_TYPE);
+        });
     }
 
     public IFastCacheLike getCacheLike() {

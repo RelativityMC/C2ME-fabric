@@ -8,6 +8,7 @@ import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(ChunkNoiseSampler.FlatCache.class)
@@ -17,6 +18,7 @@ public abstract class MixinChunkNoiseSamplerFlatCache implements IFastCacheLike 
 
     @Shadow @Final private double[][] cache;
 
+    @Mutable
     @Shadow @Final private DensityFunction delegate;
 
     @Override
@@ -44,6 +46,7 @@ public abstract class MixinChunkNoiseSamplerFlatCache implements IFastCacheLike 
             if (k >= 0 && l >= 0 && k < m && l < m) {
                 res[i] = this.cache[k][l];
             } else {
+                System.out.println("partial flat cache hit");
                 return false; // partial hit possible
             }
         }
@@ -63,5 +66,10 @@ public abstract class MixinChunkNoiseSamplerFlatCache implements IFastCacheLike 
     @Override
     public DensityFunction c2me$getDelegate() {
         return this.delegate;
+    }
+
+    @Override
+    public void c2me$setDelegate(DensityFunction delegate) {
+        this.delegate = delegate;
     }
 }

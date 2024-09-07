@@ -10,6 +10,7 @@ import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(ChunkNoiseSampler.CellCache.class)
@@ -23,6 +24,7 @@ public abstract class MixinChunkNoiseSamplerCellCache implements IFastCacheLike 
     @Final
     private double[] cache;
 
+    @Mutable
     @Shadow
     @Final
     private DensityFunction delegate;
@@ -110,6 +112,7 @@ public abstract class MixinChunkNoiseSamplerCellCache implements IFastCacheLike 
                             cellBlockZ < horizontalCellBlockCount) {
                         res[i] = this.cache[((verticalCellBlockCount - 1 - cellBlockY) * horizontalCellBlockCount + cellBlockX) * horizontalCellBlockCount + cellBlockZ];
                     } else {
+                        System.out.println("partial cell cache hit");
                         return false; // partial hit possible
                     }
                 }
@@ -132,5 +135,10 @@ public abstract class MixinChunkNoiseSamplerCellCache implements IFastCacheLike 
     @Override
     public DensityFunction c2me$getDelegate() {
         return this.delegate;
+    }
+
+    @Override
+    public void c2me$setDelegate(DensityFunction delegate) {
+        this.delegate = delegate;
     }
 }

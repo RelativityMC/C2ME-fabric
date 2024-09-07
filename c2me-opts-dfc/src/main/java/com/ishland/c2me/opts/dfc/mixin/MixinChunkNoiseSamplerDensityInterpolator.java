@@ -11,6 +11,7 @@ import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Shadow;
 
 import java.util.Arrays;
@@ -38,6 +39,7 @@ public abstract class MixinChunkNoiseSamplerDensityInterpolator implements IFast
 
     @Shadow private double result;
 
+    @Mutable
     @Shadow @Final private DensityFunction delegate;
 
     @WrapMethod(method = "sample")
@@ -165,5 +167,10 @@ public abstract class MixinChunkNoiseSamplerDensityInterpolator implements IFast
     @Override
     public DensityFunction c2me$getDelegate() {
         return this.delegate;
+    }
+
+    @Override
+    public void c2me$setDelegate(DensityFunction delegate) {
+        this.delegate = delegate;
     }
 }

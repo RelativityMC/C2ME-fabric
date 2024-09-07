@@ -2,12 +2,16 @@ package com.ishland.c2me.opts.dfc.mixin;
 
 import com.ishland.c2me.opts.dfc.common.ast.EvalType;
 import com.ishland.c2me.opts.dfc.common.ducks.IFastCacheLike;
+import com.ishland.c2me.opts.dfc.common.gen.IMultiMethod;
+import com.ishland.c2me.opts.dfc.common.gen.ISingleMethod;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 
 @Mixin(ChunkNoiseSampler.Cache2D.class)
 public abstract class MixinChunkNoiseSamplerCache2D implements IFastCacheLike {
@@ -16,6 +20,7 @@ public abstract class MixinChunkNoiseSamplerCache2D implements IFastCacheLike {
 
     @Shadow private double lastSamplingResult;
 
+    @Mutable
     @Shadow @Final private DensityFunction delegate;
 
     @Override
@@ -47,5 +52,10 @@ public abstract class MixinChunkNoiseSamplerCache2D implements IFastCacheLike {
     @Override
     public DensityFunction c2me$getDelegate() {
         return this.delegate;
+    }
+
+    @Override
+    public void c2me$setDelegate(DensityFunction delegate) {
+        this.delegate = delegate;
     }
 }

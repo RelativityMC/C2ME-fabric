@@ -9,7 +9,9 @@ import com.ishland.c2me.opts.dfc.common.util.ArrayCache;
 import com.ishland.c2me.opts.dfc.common.vif.AstVanillaInterface;
 import it.unimi.dsi.fastutil.Pair;
 import it.unimi.dsi.fastutil.ints.IntObjectPair;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
 import net.minecraft.world.gen.densityfunction.DensityFunctionTypes;
 import org.objectweb.asm.ClassWriter;
@@ -30,6 +32,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.IntConsumer;
 import java.util.stream.Collectors;
 
@@ -83,9 +86,9 @@ public class BytecodeGen {
         ListIterator<Object> iterator = args.listIterator();
         while (iterator.hasNext()) {
             Object next = iterator.next();
-            if (next instanceof DensityFunctionTypes.Wrapping wrapping) {
-                iterator.set(new DensityFunctionTypes.Wrapping(wrapping.type(), compile(wrapping.wrapped())));
-            }
+//            if (next instanceof DensityFunctionTypes.Wrapping wrapping && wrapping.type() == DensityFunctionTypes.Wrapping.Type.FLAT_CACHE) {
+//                iterator.set(new DensityFunctionTypes.Wrapping(wrapping.type(), compile(wrapping.wrapped())));
+//            }
         }
 
         byte[] bytes = writer.toByteArray();
@@ -133,6 +136,11 @@ public class BytecodeGen {
             m.invokeinterface(Type.getInternalName(List.class), "get", Type.getMethodDescriptor(InstructionAdapter.OBJECT_TYPE, Type.INT_TYPE));
             m.checkcast(Type.getType(type));
             m.putfield(context.className, name, Type.getDescriptor(type));
+        }
+
+        for (String postProcessingMethod : context.postProcessMethods.stream().sorted().toList()) {
+            m.load(0, InstructionAdapter.OBJECT_TYPE);
+            m.invokevirtual(context.className, postProcessingMethod, "()V", false);
         }
 
         m.areturn(Type.VOID_TYPE);
@@ -273,6 +281,7 @@ public class BytecodeGen {
         private int methodIdx = 0;
         private final Reference2ObjectOpenHashMap<AstNode, String> singleMethods = new Reference2ObjectOpenHashMap<>();
         private final Reference2ObjectOpenHashMap<AstNode, String> multiMethods = new Reference2ObjectOpenHashMap<>();
+        private final ObjectOpenHashSet<String> postProcessMethods = new ObjectOpenHashSet<>();
         private final Reference2ObjectOpenHashMap<Object, FieldRecord> args = new Reference2ObjectOpenHashMap<>();
 
         public Context(ClassWriter classWriter, String className) {
@@ -442,6 +451,35 @@ public class BytecodeGen {
             m.iinc(loopIdx, 1);
             m.goTo(start);
             m.visitLabel(end);
+        }
+
+        public void genPostprocessingMethod(String name, Consumer<InstructionAdapter> generator) {
+            if (this.postProcessMethods.contains(name)) {
+                return;
+            }
+            InstructionAdapter adapter = new InstructionAdapter(
+                    new AnalyzerAdapter(
+                            this.className,
+                            Opcodes.ACC_PRIVATE | Opcodes.ACC_FINAL,
+                            name,
+                            "()V",
+                            classWriter.visitMethod(
+                                    Opcodes.ACC_PRIVATE | Opcodes.ACC_FINAL,
+                                    name,
+                                    "()V",
+                                    null,
+                                    null
+                            )
+                    )
+            );
+            Label start = new Label();
+            Label end = new Label();
+            adapter.visitLabel(start);
+            generator.accept(adapter);
+            adapter.visitLabel(end);
+            adapter.visitMaxs(0, 0);
+            adapter.visitLocalVariable("this", this.classDesc, null, start, end, 0);
+            this.postProcessMethods.add(name);
         }
 
         public static interface LocalVarConsumer {

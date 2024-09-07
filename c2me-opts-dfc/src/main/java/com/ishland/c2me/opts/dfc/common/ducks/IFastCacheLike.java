@@ -1,6 +1,8 @@
 package com.ishland.c2me.opts.dfc.common.ducks;
 
 import com.ishland.c2me.opts.dfc.common.ast.EvalType;
+import com.ishland.c2me.opts.dfc.common.gen.IMultiMethod;
+import com.ishland.c2me.opts.dfc.common.gen.ISingleMethod;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
 
 public interface IFastCacheLike extends DensityFunction {
@@ -16,5 +18,8 @@ public interface IFastCacheLike extends DensityFunction {
     void c2me$cache(double[] res, int[] x, int[] y, int[] z, EvalType evalType);
 
     DensityFunction c2me$getDelegate();
+
+    // called by generated code
+    void c2me$setDelegate(DensityFunction delegate);
 
 }

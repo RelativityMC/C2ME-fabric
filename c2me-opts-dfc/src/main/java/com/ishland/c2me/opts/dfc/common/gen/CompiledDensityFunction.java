@@ -16,62 +16,18 @@ import java.util.ListIterator;
 import java.util.Objects;
 import java.util.function.Supplier;
 
-public class CompiledDensityFunction implements DensityFunction {
+public class CompiledDensityFunction extends SubCompiledDensityFunction {
 
     private final CompiledEntry compiledEntry;
-    private final Supplier<DensityFunction> blendingFallback;
 
     public CompiledDensityFunction(CompiledEntry compiledEntry, DensityFunction blendingFallback) {
+        super(compiledEntry, compiledEntry, blendingFallback);
         this.compiledEntry = Objects.requireNonNull(compiledEntry);
-        this.blendingFallback = blendingFallback != null ? () -> blendingFallback : null;
     }
 
     private CompiledDensityFunction(CompiledEntry compiledEntry, Supplier<DensityFunction> blendingFallback) {
+        super(compiledEntry, compiledEntry, blendingFallback);
         this.compiledEntry = Objects.requireNonNull(compiledEntry);
-        this.blendingFallback = blendingFallback;
-    }
-
-    @Override
-    public double sample(NoisePos pos) {
-        if (pos.getBlender() != Blender.getNoBlending()) {
-            DensityFunction fallback = this.getFallback();
-            if (fallback == null) {
-                throw new IllegalStateException("blendingFallback is no more");
-            }
-            return fallback.sample(pos);
-        } else {
-            return this.compiledEntry.evalSingle(pos.blockX(), pos.blockY(), pos.blockZ(), EvalType.from(pos));
-        }
-    }
-
-    @Override
-    public void fill(double[] densities, EachApplier applier) {
-        if (applier instanceof ChunkNoiseSampler sampler) {
-            if (sampler.getBlender() != Blender.getNoBlending()) {
-                DensityFunction fallback = this.getFallback();
-                if (fallback == null) {
-                    throw new IllegalStateException("blendingFallback is no more");
-                }
-                fallback.fill(densities, applier);
-                return;
-            }
-        }
-        if (applier instanceof EachApplierVanillaInterface vanillaInterface) {
-            this.compiledEntry.evalMulti(densities, vanillaInterface.getX(), vanillaInterface.getY(), vanillaInterface.getZ(), EvalType.from(applier), vanillaInterface.c2me$getArrayCache());
-            return;
-        }
-
-        ArrayCache cache = applier instanceof IArrayCacheCapable cacheCapable ? cacheCapable.c2me$getArrayCache() : new ArrayCache();
-        int[] x = cache.getIntArray(densities.length, false);
-        int[] y = cache.getIntArray(densities.length, false);
-        int[] z = cache.getIntArray(densities.length, false);
-        for (int i = 0; i < densities.length; i ++) {
-            NoisePos pos = applier.at(i);
-            x[i] = pos.blockX();
-            y[i] = pos.blockY();
-            z[i] = pos.blockZ();
-        }
-        this.compiledEntry.evalMulti(densities, x, y, z, EvalType.from(applier), cache);
     }
 
     @Override
@@ -82,14 +38,23 @@ public class CompiledDensityFunction implements DensityFunction {
         while (iterator.hasNext()) {
             Object next = iterator.next();
             if (next instanceof DensityFunction df) {
-                DensityFunction applied = df.apply(visitor);
-                if (df != applied) {
-                    if (df instanceof IFastCacheLike && !(applied instanceof IFastCacheLike)) {
-                        iterator.set(null);
+                if (df instanceof IFastCacheLike cacheLike) {
+                    DensityFunction applied = visitor.apply(cacheLike);
+                    if (applied == cacheLike.c2me$getDelegate()) {
+                        iterator.set(null); // cache removed
+                        modified = true;
+                    } else if (applied instanceof IFastCacheLike newCacheLike) {
+                        iterator.set(newCacheLike);
+                        modified = true;
                     } else {
-                        iterator.set(applied);
+                        throw new UnsupportedOperationException("Unsupported transformation on Wrapping node");
                     }
-                    modified = true;
+                } else {
+                    DensityFunction applied = df.apply(visitor);
+                    if (df != applied) {
+                        iterator.set(applied);
+                        modified = true;
+                    }
                 }
             }
             if (next instanceof Noise noise) {
@@ -114,26 +79,4 @@ public class CompiledDensityFunction implements DensityFunction {
         }
     }
 
-    @Override
-    public double minValue() {
-//        DensityFunction fallback = this.getFallback();
-//        return fallback != null ? fallback.minValue() : Double.MIN_VALUE;
-        return Double.MIN_VALUE;
-    }
-
-    @Override
-    public double maxValue() {
-//        DensityFunction fallback = this.getFallback();
-//        return fallback != null ? fallback.maxValue() : Double.MAX_VALUE;
-        return Double.MAX_VALUE;
-    }
-
-    @Override
-    public CodecHolder<? extends DensityFunction> getCodecHolder() {
-        throw new UnsupportedOperationException();
-    }
-
-    private DensityFunction getFallback() {
-        return this.blendingFallback != null ? this.blendingFallback.get() : null;
-    }
 }

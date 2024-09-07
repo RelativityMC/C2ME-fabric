@@ -9,6 +9,7 @@ import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Shadow;
 
 import java.util.Arrays;
@@ -16,6 +17,7 @@ import java.util.Arrays;
 @Mixin(ChunkNoiseSampler.CacheOnce.class)
 public abstract class MixinChunkNoiseSamplerCacheOnce implements IFastCacheLike {
 
+    @Mutable
     @Shadow @Final private DensityFunction delegate;
     private double c2me$lastValue = Double.NaN;
     private int c2me$lastX = Integer.MIN_VALUE;
@@ -121,5 +123,15 @@ public abstract class MixinChunkNoiseSamplerCacheOnce implements IFastCacheLike 
             this.c2me$lastYa = Arrays.copyOf(y, y.length);
             this.c2me$lastZa = Arrays.copyOf(z, z.length);
         }
+    }
+
+    @Override
+    public DensityFunction c2me$getDelegate() {
+        return this.delegate;
+    }
+
+    @Override
+    public void c2me$setDelegate(DensityFunction delegate) {
+        this.delegate = delegate;
     }
 }
