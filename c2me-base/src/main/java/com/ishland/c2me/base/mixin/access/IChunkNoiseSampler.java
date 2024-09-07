@@ -27,4 +27,11 @@ public interface IChunkNoiseSampler {
 
     @Accessor
     boolean getIsSamplingForCaches();
+
+    @Accessor
+    int getStartBiomeX();
+
+    @Accessor
+    int getStartBiomeZ();
+
 }

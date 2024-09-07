@@ -2,6 +2,7 @@ package com.ishland.c2me.opts.dfc.mixin;
 
 import com.ishland.c2me.base.mixin.access.IChunkNoiseSampler;
 import com.ishland.c2me.opts.dfc.common.ast.EvalType;
+import com.ishland.c2me.opts.dfc.common.ducks.IFastCacheLike;
 import com.ishland.c2me.opts.dfc.common.vif.NoisePosVanillaInterface;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
@@ -12,13 +13,19 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(ChunkNoiseSampler.CellCache.class)
-public class MixinChunkNoiseSamplerCellCache {
+public abstract class MixinChunkNoiseSamplerCellCache implements IFastCacheLike {
 
-    @Shadow @Final private ChunkNoiseSampler field_36602;
+    @Shadow
+    @Final
+    private ChunkNoiseSampler field_36602;
 
-    @Shadow @Final private double[] cache;
+    @Shadow
+    @Final
+    private double[] cache;
 
-    @Shadow @Final private DensityFunction delegate;
+    @Shadow
+    @Final
+    private DensityFunction delegate;
 
     @WrapMethod(method = "sample")
     private double wrapSample(DensityFunction.NoisePos pos, Operation<Double> original) {
@@ -52,4 +59,78 @@ public class MixinChunkNoiseSamplerCellCache {
         return original.call(pos);
     }
 
+    @Override
+    public double c2me$getCached(int x, int y, int z, EvalType evalType) {
+        if (evalType == EvalType.INTERPOLATION) {
+            boolean isInInterpolationLoop = ((IChunkNoiseSampler) this.field_36602).getIsInInterpolationLoop();
+            if (isInInterpolationLoop) {
+                int startBlockX = ((IChunkNoiseSampler) this.field_36602).getStartBlockX();
+                int startBlockY = ((IChunkNoiseSampler) this.field_36602).getStartBlockY();
+                int startBlockZ = ((IChunkNoiseSampler) this.field_36602).getStartBlockZ();
+                int horizontalCellBlockCount = ((IChunkNoiseSampler) this.field_36602).getHorizontalCellBlockCount();
+                int verticalCellBlockCount = ((IChunkNoiseSampler) this.field_36602).getVerticalCellBlockCount();
+                int cellBlockX = x - startBlockX;
+                int cellBlockY = y - startBlockY;
+                int cellBlockZ = z - startBlockZ;
+                if (cellBlockX >= 0 &&
+                        cellBlockY >= 0 &&
+                        cellBlockZ >= 0 &&
+                        cellBlockX < horizontalCellBlockCount &&
+                        cellBlockY < verticalCellBlockCount &&
+                        cellBlockZ < horizontalCellBlockCount) {
+                    return this.cache[((verticalCellBlockCount - 1 - cellBlockY) * horizontalCellBlockCount + cellBlockX)
+                            * horizontalCellBlockCount
+                            + cellBlockZ];
+                }
+            }
+        }
+
+        return CACHE_MISS_NAN_BITS;
+    }
+
+    @Override
+    public boolean c2me$getCached(double[] res, int[] x, int[] y, int[] z, EvalType evalType) {
+        if (evalType == EvalType.INTERPOLATION) {
+            boolean isInInterpolationLoop = ((IChunkNoiseSampler) this.field_36602).getIsInInterpolationLoop();
+            if (isInInterpolationLoop) {
+                int startBlockX = ((IChunkNoiseSampler) this.field_36602).getStartBlockX();
+                int startBlockY = ((IChunkNoiseSampler) this.field_36602).getStartBlockY();
+                int startBlockZ = ((IChunkNoiseSampler) this.field_36602).getStartBlockZ();
+                int horizontalCellBlockCount = ((IChunkNoiseSampler) this.field_36602).getHorizontalCellBlockCount();
+                int verticalCellBlockCount = ((IChunkNoiseSampler) this.field_36602).getVerticalCellBlockCount();
+                for (int i = 0; i < res.length; i++) {
+                    int cellBlockX = x[i] - startBlockX;
+                    int cellBlockY = y[i] - startBlockY;
+                    int cellBlockZ = z[i] - startBlockZ;
+                    if (cellBlockX >= 0 &&
+                            cellBlockY >= 0 &&
+                            cellBlockZ >= 0 &&
+                            cellBlockX < horizontalCellBlockCount &&
+                            cellBlockY < verticalCellBlockCount &&
+                            cellBlockZ < horizontalCellBlockCount) {
+                        res[i] = this.cache[((verticalCellBlockCount - 1 - cellBlockY) * horizontalCellBlockCount + cellBlockX) * horizontalCellBlockCount + cellBlockZ];
+                    } else {
+                        return false; // partial hit possible
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    @Override
+    public void c2me$cache(int x, int y, int z, EvalType evalType, double cached) {
+        // nop
+    }
+
+    @Override
+    public void c2me$cache(double[] res, int[] x, int[] y, int[] z, EvalType evalType) {
+        // nop
+    }
+
+    @Override
+    public DensityFunction c2me$getDelegate() {
+        return this.delegate;
+    }
 }

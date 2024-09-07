@@ -7,8 +7,12 @@
     "IChunkNoiseSamplerDensityInterpolator",
     "MixinChunkNoiseSampler",
     "MixinChunkNoiseSampler1",
+    "MixinChunkNoiseSamplerCache2D",
     "MixinChunkNoiseSamplerCacheOnce",
     "MixinChunkNoiseSamplerCellCache",
+    "MixinChunkNoiseSamplerDensityInterpolator",
+    "MixinChunkNoiseSamplerFlatCache",
+    "MixinDFTWrapping",
     "MixinNoiseConfig"
   ]
 }

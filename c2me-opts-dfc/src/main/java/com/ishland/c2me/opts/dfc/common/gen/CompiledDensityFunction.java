@@ -3,6 +3,7 @@ package com.ishland.c2me.opts.dfc.common.gen;
 import com.google.common.base.Suppliers;
 import com.ishland.c2me.opts.dfc.common.ast.EvalType;
 import com.ishland.c2me.opts.dfc.common.ducks.IArrayCacheCapable;
+import com.ishland.c2me.opts.dfc.common.ducks.IFastCacheLike;
 import com.ishland.c2me.opts.dfc.common.util.ArrayCache;
 import com.ishland.c2me.opts.dfc.common.vif.EachApplierVanillaInterface;
 import net.minecraft.util.dynamic.CodecHolder;
@@ -83,7 +84,11 @@ public class CompiledDensityFunction implements DensityFunction {
             if (next instanceof DensityFunction df) {
                 DensityFunction applied = df.apply(visitor);
                 if (df != applied) {
-                    iterator.set(applied);
+                    if (df instanceof IFastCacheLike && !(applied instanceof IFastCacheLike)) {
+                        iterator.set(null);
+                    } else {
+                        iterator.set(applied);
+                    }
                     modified = true;
                 }
             }

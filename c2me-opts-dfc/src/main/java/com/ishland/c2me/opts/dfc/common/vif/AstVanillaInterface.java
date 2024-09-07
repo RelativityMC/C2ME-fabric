@@ -2,7 +2,9 @@ package com.ishland.c2me.opts.dfc.common.vif;
 
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
 import com.ishland.c2me.opts.dfc.common.ast.EvalType;
+import com.ishland.c2me.opts.dfc.common.ast.misc.CacheLikeNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.DelegateNode;
+import com.ishland.c2me.opts.dfc.common.ducks.IFastCacheLike;
 import net.minecraft.util.dynamic.CodecHolder;
 import net.minecraft.world.gen.chunk.Blender;
 import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
@@ -65,6 +67,9 @@ public class AstVanillaInterface implements DensityFunction {
         AstNode transformed = this.astNode.transform(astNode -> {
             if (astNode instanceof DelegateNode delegateNode) {
                 return new DelegateNode(delegateNode.getDelegate().apply(visitor));
+            }
+            if (astNode instanceof CacheLikeNode cacheLikeNode) {
+                return new CacheLikeNode((IFastCacheLike) cacheLikeNode.getCacheLike().apply(visitor), cacheLikeNode.getDelegate());
             }
             return astNode;
         });
