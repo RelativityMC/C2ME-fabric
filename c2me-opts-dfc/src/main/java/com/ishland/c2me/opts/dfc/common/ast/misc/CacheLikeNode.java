@@ -3,20 +3,19 @@ package com.ishland.c2me.opts.dfc.common.ast.misc;
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
 import com.ishland.c2me.opts.dfc.common.ast.AstTransformer;
 import com.ishland.c2me.opts.dfc.common.ast.EvalType;
-import com.ishland.c2me.opts.dfc.common.ast.binary.MulNode;
 import com.ishland.c2me.opts.dfc.common.ducks.IFastCacheLike;
 import com.ishland.c2me.opts.dfc.common.gen.BytecodeGen;
 import com.ishland.c2me.opts.dfc.common.gen.IMultiMethod;
 import com.ishland.c2me.opts.dfc.common.gen.ISingleMethod;
 import com.ishland.c2me.opts.dfc.common.gen.SubCompiledDensityFunction;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
+import net.minecraft.world.gen.densityfunction.DensityFunctionTypes;
 import org.objectweb.asm.Handle;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.InstructionAdapter;
 
-import java.lang.invoke.LambdaMetafactory;
 import java.util.Objects;
 
 public class CacheLikeNode implements AstNode {
@@ -268,5 +267,50 @@ public class CacheLikeNode implements AstNode {
 
     public AstNode getDelegate() {
         return delegate;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        CacheLikeNode that = (CacheLikeNode) o;
+        return Objects.equals(cacheLike, that.cacheLike) && Objects.equals(delegate, that.delegate);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = 1;
+
+        result = 31 * result + this.getClass().hashCode();
+        result = 31 * result + Objects.hashCode(cacheLike);
+        result = 31 * result + delegate.hashCode();
+
+        return result;
+    }
+
+    @Override
+    public boolean relaxedEquals(AstNode o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        CacheLikeNode that = (CacheLikeNode) o;
+        return relaxedEquals(cacheLike, that.cacheLike) && delegate.relaxedEquals(that.delegate);
+    }
+
+    private static boolean relaxedEquals(IFastCacheLike a, IFastCacheLike b) {
+        if ((Object) a instanceof DensityFunctionTypes.Wrapping wrappingA && (Object) b instanceof DensityFunctionTypes.Wrapping wrappingB) {
+            return wrappingA.type() == wrappingB.type();
+        } else {
+            return a.getClass() == b.getClass();
+        }
+    }
+
+    @Override
+    public int relaxedHashCode() {
+        int result = 1;
+
+        result = 31 * result + this.getClass().hashCode();
+        result = 31 * result + delegate.relaxedHashCode();
+
+        return result;
     }
 }

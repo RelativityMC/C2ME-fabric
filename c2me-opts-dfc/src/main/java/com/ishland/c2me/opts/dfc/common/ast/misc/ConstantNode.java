@@ -67,4 +67,14 @@ public class ConstantNode implements AstNode {
     public int hashCode() {
         return Double.hashCode(this.value);
     }
+
+    @Override
+    public boolean relaxedEquals(AstNode o) {
+        return this.equals(o);
+    }
+
+    @Override
+    public int relaxedHashCode() {
+        return this.hashCode();
+    }
 }

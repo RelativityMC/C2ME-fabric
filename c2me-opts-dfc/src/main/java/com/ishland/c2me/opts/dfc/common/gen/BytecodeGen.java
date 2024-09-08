@@ -7,11 +7,15 @@ import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.RootNode;
 import com.ishland.c2me.opts.dfc.common.util.ArrayCache;
 import com.ishland.c2me.opts.dfc.common.vif.AstVanillaInterface;
+import it.unimi.dsi.fastutil.Hash;
 import it.unimi.dsi.fastutil.Pair;
 import it.unimi.dsi.fastutil.ints.IntObjectPair;
+import it.unimi.dsi.fastutil.objects.Object2ReferenceMap;
+import it.unimi.dsi.fastutil.objects.Object2ReferenceMaps;
+import it.unimi.dsi.fastutil.objects.Object2ReferenceOpenCustomHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
+import it.unimi.dsi.fastutil.objects.Reference2ReferenceMap;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
 import net.minecraft.world.gen.densityfunction.DensityFunctionTypes;
 import org.objectweb.asm.ClassWriter;
@@ -50,7 +54,23 @@ public class BytecodeGen {
         }
     }
 
-    public static DensityFunction compile(DensityFunction densityFunction) {
+    private static final Object2ReferenceMap<AstNode, Class<?>> compilationCache = Object2ReferenceMaps.synchronize(new Object2ReferenceOpenCustomHashMap<>(new Hash.Strategy<>() {
+        @Override
+        public int hashCode(AstNode o) {
+            return o.relaxedHashCode();
+        }
+
+        @Override
+        public boolean equals(AstNode a, AstNode b) {
+            return a.relaxedEquals(b);
+        }
+    }));
+
+    public static DensityFunction compile(DensityFunction densityFunction, Reference2ReferenceMap<DensityFunction, DensityFunction> tempCache) {
+        DensityFunction cached = tempCache.get(densityFunction);
+        if (cached != null) {
+            return cached;
+        }
         if (densityFunction instanceof AstVanillaInterface vif) {
             AstNode ast = vif.getAstNode();
             return new CompiledDensityFunction(compile0(ast), vif.getBlendingFallback());
@@ -59,12 +79,16 @@ public class BytecodeGen {
         if (ast instanceof ConstantNode constantNode) {
             return DensityFunctionTypes.constant(constantNode.getValue());
         }
-        return new CompiledDensityFunction(compile0(ast), densityFunction);
+        CompiledDensityFunction compiled = new CompiledDensityFunction(compile0(ast), densityFunction);
+        tempCache.put(densityFunction, compiled);
+        return compiled;
     }
 
-    public static CompiledEntry compile0(AstNode node) {
+    public static synchronized CompiledEntry compile0(AstNode node) {
+        Class<?> cached = compilationCache.get(node);
+
         ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES);
-        String name = String.format("DfcCompiled_%d", ordinal.getAndIncrement());
+        String name = cached != null ? String.format("DfcCompiled_discarded") : String.format("DfcCompiled_%d", ordinal.getAndIncrement());
         writer.visit(Opcodes.V21, Opcodes.ACC_PUBLIC | Opcodes.ACC_FINAL, name, null, Type.getInternalName(Object.class), new String[]{Type.getInternalName(CompiledEntry.class)});
 
         RootNode rootNode = new RootNode(node);
@@ -73,15 +97,23 @@ public class BytecodeGen {
         genContext.newSingleMethod0((adapter, localVarConsumer) -> rootNode.doBytecodeGenSingle(genContext, adapter, localVarConsumer), "evalSingle", true);
         genContext.newMultiMethod0((adapter, localVarConsumer) -> rootNode.doBytecodeGenMulti(genContext, adapter, localVarConsumer), "evalMulti", true);
 
-        genConstructor(genContext);
-        genGetArgs(genContext);
-        genNewInstance(genContext);
-//        genFields(genContext);
-
         List<Object> args = genContext.args.entrySet().stream()
                 .sorted(Comparator.comparingInt(o -> o.getValue().ordinal()))
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toCollection(ArrayList::new));
+
+        if (cached != null) {
+            try {
+                return (CompiledEntry) cached.getConstructor(List.class).newInstance(args);
+            } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        genConstructor(genContext);
+        genGetArgs(genContext);
+        genNewInstance(genContext);
+//        genFields(genContext);
 
         ListIterator<Object> iterator = args.listIterator();
         while (iterator.hasNext()) {
@@ -94,6 +126,7 @@ public class BytecodeGen {
         byte[] bytes = writer.toByteArray();
         dumpClass(genContext.className, bytes);
         Class<?> defined = defineClass(genContext.className, bytes);
+        compilationCache.put(node, defined);
         try {
             return (CompiledEntry) defined.getConstructor(List.class).newInstance(args);
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {

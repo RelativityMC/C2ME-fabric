@@ -199,4 +199,43 @@ public class DFTWeirdScaledSamplerNode implements AstNode {
 
         m.areturn(Type.VOID_TYPE);
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        DFTWeirdScaledSamplerNode that = (DFTWeirdScaledSamplerNode) o;
+        return Objects.equals(input, that.input) && Objects.equals(noise, that.noise) && mapper == that.mapper;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = 1;
+
+        result = 31 * result + this.getClass().hashCode();
+        result = 31 * result + input.hashCode();
+        result = 31 * result + noise.hashCode();
+        result = 31 * result + mapper.hashCode();
+
+        return result;
+    }
+
+    @Override
+    public boolean relaxedEquals(AstNode o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        DFTWeirdScaledSamplerNode that = (DFTWeirdScaledSamplerNode) o;
+        return input.relaxedEquals(that.input) && mapper == that.mapper;
+    }
+
+    @Override
+    public int relaxedHashCode() {
+        int result = 1;
+
+        result = 31 * result + this.getClass().hashCode();
+        result = 31 * result + input.relaxedHashCode();
+        result = 31 * result + mapper.hashCode();
+
+        return result;
+    }
 }

@@ -36,10 +36,28 @@ public abstract class AbstractBinaryNode implements AstNode {
     public int hashCode() {
         int result = 1;
 
-        Object o = this.getClass();
-        result = 31 * result + o.hashCode();
+        result = 31 * result + this.getClass().hashCode();
         result = 31 * result + left.hashCode();
         result = 31 * result + right.hashCode();
+
+        return result;
+    }
+
+    @Override
+    public boolean relaxedEquals(AstNode o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        AbstractBinaryNode that = (AbstractBinaryNode) o;
+        return left.relaxedEquals(that.left) && right.relaxedEquals(that.right);
+    }
+
+    @Override
+    public int relaxedHashCode() {
+        int result = 1;
+
+        result = 31 * result + this.getClass().hashCode();
+        result = 31 * result + left.relaxedHashCode();
+        result = 31 * result + right.relaxedHashCode();
 
         return result;
     }
@@ -99,4 +117,6 @@ public abstract class AbstractBinaryNode implements AstNode {
     }
 
     protected abstract void bytecodeGenMultiBody(InstructionAdapter m, int idx, int res1);
+
+
 }

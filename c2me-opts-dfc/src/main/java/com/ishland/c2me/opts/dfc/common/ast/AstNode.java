@@ -17,4 +17,9 @@ public interface AstNode {
 
     void doBytecodeGenMulti(BytecodeGen.Context context, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer);
 
+    // data to be created as fields in generated code are only compared by class type
+    boolean relaxedEquals(AstNode o);
+
+    int relaxedHashCode();
+
 }

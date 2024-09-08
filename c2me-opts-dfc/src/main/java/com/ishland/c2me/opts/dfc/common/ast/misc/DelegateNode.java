@@ -14,8 +14,6 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.InstructionAdapter;
 
 import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.LongAdder;
 
 public class DelegateNode implements AstNode {
 
@@ -133,5 +131,41 @@ public class DelegateNode implements AstNode {
 
     public DensityFunction getDelegate() {
         return this.densityFunction;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        DelegateNode that = (DelegateNode) o;
+        return Objects.equals(densityFunction, that.densityFunction);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = 1;
+
+        result = 31 * result + Objects.hashCode(this.getClass());
+        result = 31 * result + Objects.hashCode(densityFunction);
+
+        return result;
+    }
+
+    @Override
+    public boolean relaxedEquals(AstNode o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        DelegateNode that = (DelegateNode) o;
+        return densityFunction.getClass() == that.densityFunction.getClass();
+    }
+
+    @Override
+    public int relaxedHashCode() {
+        int result = 1;
+
+        result = 31 * result + Objects.hashCode(this.getClass());
+        result = 31 * result + Objects.hashCode(densityFunction.getClass());
+
+        return result;
     }
 }

@@ -9,6 +9,8 @@ import net.minecraft.util.math.MathHelper;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.InstructionAdapter;
 
+import java.util.Objects;
+
 public class YClampedGradientNode implements AstNode {
 
     private final double fromY;
@@ -89,5 +91,36 @@ public class YClampedGradientNode implements AstNode {
         });
 
         m.areturn(Type.VOID_TYPE);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        YClampedGradientNode that = (YClampedGradientNode) o;
+        return Double.compare(fromY, that.fromY) == 0 && Double.compare(toY, that.toY) == 0 && Double.compare(fromValue, that.fromValue) == 0 && Double.compare(toValue, that.toValue) == 0;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = 1;
+
+        result = 31 * result + this.getClass().hashCode();
+        result = 31 * result + Double.hashCode(fromY);
+        result = 31 * result + Double.hashCode(toY);
+        result = 31 * result + Double.hashCode(fromValue);
+        result = 31 * result + Double.hashCode(toValue);
+
+        return result;
+    }
+
+    @Override
+    public boolean relaxedEquals(AstNode o) {
+        return this.equals(o);
+    }
+
+    @Override
+    public int relaxedHashCode() {
+        return this.hashCode();
     }
 }

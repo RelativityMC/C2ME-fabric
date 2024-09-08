@@ -27,7 +27,7 @@ public class ShiftedNoiseNode implements AstNode {
         this.shiftZ = Objects.requireNonNull(shiftZ);
         this.xzScale = xzScale;
         this.yScale = yScale;
-        this.noise = noise;
+        this.noise = Objects.requireNonNull(noise);
     }
 
     @Override
@@ -220,5 +220,48 @@ public class ShiftedNoiseNode implements AstNode {
         m.invokevirtual(Type.getInternalName(ArrayCache.class), "recycle", Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(double[].class)), false);
 
         m.areturn(Type.VOID_TYPE);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ShiftedNoiseNode that = (ShiftedNoiseNode) o;
+        return Double.compare(xzScale, that.xzScale) == 0 && Double.compare(yScale, that.yScale) == 0 && Objects.equals(shiftX, that.shiftX) && Objects.equals(shiftY, that.shiftY) && Objects.equals(shiftZ, that.shiftZ) && Objects.equals(noise, that.noise);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = 1;
+
+        result = 31 * result + shiftX.hashCode();
+        result = 31 * result + shiftY.hashCode();
+        result = 31 * result + shiftZ.hashCode();
+        result = 31 * result + Double.hashCode(xzScale);
+        result = 31 * result + Double.hashCode(yScale);
+        result = 31 * result + noise.hashCode();
+
+        return result;
+    }
+
+    @Override
+    public boolean relaxedEquals(AstNode o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ShiftedNoiseNode that = (ShiftedNoiseNode) o;
+        return Double.compare(xzScale, that.xzScale) == 0 && Double.compare(yScale, that.yScale) == 0 && shiftX.relaxedEquals(that.shiftX) && shiftY.relaxedEquals(that.shiftY) && shiftZ.relaxedEquals(that.shiftZ);
+    }
+
+    @Override
+    public int relaxedHashCode() {
+        int result = 1;
+
+        result = 31 * result + shiftX.relaxedHashCode();
+        result = 31 * result + shiftY.relaxedHashCode();
+        result = 31 * result + shiftZ.relaxedHashCode();
+        result = 31 * result + Double.hashCode(xzScale);
+        result = 31 * result + Double.hashCode(yScale);
+
+        return result;
     }
 }

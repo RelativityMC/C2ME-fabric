@@ -114,4 +114,34 @@ public class DFTShiftANode implements AstNode {
 
         m.areturn(Type.VOID_TYPE);
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        DFTShiftANode that = (DFTShiftANode) o;
+        return Objects.equals(offsetNoise, that.offsetNoise);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = 1;
+
+        Object o = this.getClass();
+        result = 31 * result + o.hashCode();
+        result = 31 * result + offsetNoise.hashCode();
+
+        return result;
+    }
+
+    @Override
+    public boolean relaxedEquals(AstNode o) {
+        if (this == o) return true;
+        return o != null && getClass() == o.getClass();
+    }
+
+    @Override
+    public int relaxedHashCode() {
+        return this.getClass().hashCode();
+    }
 }

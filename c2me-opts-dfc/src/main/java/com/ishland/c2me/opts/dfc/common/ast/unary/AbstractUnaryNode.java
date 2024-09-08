@@ -32,9 +32,26 @@ public abstract class AbstractUnaryNode implements AstNode {
     public int hashCode() {
         int result = 1;
 
-        Object o = this.getClass();
-        result = 31 * result + o.hashCode();
+        result = 31 * result + this.getClass().hashCode();
         result = 31 * result + operand.hashCode();
+
+        return result;
+    }
+
+    @Override
+    public boolean relaxedEquals(AstNode o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        AbstractUnaryNode that = (AbstractUnaryNode) o;
+        return operand.relaxedEquals(that.operand);
+    }
+
+    @Override
+    public int relaxedHashCode() {
+        int result = 1;
+
+        result = 31 * result + this.getClass().hashCode();
+        result = 31 * result + operand.relaxedHashCode();
 
         return result;
     }

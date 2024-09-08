@@ -55,4 +55,40 @@ public class RootNode implements AstNode {
         context.callDelegateMulti(m, nextMethod);
         m.areturn(Type.VOID_TYPE);
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        RootNode that = (RootNode) o;
+        return Objects.equals(next, that.next);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = 1;
+
+        result = 31 * result + this.getClass().hashCode();
+        result = 31 * result + next.hashCode();
+
+        return result;
+    }
+
+    @Override
+    public boolean relaxedEquals(AstNode o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        RootNode that = (RootNode) o;
+        return next.relaxedEquals(that.next);
+    }
+
+    @Override
+    public int relaxedHashCode() {
+        int result = 1;
+
+        result = 31 * result + this.getClass().hashCode();
+        result = 31 * result + next.relaxedHashCode();
+
+        return result;
+    }
 }

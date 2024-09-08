@@ -321,4 +321,26 @@ public class RangeChoiceNode implements AstNode {
 
         return result;
     }
+
+    @Override
+    public boolean relaxedEquals(AstNode o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        RangeChoiceNode that = (RangeChoiceNode) o;
+        return Double.compare(minInclusive, that.minInclusive) == 0 && Double.compare(maxExclusive, that.maxExclusive) == 0 && input.relaxedEquals(that.input) && whenInRange.relaxedEquals(that.whenInRange) && whenOutOfRange.relaxedEquals(that.whenOutOfRange);
+    }
+
+    @Override
+    public int relaxedHashCode() {
+        int result = 1;
+
+        result = 31 * result + this.getClass().hashCode();
+        result = 31 * result + this.input.relaxedHashCode();
+        result = 31 * result + Double.hashCode(this.minInclusive);
+        result = 31 * result + Double.hashCode(this.maxExclusive);
+        result = 31 * result + this.whenInRange.relaxedHashCode();
+        result = 31 * result + this.whenOutOfRange.relaxedHashCode();
+
+        return result;
+    }
 }

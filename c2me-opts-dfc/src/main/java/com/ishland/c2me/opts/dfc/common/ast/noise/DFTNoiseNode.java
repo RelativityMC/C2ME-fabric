@@ -122,4 +122,43 @@ public class DFTNoiseNode implements AstNode {
 
         m.areturn(Type.VOID_TYPE);
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        DFTNoiseNode that = (DFTNoiseNode) o;
+        return Double.compare(xzScale, that.xzScale) == 0 && Double.compare(yScale, that.yScale) == 0 && Objects.equals(noise, that.noise);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = 1;
+
+        result = 31 * result + this.getClass().hashCode();
+        result = 31 * result + noise.hashCode();
+        result = 31 * result + Double.hashCode(xzScale);
+        result = 31 * result + Double.hashCode(yScale);
+
+        return result;
+    }
+
+    @Override
+    public boolean relaxedEquals(AstNode o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        DFTNoiseNode that = (DFTNoiseNode) o;
+        return Double.compare(xzScale, that.xzScale) == 0 && Double.compare(yScale, that.yScale) == 0;
+    }
+
+    @Override
+    public int relaxedHashCode() {
+        int result = 1;
+
+        result = 31 * result + this.getClass().hashCode();
+        result = 31 * result + Double.hashCode(xzScale);
+        result = 31 * result + Double.hashCode(yScale);
+
+        return result;
+    }
 }
