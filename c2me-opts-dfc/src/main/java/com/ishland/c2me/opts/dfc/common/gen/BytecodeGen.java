@@ -427,7 +427,7 @@ public class BytecodeGen {
             }
             int size = this.args.size();
             String name = String.format("field_%d", size);
-            classWriter.visitField(Opcodes.ACC_PRIVATE | Opcodes.ACC_FINAL, name, Type.getDescriptor(type), null, null);
+            classWriter.visitField(Opcodes.ACC_PRIVATE, name, Type.getDescriptor(type), null, null);
             this.args.put(data, new FieldRecord(name, size, type));
             return name;
         }

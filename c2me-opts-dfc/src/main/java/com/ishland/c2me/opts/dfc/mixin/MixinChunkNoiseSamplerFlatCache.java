@@ -69,7 +69,8 @@ public abstract class MixinChunkNoiseSamplerFlatCache implements IFastCacheLike 
     }
 
     @Override
-    public void c2me$setDelegate(DensityFunction delegate) {
+    public DensityFunction c2me$withDelegate(DensityFunction delegate) {
         this.delegate = delegate;
+        return this;
     }
 }
