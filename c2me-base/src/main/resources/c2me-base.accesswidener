@@ -53,6 +53,7 @@ accessible    class    net/minecraft/world/gen/chunk/ChunkNoiseSampler$CacheOnce
 accessible    class    net/minecraft/world/gen/chunk/ChunkNoiseSampler$BlendAlphaDensityFunction
 accessible    class    net/minecraft/world/gen/chunk/ChunkNoiseSampler$BlendOffsetDensityFunction
 accessible    class    net/minecraft/world/gen/chunk/ChunkNoiseSampler$CellCache
+accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctions$CaveScaler
 
 extendable    class    net/minecraft/client/option/SimpleOption
 extendable    class    net/minecraft/world/storage/RegionBasedStorage

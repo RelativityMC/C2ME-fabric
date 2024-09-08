@@ -13,6 +13,7 @@ import com.ishland.c2me.opts.dfc.common.ast.noise.DFTNoiseNode;
 import com.ishland.c2me.opts.dfc.common.ast.noise.DFTShiftANode;
 import com.ishland.c2me.opts.dfc.common.ast.noise.DFTShiftBNode;
 import com.ishland.c2me.opts.dfc.common.ast.noise.DFTShiftNode;
+import com.ishland.c2me.opts.dfc.common.ast.noise.DFTWeirdScaledSamplerNode;
 import com.ishland.c2me.opts.dfc.common.ast.noise.ShiftedNoiseNode;
 import com.ishland.c2me.opts.dfc.common.ast.unary.AbsNode;
 import com.ishland.c2me.opts.dfc.common.ast.unary.CubeNode;
@@ -27,8 +28,12 @@ import net.minecraft.world.gen.densityfunction.DensityFunction;
 import net.minecraft.world.gen.densityfunction.DensityFunctionTypes;
 
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.LongAdder;
 
 public class McToAst {
+
+//    private static final ConcurrentHashMap<Class<?>, LongAdder> delegateStatistics = new ConcurrentHashMap<>();
 
     public static AstNode toAst(DensityFunction df) {
         Objects.requireNonNull(df);
@@ -70,8 +75,12 @@ public class McToAst {
             case DensityFunctionTypes.ShiftA f -> new DFTShiftANode(f.offsetNoise());
             case DensityFunctionTypes.ShiftB f -> new DFTShiftBNode(f.offsetNoise());
             case DensityFunctionTypes.YClampedGradient f -> new YClampedGradientNode(f.fromY(), f.toY(), f.fromValue(), f.toValue());
+            case DensityFunctionTypes.WeirdScaledSampler f -> new DFTWeirdScaledSamplerNode(toAst(f.input()), f.noise(), f.rarityValueMapper());
 
-            default -> new DelegateNode(df);
+            default -> {
+//                delegateStatistics.computeIfAbsent(df.getClass(), unused -> new LongAdder()).increment();;
+                yield new DelegateNode(df);
+            }
         };
     }
 
