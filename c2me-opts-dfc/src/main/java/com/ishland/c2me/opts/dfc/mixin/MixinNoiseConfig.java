@@ -1,46 +1,58 @@
 package com.ishland.c2me.opts.dfc.mixin;
 
 import com.ishland.c2me.opts.dfc.common.gen.BytecodeGen;
-import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
-import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceMap;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
+import net.minecraft.world.biome.source.util.MultiNoiseUtil;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
 import net.minecraft.world.gen.noise.NoiseConfig;
 import net.minecraft.world.gen.noise.NoiseRouter;
-import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(NoiseConfig.class)
+@Mixin(value = NoiseConfig.class, priority = 900)
 public class MixinNoiseConfig {
 
     @Mutable
     @Shadow @Final private NoiseRouter noiseRouter;
 
-    @WrapOperation(method = "<init>", at = @At(value = "FIELD", target = "Lnet/minecraft/world/gen/noise/NoiseConfig;noiseRouter:Lnet/minecraft/world/gen/noise/NoiseRouter;", opcode = Opcodes.PUTFIELD))
-    private void postCreate(NoiseConfig instance, NoiseRouter value, Operation<Void> original) {
+    @Mutable
+    @Shadow @Final private MultiNoiseUtil.MultiNoiseSampler multiNoiseSampler;
+
+    @Inject(method = "<init>", at = @At("RETURN"))
+    private void postCreate(CallbackInfo ci) {
         Reference2ReferenceMap<DensityFunction, DensityFunction> tempCache = new Reference2ReferenceOpenHashMap<>();
-        original.call(instance, new NoiseRouter(
-                BytecodeGen.compile(value.barrierNoise(), tempCache),
-                BytecodeGen.compile(value.fluidLevelFloodednessNoise(), tempCache),
-                BytecodeGen.compile(value.fluidLevelSpreadNoise(), tempCache),
-                BytecodeGen.compile(value.lavaNoise(), tempCache),
-                BytecodeGen.compile(value.temperature(), tempCache),
-                BytecodeGen.compile(value.vegetation(), tempCache),
-                BytecodeGen.compile(value.continents(), tempCache),
-                BytecodeGen.compile(value.erosion(), tempCache),
-                BytecodeGen.compile(value.depth(), tempCache),
-                BytecodeGen.compile(value.ridges(), tempCache),
-                BytecodeGen.compile(value.initialDensityWithoutJaggedness(), tempCache),
-                BytecodeGen.compile(value.finalDensity(), tempCache),
-                BytecodeGen.compile(value.veinToggle(), tempCache),
-                BytecodeGen.compile(value.veinRidged(), tempCache),
-                BytecodeGen.compile(value.veinGap(), tempCache)
-        ));
+        this.noiseRouter = new NoiseRouter(
+                BytecodeGen.compile(this.noiseRouter.barrierNoise(), tempCache),
+                BytecodeGen.compile(this.noiseRouter.fluidLevelFloodednessNoise(), tempCache),
+                BytecodeGen.compile(this.noiseRouter.fluidLevelSpreadNoise(), tempCache),
+                BytecodeGen.compile(this.noiseRouter.lavaNoise(), tempCache),
+                BytecodeGen.compile(this.noiseRouter.temperature(), tempCache),
+                BytecodeGen.compile(this.noiseRouter.vegetation(), tempCache),
+                BytecodeGen.compile(this.noiseRouter.continents(), tempCache),
+                BytecodeGen.compile(this.noiseRouter.erosion(), tempCache),
+                BytecodeGen.compile(this.noiseRouter.depth(), tempCache),
+                BytecodeGen.compile(this.noiseRouter.ridges(), tempCache),
+                BytecodeGen.compile(this.noiseRouter.initialDensityWithoutJaggedness(), tempCache),
+                BytecodeGen.compile(this.noiseRouter.finalDensity(), tempCache),
+                BytecodeGen.compile(this.noiseRouter.veinToggle(), tempCache),
+                BytecodeGen.compile(this.noiseRouter.veinRidged(), tempCache),
+                BytecodeGen.compile(this.noiseRouter.veinGap(), tempCache)
+        );
+        this.multiNoiseSampler = new MultiNoiseUtil.MultiNoiseSampler(
+                BytecodeGen.compile(this.multiNoiseSampler.temperature(), tempCache),
+                BytecodeGen.compile(this.multiNoiseSampler.humidity(), tempCache),
+                BytecodeGen.compile(this.multiNoiseSampler.continentalness(), tempCache),
+                BytecodeGen.compile(this.multiNoiseSampler.erosion(), tempCache),
+                BytecodeGen.compile(this.multiNoiseSampler.depth(), tempCache),
+                BytecodeGen.compile(this.multiNoiseSampler.weirdness(), tempCache),
+                this.multiNoiseSampler.spawnTarget()
+        );
     }
 
 }
