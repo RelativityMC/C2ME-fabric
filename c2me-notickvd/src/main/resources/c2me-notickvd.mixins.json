@@ -9,6 +9,7 @@
     "MixinChunkTicketManager",
     "MixinChunkTicketManagerNearbyChunkTicketUpdater",
     "MixinPlayerManager",
+    "MixinServerAccessible",
     "MixinServerBlockTicking",
     "MixinServerChunkManager",
     "MixinThreadedAnvilChunkStorage",

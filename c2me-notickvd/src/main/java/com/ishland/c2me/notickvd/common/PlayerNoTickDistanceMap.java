@@ -156,11 +156,6 @@ public class PlayerNoTickDistanceMap extends ChunkPosDistanceLevelPropagatorExte
                 accessibleFuture.whenCompleteAsync((worldChunkOptionalChunk, throwable) -> {
                     if (throwable != null) {
                         LOGGER.error("Failed to load chunk {}", pos);
-                    } else if (worldChunkOptionalChunk != null) {
-                        final WorldChunk worldChunk = worldChunkOptionalChunk.orElse(null);
-                        if (worldChunk != null) {
-                            ((IThreadedAnvilChunkStorage) tacs).invokeSendToPlayers(worldChunk);
-                        }
                     }
                 }, ((IThreadedAnvilChunkStorage) tacs).getMainThreadExecutor());
                 return accessibleFuture.exceptionally(throwable -> null).thenAccept(unused1 -> {
