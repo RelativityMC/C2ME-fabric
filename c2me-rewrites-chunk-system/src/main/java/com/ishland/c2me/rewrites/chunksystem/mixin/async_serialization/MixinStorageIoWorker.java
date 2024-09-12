@@ -16,12 +16,14 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.BitSet;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.locks.LockSupport;
@@ -38,12 +40,12 @@ public abstract class MixinStorageIoWorker {
     @Shadow @Final private static Logger LOGGER;
     private ExecutorService threadExecutor;
 
-    @Redirect(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/Util;getIoWorkerExecutor()Ljava/util/concurrent/ExecutorService;"))
-    private ExecutorService redirectIoWorkerExecutor() {
+    @ModifyArg(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/thread/PrioritizedConsecutiveExecutor;<init>(ILjava/util/concurrent/Executor;Ljava/lang/String;)V"))
+    private Executor redirectIoWorkerExecutor(Executor executor) {
         return threadExecutor = Executors.newSingleThreadExecutor(ChunkIoThreadingExecutorUtils.ioWorkerFactory);
     }
 
-    @Inject(method = "close", at = @At(value = "INVOKE", target = "Lnet/minecraft/class_10177;close()V", shift = At.Shift.AFTER))
+    @Inject(method = "close", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/thread/PrioritizedConsecutiveExecutor;close()V", shift = At.Shift.AFTER))
     private void onClose(CallbackInfo ci) {
         threadExecutor.shutdown();
         while (!threadExecutor.isTerminated()) {

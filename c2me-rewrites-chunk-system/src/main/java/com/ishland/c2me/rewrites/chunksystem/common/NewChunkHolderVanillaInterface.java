@@ -326,7 +326,7 @@ public class NewChunkHolderVanillaInterface extends ChunkHolder implements IFast
     }
 
     @Override
-    protected void method_39967(CompletableFuture<?> completableFuture) {
+    protected void combineSavingFuture(CompletableFuture<?> completableFuture) {
         this.newHolder.submitOp(completableFuture.thenAccept(o -> {}));
     }
 

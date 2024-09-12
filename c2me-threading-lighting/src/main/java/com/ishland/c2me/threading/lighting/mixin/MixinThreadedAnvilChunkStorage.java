@@ -3,11 +3,11 @@ package com.ishland.c2me.threading.lighting.mixin;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import net.minecraft.class_10171;
-import net.minecraft.class_10176;
-import net.minecraft.class_10178;
+import net.minecraft.server.world.ChunkTaskScheduler;
 import net.minecraft.server.world.ServerChunkLoadingManager;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.thread.SimpleConsecutiveExecutor;
+import net.minecraft.util.thread.TaskExecutor;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -29,8 +29,8 @@ public class MixinThreadedAnvilChunkStorage {
     private ServerWorld world;
     private ExecutorService lightThread = null;
 
-    @WrapOperation(method = "<init>", at = @At(value = "NEW", target = "(Ljava/util/concurrent/Executor;Ljava/lang/String;)Lnet/minecraft/class_10176;"))
-    private class_10176 onLightExecutorInit(Executor executor, String name, Operation<class_10176> original) {
+    @WrapOperation(method = "<init>", at = @At(value = "NEW", target = "(Ljava/util/concurrent/Executor;Ljava/lang/String;)Lnet/minecraft/util/thread/SimpleConsecutiveExecutor;"))
+    private SimpleConsecutiveExecutor onLightExecutorInit(Executor executor, String name, Operation<SimpleConsecutiveExecutor> original) {
         if (!name.equals("light")) return original.call(executor, name);
         lightThread = new ThreadPoolExecutor(
                 1, 1,
@@ -41,8 +41,8 @@ public class MixinThreadedAnvilChunkStorage {
         return original.call(lightThread, name);
     }
 
-    @WrapOperation(method = "<init>", at = @At(value = "NEW", target = "(Lnet/minecraft/class_10178;Ljava/util/concurrent/Executor;)Lnet/minecraft/class_10171;"))
-    private class_10171 onLightExecutorInit1(class_10178 arg, Executor executor, Operation<class_10171> original) {
+    @WrapOperation(method = "<init>", at = @At(value = "NEW", target = "(Lnet/minecraft/util/thread/TaskExecutor;Ljava/util/concurrent/Executor;)Lnet/minecraft/server/world/ChunkTaskScheduler;"))
+    private ChunkTaskScheduler onLightExecutorInit1(TaskExecutor<?> arg, Executor executor, Operation<ChunkTaskScheduler> original) {
         if (!arg.getName().equals("light")) original.call(arg, executor);
         return original.call(arg, lightThread);
     }

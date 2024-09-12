@@ -20,8 +20,8 @@ import java.util.function.Supplier;
 @Mixin(ServerWorld.class)
 public abstract class MixinServerWorld extends World implements StructureWorldAccess {
 
-    protected MixinServerWorld(MutableWorldProperties properties, RegistryKey<World> registryRef, DynamicRegistryManager registryManager, RegistryEntry<DimensionType> dimensionEntry, Supplier<Profiler> profiler, boolean isClient, boolean debugWorld, long biomeAccess, int maxChainedNeighborUpdates) {
-        super(properties, registryRef, registryManager, dimensionEntry, profiler, isClient, debugWorld, biomeAccess, maxChainedNeighborUpdates);
+    protected MixinServerWorld(MutableWorldProperties properties, RegistryKey<World> registryRef, DynamicRegistryManager registryManager, RegistryEntry<DimensionType> dimensionEntry, boolean bl, boolean bl2, long l, int i) {
+        super(properties, registryRef, registryManager, dimensionEntry, bl, bl2, l, i);
     }
 
     /**

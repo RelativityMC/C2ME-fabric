@@ -5,6 +5,7 @@ import com.ishland.c2me.base.mixin.access.IVersionedChunkStorage;
 import com.ishland.c2me.rewrites.chunk_serializer.common.ChunkDataSerializer;
 import com.ishland.c2me.rewrites.chunk_serializer.common.NbtWriter;
 import com.mojang.datafixers.DataFixer;
+import net.minecraft.class_10209;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.server.world.ServerChunkLoadingManager;
 import net.minecraft.server.world.ServerWorld;
@@ -77,7 +78,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
                 }
             }
 
-            this.world.getProfiler().visit("chunkSave");
+            class_10209.method_64146().visit("chunkSave");
 
             //region start replaced code
             // NbtCompound nbtCompound = ChunkSerializer.serialize(this.world, chunk);
