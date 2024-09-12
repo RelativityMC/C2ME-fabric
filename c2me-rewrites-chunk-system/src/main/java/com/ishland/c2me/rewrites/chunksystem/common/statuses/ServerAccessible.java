@@ -6,6 +6,8 @@ import com.ishland.c2me.base.mixin.access.IThreadedAnvilChunkStorage;
 import com.ishland.c2me.base.mixin.access.IWorldChunk;
 import com.ishland.c2me.rewrites.chunksystem.common.ChunkLoadingContext;
 import com.ishland.c2me.rewrites.chunksystem.common.ChunkState;
+import com.ishland.c2me.rewrites.chunksystem.common.Config;
+import com.ishland.c2me.rewrites.chunksystem.common.NewChunkHolderVanillaInterface;
 import com.ishland.c2me.rewrites.chunksystem.common.NewChunkStatus;
 import com.ishland.c2me.rewrites.chunksystem.common.fapi.LifecycleEventInvoker;
 import com.ishland.flowsched.scheduler.ItemHolder;
@@ -14,6 +16,7 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.world.ChunkLevels;
+import net.minecraft.server.world.ServerChunkLoadingManager;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.chunk.Chunk;
@@ -71,7 +74,27 @@ public class ServerAccessible extends NewChunkStatus {
 
             ((IThreadedAnvilChunkStorage) context.tacs()).getCurrentChunkHolders().put(context.holder().getKey().toLong(), context.holder().getUserData().get());
             ((IThreadedAnvilChunkStorage) context.tacs()).setChunkHolderListDirty(true);
+
+            if (needSendChunks()) {
+                sendChunkToPlayer(context.tacs(), context.holder());
+            }
         }, ((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor());
+    }
+
+    private static boolean needSendChunks() {
+        return false;
+    }
+
+    private static void sendChunkToPlayer(ServerChunkLoadingManager tacs, ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> holder) {
+        final Chunk chunk = holder.getItem().get().chunk();
+        if (chunk instanceof WorldChunk worldChunk) {
+            CompletableFuture<?> completableFuturexx = holder.getUserData().get().getPostProcessingFuture();
+            if (completableFuturexx.isDone()) {
+                ((IThreadedAnvilChunkStorage) tacs).invokeSendToPlayers(worldChunk);
+            } else {
+                completableFuturexx.thenAcceptAsync(v -> ((IThreadedAnvilChunkStorage) tacs).invokeSendToPlayers(worldChunk), ((IThreadedAnvilChunkStorage) tacs).getMainThreadExecutor());
+            }
+        }
     }
 
     private static WorldChunk toFullChunk(ProtoChunk protoChunk, ServerWorld serverWorld) {
