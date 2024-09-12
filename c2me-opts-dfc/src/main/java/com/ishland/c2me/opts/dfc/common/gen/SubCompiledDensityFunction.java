@@ -3,6 +3,7 @@ package com.ishland.c2me.opts.dfc.common.gen;
 import com.google.common.base.Suppliers;
 import com.ishland.c2me.opts.dfc.common.ast.EvalType;
 import com.ishland.c2me.opts.dfc.common.ducks.IArrayCacheCapable;
+import com.ishland.c2me.opts.dfc.common.ducks.ICoordinatesFilling;
 import com.ishland.c2me.opts.dfc.common.util.ArrayCache;
 import com.ishland.c2me.opts.dfc.common.vif.EachApplierVanillaInterface;
 import net.minecraft.util.dynamic.CodecHolder;
@@ -72,11 +73,15 @@ public class SubCompiledDensityFunction implements DensityFunction {
         int[] x = cache.getIntArray(densities.length, false);
         int[] y = cache.getIntArray(densities.length, false);
         int[] z = cache.getIntArray(densities.length, false);
-        for (int i = 0; i < densities.length; i ++) {
-            NoisePos pos = applier.at(i);
-            x[i] = pos.blockX();
-            y[i] = pos.blockY();
-            z[i] = pos.blockZ();
+        if (applier instanceof ICoordinatesFilling coordinatesFilling) {
+            coordinatesFilling.c2me$fillCoordinates(x, y, z);
+        } else {
+            for (int i = 0; i < densities.length; i ++) {
+                NoisePos pos = applier.at(i);
+                x[i] = pos.blockX();
+                y[i] = pos.blockY();
+                z[i] = pos.blockZ();
+            }
         }
         this.multiMethod.evalMulti(densities, x, y, z, EvalType.from(applier), cache);
     }

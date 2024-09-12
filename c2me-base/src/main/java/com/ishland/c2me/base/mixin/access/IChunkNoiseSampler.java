@@ -34,4 +34,22 @@ public interface IChunkNoiseSampler {
     @Accessor
     int getStartBiomeZ();
 
+    @Accessor
+    int getHorizontalCellCount();
+
+    @Accessor
+    int getVerticalCellCount();
+
+    @Accessor
+    int getMinimumCellY();
+
+    @Accessor
+    int getCellBlockX();
+
+    @Accessor
+    int getCellBlockY();
+
+    @Accessor
+    int getCellBlockZ();
+
 }
