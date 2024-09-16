@@ -1,6 +1,6 @@
 package com.ishland.c2me.rewrites.chunksystem.mixin;
 
-import com.ishland.c2me.rewrites.chunksystem.common.IChunkSystemAccess;
+import com.ishland.c2me.rewrites.chunksystem.common.ducks.IChunkSystemAccess;
 import com.llamalad7.mixinextras.sugar.Share;
 import com.llamalad7.mixinextras.sugar.ref.LocalLongRef;
 import net.minecraft.server.MinecraftServer;

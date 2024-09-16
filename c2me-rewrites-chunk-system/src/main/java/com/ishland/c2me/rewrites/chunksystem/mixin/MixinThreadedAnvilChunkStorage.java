@@ -3,7 +3,7 @@ package com.ishland.c2me.rewrites.chunksystem.mixin;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.ishland.c2me.rewrites.chunksystem.common.ChunkLoadingContext;
 import com.ishland.c2me.rewrites.chunksystem.common.ChunkState;
-import com.ishland.c2me.rewrites.chunksystem.common.IChunkSystemAccess;
+import com.ishland.c2me.rewrites.chunksystem.common.ducks.IChunkSystemAccess;
 import com.ishland.c2me.rewrites.chunksystem.common.NewChunkHolderVanillaInterface;
 import com.ishland.c2me.rewrites.chunksystem.common.TheChunkSystem;
 import com.ishland.flowsched.scheduler.ItemHolder;
