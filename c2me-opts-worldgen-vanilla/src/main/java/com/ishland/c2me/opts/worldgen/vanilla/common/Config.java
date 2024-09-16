@@ -21,4 +21,12 @@ public class Config {
             .incompatibleMod("biolith", "*")
             .getBoolean(true, false);
 
+    public static final boolean optimizeStructureWeightSampler = new ConfigSystem.ConfigAccessor()
+            .key("vanillaWorldGenOptimizations.optimizeStructureWeightSampler")
+            .comment("""
+                    Whether to enable StructureWeightSampler optimizations to accelerate world generation
+                    """)
+            .incompatibleMod("porting_lib", "*")
+            .getBoolean(true, false);
+
 }
