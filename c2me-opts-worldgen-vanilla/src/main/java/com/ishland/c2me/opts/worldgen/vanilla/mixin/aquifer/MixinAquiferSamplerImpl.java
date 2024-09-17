@@ -103,12 +103,18 @@ public abstract class MixinAquiferSamplerImpl {
 
     @Shadow @Final private DensityFunction depthDensityFunction;
 
+    @Unique
+    private int[] c2me$blockPos;
+
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(CallbackInfo info) {
         // preload position cache
         if (this.blockPositions.length % (this.sizeX * this.sizeZ) != 0) {
             throw new AssertionError("Array length");
         }
+
+        this.c2me$blockPos = new int[this.blockPositions.length * 4];
+
         int sizeY = this.blockPositions.length / (this.sizeX * this.sizeZ);
         final Random random = RandomUtils.getRandom(this.randomDeriver);
         // index: z, x, y
@@ -124,6 +130,10 @@ public abstract class MixinAquiferSamplerImpl {
                     int z2 = z1 * 16 + random.nextInt(10);
                     int index = this.index(x1, y1, z1);
                     this.blockPositions[index] = BlockPos.asLong(x2, y2, z2);
+                    int shiftedIdx = index << 2;
+                    this.c2me$blockPos[shiftedIdx + 0] = x2;
+                    this.c2me$blockPos[shiftedIdx + 1] = y2;
+                    this.c2me$blockPos[shiftedIdx + 2] = z2;
                 }
             }
         }
@@ -161,8 +171,8 @@ public abstract class MixinAquiferSamplerImpl {
 
     @Unique
     private @Nullable BlockState aquiferExtracted$applyPost(DensityFunction.NoisePos pos, double density, Result1 result, int j, int i, int k) {
-        AquiferSampler.FluidLevel fluidLevel2 = this.getWaterLevel(result.r());
-        double d = maxDistance(result.o(), result.p());
+        AquiferSampler.FluidLevel fluidLevel2 = this.aquiferExtracted$getWaterLevelByIdx(result.posIdx1());
+        double d = maxDistance(result.dist1(), result.dist2());
         BlockState blockState = fluidLevel2.getBlockState(j);
         if (d <= 0.0) {
             this.needsFluidTick = d >= NEEDS_FLUID_TICK_DISTANCE_THRESHOLD;
@@ -172,7 +182,7 @@ public abstract class MixinAquiferSamplerImpl {
             return blockState;
         } else {
             MutableDouble mutableDouble = new MutableDouble(Double.NaN);
-            AquiferSampler.FluidLevel fluidLevel3 = this.getWaterLevel(result.s());
+            AquiferSampler.FluidLevel fluidLevel3 = this.aquiferExtracted$getWaterLevelByIdx(result.posIdx2());
             double e = d * this.calculateDensity(pos, mutableDouble, fluidLevel2, fluidLevel3);
             if (density + e > 0.0) {
                 this.needsFluidTick = false;
@@ -185,8 +195,8 @@ public abstract class MixinAquiferSamplerImpl {
 
     @Unique
     private BlockState aquiferExtracted$getFinalBlockState(DensityFunction.NoisePos pos, double density, Result1 result, double d, MutableDouble mutableDouble, AquiferSampler.FluidLevel fluidLevel2, AquiferSampler.FluidLevel fluidLevel3, BlockState blockState) {
-        AquiferSampler.FluidLevel fluidLevel4 = this.getWaterLevel(result.t());
-        double f = maxDistance(result.o(), result.q());
+        AquiferSampler.FluidLevel fluidLevel4 = this.aquiferExtracted$getWaterLevelByIdx(result.posIdx3());
+        double f = maxDistance(result.dist1(), result.dist3());
         if (f > 0.0) {
             double g = d * f * this.calculateDensity(pos, mutableDouble, fluidLevel2, fluidLevel4);
             if (density + g > 0.0) {
@@ -195,7 +205,7 @@ public abstract class MixinAquiferSamplerImpl {
             }
         }
 
-        double g = maxDistance(result.p(), result.q());
+        double g = maxDistance(result.dist2(), result.dist3());
         if (g > 0.0) {
             double h = d * g * this.calculateDensity(pos, mutableDouble, fluidLevel3, fluidLevel4);
             if (density + h > 0.0) {
@@ -217,9 +227,9 @@ public abstract class MixinAquiferSamplerImpl {
         int dist1 = Integer.MAX_VALUE;
         int dist2 = Integer.MAX_VALUE;
         int dist3 = Integer.MAX_VALUE;
-        long pos1 = 0L;
-        long pos2 = 0L;
-        long pos3 = 0L;
+        int posIdx1 = 0;
+        int posIdx2 = 0;
+        int posIdx3 = 0;
 
         for(int offX = 0; offX <= 1; ++offX) {
             for(int offY = -1; offY <= 1; ++offY) {
@@ -228,36 +238,36 @@ public abstract class MixinAquiferSamplerImpl {
                     int curY = gy + offY;
                     int curZ = gz + offZ;
                     int posIdx = this.index(curX, curY, curZ);
-                    long posPacked = this.blockPositions[posIdx]; // cache preloaded
 
-                    int dx = BlockPos.unpackLongX(posPacked) - x;
-                    int dy = BlockPos.unpackLongY(posPacked) - y;
-                    int dz = BlockPos.unpackLongZ(posPacked) - z;
+                    int shiftedIdx = posIdx << 2;
+                    int dx = this.c2me$blockPos[shiftedIdx + 0] - x;
+                    int dy = this.c2me$blockPos[shiftedIdx + 1] - y;
+                    int dz = this.c2me$blockPos[shiftedIdx + 2] - z;
                     int dist = dx * dx + dy * dy + dz * dz;
                     if (dist1 >= dist) {
-                        pos3 = pos2;
-                        pos2 = pos1;
-                        pos1 = posPacked;
+                        posIdx3 = posIdx2;
+                        posIdx2 = posIdx1;
+                        posIdx1 = posIdx;
                         dist3 = dist2;
                         dist2 = dist1;
                         dist1 = dist;
                     } else if (dist2 >= dist) {
-                        pos3 = pos2;
-                        pos2 = posPacked;
+                        posIdx3 = posIdx2;
+                        posIdx2 = posIdx;
                         dist3 = dist2;
                         dist2 = dist;
                     } else if (dist3 >= dist) {
-                        pos3 = posPacked;
+                        posIdx3 = posIdx;
                         dist3 = dist;
                     }
                 }
             }
         }
-        return new Result1(dist1, dist2, dist3, pos1, pos2, pos3);
+        return new Result1(dist1, dist2, dist3, posIdx1, posIdx2, posIdx3);
     }
 
     @SuppressWarnings("MixinInnerClass")
-    private record Result1(int o, int p, int q, long r, long s, long t) {
+    private record Result1(int dist1, int dist2, int dist3, int posIdx1, int posIdx2, int posIdx3) {
     }
 
 
@@ -270,6 +280,26 @@ public abstract class MixinAquiferSamplerImpl {
         int i = BlockPos.unpackLongX(pos);
         int j = BlockPos.unpackLongY(pos);
         int k = BlockPos.unpackLongZ(pos);
+        int l = i >> 4; // C2ME - inline: floorDiv(i, 16)
+        int m = Math.floorDiv(j, 12); // C2ME - inline
+        int n = k >> 4; // C2ME - inline: floorDiv(k, 16)
+        int o = this.index(l, m, n);
+        AquiferSampler.FluidLevel fluidLevel = this.waterLevels[o];
+        if (fluidLevel != null) {
+            return fluidLevel;
+        } else {
+            AquiferSampler.FluidLevel fluidLevel2 = this.getFluidLevel(i, j, k);
+            this.waterLevels[o] = fluidLevel2;
+            return fluidLevel2;
+        }
+    }
+
+    @Unique
+    private AquiferSampler.FluidLevel aquiferExtracted$getWaterLevelByIdx(int idx) {
+        int idxShifted = idx << 2;
+        int i = this.c2me$blockPos[idxShifted + 0];
+        int j = this.c2me$blockPos[idxShifted + 1];
+        int k = this.c2me$blockPos[idxShifted + 2];
         int l = i >> 4; // C2ME - inline: floorDiv(i, 16)
         int m = Math.floorDiv(j, 12); // C2ME - inline
         int n = k >> 4; // C2ME - inline: floorDiv(k, 16)
