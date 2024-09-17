@@ -119,7 +119,11 @@ public abstract class MixinAquiferSamplerImpl {
                     final int y1 = y + this.startY;
                     final int z1 = z + this.startZ;
                     RandomUtils.derive(this.randomDeriver, random, x1, y1, z1);
-                    this.blockPositions[this.index(x1, y1, z1)] = BlockPos.asLong(x1 * 16 + random.nextInt(10), y1 * 12 + random.nextInt(9), z1 * 16 + random.nextInt(10));
+                    int x2 = x1 * 16 + random.nextInt(10);
+                    int y2 = y1 * 12 + random.nextInt(9);
+                    int z2 = z1 * 16 + random.nextInt(10);
+                    int index = this.index(x1, y1, z1);
+                    this.blockPositions[index] = BlockPos.asLong(x2, y2, z2);
                 }
             }
         }
@@ -206,51 +210,50 @@ public abstract class MixinAquiferSamplerImpl {
 
     @Unique
     @NotNull
-    private Result1 aquiferExtracted$getResult1(int i, int j, int k) {
-        int l = (i - 5) >> 4;
-        int m = Math.floorDiv(j + 1, 12);
-        int n = (k - 5) >> 4;
-        int o = Integer.MAX_VALUE;
-        int p = Integer.MAX_VALUE;
-        int q = Integer.MAX_VALUE;
-        long r = 0L;
-        long s = 0L;
-        long t = 0L;
+    private Result1 aquiferExtracted$getResult1(int x, int y, int z) {
+        int gx = (x - 5) >> 4;
+        int gy = Math.floorDiv(y + 1, 12);
+        int gz = (z - 5) >> 4;
+        int dist1 = Integer.MAX_VALUE;
+        int dist2 = Integer.MAX_VALUE;
+        int dist3 = Integer.MAX_VALUE;
+        long pos1 = 0L;
+        long pos2 = 0L;
+        long pos3 = 0L;
 
-        for(int u = 0; u <= 1; ++u) {
-            for(int v = -1; v <= 1; ++v) {
-                for(int w = 0; w <= 1; ++w) {
-                    int x = l + u;
-                    int y = m + v;
-                    int z = n + w;
-                    int aa = this.index(x, y, z);
-                    long ab = this.blockPositions[aa];
-                    long ac = ab; // cache preloaded
+        for(int offX = 0; offX <= 1; ++offX) {
+            for(int offY = -1; offY <= 1; ++offY) {
+                for(int offZ = 0; offZ <= 1; ++offZ) {
+                    int curX = gx + offX;
+                    int curY = gy + offY;
+                    int curZ = gz + offZ;
+                    int posIdx = this.index(curX, curY, curZ);
+                    long posPacked = this.blockPositions[posIdx]; // cache preloaded
 
-                    int ad = BlockPos.unpackLongX(ac) - i;
-                    int ae = BlockPos.unpackLongY(ac) - j;
-                    int af = BlockPos.unpackLongZ(ac) - k;
-                    int ag = ad * ad + ae * ae + af * af;
-                    if (o >= ag) {
-                        t = s;
-                        s = r;
-                        r = ac;
-                        q = p;
-                        p = o;
-                        o = ag;
-                    } else if (p >= ag) {
-                        t = s;
-                        s = ac;
-                        q = p;
-                        p = ag;
-                    } else if (q >= ag) {
-                        t = ac;
-                        q = ag;
+                    int dx = BlockPos.unpackLongX(posPacked) - x;
+                    int dy = BlockPos.unpackLongY(posPacked) - y;
+                    int dz = BlockPos.unpackLongZ(posPacked) - z;
+                    int dist = dx * dx + dy * dy + dz * dz;
+                    if (dist1 >= dist) {
+                        pos3 = pos2;
+                        pos2 = pos1;
+                        pos1 = posPacked;
+                        dist3 = dist2;
+                        dist2 = dist1;
+                        dist1 = dist;
+                    } else if (dist2 >= dist) {
+                        pos3 = pos2;
+                        pos2 = posPacked;
+                        dist3 = dist2;
+                        dist2 = dist;
+                    } else if (dist3 >= dist) {
+                        pos3 = posPacked;
+                        dist3 = dist;
                     }
                 }
             }
         }
-        return new Result1(o, p, q, r, s, t);
+        return new Result1(dist1, dist2, dist3, pos1, pos2, pos3);
     }
 
     @SuppressWarnings("MixinInnerClass")
