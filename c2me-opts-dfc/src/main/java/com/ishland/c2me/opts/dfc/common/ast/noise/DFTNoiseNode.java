@@ -99,7 +99,7 @@ public class DFTNoiseNode implements AstNode {
                 m.load(idx, Type.INT_TYPE);
                 m.aload(Type.INT_TYPE);
                 m.cast(Type.INT_TYPE, Type.DOUBLE_TYPE);
-                m.dconst(this.xzScale);
+                m.dconst(this.yScale);
                 m.mul(Type.DOUBLE_TYPE);
 
                 m.load(4, InstructionAdapter.OBJECT_TYPE);
