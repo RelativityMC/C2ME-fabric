@@ -1,5 +1,6 @@
 package com.ishland.c2me.rewrites.chunksystem.mixin;
 
+import com.ishland.c2me.rewrites.chunksystem.common.Config;
 import com.ishland.c2me.rewrites.chunksystem.common.ducks.IPOIUnloading;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import net.minecraft.util.math.ChunkPos;
@@ -23,6 +24,8 @@ public abstract class MixinSerializingRegionBasedStorage<R> implements IPOIUnloa
 
     @Override
     public void c2me$unloadPoi(ChunkPos pos) {
+        if (!Config.allowPOIUnloading) return;
+
         if (!this.c2me$shouldUnloadPoi(pos)) {
             return;
         }
