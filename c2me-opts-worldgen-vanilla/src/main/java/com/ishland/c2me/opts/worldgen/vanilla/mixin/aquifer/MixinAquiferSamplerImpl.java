@@ -146,7 +146,7 @@ public abstract class MixinAquiferSamplerImpl {
 
     /**
      * @author ishland
-     * @reason make C2 happier by splitting method into four
+     * @reason make C2 happier by splitting method into many
      */
     @Overwrite
     public BlockState apply(DensityFunction.NoisePos pos, double density) {
@@ -197,25 +197,25 @@ public abstract class MixinAquiferSamplerImpl {
     private BlockState aquiferExtracted$getFinalBlockState(DensityFunction.NoisePos pos, double density, Result1 result, double d, MutableDouble mutableDouble, AquiferSampler.FluidLevel fluidLevel2, AquiferSampler.FluidLevel fluidLevel3, BlockState blockState) {
         AquiferSampler.FluidLevel fluidLevel4 = this.aquiferExtracted$getWaterLevelByIdx(result.posIdx3());
         double f = maxDistance(result.dist1(), result.dist3());
+        if (aquiferExtracted$extractedCheckFG(pos, density, d, mutableDouble, fluidLevel2, f, fluidLevel4)) return null;
+
+        double g = maxDistance(result.dist2(), result.dist3());
+        if (aquiferExtracted$extractedCheckFG(pos, density, d, mutableDouble, fluidLevel3, g, fluidLevel4)) return null;
+
+        this.needsFluidTick = true;
+        return blockState;
+    }
+
+    @Unique
+    private boolean aquiferExtracted$extractedCheckFG(DensityFunction.NoisePos pos, double density, double d, MutableDouble mutableDouble, AquiferSampler.FluidLevel fluidLevel2, double f, AquiferSampler.FluidLevel fluidLevel4) {
         if (f > 0.0) {
             double g = d * f * this.calculateDensity(pos, mutableDouble, fluidLevel2, fluidLevel4);
             if (density + g > 0.0) {
                 this.needsFluidTick = false;
-                return null;
+                return true;
             }
         }
-
-        double g = maxDistance(result.dist2(), result.dist3());
-        if (g > 0.0) {
-            double h = d * g * this.calculateDensity(pos, mutableDouble, fluidLevel3, fluidLevel4);
-            if (density + h > 0.0) {
-                this.needsFluidTick = false;
-                return null;
-            }
-        }
-
-        this.needsFluidTick = true;
-        return blockState;
+        return false;
     }
 
     @Unique
@@ -348,7 +348,7 @@ public abstract class MixinAquiferSamplerImpl {
 
     /**
      * @author ishland
-     * @reason optimize, split method into two
+     * @reason optimize, split method into many
      */
     @Overwrite
     private double calculateDensity(
@@ -365,25 +365,30 @@ public abstract class MixinAquiferSamplerImpl {
                 double d = 0.5 * (double)(fluidLevel.y + fluidLevel2.y);
                 final double q = aquiferExtracted$getQ(i, d, j);
 
-                double r;
-                if (!(q < -2.0) && !(q > 2.0)) {
-                    double s = mutableDouble.getValue();
-                    if (Double.isNaN(s)) {
-                        double t = this.barrierNoise.sample(pos);
-                        mutableDouble.setValue(t);
-                        r = t;
-                    } else {
-                        r = s;
-                    }
-                } else {
-                    r = 0.0;
-                }
-
-                return 2.0 * (r + q);
+                return aquiferExtracted$postCalculateDensity(pos, mutableDouble, q);
             }
         } else {
             return 2.0;
         }
+    }
+
+    @Unique
+    private double aquiferExtracted$postCalculateDensity(DensityFunction.NoisePos pos, MutableDouble mutableDouble, double q) {
+        double r;
+        if (!(q < -2.0) && !(q > 2.0)) {
+            double s = mutableDouble.getValue();
+            if (Double.isNaN(s)) {
+                double t = this.barrierNoise.sample(pos);
+                mutableDouble.setValue(t);
+                r = t;
+            } else {
+                r = s;
+            }
+        } else {
+            r = 0.0;
+        }
+
+        return 2.0 * (r + q);
     }
 
     @Unique
