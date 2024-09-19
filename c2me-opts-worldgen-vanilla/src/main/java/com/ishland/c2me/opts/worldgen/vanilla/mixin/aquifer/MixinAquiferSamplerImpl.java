@@ -243,9 +243,9 @@ public abstract class MixinAquiferSamplerImpl {
         int posIdx2 = 0;
         int posIdx3 = 0;
 
-        for(int offX = 0; offX <= 1; ++offX) {
-            for(int offY = -1; offY <= 1; ++offY) {
-                for(int offZ = 0; offZ <= 1; ++offZ) {
+        for (int offY = -1; offY <= 1; ++offY) {
+            for (int offZ = 0; offZ <= 1; ++offZ) {
+                for (int offX = 0; offX <= 1; ++offX) {
                     int curX = gx + offX;
                     int curY = gy + offY;
                     int curZ = gz + offZ;
