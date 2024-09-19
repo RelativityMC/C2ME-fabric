@@ -87,12 +87,14 @@ public class ServerAccessible extends NewChunkStatus {
 
     private static void sendChunkToPlayer(ServerChunkLoadingManager tacs, ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> holder) {
         holder.submitOp(CompletableFuture.runAsync(() -> {
-            final Chunk chunk = holder.getItem().get().chunk();
-            if (chunk instanceof WorldChunk worldChunk) {
-                ((IPartialPostProcessing) worldChunk).c2me$runBorderPostProcessing();
-                ((IThreadedAnvilChunkStorage) tacs).invokeSendToPlayers(worldChunk);
+            if (holder.isOpen()) {
+                final Chunk chunk = holder.getItem().get().chunk();
+                if (chunk instanceof WorldChunk worldChunk) {
+                    ((IPartialPostProcessing) worldChunk).c2me$runBorderPostProcessing();
+                    ((IThreadedAnvilChunkStorage) tacs).invokeSendToPlayers(worldChunk);
+                }
             }
-        }, ((IThreadedAnvilChunkStorage) tacs).getMainThreadExecutor()::submit));
+        }, ((IThreadedAnvilChunkStorage) tacs).getMainThreadExecutor()::send));
     }
 
     private static WorldChunk toFullChunk(ProtoChunk protoChunk, ServerWorld serverWorld) {
