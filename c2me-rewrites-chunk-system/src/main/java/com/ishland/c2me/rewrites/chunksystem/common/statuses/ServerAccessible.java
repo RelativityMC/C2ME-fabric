@@ -9,7 +9,6 @@ import com.ishland.c2me.rewrites.chunksystem.common.ChunkState;
 import com.ishland.c2me.rewrites.chunksystem.common.Config;
 import com.ishland.c2me.rewrites.chunksystem.common.NewChunkHolderVanillaInterface;
 import com.ishland.c2me.rewrites.chunksystem.common.NewChunkStatus;
-import com.ishland.c2me.rewrites.chunksystem.common.ducks.IPartialPostProcessing;
 import com.ishland.c2me.rewrites.chunksystem.common.fapi.LifecycleEventInvoker;
 import com.ishland.flowsched.scheduler.ItemHolder;
 import com.ishland.flowsched.scheduler.KeyStatusPair;
@@ -86,13 +85,15 @@ public class ServerAccessible extends NewChunkStatus {
     }
 
     private static void sendChunkToPlayer(ServerChunkLoadingManager tacs, ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> holder) {
-        holder.submitOp(CompletableFuture.runAsync(() -> {
-            final Chunk chunk = holder.getItem().get().chunk();
-            if (chunk instanceof WorldChunk worldChunk) {
-                ((IPartialPostProcessing) worldChunk).c2me$runBorderPostProcessing();
+        final Chunk chunk = holder.getItem().get().chunk();
+        if (chunk instanceof WorldChunk worldChunk) {
+            CompletableFuture<?> completableFuturexx = holder.getUserData().get().getPostProcessingFuture();
+            if (completableFuturexx.isDone()) {
                 ((IThreadedAnvilChunkStorage) tacs).invokeSendToPlayers(worldChunk);
+            } else {
+                completableFuturexx.thenAcceptAsync(v -> ((IThreadedAnvilChunkStorage) tacs).invokeSendToPlayers(worldChunk), ((IThreadedAnvilChunkStorage) tacs).getMainThreadExecutor());
             }
-        }, ((IThreadedAnvilChunkStorage) tacs).getMainThreadExecutor()::submit));
+        }
     }
 
     private static WorldChunk toFullChunk(ProtoChunk protoChunk, ServerWorld serverWorld) {

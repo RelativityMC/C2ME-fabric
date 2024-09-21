@@ -13,6 +13,12 @@ public class Config {
                     " Lower this for a better latency and higher this for a faster loading")
             .getLong(GlobalExecutors.GLOBAL_EXECUTOR_PARALLELISM * 2L, GlobalExecutors.GLOBAL_EXECUTOR_PARALLELISM * 2L, ConfigSystem.LongChecks.POSITIVE_VALUES_ONLY);
 
+    public static final boolean compatibilityMode = new ConfigSystem.ConfigAccessor()
+            .key("noTickViewDistance.compatibilityMode")
+            .comment("Whether to use compatibility mode to send chunks \n" +
+                    " This may fix some mod compatibility issues")
+            .getBoolean(true, true);
+
     public static final boolean enableExtRenderDistanceProtocol = new ConfigSystem.ConfigAccessor()
             .key("noTickViewDistance.enableExtRenderDistanceProtocol")
             .comment("""

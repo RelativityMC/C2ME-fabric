@@ -27,4 +27,14 @@ public class MixinServerAccessible {
         return true;
     }
 
+    @Dynamic
+    @WrapOperation(method = "lambda$upgradeToThis$0", at = @At(value = "INVOKE", target = "Lcom/ishland/c2me/rewrites/chunksystem/common/statuses/ServerAccessible;sendChunkToPlayer(Lnet/minecraft/server/world/ServerChunkLoadingManager;Lcom/ishland/flowsched/scheduler/ItemHolder;)V", remap = true), remap = false)
+    private static void wrapSendChunks(ServerChunkLoadingManager tacs, ItemHolder<?, ?, ?, ?> holder, Operation<Void> original) {
+        if (Config.compatibilityMode) {
+            ((IThreadedAnvilChunkStorage) tacs).getMainThreadExecutor().submit(() -> original.call(tacs, holder));
+        } else {
+            original.call(tacs, holder);
+        }
+    }
+
 }

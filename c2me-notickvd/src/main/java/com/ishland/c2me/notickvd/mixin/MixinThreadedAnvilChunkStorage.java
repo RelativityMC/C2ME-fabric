@@ -53,7 +53,11 @@ public abstract class MixinThreadedAnvilChunkStorage {
     @Inject(method = "makeChunkAccessible", at = @At("RETURN"))
     private void onMakeChunkAccessible(ChunkHolder chunkHolder, CallbackInfoReturnable<CompletableFuture<OptionalChunk<WorldChunk>>> cir) {
         cir.getReturnValue().thenAccept(either -> either.ifPresent(worldChunk -> {
-            this.mainThreadExecutor.send(() -> this.sendToPlayers(worldChunk));
+            if (Config.compatibilityMode) {
+                this.mainThreadExecutor.send(() -> this.sendToPlayers(worldChunk));
+            } else {
+                this.sendToPlayers(worldChunk);
+            }
         }));
     }
 
