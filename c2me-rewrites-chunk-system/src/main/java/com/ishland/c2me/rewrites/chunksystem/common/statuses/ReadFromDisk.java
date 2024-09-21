@@ -10,6 +10,7 @@ import com.ishland.c2me.rewrites.chunksystem.common.ChunkLoadingContext;
 import com.ishland.c2me.rewrites.chunksystem.common.ChunkState;
 import com.ishland.c2me.rewrites.chunksystem.common.Config;
 import com.ishland.c2me.rewrites.chunksystem.common.NewChunkStatus;
+import com.ishland.c2me.rewrites.chunksystem.common.ducks.IPOIUnloading;
 import com.ishland.c2me.rewrites.chunksystem.common.fapi.LifecycleEventInvoker;
 import com.ishland.flowsched.scheduler.ItemHolder;
 import com.ishland.flowsched.scheduler.KeyStatusPair;
@@ -141,6 +142,8 @@ public class ReadFromDisk extends NewChunkStatus {
             if (listener != null) {
                 listener.setChunkStatus(context.holder().getKey(), null);
             }
+
+            ((IPOIUnloading) ((IThreadedAnvilChunkStorage) context.tacs()).getPointOfInterestStorage()).c2me$unloadPoi(context.holder().getKey());
 
             context.holder().getItem().set(new ChunkState(null, null, null));
         }, ((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor());

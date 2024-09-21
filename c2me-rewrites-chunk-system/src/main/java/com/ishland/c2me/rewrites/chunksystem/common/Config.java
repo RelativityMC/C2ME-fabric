@@ -20,6 +20,20 @@ public class Config {
                      """)
             .getBoolean(false, false);
 
+    public static final boolean allowPOIUnloading = new ConfigSystem.ConfigAccessor()
+            .key("chunkSystem.allowPOIUnloading")
+            .comment("""
+                    Whether to allow POIs (Point of Interest) to be unloaded
+                    Unloaded POIs are reloaded on-demand or when the corresponding chunks are loaded again,
+                    which should not cause any behavior change
+                    \s
+                    Note:
+                    Vanilla never unloads POIs when chunks unload, causing small memory leaks
+                    These leaks adds up and eventually cause issues after generating millions of chunks
+                    in a single world instance
+                    """)
+            .getBoolean(true, false);
+
     public static void init() {
         // intentionally empty
     }

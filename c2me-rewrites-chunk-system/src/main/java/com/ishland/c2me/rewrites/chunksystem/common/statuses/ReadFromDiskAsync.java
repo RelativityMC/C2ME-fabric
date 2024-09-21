@@ -18,6 +18,7 @@ import com.ishland.c2me.rewrites.chunksystem.common.async_chunkio.BlendingInfoUt
 import com.ishland.c2me.rewrites.chunksystem.common.async_chunkio.ChunkIoMainThreadTaskUtils;
 import com.ishland.c2me.rewrites.chunksystem.common.async_chunkio.ProtoChunkExtension;
 import com.ishland.c2me.rewrites.chunksystem.common.async_chunkio.SerializingRegionBasedStorageExtension;
+import com.ishland.c2me.rewrites.chunksystem.common.ducks.IPOIUnloading;
 import com.ishland.c2me.rewrites.chunksystem.common.fapi.LifecycleEventInvoker;
 import com.ishland.flowsched.scheduler.ItemHolder;
 import com.ishland.flowsched.scheduler.KeyStatusPair;
@@ -166,6 +167,8 @@ public class ReadFromDiskAsync extends ReadFromDisk {
                     ((IThreadedAnvilChunkStorage) context.tacs()).getLightingProvider().tick();
                     ((IThreadedAnvilChunkStorage) context.tacs()).getWorldGenerationProgressListener().setChunkStatus(chunk.getPos(), null);
                     ((IThreadedAnvilChunkStorage) context.tacs()).getChunkToNextSaveTimeMs().remove(chunk.getPos().toLong());
+
+                    ((IPOIUnloading) ((IThreadedAnvilChunkStorage) context.tacs()).getPointOfInterestStorage()).c2me$unloadPoi(context.holder().getKey());
 
                     context.holder().getItem().set(new ChunkState(null, null, null));
                 }, ((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor());
