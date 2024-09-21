@@ -62,7 +62,8 @@ public class NativeLoader {
         // load from resources
         try (final InputStream in = NativeLoader.class.getClassLoader().getResourceAsStream(libName)) {
             if (in == null) {
-                throw new IOException("Cannot find native library " + libName);
+                LOGGER.warn("Cannot find native library {}, possibly unsupported platform for native acceleration", libName);
+                return null;
             }
             final Path tempFile;
             if (Boolean.getBoolean("vectorizedgen.preserveNative")) {
