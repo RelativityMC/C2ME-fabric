@@ -63,7 +63,8 @@ public class ServerAccessible extends NewChunkStatus {
         final Chunk chunk = context.holder().getItem().get().chunk();
         Preconditions.checkState(chunk instanceof ProtoChunk, "Chunk must be a proto chunk");
         ProtoChunk protoChunk = (ProtoChunk) chunk;
-        {
+
+        if (Config.suppressGhostMushrooms) {
             ServerWorld serverWorld = ((IThreadedAnvilChunkStorage) context.tacs()).getWorld();
             ChunkRegion chunkRegion = new ChunkRegion(serverWorld, context.chunks(), ChunkGenerationSteps.GENERATION.get(ChunkStatus.FULL), chunk);
 
