@@ -1,6 +1,7 @@
 package com.ishland.c2me.opts.dfc.mixin;
 
 import com.ishland.c2me.opts.dfc.common.ducks.IArrayCacheCapable;
+import com.ishland.c2me.opts.dfc.common.util.ArrayCache;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
@@ -24,8 +25,10 @@ public class MixinDFTBinaryOperation {
             this.argument1.fill(densities, applier);
             double[] ds;
 
-            if (applier instanceof IArrayCacheCapable arrayCacheCapable) {
-                ds = arrayCacheCapable.c2me$getArrayCache().getDoubleArray(densities.length, false);
+            ArrayCache arrayCache = applier instanceof IArrayCacheCapable arrayCacheCapable ? arrayCacheCapable.c2me$getArrayCache() : null;
+
+            if (arrayCache != null) {
+                ds = arrayCache.getDoubleArray(densities.length, false);
             } else {
                 ds = new double[densities.length];
             }
@@ -34,6 +37,10 @@ public class MixinDFTBinaryOperation {
 
             for (int i = 0; i < densities.length; i++) {
                 densities[i] += ds[i];
+            }
+
+            if (arrayCache != null) {
+                arrayCache.recycle(ds);
             }
         } else {
             original.call(densities, applier);
