@@ -43,7 +43,7 @@ public class MixinChunkGenerating {
 
                         if (blockState.getBlock() == Blocks.BROWN_MUSHROOM || blockState.getBlock() == Blocks.RED_MUSHROOM) {
                             if (!blockState.canPlaceAt(chunkRegion, blockPos)) {
-                                chunk1.setBlockState(blockPos, Blocks.AIR.getDefaultState(), false); // TODO depends on the fact that the chunk system always locks the current chunk
+                                chunkRegion.setBlockState(blockPos, Blocks.AIR.getDefaultState(), Block.NO_REDRAW | Block.FORCE_STATE);
                             }
                         }
                     }
