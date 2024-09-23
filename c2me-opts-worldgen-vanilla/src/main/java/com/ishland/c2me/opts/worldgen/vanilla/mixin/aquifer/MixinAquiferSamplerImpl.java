@@ -246,10 +246,7 @@ public abstract class MixinAquiferSamplerImpl {
         for (int offY = -1; offY <= 1; ++offY) {
             for (int offZ = 0; offZ <= 1; ++offZ) {
                 for (int offX = 0; offX <= 1; ++offX) {
-                    int curX = gx + offX;
-                    int curY = gy + offY;
-                    int curZ = gz + offZ;
-                    int posIdx = this.index(curX, curY, curZ);
+                    int posIdx = this.index(gx + offX, gy + offY, gz + offZ);
 
                     int shiftedIdx = posIdx << 2;
                     int dx = this.c2me$blockPos[shiftedIdx + 0] - x;
@@ -258,15 +255,15 @@ public abstract class MixinAquiferSamplerImpl {
                     int dist = dx * dx + dy * dy + dz * dz;
                     if (dist1 >= dist) {
                         posIdx3 = posIdx2;
-                        posIdx2 = posIdx1;
-                        posIdx1 = posIdx;
                         dist3 = dist2;
+                        posIdx2 = posIdx1;
                         dist2 = dist1;
+                        posIdx1 = posIdx;
                         dist1 = dist;
                     } else if (dist2 >= dist) {
                         posIdx3 = posIdx2;
-                        posIdx2 = posIdx;
                         dist3 = dist2;
+                        posIdx2 = posIdx;
                         dist2 = dist;
                     } else if (dist3 >= dist) {
                         posIdx3 = posIdx;
