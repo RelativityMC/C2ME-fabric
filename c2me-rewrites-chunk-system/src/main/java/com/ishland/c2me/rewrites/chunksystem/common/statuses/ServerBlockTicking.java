@@ -38,7 +38,7 @@ public class ServerBlockTicking extends NewChunkStatus {
     public CompletionStage<Void> upgradeToThis(ChunkLoadingContext context) {
         return CompletableFuture.runAsync(() -> {
             final WorldChunk chunk = (WorldChunk) context.holder().getItem().get().chunk();
-            chunk.runPostProcessing();
+            chunk.runPostProcessing(((IThreadedAnvilChunkStorage) context.tacs()).getWorld());
             ((IThreadedAnvilChunkStorage) context.tacs()).getWorld().disableTickSchedulers(chunk);
             sendChunkToPlayer(context);
             ((IThreadedAnvilChunkStorage) context.tacs()).getTotalChunksLoadedCount().incrementAndGet(); // never decremented in vanilla

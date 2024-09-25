@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.injection.ModifyArg;
 @Mixin(WorldChunk.class)
 public class MixinWorldChunk {
 
-    @ModifyArg(method = "runPostProcessing", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z"))
+    @ModifyArg(method = "runPostProcessing", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerWorld;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z"))
     private int notifyListenersWhenPostProcessing(int flags) {
 //        if (true) return flags;
         flags &= ~Block.NO_REDRAW; // clear NO_REDRAW
