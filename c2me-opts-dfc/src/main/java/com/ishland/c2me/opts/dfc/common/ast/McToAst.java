@@ -15,6 +15,7 @@ import com.ishland.c2me.opts.dfc.common.ast.noise.DFTShiftBNode;
 import com.ishland.c2me.opts.dfc.common.ast.noise.DFTShiftNode;
 import com.ishland.c2me.opts.dfc.common.ast.noise.DFTWeirdScaledSamplerNode;
 import com.ishland.c2me.opts.dfc.common.ast.noise.ShiftedNoiseNode;
+import com.ishland.c2me.opts.dfc.common.ast.spline.SplineAstNode;
 import com.ishland.c2me.opts.dfc.common.ast.unary.AbsNode;
 import com.ishland.c2me.opts.dfc.common.ast.unary.CubeNode;
 import com.ishland.c2me.opts.dfc.common.ast.unary.NegMulNode;
@@ -76,6 +77,7 @@ public class McToAst {
             case DensityFunctionTypes.ShiftB f -> new DFTShiftBNode(f.offsetNoise());
             case DensityFunctionTypes.YClampedGradient f -> new YClampedGradientNode(f.fromY(), f.toY(), f.fromValue(), f.toValue());
             case DensityFunctionTypes.WeirdScaledSampler f -> new DFTWeirdScaledSamplerNode(toAst(f.input()), f.noise(), f.rarityValueMapper());
+            case DensityFunctionTypes.Spline f -> new SplineAstNode(f.spline());
 
             default -> {
 //                delegateStatistics.computeIfAbsent(df.getClass(), unused -> new LongAdder()).increment();;

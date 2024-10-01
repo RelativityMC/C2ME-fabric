@@ -13,6 +13,7 @@ import it.unimi.dsi.fastutil.ints.IntObjectPair;
 import it.unimi.dsi.fastutil.objects.Object2ReferenceMap;
 import it.unimi.dsi.fastutil.objects.Object2ReferenceMaps;
 import it.unimi.dsi.fastutil.objects.Object2ReferenceOpenCustomHashMap;
+import it.unimi.dsi.fastutil.objects.Object2ReferenceOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceMap;
@@ -54,7 +55,7 @@ public class BytecodeGen {
         }
     }
 
-    private static final Object2ReferenceMap<AstNode, Class<?>> compilationCache = Object2ReferenceMaps.synchronize(new Object2ReferenceOpenCustomHashMap<>(new Hash.Strategy<>() {
+    public static final Hash.Strategy<AstNode> RELAXED_STRATEGY = new Hash.Strategy<>() {
         @Override
         public int hashCode(AstNode o) {
             return o.relaxedHashCode();
@@ -64,7 +65,8 @@ public class BytecodeGen {
         public boolean equals(AstNode a, AstNode b) {
             return a.relaxedEquals(b);
         }
-    }));
+    };
+    private static final Object2ReferenceMap<AstNode, Class<?>> compilationCache = Object2ReferenceMaps.synchronize(new Object2ReferenceOpenCustomHashMap<>(RELAXED_STRATEGY));
 
     public static DensityFunction compile(DensityFunction densityFunction, Reference2ReferenceMap<DensityFunction, DensityFunction> tempCache) {
         DensityFunction cached = tempCache.get(densityFunction);
@@ -308,12 +310,12 @@ public class BytecodeGen {
     public static class Context {
         public static final String SINGLE_DESC = Type.getMethodDescriptor(Type.getType(double.class), Type.getType(int.class), Type.getType(int.class), Type.getType(int.class), Type.getType(EvalType.class));
         public static final String MULTI_DESC = Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(double[].class), Type.getType(int[].class), Type.getType(int[].class), Type.getType(int[].class), Type.getType(EvalType.class), Type.getType(ArrayCache.class));
-        private final ClassWriter classWriter;
+        public final ClassWriter classWriter;
         public final String className;
         public final String classDesc;
         private int methodIdx = 0;
-        private final Reference2ObjectOpenHashMap<AstNode, String> singleMethods = new Reference2ObjectOpenHashMap<>();
-        private final Reference2ObjectOpenHashMap<AstNode, String> multiMethods = new Reference2ObjectOpenHashMap<>();
+        private final Object2ReferenceOpenHashMap<AstNode, String> singleMethods = new Object2ReferenceOpenHashMap<>();
+        private final Object2ReferenceOpenHashMap<AstNode, String> multiMethods = new Object2ReferenceOpenHashMap<>();
         private final ObjectOpenHashSet<String> postProcessMethods = new ObjectOpenHashSet<>();
         private final Reference2ObjectOpenHashMap<Object, FieldRecord> args = new Reference2ObjectOpenHashMap<>();
 
@@ -323,11 +325,11 @@ public class BytecodeGen {
             this.classDesc = String.format("L%s;", this.className);
         }
 
-        private String nextMethodName() {
+        public String nextMethodName() {
             return String.format("method_%d", methodIdx++);
         }
 
-        private String nextMethodName(String suffix) {
+        public String nextMethodName(String suffix) {
             return String.format("method_%d_%s", methodIdx++, suffix);
         }
 
