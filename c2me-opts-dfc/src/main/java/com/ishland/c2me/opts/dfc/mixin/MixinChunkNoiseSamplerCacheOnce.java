@@ -112,7 +112,7 @@ public abstract class MixinChunkNoiseSamplerCacheOnce implements IFastCacheLike 
 
     @Override
     public void c2me$cache(double[] res, int[] x, int[] y, int[] z, EvalType evalType) {
-        if (this.c2me$lastValuea.length == res.length) {
+        if (c2me$lastValuea != null && this.c2me$lastValuea.length == res.length) {
             System.arraycopy(res, 0, this.c2me$lastValuea, 0, this.c2me$lastValuea.length);
             System.arraycopy(x, 0, this.c2me$lastXa, 0, this.c2me$lastValuea.length);
             System.arraycopy(y, 0, this.c2me$lastYa, 0, this.c2me$lastValuea.length);
