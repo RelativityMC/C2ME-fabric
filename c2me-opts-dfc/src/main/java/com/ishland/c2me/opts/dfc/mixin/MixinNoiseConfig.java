@@ -1,5 +1,6 @@
 package com.ishland.c2me.opts.dfc.mixin;
 
+import com.google.common.base.Stopwatch;
 import com.ishland.c2me.opts.dfc.common.gen.BytecodeGen;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceMap;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
@@ -26,6 +27,7 @@ public class MixinNoiseConfig {
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void postCreate(CallbackInfo ci) {
+        Stopwatch stopwatch = Stopwatch.createStarted();
         Reference2ReferenceMap<DensityFunction, DensityFunction> tempCache = new Reference2ReferenceOpenHashMap<>();
         this.noiseRouter = new NoiseRouter(
                 BytecodeGen.compile(this.noiseRouter.barrierNoise(), tempCache),
@@ -53,6 +55,8 @@ public class MixinNoiseConfig {
                 BytecodeGen.compile(this.multiNoiseSampler.weirdness(), tempCache),
                 this.multiNoiseSampler.spawnTarget()
         );
+        stopwatch.stop();
+        System.out.println(String.format("Density function compilation finished in %s", stopwatch));
     }
 
 }
