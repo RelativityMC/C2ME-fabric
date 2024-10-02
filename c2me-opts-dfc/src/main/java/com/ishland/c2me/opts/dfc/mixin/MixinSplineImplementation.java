@@ -8,14 +8,16 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 @Mixin(Spline.Implementation.class)
 public abstract class MixinSplineImplementation<C, I extends ToFloatFunction<C>> {
 
     /**
-     * @author
-     * @reason
+     * @author ishland
+     * @reason inline binary search
      */
     @Overwrite
     private static int findRangeForLocation(float[] locations, float x) {
@@ -50,8 +52,8 @@ public abstract class MixinSplineImplementation<C, I extends ToFloatFunction<C>>
     @Shadow @Final private float[] derivatives;
 
     /**
-     * @author
-     * @reason
+     * @author ishland
+     * @reason simplify method a bit
      */
     @Overwrite
     public float apply(C x) {
@@ -76,5 +78,23 @@ public abstract class MixinSplineImplementation<C, I extends ToFloatFunction<C>>
         }
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Spline.Implementation<?, ?> that = (Spline.Implementation<?, ?>) o;
+        return Objects.equals(locationFunction, that.locationFunction()) && Arrays.equals(locations, that.locations()) && Objects.equals(values, that.values()) && Arrays.equals(derivatives, that.derivatives());
+    }
 
+    @Override
+    public int hashCode() {
+        int result = 1;
+
+        result = 31 * result + Objects.hashCode(locationFunction);
+        result = 31 * result + Arrays.hashCode(locations);
+        result = 31 * result + Objects.hashCode(values);
+        result = 31 * result + Arrays.hashCode(derivatives);
+
+        return result;
+    }
 }
