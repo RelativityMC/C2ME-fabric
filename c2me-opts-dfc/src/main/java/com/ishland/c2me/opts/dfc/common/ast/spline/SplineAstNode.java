@@ -283,9 +283,18 @@ public class SplineAstNode implements AstNode {
                 for (int i = 0; i < valuesMethods.length - 1; i ++) {
                     m.visitLabel(jumpLabels[i]);
                     m.invokevirtual(context.className, valuesMethods[i], SPLINE_METHOD_DESC, false);
-                    m.store(n, Type.FLOAT_TYPE);
-                    m.invokevirtual(context.className, valuesMethods[i + 1], SPLINE_METHOD_DESC, false);
-                    m.store(o, Type.FLOAT_TYPE);
+                    if (valuesMethods[i].equals(valuesMethods[i + 1])) { // splines are pure
+                        m.dup();
+                        m.store(n, Type.FLOAT_TYPE);
+                        m.store(o, Type.FLOAT_TYPE);
+                        m.pop2();
+                        m.pop2();
+                        m.pop();
+                    } else {
+                        m.store(n, Type.FLOAT_TYPE);
+                        m.invokevirtual(context.className, valuesMethods[i + 1], SPLINE_METHOD_DESC, false);
+                        m.store(o, Type.FLOAT_TYPE);
+                    }
                     m.goTo(label3);
                 }
 
