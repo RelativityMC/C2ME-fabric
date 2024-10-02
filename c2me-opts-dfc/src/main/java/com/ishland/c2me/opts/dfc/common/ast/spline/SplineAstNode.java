@@ -20,9 +20,7 @@ import org.objectweb.asm.commons.AnalyzerAdapter;
 import org.objectweb.asm.commons.InstructionAdapter;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 
 public class SplineAstNode implements AstNode {
 
@@ -257,6 +255,17 @@ public class SplineAstNode implements AstNode {
                 Label defaultLabel = new Label();
                 Label label3 = new Label();
 
+                m.load(0, InstructionAdapter.OBJECT_TYPE);
+                m.load(1, Type.INT_TYPE);
+                m.load(2, Type.INT_TYPE);
+                m.load(3, Type.INT_TYPE);
+                m.load(4, InstructionAdapter.OBJECT_TYPE);
+                m.load(0, InstructionAdapter.OBJECT_TYPE);
+                m.load(1, Type.INT_TYPE);
+                m.load(2, Type.INT_TYPE);
+                m.load(3, Type.INT_TYPE);
+                m.load(4, InstructionAdapter.OBJECT_TYPE);
+
                 m.load(rangeForLocation, Type.INT_TYPE);
                 m.tableswitch(
                         0,
@@ -267,9 +276,9 @@ public class SplineAstNode implements AstNode {
 
                 for (int i = 0; i < valuesMethods.length - 1; i ++) {
                     m.visitLabel(jumpLabels[i]);
-                    callSplineSingle(context, m, valuesMethods[i]);
+                    m.invokevirtual(context.className, valuesMethods[i], SPLINE_METHOD_DESC, false);
                     m.store(n, Type.FLOAT_TYPE);
-                    callSplineSingle(context, m, valuesMethods[i + 1]);
+                    m.invokevirtual(context.className, valuesMethods[i + 1], SPLINE_METHOD_DESC, false);
                     m.store(o, Type.FLOAT_TYPE);
                     m.goTo(label3);
                 }
