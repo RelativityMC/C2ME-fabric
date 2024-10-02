@@ -62,6 +62,12 @@ public class SplineAstNode implements AstNode {
     }
 
     private static String doBytecodeGenSpline(BytecodeGen.Context context, Spline<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> spline) {
+        {
+            String cachedSplineMethod = context.getCachedSplineMethod(spline);
+            if (cachedSplineMethod != null) {
+                return cachedSplineMethod;
+            }
+        }
         String name = context.nextMethodName("Spline");
         InstructionAdapter m = new InstructionAdapter(
                 new AnalyzerAdapter(
@@ -378,6 +384,8 @@ public class SplineAstNode implements AstNode {
             m.visitLocalVariable(local.right().left(), local.right().right(), null, start, end, local.leftInt());
         }
         m.visitMaxs(0, 0);
+
+        context.cacheSplineMethod(spline, name);
 
         return name;
     }

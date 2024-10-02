@@ -17,6 +17,7 @@ import it.unimi.dsi.fastutil.objects.Object2ReferenceOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceMap;
+import net.minecraft.util.math.Spline;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
 import net.minecraft.world.gen.densityfunction.DensityFunctionTypes;
 import org.objectweb.asm.ClassWriter;
@@ -316,6 +317,7 @@ public class BytecodeGen {
         private int methodIdx = 0;
         private final Object2ReferenceOpenHashMap<AstNode, String> singleMethods = new Object2ReferenceOpenHashMap<>();
         private final Object2ReferenceOpenHashMap<AstNode, String> multiMethods = new Object2ReferenceOpenHashMap<>();
+        private final Object2ReferenceOpenHashMap<Spline<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper>, String> splineMethods = new Object2ReferenceOpenHashMap<>();
         private final ObjectOpenHashSet<String> postProcessMethods = new ObjectOpenHashSet<>();
         private final Reference2ObjectOpenHashMap<Object, FieldRecord> args = new Reference2ObjectOpenHashMap<>();
 
@@ -433,6 +435,14 @@ public class BytecodeGen {
                 adapter.visitLocalVariable(local.right().left(), local.right().right(), null, start, end, local.leftInt());
             }
             adapter.visitMaxs(0, 0);
+        }
+
+        public String getCachedSplineMethod(Spline<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> spline) {
+            return this.splineMethods.get(spline);
+        }
+
+        public void cacheSplineMethod(Spline<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> spline, String method) {
+            this.splineMethods.put(spline, method);
         }
 
         public void callDelegateSingle(InstructionAdapter m, String target) {
