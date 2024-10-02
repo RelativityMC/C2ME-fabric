@@ -83,15 +83,15 @@ public abstract class MixinChunkNoiseSamplerDensityInterpolator implements IFast
         if (evalType == EvalType.INTERPOLATION) {
             boolean isInInterpolationLoop = ((IChunkNoiseSampler) this.field_34622).getIsInInterpolationLoop();
             if (isInInterpolationLoop) {
-                int startBlockX = ((IChunkNoiseSampler) this.field_34622).getStartBlockX();
-                int startBlockY = ((IChunkNoiseSampler) this.field_34622).getStartBlockY();
-                int startBlockZ = ((IChunkNoiseSampler) this.field_34622).getStartBlockZ();
-                int horizontalCellBlockCount = ((IChunkNoiseSampler) this.field_34622).getHorizontalCellBlockCount();
-                int verticalCellBlockCount = ((IChunkNoiseSampler) this.field_34622).getVerticalCellBlockCount();
-                int cellBlockX = x - startBlockX;
-                int cellBlockY = y - startBlockY;
-                int cellBlockZ = z - startBlockZ;
                 if (((IChunkNoiseSampler) this.field_34622).getIsSamplingForCaches()) {
+                    int startBlockX = ((IChunkNoiseSampler) this.field_34622).getStartBlockX();
+                    int startBlockY = ((IChunkNoiseSampler) this.field_34622).getStartBlockY();
+                    int startBlockZ = ((IChunkNoiseSampler) this.field_34622).getStartBlockZ();
+                    int horizontalCellBlockCount = ((IChunkNoiseSampler) this.field_34622).getHorizontalCellBlockCount();
+                    int verticalCellBlockCount = ((IChunkNoiseSampler) this.field_34622).getVerticalCellBlockCount();
+                    int cellBlockX = x - startBlockX;
+                    int cellBlockY = y - startBlockY;
+                    int cellBlockZ = z - startBlockZ;
                     return MathHelper.lerp3(
                             (double) cellBlockX / (double) horizontalCellBlockCount,
                             (double) cellBlockY / (double) verticalCellBlockCount,
@@ -123,16 +123,16 @@ public abstract class MixinChunkNoiseSamplerDensityInterpolator implements IFast
                     int startBlockX = ((IChunkNoiseSampler) this.field_34622).getStartBlockX();
                     int startBlockY = ((IChunkNoiseSampler) this.field_34622).getStartBlockY();
                     int startBlockZ = ((IChunkNoiseSampler) this.field_34622).getStartBlockZ();
-                    int horizontalCellBlockCount = ((IChunkNoiseSampler) this.field_34622).getHorizontalCellBlockCount();
-                    int verticalCellBlockCount = ((IChunkNoiseSampler) this.field_34622).getVerticalCellBlockCount();
+                    double horizontalCellBlockCount = ((IChunkNoiseSampler) this.field_34622).getHorizontalCellBlockCount();
+                    double verticalCellBlockCount = ((IChunkNoiseSampler) this.field_34622).getVerticalCellBlockCount();
                     for (int i = 0; i < res.length; i ++) {
                         int cellBlockX = x[i] - startBlockX;
                         int cellBlockY = y[i] - startBlockY;
                         int cellBlockZ = z[i] - startBlockZ;
                         res[i] = MathHelper.lerp3(
-                                (double)cellBlockX / (double)horizontalCellBlockCount,
-                                (double)cellBlockY / (double)verticalCellBlockCount,
-                                (double)cellBlockZ / (double)horizontalCellBlockCount,
+                                (double)cellBlockX / horizontalCellBlockCount,
+                                (double)cellBlockY / verticalCellBlockCount,
+                                (double)cellBlockZ / horizontalCellBlockCount,
                                 this.x0y0z0,
                                 this.x1y0z0,
                                 this.x0y1z0,

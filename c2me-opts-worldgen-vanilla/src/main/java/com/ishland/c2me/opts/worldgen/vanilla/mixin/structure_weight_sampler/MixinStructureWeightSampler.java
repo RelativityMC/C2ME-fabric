@@ -66,18 +66,26 @@ public abstract class MixinStructureWeightSampler {
             int o = blockBox.getMinY() + l;
             int p = j - o;
 
-            int q = switch (piece.terrainAdjustment()) {
-                case NONE -> 0;
-                case BURY, BEARD_THIN -> p;
-                case BEARD_BOX -> Math.max(0, Math.max(o - j, j - blockBox.getMaxY()));
-                case ENCAPSULATE -> Math.max(0, Math.max(blockBox.getMinY() - j, j - blockBox.getMaxY()));
-            };
+//            int q = switch (piece.terrainAdjustment()) {
+//                case NONE -> 0;
+//                case BURY, BEARD_THIN -> p;
+//                case BEARD_BOX -> Math.max(0, Math.max(o - j, j - blockBox.getMaxY()));
+//                case ENCAPSULATE -> Math.max(0, Math.max(blockBox.getMinY() - j, j - blockBox.getMaxY()));
+//            };
+//
+//            d += switch (piece.terrainAdjustment()) {
+//                case NONE -> 0.0;
+//                case BURY -> getMagnitudeWeight(m, (double)q / 2.0, n);
+//                case BEARD_THIN, BEARD_BOX -> getStructureWeight(m, q, n, p) * 0.8;
+//                case ENCAPSULATE -> getMagnitudeWeight((double)m / 2.0, (double)q / 2.0, (double)n / 2.0) * 0.8;
+//            };
 
-            d += switch (piece.terrainAdjustment()) {
+            d += switch (piece.terrainAdjustment()) { // 2 switch statement merged
                 case NONE -> 0.0;
-                case BURY -> getMagnitudeWeight(m, (double)q / 2.0, n);
-                case BEARD_THIN, BEARD_BOX -> getStructureWeight(m, q, n, p) * 0.8;
-                case ENCAPSULATE -> getMagnitudeWeight((double)m / 2.0, (double)q / 2.0, (double)n / 2.0) * 0.8;
+                case BURY -> getMagnitudeWeight(m, (double)p / 2.0, n);
+                case BEARD_THIN -> getStructureWeight(m, p, n, p) * 0.8;
+                case BEARD_BOX -> getStructureWeight(m, Math.max(0, Math.max(o - j, j - blockBox.getMaxY())), n, p) * 0.8;
+                case ENCAPSULATE -> getMagnitudeWeight((double)m / 2.0, (double)Math.max(0, Math.max(blockBox.getMinY() - j, j - blockBox.getMaxY())) / 2.0, (double)n / 2.0) * 0.8;
             };
         }
 
