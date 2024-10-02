@@ -256,6 +256,7 @@ public class SplineAstNode implements AstNode {
                 m.store(k, Type.FLOAT_TYPE);
 
                 Label[] jumpLabels = new Label[valuesMethods.length - 1];
+                boolean[] jumpGenerated = new boolean[valuesMethods.length - 1];
                 for (int i = 0; i < valuesMethods.length - 1; i++) {
                     jumpLabels[i] = new Label();
                 }
@@ -271,7 +272,15 @@ public class SplineAstNode implements AstNode {
                 );
 
                 for (int i = 0; i < valuesMethods.length - 1; i++) {
+                    if (jumpGenerated[i]) continue;
                     m.visitLabel(jumpLabels[i]);
+                    jumpGenerated[i] = true;
+                    for (int j = i + 1; j < valuesMethods.length - 1; j++) { // deduplication
+                        if (valuesMethods[i].equals(valuesMethods[j]) && valuesMethods[i + 1].equals(valuesMethods[j + 1])) {
+                            m.visitLabel(jumpLabels[j]);
+                            jumpGenerated[j] = true;
+                        }
+                    }
                     callSplineSingle(context, m, valuesMethods[i]);
                     if (valuesMethods[i].equals(valuesMethods[i + 1])) { // splines are pure
                         m.dup();
