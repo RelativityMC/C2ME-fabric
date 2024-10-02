@@ -262,17 +262,6 @@ public class SplineAstNode implements AstNode {
                 Label defaultLabel = new Label();
                 Label label3 = new Label();
 
-                m.load(0, InstructionAdapter.OBJECT_TYPE);
-                m.load(1, Type.INT_TYPE);
-                m.load(2, Type.INT_TYPE);
-                m.load(3, Type.INT_TYPE);
-                m.load(4, InstructionAdapter.OBJECT_TYPE);
-                m.load(0, InstructionAdapter.OBJECT_TYPE);
-                m.load(1, Type.INT_TYPE);
-                m.load(2, Type.INT_TYPE);
-                m.load(3, Type.INT_TYPE);
-                m.load(4, InstructionAdapter.OBJECT_TYPE);
-
                 m.load(rangeForLocation, Type.INT_TYPE);
                 m.tableswitch(
                         0,
@@ -283,17 +272,14 @@ public class SplineAstNode implements AstNode {
 
                 for (int i = 0; i < valuesMethods.length - 1; i++) {
                     m.visitLabel(jumpLabels[i]);
-                    m.invokevirtual(context.className, valuesMethods[i], SPLINE_METHOD_DESC, false);
+                    callSplineSingle(context, m, valuesMethods[i]);
                     if (valuesMethods[i].equals(valuesMethods[i + 1])) { // splines are pure
                         m.dup();
                         m.store(n, Type.FLOAT_TYPE);
                         m.store(o, Type.FLOAT_TYPE);
-                        m.pop2();
-                        m.pop2();
-                        m.pop();
                     } else {
                         m.store(n, Type.FLOAT_TYPE);
-                        m.invokevirtual(context.className, valuesMethods[i + 1], SPLINE_METHOD_DESC, false);
+                        callSplineSingle(context, m, valuesMethods[i + 1]);
                         m.store(o, Type.FLOAT_TYPE);
                     }
                     m.goTo(label3);
