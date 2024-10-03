@@ -104,20 +104,17 @@ public abstract class MixinAquiferSamplerImpl {
     @Shadow @Final private DensityFunction depthDensityFunction;
 
     @Unique
-    private int[] c2me$blockPos;
-
-    @Unique
     private int c2me$dist1;
     @Unique
     private int c2me$dist2;
     @Unique
     private int c2me$dist3;
     @Unique
-    private int c2me$posIdx1;
+    private long c2me$pos1;
     @Unique
-    private int c2me$posIdx2;
+    private long c2me$pos2;
     @Unique
-    private int c2me$posIdx3;
+    private long c2me$pos3;
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(CallbackInfo info) {
@@ -126,14 +123,13 @@ public abstract class MixinAquiferSamplerImpl {
             throw new AssertionError("Array length");
         }
 
-        this.c2me$blockPos = new int[this.blockPositions.length * 4];
-
         int sizeY = this.blockPositions.length / (this.sizeX * this.sizeZ);
+
         final Random random = RandomUtils.getRandom(this.randomDeriver);
-        // index: z, x, y
-        for (int z = 0; z < this.sizeZ; z++) {
-            for (int x = 0; x < this.sizeX; x++) {
-                for (int y = 0; y < sizeY; y++) {
+        // index: y, z, x
+        for (int y = 0; y < sizeY; y++) {
+            for (int z = 0; z < this.sizeZ; z++) {
+                for (int x = 0; x < this.sizeX; x++) {
                     final int x1 = x + this.startX;
                     final int y1 = y + this.startY;
                     final int z1 = z + this.startZ;
@@ -143,10 +139,6 @@ public abstract class MixinAquiferSamplerImpl {
                     int z2 = z1 * 16 + random.nextInt(10);
                     int index = this.index(x1, y1, z1);
                     this.blockPositions[index] = BlockPos.asLong(x2, y2, z2);
-                    int shiftedIdx = index << 2;
-                    this.c2me$blockPos[shiftedIdx + 0] = x2;
-                    this.c2me$blockPos[shiftedIdx + 1] = y2;
-                    this.c2me$blockPos[shiftedIdx + 2] = z2;
                 }
             }
         }
@@ -183,7 +175,7 @@ public abstract class MixinAquiferSamplerImpl {
 
     @Unique
     private @Nullable BlockState aquiferExtracted$applyPost(DensityFunction.NoisePos pos, double density, int j, int i, int k) {
-        AquiferSampler.FluidLevel fluidLevel2 = this.aquiferExtracted$getWaterLevelByIdx(this.c2me$posIdx1);
+        AquiferSampler.FluidLevel fluidLevel2 = this.getWaterLevel(this.c2me$pos1);
         double d = maxDistance(this.c2me$dist1, this.c2me$dist2);
         BlockState blockState = fluidLevel2.getBlockState(j);
         if (d <= 0.0) {
@@ -194,7 +186,7 @@ public abstract class MixinAquiferSamplerImpl {
             return blockState;
         } else {
             MutableDouble mutableDouble = new MutableDouble(Double.NaN);
-            AquiferSampler.FluidLevel fluidLevel3 = this.aquiferExtracted$getWaterLevelByIdx(this.c2me$posIdx2);
+            AquiferSampler.FluidLevel fluidLevel3 = this.getWaterLevel(this.c2me$pos2);
             double e = d * this.calculateDensity(pos, mutableDouble, fluidLevel2, fluidLevel3);
             if (density + e > 0.0) {
                 this.needsFluidTick = false;
@@ -207,7 +199,7 @@ public abstract class MixinAquiferSamplerImpl {
 
     @Unique
     private BlockState aquiferExtracted$getFinalBlockState(DensityFunction.NoisePos pos, double density, double d, MutableDouble mutableDouble, AquiferSampler.FluidLevel fluidLevel2, AquiferSampler.FluidLevel fluidLevel3, BlockState blockState) {
-        AquiferSampler.FluidLevel fluidLevel4 = this.aquiferExtracted$getWaterLevelByIdx(this.c2me$posIdx3);
+        AquiferSampler.FluidLevel fluidLevel4 = this.getWaterLevel(this.c2me$pos3);
         double f = maxDistance(this.c2me$dist1, this.c2me$dist3);
         if (aquiferExtracted$extractedCheckFG(pos, density, d, mutableDouble, fluidLevel2, f, fluidLevel4)) return null;
 
@@ -239,35 +231,38 @@ public abstract class MixinAquiferSamplerImpl {
         int dist1 = Integer.MAX_VALUE;
         int dist2 = Integer.MAX_VALUE;
         int dist3 = Integer.MAX_VALUE;
-        int posIdx1 = 0;
-        int posIdx2 = 0;
-        int posIdx3 = 0;
+        long pos1 = 0;
+        long pos2 = 0;
+        long pos3 = 0;
 
         for (int offY = -1; offY <= 1; ++offY) {
             for (int offZ = 0; offZ <= 1; ++offZ) {
                 for (int offX = 0; offX <= 1; ++offX) {
                     int posIdx = this.index(gx + offX, gy + offY, gz + offZ);
 
-                    int shiftedIdx = posIdx << 2;
-                    int dx = this.c2me$blockPos[shiftedIdx + 0] - x;
-                    int dy = this.c2me$blockPos[shiftedIdx + 1] - y;
-                    int dz = this.c2me$blockPos[shiftedIdx + 2] - z;
+                    long position = this.blockPositions[posIdx];
+
+                    int dx = BlockPos.unpackLongX(position) - x;
+                    int dy = BlockPos.unpackLongY(position) - y;
+                    int dz = BlockPos.unpackLongZ(position) - z;
                     int dist = dx * dx + dy * dy + dz * dz;
-                    if (dist1 >= dist) {
-                        posIdx3 = posIdx2;
-                        dist3 = dist2;
-                        posIdx2 = posIdx1;
-                        dist2 = dist1;
-                        posIdx1 = posIdx;
-                        dist1 = dist;
-                    } else if (dist2 >= dist) {
-                        posIdx3 = posIdx2;
-                        dist3 = dist2;
-                        posIdx2 = posIdx;
-                        dist2 = dist;
-                    } else if (dist3 >= dist) {
-                        posIdx3 = posIdx;
+
+                    // unexplainable branch prediction magic
+                    if (dist3 >= dist) {
+                        pos3 = position;
                         dist3 = dist;
+                    }
+                    if (dist2 >= dist) {
+                        pos3 = pos2;
+                        dist3 = dist2;
+                        pos2 = position;
+                        dist2 = dist;
+                    }
+                    if (dist1 >= dist) {
+                        pos2 = pos1;
+                        dist2 = dist1;
+                        pos1 = position;
+                        dist1 = dist;
                     }
                 }
             }
@@ -276,9 +271,9 @@ public abstract class MixinAquiferSamplerImpl {
         this.c2me$dist1 = dist1;
         this.c2me$dist2 = dist2;
         this.c2me$dist3 = dist3;
-        this.c2me$posIdx1 = posIdx1;
-        this.c2me$posIdx2 = posIdx2;
-        this.c2me$posIdx3 = posIdx3;
+        this.c2me$pos1 = pos1;
+        this.c2me$pos2 = pos2;
+        this.c2me$pos3 = pos3;
     }
 
     /**
@@ -290,26 +285,6 @@ public abstract class MixinAquiferSamplerImpl {
         int i = BlockPos.unpackLongX(pos);
         int j = BlockPos.unpackLongY(pos);
         int k = BlockPos.unpackLongZ(pos);
-        int l = i >> 4; // C2ME - inline: floorDiv(i, 16)
-        int m = Math.floorDiv(j, 12); // C2ME - inline
-        int n = k >> 4; // C2ME - inline: floorDiv(k, 16)
-        int o = this.index(l, m, n);
-        AquiferSampler.FluidLevel fluidLevel = this.waterLevels[o];
-        if (fluidLevel != null) {
-            return fluidLevel;
-        } else {
-            AquiferSampler.FluidLevel fluidLevel2 = this.getFluidLevel(i, j, k);
-            this.waterLevels[o] = fluidLevel2;
-            return fluidLevel2;
-        }
-    }
-
-    @Unique
-    private AquiferSampler.FluidLevel aquiferExtracted$getWaterLevelByIdx(int idx) {
-        int idxShifted = idx << 2;
-        int i = this.c2me$blockPos[idxShifted + 0];
-        int j = this.c2me$blockPos[idxShifted + 1];
-        int k = this.c2me$blockPos[idxShifted + 2];
         int l = i >> 4; // C2ME - inline: floorDiv(i, 16)
         int m = Math.floorDiv(j, 12); // C2ME - inline
         int n = k >> 4; // C2ME - inline: floorDiv(k, 16)
