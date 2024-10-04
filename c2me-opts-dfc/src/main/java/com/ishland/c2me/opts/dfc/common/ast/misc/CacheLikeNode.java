@@ -274,7 +274,15 @@ public class CacheLikeNode implements AstNode {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         CacheLikeNode that = (CacheLikeNode) o;
-        return Objects.equals(cacheLike, that.cacheLike) && Objects.equals(delegate, that.delegate);
+        return equals(cacheLike, that.cacheLike) && Objects.equals(delegate, that.delegate);
+    }
+
+    private static boolean equals(IFastCacheLike a, IFastCacheLike b) {
+        if ((Object) a instanceof DensityFunctionTypes.Wrapping wrappingA && (Object) b instanceof DensityFunctionTypes.Wrapping wrappingB) {
+            return wrappingA.type() == wrappingB.type();
+        } else {
+            return a.equals(b);
+        }
     }
 
     @Override
@@ -282,10 +290,18 @@ public class CacheLikeNode implements AstNode {
         int result = 1;
 
         result = 31 * result + this.getClass().hashCode();
-        result = 31 * result + Objects.hashCode(cacheLike);
+        result = 31 * result + hashCode(cacheLike);
         result = 31 * result + delegate.hashCode();
 
         return result;
+    }
+
+    private static int hashCode(IFastCacheLike o) {
+        if ((Object) o instanceof DensityFunctionTypes.Wrapping wrapping) {
+            return wrapping.type().hashCode();
+        } else {
+            return o.hashCode();
+        }
     }
 
     @Override
@@ -309,8 +325,17 @@ public class CacheLikeNode implements AstNode {
         int result = 1;
 
         result = 31 * result + this.getClass().hashCode();
+        result = 31 * result + relaxedHashCode(this.cacheLike);
         result = 31 * result + delegate.relaxedHashCode();
 
         return result;
+    }
+
+    private static int relaxedHashCode(IFastCacheLike o) {
+        if ((Object) o instanceof DensityFunctionTypes.Wrapping wrapping) {
+            return wrapping.type().hashCode();
+        } else {
+            return o.getClass().hashCode();
+        }
     }
 }
