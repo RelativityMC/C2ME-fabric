@@ -20,11 +20,6 @@ public abstract class MixinStructureWeightSampler {
     @Shadow @Final private ObjectListIterator<JigsawJunction> junctionIterator;
 
     @Shadow
-    private static double getMagnitudeWeight(double x, double y, double z) {
-        throw new AbstractMethodError();
-    }
-
-    @Shadow
     private static double getStructureWeight(int x, int y, int z, int yy) {
         throw new AbstractMethodError();
     }
@@ -97,6 +92,20 @@ public abstract class MixinStructureWeightSampler {
         }
 
         return d;
+    }
+
+    /**
+     * @author ishland
+     * @reason optimize impl
+     */
+    @Overwrite
+    private static double getMagnitudeWeight(double x, double y, double z) {
+        double d = Math.sqrt(x * x + y * y + z * z);
+        if (d > 6.0) {
+            return 0.0;
+        } else {
+            return 1.0 - d / 6.0;
+        }
     }
 
 }
