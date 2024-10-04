@@ -22,7 +22,7 @@ import com.ishland.c2me.opts.dfc.common.ast.unary.NegMulNode;
 import com.ishland.c2me.opts.dfc.common.ast.unary.SquareNode;
 import com.ishland.c2me.opts.dfc.common.ast.unary.SqueezeNode;
 import com.ishland.c2me.opts.dfc.common.ducks.IFastCacheLike;
-import com.ishland.c2me.opts.dfc.common.ducks.IHashCodeOverriding;
+import com.ishland.c2me.opts.dfc.common.ducks.IEqualityOverriding;
 import com.ishland.c2me.opts.dfc.common.vif.AstVanillaInterface;
 import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
@@ -67,7 +67,7 @@ public class McToAst {
             case IFastCacheLike f -> new CacheLikeNode(f, toAst(f.c2me$getDelegate()));
             case DensityFunctionTypes.Wrapping f -> {
                 DensityFunctionTypes.Wrapping wrapping = new DensityFunctionTypes.Wrapping(f.type(), new AstVanillaInterface(toAst(f.wrapped()), null));
-                ((IHashCodeOverriding) (Object) wrapping).c2me$overrideHashCode(wrapping.hashCode());
+                ((IEqualityOverriding) (Object) wrapping).c2me$overrideEquality(wrapping);
                 yield new DelegateNode(wrapping);
             }
             case DensityFunctionTypes.ShiftedNoise f -> new ShiftedNoiseNode(toAst(f.shiftX()), toAst(f.shiftY()), toAst(f.shiftZ()), f.xzScale(), f.yScale(), f.noise());
