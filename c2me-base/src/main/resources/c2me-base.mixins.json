@@ -13,6 +13,7 @@
     "access.IChunkGenerator",
     "access.IChunkHolder",
     "access.IChunkNoiseSampler",
+    "access.IChunkNoiseSamplerDensityInterpolator",
     "access.IChunkSection",
     "access.IChunkTicket",
     "access.IChunkTicketManager",
