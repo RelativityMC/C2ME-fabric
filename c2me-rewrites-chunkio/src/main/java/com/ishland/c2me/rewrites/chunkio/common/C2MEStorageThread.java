@@ -23,9 +23,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.util.Queue;
@@ -345,6 +347,14 @@ public class C2MEStorageThread extends Thread {
             ChunkCompressionFormat finalCompressionFormat = compressionFormat;
             final CompletableFuture<Void> future = CompletableFuture.supplyAsync(() -> {
                 try {
+                    ByteArrayOutputStream uncompressedStream = new ByteArrayOutputStream();
+                    try (DataOutputStream dataOutputStream = new DataOutputStream(uncompressedStream)) {
+                        if (nbt.left().isPresent()) {
+                            NbtIo.writeCompound(nbt.left().get(), dataOutputStream);
+                        } else {
+                            dataOutputStream.write(nbt.right().get());
+                        }
+                    }
                     final RawByteArrayOutputStream out = new RawByteArrayOutputStream(8096);
                     // TODO [VanillaCopy] RegionFile.ChunkBuffer
                     out.write(0);
@@ -352,12 +362,8 @@ public class C2MEStorageThread extends Thread {
                     out.write(0);
                     out.write(0);
                     out.write(finalCompressionFormat.getId());
-                    try (DataOutputStream dataOutputStream = new DataOutputStream(finalCompressionFormat.wrap(out))) {
-                        if (nbt.left().isPresent()) {
-                            NbtIo.writeCompound(nbt.left().get(), dataOutputStream);
-                        } else {
-                            dataOutputStream.write(nbt.right().get());
-                        }
+                    try (OutputStream out1 = finalCompressionFormat.wrap(out)) {
+                        uncompressedStream.writeTo(out1);
                     }
                     return out;
                 } catch (Throwable t) {
