@@ -221,11 +221,19 @@ public class RangeChoiceNode implements AstNode {
         m.cmpg(Type.DOUBLE_TYPE);
         m.ifge(whenOutOfRangeLabel); // inputValue >= maxExclusive
 
-        context.callDelegateSingle(m, whenInRangeMethod);
+        if (whenInRangeMethod.equals(inputMethod)) {
+            m.load(inputValue, Type.DOUBLE_TYPE);
+        } else {
+            context.callDelegateSingle(m, whenInRangeMethod);
+        }
         m.goTo(end);
 
         m.visitLabel(whenOutOfRangeLabel);
-        context.callDelegateSingle(m, whenOutOfRangeMethod);
+        if (whenOutOfRangeMethod.equals(inputMethod)) {
+            m.load(inputValue, Type.DOUBLE_TYPE);
+        } else {
+            context.callDelegateSingle(m, whenOutOfRangeMethod);
+        }
 
         m.visitLabel(end);
         m.areturn(Type.DOUBLE_TYPE);
@@ -233,7 +241,7 @@ public class RangeChoiceNode implements AstNode {
 
     @Override
     public void doBytecodeGenMulti(BytecodeGen.Context context, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
-//        String inputSingle = context.newSingleMethod(this.input);
+        String inputSingle = context.newSingleMethod(this.input);
         String whenInRangeSingle = context.newSingleMethod(this.whenInRange);
         String whenOutOfRangeSingle = context.newSingleMethod(this.whenOutOfRange);
         String inputMulti = context.newMultiMethod(this.input);
@@ -265,33 +273,45 @@ public class RangeChoiceNode implements AstNode {
             m.ifge(whenOutOfRangeLabel); // inputValue >= maxExclusive
 
 //            context.callDelegateSingle(m, whenInRangeSingle);
-            m.load(0, InstructionAdapter.OBJECT_TYPE);
-            m.load(2, InstructionAdapter.OBJECT_TYPE);
-            m.load(idx, Type.INT_TYPE);
-            m.aload(Type.INT_TYPE);
-            m.load(3, InstructionAdapter.OBJECT_TYPE);
-            m.load(idx, Type.INT_TYPE);
-            m.aload(Type.INT_TYPE);
-            m.load(4, InstructionAdapter.OBJECT_TYPE);
-            m.load(idx, Type.INT_TYPE);
-            m.aload(Type.INT_TYPE);
-            m.load(5, InstructionAdapter.OBJECT_TYPE);
-            m.invokevirtual(context.className, whenInRangeSingle, BytecodeGen.Context.SINGLE_DESC, false);
+            if (whenInRangeSingle.equals(inputSingle)) {
+                m.load(1, InstructionAdapter.OBJECT_TYPE);
+                m.load(idx, Type.INT_TYPE);
+                m.aload(Type.DOUBLE_TYPE);
+            } else {
+                m.load(0, InstructionAdapter.OBJECT_TYPE);
+                m.load(2, InstructionAdapter.OBJECT_TYPE);
+                m.load(idx, Type.INT_TYPE);
+                m.aload(Type.INT_TYPE);
+                m.load(3, InstructionAdapter.OBJECT_TYPE);
+                m.load(idx, Type.INT_TYPE);
+                m.aload(Type.INT_TYPE);
+                m.load(4, InstructionAdapter.OBJECT_TYPE);
+                m.load(idx, Type.INT_TYPE);
+                m.aload(Type.INT_TYPE);
+                m.load(5, InstructionAdapter.OBJECT_TYPE);
+                m.invokevirtual(context.className, whenInRangeSingle, BytecodeGen.Context.SINGLE_DESC, false);
+            }
             m.goTo(end);
 
             m.visitLabel(whenOutOfRangeLabel);
-            m.load(0, InstructionAdapter.OBJECT_TYPE);
-            m.load(2, InstructionAdapter.OBJECT_TYPE);
-            m.load(idx, Type.INT_TYPE);
-            m.aload(Type.INT_TYPE);
-            m.load(3, InstructionAdapter.OBJECT_TYPE);
-            m.load(idx, Type.INT_TYPE);
-            m.aload(Type.INT_TYPE);
-            m.load(4, InstructionAdapter.OBJECT_TYPE);
-            m.load(idx, Type.INT_TYPE);
-            m.aload(Type.INT_TYPE);
-            m.load(5, InstructionAdapter.OBJECT_TYPE);
-            m.invokevirtual(context.className, whenOutOfRangeSingle, BytecodeGen.Context.SINGLE_DESC, false);
+            if (whenOutOfRangeSingle.equals(inputSingle)) {
+                m.load(1, InstructionAdapter.OBJECT_TYPE);
+                m.load(idx, Type.INT_TYPE);
+                m.aload(Type.DOUBLE_TYPE);
+            } else {
+                m.load(0, InstructionAdapter.OBJECT_TYPE);
+                m.load(2, InstructionAdapter.OBJECT_TYPE);
+                m.load(idx, Type.INT_TYPE);
+                m.aload(Type.INT_TYPE);
+                m.load(3, InstructionAdapter.OBJECT_TYPE);
+                m.load(idx, Type.INT_TYPE);
+                m.aload(Type.INT_TYPE);
+                m.load(4, InstructionAdapter.OBJECT_TYPE);
+                m.load(idx, Type.INT_TYPE);
+                m.aload(Type.INT_TYPE);
+                m.load(5, InstructionAdapter.OBJECT_TYPE);
+                m.invokevirtual(context.className, whenOutOfRangeSingle, BytecodeGen.Context.SINGLE_DESC, false);
+            }
 
             m.visitLabel(end);
             m.astore(Type.DOUBLE_TYPE);
