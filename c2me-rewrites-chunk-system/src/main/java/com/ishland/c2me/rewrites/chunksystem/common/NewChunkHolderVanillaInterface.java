@@ -192,7 +192,7 @@ public class NewChunkHolderVanillaInterface extends ChunkHolder implements IFast
 
     @Override
     public CompletableFuture<?> getSavingFuture() {
-        return this.newHolder.getOpFuture().thenApply(Function.identity());
+        return this.newHolder.getOpFuture(); // already safe to use as the implementation creates a new future
     }
 
     @Override

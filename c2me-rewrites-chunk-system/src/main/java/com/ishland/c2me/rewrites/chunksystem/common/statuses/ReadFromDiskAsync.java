@@ -63,7 +63,7 @@ public class ReadFromDiskAsync extends ReadFromDisk {
                 .onErrorResumeNext(throwable -> {
                     LOGGER.error("Failed to load chunk {} asynchronously, falling back to sync loading", context.holder().getKey(), throwable);
                     return invokeSyncRead(context)
-                            .retryWhen(RxJavaUtils.retryWithExponentialBackoff(3, 200));
+                            .retryWhen(RxJavaUtils.retryWithExponentialBackoff(3, 200, new RuntimeException("Failed to load asynchronously, falling back to sync loading", throwable)));
                 });
         return finalizeLoading(context, single);
     }
