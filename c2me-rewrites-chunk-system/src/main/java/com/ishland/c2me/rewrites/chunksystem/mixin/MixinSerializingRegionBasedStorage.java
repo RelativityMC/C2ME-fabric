@@ -16,11 +16,11 @@ import java.util.Optional;
 @Mixin(SerializingRegionBasedStorage.class)
 public abstract class MixinSerializingRegionBasedStorage<R> implements IPOIUnloading {
 
-    @Shadow protected abstract void save(ChunkPos pos);
-
     @Shadow @Final protected HeightLimitView world;
 
     @Shadow @Final private Long2ObjectMap<Optional<R>> loadedElements;
+
+    @Shadow public abstract void saveChunk(ChunkPos pos);
 
     @Override
     public void c2me$unloadPoi(ChunkPos pos) {
@@ -30,7 +30,7 @@ public abstract class MixinSerializingRegionBasedStorage<R> implements IPOIUnloa
             return;
         }
 
-        this.save(pos);
+        this.saveChunk(pos);
         for (int i = this.world.getBottomSectionCoord(); i < this.world.getTopSectionCoord(); i++) {
             this.loadedElements.remove(ChunkSectionPos.asLong(pos.x, i, pos.z));
         }
