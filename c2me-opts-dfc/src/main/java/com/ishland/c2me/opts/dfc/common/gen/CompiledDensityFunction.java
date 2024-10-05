@@ -34,22 +34,10 @@ public class CompiledDensityFunction extends SubCompiledDensityFunction {
     public DensityFunction apply(DensityFunctionVisitor visitor) {
         boolean modified = false;
         List<Object> args = this.compiledEntry.getArgs();
-        ListIterator<Object> iterator = args.listIterator();
-        while (iterator.hasNext()) {
+        for (ListIterator<Object> iterator = args.listIterator(); iterator.hasNext(); ) {
             Object next = iterator.next();
             if (next instanceof DensityFunction df) {
-                if (df instanceof IFastCacheLike cacheLike) {
-                    DensityFunction applied = visitor.apply(cacheLike);
-                    if (applied == cacheLike.c2me$getDelegate()) {
-                        iterator.set(null); // cache removed
-                        modified = true;
-                    } else if (applied instanceof IFastCacheLike newCacheLike) {
-                        iterator.set(newCacheLike);
-                        modified = true;
-                    } else {
-                        throw new UnsupportedOperationException("Unsupported transformation on Wrapping node");
-                    }
-                } else {
+                if (!(df instanceof IFastCacheLike)) {
                     DensityFunction applied = df.apply(visitor);
                     if (df != applied) {
                         iterator.set(applied);
@@ -65,6 +53,23 @@ public class CompiledDensityFunction extends SubCompiledDensityFunction {
                 }
             }
         }
+
+        for (ListIterator<Object> iterator = args.listIterator(); iterator.hasNext(); ) {
+            Object next = iterator.next();
+            if (next instanceof IFastCacheLike cacheLike) {
+                DensityFunction applied = visitor.apply(cacheLike);
+                if (applied == cacheLike.c2me$getDelegate()) {
+                    iterator.set(null); // cache removed
+                    modified = true;
+                } else if (applied instanceof IFastCacheLike newCacheLike) {
+                    iterator.set(newCacheLike);
+                    modified = true;
+                } else {
+                    throw new UnsupportedOperationException("Unsupported transformation on Wrapping node");
+                }
+            }
+        }
+
         Supplier<DensityFunction> fallback = this.blendingFallback != null ? Suppliers.memoize(() -> {
             DensityFunction densityFunction = this.blendingFallback.get();
             return densityFunction != null ? densityFunction.apply(visitor) : null;
