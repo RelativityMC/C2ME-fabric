@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 
 @Mixin(DensityFunctionTypes.Wrapping.class)
-public abstract class MixinDFTWrapping implements IFastCacheLike, IEqualityOverriding {
+public abstract class MixinDFTWrapping implements IFastCacheLike, IEqualityOverriding, DensityFunctionTypes.Wrapper {
 
     @Mutable
     @Shadow @Final private DensityFunction wrapped;
@@ -58,7 +58,20 @@ public abstract class MixinDFTWrapping implements IFastCacheLike, IEqualityOverr
 
     @Override
     public void c2me$overrideEquality(Object object) {
-        this.c2me$optionalEquality = object;
+        Object inner = object;
+        while (true) {
+            Object inner1 = inner instanceof IEqualityOverriding e1 ? e1.c2me$getOverriddenEquality() : null;
+            if (inner1 == null) {
+                this.c2me$optionalEquality = inner;
+                break;
+            }
+            inner = inner1;
+        }
+    }
+
+    @Override
+    public Object c2me$getOverriddenEquality() {
+        return this.c2me$optionalEquality;
     }
 
     @WrapMethod(method = "hashCode")
@@ -72,12 +85,18 @@ public abstract class MixinDFTWrapping implements IFastCacheLike, IEqualityOverr
     }
 
     @WrapMethod(method = "equals")
-    private boolean wrapEquals(Object object, Operation<Boolean> original) {
-        Object c2me$optionalEquality1 = this.c2me$optionalEquality;
-        if (c2me$optionalEquality1 != null) {
-            return c2me$optionalEquality1.equals(object);
+    private boolean wrapEquals(Object that, Operation<Boolean> original) {
+        Object a = this.c2me$getOverriddenEquality();
+        Object b = that instanceof IEqualityOverriding equalityOverriding ? equalityOverriding.c2me$getOverriddenEquality() : null;
+        if (a == null) {
+            return original.call(b != null ? b : that);
         } else {
-            return original.call(object);
+            return a.equals(b != null ? b : that);
         }
+    }
+
+    @Override
+    public DensityFunction apply(DensityFunctionVisitor visitor) {
+        return visitor.apply(this.c2me$withDelegate(this.wrapped().apply(visitor)));
     }
 }

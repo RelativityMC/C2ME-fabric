@@ -4,9 +4,14 @@ import com.ishland.c2me.opts.dfc.common.ducks.IArrayCacheCapable;
 import com.ishland.c2me.opts.dfc.common.ducks.ICoordinatesFilling;
 import com.ishland.c2me.opts.dfc.common.util.ArrayCache;
 import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
+import net.minecraft.world.gen.densityfunction.DensityFunction;
+import net.minecraft.world.gen.densityfunction.DensityFunctionTypes;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(ChunkNoiseSampler.class)
 public class MixinChunkNoiseSampler implements IArrayCacheCapable, ICoordinatesFilling {
@@ -16,6 +21,7 @@ public class MixinChunkNoiseSampler implements IArrayCacheCapable, ICoordinatesF
     @Shadow private int startBlockY;
     @Shadow private int startBlockX;
     @Shadow private int startBlockZ;
+    @Shadow private boolean isInInterpolationLoop;
     private final ArrayCache c2me$arrayCache = new ArrayCache();
 
     @Override
@@ -40,6 +46,13 @@ public class MixinChunkNoiseSampler implements IArrayCacheCapable, ICoordinatesF
                     index++;
                 }
             }
+        }
+    }
+
+    @Inject(method = "getActualDensityFunctionImpl", at = @At("HEAD"))
+    private void protectInterpolationLoop(DensityFunction function, CallbackInfoReturnable<DensityFunction> cir) {
+        if (this.isInInterpolationLoop && function instanceof DensityFunctionTypes.Wrapping) {
+            throw new IllegalStateException("Cannot create more wrapping during interpolation loop");
         }
     }
 }

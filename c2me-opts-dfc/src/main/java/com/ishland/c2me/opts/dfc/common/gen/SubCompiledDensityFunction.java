@@ -89,7 +89,7 @@ public class SubCompiledDensityFunction implements DensityFunction {
     @Override
     public DensityFunction apply(DensityFunctionVisitor visitor) {
         if (this.getClass() != SubCompiledDensityFunction.class) {
-            throw new UnsupportedOperationException();
+            throw new AbstractMethodError();
         }
         boolean modified = false;
         Supplier<DensityFunction> fallback = this.blendingFallback != null ? Suppliers.memoize(() -> {
