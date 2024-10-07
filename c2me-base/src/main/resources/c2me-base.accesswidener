@@ -21,6 +21,7 @@ accessible    class    net/minecraft/server/world/ServerChunkLoadingManager$Tick
 accessible    class    net/minecraft/server/world/ChunkTicketManager$TicketDistanceLevelPropagator
 accessible    class    net/minecraft/server/world/ServerLightingProvider$Stage
 accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$EndIslands
+accessible    class    net/minecraft/world/storage/SerializingRegionBasedStorage$LoadResult
 
 extendable    class    net/minecraft/client/option/SimpleOption
 extendable    class    net/minecraft/world/storage/RegionBasedStorage

@@ -17,7 +17,6 @@ import com.ishland.c2me.rewrites.chunksystem.common.async_chunkio.AsyncSerializa
 import com.ishland.c2me.rewrites.chunksystem.common.async_chunkio.BlendingInfoUtil;
 import com.ishland.c2me.rewrites.chunksystem.common.async_chunkio.ChunkIoMainThreadTaskUtils;
 import com.ishland.c2me.rewrites.chunksystem.common.async_chunkio.ProtoChunkExtension;
-import com.ishland.c2me.rewrites.chunksystem.common.async_chunkio.SerializingRegionBasedStorageExtension;
 import com.ishland.c2me.rewrites.chunksystem.common.ducks.IPOIUnloading;
 import com.ishland.c2me.rewrites.chunksystem.common.fapi.LifecycleEventInvoker;
 import com.ishland.flowsched.scheduler.ItemHolder;
