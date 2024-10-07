@@ -10,6 +10,8 @@
     "MixinChunkTicketManagerTicketDistanceLevelPropagator",
     "MixinMinecraftServer",
     "MixinNoiseChunkGenerator",
+    "MixinPointOfInterestStorage",
+    "MixinSerializingRegionBasedStorage",
     "MixinServerChunkManager",
     "MixinThreadedAnvilChunkStorage",
     "async_serialization.MixinBlender",

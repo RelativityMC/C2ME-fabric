@@ -27,7 +27,7 @@ public class ModuleEntryPoint {
         boolean actuallyEnabled = false;
         if (configured) {
             try {
-                actuallyEnabled = Class.forName("com.ishland.c2me.opts.natives_math.common.NativeLoader").getField("linker").get(null) != null;
+                actuallyEnabled = Class.forName("com.ishland.c2me.opts.natives_math.common.NativeLoader").getField("lookup").get(null) != null;
             } catch (Throwable t) {
                 t.printStackTrace();
             }

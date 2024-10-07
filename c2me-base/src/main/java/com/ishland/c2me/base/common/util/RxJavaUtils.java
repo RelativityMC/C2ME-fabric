@@ -12,9 +12,10 @@ import java.util.concurrent.TimeUnit;
 
 public class RxJavaUtils {
 
-    public static @NonNull Function<? super Flowable<Throwable>, @NonNull ? extends Publisher<@NonNull ?>> retryWithExponentialBackoff(int maxRetries, long initialDelayMillis) {
+    public static @NonNull Function<? super Flowable<Throwable>, @NonNull ? extends Publisher<@NonNull ?>> retryWithExponentialBackoff(int maxRetries, long initialDelayMillis, Throwable... existingErrors) {
         List<Throwable> throwableList = Collections.synchronizedList(new ReferenceArrayList<>());
-        return errors -> errors.zipWith(Flowable.range(1, maxRetries), (error, retryCount) -> {
+        throwableList.addAll(List.of(existingErrors));
+        return errors -> errors.zipWith(Flowable.range(1, maxRetries + 1), (error, retryCount) -> {
             if (retryCount > maxRetries) {
                 final RuntimeException exception = new RuntimeException("Max retries reached", error);
                 throwableList.forEach(exception::addSuppressed);
