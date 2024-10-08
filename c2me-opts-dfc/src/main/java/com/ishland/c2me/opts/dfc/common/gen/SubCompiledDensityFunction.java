@@ -3,6 +3,7 @@ package com.ishland.c2me.opts.dfc.common.gen;
 import com.google.common.base.Suppliers;
 import com.ishland.c2me.opts.dfc.common.ast.EvalType;
 import com.ishland.c2me.opts.dfc.common.ducks.IArrayCacheCapable;
+import com.ishland.c2me.opts.dfc.common.ducks.IBlendingAwareVisitor;
 import com.ishland.c2me.opts.dfc.common.ducks.ICoordinatesFilling;
 import com.ishland.c2me.opts.dfc.common.util.ArrayCache;
 import com.ishland.c2me.opts.dfc.common.vif.EachApplierVanillaInterface;
@@ -10,11 +11,15 @@ import net.minecraft.util.dynamic.CodecHolder;
 import net.minecraft.world.gen.chunk.Blender;
 import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
 import java.util.function.Supplier;
 
 public class SubCompiledDensityFunction implements DensityFunction {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(SubCompiledDensityFunction.class);
 
     private final ISingleMethod singleMethod;
     private final IMultiMethod multiMethod;
@@ -35,7 +40,7 @@ public class SubCompiledDensityFunction implements DensityFunction {
         if (densityFunction instanceof SubCompiledDensityFunction scdf) {
             return scdf.blendingFallback;
         } else {
-            return densityFunction != null ? () -> densityFunction : null;
+            return densityFunction != null ? Suppliers.ofInstance(densityFunction) : null;
         }
     }
 
@@ -91,6 +96,13 @@ public class SubCompiledDensityFunction implements DensityFunction {
         if (this.getClass() != SubCompiledDensityFunction.class) {
             throw new AbstractMethodError();
         }
+        if (visitor instanceof IBlendingAwareVisitor blendingAwareVisitor && blendingAwareVisitor.c2me$isBlendingEnabled()) {
+            DensityFunction fallback1 = this.getFallback();
+            if (fallback1 == null) {
+                throw new IllegalStateException("blendingFallback is no more");
+            }
+            return fallback1.apply(visitor);
+        }
         boolean modified = false;
         Supplier<DensityFunction> fallback = this.blendingFallback != null ? Suppliers.memoize(() -> {
             DensityFunction densityFunction = this.blendingFallback.get();
@@ -125,7 +137,7 @@ public class SubCompiledDensityFunction implements DensityFunction {
         throw new UnsupportedOperationException();
     }
 
-    private DensityFunction getFallback() {
+    protected DensityFunction getFallback() {
         return this.blendingFallback != null ? this.blendingFallback.get() : null;
     }
 }

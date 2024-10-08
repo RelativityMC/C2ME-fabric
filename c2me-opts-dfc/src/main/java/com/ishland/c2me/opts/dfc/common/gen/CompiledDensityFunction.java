@@ -3,6 +3,7 @@ package com.ishland.c2me.opts.dfc.common.gen;
 import com.google.common.base.Suppliers;
 import com.ishland.c2me.opts.dfc.common.ast.EvalType;
 import com.ishland.c2me.opts.dfc.common.ducks.IArrayCacheCapable;
+import com.ishland.c2me.opts.dfc.common.ducks.IBlendingAwareVisitor;
 import com.ishland.c2me.opts.dfc.common.ducks.IFastCacheLike;
 import com.ishland.c2me.opts.dfc.common.util.ArrayCache;
 import com.ishland.c2me.opts.dfc.common.vif.EachApplierVanillaInterface;
@@ -32,6 +33,13 @@ public class CompiledDensityFunction extends SubCompiledDensityFunction {
 
     @Override
     public DensityFunction apply(DensityFunctionVisitor visitor) {
+        if (visitor instanceof IBlendingAwareVisitor blendingAwareVisitor && blendingAwareVisitor.c2me$isBlendingEnabled()) {
+            DensityFunction fallback1 = this.getFallback();
+            if (fallback1 == null) {
+                throw new IllegalStateException("blendingFallback is no more");
+            }
+            return fallback1.apply(visitor);
+        }
         boolean modified = false;
         List<Object> args = this.compiledEntry.getArgs();
         for (ListIterator<Object> iterator = args.listIterator(); iterator.hasNext(); ) {
