@@ -37,12 +37,5 @@
   "breaks": {
     "tic_tacs": "*",
     "optifabric": "*"
-  },
-
-  "custom": {
-    "_lithium_toggle_comment": "We disable the player_chunk_tick mixin as some weird incompatibility is present, you are free to remove this and test the incompatibility issue",
-    "lithium:options": {
-      "mixin.world.player_chunk_tick": false
-    }
   }
 }
