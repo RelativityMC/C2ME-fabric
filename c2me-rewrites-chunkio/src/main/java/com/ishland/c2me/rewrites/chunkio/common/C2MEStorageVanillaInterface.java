@@ -26,8 +26,7 @@ public class C2MEStorageVanillaInterface extends StorageIoWorker implements IDir
 
     @Override
     public CompletableFuture<Void> setResult(ChunkPos pos, @Nullable NbtCompound nbt) {
-        this.backend.setChunkData(pos.toLong(), nbt);
-        return CompletableFuture.completedFuture(null);
+        return this.backend.setChunkData(pos.toLong(), nbt).thenApply(Function.identity());
     }
 
     @Override

@@ -153,12 +153,22 @@ public class C2MEStorageThread extends Thread {
                 .thenApply(Function.identity());
     }
 
-    public void setChunkData(long pos, @Nullable NbtCompound nbt) {
-        this.executor.execute(() -> this.write0(pos, nbt != null ? Either.left(nbt) : null));
+    public CompletableFuture<Void> setChunkData(long pos, @Nullable NbtCompound nbt) {
+        CompletableFuture<Void> future = new CompletableFuture<>();
+        this.executor.execute(() -> {
+            this.write0(pos, nbt != null ? Either.left(nbt) : null);
+            future.complete(null);
+        });
+        return future;
     }
 
-    public void setChunkData(long pos, @Nullable byte[] data) {
-        this.executor.execute(() -> this.write0(pos, data != null ? Either.right(data) : null));
+    public CompletableFuture<Void> setChunkData(long pos, @Nullable byte[] data) {
+        CompletableFuture<Void> future = new CompletableFuture<>();
+        this.executor.execute(() -> {
+            this.write0(pos, data != null ? Either.right(data) : null);
+            future.complete(null);
+        });
+        return future;
     }
 
     public CompletableFuture<Void> flush(boolean sync) {

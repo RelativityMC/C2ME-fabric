@@ -191,12 +191,12 @@ public class ReadFromDisk extends NewChunkStatus {
             return CompletableFuture.supplyAsync(() -> {
                         return SerializerAccess.getSerializer().serialize(serializer);
                     }, GlobalExecutors.prioritizedScheduler.executor(16) /* boost priority as we are serializing an unloaded chunk */)
-                    .thenAccept((either) -> {
+                    .thenCompose((either) -> {
                         if (either.left().isPresent()) {
                             NbtCompound nbtCompound = either.left().get();
-                            tacs.setNbt(chunkPos, () -> nbtCompound);
+                            return tacs.setNbt(chunkPos, () -> nbtCompound);
                         } else {
-                            ((IDirectStorage) ((IVersionedChunkStorage) tacs).getWorker()).setRawChunkData(chunkPos, either.right().get());
+                            return ((IDirectStorage) ((IVersionedChunkStorage) tacs).getWorker()).setRawChunkData(chunkPos, either.right().get());
                         }
                     });
         }
