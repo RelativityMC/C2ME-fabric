@@ -104,10 +104,9 @@ public class ReadFromDiskAsync extends ReadFromDisk {
 
     private CompletionStage<Void> asyncSave(ServerChunkLoadingManager tacs, Chunk chunk) {
         ((IThreadedAnvilChunkStorage) tacs).getPointOfInterestStorage().saveChunk(chunk.getPos());
-        if (!chunk.needsSaving()) {
+        if (!chunk.tryMarkSaved()) {
             return CompletableFuture.completedStage(null);
         } else {
-            chunk.setNeedsSaving(false);
             ChunkPos chunkPos = chunk.getPos();
 
             SerializedChunk serializer = SerializedChunk.fromChunk(((IThreadedAnvilChunkStorage) tacs).getWorld(), chunk);
@@ -125,7 +124,7 @@ public class ReadFromDiskAsync extends ReadFromDisk {
                     .exceptionallyCompose(throwable -> {
                         LOGGER.error("Failed to save chunk {},{} asynchronously, falling back to sync saving", chunkPos.x, chunkPos.z, throwable);
                         return CompletableFuture.runAsync(() -> {
-                            chunk.setNeedsSaving(true);
+                            chunk.markNeedsSaving();
                             ((IThreadedAnvilChunkStorage) tacs).invokeSave(chunk);
                         }, ((IThreadedAnvilChunkStorage) tacs).getMainThreadExecutor());
                     });

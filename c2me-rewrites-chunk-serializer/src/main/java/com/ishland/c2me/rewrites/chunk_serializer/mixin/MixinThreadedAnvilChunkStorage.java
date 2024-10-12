@@ -59,11 +59,10 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
     private boolean save(Chunk chunk) {
         // [VanillaCopy]
         this.pointOfInterestStorage.saveChunk(chunk.getPos());
-        if (!chunk.needsSaving()) {
+        if (!chunk.tryMarkSaved()) {
             return false;
         }
 
-        chunk.setNeedsSaving(false);
         ChunkPos chunkPos = chunk.getPos();
 
         try {
