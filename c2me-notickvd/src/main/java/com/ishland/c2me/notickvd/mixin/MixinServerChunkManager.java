@@ -1,6 +1,5 @@
 package com.ishland.c2me.notickvd.mixin;
 
-import com.ishland.c2me.base.common.theinterface.IFastChunkHolder;
 import com.ishland.c2me.base.common.util.FilteringIterable;
 import com.ishland.c2me.notickvd.common.IChunkTicketManager;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
@@ -28,6 +27,11 @@ public class MixinServerChunkManager {
         final LongSet noTickOnlyChunks = ((IChunkTicketManager) this.ticketManager).getNoTickOnlyChunks();
         if (noTickOnlyChunks == null) return op.call(serverWorld);
         return new FilteringIterable<>(op.call(serverWorld), entity -> !noTickOnlyChunks.contains(entity.getChunkPos().toLong()));
+    }
+
+    @Redirect(method = "broadcastUpdates", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ChunkHolder;getWorldChunk()Lnet/minecraft/world/chunk/WorldChunk;"))
+    private WorldChunk broadcastBorderChunks(ChunkHolder instance) {
+        return instance.getAccessibleFuture().getNow(ChunkHolder.UNLOADED_WORLD_CHUNK).orElse(null);
     }
 
 }
