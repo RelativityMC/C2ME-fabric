@@ -44,7 +44,7 @@ import java.util.stream.Collectors;
 
 public class BytecodeGen {
 
-    private static final File exportDir = new File("./dfcOutput");
+    private static final File exportDir = new File("./cache/c2me-dfc");
 
     private static final AtomicLong ordinal = new AtomicLong();
 
