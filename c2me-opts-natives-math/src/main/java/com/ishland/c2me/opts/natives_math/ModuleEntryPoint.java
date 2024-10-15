@@ -23,7 +23,7 @@ public class ModuleEntryPoint {
                 .comment("""
                         Enable the use of bundled native libraries to accelerate world generation
                         """)
-                .getBoolean(false, false);
+                .getBoolean(true, false);
         boolean actuallyEnabled = false;
         if (configured) {
             try {
