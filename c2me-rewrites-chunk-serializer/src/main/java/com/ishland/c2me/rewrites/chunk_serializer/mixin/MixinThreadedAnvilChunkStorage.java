@@ -30,6 +30,7 @@ import org.spongepowered.asm.mixin.Shadow;
 
 import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
 @Mixin(value = ServerChunkLoadingManager.class, priority = 1099)
@@ -59,6 +60,8 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
 
     @Shadow protected abstract @Nullable ChunkHolder getCurrentChunkHolder(long pos);
 
+    @Shadow @Final private AtomicInteger chunksBeingSavedCount;
+
     /**
      * @author Kroppeb
      * @reason Reduces allocations
@@ -87,9 +90,10 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
 
             Profilers.get().visit("chunkSave");
 
+            this.chunksBeingSavedCount.incrementAndGet();
+            SerializedChunk chunkSerializer = SerializedChunk.fromChunk(this.world, chunk);
             //region start replaced code
             // NbtCompound nbtCompound = ChunkSerializer.serialize(this.world, chunk);
-            SerializedChunk chunkSerializer = SerializedChunk.fromChunk(this.world, chunk);
             CompletableFuture<Void> saveFuture = CompletableFuture.supplyAsync(() -> {
                 NbtWriter nbtWriter = new NbtWriter();
                 nbtWriter.start(NbtElement.COMPOUND_TYPE);
@@ -101,6 +105,15 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
                 nbtWriter.release();
                 return future;
             }, ((IVanillaChunkManager) this).c2me$getSchedulingManager().positionedExecutor(chunk.getPos().toLong())).thenCompose(Function.identity());
+
+            saveFuture.handle((void_, exceptionx) -> {
+                if (exceptionx != null) {
+                    this.world.getServer().onChunkSaveFailure(exceptionx, this.getStorageKey(), chunkPos);
+                }
+
+                this.chunksBeingSavedCount.decrementAndGet();
+                return null;
+            });
 
             ChunkHolder holder = this.getCurrentChunkHolder(chunk.getPos().toLong());
             if (holder != null) {
