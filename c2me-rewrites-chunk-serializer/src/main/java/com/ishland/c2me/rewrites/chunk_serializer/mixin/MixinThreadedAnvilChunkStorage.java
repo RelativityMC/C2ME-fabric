@@ -1,11 +1,14 @@
 package com.ishland.c2me.rewrites.chunk_serializer.mixin;
 
+import com.ishland.c2me.base.common.scheduler.IVanillaChunkManager;
 import com.ishland.c2me.base.common.theinterface.IDirectStorage;
+import com.ishland.c2me.base.mixin.access.IChunkHolder;
 import com.ishland.c2me.base.mixin.access.IVersionedChunkStorage;
 import com.ishland.c2me.rewrites.chunk_serializer.common.ChunkDataSerializer;
 import com.ishland.c2me.rewrites.chunk_serializer.common.NbtWriter;
 import com.mojang.datafixers.DataFixer;
 import net.minecraft.nbt.NbtElement;
+import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ServerChunkLoadingManager;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.structure.StructureStart;
@@ -18,6 +21,7 @@ import net.minecraft.world.chunk.SerializedChunk;
 import net.minecraft.world.poi.PointOfInterestStorage;
 import net.minecraft.world.storage.StorageKey;
 import net.minecraft.world.storage.VersionedChunkStorage;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -25,6 +29,8 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
 import java.nio.file.Path;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 
 @Mixin(value = ServerChunkLoadingManager.class, priority = 1099)
 public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStorage {
@@ -50,6 +56,8 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
     @Shadow
     private native byte mark(ChunkPos chunkPos, ChunkType chunkType);
 
+
+    @Shadow protected abstract @Nullable ChunkHolder getCurrentChunkHolder(long pos);
 
     /**
      * @author Kroppeb
@@ -82,28 +90,22 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
             //region start replaced code
             // NbtCompound nbtCompound = ChunkSerializer.serialize(this.world, chunk);
             SerializedChunk chunkSerializer = SerializedChunk.fromChunk(this.world, chunk);
-            NbtWriter nbtWriter = new NbtWriter();
-            nbtWriter.start(NbtElement.COMPOUND_TYPE);
-            ChunkDataSerializer.write(chunkSerializer, nbtWriter);
-            nbtWriter.finishCompound();
+            CompletableFuture<Void> saveFuture = CompletableFuture.supplyAsync(() -> {
+                NbtWriter nbtWriter = new NbtWriter();
+                nbtWriter.start(NbtElement.COMPOUND_TYPE);
+                ChunkDataSerializer.write(chunkSerializer, nbtWriter);
+                nbtWriter.finishCompound();
 
-            // this.setNbt(chunkPos, nbtCompound);
-            // temp fix, idk,
-//            var storageWorker = (StorageIoWorkerAccessor) this.getIoWorker();
-//            var storage = (RegionBasedStorageAccessor) (Object) storageWorker.getStorage();
-//            storageWorker.invokeRun(() -> {
-//                try {
-//                    DataOutputStream chunkOutputStream = storage.invokeGetRegionFile(chunkPos).getChunkOutputStream(chunkPos);
-//                    chunkOutputStream.write(nbtWriter.toByteArray());
-//                    chunkOutputStream.close();
-//                    nbtWriter.release();
-//                    return Either.left((Void) null);
-//                } catch (Exception t) {
-//                    return Either.right(t);
-//                }
-//            });
-            ((IDirectStorage) ((IVersionedChunkStorage) this).getWorker()).setRawChunkData(chunkPos, nbtWriter.toByteArray());
-            nbtWriter.release();
+                // this.setNbt(chunkPos, nbtCompound);
+                CompletableFuture<Void> future = ((IDirectStorage) ((IVersionedChunkStorage) this).getWorker()).setRawChunkData(chunkPos, nbtWriter.toByteArray());
+                nbtWriter.release();
+                return future;
+            }, ((IVanillaChunkManager) this).c2me$getSchedulingManager().positionedExecutor(chunk.getPos().toLong())).thenCompose(Function.identity());
+
+            ChunkHolder holder = this.getCurrentChunkHolder(chunk.getPos().toLong());
+            if (holder != null) {
+                ((IChunkHolder) holder).invokeCombineSavingFuture(saveFuture);
+            }
 
             //endregion end replaced code
 

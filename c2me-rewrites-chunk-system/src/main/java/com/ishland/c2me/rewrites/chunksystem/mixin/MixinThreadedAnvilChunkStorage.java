@@ -1,6 +1,7 @@
 package com.ishland.c2me.rewrites.chunksystem.mixin;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.ishland.c2me.base.common.scheduler.IVanillaChunkManager;
 import com.ishland.c2me.rewrites.chunksystem.common.ChunkLoadingContext;
 import com.ishland.c2me.rewrites.chunksystem.common.ChunkState;
 import com.ishland.c2me.rewrites.chunksystem.common.ducks.IChunkSystemAccess;
@@ -8,10 +9,12 @@ import com.ishland.c2me.rewrites.chunksystem.common.NewChunkHolderVanillaInterfa
 import com.ishland.c2me.rewrites.chunksystem.common.TheChunkSystem;
 import com.ishland.flowsched.scheduler.ItemHolder;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
+import com.llamalad7.mixinextras.sugar.Local;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ServerChunkLoadingManager;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.ChunkType;
 import org.jetbrains.annotations.Nullable;
@@ -21,8 +24,11 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import java.util.concurrent.Executor;
 
 @Mixin(ServerChunkLoadingManager.class)
 public class MixinThreadedAnvilChunkStorage implements IChunkSystemAccess {
@@ -69,6 +75,11 @@ public class MixinThreadedAnvilChunkStorage implements IChunkSystemAccess {
         } else {
             return null;
         }
+    }
+    
+    @ModifyArg(method = "save(Lnet/minecraft/world/chunk/Chunk;)Z", at = @At(value = "INVOKE", target = "Ljava/util/concurrent/CompletableFuture;supplyAsync(Ljava/util/function/Supplier;Ljava/util/concurrent/Executor;)Ljava/util/concurrent/CompletableFuture;"), require = 0)
+    private Executor redirectSavingExecutor(Executor executor, @Local(argsOnly = true) Chunk chunk) {
+        return ((IVanillaChunkManager) this).c2me$getSchedulingManager().positionedExecutor(chunk.getPos().toLong());
     }
 
     /**

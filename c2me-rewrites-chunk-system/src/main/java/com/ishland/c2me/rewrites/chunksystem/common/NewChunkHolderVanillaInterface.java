@@ -397,4 +397,8 @@ public class NewChunkHolderVanillaInterface extends ChunkHolder implements IFast
             return null;
         }
     }
+
+    public ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> getBackingHolder() {
+        return this.newHolder;
+    }
 }
