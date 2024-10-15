@@ -1,5 +1,6 @@
 package com.ishland.c2me.notickvd.mixin;
 
+import com.ishland.c2me.base.common.theinterface.IFastChunkHolder;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.OptionalChunk;
 import net.minecraft.world.chunk.WorldChunk;
@@ -17,7 +18,11 @@ public abstract class MixinChunkHolder {
 
     @Redirect(method = {"markForBlockUpdate", "markForLightUpdate"}, at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ChunkHolder;getWorldChunk()Lnet/minecraft/world/chunk/WorldChunk;"), require = 2)
     private WorldChunk redirectWorldChunk(ChunkHolder chunkHolder) {
-        return this.getAccessibleFuture().getNow(ChunkHolder.UNLOADED_WORLD_CHUNK).orElse(null);
+        if (this instanceof IFastChunkHolder fastChunkHolder) {
+            return fastChunkHolder.c2me$immediateWorldChunk();
+        } else {
+            return this.getAccessibleFuture().getNow(ChunkHolder.UNLOADED_WORLD_CHUNK).orElse(null);
+        }
     }
 
 }
