@@ -110,7 +110,7 @@ public class DoublePerlinNoiseBenchmark extends Base_x86_64 {
     private int scale;
 
     public DoublePerlinNoiseBenchmark() {
-        super(BindingsTemplate.c2me_natives_noise_perlin_double_octave_sample_ptr, "c2me_natives_noise_perlin_double_octave_sample");
+        super(BindingsTemplate.c2me_natives_noise_perlin_double_ptr, "c2me_natives_noise_perlin_double");
     }
 
     @Setup(Level.Trial)

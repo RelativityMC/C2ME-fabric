@@ -2,9 +2,7 @@ package natives.accuracy;
 
 import com.ishland.c2me.opts.natives_math.common.BindingsTemplate;
 import com.ishland.c2me.opts.natives_math.common.ISATarget;
-import natives.DoublePerlinNoiseBenchmark;
 import natives.support.InterpolatedNoiseSamplerCopy;
-import net.minecraft.util.math.noise.DoublePerlinNoiseSampler;
 
 import java.lang.foreign.MemorySegment;
 import java.lang.invoke.MethodHandle;
@@ -19,7 +17,7 @@ public class InterpolatedNoiseAccuracy extends AbstractAccuracy {
     private final long nativeSamplerPtr;
 
     protected InterpolatedNoiseAccuracy() {
-        super(Arrays.stream(ISATarget.getInstance().getEnumConstants()).toArray(ISATarget[]::new), BindingsTemplate.c2me_natives_noise_perlin_interpolated_sample_ptr, "c2me_natives_noise_perlin_interpolated_sample");
+        super(Arrays.stream(ISATarget.getInstance().getEnumConstants()).toArray(ISATarget[]::new), BindingsTemplate.c2me_natives_noise_interpolated_ptr, "c2me_natives_noise_interpolated");
         vanillaSampler = InterpolatedNoiseSamplerCopy.createBase3dNoiseFunction(0.25, 0.125, 80.0, 160.0, 8.0);
         nativeSampler = InterpolatedNoiseSamplerCopy.interpolated_noise_sampler$create(vanillaSampler);
         nativeSamplerPtr = nativeSampler.address();

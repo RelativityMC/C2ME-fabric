@@ -8,13 +8,20 @@ TARGET_IMPL(c2me_natives_noise_perlin_sample, double, (const aligned_uint32_ptr 
     return math_noise_perlin_sample(permutations, originX, originY, originZ, x, y, z, yScale, yMax);
 })
 
-TARGET_IMPL(c2me_natives_noise_perlin_double_octave_sample, double, (const double_octave_sampler_data_t *const data,
-                                                                     const double x, const double y, const double z) {
+TARGET_IMPL(c2me_natives_noise_perlin_double, double, (const double_octave_sampler_data_t *const data,
+                                                       const double x, const double y, const double z) {
     return math_noise_perlin_double_octave_sample(data, x, y, z);
 })
 
-TARGET_IMPL(c2me_natives_noise_perlin_interpolated_sample, double, (const interpolated_noise_sampler_t *const data,
-                                                                    const double x, const double y, const double z) {
+TARGET_IMPL(c2me_natives_noise_perlin_double_batch, void, (const double_octave_sampler_data_t *const data,
+                                                           double *const res, const double *const x,
+                                                           const double *const y, const double *const z,
+                                                           const uint32_t length) {
+    math_noise_perlin_double_octave_sample_batch(data, res, x, y, z, length);
+})
+
+TARGET_IMPL(c2me_natives_noise_interpolated, double, (const interpolated_noise_sampler_t *const data,
+                                                      const double x, const double y, const double z) {
     return math_noise_perlin_interpolated_sample(data, x, y, z);
 })
 

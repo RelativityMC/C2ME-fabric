@@ -5,6 +5,7 @@ set(CMAKE_TRY_COMPILE_TARGET_TYPE "STATIC_LIBRARY")
 project(c2me-opts-natives-math C)
 
 set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_COMPILER clang)
 
 SET(CMAKE_C_FLAGS_RELWITHDEBINFO "-O3 -g")
 

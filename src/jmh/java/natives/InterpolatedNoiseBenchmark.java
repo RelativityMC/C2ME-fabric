@@ -27,7 +27,7 @@ public class InterpolatedNoiseBenchmark extends Base_x86_64 {
     private long nativeSamplerDataPtr;
 
     public InterpolatedNoiseBenchmark() {
-        super(BindingsTemplate.c2me_natives_noise_perlin_interpolated_sample_ptr, "c2me_natives_noise_perlin_interpolated_sample");
+        super(BindingsTemplate.c2me_natives_noise_interpolated_ptr, "c2me_natives_noise_interpolated");
     }
 
     @Setup(Level.Trial)
