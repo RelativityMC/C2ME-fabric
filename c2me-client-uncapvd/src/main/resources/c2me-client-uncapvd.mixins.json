@@ -7,6 +7,7 @@
     "ISimpleOption",
     "MixinGameOptions",
     "MixinSodiumUserConfigCategories",
-    "MixinSyncedClientOptions"
+    "MixinSyncedClientOptions",
+    "MixinVKModOptions"
   ]
 }

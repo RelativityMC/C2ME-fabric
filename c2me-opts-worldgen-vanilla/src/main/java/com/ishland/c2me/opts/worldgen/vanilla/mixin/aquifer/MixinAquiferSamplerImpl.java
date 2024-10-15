@@ -103,23 +103,45 @@ public abstract class MixinAquiferSamplerImpl {
 
     @Shadow @Final private DensityFunction depthDensityFunction;
 
+    @Unique
+    private int c2me$dist1;
+    @Unique
+    private int c2me$dist2;
+    @Unique
+    private int c2me$dist3;
+    @Unique
+    private long c2me$pos1;
+    @Unique
+    private long c2me$pos2;
+    @Unique
+    private long c2me$pos3;
+
+    @Unique
+    private double c2me$mutableDoubleThingy;
+
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(CallbackInfo info) {
         // preload position cache
         if (this.blockPositions.length % (this.sizeX * this.sizeZ) != 0) {
             throw new AssertionError("Array length");
         }
+
         int sizeY = this.blockPositions.length / (this.sizeX * this.sizeZ);
+
         final Random random = RandomUtils.getRandom(this.randomDeriver);
-        // index: z, x, y
-        for (int z = 0; z < this.sizeZ; z++) {
-            for (int x = 0; x < this.sizeX; x++) {
-                for (int y = 0; y < sizeY; y++) {
+        // index: y, z, x
+        for (int y = 0; y < sizeY; y++) {
+            for (int z = 0; z < this.sizeZ; z++) {
+                for (int x = 0; x < this.sizeX; x++) {
                     final int x1 = x + this.startX;
                     final int y1 = y + this.startY;
                     final int z1 = z + this.startZ;
                     RandomUtils.derive(this.randomDeriver, random, x1, y1, z1);
-                    this.blockPositions[this.index(x1, y1, z1)] = BlockPos.asLong(x1 * 16 + random.nextInt(10), y1 * 12 + random.nextInt(9), z1 * 16 + random.nextInt(10));
+                    int x2 = x1 * 16 + random.nextInt(10);
+                    int y2 = y1 * 12 + random.nextInt(9);
+                    int z2 = z1 * 16 + random.nextInt(10);
+                    int index = this.index(x1, y1, z1);
+                    this.blockPositions[index] = BlockPos.asLong(x2, y2, z2);
                 }
             }
         }
@@ -132,7 +154,7 @@ public abstract class MixinAquiferSamplerImpl {
 
     /**
      * @author ishland
-     * @reason make C2 happier by splitting method into four
+     * @reason make C2 happier by splitting method into many
      */
     @Overwrite
     public BlockState apply(DensityFunction.NoisePos pos, double density) {
@@ -148,17 +170,16 @@ public abstract class MixinAquiferSamplerImpl {
                 this.needsFluidTick = false;
                 return Blocks.LAVA.getDefaultState();
             } else {
-                final Result1 result = aquiferExtracted$getResult1(i, j, k);
-
-                return aquiferExtracted$applyPost(pos, density, result, j, i, k);
+                aquiferExtracted$refreshDistPosIdx(i, j, k);
+                return aquiferExtracted$applyPost(pos, density, j, i, k);
             }
         }
     }
 
     @Unique
-    private @Nullable BlockState aquiferExtracted$applyPost(DensityFunction.NoisePos pos, double density, Result1 result, int j, int i, int k) {
-        AquiferSampler.FluidLevel fluidLevel2 = this.getWaterLevel(result.r());
-        double d = maxDistance(result.o(), result.p());
+    private @Nullable BlockState aquiferExtracted$applyPost(DensityFunction.NoisePos pos, double density, int j, int i, int k) {
+        AquiferSampler.FluidLevel fluidLevel2 = this.getWaterLevel(this.c2me$pos1);
+        double d = maxDistance(this.c2me$dist1, this.c2me$dist2);
         BlockState blockState = fluidLevel2.getBlockState(j);
         if (d <= 0.0) {
             this.needsFluidTick = d >= NEEDS_FLUID_TICK_DISTANCE_THRESHOLD;
@@ -167,96 +188,97 @@ public abstract class MixinAquiferSamplerImpl {
             this.needsFluidTick = true;
             return blockState;
         } else {
-            MutableDouble mutableDouble = new MutableDouble(Double.NaN);
-            AquiferSampler.FluidLevel fluidLevel3 = this.getWaterLevel(result.s());
-            double e = d * this.calculateDensity(pos, mutableDouble, fluidLevel2, fluidLevel3);
+//            MutableDouble mutableDouble = new MutableDouble(Double.NaN); // 234MB/s alloc rate at 480 cps
+            this.c2me$mutableDoubleThingy = Double.NaN;
+            AquiferSampler.FluidLevel fluidLevel3 = this.getWaterLevel(this.c2me$pos2);
+            double e = d * this.c2me$calculateDensityModified(pos, fluidLevel2, fluidLevel3);
             if (density + e > 0.0) {
                 this.needsFluidTick = false;
                 return null;
             } else {
-                return aquiferExtracted$getFinalBlockState(pos, density, result, d, mutableDouble, fluidLevel2, fluidLevel3, blockState);
+                return aquiferExtracted$getFinalBlockState(pos, density, d, fluidLevel2, fluidLevel3, blockState);
             }
         }
     }
 
     @Unique
-    private BlockState aquiferExtracted$getFinalBlockState(DensityFunction.NoisePos pos, double density, Result1 result, double d, MutableDouble mutableDouble, AquiferSampler.FluidLevel fluidLevel2, AquiferSampler.FluidLevel fluidLevel3, BlockState blockState) {
-        AquiferSampler.FluidLevel fluidLevel4 = this.getWaterLevel(result.t());
-        double f = maxDistance(result.o(), result.q());
-        if (f > 0.0) {
-            double g = d * f * this.calculateDensity(pos, mutableDouble, fluidLevel2, fluidLevel4);
-            if (density + g > 0.0) {
-                this.needsFluidTick = false;
-                return null;
-            }
-        }
+    private BlockState aquiferExtracted$getFinalBlockState(DensityFunction.NoisePos pos, double density, double d, AquiferSampler.FluidLevel fluidLevel2, AquiferSampler.FluidLevel fluidLevel3, BlockState blockState) {
+        AquiferSampler.FluidLevel fluidLevel4 = this.getWaterLevel(this.c2me$pos3);
+        double f = maxDistance(this.c2me$dist1, this.c2me$dist3);
+        if (aquiferExtracted$extractedCheckFG(pos, density, d, fluidLevel2, f, fluidLevel4)) return null;
 
-        double g = maxDistance(result.p(), result.q());
-        if (g > 0.0) {
-            double h = d * g * this.calculateDensity(pos, mutableDouble, fluidLevel3, fluidLevel4);
-            if (density + h > 0.0) {
-                this.needsFluidTick = false;
-                return null;
-            }
-        }
+        double g = maxDistance(this.c2me$dist2, this.c2me$dist3);
+        if (aquiferExtracted$extractedCheckFG(pos, density, d, fluidLevel3, g, fluidLevel4)) return null;
 
         this.needsFluidTick = true;
         return blockState;
     }
 
     @Unique
+    private boolean aquiferExtracted$extractedCheckFG(DensityFunction.NoisePos pos, double density, double d, AquiferSampler.FluidLevel fluidLevel2, double f, AquiferSampler.FluidLevel fluidLevel4) {
+        if (f > 0.0) {
+            double g = d * f * this.c2me$calculateDensityModified(pos, fluidLevel2, fluidLevel4);
+            if (density + g > 0.0) {
+                this.needsFluidTick = false;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Unique
     @NotNull
-    private Result1 aquiferExtracted$getResult1(int i, int j, int k) {
-        int l = (i - 5) >> 4;
-        int m = Math.floorDiv(j + 1, 12);
-        int n = (k - 5) >> 4;
-        int o = Integer.MAX_VALUE;
-        int p = Integer.MAX_VALUE;
-        int q = Integer.MAX_VALUE;
-        long r = 0L;
-        long s = 0L;
-        long t = 0L;
+    private void aquiferExtracted$refreshDistPosIdx(int x, int y, int z) {
+        int gx = (x - 5) >> 4;
+        int gy = Math.floorDiv(y + 1, 12);
+        int gz = (z - 5) >> 4;
+        int dist1 = Integer.MAX_VALUE;
+        int dist2 = Integer.MAX_VALUE;
+        int dist3 = Integer.MAX_VALUE;
+        long pos1 = 0;
+        long pos2 = 0;
+        long pos3 = 0;
 
-        for(int u = 0; u <= 1; ++u) {
-            for(int v = -1; v <= 1; ++v) {
-                for(int w = 0; w <= 1; ++w) {
-                    int x = l + u;
-                    int y = m + v;
-                    int z = n + w;
-                    int aa = this.index(x, y, z);
-                    long ab = this.blockPositions[aa];
-                    long ac = ab; // cache preloaded
+        for (int offY = -1; offY <= 1; ++offY) {
+            for (int offZ = 0; offZ <= 1; ++offZ) {
+                for (int offX = 0; offX <= 1; ++offX) {
+                    int posIdx = this.index(gx + offX, gy + offY, gz + offZ);
 
-                    int ad = BlockPos.unpackLongX(ac) - i;
-                    int ae = BlockPos.unpackLongY(ac) - j;
-                    int af = BlockPos.unpackLongZ(ac) - k;
-                    int ag = ad * ad + ae * ae + af * af;
-                    if (o >= ag) {
-                        t = s;
-                        s = r;
-                        r = ac;
-                        q = p;
-                        p = o;
-                        o = ag;
-                    } else if (p >= ag) {
-                        t = s;
-                        s = ac;
-                        q = p;
-                        p = ag;
-                    } else if (q >= ag) {
-                        t = ac;
-                        q = ag;
+                    long position = this.blockPositions[posIdx];
+
+                    int dx = BlockPos.unpackLongX(position) - x;
+                    int dy = BlockPos.unpackLongY(position) - y;
+                    int dz = BlockPos.unpackLongZ(position) - z;
+                    int dist = dx * dx + dy * dy + dz * dz;
+
+                    // unexplainable branch prediction magic
+                    if (dist3 >= dist) {
+                        pos3 = position;
+                        dist3 = dist;
+                    }
+                    if (dist2 >= dist) {
+                        pos3 = pos2;
+                        dist3 = dist2;
+                        pos2 = position;
+                        dist2 = dist;
+                    }
+                    if (dist1 >= dist) {
+                        pos2 = pos1;
+                        dist2 = dist1;
+                        pos1 = position;
+                        dist1 = dist;
                     }
                 }
             }
         }
-        return new Result1(o, p, q, r, s, t);
-    }
 
-    @SuppressWarnings("MixinInnerClass")
-    private record Result1(int o, int p, int q, long r, long s, long t) {
+        this.c2me$dist1 = dist1;
+        this.c2me$dist2 = dist2;
+        this.c2me$dist3 = dist3;
+        this.c2me$pos1 = pos1;
+        this.c2me$pos2 = pos2;
+        this.c2me$pos3 = pos3;
     }
-
 
     /**
      * @author ishland
@@ -315,7 +337,7 @@ public abstract class MixinAquiferSamplerImpl {
 
     /**
      * @author ishland
-     * @reason optimize, split method into two
+     * @reason optimize, split method into many
      */
     @Overwrite
     private double calculateDensity(
@@ -332,25 +354,70 @@ public abstract class MixinAquiferSamplerImpl {
                 double d = 0.5 * (double)(fluidLevel.y + fluidLevel2.y);
                 final double q = aquiferExtracted$getQ(i, d, j);
 
-                double r;
-                if (!(q < -2.0) && !(q > 2.0)) {
-                    double s = mutableDouble.getValue();
-                    if (Double.isNaN(s)) {
-                        double t = this.barrierNoise.sample(pos);
-                        mutableDouble.setValue(t);
-                        r = t;
-                    } else {
-                        r = s;
-                    }
-                } else {
-                    r = 0.0;
-                }
-
-                return 2.0 * (r + q);
+                return aquiferExtracted$postCalculateDensity(pos, mutableDouble, q);
             }
         } else {
             return 2.0;
         }
+    }
+
+    private double c2me$calculateDensityModified(
+            DensityFunction.NoisePos pos, AquiferSampler.FluidLevel fluidLevel, AquiferSampler.FluidLevel fluidLevel2
+    ) {
+        int i = pos.blockY();
+        BlockState blockState = fluidLevel.getBlockState(i);
+        BlockState blockState2 = fluidLevel2.getBlockState(i);
+        if ((!blockState.isOf(Blocks.LAVA) || !blockState2.isOf(Blocks.WATER)) && (!blockState.isOf(Blocks.WATER) || !blockState2.isOf(Blocks.LAVA))) {
+            int j = Math.abs(fluidLevel.y - fluidLevel2.y);
+            if (j == 0) {
+                return 0.0;
+            } else {
+                double d = 0.5 * (double)(fluidLevel.y + fluidLevel2.y);
+                final double q = aquiferExtracted$getQ(i, d, j);
+
+                return aquiferExtracted$postCalculateDensityModified(pos, q);
+            }
+        } else {
+            return 2.0;
+        }
+    }
+
+    @Unique
+    private double aquiferExtracted$postCalculateDensity(DensityFunction.NoisePos pos, MutableDouble mutableDouble, double q) {
+        double r;
+        if (!(q < -2.0) && !(q > 2.0)) {
+            double s = mutableDouble.getValue();
+            if (Double.isNaN(s)) {
+                double t = this.barrierNoise.sample(pos);
+                mutableDouble.setValue(t);
+                r = t;
+            } else {
+                r = s;
+            }
+        } else {
+            r = 0.0;
+        }
+
+        return 2.0 * (r + q);
+    }
+
+    @Unique
+    private double aquiferExtracted$postCalculateDensityModified(DensityFunction.NoisePos pos, double q) {
+        double r;
+        if (!(q < -2.0) && !(q > 2.0)) {
+            double s = this.c2me$mutableDoubleThingy;
+            if (Double.isNaN(s)) {
+                double t = this.barrierNoise.sample(pos);
+                this.c2me$mutableDoubleThingy = t;
+                r = t;
+            } else {
+                r = s;
+            }
+        } else {
+            r = 0.0;
+        }
+
+        return 2.0 * (r + q);
     }
 
     @Unique

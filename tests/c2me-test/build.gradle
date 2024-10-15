@@ -11,6 +11,7 @@ loom {
             vmArgs "-Dc2me.base.config.override.asyncScheduling.enabled=true",
                     "-Dc2me.base.config.override.ioSystem.replaceImpl=true",
                     "-Dc2me.base.config.override.ioSystem.gcFreeChunkSerializer=true",
+                    "-Dc2me.base.config.override.vanillaWorldGenOptimizations.useDensityFunctionCompiler=true",
                     "-Dc2me.base.config.override.vanillaWorldGenOptimizations.nativeAcceleration.enabled=true",
                     "-Dcom.ishland.c2me.mixin.doAudit=true"
             if (System.getenv("GITHUB_WORKFLOW") != null) {

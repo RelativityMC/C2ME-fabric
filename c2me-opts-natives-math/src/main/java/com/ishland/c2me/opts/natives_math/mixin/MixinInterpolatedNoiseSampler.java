@@ -3,7 +3,6 @@ package com.ishland.c2me.opts.natives_math.mixin;
 import com.ishland.c2me.opts.natives_math.common.Bindings;
 import com.ishland.c2me.opts.natives_math.common.BindingsTemplate;
 import net.minecraft.util.math.noise.InterpolatedNoiseSampler;
-import net.minecraft.util.math.noise.OctavePerlinNoiseSampler;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -37,7 +36,7 @@ public class MixinInterpolatedNoiseSampler {
      */
     @Overwrite
     public double sample(DensityFunction.NoisePos pos) {
-        return Bindings.c2me_natives_noise_perlin_interpolated_sample(this.c2me$samplerDataPtr, pos.blockX(), pos.blockY(), pos.blockZ());
+        return Bindings.c2me_natives_noise_interpolated(this.c2me$samplerDataPtr, pos.blockX(), pos.blockY(), pos.blockZ());
     }
 
 }

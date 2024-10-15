@@ -9,39 +9,58 @@ public class Bindings {
         return template.bindTo(NativeLoader.lookup.find(prefix + NativeLoader.currentMachineTarget.getSuffix()).get());
     }
 
-    private static final MethodHandle MH_c2me_natives_noise_perlin_double_octave_sample = bind(BindingsTemplate.c2me_natives_noise_perlin_double_octave_sample, "c2me_natives_noise_perlin_double_octave_sample");
-    private static final MethodHandle MH_c2me_natives_noise_perlin_double_octave_sample_ptr = bind(BindingsTemplate.c2me_natives_noise_perlin_double_octave_sample_ptr, "c2me_natives_noise_perlin_double_octave_sample");
+    private static final MethodHandle MH_c2me_natives_noise_perlin_double = bind(BindingsTemplate.c2me_natives_noise_perlin_double, "c2me_natives_noise_perlin_double");
+    private static final MethodHandle MH_c2me_natives_noise_perlin_double_ptr = bind(BindingsTemplate.c2me_natives_noise_perlin_double_ptr, "c2me_natives_noise_perlin_double");
 
-    public static double c2me_natives_noise_perlin_double_octave_sample(MemorySegment data, double x, double y, double z) {
+    public static double c2me_natives_noise_perlin_double(MemorySegment data, double x, double y, double z) {
         try {
-            return (double) MH_c2me_natives_noise_perlin_double_octave_sample.invokeExact(data, x, y, z);
+            return (double) MH_c2me_natives_noise_perlin_double.invokeExact(data, x, y, z);
         } catch (Throwable e) {
             throw new RuntimeException(e);
         }
     }
 
-    public static double c2me_natives_noise_perlin_double_octave_sample(long data_ptr, double x, double y, double z) {
+    public static double c2me_natives_noise_perlin_double(long data_ptr, double x, double y, double z) {
         try {
-            return (double) MH_c2me_natives_noise_perlin_double_octave_sample_ptr.invokeExact(data_ptr, x, y, z);
+            return (double) MH_c2me_natives_noise_perlin_double_ptr.invokeExact(data_ptr, x, y, z);
         } catch (Throwable e) {
             throw new RuntimeException(e);
         }
     }
 
-    private static final MethodHandle MH_c2me_natives_noise_perlin_interpolated_sample = bind(BindingsTemplate.c2me_natives_noise_perlin_interpolated_sample, "c2me_natives_noise_perlin_interpolated_sample");
-    private static final MethodHandle MH_c2me_natives_noise_perlin_interpolated_sample_ptr = bind(BindingsTemplate.c2me_natives_noise_perlin_interpolated_sample_ptr, "c2me_natives_noise_perlin_interpolated_sample");
+    private static final MethodHandle MH_c2me_natives_noise_perlin_double_batch = bind(BindingsTemplate.c2me_natives_noise_perlin_double_batch, "c2me_natives_noise_perlin_double_batch");
+    private static final MethodHandle MH_c2me_natives_noise_perlin_double_batch_partial_ptr = bind(BindingsTemplate.c2me_natives_noise_perlin_double_batch_ptr, "c2me_natives_noise_perlin_double_batch");
 
-    public static double c2me_natives_noise_perlin_interpolated_sample(MemorySegment data, double x, double y, double z) {
+    public static void c2me_natives_noise_perlin_double_batch(MemorySegment data, MemorySegment res, MemorySegment x, MemorySegment y, MemorySegment z, int length) {
         try {
-            return (double) MH_c2me_natives_noise_perlin_interpolated_sample.invokeExact(data, x, y, z);
+            MH_c2me_natives_noise_perlin_double_batch.invokeExact(data, res, x, y, z, length);
         } catch (Throwable e) {
             throw new RuntimeException(e);
         }
     }
 
-    public static double c2me_natives_noise_perlin_interpolated_sample(long data_ptr, double x, double y, double z) {
+    public static void c2me_natives_noise_perlin_double_batch(long data_ptr, MemorySegment res, MemorySegment x, MemorySegment y, MemorySegment z, int length) {
         try {
-            return (double) MH_c2me_natives_noise_perlin_interpolated_sample_ptr.invokeExact(data_ptr, x, y, z);
+            MH_c2me_natives_noise_perlin_double_batch_partial_ptr.invokeExact(data_ptr, res, x, y, z, length);
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static final MethodHandle MH_c2me_natives_noise_interpolated = bind(BindingsTemplate.c2me_natives_noise_interpolated, "c2me_natives_noise_interpolated");
+    private static final MethodHandle MH_c2me_natives_noise_interpolated_ptr = bind(BindingsTemplate.c2me_natives_noise_interpolated_ptr, "c2me_natives_noise_interpolated");
+
+    public static double c2me_natives_noise_interpolated(MemorySegment data, double x, double y, double z) {
+        try {
+            return (double) MH_c2me_natives_noise_interpolated.invokeExact(data, x, y, z);
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static double c2me_natives_noise_interpolated(long data_ptr, double x, double y, double z) {
+        try {
+            return (double) MH_c2me_natives_noise_interpolated_ptr.invokeExact(data_ptr, x, y, z);
         } catch (Throwable e) {
             throw new RuntimeException(e);
         }

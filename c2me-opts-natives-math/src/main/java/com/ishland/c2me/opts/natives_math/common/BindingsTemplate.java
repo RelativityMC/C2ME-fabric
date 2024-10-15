@@ -33,8 +33,8 @@ public class BindingsTemplate {
             Linker.Option.critical(true)
     );
 
-    // c2me_natives_noise_perlin_double_octave_sample, double, (const double_octave_sampler_data_t *data, double x, double y, double z)
-    public static final MethodHandle c2me_natives_noise_perlin_double_octave_sample = NativeLoader.linker.downcallHandle(
+    // c2me_natives_noise_perlin_double, double, (const double_octave_sampler_data_t *data, double x, double y, double z)
+    public static final MethodHandle c2me_natives_noise_perlin_double = NativeLoader.linker.downcallHandle(
             FunctionDescriptor.of(
                     ValueLayout.JAVA_DOUBLE,
                     ValueLayout.ADDRESS,
@@ -44,7 +44,7 @@ public class BindingsTemplate {
             ),
             Linker.Option.critical(false)
     );
-    public static final MethodHandle c2me_natives_noise_perlin_double_octave_sample_ptr = NativeLoader.linker.downcallHandle(
+    public static final MethodHandle c2me_natives_noise_perlin_double_ptr = NativeLoader.linker.downcallHandle(
             FunctionDescriptor.of(
                     ValueLayout.JAVA_DOUBLE,
                     ValueLayout.JAVA_LONG,
@@ -54,6 +54,34 @@ public class BindingsTemplate {
             ),
             Linker.Option.critical(false)
     );
+
+    // c2me_natives_noise_perlin_double_batch, void, (const double_octave_sampler_data_t *const data,
+    //                                                                           double *const res, const double *const x,
+    //                                                                           const double *const y, const double *const z,
+    //                                                                           const uint32_t length)
+    public static final MethodHandle c2me_natives_noise_perlin_double_batch = NativeLoader.linker.downcallHandle(
+            FunctionDescriptor.ofVoid(
+                    ValueLayout.ADDRESS,
+                    ValueLayout.ADDRESS,
+                    ValueLayout.ADDRESS,
+                    ValueLayout.ADDRESS,
+                    ValueLayout.ADDRESS,
+                    ValueLayout.JAVA_INT
+            ),
+            Linker.Option.critical(true)
+    );
+    public static final MethodHandle c2me_natives_noise_perlin_double_batch_ptr = NativeLoader.linker.downcallHandle(
+            FunctionDescriptor.ofVoid(
+                    ValueLayout.JAVA_LONG,
+                    ValueLayout.ADDRESS,
+                    ValueLayout.ADDRESS,
+                    ValueLayout.ADDRESS,
+                    ValueLayout.ADDRESS,
+                    ValueLayout.JAVA_INT
+            ),
+            Linker.Option.critical(true)
+    );
+
 
     public static final StructLayout double_octave_sampler_data = MemoryLayout.structLayout(
             ValueLayout.JAVA_LONG.withName("length"),
@@ -150,8 +178,8 @@ public class BindingsTemplate {
         return data;
     }
 
-    // c2me_natives_noise_perlin_interpolated_sample, double, (const interpolated_noise_sampler_t *const data, const double x, const double y, const double z)
-    public static final MethodHandle c2me_natives_noise_perlin_interpolated_sample = NativeLoader.linker.downcallHandle(
+    // c2me_natives_noise_interpolated, double, (const interpolated_noise_sampler_t *const data, const double x, const double y, const double z)
+    public static final MethodHandle c2me_natives_noise_interpolated = NativeLoader.linker.downcallHandle(
             FunctionDescriptor.of(
                     ValueLayout.JAVA_DOUBLE,
                     ValueLayout.ADDRESS,
@@ -161,7 +189,7 @@ public class BindingsTemplate {
             ),
             Linker.Option.critical(false)
     );
-    public static final MethodHandle c2me_natives_noise_perlin_interpolated_sample_ptr = NativeLoader.linker.downcallHandle(
+    public static final MethodHandle c2me_natives_noise_interpolated_ptr = NativeLoader.linker.downcallHandle(
             FunctionDescriptor.of(
                     ValueLayout.JAVA_DOUBLE,
                     ValueLayout.JAVA_LONG,

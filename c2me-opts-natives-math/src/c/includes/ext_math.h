@@ -170,7 +170,7 @@ static inline __attribute__((const)) int32_t math_block2biome(const int32_t bloc
     return blockCoord >> 2;
 }
 
-static inline __attribute__((const)) int32_t
+static inline __attribute__((const)) uint32_t
 __math_simplex_map(const aligned_uint32_ptr permutations, const int32_t input) {
     return permutations[input & 0xFF];
 }
@@ -247,8 +247,8 @@ static inline __attribute__((const)) double __math_perlin_grad(const aligned_uin
                                                                const double fy, const double fz) {
     const double f[3] = {fx, fy, fz};
     const int32_t p[3] = {px, py, pz};
-    const int32_t q[3] = {p[0] & 0xFF, p[1] & 0xFF, p[2] & 0xFF};
-    const int32_t hash = permutations[(permutations[(permutations[q[0]] + q[1]) & 0xFF] + q[2]) & 0xFF] & 0xF;
+    const uint32_t q[3] = {p[0] & 0xFF, p[1] & 0xFF, p[2] & 0xFF};
+    const uint32_t hash = permutations[(permutations[(permutations[q[0]] + q[1]) & 0xFF] + q[2]) & 0xFF] & 0xF;
     const double *const grad = FLAT_SIMPLEX_GRAD + (hash << 2);
     return grad[0] * f[0] + grad[1] * f[1] + grad[2] * f[2];
 }
@@ -342,7 +342,7 @@ math_noise_perlin_double_octave_sample_impl(const double_octave_sampler_data_t *
 
     double d1 = 0.0;
     double d2 = 0.0;
-    for (uint32_t i = 0; i < data->length; i ++) {
+    for (uint32_t i = 0; i < data->length; i++) {
         if (!data->need_shift[i]) {
             d1 += ds[i];
         } else {
@@ -353,10 +353,157 @@ math_noise_perlin_double_octave_sample_impl(const double_octave_sampler_data_t *
     return (d1 + d2) * data->amplitude;
 }
 
+//static inline void
+//math_noise_perlin_double_octave_sample_impl_batch(const double_octave_sampler_data_t *const data, double *const res,
+//                                                  const double *const x, const double *const y, const double *const z,
+//                                                  const uint32_t length) {
+//    double ds[data->length][length];
+//
+//    for (uint32_t si = 0; si < data->length; si ++) {
+//#pragma clang loop vectorize(enable) interleave(enable) interleave_count(2)
+//        for (uint32_t bi = 0; bi < length; bi++) {
+//            const double e = data->lacunarity_powd[si];
+//            const double f = data->persistence_powd[si];
+//            const aligned_uint32_ptr permutations = data->sampler_permutations + 256 * si;
+//            const double sampleX = data->need_shift[si] ? x[bi] * 1.0181268882175227 : x[bi];
+//            const double sampleY = data->need_shift[si] ? y[bi] * 1.0181268882175227 : y[bi];
+//            const double sampleZ = data->need_shift[si] ? z[bi] * 1.0181268882175227 : z[bi];
+//            const double g = math_noise_perlin_sample(
+//                    permutations,
+//                    data->sampler_originX[si],
+//                    data->sampler_originY[si],
+//                    data->sampler_originZ[si],
+//                    math_octave_maintainPrecision(sampleX * e),
+//                    math_octave_maintainPrecision(sampleY * e),
+//                    math_octave_maintainPrecision(sampleZ * e),
+//                    0.0,
+//                    0.0);
+//            ds[si][bi] = data->amplitudes[si] * g * f;
+//        }
+//    }
+//
+//    double d1[length];
+//    double d2[length];
+//    for (uint32_t i = 0; i < length; i ++) {
+//        d1[i] = 0.0;
+//        d2[i] = 0.0;
+//    }
+//    for (uint32_t bi = 0; bi < length; bi++) {
+//        for (uint32_t si = 0; si < data->length; si ++) {
+//            if (!data->need_shift[si]) {
+//                d1[bi] += ds[si][bi];
+//            } else {
+//                d2[bi] += ds[si][bi];
+//            }
+//        }
+//    }
+//    for (uint32_t bi = 0; bi < length; bi++) {
+//        res[bi] = (d1[bi] + d2[bi]) * data->amplitude;
+//    }
+//}
+
+//static inline void
+//math_noise_perlin_double_octave_sample_impl_batch(const double_octave_sampler_data_t *restrict const data,
+//                                                  double *restrict const res, const double *restrict const x,
+//                                                  const double *restrict const y, const double *restrict const z,
+//                                                  const uint32_t length) {
+//    const uint32_t total_len = data->length * length;
+//
+//    double ds[total_len];
+//    uint32_t sia[total_len]; // sampler index array
+//    uint32_t bia[total_len]; // batch index array
+//    double xa[total_len]; // x array
+//    double ya[total_len]; // y array
+//    double za[total_len]; // z array
+//
+//    double lacunarity_powd[total_len];
+//    double persistence_powd[total_len];
+//    bool need_shift[total_len];
+//    double sampler_originX[total_len];
+//    double sampler_originY[total_len];
+//    double sampler_originZ[total_len];
+//    double amplitudes[total_len];
+//
+//    {
+//        uint32_t idx = 0;
+//        for (uint32_t si = 0; si < data->length; si++) {
+//            for (uint32_t bi = 0; bi < length; bi++) {
+//                sia[idx] = si;
+//                bia[idx] = bi;
+//                xa[idx] = x[bi];
+//                ya[idx] = y[bi];
+//                za[idx] = z[bi];
+//                lacunarity_powd[idx] = data->lacunarity_powd[si];
+//                persistence_powd[idx] = data->persistence_powd[si];
+//                need_shift[idx] = data->need_shift[si];
+//                sampler_originX[idx] = data->sampler_originX[si];
+//                sampler_originY[idx] = data->sampler_originY[si];
+//                sampler_originZ[idx] = data->sampler_originZ[si];
+//                amplitudes[idx] = data->amplitudes[si];
+//                idx++;
+//            }
+//        }
+//    }
+//
+//#pragma clang loop vectorize(enable) interleave(enable) interleave_count(2)
+//    for (uint32_t idx = 0; idx < total_len; idx++) {
+//        const uint32_t si = sia[idx];
+//        const double xi = xa[idx];
+//        const double yi = ya[idx];
+//        const double zi = za[idx];
+//        const double e = lacunarity_powd[idx];
+//        const double f = persistence_powd[idx];
+//        const aligned_uint32_ptr permutations = data->sampler_permutations + 256 * si;
+//        const double sampleX = need_shift[idx] ? xi * 1.0181268882175227 : xi;
+//        const double sampleY = need_shift[idx] ? yi * 1.0181268882175227 : yi;
+//        const double sampleZ = need_shift[idx] ? zi * 1.0181268882175227 : zi;
+//        const double g = math_noise_perlin_sample(
+//                permutations,
+//                sampler_originX[idx],
+//                sampler_originY[idx],
+//                sampler_originZ[idx],
+//                math_octave_maintainPrecision(sampleX * e),
+//                math_octave_maintainPrecision(sampleY * e),
+//                math_octave_maintainPrecision(sampleZ * e),
+//                0.0,
+//                0.0);
+//        ds[idx] = amplitudes[idx] * g * f;
+//    }
+//
+//    double d1[length];
+//    double d2[length];
+//    for (uint32_t i = 0; i < length; i++) {
+//        d1[i] = 0.0;
+//        d2[i] = 0.0;
+//    }
+//    for (uint32_t idx = 0; idx < total_len; idx++) {
+//        const uint32_t si = sia[idx];
+//        const uint32_t bi = bia[idx];
+//        if (!data->need_shift[si]) {
+//            d1[bi] += ds[idx];
+//        } else {
+//            d2[bi] += ds[idx];
+//        }
+//    }
+//    for (uint32_t bi = 0; bi < length; bi++) {
+//        res[bi] = (d1[bi] + d2[bi]) * data->amplitude;
+//    }
+//}
+
 static inline __attribute__((const)) double
 math_noise_perlin_double_octave_sample(const double_octave_sampler_data_t *const data,
                                        const double x, const double y, const double z) {
     return math_noise_perlin_double_octave_sample_impl(data, x, y, z, 0.0, 0.0, 0);
+}
+
+static inline void
+math_noise_perlin_double_octave_sample_batch(const double_octave_sampler_data_t *const data, double *const res,
+                                             const double *const x, const double *const y, const double *const z,
+                                             const uint32_t length) {
+//    math_noise_perlin_double_octave_sample_impl_batch(data, res, x, y, z, length);
+    for (uint32_t i = 0; i < length; i ++) {
+        res[i] = math_noise_perlin_double_octave_sample_impl(data, x[i], y[i], z[i], 0.0, 0.0, 0);
+    }
 }
 
 typedef const struct interpolated_noise_sub_sampler {
@@ -414,7 +561,7 @@ math_noise_perlin_interpolated_sample(const interpolated_noise_sampler_t *const 
         ) / data->normal.sampler_mulFactor[offset];
     }
 
-    for (uint32_t offset = 0; offset < data->normal.length; offset ++) {
+    for (uint32_t offset = 0; offset < data->normal.length; offset++) {
         n += ns[offset];
     }
 
