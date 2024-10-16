@@ -1,6 +1,6 @@
 plugins {
     id 'java-library'
-    id 'fabric-loom' version '1.7-SNAPSHOT' apply false
+    id 'fabric-loom' version '1.8-SNAPSHOT' apply false
     id "me.champeau.jmh" version "0.7.2"
     id 'com.modrinth.minotaur' version '2.+' apply false
     id 'com.matthewprenger.cursegradle' version '1.4.0' apply false
@@ -33,8 +33,10 @@ configure(allprojects) {
 
     afterEvaluate {
         if (it.plugins.hasPlugin("fabric-loom")) {
-            migrateMappings.configure {
-                outputDir = project.file("src/main/java")
+            afterEvaluate {
+                migrateMappings.configure {
+                    outputDir = project.file("src/main/java")
+                }
             }
         }
     }
@@ -94,10 +96,10 @@ configure (allprojects - project(":tests")) {
     }
 
     processResources {
-        inputs.property "version", project.version + "+" + project.minecraft_version
+        inputs.property "version", version + "+" + minecraft_version
 
         filesMatching("fabric.mod.json") {
-            expand "version": project.version + "+" + project.minecraft_version
+            expand "version": version + "+" + minecraft_version
         }
     }
 

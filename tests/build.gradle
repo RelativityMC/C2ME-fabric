@@ -48,10 +48,10 @@ allprojects {
         implementation "com.ibm.async:asyncutil:${async_util_version}"
     }
     processResources {
-        inputs.property "version", project.version
+        inputs.property "version", version
 
         filesMatching("fabric.mod.json") {
-            expand "version": project.version
+            expand "version": version
         }
     }
     afterEvaluate {
@@ -68,7 +68,9 @@ allprojects {
     }
 }
 
-migrateMappings.onlyIf { false }
+afterEvaluate {
+    migrateMappings.onlyIf { false }
+}
 
 test {
     useJUnitPlatform()
