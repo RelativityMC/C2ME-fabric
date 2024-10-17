@@ -28,7 +28,7 @@
   "depends": {
     "fabricloader": ">=0.16.0",
     "java": ">=21",
-    "minecraft": ">=1.21"
+    "minecraft": ">=1.21.2-rc.1"
   },
   "conflicts": {
     "dynview": "*",
