@@ -31,10 +31,7 @@ public class C2MEStorageVanillaInterface extends StorageIoWorker implements IDir
 
     @Override
     public CompletableFuture<Void> setResult(ChunkPos pos, Supplier<NbtCompound> nbtSupplier) {
-        return CompletableFuture.supplyAsync(() -> {
-            NbtCompound nbtCompound = nbtSupplier.get();
-            return this.setResult(pos, nbtCompound);
-        }, Thread::startVirtualThread).thenCompose(Function.identity());
+        return this.backend.setChunkData(pos.toLong(), CompletableFuture.supplyAsync(nbtSupplier, Thread::startVirtualThread)); // nonblocking write
     }
 
     @Override

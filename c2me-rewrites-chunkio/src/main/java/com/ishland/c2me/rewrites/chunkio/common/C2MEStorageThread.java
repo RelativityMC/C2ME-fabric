@@ -31,6 +31,7 @@ import java.nio.file.Path;
 import java.util.Queue;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -49,8 +50,8 @@ public class C2MEStorageThread extends Thread {
 
     private final RegionBasedStorage storage;
     private final AtomicInteger taskSize = new AtomicInteger();
-    private final Long2ReferenceLinkedOpenHashMap<Either<NbtCompound, byte[]>> writeBacklog = new Long2ReferenceLinkedOpenHashMap<>();
-    private final Long2ReferenceLinkedOpenHashMap<Either<NbtCompound, byte[]>> cache = new Long2ReferenceLinkedOpenHashMap<>();
+    private final Long2ReferenceLinkedOpenHashMap<CompletionStage<Either<NbtCompound, byte[]>>> writeBacklog = new Long2ReferenceLinkedOpenHashMap<>();
+    private final Long2ReferenceLinkedOpenHashMap<CompletionStage<Either<NbtCompound, byte[]>>> cache = new Long2ReferenceLinkedOpenHashMap<>();
     private final Queue<Runnable> pendingTasks = PlatformDependent.newMpscQueue();
     private final Executor executor = command -> {
         if (Thread.currentThread() == this) {
@@ -156,7 +157,7 @@ public class C2MEStorageThread extends Thread {
     public CompletableFuture<Void> setChunkData(long pos, @Nullable NbtCompound nbt) {
         CompletableFuture<Void> future = new CompletableFuture<>();
         this.executor.execute(() -> {
-            this.write0(pos, nbt != null ? Either.left(nbt) : null);
+            this.write0(pos, CompletableFuture.completedFuture(nbt != null ? Either.left(nbt) : null));
             future.complete(null);
         });
         return future;
@@ -165,7 +166,16 @@ public class C2MEStorageThread extends Thread {
     public CompletableFuture<Void> setChunkData(long pos, @Nullable byte[] data) {
         CompletableFuture<Void> future = new CompletableFuture<>();
         this.executor.execute(() -> {
-            this.write0(pos, data != null ? Either.right(data) : null);
+            this.write0(pos, CompletableFuture.completedFuture(data != null ? Either.right(data) : null));
+            future.complete(null);
+        });
+        return future;
+    }
+
+    public CompletableFuture<Void> setChunkData(long pos, CompletionStage<NbtCompound> nbtFuture) {
+        CompletableFuture<Void> future = new CompletableFuture<>();
+        this.executor.execute(() -> {
+            this.write0(pos, nbtFuture.thenApply(nbt -> nbt != null ? Either.left(nbt) : null));
             future.complete(null);
         });
         return future;
@@ -216,50 +226,56 @@ public class C2MEStorageThread extends Thread {
         return hasWork;
     }
 
-    private void write0(long pos, Either<NbtCompound, byte[]> nbt) {
+    private void write0(long pos, CompletionStage<Either<NbtCompound, byte[]>> nbt) {
         this.cache.put(pos, nbt);
         this.writeBacklog.put(pos, nbt);
     }
 
     private void read0(long pos, CompletableFuture<NbtCompound> future, NbtScanner scanner) {
         if (this.cache.containsKey(pos)) {
-            final Either<NbtCompound, byte[]> cached = this.cache.get(pos);
-            if (cached == null) {
+            final CompletionStage<Either<NbtCompound, byte[]>> cachedFuture = this.cache.get(pos);
+            if (cachedFuture == null) {
                 future.complete(null);
-            } else if (cached.left().isPresent()) {
-                if (scanner != null) {
-                    GlobalExecutors.prioritizedScheduler.schedule(() -> {
-                        try {
-                            cached.left().get().accept(scanner);
-                            future.complete(null);
-                        } catch (Throwable t) {
-                            future.completeExceptionally(t);
-                        }
-                    }, 16);
-                } else {
-                    future.complete(cached.left().get());
-                }
             } else {
-                CompletableFuture.supplyAsync(() -> {
-                            try {
-                                final DataInputStream input = new DataInputStream(new ByteArrayInputStream(cached.right().get()));
-                                if (scanner != null) {
-                                    NbtIo.scan(input, scanner, NbtSizeTracker.ofUnlimitedBytes());
-                                    return null;
-                                } else {
-                                    final NbtCompound compound = NbtIo.readCompound(input);
-                                    return compound;
+                cachedFuture.thenAccept(cached -> { // mirror vanilla behavior: get the immediate result rather than latest
+                    if (cached == null) {
+                        future.complete(null);
+                    } else if (cached.left().isPresent()) {
+                        if (scanner != null) {
+                            GlobalExecutors.prioritizedScheduler.schedule(() -> {
+                                try {
+                                    cached.left().get().accept(scanner);
+                                    future.complete(null);
+                                } catch (Throwable t) {
+                                    future.completeExceptionally(t);
                                 }
-                            } catch (IOException e) {
-                                SneakyThrow.sneaky(e);
-                                return null; // unreachable
-                            }
-                        }, GlobalExecutors.prioritizedScheduler.executor(16))
-                        .thenAccept(future::complete)
-                        .exceptionally(throwable -> {
-                            future.completeExceptionally(throwable);
-                            return null;
-                        });
+                            }, 16);
+                        } else {
+                            future.complete(cached.left().get());
+                        }
+                    } else {
+                        CompletableFuture.supplyAsync(() -> {
+                                    try {
+                                        final DataInputStream input = new DataInputStream(new ByteArrayInputStream(cached.right().get()));
+                                        if (scanner != null) {
+                                            NbtIo.scan(input, scanner, NbtSizeTracker.ofUnlimitedBytes());
+                                            return null;
+                                        } else {
+                                            final NbtCompound compound = NbtIo.readCompound(input);
+                                            return compound;
+                                        }
+                                    } catch (IOException e) {
+                                        SneakyThrow.sneaky(e);
+                                        return null; // unreachable
+                                    }
+                                }, GlobalExecutors.prioritizedScheduler.executor(16))
+                                .thenAccept(future::complete)
+                                .exceptionally(throwable -> {
+                                    future.completeExceptionally(throwable);
+                                    return null;
+                                });
+                    }
+                });
             }
         } else {
             scheduleChunkRead(pos, future, scanner);
@@ -269,8 +285,8 @@ public class C2MEStorageThread extends Thread {
     private boolean writeBacklog() {
         if (!this.writeBacklog.isEmpty()) {
             final long pos = this.writeBacklog.firstLongKey();
-            final Either<NbtCompound, byte[]> nbt = this.writeBacklog.removeFirst();
-            writeChunk(pos, nbt);
+            final CompletionStage<Either<NbtCompound, byte[]>> nbtFuture = this.writeBacklog.removeFirst();
+            writeChunk(pos, nbtFuture);
             return true;
         }
         return false;
@@ -328,74 +344,77 @@ public class C2MEStorageThread extends Thread {
         }
     }
 
-    private void writeChunk(long pos, Either<NbtCompound, byte[]> nbt) {
-        if (nbt == null) {
-            if (this.cache.get(pos) == null) {
-                try {
-                    final ChunkPos pos1 = new ChunkPos(pos);
-                    final RegionFile regionFile = ((IRegionBasedStorage) this.storage).invokeGetRegionFile(pos1);
-                    regionFile.delete(pos1);
-                } catch (Throwable t) {
-                    LOGGER.error("Error writing chunk %s".formatted(new ChunkPos(pos)), t);
-                }
-                this.cache.remove(pos);
-            }
-        } else {
-            ChunkCompressionFormat compressionFormat;
-            {
-                final ChunkPos pos1 = new ChunkPos(pos);
-                try {
-                    final RegionFile regionFile = ((IRegionBasedStorage) this.storage).invokeGetRegionFile(pos1);
-                    compressionFormat = ((IRegionFile) regionFile).getCompressionFormat();
-                } catch (Throwable t) {
-                    LOGGER.warn("Failed to get compression format for chunk %s".formatted(pos1), t);
-                    compressionFormat = ChunkCompressionFormat.getCurrentFormat();
-                }
-            }
-            ChunkCompressionFormat finalCompressionFormat = compressionFormat;
-            final CompletableFuture<Void> future = CompletableFuture.supplyAsync(() -> {
-                try {
-                    final RawByteArrayOutputStream out = new RawByteArrayOutputStream(8096);
-                    // TODO [VanillaCopy] RegionFile.ChunkBuffer
-                    out.write(0);
-                    out.write(0);
-                    out.write(0);
-                    out.write(0);
-                    out.write(finalCompressionFormat.getId());
-                    try (DataOutputStream dataOutputStream = new DataOutputStream(finalCompressionFormat.wrap(out))) {
-                        if (nbt.left().isPresent()) {
-                            NbtIo.writeCompound(nbt.left().get(), dataOutputStream);
-                        } else {
-                            dataOutputStream.write(nbt.right().get());
-                        }
-                    }
-                    return out;
-                } catch (Throwable t) {
-                    SneakyThrow.sneaky(t);
-                    return null; // Unreachable anyway
-                }
-            }, GlobalExecutors.prioritizedScheduler.executor(16)).thenAcceptAsync(bytes -> {
-                if (nbt == this.cache.get(pos)) { // only write if match to avoid overwrites
+    private void writeChunk(long pos, CompletionStage<Either<NbtCompound, byte[]>> nbtFuture) {
+        CompletionStage<Void> writeFuture1 = nbtFuture.thenAcceptAsync(nbt -> {
+            if (nbt == null) {
+                if (this.cache.get(pos) == nbtFuture) {
                     try {
                         final ChunkPos pos1 = new ChunkPos(pos);
                         final RegionFile regionFile = ((IRegionBasedStorage) this.storage).invokeGetRegionFile(pos1);
-                        ByteBuffer byteBuffer = bytes.asByteBuffer();
-                        // TODO [VanillaCopy] RegionFile.ChunkBuffer
-                        byteBuffer.putInt(0, bytes.size() - 5 + 1);
-                        ((IRegionFile) regionFile).invokeWriteChunk(pos1, byteBuffer);
+                        regionFile.delete(pos1);
                     } catch (Throwable t) {
-                        SneakyThrow.sneaky(t);
+                        LOGGER.error("Error writing chunk %s".formatted(new ChunkPos(pos)), t);
                     }
                     this.cache.remove(pos);
+                } // discard old data
+            } else {
+                ChunkCompressionFormat compressionFormat;
+                {
+                    final ChunkPos pos1 = new ChunkPos(pos);
+                    try {
+                        final RegionFile regionFile = ((IRegionBasedStorage) this.storage).invokeGetRegionFile(pos1);
+                        compressionFormat = ((IRegionFile) regionFile).getCompressionFormat();
+                    } catch (Throwable t) {
+                        LOGGER.warn("Failed to get compression format for chunk %s".formatted(pos1), t);
+                        compressionFormat = ChunkCompressionFormat.getCurrentFormat();
+                    }
                 }
-            }, this.executor).handleAsync((unused, throwable) -> {
-                if (throwable != null) LOGGER.error("Error writing chunk %s".formatted(new ChunkPos(pos)), throwable);
-                // TODO error retry
+                ChunkCompressionFormat finalCompressionFormat = compressionFormat;
+                final CompletableFuture<Void> future = CompletableFuture.supplyAsync(() -> {
+                    try {
+                        final RawByteArrayOutputStream out = new RawByteArrayOutputStream(8096);
+                        // TODO [VanillaCopy] RegionFile.ChunkBuffer
+                        out.write(0);
+                        out.write(0);
+                        out.write(0);
+                        out.write(0);
+                        out.write(finalCompressionFormat.getId());
+                        try (DataOutputStream dataOutputStream = new DataOutputStream(finalCompressionFormat.wrap(out))) {
+                            if (nbt.left().isPresent()) {
+                                NbtIo.writeCompound(nbt.left().get(), dataOutputStream);
+                            } else {
+                                dataOutputStream.write(nbt.right().get());
+                            }
+                        }
+                        return out;
+                    } catch (Throwable t) {
+                        SneakyThrow.sneaky(t);
+                        return null; // Unreachable anyway
+                    }
+                }, GlobalExecutors.prioritizedScheduler.executor(16)).thenAcceptAsync(bytes -> {
+                    if (this.cache.remove(pos, nbtFuture)) { // only write if match to avoid overwrites
+                        try {
+                            final ChunkPos pos1 = new ChunkPos(pos);
+                            final RegionFile regionFile = ((IRegionBasedStorage) this.storage).invokeGetRegionFile(pos1);
+                            ByteBuffer byteBuffer = bytes.asByteBuffer();
+                            // TODO [VanillaCopy] RegionFile.ChunkBuffer
+                            byteBuffer.putInt(0, bytes.size() - 5 + 1);
+                            ((IRegionFile) regionFile).invokeWriteChunk(pos1, byteBuffer);
+                        } catch (Throwable t) {
+                            SneakyThrow.sneaky(t);
+                        }
+                    }
+                }, this.executor).handleAsync((unused, throwable) -> {
+                    if (throwable != null)
+                        LOGGER.error("Error writing chunk %s".formatted(new ChunkPos(pos)), throwable);
+                    // TODO error retry
 
-                return null;
-            }, this.executor);
-            this.writeFutures.add(future);
-        }
+                    return null;
+                }, this.executor);
+                this.writeFutures.add(future);
+            }
+        }, this.executor);
+        this.writeFutures.add(writeFuture1.toCompletableFuture());
     }
 
     private record ReadRequest(long pos, CompletableFuture<NbtCompound> future, @Nullable NbtScanner scanner) {
