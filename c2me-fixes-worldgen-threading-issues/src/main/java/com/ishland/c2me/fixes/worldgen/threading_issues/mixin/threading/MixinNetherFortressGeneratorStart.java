@@ -1,5 +1,6 @@
 package com.ishland.c2me.fixes.worldgen.threading_issues.mixin.threading;
 
+import com.ishland.c2me.fixes.worldgen.threading_issues.asm.MakeVolatile;
 import com.ishland.c2me.fixes.worldgen.threading_issues.common.INetherFortressGeneratorPieceData;
 import net.minecraft.structure.NetherFortressGenerator;
 import org.objectweb.asm.Opcodes;
@@ -18,6 +19,9 @@ public class MixinNetherFortressGeneratorStart {
 
     @Shadow public List<NetherFortressGenerator.PieceData> bridgePieces;
     @Shadow public List<NetherFortressGenerator.PieceData> corridorPieces;
+
+    @MakeVolatile
+    @Shadow public NetherFortressGenerator.PieceData lastPiece;
 
     @Redirect(method = "<init>(Lnet/minecraft/util/math/random/Random;II)V", at = @At(value = "FIELD", target = "Lnet/minecraft/structure/NetherFortressGenerator$PieceData;generatedCount:I", opcode = Opcodes.PUTFIELD))
     private void redirectSetPieceDataGeneratedCount(NetherFortressGenerator.PieceData pieceData, int value) {

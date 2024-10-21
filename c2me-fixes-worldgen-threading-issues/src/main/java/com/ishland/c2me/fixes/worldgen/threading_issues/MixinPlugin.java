@@ -45,7 +45,7 @@ public class MixinPlugin extends ModuleMixinPlugin {
     }
 
     @Override
-    public void preApply(String targetClassName, ClassNode targetClass, String mixinClassName, IMixinInfo mixinInfo) {
+    public void postApply(String targetClassName, ClassNode targetClass, String mixinClassName, IMixinInfo mixinInfo) {
         ASMTransformerMakeVolatile.transform(targetClass);
     }
 }
