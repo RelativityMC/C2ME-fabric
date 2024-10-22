@@ -1,7 +1,9 @@
 package com.ishland.c2me.fixes.worldgen.threading_issues.mixin.threading;
 
+import com.ishland.c2me.fixes.worldgen.threading_issues.asm.MakeVolatile;
 import net.minecraft.structure.StrongholdGenerator;
 import net.minecraft.structure.StructurePiece;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
@@ -18,6 +20,12 @@ public class MixinStrongholdGeneratorStart {
 
     @Mutable
     @Shadow @Final public List<StructurePiece> pieces;
+
+    @MakeVolatile
+    @Shadow public volatile StrongholdGenerator.PieceData lastPiece;
+
+    @MakeVolatile
+    @Shadow @Nullable public StrongholdGenerator.@Nullable PortalRoom portalRoom;
 
     @Inject(method = "<init>*", at = @At("RETURN"))
     private void onInit(CallbackInfo info) {
