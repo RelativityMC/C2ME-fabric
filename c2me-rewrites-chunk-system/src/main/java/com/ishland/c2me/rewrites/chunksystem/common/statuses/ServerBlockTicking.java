@@ -3,6 +3,7 @@ package com.ishland.c2me.rewrites.chunksystem.common.statuses;
 import com.ishland.c2me.base.mixin.access.IThreadedAnvilChunkStorage;
 import com.ishland.c2me.rewrites.chunksystem.common.ChunkLoadingContext;
 import com.ishland.c2me.rewrites.chunksystem.common.ChunkState;
+import com.ishland.c2me.rewrites.chunksystem.common.NewChunkHolderVanillaInterface;
 import com.ishland.c2me.rewrites.chunksystem.common.NewChunkStatus;
 import com.ishland.flowsched.scheduler.ItemHolder;
 import com.ishland.flowsched.scheduler.KeyStatusPair;
@@ -47,11 +48,12 @@ public class ServerBlockTicking extends NewChunkStatus {
 
     private static void sendChunkToPlayer(ChunkLoadingContext context) {
         final WorldChunk chunk = (WorldChunk) context.holder().getItem().get().chunk();
-        CompletableFuture<?> completableFuturexx = context.holder().getUserData().get().getPostProcessingFuture();
+        NewChunkHolderVanillaInterface holderVanillaInterface = context.holder().getUserData().get();
+        CompletableFuture<?> completableFuturexx = holderVanillaInterface.getPostProcessingFuture();
         if (completableFuturexx.isDone()) {
-            ((IThreadedAnvilChunkStorage) context.tacs()).invokeSendToPlayers(chunk);
+            ((IThreadedAnvilChunkStorage) context.tacs()).invokeSendToPlayers(holderVanillaInterface, chunk);
         } else {
-            completableFuturexx.thenAcceptAsync(v -> ((IThreadedAnvilChunkStorage) context.tacs()).invokeSendToPlayers(chunk), ((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor());
+            completableFuturexx.thenAcceptAsync(v -> ((IThreadedAnvilChunkStorage) context.tacs()).invokeSendToPlayers(holderVanillaInterface, chunk), ((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor());
         }
     }
 

@@ -37,7 +37,7 @@ public abstract class MixinThreadedAnvilChunkStorage {
 
     @Shadow @Final private PlayerChunkWatchingManager playerChunkWatchingManager;
 
-    @Shadow protected abstract void sendToPlayers(WorldChunk chunk);
+    @Shadow protected abstract void sendToPlayers(ChunkHolder holder, WorldChunk chunk);
 
     @ModifyArg(method = "setViewDistance", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/MathHelper;clamp(III)I"), index = 2)
     private int modifyMaxVD(int max) {
@@ -54,9 +54,9 @@ public abstract class MixinThreadedAnvilChunkStorage {
     private void onMakeChunkAccessible(ChunkHolder chunkHolder, CallbackInfoReturnable<CompletableFuture<OptionalChunk<WorldChunk>>> cir) {
         cir.getReturnValue().thenAccept(either -> either.ifPresent(worldChunk -> {
             if (Config.compatibilityMode) {
-                this.mainThreadExecutor.send(() -> this.sendToPlayers(worldChunk));
+                this.mainThreadExecutor.send(() -> this.sendToPlayers(chunkHolder, worldChunk));
             } else {
-                this.sendToPlayers(worldChunk);
+                this.sendToPlayers(chunkHolder, worldChunk);
             }
         }));
     }
@@ -72,13 +72,13 @@ public abstract class MixinThreadedAnvilChunkStorage {
 //            this.sendChunkDataPackets(player, mutableObject, worldChunk);
 //    }
 
-    @WrapWithCondition(method = "method_61257", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerChunkLoadingManager;sendToPlayers(Lnet/minecraft/world/chunk/WorldChunk;)V"))
-    private boolean controlDuplicateChunkSending(ServerChunkLoadingManager instance, WorldChunk worldChunk) {
+    @WrapWithCondition(method = "method_61257", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerChunkLoadingManager;sendToPlayers(Lnet/minecraft/server/world/ChunkHolder;Lnet/minecraft/world/chunk/WorldChunk;)V"))
+    private boolean controlDuplicateChunkSending(ServerChunkLoadingManager instance, ChunkHolder chunkHolder, WorldChunk chunk) {
         return Config.ensureChunkCorrectness;
     }
 
-    @WrapWithCondition(method = "method_53687", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerChunkLoadingManager;sendToPlayers(Lnet/minecraft/world/chunk/WorldChunk;)V"))
-    private boolean controlDuplicateChunkSending1(ServerChunkLoadingManager instance, WorldChunk worldChunk) {
+    @WrapWithCondition(method = "method_53687", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerChunkLoadingManager;sendToPlayers(Lnet/minecraft/server/world/ChunkHolder;Lnet/minecraft/world/chunk/WorldChunk;)V"))
+    private boolean controlDuplicateChunkSending1(ServerChunkLoadingManager instance, ChunkHolder chunkHolder, WorldChunk chunk) {
         return Config.ensureChunkCorrectness; // TODO config set to false unfixes MC-264947
     }
 

@@ -45,7 +45,7 @@ public interface IThreadedAnvilChunkStorage {
     ChunkGenerationContext getGenerationContext();
 
     @Invoker
-    void invokeSendToPlayers(WorldChunk chunk);
+    void invokeSendToPlayers(ChunkHolder chunkHolder, WorldChunk chunk);
 
     @Accessor
     WorldGenerationProgressListener getWorldGenerationProgressListener();
