@@ -1,6 +1,7 @@
 package com.ishland.c2me.rewrites.chunksystem.common.statuses;
 
 import com.google.common.base.Preconditions;
+import com.ishland.c2me.base.common.threadstate.ThreadInstrumentation;
 import com.ishland.c2me.base.common.config.LateModStatuses;
 import com.ishland.c2me.base.common.config.ModStatuses;
 import com.ishland.c2me.base.mixin.access.IThreadedAnvilChunkStorage;
@@ -12,6 +13,7 @@ import com.ishland.c2me.rewrites.chunksystem.common.NewChunkHolderVanillaInterfa
 import com.ishland.c2me.rewrites.chunksystem.common.NewChunkStatus;
 import com.ishland.c2me.rewrites.chunksystem.common.compat.lithium.LithiumChunkStatusTrackerInvoker;
 import com.ishland.c2me.rewrites.chunksystem.common.fapi.LifecycleEventInvoker;
+import com.ishland.c2me.rewrites.chunksystem.common.threadstate.ChunkTaskWork;
 import com.ishland.flowsched.scheduler.Cancellable;
 import com.ishland.flowsched.scheduler.ItemHolder;
 import com.ishland.flowsched.scheduler.KeyStatusPair;
@@ -68,22 +70,24 @@ public class ServerAccessible extends NewChunkStatus {
         ProtoChunk protoChunk = (ProtoChunk) chunk;
 
         if (Config.suppressGhostMushrooms) {
-            ServerWorld serverWorld = ((IThreadedAnvilChunkStorage) context.tacs()).getWorld();
-            ChunkRegion chunkRegion = new ChunkRegion(serverWorld, context.chunks(), ChunkGenerationSteps.GENERATION.get(ChunkStatus.FULL), chunk);
+            try (var ignored = ThreadInstrumentation.getCurrent().begin(new ChunkTaskWork(context, this, true))) {
+                ServerWorld serverWorld = ((IThreadedAnvilChunkStorage) context.tacs()).getWorld();
+                ChunkRegion chunkRegion = new ChunkRegion(serverWorld, context.chunks(), ChunkGenerationSteps.GENERATION.get(ChunkStatus.FULL), chunk);
 
-            ChunkPos chunkPos = context.holder().getKey();
+                ChunkPos chunkPos = context.holder().getKey();
 
-            ShortList[] postProcessingLists = protoChunk.getPostProcessingLists();
-            for (int i = 0; i < postProcessingLists.length; i++) {
-                if (postProcessingLists[i] != null) {
-                    for (ShortListIterator iterator = postProcessingLists[i].iterator(); iterator.hasNext(); ) {
-                        short short_ = iterator.nextShort();
-                        BlockPos blockPos = ProtoChunk.joinBlockPos(short_, protoChunk.sectionIndexToCoord(i), chunkPos);
-                        BlockState blockState = protoChunk.getBlockState(blockPos);
+                ShortList[] postProcessingLists = protoChunk.getPostProcessingLists();
+                for (int i = 0; i < postProcessingLists.length; i++) {
+                    if (postProcessingLists[i] != null) {
+                        for (ShortListIterator iterator = postProcessingLists[i].iterator(); iterator.hasNext(); ) {
+                            short short_ = iterator.nextShort();
+                            BlockPos blockPos = ProtoChunk.joinBlockPos(short_, protoChunk.sectionIndexToCoord(i), chunkPos);
+                            BlockState blockState = protoChunk.getBlockState(blockPos);
 
-                        if (blockState.getBlock() == Blocks.BROWN_MUSHROOM || blockState.getBlock() == Blocks.RED_MUSHROOM) {
-                            if (!blockState.canPlaceAt(chunkRegion, blockPos)) {
-                                protoChunk.setBlockState(blockPos, Blocks.AIR.getDefaultState(), false); // TODO depends on the fact that the chunk system always locks the current chunk
+                            if (blockState.getBlock() == Blocks.BROWN_MUSHROOM || blockState.getBlock() == Blocks.RED_MUSHROOM) {
+                                if (!blockState.canPlaceAt(chunkRegion, blockPos)) {
+                                    protoChunk.setBlockState(blockPos, Blocks.AIR.getDefaultState(), false); // TODO depends on the fact that the chunk system always locks the current chunk
+                                }
                             }
                         }
                     }
@@ -92,28 +96,28 @@ public class ServerAccessible extends NewChunkStatus {
         }
 
         return CompletableFuture.runAsync(() -> {
-            ServerWorld serverWorld = ((IThreadedAnvilChunkStorage) context.tacs()).getWorld();
-            final WorldChunk worldChunk = toFullChunk(protoChunk, serverWorld);
+            try (var ignored = ThreadInstrumentation.getCurrent().begin(new ChunkTaskWork(context, this, true))) {
+                ServerWorld serverWorld = ((IThreadedAnvilChunkStorage) context.tacs()).getWorld();
+                final WorldChunk worldChunk = toFullChunk(protoChunk, serverWorld);
 
-            worldChunk.setLevelTypeProvider(context.holder().getUserData().get()::getLevelType);
-            context.holder().getItem().set(new ChunkState(worldChunk, new WrapperProtoChunk(worldChunk, false), ChunkStatus.FULL));
-            if (!((IWorldChunk) worldChunk).isLoadedToWorld()) {
-                worldChunk.loadEntities();
-                worldChunk.setLoadedToWorld(true);
-                worldChunk.updateAllBlockEntities();
-                worldChunk.addChunkTickSchedulers(serverWorld);
-                if (ModStatuses.fabric_lifecycle_events_v1) {
-                    LifecycleEventInvoker.invokeChunkLoaded(serverWorld, worldChunk, !(protoChunk instanceof WrapperProtoChunk));
-                }
-            }
+                worldChunk.setLevelTypeProvider(context.holder().getUserData().get()::getLevelType);
+                context.holder().getItem().set(new ChunkState(worldChunk, new WrapperProtoChunk(worldChunk, false), ChunkStatus.FULL));
+                if (!((IWorldChunk) worldChunk).isLoadedToWorld()) {
+                    worldChunk.loadEntities();
+                    worldChunk.setLoadedToWorld(true);
+                    worldChunk.updateAllBlockEntities();
+                    worldChunk.addChunkTickSchedulers(serverWorld);
+                    if (ModStatuses.fabric_lifecycle_events_v1) {LifecycleEventInvoker.invokeChunkLoaded(serverWorld, worldChunk, !(protoChunk instanceof WrapperProtoChunk));
+                }}
 
-            if (LateModStatuses.fabric_lifecycle_events_v1_CHUNK_LEVEL_TYPE_CHANGE) {
+                if (LateModStatuses.fabric_lifecycle_events_v1_CHUNK_LEVEL_TYPE_CHANGE) {
                     LifecycleEventInvoker.invokeChunkLevelTypeChange(serverWorld, worldChunk, ChunkLevelType.INACCESSIBLE, ChunkLevelType.FULL);
                 }((IThreadedAnvilChunkStorage) context.tacs()).getCurrentChunkHolders().put(context.holder().getKey().toLong(), context.holder().getUserData().get());
-            ((IThreadedAnvilChunkStorage) context.tacs()).setChunkHolderListDirty(true);
+                ((IThreadedAnvilChunkStorage) context.tacs()).setChunkHolderListDirty(true);
 
-            if (needSendChunks()) {
-                sendChunkToPlayer(context.tacs(), context.holder());
+                if (needSendChunks()) {
+                    sendChunkToPlayer(context.tacs(), context.holder());
+                }
             }
         }, ((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor());
     }
@@ -155,20 +159,17 @@ public class ServerAccessible extends NewChunkStatus {
         final Chunk chunk = state.chunk();
         Preconditions.checkState(chunk instanceof WorldChunk, "Chunk must be a full chunk");
         return CompletableFuture.runAsync(() -> {
-            ((IThreadedAnvilChunkStorage) context.tacs()).getCurrentChunkHolders().remove(context.holder().getKey().toLong());
-            ((IThreadedAnvilChunkStorage) context.tacs()).setChunkHolderListDirty(true);
-            final WorldChunk worldChunk = (WorldChunk) chunk;
-            ServerWorld serverWorld = ((IThreadedAnvilChunkStorage) context.tacs()).getWorld();
-//            worldChunk.setLoadedToWorld(false);
-//            worldChunk.removeChunkTickSchedulers(((IThreadedAnvilChunkStorage) context.tacs()).getWorld());
-
-            if (LateModStatuses.fabric_lifecycle_events_v1_CHUNK_LEVEL_TYPE_CHANGE) {
+            try (var ignored = ThreadInstrumentation.getCurrent().begin(new ChunkTaskWork(context, this, false))) {
+                ((IThreadedAnvilChunkStorage) context.tacs()).getCurrentChunkHolders().remove(context.holder().getKey().toLong());
+                ((IThreadedAnvilChunkStorage) context.tacs()).setChunkHolderListDirty(true);
+                final WorldChunk worldChunk = (WorldChunk) chunk;
+ServerWorld serverWorld = ((IThreadedAnvilChunkStorage) context.tacs()).getWorld();//                worldChunk.setLoadedToWorld(false);
+//                worldChunk.removeChunkTickSchedulers(((IThreadedAnvilChunkStorage) context.tacs()).getWorld());
+               if (LateModStatuses.fabric_lifecycle_events_v1_CHUNK_LEVEL_TYPE_CHANGE) {
                 LifecycleEventInvoker.invokeChunkLevelTypeChange(serverWorld, worldChunk, ChunkLevelType.FULL, ChunkLevelType.INACCESSIBLE);
             }
-            LithiumChunkStatusTrackerInvoker.invokeOnChunkInaccessible(((IThreadedAnvilChunkStorage) context.tacs()).getWorld(), context.holder().getKey());
-
-            worldChunk.setLevelTypeProvider(null);
-            context.holder().getItem().set(new ChunkState(state.protoChunk(), state.protoChunk(), ChunkStatus.FULL));
+                LithiumChunkStatusTrackerInvoker.invokeOnChunkInaccessible(((IThreadedAnvilChunkStorage) context.tacs()).getWorld(), context.holder().getKey());worldChunk.setLevelTypeProvider(null);context.holder().getItem().set(new ChunkState(state.protoChunk(), state.protoChunk(), ChunkStatus.FULL));
+            }
         }, ((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor());
     }
 

@@ -5,6 +5,7 @@ import com.ishland.c2me.base.common.config.ModStatuses;
 import com.ishland.c2me.base.common.registry.SerializerAccess;
 import com.ishland.c2me.base.common.scheduler.IVanillaChunkManager;
 import com.ishland.c2me.base.common.theinterface.IDirectStorage;
+import com.ishland.c2me.base.common.threadstate.ThreadInstrumentation;
 import com.ishland.c2me.base.common.util.RxJavaUtils;
 import com.ishland.c2me.base.mixin.access.ISerializingRegionBasedStorage;
 import com.ishland.c2me.base.mixin.access.IServerLightingProvider;
@@ -20,6 +21,7 @@ import com.ishland.c2me.rewrites.chunksystem.common.async_chunkio.ProtoChunkExte
 import com.ishland.c2me.rewrites.chunksystem.common.async_chunkio.SerializingRegionBasedStorageExtension;
 import com.ishland.c2me.rewrites.chunksystem.common.ducks.IPOIUnloading;
 import com.ishland.c2me.rewrites.chunksystem.common.fapi.LifecycleEventInvoker;
+import com.ishland.c2me.rewrites.chunksystem.common.threadstate.ChunkTaskWork;
 import com.ishland.flowsched.scheduler.Cancellable;
 import com.ishland.flowsched.scheduler.ItemHolder;
 import com.ishland.flowsched.scheduler.KeyStatusPair;
@@ -70,7 +72,7 @@ public class ReadFromDiskAsync extends ReadFromDisk {
         return finalizeLoading(context, single);
     }
 
-    protected static Single<ProtoChunk> invokeAsyncLoad(ChunkLoadingContext context) {
+    protected Single<ProtoChunk> invokeAsyncLoad(ChunkLoadingContext context) {
         return Single.defer(() -> Single.fromCompletionStage(((IThreadedAnvilChunkStorage) context.tacs()).invokeGetUpdatedChunkNbt(context.holder().getKey())))
                 .map(nbt -> nbt.filter(nbt2 -> {
                     boolean bl = nbt2.contains("Status", NbtElement.STRING_TYPE);
@@ -82,37 +84,41 @@ public class ReadFromDiskAsync extends ReadFromDisk {
                 }))
                 .observeOn(Schedulers.from(((IVanillaChunkManager) context.tacs()).c2me$getSchedulingManager().positionedExecutor(context.holder().getKey().toLong())))
                 .map(nbt -> {
-                    final ReferenceArrayList<Runnable> mainThreadQueue = new ReferenceArrayList<>();
-                    if (nbt.isPresent()) {
-                        ChunkIoMainThreadTaskUtils.push(mainThreadQueue);
-                        try {
-                            return Pair.of(mainThreadQueue, ChunkSerializer.deserialize(
-                                    ((IThreadedAnvilChunkStorage) context.tacs()).getWorld(),
-                                    ((IThreadedAnvilChunkStorage) context.tacs()).getPointOfInterestStorage(),
-                                    ((IVersionedChunkStorage) context.tacs()).invokeGetStorageKey(),
-                                    context.holder().getKey(),
-                                    nbt.get()
-                            ));
-                        } finally {
-                            ChunkIoMainThreadTaskUtils.pop(mainThreadQueue);
+                    try (var ignored = ThreadInstrumentation.getCurrent().begin(new ChunkTaskWork(context, this, true))) {
+                        final ReferenceArrayList<Runnable> mainThreadQueue = new ReferenceArrayList<>();
+                        if (nbt.isPresent()) {
+                            ChunkIoMainThreadTaskUtils.push(mainThreadQueue);
+                            try {
+                                return Pair.of(mainThreadQueue, ChunkSerializer.deserialize(
+                                        ((IThreadedAnvilChunkStorage) context.tacs()).getWorld(),
+                                        ((IThreadedAnvilChunkStorage) context.tacs()).getPointOfInterestStorage(),
+                                        ((IVersionedChunkStorage) context.tacs()).invokeGetStorageKey(),
+                                        context.holder().getKey(),
+                                        nbt.get()
+                                ));
+                            } finally {
+                                ChunkIoMainThreadTaskUtils.pop(mainThreadQueue);
+                            }
+                        } else {
+                            return Pair.of(mainThreadQueue, createEmptyProtoChunk(context));
                         }
-                    } else {
-                        return Pair.of(mainThreadQueue, createEmptyProtoChunk(context));
                     }
                 })
                 .flatMap(pair -> {
-                    final ServerWorld world = ((IThreadedAnvilChunkStorage) context.tacs()).getWorld();
-                    ProtoChunk protoChunk = pair.right();
-                    // blending
-                    final ChunkPos pos = context.holder().getKey();
-                    protoChunk = protoChunk != null ? protoChunk : new ProtoChunk(pos, UpgradeData.NO_UPGRADE_DATA, world, world.getRegistryManager().get(RegistryKeys.BIOME), null);
-                    if (protoChunk.getBelowZeroRetrogen() != null || protoChunk.getStatus().getChunkType() == ChunkType.PROTOCHUNK) {
-                        ProtoChunk finalProtoChunk = protoChunk;
-                        return Single.defer(() -> Single.fromCompletionStage(BlendingInfoUtil.getBlendingInfos(((IVersionedChunkStorage) context.tacs()).getWorker(), pos)))
-                                .doOnSuccess(bitSets -> ((ProtoChunkExtension) finalProtoChunk).setBlendingInfo(pos, bitSets))
-                                .map(unused -> pair);
-                    } else {
-                        return Single.just(pair);
+                    try (var ignored = ThreadInstrumentation.getCurrent().begin(new ChunkTaskWork(context, this, true))) {
+                        final ServerWorld world = ((IThreadedAnvilChunkStorage) context.tacs()).getWorld();
+                        ProtoChunk protoChunk = pair.right();
+                        // blending
+                        final ChunkPos pos = context.holder().getKey();
+                        protoChunk = protoChunk != null ? protoChunk : new ProtoChunk(pos, UpgradeData.NO_UPGRADE_DATA, world, world.getRegistryManager().get(RegistryKeys.BIOME), null);
+                        if (protoChunk.getBelowZeroRetrogen() != null || protoChunk.getStatus().getChunkType() == ChunkType.PROTOCHUNK) {
+                            ProtoChunk finalProtoChunk = protoChunk;
+                            return Single.defer(() -> Single.fromCompletionStage(BlendingInfoUtil.getBlendingInfos(((IVersionedChunkStorage) context.tacs()).getWorker(), pos)))
+                                    .doOnSuccess(bitSets -> ((ProtoChunkExtension) finalProtoChunk).setBlendingInfo(pos, bitSets))
+                                    .map(unused -> pair);
+                        } else {
+                            return Single.just(pair);
+                        }
                     }
                 })
                 .zipWith(
@@ -124,7 +130,9 @@ public class ReadFromDiskAsync extends ReadFromDisk {
                 )
                 .observeOn(Schedulers.from(((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor()))
                 .map(pair -> {
-                    ChunkIoMainThreadTaskUtils.drainQueue(pair.left());
+                    try (var ignored = ThreadInstrumentation.getCurrent().begin(new ChunkTaskWork(context, this, true))) {
+                        ChunkIoMainThreadTaskUtils.drainQueue(pair.left());
+                    }
                     return pair.right();
                 });
     }
@@ -133,59 +141,63 @@ public class ReadFromDiskAsync extends ReadFromDisk {
     public CompletionStage<Void> downgradeFromThis(ChunkLoadingContext context, Cancellable cancellable) {
         final AtomicBoolean loadedToWorld = new AtomicBoolean(false);
         return syncWithLightEngine(context).thenApplyAsync(unused -> {
-                    if (context.holder().getTargetStatus().ordinal() >= this.ordinal()) { // saving cancelled
-                        cancellable.cancel();
-                        return CompletableFuture.<Void>failedFuture(new CancellationException());
-                    }
+                    try (var ignored = ThreadInstrumentation.getCurrent().begin(new ChunkTaskWork(context, this, false))) {
+                        if (context.holder().getTargetStatus().ordinal() >= this.ordinal()) { // saving cancelled
+                            cancellable.cancel();
+                            return CompletableFuture.<Void>failedFuture(new CancellationException());
+                        }
 
-                    final ChunkState chunkState = context.holder().getItem().get();
-                    Chunk chunk = chunkState.chunk();
-                    if (chunk instanceof WrapperProtoChunk protoChunk) chunk = protoChunk.getWrappedChunk();
+                        final ChunkState chunkState = context.holder().getItem().get();
+                        Chunk chunk = chunkState.chunk();
+                        if (chunk instanceof WrapperProtoChunk protoChunk) chunk = protoChunk.getWrappedChunk();
 
-                    if (chunk instanceof WorldChunk worldChunk) {
-                        loadedToWorld.set(((IWorldChunk) worldChunk).isLoadedToWorld());
-                        worldChunk.setLoadedToWorld(false);
-                    }
+                        if (chunk instanceof WorldChunk worldChunk) {
+                            loadedToWorld.set(((IWorldChunk) worldChunk).isLoadedToWorld());
+                            worldChunk.setLoadedToWorld(false);
+                        }
 
-                    if ((context.holder().getFlags() & ItemHolder.FLAG_BROKEN) != 0 && chunk instanceof ProtoChunk) { // do not save broken ProtoChunks
-                        LOGGER.warn("Not saving partially generated broken chunk {}", context.holder().getKey());
-                        return CompletableFuture.completedStage((Void) null);
-                    } else if (chunk instanceof WorldChunk && !chunkState.reachedStatus().isAtLeast(ChunkStatus.FULL)) {
-                        // do not save WorldChunks that doesn't reach full status: Vanilla behavior
-                        // If saved, block entities will be lost
-                        return CompletableFuture.completedStage((Void) null);
-                    } else {
-                        return asyncSave(context.tacs(), chunk);
+                        if ((context.holder().getFlags() & ItemHolder.FLAG_BROKEN) != 0 && chunk instanceof ProtoChunk) { // do not save broken ProtoChunks
+                            LOGGER.warn("Not saving partially generated broken chunk {}", context.holder().getKey());
+                            return CompletableFuture.completedStage((Void) null);
+                        } else if (chunk instanceof WorldChunk && !chunkState.reachedStatus().isAtLeast(ChunkStatus.FULL)) {
+                            // do not save WorldChunks that doesn't reach full status: Vanilla behavior
+                            // If saved, block entities will be lost
+                            return CompletableFuture.completedStage((Void) null);
+                        } else {
+                            return asyncSave(context.tacs(), chunk);
+                        }
                     }
                 }, ((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor())
                 .thenCompose(Function.identity())
                 .thenAcceptAsync(unused -> {
-                    Chunk chunk = context.holder().getItem().get().chunk();
-                    if (chunk instanceof WrapperProtoChunk protoChunk) chunk = protoChunk.getWrappedChunk();
+                    try (var ignored = ThreadInstrumentation.getCurrent().begin(new ChunkTaskWork(context, this, false))) {
+                        Chunk chunk = context.holder().getItem().get().chunk();
+                        if (chunk instanceof WrapperProtoChunk protoChunk) chunk = protoChunk.getWrappedChunk();
 
-                    if (context.holder().getTargetStatus().ordinal() >= this.ordinal()) { // saving cancelled late
-                        if (chunk instanceof WorldChunk worldChunk) {
-                            worldChunk.setLoadedToWorld(loadedToWorld.get());
+                        if (context.holder().getTargetStatus().ordinal() >= this.ordinal()) { // saving cancelled late
+                            if (chunk instanceof WorldChunk worldChunk) {
+                                worldChunk.setLoadedToWorld(loadedToWorld.get());
+                            }
+                            cancellable.cancel();
+                            throw new CancellationException();
                         }
-                        cancellable.cancel();
-                        throw new CancellationException();
-                    }
 
-                    if (loadedToWorld.get() && chunk instanceof WorldChunk worldChunk) {
-                        if (ModStatuses.fabric_lifecycle_events_v1) {
+                        if (loadedToWorld.get() && chunk instanceof WorldChunk worldChunk) {
+                            if (ModStatuses.fabric_lifecycle_events_v1) {
                             LifecycleEventInvoker.invokeChunkUnload(((IThreadedAnvilChunkStorage) context.tacs()).getWorld(), worldChunk);
                         }
-                        ((IThreadedAnvilChunkStorage) context.tacs()).getWorld().unloadEntities(worldChunk);
+                            ((IThreadedAnvilChunkStorage) context.tacs()).getWorld().unloadEntities(worldChunk);
+                        }
+
+                        ((IServerLightingProvider) ((IThreadedAnvilChunkStorage) context.tacs()).getLightingProvider()).invokeUpdateChunkStatus(chunk.getPos());
+                        ((IThreadedAnvilChunkStorage) context.tacs()).getLightingProvider().tick();
+                        ((IThreadedAnvilChunkStorage) context.tacs()).getWorldGenerationProgressListener().setChunkStatus(chunk.getPos(), null);
+                        ((IThreadedAnvilChunkStorage) context.tacs()).getChunkToNextSaveTimeMs().remove(chunk.getPos().toLong());
+
+                        ((IPOIUnloading) ((IThreadedAnvilChunkStorage) context.tacs()).getPointOfInterestStorage()).c2me$unloadPoi(context.holder().getKey());
+
+                        context.holder().getItem().set(new ChunkState(null, null, null));
                     }
-
-                    ((IServerLightingProvider) ((IThreadedAnvilChunkStorage) context.tacs()).getLightingProvider()).invokeUpdateChunkStatus(chunk.getPos());
-                    ((IThreadedAnvilChunkStorage) context.tacs()).getLightingProvider().tick();
-                    ((IThreadedAnvilChunkStorage) context.tacs()).getWorldGenerationProgressListener().setChunkStatus(chunk.getPos(), null);
-                    ((IThreadedAnvilChunkStorage) context.tacs()).getChunkToNextSaveTimeMs().remove(chunk.getPos().toLong());
-
-                    ((IPOIUnloading) ((IThreadedAnvilChunkStorage) context.tacs()).getPointOfInterestStorage()).c2me$unloadPoi(context.holder().getKey());
-
-                    context.holder().getItem().set(new ChunkState(null, null, null));
                 }, ((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor());
     }
 
@@ -199,19 +211,23 @@ public class ReadFromDiskAsync extends ReadFromDisk {
 
             AsyncSerializationManager.Scope scope = new AsyncSerializationManager.Scope(chunk, ((IThreadedAnvilChunkStorage) tacs).getWorld());
             return CompletableFuture.supplyAsync(() -> {
-                        scope.open();
-                        AsyncSerializationManager.push(scope);
-                        try {
-                            return SerializerAccess.getSerializer().serialize(((IThreadedAnvilChunkStorage) tacs).getWorld(), chunk);
-                        } finally {
-                            AsyncSerializationManager.pop(scope);
+                        try (var ignored = ThreadInstrumentation.getCurrent().begin(new ChunkTaskWork(((IThreadedAnvilChunkStorage) tacs).getWorld(), chunk.getPos(), this, false))) {
+                            scope.open();
+                            AsyncSerializationManager.push(scope);
+                            try {
+                                return SerializerAccess.getSerializer().serialize(((IThreadedAnvilChunkStorage) tacs).getWorld(), chunk);
+                            } finally {
+                                AsyncSerializationManager.pop(scope);
+                            }
                         }
                     }, GlobalExecutors.prioritizedScheduler.executor(16) /* boost priority as we are serializing an unloaded chunk */)
                     .thenAccept((either) -> {
-                        if (either.left().isPresent()) {
-                            tacs.setNbt(chunkPos, either.left().get());
-                        } else {
-                            ((IDirectStorage) ((IVersionedChunkStorage) tacs).getWorker()).setRawChunkData(chunkPos, either.right().get());
+                        try (var ignored = ThreadInstrumentation.getCurrent().begin(new ChunkTaskWork(((IThreadedAnvilChunkStorage) tacs).getWorld(), chunk.getPos(), this, false))) {
+                            if (either.left().isPresent()) {
+                                tacs.setNbt(chunkPos, either.left().get());
+                            } else {
+                                ((IDirectStorage) ((IVersionedChunkStorage) tacs).getWorker()).setRawChunkData(chunkPos, either.right().get());
+                            }
                         }
                     })
                     .exceptionallyCompose(throwable -> {

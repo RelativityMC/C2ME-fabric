@@ -68,7 +68,9 @@ allprojects {
     }
 }
 
-migrateMappings.onlyIf { false }
+afterEvaluate {
+    migrateMappings.onlyIf { false }
+}
 
 test {
     useJUnitPlatform()
