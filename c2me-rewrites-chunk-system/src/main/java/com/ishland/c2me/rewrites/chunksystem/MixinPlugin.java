@@ -10,6 +10,8 @@ public class MixinPlugin extends ModuleMixinPlugin {
         if (!super.shouldApplyMixin(targetClassName, mixinClassName))
             return false;
 
+        if (mixinClassName.startsWith("com.ishland.c2me.rewrites.chunksystem.mixin.fluid_postprocessing"))
+            return Config.fluidPostProcessingToScheduledTick;
         if (mixinClassName.startsWith("com.ishland.c2me.rewrites.chunksystem.mixin.async_chunkio."))
             return Config.asyncSerialization;
 
