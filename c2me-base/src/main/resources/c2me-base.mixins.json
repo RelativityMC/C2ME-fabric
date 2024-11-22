@@ -36,6 +36,7 @@
     "access.ISimpleRandom",
     "access.ISimpleTickScheduler",
     "access.ISimplexNoiseSampler",
+    "access.ISimulationDistanceLevelPropagator",
     "access.IState",
     "access.IStorageIoWorker",
     "access.IStructurePiece",
