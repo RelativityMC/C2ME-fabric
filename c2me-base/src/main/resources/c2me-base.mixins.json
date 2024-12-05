@@ -45,6 +45,7 @@
     "access.ISyncedClientOptions",
     "access.ITACSTicketManager",
     "access.IThreadedAnvilChunkStorage",
+    "access.IThreadedAnvilChunkStorageTicketManager",
     "access.IUpgradeData",
     "access.IVersionedChunkStorage",
     "access.IWeightedList",
