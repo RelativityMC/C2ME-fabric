@@ -1,6 +1,6 @@
 package com.ishland.c2me.fixes.worldgen.threading_issues.mixin.threading;
 
-import com.ishland.c2me.fixes.worldgen.threading_issues.common.INetherFortressGeneratorPieceData;
+import com.ishland.c2me.fixes.worldgen.threading_issues.common.XPieceDataExtension;
 import net.minecraft.structure.NetherFortressGenerator;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
@@ -19,9 +19,13 @@ public class MixinNetherFortressGeneratorStart {
     @Shadow public List<NetherFortressGenerator.PieceData> bridgePieces;
     @Shadow public List<NetherFortressGenerator.PieceData> corridorPieces;
 
-    @Redirect(method = "<init>(Lnet/minecraft/util/math/random/Random;II)V", at = @At(value = "FIELD", target = "Lnet/minecraft/structure/NetherFortressGenerator$PieceData;generatedCount:I", opcode = Opcodes.PUTFIELD))
+    @Redirect(method = "<init>(Lnet/minecraft/util/math/random/Random;II)V", at = @At(value = "FIELD", target = "Lnet/minecraft/structure/NetherFortressGenerator$PieceData;generatedCount:I", opcode = Opcodes.PUTFIELD), require = 2)
     private void redirectSetPieceDataGeneratedCount(NetherFortressGenerator.PieceData pieceData, int value) {
-        ((INetherFortressGeneratorPieceData) pieceData).getGeneratedCountAtomic().set(value);
+        if (value == 0) {
+            ((XPieceDataExtension) pieceData).c2me$getGeneratedCountThreadLocal().remove();
+        } else {
+            ((XPieceDataExtension) pieceData).c2me$getGeneratedCountThreadLocal().set(value);
+        }
     }
 
     @Inject(method = "<init>*", at = @At("RETURN"))

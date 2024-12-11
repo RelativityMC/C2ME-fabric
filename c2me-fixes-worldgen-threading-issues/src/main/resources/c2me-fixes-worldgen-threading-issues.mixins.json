@@ -17,6 +17,7 @@
     "threading.MixinOrder",
     "threading.MixinRandomizedIntBlockStateProvider",
     "threading.MixinStrongholdGenerator",
+    "threading.MixinStrongholdGeneratorPieceData",
     "threading.MixinStrongholdGeneratorSpiralStaircase",
     "threading.MixinStrongholdGeneratorStart",
     "threading.MixinStructure",
