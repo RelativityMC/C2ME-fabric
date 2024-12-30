@@ -42,7 +42,7 @@ public class Config {
                     
                     This should not affect other worldgen behavior and game mechanics in general
                     """)
-            .getBoolean(true, false);
+            .getBoolean(false, false);
 
     public static final boolean syncPlayerTickets = new ConfigSystem.ConfigAccessor()
             .key("chunkSystem.syncPlayerTickets")
