@@ -48,6 +48,16 @@ public class ModuleEntryPoint {
             .incompatibleMod("textile_backup", "*")
             .getBoolean(true, false);
 
+    public static final long threadPoolPriority = new ConfigSystem.ConfigAccessor()
+            .key("threadPoolPriority")
+            .comment("""
+                    Sets the thread priority for worker threads
+                    
+                    References:
+                    - https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Thread.html#setPriority(int)
+                    """)
+            .getLong(Thread.NORM_PRIORITY - 1, Thread.NORM_PRIORITY - 1, ConfigSystem.LongChecks.POSITIVE_VALUES_ONLY);
+
     public static final int defaultParallelism;
 
     private static int tryEvaluateExpression(String expression) {
