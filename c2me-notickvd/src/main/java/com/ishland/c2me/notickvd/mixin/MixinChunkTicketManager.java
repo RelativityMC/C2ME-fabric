@@ -64,13 +64,9 @@ public class MixinChunkTicketManager implements ChunkTicketManagerExtension {
         this.noTickSystem.tick();
     }
 
-    /**
-     * @author ishland
-     * @reason remap setSimulationDistance to the normal one
-     */
-    @Overwrite
-    public void setSimulationDistance(int i) {
-        this.nearbyChunkTicketUpdater.setWatchDistance(i);
+    @Inject(method = "setSimulationDistance", at = @At("HEAD"))
+    public void mapSimulationDistance(int simulationDistance, CallbackInfo ci) {
+        this.nearbyChunkTicketUpdater.setWatchDistance(simulationDistance);
     }
 
     /**
