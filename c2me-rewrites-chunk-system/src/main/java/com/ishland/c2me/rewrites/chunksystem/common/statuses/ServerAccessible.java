@@ -9,6 +9,7 @@ import com.ishland.c2me.rewrites.chunksystem.common.ChunkLoadingContext;
 import com.ishland.c2me.rewrites.chunksystem.common.ChunkState;
 import com.ishland.c2me.rewrites.chunksystem.common.NewChunkStatus;
 import com.ishland.c2me.rewrites.chunksystem.common.compat.lithium.LithiumChunkStatusTrackerInvoker;
+import com.ishland.c2me.rewrites.chunksystem.common.ducks.WorldChunkExtension;
 import com.ishland.c2me.rewrites.chunksystem.common.fapi.LifecycleEventInvoker;
 import com.ishland.c2me.rewrites.chunksystem.common.threadstate.ChunkTaskWork;
 import com.ishland.flowsched.scheduler.Cancellable;
@@ -45,6 +46,7 @@ public class ServerAccessible extends NewChunkStatus {
 
                 worldChunk.setLevelTypeProvider(context.holder().getUserData().get()::getLevelType);
                 worldChunk.setUnsavedListener(((IThreadedAnvilChunkStorage) context.tacs()).getGenerationContext().unsavedListener());
+                ((WorldChunkExtension) worldChunk).c2me$setBlockTicking(false); // not necessary, but just in case
                 context.holder().getItem().set(new ChunkState(worldChunk, new WrapperProtoChunk(worldChunk, false), ChunkStatus.FULL));
                 if (!((IWorldChunk) worldChunk).isLoadedToWorld()) {
                     worldChunk.loadEntities();

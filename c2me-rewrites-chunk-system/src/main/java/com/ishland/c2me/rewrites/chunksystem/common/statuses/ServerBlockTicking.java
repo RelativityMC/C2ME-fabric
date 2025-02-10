@@ -6,6 +6,7 @@ import com.ishland.c2me.rewrites.chunksystem.common.ChunkLoadingContext;
 import com.ishland.c2me.rewrites.chunksystem.common.ChunkState;
 import com.ishland.c2me.rewrites.chunksystem.common.NewChunkHolderVanillaInterface;
 import com.ishland.c2me.rewrites.chunksystem.common.NewChunkStatus;
+import com.ishland.c2me.rewrites.chunksystem.common.ducks.WorldChunkExtension;
 import com.ishland.c2me.rewrites.chunksystem.common.threadstate.ChunkTaskWork;
 import com.ishland.flowsched.scheduler.Cancellable;
 import com.ishland.flowsched.scheduler.ItemHolder;
@@ -47,6 +48,7 @@ public class ServerBlockTicking extends NewChunkStatus {
                 ((IThreadedAnvilChunkStorage) context.tacs()).getWorld().disableTickSchedulers(chunk);
                 sendChunkToPlayer(context);
                 ((IThreadedAnvilChunkStorage) context.tacs()).getTotalChunksLoadedCount().incrementAndGet(); // never decremented in vanilla
+                ((WorldChunkExtension) chunk).c2me$setBlockTicking(true);
             }
         }, ((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor());
     }
@@ -64,7 +66,10 @@ public class ServerBlockTicking extends NewChunkStatus {
 
     @Override
     public CompletionStage<Void> downgradeFromThis(ChunkLoadingContext context, Cancellable cancellable) {
+        final WorldChunk chunk = (WorldChunk) context.holder().getItem().get().chunk();
+        ((WorldChunkExtension) chunk).c2me$setBlockTicking(false);
         return CompletableFuture.completedStage(null);
+        // TODO check if syncing is needed
     }
 
     @Override
