@@ -15,7 +15,7 @@ public class HeightMapTypeMixin implements HeightMapTypeAccessor {
     private byte[] nameBytes;
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    private void postInit(String enum$name, int enum$ordinal, String name, Heightmap.Purpose purpose, Predicate<?> blockPredicate, CallbackInfo ci) {
+    private void postInit(String enum$name, int enum$ordinal, int ordinal, String name, Heightmap.Purpose purpose, Predicate<?> blockPredicate, CallbackInfo ci) {
         this.nameBytes = NbtWriter.getStringBytes(name);
     }
 
