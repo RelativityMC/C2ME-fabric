@@ -16,10 +16,13 @@ import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.UpgradeData;
+import net.minecraft.world.World;
 import net.minecraft.world.chunk.WorldChunk;
 import net.minecraft.world.gen.chunk.BlendingData;
 import org.jetbrains.annotations.Nullable;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 
@@ -27,6 +30,8 @@ import java.util.List;
 
 @Mixin(WorldChunk.class)
 public abstract class MixinWorldChunk extends Chunk implements WorldChunkExtension {
+
+    @Shadow @Final private World world;
 
     @Unique
     private boolean c2me$blockTicking;
@@ -61,7 +66,7 @@ public abstract class MixinWorldChunk extends Chunk implements WorldChunkExtensi
 
     @WrapMethod(method = "canTickBlockEntity")
     private boolean wrapCanTickBlockEntity(BlockPos pos, Operation<Boolean> original) {
-        return this.c2me$isBlockTicking() && original.call(pos);
+        return (this.world.isClient || this.c2me$isBlockTicking()) && original.call(pos);
     }
 
 }
