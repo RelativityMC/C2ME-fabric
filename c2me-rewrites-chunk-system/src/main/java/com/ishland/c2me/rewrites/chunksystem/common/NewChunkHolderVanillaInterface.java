@@ -35,6 +35,7 @@ import java.util.function.Function;
 public class NewChunkHolderVanillaInterface extends ChunkHolder implements IFastChunkHolder {
 
     private static final List<ChunkStatus> CHUNK_STATUSES = ChunkStatus.createOrderedList();
+    private static final CompletableFuture<Void> COMPLETED_VOID_FUTURE = CompletableFuture.completedFuture(null);
 
     private final ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> newHolder;
 
@@ -192,7 +193,13 @@ public class NewChunkHolderVanillaInterface extends ChunkHolder implements IFast
 
     @Override
     public CompletableFuture<?> getSavingFuture() {
-        return this.newHolder.getOpFuture(); // already safe to use as the implementation creates a new future
+        synchronized (this.newHolder) {
+            if (this.newHolder.isOpen()) {
+                return this.newHolder.getOpFuture(); // already safe to use as the implementation creates a new future
+            } else {
+                return COMPLETED_VOID_FUTURE;
+            }
+        }
     }
 
     @Override
