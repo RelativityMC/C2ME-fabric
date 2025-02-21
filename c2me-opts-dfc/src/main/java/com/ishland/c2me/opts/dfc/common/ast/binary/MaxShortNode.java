@@ -46,7 +46,7 @@ public class MaxShortNode extends AbstractBinaryNode {
         m.dup2();
         m.dconst(this.rightMax);
         m.cmpl(Type.DOUBLE_TYPE);
-        m.iflt(minLabel);
+        m.ifle(minLabel);
         m.areturn(Type.DOUBLE_TYPE);
 
         m.visitLabel(minLabel);
@@ -80,7 +80,7 @@ public class MaxShortNode extends AbstractBinaryNode {
             m.dup2();
             m.dconst(this.rightMax);
             m.cmpl(Type.DOUBLE_TYPE);
-            m.iflt(minLabel);
+            m.ifle(minLabel);
             m.goTo(end);
 
             m.visitLabel(minLabel);
