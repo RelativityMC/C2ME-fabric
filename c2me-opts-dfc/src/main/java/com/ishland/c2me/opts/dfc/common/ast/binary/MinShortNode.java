@@ -46,7 +46,7 @@ public class MinShortNode extends AbstractBinaryNode {
         m.dup2();
         m.dconst(this.rightMin);
         m.cmpg(Type.DOUBLE_TYPE);
-        m.ifgt(minLabel);
+        m.ifge(minLabel);
         m.areturn(Type.DOUBLE_TYPE);
 
         m.visitLabel(minLabel);
@@ -80,7 +80,7 @@ public class MinShortNode extends AbstractBinaryNode {
             m.dup2();
             m.dconst(this.rightMin);
             m.cmpg(Type.DOUBLE_TYPE);
-            m.ifgt(minLabel);
+            m.ifge(minLabel);
             m.goTo(end);
 
             m.visitLabel(minLabel);

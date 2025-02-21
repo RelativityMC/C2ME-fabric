@@ -49,31 +49,32 @@ public abstract class MixinChunkNoiseSamplerDensityInterpolator implements IFast
         }
         if (pos instanceof NoisePosVanillaInterface vif && vif.getType() == EvalType.INTERPOLATION) {
             boolean isInInterpolationLoop = ((IChunkNoiseSampler) this.field_34622).getIsInInterpolationLoop();
-            if (isInInterpolationLoop) {
-                int startBlockX = ((IChunkNoiseSampler) this.field_34622).getStartBlockX();
-                int startBlockY = ((IChunkNoiseSampler) this.field_34622).getStartBlockY();
-                int startBlockZ = ((IChunkNoiseSampler) this.field_34622).getStartBlockZ();
-                int horizontalCellBlockCount = ((IChunkNoiseSampler) this.field_34622).getHorizontalCellBlockCount();
-                int verticalCellBlockCount = ((IChunkNoiseSampler) this.field_34622).getVerticalCellBlockCount();
-                int cellBlockX = pos.blockX() - startBlockX;
-                int cellBlockY = pos.blockY() - startBlockY;
-                int cellBlockZ = pos.blockZ() - startBlockZ;
-                return ((IChunkNoiseSampler) this.field_34622).getIsSamplingForCaches()
-                        ? MathHelper.lerp3(
-                        (double)cellBlockX / (double)horizontalCellBlockCount,
-                        (double)cellBlockY / (double)verticalCellBlockCount,
-                        (double)cellBlockZ / (double)horizontalCellBlockCount,
-                        this.x0y0z0,
-                        this.x1y0z0,
-                        this.x0y1z0,
-                        this.x1y1z0,
-                        this.x0y0z1,
-                        this.x1y0z1,
-                        this.x0y1z1,
-                        this.x1y1z1
-                )
-                        : this.result;
+            boolean isSamplingForCaches = ((IChunkNoiseSampler) this.field_34622).getIsSamplingForCaches();
+            if (!isInInterpolationLoop) {
+                return original.call(pos);
             }
+            int startBlockX = ((IChunkNoiseSampler) this.field_34622).getStartBlockX();
+            int startBlockY = ((IChunkNoiseSampler) this.field_34622).getStartBlockY();
+            int startBlockZ = ((IChunkNoiseSampler) this.field_34622).getStartBlockZ();
+            int horizontalCellBlockCount = ((IChunkNoiseSampler) this.field_34622).getHorizontalCellBlockCount();
+            int verticalCellBlockCount = ((IChunkNoiseSampler) this.field_34622).getVerticalCellBlockCount();
+            int cellBlockX = pos.blockX() - startBlockX;
+            int cellBlockY = pos.blockY() - startBlockY;
+            int cellBlockZ = pos.blockZ() - startBlockZ;
+            return isSamplingForCaches
+                    ? MathHelper.lerp3(
+                    (double)cellBlockX / (double)horizontalCellBlockCount,
+                    (double)cellBlockY / (double)verticalCellBlockCount,
+                    (double)cellBlockZ / (double)horizontalCellBlockCount,
+                    this.x0y0z0,
+                    this.x1y0z0,
+                    this.x0y1z0,
+                    this.x1y1z0,
+                    this.x0y0z1,
+                    this.x1y0z1,
+                    this.x0y1z1,
+                    this.x1y1z1
+            ) : this.result;
         }
         return original.call(pos);
     }
@@ -108,10 +109,12 @@ public abstract class MixinChunkNoiseSamplerDensityInterpolator implements IFast
                 } else {
                     return this.result;
                 }
+            } else {
+                throw new IllegalStateException("Trying to sample interpolator outside the interpolation loop");
             }
         }
 
-        return CACHE_MISS_NAN_BITS;
+        return Double.longBitsToDouble(CACHE_MISS_NAN_BITS);
     }
 
     @Override
@@ -145,8 +148,7 @@ public abstract class MixinChunkNoiseSamplerDensityInterpolator implements IFast
                     }
                     return true;
                 } else {
-                    Arrays.fill(res, this.result);
-                    return true;
+                    return false;
                 }
             }
         }
