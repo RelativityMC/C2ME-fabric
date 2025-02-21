@@ -25,6 +25,8 @@ import com.ishland.c2me.opts.dfc.common.ast.unary.SquareNode;
 import com.ishland.c2me.opts.dfc.common.ast.unary.SqueezeNode;
 import com.ishland.c2me.opts.dfc.common.ducks.IFastCacheLike;
 import com.ishland.c2me.opts.dfc.common.ducks.IEqualityOverriding;
+import com.ishland.c2me.opts.dfc.common.gen.BytecodeGen;
+import com.ishland.c2me.opts.dfc.common.gen.CompiledDensityFunction;
 import com.ishland.c2me.opts.dfc.common.vif.AstVanillaInterface;
 import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
@@ -66,7 +68,7 @@ public class McToAst {
                 }
             };
             case DensityFunctionTypes.BlendDensity f -> toAst(f.input());
-            case DensityFunctionTypes.Clamp f -> new MaxNode(new ConstantNode(f.minValue()), new MinNode(new ConstantNode(f.maxValue()), toAst(f.input())));
+            case DensityFunctionTypes.Clamp f -> new MinNode(new ConstantNode(f.maxValue()), new MaxNode(new ConstantNode(f.minValue()), toAst(f.input())));
             case DensityFunctionTypes.Constant f -> new ConstantNode(f.value());
             case DensityFunctionTypes.RegistryEntryHolder f -> toAst(f.function().value());
             case DensityFunctionTypes.UnaryOperation f -> switch (f.type()) {
@@ -80,8 +82,11 @@ public class McToAst {
             case DensityFunctionTypes.RangeChoice f -> new RangeChoiceNode(toAst(f.input()), f.minInclusive(), f.maxExclusive(), toAst(f.whenInRange()), toAst(f.whenOutOfRange()));
             case IFastCacheLike f -> new CacheLikeNode(f, toAst(f.c2me$getDelegate()));
             case DensityFunctionTypes.Wrapping f -> {
-                DensityFunctionTypes.Wrapping wrapping = new DensityFunctionTypes.Wrapping(f.type(), new AstVanillaInterface(toAst(f.wrapped()), null));
-                ((IEqualityOverriding) (Object) wrapping).c2me$overrideEquality(wrapping);
+//                if ((Object) f instanceof IFastCacheLike fastCacheLike && f.type() != DensityFunctionTypes.Wrapping.Type.INTERPOLATED) {
+//                    yield new CacheLikeNode(fastCacheLike, toAst(fastCacheLike.c2me$getDelegate()));
+//                }
+                DensityFunctionTypes.Wrapping wrapping = new DensityFunctionTypes.Wrapping(f.type(), new CompiledDensityFunction(BytecodeGen.compile0(toAst(f.wrapped())), null));
+                ((IEqualityOverriding) (Object) wrapping).c2me$overrideEquality(f);
                 yield new DelegateNode(wrapping);
             }
             case DensityFunctionTypes.ShiftedNoise f -> new ShiftedNoiseNode(toAst(f.shiftX()), toAst(f.shiftY()), toAst(f.shiftZ()), f.xzScale(), f.yScale(), f.noise());

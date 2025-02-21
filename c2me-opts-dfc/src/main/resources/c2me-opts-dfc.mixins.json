@@ -4,7 +4,6 @@
   "package": "com.ishland.c2me.opts.dfc.mixin",
   "plugin": "com.ishland.c2me.base.common.ModuleMixinPlugin",
   "mixins": [
-    "IChunkNoiseSamplerDensityInterpolator",
     "MixinChunkNoiseSampler",
     "MixinChunkNoiseSampler1",
     "MixinChunkNoiseSamplerCache2D",
