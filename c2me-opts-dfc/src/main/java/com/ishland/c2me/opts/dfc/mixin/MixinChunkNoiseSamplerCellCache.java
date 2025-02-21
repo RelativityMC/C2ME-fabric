@@ -87,7 +87,7 @@ public abstract class MixinChunkNoiseSamplerCellCache implements IFastCacheLike 
             }
         }
 
-        return CACHE_MISS_NAN_BITS;
+        return Double.longBitsToDouble(CACHE_MISS_NAN_BITS);
     }
 
     @Override
