@@ -36,17 +36,17 @@ public class SqueezeNode extends AbstractUnaryNode {
     @Override
     public void doBytecodeGenSingle(BytecodeGen.Context context, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
         super.doBytecodeGenSingle(context, m, localVarConsumer);
-        m.dconst(1.0); // max
-        m.invokestatic(
-                Type.getInternalName(Math.class),
-                "min",
-                Type.getMethodDescriptor(Type.DOUBLE_TYPE, Type.DOUBLE_TYPE, Type.DOUBLE_TYPE),
-                false
-        );
         m.dconst(-1.0); // min
         m.invokestatic(
                 Type.getInternalName(Math.class),
                 "max",
+                Type.getMethodDescriptor(Type.DOUBLE_TYPE, Type.DOUBLE_TYPE, Type.DOUBLE_TYPE),
+                false
+        );
+        m.dconst(1.0); // max
+        m.invokestatic(
+                Type.getInternalName(Math.class),
+                "min",
                 Type.getMethodDescriptor(Type.DOUBLE_TYPE, Type.DOUBLE_TYPE, Type.DOUBLE_TYPE),
                 false
         );
@@ -79,17 +79,17 @@ public class SqueezeNode extends AbstractUnaryNode {
             m.load(idx, Type.INT_TYPE);
             m.dup2();
             m.aload(Type.DOUBLE_TYPE);
-            m.dconst(1.0); // max
-            m.invokestatic(
-                    Type.getInternalName(Math.class),
-                    "min",
-                    Type.getMethodDescriptor(Type.DOUBLE_TYPE, Type.DOUBLE_TYPE, Type.DOUBLE_TYPE),
-                    false
-            );
             m.dconst(-1.0); // min
             m.invokestatic(
                     Type.getInternalName(Math.class),
                     "max",
+                    Type.getMethodDescriptor(Type.DOUBLE_TYPE, Type.DOUBLE_TYPE, Type.DOUBLE_TYPE),
+                    false
+            );
+            m.dconst(1.0); // max
+            m.invokestatic(
+                    Type.getInternalName(Math.class),
+                    "min",
                     Type.getMethodDescriptor(Type.DOUBLE_TYPE, Type.DOUBLE_TYPE, Type.DOUBLE_TYPE),
                     false
             );
