@@ -114,7 +114,7 @@ public abstract class MixinChunkNoiseSamplerDensityInterpolator implements IFast
             }
         }
 
-        return CACHE_MISS_NAN_BITS;
+        return Double.longBitsToDouble(CACHE_MISS_NAN_BITS);
     }
 
     @Override
