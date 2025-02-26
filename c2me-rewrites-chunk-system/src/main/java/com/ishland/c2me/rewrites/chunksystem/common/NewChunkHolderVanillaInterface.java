@@ -24,16 +24,20 @@ import net.minecraft.world.chunk.WorldChunk;
 import net.minecraft.world.chunk.WrapperProtoChunk;
 import net.minecraft.world.chunk.light.LightingProvider;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.Executor;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
 public class NewChunkHolderVanillaInterface extends ChunkHolder implements IFastChunkHolder {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(NewChunkHolderVanillaInterface.class);
     private static final List<ChunkStatus> CHUNK_STATUSES = ChunkStatus.createOrderedList();
     private static final CompletableFuture<Void> COMPLETED_VOID_FUTURE = CompletableFuture.completedFuture(null);
 
@@ -202,19 +206,65 @@ public class NewChunkHolderVanillaInterface extends ChunkHolder implements IFast
         }
     }
 
+    private static final String DEBUG_BLOCK_LIGHT_UPDATE_REENTRANCE_PROP = "c2me.debugBlockLightUpdateReentrance";
+    private static final boolean DEBUG_BLOCK_LIGHT_UPDATE_REENTRANCE = Boolean.getBoolean(DEBUG_BLOCK_LIGHT_UPDATE_REENTRANCE_PROP);
+    private static final AtomicInteger DEBUG_BLOCK_LIGHT_UPDATE_REENTRANCE_COUNTER = new AtomicInteger();
+    private final AtomicInteger reentranceCount = new AtomicInteger();
+    private final ArrayList<Runnable> pendingBlockLightUpdates = new ArrayList<>();
+
+    private static void onBlockLightUpdateReentrance() {
+        if (DEBUG_BLOCK_LIGHT_UPDATE_REENTRANCE) {
+            LOGGER.error("Block/Light update reentrance detected", new Throwable());
+        } else if (DEBUG_BLOCK_LIGHT_UPDATE_REENTRANCE_COUNTER.incrementAndGet() <= 128) {
+            if (DEBUG_BLOCK_LIGHT_UPDATE_REENTRANCE_COUNTER.get() <= 4) {
+                LOGGER.error("Block/Light update reentrance detected, use -D{}=true to debug", DEBUG_BLOCK_LIGHT_UPDATE_REENTRANCE_PROP, new Throwable());
+            } else {
+                LOGGER.error("Block/Light update reentrance detected, use -D{}=true to debug", DEBUG_BLOCK_LIGHT_UPDATE_REENTRANCE_PROP);
+                LOGGER.debug("Block/Light update reentrance detected, use -D{}=true to debug", DEBUG_BLOCK_LIGHT_UPDATE_REENTRANCE_PROP, new Throwable());
+            }
+            if (DEBUG_BLOCK_LIGHT_UPDATE_REENTRANCE_COUNTER.get() == 128) {
+                LOGGER.error("Further reentrance detection error is suppressed, use -D{}=true to debug", DEBUG_BLOCK_LIGHT_UPDATE_REENTRANCE_PROP);
+            }
+        }
+    }
+
     @Override
     public void markForBlockUpdate(BlockPos pos) {
-        super.markForBlockUpdate(pos); // use vanilla impl
+        if (this.reentranceCount.get() >= 1) {
+            onBlockLightUpdateReentrance();
+            this.pendingBlockLightUpdates.add(() -> super.markForBlockUpdate(pos));
+            return;
+        }
+        super.markForBlockUpdate(pos);
     }
 
     @Override
     public void markForLightUpdate(LightType lightType, int y) {
+        if (this.reentranceCount.get() >= 1) {
+            onBlockLightUpdateReentrance();
+            this.pendingBlockLightUpdates.add(() -> super.markForLightUpdate(lightType, y));
+            return;
+        }
         super.markForLightUpdate(lightType, y); // use vanilla impl
     }
 
     @Override
     public void flushUpdates(WorldChunk chunk) {
-        super.flushUpdates(chunk); // use vanilla impl
+        int i = this.reentranceCount.incrementAndGet();
+        if (i > 1) {
+            new Throwable("Reentrance").printStackTrace();
+        }
+        try {
+            super.flushUpdates(chunk); // use vanilla impl
+        } finally {
+            this.reentranceCount.decrementAndGet();
+        }
+        if (this.reentranceCount.get() == 0 && !this.pendingBlockLightUpdates.isEmpty()) {
+            for (Runnable runnable : this.pendingBlockLightUpdates) {
+                runnable.run();
+            }
+            this.pendingBlockLightUpdates.clear();
+        }
     }
 
     @Override
