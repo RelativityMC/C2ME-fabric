@@ -4,12 +4,12 @@ plugins {
     id 'java-gradle-plugin'
 }
 
-group 'com.ishland.c2me'
+group = 'com.ishland.c2me'
 
 repositories {
     mavenCentral()
-    maven { url "https://jitpack.io" }
-    maven { url "https://maven.fabricmc.net/" }
+    maven { url = "https://jitpack.io" }
+    maven { url = "https://maven.fabricmc.net/" }
 }
 
 dependencies {

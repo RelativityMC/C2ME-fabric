@@ -1,5 +1,6 @@
 package com.ishland.c2me.rewrites.chunk_serializer.common;
 
+import com.ishland.c2me.base.mixin.access.INbtList;
 import net.minecraft.nbt.*;
 import net.minecraft.nbt.visitor.NbtElementVisitor;
 
@@ -12,7 +13,7 @@ public class NbtWriterVisitor implements NbtElementVisitor {
 
     @Override
     public void visitString(NbtString element) {
-        this.writer.putStringEntry(NbtWriter.getStringBytes(element.asString()));
+        this.writer.putStringEntry(NbtWriter.getStringBytes(element.value()));
     }
 
     @Override
@@ -62,9 +63,21 @@ public class NbtWriterVisitor implements NbtElementVisitor {
 
     @Override
     public void visitList(NbtList element) {
-        this.writer.startFixedListEntry(element.size(), element.getHeldType());
-        for (NbtElement elementBase : element) {
-            elementBase.accept(this);
+        byte serializedType = ((INbtList) (Object) element).invokeGetSerializedType();
+        this.writer.startFixedListEntry(element.size(), serializedType);
+        if (serializedType == NbtElement.COMPOUND_TYPE) {
+            for (NbtElement elementBase : element) {
+                if (elementBase instanceof NbtCompound nbtCompound && !needWeaklyTypedWrapper(nbtCompound)) {
+                    elementBase.accept(this);
+                } else {
+                    this.visit("", elementBase);
+                    this.writer.finishCompound();
+                }
+            }
+        } else {
+            for (NbtElement elementBase : element) {
+                elementBase.accept(this);
+            }
         }
     }
 
@@ -78,7 +91,7 @@ public class NbtWriterVisitor implements NbtElementVisitor {
     }
 
     public void visitString(byte[] name, NbtString element) {
-        this.writer.putString(name, element.asString());
+        this.writer.putString(name, element.value());
     }
 
     public void visitString(String name, NbtString element) {
@@ -158,9 +171,21 @@ public class NbtWriterVisitor implements NbtElementVisitor {
     }
 
     public void visitList(byte[] name, NbtList element) {
-        this.writer.startFixedList(name, element.size(), element.getHeldType());
-        for (NbtElement elementBase : element) {
-            elementBase.accept(this);
+        byte serializedType = ((INbtList) (Object) element).invokeGetSerializedType();
+        this.writer.startFixedList(name, element.size(), serializedType);
+        if (serializedType == NbtElement.COMPOUND_TYPE) {
+            for (NbtElement elementBase : element) {
+                if (elementBase instanceof NbtCompound nbtCompound && !needWeaklyTypedWrapper(nbtCompound)) {
+                    elementBase.accept(this);
+                } else {
+                    this.visit("", elementBase);
+                    this.writer.finishCompound();
+                }
+            }
+        } else {
+            for (NbtElement elementBase : element) {
+                elementBase.accept(this);
+            }
         }
     }
 
@@ -220,5 +245,9 @@ public class NbtWriterVisitor implements NbtElementVisitor {
     @Override
     public void visitEnd(NbtEnd element) {
         throw new IllegalArgumentException("Cannot visit null element");
+    }
+
+    private static boolean needWeaklyTypedWrapper(NbtCompound nbtCompound) {
+        return nbtCompound.getSize() == 1 && nbtCompound.contains("");
     }
 }

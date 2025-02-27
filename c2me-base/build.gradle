@@ -6,7 +6,7 @@ configurations {
 
 dependencies {
     shadowInclude("com.ishland.flowsched:flowsched") {
-        transitive false
+        transitive = false
     }
 }
 
