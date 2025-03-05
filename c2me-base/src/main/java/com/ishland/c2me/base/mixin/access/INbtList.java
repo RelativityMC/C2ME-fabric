@@ -7,7 +7,7 @@ import org.spongepowered.asm.mixin.gen.Invoker;
 @Mixin(NbtList.class)
 public interface INbtList {
 
-    @Invoker("method_68587")
+    @Invoker("getValueType")
     byte invokeGetSerializedType();
 
 }
