@@ -4,6 +4,7 @@ import com.ishland.c2me.base.common.GlobalExecutors;
 import com.ishland.c2me.base.common.scheduler.IVanillaChunkManager;
 import com.ishland.c2me.base.common.scheduler.SchedulingManager;
 import com.ishland.c2me.base.mixin.access.IThreadedAnvilChunkStorage;
+import com.ishland.c2me.base.mixin.access.IVersionedChunkStorage;
 import com.ishland.flowsched.scheduler.DaemonizedStatusAdvancingScheduler;
 import com.ishland.flowsched.scheduler.ExceptionHandlingAction;
 import com.ishland.flowsched.scheduler.ItemHolder;
@@ -100,13 +101,8 @@ public class TheChunkSystem extends DaemonizedStatusAdvancingScheduler<ChunkPos,
         } else {
             LOGGER.error("Error downgrading chunk {} to \"{}\"", holder.getKey(), nextStatus, throwable);
         }
-        if (throwable instanceof CrashException crashException) {
-            final MinecraftServer server = ((IThreadedAnvilChunkStorage) this.tacs).getWorld().getServer();
-            server.execute(() -> {
-                final Path path = server.getRunDirectory().resolve("crash-reports").resolve("crash-" + Util.getFormattedCurrentTime() + "-server.txt");
-                crashException.getReport().writeToFile(path, ReportType.MINECRAFT_CHUNK_IO_ERROR_REPORT);
-            });
-        }
+        final MinecraftServer server = ((IThreadedAnvilChunkStorage) this.tacs).getWorld().getServer();
+        server.execute(() -> server.onChunkLoadFailure(throwable, ((IVersionedChunkStorage) this.tacs).invokeGetStorageKey(), holder.getKey()));
         return ExceptionHandlingAction.MARK_BROKEN;
     }
 

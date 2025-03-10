@@ -17,7 +17,7 @@ import java.util.Iterator;
 import java.util.List;
 
 @Mixin(NbtList.class)
-public abstract class MixinNbtList extends AbstractList<NbtElement> {
+public abstract class MixinNbtList {
 
     @Shadow @Final private List<NbtElement> value;
 
