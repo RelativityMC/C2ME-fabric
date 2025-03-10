@@ -24,6 +24,7 @@ import net.minecraft.nbt.NbtElement;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.server.WorldGenerationProgressListener;
 import net.minecraft.server.world.ServerLightingProvider;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.ChunkSerializer;
@@ -58,7 +59,10 @@ public class ReadFromDisk extends NewChunkStatus {
 
     protected @NotNull CompletionStage<Void> finalizeLoading(ChunkLoadingContext context, Single<ProtoChunk> single) {
         return single
-                .doOnError(throwable -> ((IThreadedAnvilChunkStorage) context.tacs()).getWorld().getServer().onChunkLoadFailure(throwable, ((IVersionedChunkStorage) context.tacs()).invokeGetStorageKey(), context.holder().getKey()))
+                .doOnError(throwable -> {
+                    MinecraftServer server = ((IThreadedAnvilChunkStorage) context.tacs()).getWorld().getServer();
+                    server.execute(() -> server.onChunkLoadFailure(throwable, ((IVersionedChunkStorage) context.tacs()).invokeGetStorageKey(), context.holder().getKey()));
+                })
                 .onErrorResumeNext(throwable -> {
                     try (var ignored = ThreadInstrumentation.getCurrent().begin(new ChunkTaskWork(context, this, true))) {
                         if (Config.recoverFromErrors) {
