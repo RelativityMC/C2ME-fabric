@@ -18,13 +18,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Mixin(NbtList.class)
-public abstract class MixinNbtList extends AbstractNbtList<NbtElement> {
+public abstract class MixinNbtList {
 
     @Shadow private byte type;
 
     @Shadow @Final private List<NbtElement> value;
-
-    @Shadow protected abstract boolean canAdd(NbtElement element);
 
     /**
      * @author ishland
@@ -48,13 +46,4 @@ public abstract class MixinNbtList extends AbstractNbtList<NbtElement> {
         return null; // avoid double list creation
     }
 
-    @Override
-    public boolean add(NbtElement element) {
-        if (this.canAdd(element)) {
-            this.value.add(element);
-            return true;
-        } else {
-            return false;
-        }
-    }
 }
