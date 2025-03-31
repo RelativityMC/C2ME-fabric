@@ -32,7 +32,8 @@
   },
   "conflicts": {
     "dynview": "*",
-    "betterchunkloading": "*"
+    "betterchunkloading": "*",
+    "flashback": "<=0.20.1"
   },
   "breaks": {
     "tic_tacs": "*",
