@@ -22,7 +22,6 @@
     "async_serialization.MixinStorageIoWorker",
     "async_serialization.MixinThreadedAnvilChunkStorage",
     "fixes.MixinServerEntityManager",
-    "fixes.MixinServerWorld",
     "fluid_postprocessing.MixinWorldChunk"
   ]
 }
