@@ -53,7 +53,8 @@ public class AsyncSerializationManager {
             for (BlockPos blockPos : chunk.getBlockEntityPositions()) {
                 final NbtCompound nbt = chunk.getPackedBlockEntityNbt(blockPos, world.getRegistryManager());
                 if (nbt == null) {
-                    LOGGER.warn("Block entity at {} for block {} in chunk {} is missing", blockPos, chunk.getBlockState(blockPos), chunk.getPos());
+                    // the game actually allows this to exist
+                    LOGGER.debug("Block entity at {} for block {} in chunk {} is missing", blockPos, chunk.getBlockState(blockPos), chunk.getPos());
                 }
                 if (blockEntities.containsKey(blockPos)) {
                     LOGGER.warn("Duplicate block entity at {} in chunk {}", blockPos, chunk.getPos());
