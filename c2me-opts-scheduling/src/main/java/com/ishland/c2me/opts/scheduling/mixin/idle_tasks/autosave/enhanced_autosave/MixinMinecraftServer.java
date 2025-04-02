@@ -23,7 +23,7 @@ public abstract class MixinMinecraftServer extends ReentrantThreadExecutor<Serve
 
     @Shadow private long tickStartTimeNanos;
 
-    @Shadow @Nullable protected class_10961 field_59588;
+    @Shadow @Nullable public class_10961 field_59589;
 
     public MixinMinecraftServer(String string) {
         super(string);
@@ -41,8 +41,9 @@ public abstract class MixinMinecraftServer extends ReentrantThreadExecutor<Serve
     @ModifyReturnValue(method = "runOneTask", at = @At("RETURN"))
     private boolean postRunTask(boolean original) {
         if (original) return true;
+        if (this.field_59589 == null) return false;
         if (this.c2me$shouldKeepSavingChunks()) {
-            for (ServerWorld serverWorld : this.field_59588.method_68997()) {
+            for (ServerWorld serverWorld : this.field_59589.method_68997()) {
                 if (((IThreadedAnvilChunkStorage) serverWorld.getChunkManager().chunkLoadingManager).c2me$runOneChunkAutoSave()) {
                     return false;
                 }

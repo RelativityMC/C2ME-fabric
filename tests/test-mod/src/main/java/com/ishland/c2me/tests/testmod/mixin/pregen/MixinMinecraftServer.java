@@ -64,7 +64,7 @@ public abstract class MixinMinecraftServer extends ReentrantThreadExecutor<Serve
         if (ranTest.compareAndSet(false, true)) {
             System.err.printf("Starting pre-generation task for worlds: %s\n",
                     String.join(", ",
-                            ((ITheSecondHalfOfTheServer) this.field_59588.method_68997()).getWorlds().entrySet().stream()
+                            ((ITheSecondHalfOfTheServer) this.field_59588).getWorlds().entrySet().stream()
                                     .map(worldEntry -> String.format("%s;%s",
                                             worldEntry.getValue().toString(),
                                             worldEntry.getKey().getValue().toString()))
@@ -73,7 +73,7 @@ public abstract class MixinMinecraftServer extends ReentrantThreadExecutor<Serve
             long startTime = System.nanoTime();
             PreGenTask.PreGenEventListener eventListener = new PreGenTask.PreGenEventListener();
             final CompletableFuture<Void> future = CompletableFuture.allOf(
-                    ((ITheSecondHalfOfTheServer) this.field_59588.method_68997()).getWorlds().values().stream()
+                    ((ITheSecondHalfOfTheServer) this.field_59588).getWorlds().values().stream()
                             .map((ServerWorld world1) -> PreGenTask.runPreGen(world1, eventListener))
                             .distinct()
                             .toArray(CompletableFuture[]::new)
@@ -83,7 +83,7 @@ public abstract class MixinMinecraftServer extends ReentrantThreadExecutor<Serve
                 if (!c2metest$runAsyncTask()) LockSupport.parkNanos("waiting for tasks", 100000L);
             }
             if (!isRunning()) LOGGER.error("Exiting due to server stopping");
-            for (ServerWorld world : ((ITheSecondHalfOfTheServer) this.field_59588.method_68997()).getWorlds().values()) {
+            for (ServerWorld world : ((ITheSecondHalfOfTheServer) this.field_59588).getWorlds().values()) {
                 world.getChunkManager().tick(() -> true, false);
             }
             long duration = System.nanoTime() - startTime;
@@ -125,9 +125,9 @@ public abstract class MixinMinecraftServer extends ReentrantThreadExecutor<Serve
         if (largeOverheadGC != handledGc || Runtime.getRuntime().maxMemory() - (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) < 256 * 1024 * 1024) {
             // Too spammy I think
             // LOGGER.warn("High GC overhead / low available heap, saving worlds...");
-            ((ITheSecondHalfOfTheServer) this.field_59588.method_68997()).getWorlds().values().forEach(world -> world.getChunkManager().tick(() -> true, false));
-            ((ITheSecondHalfOfTheServer) this.field_59588.method_68997()).getWorlds().values().forEach(world -> world.getChunkManager().save(false));
-            ((ITheSecondHalfOfTheServer) this.field_59588.method_68997()).getWorlds().values().forEach(world -> world.getChunkManager().chunkLoadingManager.completeAll());
+            ((ITheSecondHalfOfTheServer) this.field_59588).getWorlds().values().forEach(world -> world.getChunkManager().tick(() -> true, false));
+            ((ITheSecondHalfOfTheServer) this.field_59588).getWorlds().values().forEach(world -> world.getChunkManager().save(false));
+            ((ITheSecondHalfOfTheServer) this.field_59588).getWorlds().values().forEach(world -> world.getChunkManager().chunkLoadingManager.completeAll());
             handledGc = largeOverheadGC;
         }
     }
@@ -139,7 +139,7 @@ public abstract class MixinMinecraftServer extends ReentrantThreadExecutor<Serve
         c2metest$handleGC();
         boolean hasTask = false;
         if (System.currentTimeMillis() - lastTick > 50) {
-            for (ServerWorld world : ((ITheSecondHalfOfTheServer) this.field_59588.method_68997()).getWorlds().values()) {
+            for (ServerWorld world : ((ITheSecondHalfOfTheServer) this.field_59588).getWorlds().values()) {
                 world.getChunkManager().tick(() -> true, false);
                 world.getBlockTickScheduler().tick(world.getTime(), 65536, (blockPos, block) -> {});
                 world.getFluidTickScheduler().tick(world.getTime(), 65536, (blockPos, fluid) -> {});
@@ -148,7 +148,7 @@ public abstract class MixinMinecraftServer extends ReentrantThreadExecutor<Serve
             hasTask = true;
         }
         while (super.runTask()) hasTask = true;
-        for (ServerWorld world : ((ITheSecondHalfOfTheServer) this.field_59588.method_68997()).getWorlds().values()) {
+        for (ServerWorld world : ((ITheSecondHalfOfTheServer) this.field_59588).getWorlds().values()) {
             while (world.getChunkManager().executeQueuedTasks()) hasTask = true;
         }
         return hasTask;

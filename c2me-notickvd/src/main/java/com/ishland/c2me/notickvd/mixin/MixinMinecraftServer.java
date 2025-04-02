@@ -16,8 +16,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(MinecraftServer.class)
 public abstract class MixinMinecraftServer {
 
-    @Shadow @Nullable protected class_10961 field_59588;
-
     @Inject(method = "method_70559", at = @At(value = "INVOKE_STRING", target = "Lorg/slf4j/Logger;info(Ljava/lang/String;)V", args = "ldc=Saving worlds"))
     private void stopNoTickVD(class_10961 arg, CallbackInfo ci) {
         for (ServerWorld world : arg.method_68997()) {
