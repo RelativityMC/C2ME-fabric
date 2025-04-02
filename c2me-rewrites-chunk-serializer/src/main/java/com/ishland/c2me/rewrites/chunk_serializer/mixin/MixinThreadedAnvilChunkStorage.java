@@ -110,7 +110,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
 
             saveFuture.handle((void_, exceptionx) -> {
                 if (exceptionx != null) {
-                    this.world.getServer().onChunkSaveFailure(exceptionx, this.getStorageKey(), chunkPos);
+                    this.world.method_69071().method_68961().onChunkSaveFailure(exceptionx, this.getStorageKey(), chunkPos);
                 }
 
                 this.chunksBeingSavedCount.decrementAndGet();

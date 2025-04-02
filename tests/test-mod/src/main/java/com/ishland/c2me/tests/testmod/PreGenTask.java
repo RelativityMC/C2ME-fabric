@@ -149,7 +149,7 @@ public class PreGenTask {
         long lastProgress = System.currentTimeMillis();
         int printCounter = 0;
         System.err.printf("Waiting for tasks to finish\n");
-        while (!locateFuture.isDone() && world.getServer().isRunning()) {
+        while (!locateFuture.isDone() && world.method_69071().method_68961().isRunning()) {
             while (System.currentTimeMillis() - lastProgress > 40) {
                 lastProgress += 40;
                 printCounter++;
@@ -160,10 +160,10 @@ public class PreGenTask {
                     printCounter = 0;
                 }
             }
-            if (!((IMinecraftServer) world.getServer()).c2metest$runAsyncTask())
+            if (!((IMinecraftServer) world.method_69071().method_68961()).c2metest$runAsyncTask())
                 LockSupport.parkNanos("waiting for tasks", 100000L);
         }
-        if (!world.getServer().isRunning()) return CompletableFuture.completedFuture(null);
+        if (!world.method_69071().method_68961().isRunning()) return CompletableFuture.completedFuture(null);
         chunksHashed.clear();
         final int total = chunks.size();
         LOGGER.info("Total chunks: {}", total);
@@ -178,7 +178,7 @@ public class PreGenTask {
                                     eventListener.accept(new ChunkGeneratedEventInfo(generatedCount.get(), total, world));
                                 }),
                                 runnable -> {
-                                    if (world.getServer().isOnThread()) runnable.run();
+                                    if (world.method_69071().method_68961().isOnThread()) runnable.run();
                                     else
                                         ((IThreadedAnvilChunkStorage) world.getChunkManager().chunkLoadingManager).getMainThreadExecutor().execute(runnable);
                                 }

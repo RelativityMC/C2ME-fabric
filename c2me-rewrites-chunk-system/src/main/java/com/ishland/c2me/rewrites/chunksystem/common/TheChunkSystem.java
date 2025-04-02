@@ -101,7 +101,7 @@ public class TheChunkSystem extends DaemonizedStatusAdvancingScheduler<ChunkPos,
         } else {
             LOGGER.error("Error downgrading chunk {} to \"{}\"", holder.getKey(), nextStatus, throwable);
         }
-        final MinecraftServer server = ((IThreadedAnvilChunkStorage) this.tacs).getWorld().getServer();
+        final MinecraftServer server = ((IThreadedAnvilChunkStorage) this.tacs).getWorld().method_69071().method_68961();
         server.execute(() -> server.onChunkLoadFailure(throwable, ((IVersionedChunkStorage) this.tacs).invokeGetStorageKey(), holder.getKey()));
         return ExceptionHandlingAction.MARK_BROKEN;
     }

@@ -2,8 +2,10 @@ package com.ishland.c2me.tests.testmod.mixin.pregen;
 
 import com.ishland.c2me.tests.testmod.IMinecraftServer;
 import com.ishland.c2me.tests.testmod.PreGenTask;
+import com.ishland.c2me.tests.testmod.mixin.ITheSecondHalfOfTheServer;
 import com.sun.management.GarbageCollectionNotificationInfo;
 import com.sun.management.GcInfo;
+import net.minecraft.class_10961;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.ServerTask;
@@ -14,6 +16,7 @@ import net.minecraft.util.SystemDetails;
 import net.minecraft.util.crash.CrashMemoryReserve;
 import net.minecraft.util.thread.ReentrantThreadExecutor;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -40,9 +43,6 @@ public abstract class MixinMinecraftServer extends ReentrantThreadExecutor<Serve
     @Final
     static Logger LOGGER;
     @Shadow
-    @Final
-    private Map<RegistryKey<World>, ServerWorld> worlds;
-    @Shadow
     private volatile boolean running;
 
     public MixinMinecraftServer(String string) {
@@ -56,6 +56,7 @@ public abstract class MixinMinecraftServer extends ReentrantThreadExecutor<Serve
     public abstract boolean isRunning();
 
     @Shadow private int ticks;
+    @Shadow @Nullable protected class_10961 field_59588;
     private final AtomicBoolean ranTest = new AtomicBoolean(false);
 
     @Inject(method = "tick", at = @At("RETURN"))
@@ -63,7 +64,7 @@ public abstract class MixinMinecraftServer extends ReentrantThreadExecutor<Serve
         if (ranTest.compareAndSet(false, true)) {
             System.err.printf("Starting pre-generation task for worlds: %s\n",
                     String.join(", ",
-                            this.worlds.entrySet().stream()
+                            ((ITheSecondHalfOfTheServer) this.field_59588.method_68997()).getWorlds().entrySet().stream()
                                     .map(worldEntry -> String.format("%s;%s",
                                             worldEntry.getValue().toString(),
                                             worldEntry.getKey().getValue().toString()))
@@ -72,7 +73,7 @@ public abstract class MixinMinecraftServer extends ReentrantThreadExecutor<Serve
             long startTime = System.nanoTime();
             PreGenTask.PreGenEventListener eventListener = new PreGenTask.PreGenEventListener();
             final CompletableFuture<Void> future = CompletableFuture.allOf(
-                    this.worlds.values().stream()
+                    ((ITheSecondHalfOfTheServer) this.field_59588.method_68997()).getWorlds().values().stream()
                             .map((ServerWorld world1) -> PreGenTask.runPreGen(world1, eventListener))
                             .distinct()
                             .toArray(CompletableFuture[]::new)
@@ -82,7 +83,7 @@ public abstract class MixinMinecraftServer extends ReentrantThreadExecutor<Serve
                 if (!c2metest$runAsyncTask()) LockSupport.parkNanos("waiting for tasks", 100000L);
             }
             if (!isRunning()) LOGGER.error("Exiting due to server stopping");
-            for (ServerWorld world : this.worlds.values()) {
+            for (ServerWorld world : ((ITheSecondHalfOfTheServer) this.field_59588.method_68997()).getWorlds().values()) {
                 world.getChunkManager().tick(() -> true, false);
             }
             long duration = System.nanoTime() - startTime;
@@ -124,9 +125,9 @@ public abstract class MixinMinecraftServer extends ReentrantThreadExecutor<Serve
         if (largeOverheadGC != handledGc || Runtime.getRuntime().maxMemory() - (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) < 256 * 1024 * 1024) {
             // Too spammy I think
             // LOGGER.warn("High GC overhead / low available heap, saving worlds...");
-            this.worlds.values().forEach(world -> world.getChunkManager().tick(() -> true, false));
-            this.worlds.values().forEach(world -> world.getChunkManager().save(false));
-            this.worlds.values().forEach(world -> world.getChunkManager().chunkLoadingManager.completeAll());
+            ((ITheSecondHalfOfTheServer) this.field_59588.method_68997()).getWorlds().values().forEach(world -> world.getChunkManager().tick(() -> true, false));
+            ((ITheSecondHalfOfTheServer) this.field_59588.method_68997()).getWorlds().values().forEach(world -> world.getChunkManager().save(false));
+            ((ITheSecondHalfOfTheServer) this.field_59588.method_68997()).getWorlds().values().forEach(world -> world.getChunkManager().chunkLoadingManager.completeAll());
             handledGc = largeOverheadGC;
         }
     }
@@ -138,7 +139,7 @@ public abstract class MixinMinecraftServer extends ReentrantThreadExecutor<Serve
         c2metest$handleGC();
         boolean hasTask = false;
         if (System.currentTimeMillis() - lastTick > 50) {
-            for (ServerWorld world : this.worlds.values()) {
+            for (ServerWorld world : ((ITheSecondHalfOfTheServer) this.field_59588.method_68997()).getWorlds().values()) {
                 world.getChunkManager().tick(() -> true, false);
                 world.getBlockTickScheduler().tick(world.getTime(), 65536, (blockPos, block) -> {});
                 world.getFluidTickScheduler().tick(world.getTime(), 65536, (blockPos, fluid) -> {});
@@ -147,15 +148,10 @@ public abstract class MixinMinecraftServer extends ReentrantThreadExecutor<Serve
             hasTask = true;
         }
         while (super.runTask()) hasTask = true;
-        for (ServerWorld world : this.worlds.values()) {
+        for (ServerWorld world : ((ITheSecondHalfOfTheServer) this.field_59588.method_68997()).getWorlds().values()) {
             while (world.getChunkManager().executeQueuedTasks()) hasTask = true;
         }
         return hasTask;
-    }
-
-    @Redirect(method = "loadWorld", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;prepareStartRegion(Lnet/minecraft/server/WorldGenerationProgressListener;)V"))
-    private void redirectPrepareStartRegion(MinecraftServer server, WorldGenerationProgressListener worldGenerationProgressListener) {
-        LOGGER.info("Not preparing start region");
     }
 
     @Redirect(method = "runServer", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;addSystemDetails(Lnet/minecraft/util/SystemDetails;)Lnet/minecraft/util/SystemDetails;"))

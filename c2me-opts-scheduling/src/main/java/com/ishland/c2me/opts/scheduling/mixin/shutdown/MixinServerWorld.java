@@ -1,6 +1,7 @@
 package com.ishland.c2me.opts.scheduling.mixin.shutdown;
 
 import com.ishland.c2me.opts.scheduling.common.ITryFlushable;
+import net.minecraft.class_10961;
 import net.minecraft.entity.Entity;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.world.ServerChunkManager;
@@ -19,16 +20,16 @@ import java.util.concurrent.locks.LockSupport;
 @Mixin(ServerWorld.class)
 public class MixinServerWorld {
 
-    @Shadow @Final private MinecraftServer server;
-
     @Shadow @Final private ServerChunkManager chunkManager;
 
     @Shadow @Final private ServerEntityManager<Entity> entityManager;
 
+    @Shadow @Final private class_10961 field_58288;
+
     @Inject(method = "save", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerEntityManager;flush()V", shift = At.Shift.BEFORE))
     private void replaceEntityFlushLogic(ProgressListener progressListener, boolean flush, boolean savingDisabled, CallbackInfo ci) {
         while (!((ITryFlushable) this.entityManager).c2me$tryFlush()) {
-            this.server.runTask();
+            this.field_58288.method_68961().runTask();
             while (this.chunkManager.executeQueuedTasks());
             LockSupport.parkNanos("waiting for completion", 1_000_000);
         }

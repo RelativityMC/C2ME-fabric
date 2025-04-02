@@ -68,7 +68,7 @@ public class ReadFromDisk extends NewChunkStatus {
     protected @NotNull CompletionStage<Void> finalizeLoading(ChunkLoadingContext context, Single<ProtoChunk> single) {
         return single
                 .doOnError(throwable -> {
-                    MinecraftServer server = ((IThreadedAnvilChunkStorage) context.tacs()).getWorld().getServer();
+                    MinecraftServer server = ((IThreadedAnvilChunkStorage) context.tacs()).getWorld().method_69071().method_68961();
                     server.execute(() -> server.onChunkLoadFailure(throwable, ((IVersionedChunkStorage) context.tacs()).invokeGetStorageKey(), context.holder().getKey()));
                 })
                 .onErrorResumeNext(throwable -> {

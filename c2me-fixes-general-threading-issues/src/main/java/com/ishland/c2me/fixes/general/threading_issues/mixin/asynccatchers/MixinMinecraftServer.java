@@ -15,14 +15,14 @@ public class MixinMinecraftServer {
 
     @Shadow @Final private Thread serverThread;
 
-    @Inject(method = "save", at = @At("HEAD"))
-    private void preventAsyncSave(CallbackInfoReturnable<Boolean> cir) {
-        if (Thread.currentThread() != this.serverThread) {
-            final ConcurrentModificationException exception = new ConcurrentModificationException("Attempted to call MinecraftServer#save async");
-            exception.printStackTrace();
-            throw exception;
-        }
-    }
+//    @Inject(method = "save", at = @At("HEAD"))
+//    private void preventAsyncSave(CallbackInfoReturnable<Boolean> cir) {
+//        if (Thread.currentThread() != this.serverThread) {
+//            final ConcurrentModificationException exception = new ConcurrentModificationException("Attempted to call MinecraftServer#save async");
+//            exception.printStackTrace();
+//            throw exception;
+//        }
+//    }
 
     @Inject(method = "saveAll", at = @At("HEAD"))
     private void preventAsyncSaveAll(CallbackInfoReturnable<Boolean> cir) {

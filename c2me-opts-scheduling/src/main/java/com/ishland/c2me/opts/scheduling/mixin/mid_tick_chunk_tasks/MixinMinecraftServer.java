@@ -14,8 +14,6 @@ import org.spongepowered.asm.mixin.Unique;
 @Mixin(MinecraftServer.class)
 public abstract class MixinMinecraftServer implements ServerMidTickTask {
 
-    @Shadow public abstract Iterable<ServerWorld> getWorlds();
-
     @Shadow @Final private Thread serverThread;
     @Unique
     private long midTickChunkTasksLastRun = System.nanoTime();

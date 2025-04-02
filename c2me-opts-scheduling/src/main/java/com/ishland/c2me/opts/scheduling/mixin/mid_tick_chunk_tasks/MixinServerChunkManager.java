@@ -18,7 +18,7 @@ public class MixinServerChunkManager {
 
     @Inject(method = "method_67501", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerWorld;tickChunk(Lnet/minecraft/world/chunk/WorldChunk;I)V"))
     private void onPostTickChunk(CallbackInfo ci) {
-        ((ServerMidTickTask) this.world.getServer()).executeTasksMidTick(this.world);
+        ((ServerMidTickTask) this.world.method_69071().method_68961()).executeTasksMidTick(this.world);
     }
 
 }

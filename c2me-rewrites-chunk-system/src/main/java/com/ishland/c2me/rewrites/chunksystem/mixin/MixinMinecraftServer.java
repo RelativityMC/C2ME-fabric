@@ -5,6 +5,7 @@ import com.ishland.c2me.base.common.threadstate.ThreadState;
 import com.ishland.c2me.rewrites.chunksystem.common.ducks.IChunkSystemAccess;
 import com.llamalad7.mixinextras.sugar.Share;
 import com.llamalad7.mixinextras.sugar.ref.LocalLongRef;
+import net.minecraft.class_10961;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.world.ServerWorld;
 import org.slf4j.Logger;
@@ -20,12 +21,10 @@ import java.util.Map;
 @Mixin(MinecraftServer.class)
 public abstract class MixinMinecraftServer {
 
-    @Shadow public abstract Iterable<ServerWorld> getWorlds();
-
     @Shadow @Final private static Logger LOGGER;
 
-    @Inject(method = "shutdown", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;runTasksTillTickEnd()V"))
-    private void onTaskWait(CallbackInfo ci, @Share("c2me:shutdownLastPrint") LocalLongRef lastPrint, @Share("c2me:shutdownFirstPrint") LocalLongRef firstPrint) {
+    @Inject(method = "method_70559", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;runTasksTillTickEnd()V"))
+    private void onTaskWait(class_10961 arg, CallbackInfo ci, @Share("c2me:shutdownLastPrint") LocalLongRef lastPrint, @Share("c2me:shutdownFirstPrint") LocalLongRef firstPrint) {
         long now = System.nanoTime();
         if (firstPrint.get() == 0) {
             firstPrint.set(now);
@@ -47,7 +46,7 @@ public abstract class MixinMinecraftServer {
                 }
             }
 
-            for (ServerWorld world : this.getWorlds()) {
+            for (ServerWorld world : arg.method_68997()) {
                 final int itemCount = ((IChunkSystemAccess) world.getChunkManager().chunkLoadingManager).c2me$getTheChunkSystem().itemCount();
                 if (itemCount > 0) {
                     LOGGER.info("{}/{}: waiting for {} chunks to unload", world, world.getRegistryKey().getValue(), itemCount);

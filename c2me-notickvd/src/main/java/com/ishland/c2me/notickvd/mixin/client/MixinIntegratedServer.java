@@ -19,13 +19,13 @@ import java.net.Proxy;
 @Mixin(IntegratedServer.class)
 public abstract class MixinIntegratedServer extends MinecraftServer {
 
-    public MixinIntegratedServer(Thread serverThread, LevelStorage.Session session, ResourcePackManager dataPackManager, SaveLoader saveLoader, Proxy proxy, DataFixer dataFixer, ApiServices apiServices, WorldGenerationProgressListenerFactory worldGenerationProgressListenerFactory) {
-        super(serverThread, session, dataPackManager, saveLoader, proxy, dataFixer, apiServices, worldGenerationProgressListenerFactory);
+    public MixinIntegratedServer(Thread serverThread, LevelStorage.Session session, Proxy proxy, DataFixer dataFixer, ApiServices apiServices) {
+        super(serverThread, session, proxy, dataFixer, apiServices);
     }
 
-    @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/integrated/IntegratedServer;incrementTotalWorldTimeStat()V", shift = At.Shift.AFTER))
+    @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/class_10961;method_68954()V", shift = At.Shift.AFTER))
     private void afterPauseLoop(CallbackInfo ci) {
-        for(ServerPlayerEntity serverPlayerEntity : this.getPlayerManager().getPlayerList()) {
+        for(ServerPlayerEntity serverPlayerEntity : this.field_59588.method_68990().getPlayerList()) {
             serverPlayerEntity.networkHandler.disableFlush();
             serverPlayerEntity.networkHandler.chunkDataSender.sendChunkBatches(serverPlayerEntity);
             serverPlayerEntity.networkHandler.enableFlush();

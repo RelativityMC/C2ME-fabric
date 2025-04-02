@@ -43,6 +43,7 @@
     "access.IStructureStart",
     "access.IStructureWeightSampler",
     "access.ISyncedClientOptions",
+    "access.ITheSecondHalfOfTheServer",
     "access.IThreadedAnvilChunkStorage",
     "access.IThreadedAnvilChunkStorageLevelManager",
     "access.IUpgradeData",
