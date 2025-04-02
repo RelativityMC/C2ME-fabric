@@ -58,6 +58,11 @@ public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState,
             public int toVanillaLevel() {
                 return ChunkLevels.INACCESSIBLE + 1;
             }
+
+            @Override
+            public String toString() {
+                return "unloaded";
+            }
         };
         statuses.add(NEW);
         DEFERRED = new Deferred(statuses.size());

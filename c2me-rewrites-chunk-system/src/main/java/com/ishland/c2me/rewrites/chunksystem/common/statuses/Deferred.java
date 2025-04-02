@@ -23,4 +23,10 @@ public class Deferred extends NewChunkStatus {
     public CompletionStage<Void> downgradeFromThis(ChunkLoadingContext context, Cancellable cancellable) {
         return CompletableFuture.completedFuture(null);
     }
+
+    @Override
+    public String toString() {
+        return "deferred";
+    }
+
 }
