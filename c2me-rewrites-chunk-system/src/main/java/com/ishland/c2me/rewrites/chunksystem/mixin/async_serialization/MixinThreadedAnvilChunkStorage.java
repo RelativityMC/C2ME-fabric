@@ -36,7 +36,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
         return this.getNbt(chunkPos).thenCompose(nbt -> {
             if (nbt.isPresent()) {
                 final NbtCompound compound = nbt.get();
-                if (VersionedChunkStorage.getDataVersion(compound) != SharedConstants.getGameVersion().getSaveVersion().getId()) {
+                if (VersionedChunkStorage.getDataVersion(compound) != SharedConstants.getGameVersion().dataVersion().id()) {
                     return CompletableFuture.supplyAsync(() -> Optional.of(updateChunkNbt(compound)), Util.getMainWorkerExecutor());
                 } else {
                     return CompletableFuture.completedFuture(nbt);
