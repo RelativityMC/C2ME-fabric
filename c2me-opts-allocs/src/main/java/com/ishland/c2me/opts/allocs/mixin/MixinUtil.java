@@ -7,6 +7,7 @@ import org.spongepowered.asm.mixin.Overwrite;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 @Mixin(Util.class)
@@ -28,10 +29,14 @@ public abstract class MixinUtil {
     @Overwrite
     public static <V> CompletableFuture<List<V>> combine(List<CompletableFuture<V>> futures) {
         final CompletableFuture<List<V>> future = Combinators.collect(futures, Collectors.toList()).toCompletableFuture();
-        CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).exceptionally(e -> {
-            future.completeExceptionally(e);
-            return null;
-        });
+        BiConsumer<V, Throwable> action = (v, throwable) -> {
+            if (throwable != null) {
+                future.completeExceptionally(throwable);
+            }
+        };
+        for (CompletableFuture<V> completableFuture : futures) {
+            completableFuture.whenComplete(action);
+        }
         return future;
     }
 
@@ -42,11 +47,15 @@ public abstract class MixinUtil {
     @Overwrite
     public static <V> CompletableFuture<List<V>> combineCancellable(List<CompletableFuture<V>> futures) {
         final CompletableFuture<List<V>> future = Combinators.collect(futures, Collectors.toList()).toCompletableFuture();
-        CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).exceptionally(e -> {
-            future.completeExceptionally(e);
-            futures.forEach(f -> f.cancel(false));
-            return null;
-        });
+        BiConsumer<V, Throwable> action = (v, throwable) -> {
+            if (throwable != null) {
+                future.completeExceptionally(throwable);
+                futures.forEach(f -> f.cancel(false));
+            }
+        };
+        for (CompletableFuture<V> completableFuture : futures) {
+            completableFuture.whenComplete(action);
+        }
         return future;
     }
 
