@@ -69,6 +69,27 @@ public class Config {
                     """)
             .getBoolean(true, false);
 
+    public static final boolean filterFluidPostProcessing = new ConfigSystem.ConfigAccessor()
+            .key("chunkSystem.filterFluidPostProcessing")
+            .comment("""
+                    Whether to filter fluid post-processing on worldgen threads
+                    
+                    The worldgen processes creates a lot of unnecessary fluid post-processing tasks,
+                    which can overload the server thread and cause stutters.
+                    This applies a rough filter to filter out fluids that are definitely not going to flow
+                    """)
+            .getBoolean(true, false);
+
+    public static final boolean lowMemoryMode = new ConfigSystem.ConfigAccessor()
+            .key("chunkSystem.lowMemoryMode")
+            .comment("""
+                    Whether to enable low memory mode
+                    
+                    This will attempt to aggressively unload unneeded chunks, saving memory at the cost of additional
+                    overhead when generating new chunks.
+                    """)
+            .getBoolean(false, false);
+
     public static void init() {
         // intentionally empty
     }

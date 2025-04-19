@@ -22,6 +22,7 @@
     "access.IChunkTickScheduler",
     "access.IDensityFunctionsCaveScaler",
     "access.IDensityFunctionTypesWeirdScaledSamplerRarityValueMapper",
+    "access.IFlowableFluid",
     "access.IInterpolatedNoiseSampler",
     "access.IMultiNoiseBiomeSource",
     "access.INbtCompound",

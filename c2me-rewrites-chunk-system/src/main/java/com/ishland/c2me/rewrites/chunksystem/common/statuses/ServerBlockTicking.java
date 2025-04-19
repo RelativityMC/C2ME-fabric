@@ -1,24 +1,37 @@
 package com.ishland.c2me.rewrites.chunksystem.common.statuses;
 
+import com.google.common.base.Suppliers;
 import com.ishland.c2me.base.common.threadstate.ThreadInstrumentation;
 import com.ishland.c2me.base.common.config.LateModStatuses;
 import com.ishland.c2me.base.mixin.access.IThreadedAnvilChunkStorage;
 import com.ishland.c2me.rewrites.chunksystem.common.ChunkLoadingContext;
 import com.ishland.c2me.rewrites.chunksystem.common.ChunkState;
+import com.ishland.c2me.rewrites.chunksystem.common.Config;
 import com.ishland.c2me.rewrites.chunksystem.common.NewChunkStatus;
+import com.ishland.c2me.rewrites.chunksystem.common.quirks.FlowableFluidUtils;
 import com.ishland.c2me.rewrites.chunksystem.common.threadstate.ChunkTaskWork;
 import com.ishland.c2me.rewrites.chunksystem.common.fapi.LifecycleEventInvoker;
 import com.ishland.flowsched.scheduler.Cancellable;
 import com.ishland.flowsched.scheduler.ItemHolder;
 import com.ishland.flowsched.scheduler.KeyStatusPair;
+import it.unimi.dsi.fastutil.shorts.ShortList;
+import it.unimi.dsi.fastutil.shorts.ShortListIterator;
+import net.minecraft.block.BlockState;
+import net.minecraft.fluid.FlowableFluid;
+import net.minecraft.fluid.FluidState;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.server.world.ChunkLevelType;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.world.ChunkRegion;
+import net.minecraft.world.chunk.ChunkGenerationSteps;
 import net.minecraft.world.chunk.ChunkStatus;
+import net.minecraft.world.chunk.ProtoChunk;
 import net.minecraft.world.chunk.WorldChunk;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.function.Supplier;
 
 public class ServerBlockTicking extends NewChunkStatus {
 
@@ -43,6 +56,13 @@ public class ServerBlockTicking extends NewChunkStatus {
 
     @Override
     public CompletionStage<Void> upgradeToThis(ChunkLoadingContext context, Cancellable cancellable) {
+        if (Config.filterFluidPostProcessing) {
+            try {
+                filterFluidTicks(context);
+            } catch (Throwable t) {
+                t.printStackTrace();
+            }
+        }
         return CompletableFuture.runAsync(() -> {
             try (var ignored = ThreadInstrumentation.getCurrent().begin(new ChunkTaskWork(context, this, true))) {
                 final WorldChunk chunk = (WorldChunk) context.holder().getItem().get().chunk();
@@ -56,6 +76,38 @@ public class ServerBlockTicking extends NewChunkStatus {
                 }
             }
         }, ((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor());
+    }
+
+    private static void filterFluidTicks(ChunkLoadingContext context) {
+        final WorldChunk chunk = (WorldChunk) context.holder().getItem().get().chunk();
+
+        Supplier<ChunkRegion> chunkRegionSupplier = Suppliers.memoize(() -> new ChunkRegion(((IThreadedAnvilChunkStorage) context.tacs()).getWorld(), context.chunks(), ChunkGenerationSteps.GENERATION.get(ChunkStatus.LIGHT), chunk));
+
+        int total = 0;
+        int eliminated = 0;
+        ShortList[] postProcessingLists = chunk.getPostProcessingLists();
+        for (int i = 0; i < postProcessingLists.length; i++) {
+            if (postProcessingLists[i] != null) {
+                for (ShortListIterator iterator = postProcessingLists[i].iterator(); iterator.hasNext(); ) {
+                    Short short_ = iterator.next();
+                    BlockPos blockPos = ProtoChunk.joinBlockPos(short_, chunk.sectionIndexToCoord(i), chunk.getPos());
+                    BlockState blockState = chunk.getBlockState(blockPos);
+                    FluidState fluidState = blockState.getFluidState();
+                    if (!fluidState.isEmpty() && fluidState.getFluid() instanceof FlowableFluid) {
+                        total ++;
+                        if (!FlowableFluidUtils.needsPostProcessing(chunkRegionSupplier.get(), blockPos, blockState, fluidState)) {
+                            iterator.remove();
+//                            iterator.set((short) (short_ | (0x4000))); // set a flag
+                            eliminated ++;
+                        }
+                    }
+                }
+            }
+        }
+
+//        if (total > 0) {
+//            System.out.println(String.format("Eliminated %d/%d (%.2f%%) post processing fluids in chunk %s", eliminated, total, eliminated / (double) total * 100.0, context.holder().getKey()));
+//        }
     }
 
     private static void sendChunkToPlayer(ChunkLoadingContext context) {
