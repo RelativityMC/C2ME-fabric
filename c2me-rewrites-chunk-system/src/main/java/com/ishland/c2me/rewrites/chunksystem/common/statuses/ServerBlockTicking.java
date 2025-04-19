@@ -91,8 +91,7 @@ public class ServerBlockTicking extends NewChunkStatus {
                     if (!fluidState.isEmpty() && fluidState.getFluid() instanceof FlowableFluid) {
                         total ++;
                         if (!FlowableFluidUtils.needsPostProcessing(chunkRegionSupplier.get(), blockPos, blockState, fluidState)) {
-//                            iterator.remove();
-                            iterator.set((short) (short_ | (0x4000))); // set a flag
+                            iterator.remove();
                             eliminated ++;
                         }
                     }
