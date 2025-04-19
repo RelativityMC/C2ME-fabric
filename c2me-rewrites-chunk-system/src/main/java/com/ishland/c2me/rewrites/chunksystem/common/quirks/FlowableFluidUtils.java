@@ -43,7 +43,8 @@ public class FlowableFluidUtils {
                 return true;
             }
         }
-        if (canSpreadToSidesNormally(world, pos, blockState, fluidState) || !(((IFlowableFluid) fluidState.getFluid()).invokeCanFlowDownTo(world, pos, blockState, belowPos, belowBlockState))) {
+        if ((fluidState.isStill() || !(((IFlowableFluid) fluidState.getFluid()).invokeCanFlowDownTo(world, pos, blockState, belowPos, belowBlockState))) &&
+                canSpreadToSidesNormally(world, pos, blockState, fluidState)) {
             return true;
         }
 
