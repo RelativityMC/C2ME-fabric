@@ -28,6 +28,7 @@
     "access.INbtList",
     "access.IOctavePerlinNoiseSampler",
     "access.IPerlinNoiseSampler",
+    "access.IPlayerEntity",
     "access.IRegionBasedStorage",
     "access.IRegionFile",
     "access.ISerializingRegionBasedStorage",
@@ -60,5 +61,8 @@
     "theinterface.MixinStorageIoWorker",
     "util.log4j2shutdownhookisnomore.MixinMain",
     "util.log4j2shutdownhookisnomore.MixinMinecraftDedicatedServer"
+  ],
+  "client": [
+    "client_movement.MixinClientPlayerEntity"
   ]
 }
