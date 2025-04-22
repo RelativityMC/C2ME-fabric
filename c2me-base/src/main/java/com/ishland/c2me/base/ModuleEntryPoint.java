@@ -58,6 +58,16 @@ public class ModuleEntryPoint {
             .incompatibleMod("textile_backup", "*")
             .getBoolean(true, false);
 
+    public static final boolean preventEarlyClientMovementTicks = new ConfigSystem.ConfigAccessor()
+            .key("fixes.preventEarlyClientMovementTicks")
+            .comment("""
+                    Whether to prevent early client ticks.
+                    
+                    This avoids the player from falling through the world.
+                    Mitigates https://github.com/CaffeineMC/sodium/issues/3065
+                    """)
+            .getBoolean(true, false);
+
     public static final int defaultParallelism;
 
     private static int tryEvaluateExpression(String expression) {

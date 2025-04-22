@@ -16,6 +16,9 @@ public final class TheMixinPlugin extends ModuleMixinPlugin {
         if (mixinClassName.startsWith("com.ishland.c2me.base.mixin.util.log4j2shutdownhookisnomore."))
             return ModuleEntryPoint.disableLoggingShutdownHook;
 
+        if (mixinClassName.startsWith("com.ishland.c2me.base.mixin.client_movement."))
+            return ModuleEntryPoint.preventEarlyClientMovementTicks;
+
         return true;
     }
 }
