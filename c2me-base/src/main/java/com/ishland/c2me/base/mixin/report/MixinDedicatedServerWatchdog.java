@@ -37,7 +37,7 @@ public class MixinDedicatedServerWatchdog {
 
     @Inject(method = "run", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/crash/CrashReport;addElement(Ljava/lang/String;)Lnet/minecraft/util/crash/CrashReportSection;", ordinal = 0))
     private void addInstrumentationData(CallbackInfo ci, @Local CrashReport crashReport) {
-        CrashReportSection section = crashReport.addElement("Thread trace dump (obtained on a best-effort basis)");
+        CrashReportSection section = crashReport.addElement("Thread trace dump (obtained on a best-effort basis)", 1);
         try {
             for (Map.Entry<Thread, ThreadState> entry : ThreadInstrumentation.entrySet()) {
                 try {
