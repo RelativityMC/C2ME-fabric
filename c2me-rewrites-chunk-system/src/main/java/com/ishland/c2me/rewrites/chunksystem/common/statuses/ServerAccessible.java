@@ -13,21 +13,26 @@ import com.ishland.c2me.rewrites.chunksystem.common.ducks.WorldChunkExtension;
 import com.ishland.c2me.rewrites.chunksystem.common.fapi.LifecycleEventInvoker;
 import com.ishland.c2me.rewrites.chunksystem.common.threadstate.ChunkTaskWork;
 import com.ishland.flowsched.scheduler.Cancellable;
+import net.minecraft.class_11352;
+import net.minecraft.class_11368;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SpawnReason;
-import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.ErrorReporter;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.ProtoChunk;
 import net.minecraft.world.chunk.WorldChunk;
 import net.minecraft.world.chunk.WrapperProtoChunk;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
 public class ServerAccessible extends NewChunkStatus {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ServerAccessible.class);
 
     public ServerAccessible(int ordinal) {
         super(ordinal, ChunkStatus.FULL);
@@ -70,9 +75,11 @@ public class ServerAccessible extends NewChunkStatus {
             worldChunk = ((WrapperProtoChunk) protoChunk).getWrappedChunk();
         } else {
             worldChunk = new WorldChunk(serverWorld, protoChunk, worldChunkx -> {
-                final List<NbtCompound> entities = protoChunk.getEntities();
-                if (!entities.isEmpty()) {
-                    serverWorld.addEntities(EntityType.streamFromNbt(entities, serverWorld, SpawnReason.LOAD));
+                try (ErrorReporter.class_11340 lv = new ErrorReporter.class_11340(protoChunk.method_71412(), LOGGER)) {
+                    class_11368.class_11370 arg = class_11352.method_71416(lv, serverWorld.getRegistryManager(), protoChunk.getEntities());
+                    if (!arg.method_71444()) {
+                        serverWorld.addEntities(EntityType.streamFromNbt(arg, serverWorld, SpawnReason.LOAD));
+                    }
                 }
             });
         }
