@@ -1,12 +1,16 @@
 package com.ishland.c2me.rewrites.chunksystem.common.statuses;
 
+import com.ishland.c2me.base.common.config.LateModStatuses;
 import com.ishland.c2me.base.mixin.access.IThreadedAnvilChunkStorage;
 import com.ishland.c2me.rewrites.chunksystem.common.ChunkLoadingContext;
 import com.ishland.c2me.rewrites.chunksystem.common.ChunkState;
 import com.ishland.c2me.rewrites.chunksystem.common.NewChunkStatus;
+import com.ishland.c2me.rewrites.chunksystem.common.fapi.LifecycleEventInvoker;
 import com.ishland.flowsched.scheduler.Cancellable;
 import com.ishland.flowsched.scheduler.ItemHolder;
 import com.ishland.flowsched.scheduler.KeyStatusPair;
+import net.minecraft.server.world.ChunkLevelType;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.WorldChunk;
@@ -40,9 +44,13 @@ public class ServerBlockTicking extends NewChunkStatus {
         return CompletableFuture.runAsync(() -> {
             final WorldChunk chunk = (WorldChunk) context.holder().getItem().get().chunk();
             chunk.runPostProcessing();
-            ((IThreadedAnvilChunkStorage) context.tacs()).getWorld().disableTickSchedulers(chunk);
+            ServerWorld serverWorld = ((IThreadedAnvilChunkStorage) context.tacs()).getWorld();
+            serverWorld.disableTickSchedulers(chunk);
             sendChunkToPlayer(context);
             ((IThreadedAnvilChunkStorage) context.tacs()).getTotalChunksLoadedCount().incrementAndGet(); // never decremented in vanilla
+            if (LateModStatuses.fabric_lifecycle_events_v1_CHUNK_LEVEL_TYPE_CHANGE) {
+                LifecycleEventInvoker.invokeChunkLevelTypeChange(serverWorld, chunk, ChunkLevelType.FULL, ChunkLevelType.BLOCK_TICKING);
+            }
         }, ((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor());
     }
 
@@ -58,6 +66,13 @@ public class ServerBlockTicking extends NewChunkStatus {
 
     @Override
     public CompletionStage<Void> downgradeFromThis(ChunkLoadingContext context, Cancellable cancellable) {
+        ServerWorld serverWorld = ((IThreadedAnvilChunkStorage) context.tacs()).getWorld();
+        final WorldChunk chunk = (WorldChunk) context.holder().getItem().get().chunk();
+        if (LateModStatuses.fabric_lifecycle_events_v1_CHUNK_LEVEL_TYPE_CHANGE && LifecycleEventInvoker.needsInvokeChunkLevelTypeChange()) {
+            return CompletableFuture.runAsync(() -> {
+                LifecycleEventInvoker.invokeChunkLevelTypeChange(serverWorld, chunk, ChunkLevelType.BLOCK_TICKING, ChunkLevelType.FULL);
+            }, ((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor());
+        }
         return CompletableFuture.completedStage(null);
     }
 

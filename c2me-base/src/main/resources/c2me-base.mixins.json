@@ -53,6 +53,7 @@
     "access.IXoroshiro128PlusPlusRandomDeriver",
     "access.IXoroshiro128PlusPlusRandomImpl",
     "priority.MixinServerChunkManager",
+    "access.fapi.IArrayBackedEvent",
     "scheduler.MixinThreadedAnvilChunkStorage",
     "theinterface.MixinStorageIoWorker",
     "util.log4j2shutdownhookisnomore.MixinMain",
