@@ -55,6 +55,7 @@
     "access.IXoroshiro128PlusPlusRandom",
     "access.IXoroshiro128PlusPlusRandomDeriver",
     "access.IXoroshiro128PlusPlusRandomImpl",
+    "access.fapi.IArrayBackedEvent",
     "instrumentation.MixinServerChunkManager",
     "report.MixinDedicatedServerWatchdog",
     "scheduler.MixinThreadedAnvilChunkStorage",

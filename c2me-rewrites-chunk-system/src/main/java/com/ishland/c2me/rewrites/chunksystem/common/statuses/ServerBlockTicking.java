@@ -1,6 +1,7 @@
 package com.ishland.c2me.rewrites.chunksystem.common.statuses;
 
 import com.google.common.base.Suppliers;
+import com.ishland.c2me.base.common.config.LateModStatuses;
 import com.ishland.c2me.base.common.threadstate.ThreadInstrumentation;
 import com.ishland.c2me.base.mixin.access.IThreadedAnvilChunkStorage;
 import com.ishland.c2me.rewrites.chunksystem.common.ChunkLoadingContext;
@@ -9,6 +10,7 @@ import com.ishland.c2me.rewrites.chunksystem.common.Config;
 import com.ishland.c2me.rewrites.chunksystem.common.NewChunkHolderVanillaInterface;
 import com.ishland.c2me.rewrites.chunksystem.common.NewChunkStatus;
 import com.ishland.c2me.rewrites.chunksystem.common.ducks.WorldChunkExtension;
+import com.ishland.c2me.rewrites.chunksystem.common.fapi.LifecycleEventInvoker;
 import com.ishland.c2me.rewrites.chunksystem.common.quirks.FlowableFluidUtils;
 import com.ishland.c2me.rewrites.chunksystem.common.threadstate.ChunkTaskWork;
 import com.ishland.flowsched.scheduler.Cancellable;
@@ -19,6 +21,8 @@ import it.unimi.dsi.fastutil.shorts.ShortListIterator;
 import net.minecraft.block.BlockState;
 import net.minecraft.fluid.FlowableFluid;
 import net.minecraft.fluid.FluidState;
+import net.minecraft.server.world.ChunkLevelType;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.ChunkRegion;
@@ -64,11 +68,15 @@ public class ServerBlockTicking extends NewChunkStatus {
         return CompletableFuture.runAsync(() -> {
             try (var ignored = ThreadInstrumentation.getCurrent().begin(new ChunkTaskWork(context, this, true))) {
                 final WorldChunk chunk = (WorldChunk) context.holder().getItem().get().chunk();
-                chunk.runPostProcessing(((IThreadedAnvilChunkStorage) context.tacs()).getWorld());
-                ((IThreadedAnvilChunkStorage) context.tacs()).getWorld().disableTickSchedulers(chunk);
+                ServerWorld serverWorld = ((IThreadedAnvilChunkStorage) context.tacs()).getWorld();
+                chunk.runPostProcessing(serverWorld);
+                serverWorld.disableTickSchedulers(chunk);
                 sendChunkToPlayer(context);
                 ((IThreadedAnvilChunkStorage) context.tacs()).getTotalChunksLoadedCount().incrementAndGet(); // never decremented in vanilla
                 ((WorldChunkExtension) chunk).c2me$setBlockTicking(true);
+                if (LateModStatuses.fabric_lifecycle_events_v1_CHUNK_LEVEL_TYPE_CHANGE) {
+                    LifecycleEventInvoker.invokeChunkLevelTypeChange(serverWorld, chunk, ChunkLevelType.FULL, ChunkLevelType.BLOCK_TICKING);
+                }
             }
         }, ((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor());
     }
@@ -117,8 +125,14 @@ public class ServerBlockTicking extends NewChunkStatus {
 
     @Override
     public CompletionStage<Void> downgradeFromThis(ChunkLoadingContext context, Cancellable cancellable) {
+        ServerWorld serverWorld = ((IThreadedAnvilChunkStorage) context.tacs()).getWorld();
         final WorldChunk chunk = (WorldChunk) context.holder().getItem().get().chunk();
         ((WorldChunkExtension) chunk).c2me$setBlockTicking(false);
+        if (LateModStatuses.fabric_lifecycle_events_v1_CHUNK_LEVEL_TYPE_CHANGE && LifecycleEventInvoker.needsInvokeChunkLevelTypeChange()) {
+            return CompletableFuture.runAsync(() -> {
+                LifecycleEventInvoker.invokeChunkLevelTypeChange(serverWorld, chunk, ChunkLevelType.BLOCK_TICKING, ChunkLevelType.FULL);
+            }, ((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor());
+        }
         return CompletableFuture.completedStage(null);
         // TODO check if syncing is needed
     }

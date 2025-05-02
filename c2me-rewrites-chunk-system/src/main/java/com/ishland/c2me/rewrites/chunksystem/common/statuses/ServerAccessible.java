@@ -1,6 +1,7 @@
 package com.ishland.c2me.rewrites.chunksystem.common.statuses;
 
 import com.google.common.base.Preconditions;
+import com.ishland.c2me.base.common.config.LateModStatuses;
 import com.ishland.c2me.base.common.config.ModStatuses;
 import com.ishland.c2me.base.common.threadstate.ThreadInstrumentation;
 import com.ishland.c2me.base.mixin.access.IThreadedAnvilChunkStorage;
@@ -16,6 +17,7 @@ import com.ishland.flowsched.scheduler.Cancellable;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.server.world.ChunkLevelType;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
@@ -58,6 +60,10 @@ public class ServerAccessible extends NewChunkStatus {
                     }
                 }
 
+                if (LateModStatuses.fabric_lifecycle_events_v1_CHUNK_LEVEL_TYPE_CHANGE) {
+                    LifecycleEventInvoker.invokeChunkLevelTypeChange(serverWorld, worldChunk, ChunkLevelType.INACCESSIBLE, ChunkLevelType.FULL);
+                }
+
                 ((IThreadedAnvilChunkStorage) context.tacs()).getCurrentChunkHolders().put(context.holder().getKey().toLong(), context.holder().getUserData().get());
                 ((IThreadedAnvilChunkStorage) context.tacs()).setChunkHolderListDirty(true);
             }
@@ -88,12 +94,18 @@ public class ServerAccessible extends NewChunkStatus {
             ((IThreadedAnvilChunkStorage) context.tacs()).getCurrentChunkHolders().remove(context.holder().getKey().toLong());
             ((IThreadedAnvilChunkStorage) context.tacs()).setChunkHolderListDirty(true);
             final WorldChunk worldChunk = (WorldChunk) chunk;
+            ServerWorld serverWorld = ((IThreadedAnvilChunkStorage) context.tacs()).getWorld();
 //            worldChunk.setLoadedToWorld(false);
 //            worldChunk.removeChunkTickSchedulers(((IThreadedAnvilChunkStorage) context.tacs()).getWorld());
+
+            if (LateModStatuses.fabric_lifecycle_events_v1_CHUNK_LEVEL_TYPE_CHANGE) {
+                LifecycleEventInvoker.invokeChunkLevelTypeChange(serverWorld, worldChunk, ChunkLevelType.FULL, ChunkLevelType.INACCESSIBLE);
+            }
+            LithiumChunkStatusTrackerInvoker.invokeOnChunkInaccessible(((IThreadedAnvilChunkStorage) context.tacs()).getWorld(), context.holder().getKey());
+
             worldChunk.setLevelTypeProvider(null);
             worldChunk.setUnsavedListener(pos -> {
             });
-            LithiumChunkStatusTrackerInvoker.invokeOnChunkInaccessible(((IThreadedAnvilChunkStorage) context.tacs()).getWorld(), context.holder().getKey());
             context.holder().getItem().set(new ChunkState(state.protoChunk(), state.protoChunk(), ChunkStatus.FULL));
         }, ((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor());
     }
