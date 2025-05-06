@@ -13,11 +13,11 @@ import com.ishland.c2me.rewrites.chunksystem.common.ducks.WorldChunkExtension;
 import com.ishland.c2me.rewrites.chunksystem.common.fapi.LifecycleEventInvoker;
 import com.ishland.c2me.rewrites.chunksystem.common.threadstate.ChunkTaskWork;
 import com.ishland.flowsched.scheduler.Cancellable;
-import net.minecraft.class_11352;
-import net.minecraft.class_11368;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.storage.NbtReadView;
+import net.minecraft.storage.ReadView;
 import net.minecraft.util.ErrorReporter;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
@@ -75,10 +75,10 @@ public class ServerAccessible extends NewChunkStatus {
             worldChunk = ((WrapperProtoChunk) protoChunk).getWrappedChunk();
         } else {
             worldChunk = new WorldChunk(serverWorld, protoChunk, worldChunkx -> {
-                try (ErrorReporter.class_11340 lv = new ErrorReporter.class_11340(protoChunk.method_71412(), LOGGER)) {
-                    class_11368.class_11370 arg = class_11352.method_71416(lv, serverWorld.getRegistryManager(), protoChunk.getEntities());
-                    if (!arg.method_71444()) {
-                        serverWorld.addEntities(EntityType.streamFromNbt(arg, serverWorld, SpawnReason.LOAD));
+                try (ErrorReporter.Logging lv = new ErrorReporter.Logging(protoChunk.getErrorReporterContext(), LOGGER)) {
+                    ReadView.ListReadView arg = NbtReadView.createList(lv, serverWorld.getRegistryManager(), protoChunk.getEntities());
+                    if (!arg.isEmpty()) {
+                        serverWorld.addEntities(EntityType.streamFromData(arg, serverWorld, SpawnReason.LOAD));
                     }
                 }
             });
