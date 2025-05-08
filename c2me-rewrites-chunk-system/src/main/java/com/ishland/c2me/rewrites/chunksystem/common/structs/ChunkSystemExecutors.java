@@ -10,7 +10,7 @@ import java.util.concurrent.Executor;
 
 public class ChunkSystemExecutors {
 
-    private static final ThreadLocal<Queue<Runnable>> CONSOLIDATING_QUEUE = new ThreadLocal<>();
+    public static final ThreadLocal<Queue<Runnable>> CONSOLIDATING_QUEUE = new ThreadLocal<>();
 
     public static final Executor backingBackgroundExecutor = GlobalExecutors.prioritizedScheduler.executor(15);
     public static final Scheduler backgroundScheduler = Schedulers.from(backingBackgroundExecutor);
