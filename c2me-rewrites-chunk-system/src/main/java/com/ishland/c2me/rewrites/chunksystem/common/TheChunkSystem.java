@@ -1,19 +1,17 @@
 package com.ishland.c2me.rewrites.chunksystem.common;
 
-import com.ishland.c2me.base.common.GlobalExecutors;
 import com.ishland.c2me.base.common.scheduler.IVanillaChunkManager;
 import com.ishland.c2me.base.common.scheduler.SchedulingManager;
 import com.ishland.c2me.base.mixin.access.IThreadedAnvilChunkStorage;
 import com.ishland.c2me.base.mixin.access.IVersionedChunkStorage;
+import com.ishland.c2me.rewrites.chunksystem.common.structs.ChunkSystemExecutors;
 import com.ishland.flowsched.scheduler.ExceptionHandlingAction;
 import com.ishland.flowsched.scheduler.ItemHolder;
 import com.ishland.flowsched.scheduler.ItemStatus;
 import com.ishland.flowsched.scheduler.KeyStatusPair;
 import com.ishland.flowsched.scheduler.StatusAdvancingScheduler;
 import com.ishland.flowsched.util.Assertions;
-import io.netty.util.internal.PlatformDependent;
 import io.reactivex.rxjava3.core.Scheduler;
-import io.reactivex.rxjava3.schedulers.Schedulers;
 import it.unimi.dsi.fastutil.longs.Long2IntMap;
 import it.unimi.dsi.fastutil.longs.Long2IntMaps;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
@@ -26,7 +24,6 @@ import net.minecraft.util.math.ChunkPos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Queue;
 import java.util.concurrent.Executor;
 
 public class TheChunkSystem extends StatusAdvancingScheduler<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> {
@@ -35,8 +32,6 @@ public class TheChunkSystem extends StatusAdvancingScheduler<ChunkPos, ChunkStat
 
     private final Long2IntMap managedTickets = Long2IntMaps.synchronize(new Long2IntOpenHashMap());
     private final SchedulingManager schedulingManager;
-    private final Executor backingBackgroundExecutor = GlobalExecutors.prioritizedScheduler.executor(15);
-    private final Scheduler backgroundScheduler = Schedulers.from(this.backingBackgroundExecutor);
     private final ServerChunkLoadingManager tacs;
 
     public TheChunkSystem(ServerChunkLoadingManager tacs) {
@@ -49,12 +44,12 @@ public class TheChunkSystem extends StatusAdvancingScheduler<ChunkPos, ChunkStat
 
     @Override
     protected Executor getBackgroundExecutor() {
-        return this.backingBackgroundExecutor;
+        return ChunkSystemExecutors.consolidatingBackgroundExecutor;
     }
 
     @Override
     protected Scheduler getSchedulerBackedByBackgroundExecutor() {
-        return this.backgroundScheduler;
+        return ChunkSystemExecutors.consolidatingBackgroundScheduler;
     }
 
     @Override
