@@ -18,6 +18,7 @@ public class ChunkSystemExecutors {
         Queue<Runnable> runnables = CONSOLIDATING_QUEUE.get();
         if (runnables == null) { // first entry
             consolidatingRoot(command);
+            CONSOLIDATING_QUEUE.remove(); // get() initielizes threadlocal
             return;
         }
         runnables.add(command);
