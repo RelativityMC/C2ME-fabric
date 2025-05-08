@@ -5,11 +5,11 @@ import com.ishland.c2me.base.common.scheduler.IVanillaChunkManager;
 import com.ishland.c2me.base.common.scheduler.SchedulingManager;
 import com.ishland.c2me.base.mixin.access.IThreadedAnvilChunkStorage;
 import com.ishland.c2me.base.mixin.access.IVersionedChunkStorage;
-import com.ishland.flowsched.scheduler.DaemonizedStatusAdvancingScheduler;
 import com.ishland.flowsched.scheduler.ExceptionHandlingAction;
 import com.ishland.flowsched.scheduler.ItemHolder;
 import com.ishland.flowsched.scheduler.ItemStatus;
 import com.ishland.flowsched.scheduler.KeyStatusPair;
+import com.ishland.flowsched.scheduler.StatusAdvancingScheduler;
 import com.ishland.flowsched.util.Assertions;
 import io.netty.util.internal.PlatformDependent;
 import io.reactivex.rxjava3.core.Scheduler;
@@ -21,49 +21,35 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.WorldGenerationProgressListener;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ServerChunkLoadingManager;
-import net.minecraft.util.Util;
 import net.minecraft.util.collection.BoundedRegionArray;
-import net.minecraft.util.crash.CrashException;
-import net.minecraft.util.crash.ReportType;
 import net.minecraft.util.math.ChunkPos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.file.Path;
 import java.util.Queue;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ThreadFactory;
 
-public class TheChunkSystem extends DaemonizedStatusAdvancingScheduler<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> {
+public class TheChunkSystem extends StatusAdvancingScheduler<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> {
 
     private final Logger LOGGER;
 
     private final Long2IntMap managedTickets = Long2IntMaps.synchronize(new Long2IntOpenHashMap());
     private final SchedulingManager schedulingManager;
     private final Executor backingBackgroundExecutor = GlobalExecutors.prioritizedScheduler.executor(15);
-    private Queue<Runnable> backgroundTaskQueue = PlatformDependent.newSpscQueue();
-    private final Executor backgroundExecutor = command -> {
-        if (Thread.currentThread() != this.thread) {
-            command.run();
-        } else {
-            backgroundTaskQueue.add(command);
-        }
-    };
-    private final Scheduler backgroundScheduler = Schedulers.from(this.backgroundExecutor);
+    private final Scheduler backgroundScheduler = Schedulers.from(this.backingBackgroundExecutor);
     private final ServerChunkLoadingManager tacs;
 
-    public TheChunkSystem(ThreadFactory threadFactory, ServerChunkLoadingManager tacs) {
-        super(threadFactory, TheSpeedyObjectFactory.INSTANCE);
+    public TheChunkSystem(ServerChunkLoadingManager tacs) {
+        super(TheSpeedyObjectFactory.INSTANCE);
         this.tacs = tacs;
         this.schedulingManager =  ((IVanillaChunkManager) tacs).c2me$getSchedulingManager();
         this.LOGGER = LoggerFactory.getLogger("Chunk System of %s".formatted(((IThreadedAnvilChunkStorage) tacs).getWorld().getRegistryKey().getValue()));
         managedTickets.defaultReturnValue(NewChunkStatus.vanillaLevelToStatus.length - 1);
-        this.thread.start();
     }
 
     @Override
     protected Executor getBackgroundExecutor() {
-        return this.backgroundExecutor;
+        return this.backingBackgroundExecutor;
     }
 
     @Override
@@ -215,25 +201,5 @@ public class TheChunkSystem extends DaemonizedStatusAdvancingScheduler<ChunkPos,
 
     public int vanillaIf$getManagedLevel(long pos) {
         return this.managedTickets.get(pos);
-    }
-
-    @Override
-    public boolean tick() {
-        boolean tick = super.tick();
-        if (!this.backgroundTaskQueue.isEmpty()) {
-            Queue<Runnable> queue = this.backgroundTaskQueue;
-            this.backgroundTaskQueue = PlatformDependent.newSpscQueue();
-            this.backingBackgroundExecutor.execute(() -> {
-                Runnable runnable;
-                while ((runnable = queue.poll()) != null) {
-                    try {
-                        runnable.run();
-                    } catch (Throwable t) {
-                        t.printStackTrace();
-                    }
-                }
-            });
-        }
-        return tick;
     }
 }
