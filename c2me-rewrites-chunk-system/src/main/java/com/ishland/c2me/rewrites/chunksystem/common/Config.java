@@ -80,13 +80,14 @@ public class Config {
                     """)
             .getBoolean(true, false);
 
-    public static final boolean lowMemoryMode = new ConfigSystem.ConfigAccessor()
-            .key("chunkSystem.lowMemoryMode")
+    public static final boolean useLegacyScheduling = new ConfigSystem.ConfigAccessor()
+            .key("chunkSystem.useLegacyScheduling")
             .comment("""
-                    Whether to enable low memory mode
+                    Whether to use legacy scheduling for neighbor chunks
                     
-                    This will attempt to aggressively unload unneeded chunks, saving memory at the cost of additional
-                    overhead when generating new chunks.
+                    Enabling this restores the behavior of always loading in neighbor chunks when a chunk is loaded.
+                    
+                    This is currently deprecated and will be removed in the future.
                     """)
             .getBoolean(false, false);
 
