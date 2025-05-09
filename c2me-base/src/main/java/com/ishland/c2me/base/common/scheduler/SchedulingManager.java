@@ -18,7 +18,14 @@ public class SchedulingManager {
 
     public static final int MAX_LEVEL = ChunkLevels.INACCESSIBLE + 1;
     private final ConcurrentMap<Long, FreeableTaskList> pos2Tasks = new ConcurrentHashMap<>();
-    private final Long2IntOpenHashMap prioritiesFromLevel = new Long2IntOpenHashMap();
+    private final Long2IntOpenHashMap prioritiesFromLevel = new Long2IntOpenHashMap() {
+        @Override
+        protected void rehash(int newN) {
+            if (n < newN) {
+                super.rehash(newN);
+            }
+        }
+    };
     private final StampedLock prioritiesLock = new StampedLock();
     private final int id = COUNTER.getAndIncrement();
     private volatile ChunkPos currentSyncLoad = null;
