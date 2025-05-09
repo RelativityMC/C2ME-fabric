@@ -58,6 +58,7 @@
     "access.fapi.IArrayBackedEvent",
     "instrumentation.MixinServerChunkManager",
     "report.MixinDedicatedServerWatchdog",
+    "scheduler.MixinServerChunkManager",
     "scheduler.MixinThreadedAnvilChunkStorage",
     "theinterface.MixinStorageIoWorker",
     "util.log4j2shutdownhookisnomore.MixinMain",

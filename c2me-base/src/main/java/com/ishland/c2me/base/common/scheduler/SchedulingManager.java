@@ -6,6 +6,8 @@ import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import net.minecraft.server.world.ChunkLevels;
 import net.minecraft.util.math.ChunkPos;
 
+import java.util.ArrayDeque;
+import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executor;
@@ -29,6 +31,9 @@ public class SchedulingManager {
     private final StampedLock prioritiesLock = new StampedLock();
     private final int id = COUNTER.getAndIncrement();
     private volatile ChunkPos currentSyncLoad = null;
+
+    private boolean consolidatingLevelUpdates = false;
+    private Queue<Runnable> consolidatedLevelUpdates = new ArrayDeque<>();
 
     private final Executor executor;
 
@@ -80,19 +85,50 @@ public class SchedulingManager {
 
     public void updatePriorityFromLevel(long pos, int level) {
         this.executor.execute(() -> {
-            if (this.getPriorityFromMap(pos) == level) return;
-            final long stamp = this.prioritiesLock.writeLock();
-            try {
-                if (level < MAX_LEVEL) {
-                    this.prioritiesFromLevel.put(pos, level);
-                } else {
-                    this.prioritiesFromLevel.remove(pos);
-                }
-            } finally {
-                this.prioritiesLock.unlockWrite(stamp);
-            }
-            updatePriorityInternal(pos);
+            updatePriorityFromLevel0(pos, level);
         });
+    }
+
+    private void updatePriorityFromLevel0(long pos, int level) {
+        if (this.getPriorityFromMap(pos) == level) return;
+        final long stamp = this.prioritiesLock.writeLock();
+        try {
+            if (level < MAX_LEVEL) {
+                this.prioritiesFromLevel.put(pos, level);
+            } else {
+                this.prioritiesFromLevel.remove(pos);
+            }
+        } finally {
+            this.prioritiesLock.unlockWrite(stamp);
+        }
+        updatePriorityInternal(pos);
+    }
+
+    public void updatePriorityFromLevelOnMain(long pos, int level) {
+        if (this.consolidatingLevelUpdates) {
+            this.consolidatedLevelUpdates.add(() -> updatePriorityFromLevel0(pos, level));
+        } else {
+            updatePriorityFromLevel(pos, level);
+        }
+    }
+
+    public void setConsolidatingLevelUpdates(boolean value) {
+        this.consolidatingLevelUpdates = value;
+        if (!value) {
+            if (!this.consolidatedLevelUpdates.isEmpty()) {
+                Queue<Runnable> runnables = this.consolidatedLevelUpdates;
+                this.consolidatedLevelUpdates = new ArrayDeque<>();
+                this.executor.execute(() -> {
+                    for (Runnable runnable : runnables) {
+                        try {
+                            runnable.run();
+                        } catch (Throwable t) {
+                            t.printStackTrace();
+                        }
+                    }
+                });
+            }
+        }
     }
 
     private void updatePriorityInternal(long pos) {
