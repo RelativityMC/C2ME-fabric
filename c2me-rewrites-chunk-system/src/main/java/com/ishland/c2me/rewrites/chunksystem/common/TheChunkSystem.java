@@ -130,7 +130,7 @@ public class TheChunkSystem extends StatusAdvancingScheduler<ChunkPos, ChunkStat
     }
 
     public ChunkHolder vanillaIf$setLevel(long pos, int level) {
-        Assertions.assertTrue(!Thread.holdsLock(this.managedTickets));
+        assert !Thread.holdsLock(this.managedTickets);
         synchronized (this.managedTickets) {
             final int oldLevel = this.managedTickets.put(pos, level);
             NewChunkStatus oldStatus = c2me$getDeferredStatusFromVanillaLevel(oldLevel);
