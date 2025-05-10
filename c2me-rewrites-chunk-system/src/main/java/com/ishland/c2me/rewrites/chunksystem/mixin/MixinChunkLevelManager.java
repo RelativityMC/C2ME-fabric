@@ -8,6 +8,7 @@ import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ChunkLevelManager;
 import net.minecraft.server.world.ThrottledChunkTaskScheduler;
 import net.minecraft.util.thread.TaskExecutor;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Dynamic;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -26,6 +27,26 @@ public class MixinChunkLevelManager {
     @Redirect(method = "@MixinSquared:Handler", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ChunkHolder;getLevel()I"), require = 0)
     private int fakeLevel(ChunkHolder instance) {
         return Integer.MAX_VALUE;
+    }
+
+    @Dynamic
+    @TargetHandler(
+            mixin = "com.ishland.vmp.mixins.ticketsystem.ticketpropagator.MixinChunkLevelManager",
+            name = "tickTickets"
+    )
+    @Redirect(method = "@MixinSquared:Handler", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ChunkLevelManager;getChunkHolder(J)Lnet/minecraft/server/world/ChunkHolder;"), require = 0)
+    private ChunkHolder fakeLevel(ChunkLevelManager instance, long l) {
+        return null;
+    }
+
+    @Dynamic
+    @TargetHandler(
+            mixin = "com.ishland.vmp.mixins.ticketsystem.ticketpropagator.MixinChunkLevelManager",
+            name = "tickTickets"
+    )
+    @Redirect(method = "@MixinSquared:Handler", at = @At(value = "FIELD", target = "Lnet/minecraft/server/world/ChunkLevels;INACCESSIBLE:I", opcode = Opcodes.GETSTATIC, ordinal = 0), require = 0)
+    private int fakeLevel() {
+        return Integer.MAX_VALUE - 1;
     }
 
     @WrapOperation(method = "<init>", at = @At(value = "NEW", target = "(Lnet/minecraft/util/thread/TaskExecutor;Ljava/util/concurrent/Executor;I)Lnet/minecraft/server/world/ThrottledChunkTaskScheduler;"))
