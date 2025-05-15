@@ -88,7 +88,7 @@ public class Config {
                     This will attempt to aggressively unload unneeded chunks, saving memory at the cost of additional
                     overhead when generating new chunks.
                     """)
-            .getBoolean(false, false);
+            .getBoolean(true, false);
 
     public static void init() {
         // intentionally empty
