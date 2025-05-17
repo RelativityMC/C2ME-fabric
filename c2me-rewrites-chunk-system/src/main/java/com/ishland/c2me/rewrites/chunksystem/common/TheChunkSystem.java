@@ -151,7 +151,7 @@ public class TheChunkSystem extends StatusAdvancingScheduler<ChunkPos, ChunkStat
                 Assertions.assertTrue(holder != null, "Holder should be managed by the vanilla interface");
                 assert holder != null;
                 vanillaHolder = holder.getUserData().get();
-                if (Config.lowMemoryMode) {
+                if (!Config.useLegacyScheduling) {
                     vanillaHolder.updateDeferredStatus(NewChunkStatus.fromVanillaLevel(level));
                 }
 
@@ -168,7 +168,7 @@ public class TheChunkSystem extends StatusAdvancingScheduler<ChunkPos, ChunkStat
                 } else {
                     vanillaHolder = null;
                 }
-                if (Config.lowMemoryMode && vanillaHolder != null) {
+                if (!Config.useLegacyScheduling && vanillaHolder != null) {
                     vanillaHolder.updateDeferredStatus(NewChunkStatus.fromVanillaLevel(level));
                 }
                 if (newStatus != this.getUnloadedStatus() && vanillaHolder != null) {
@@ -181,7 +181,7 @@ public class TheChunkSystem extends StatusAdvancingScheduler<ChunkPos, ChunkStat
 
     private static NewChunkStatus c2me$getDeferredStatusFromVanillaLevel(int level) {
         NewChunkStatus status = NewChunkStatus.fromVanillaLevel(level);
-        if (Config.lowMemoryMode) {
+        if (!Config.useLegacyScheduling) {
             if (status == NewChunkStatus.NEW) {
                 return status;
             } else if (status.ordinal() < NewChunkStatus.SERVER_ACCESSIBLE.ordinal()) {
