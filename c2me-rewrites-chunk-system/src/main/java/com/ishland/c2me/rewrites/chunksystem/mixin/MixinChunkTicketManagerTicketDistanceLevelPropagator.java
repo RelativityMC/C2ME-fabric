@@ -3,7 +3,9 @@ package com.ishland.c2me.rewrites.chunksystem.mixin;
 import it.unimi.dsi.fastutil.longs.Long2IntMap;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import net.minecraft.server.world.ChunkHolder;
+import net.minecraft.server.world.ChunkLevelManager;
 import net.minecraft.server.world.TicketDistanceLevelPropagator;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -43,8 +45,13 @@ public class MixinChunkTicketManagerTicketDistanceLevelPropagator {
         }
     }
 
-    @Redirect(method = "setLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ChunkHolder;getLevel()I"))
-    private int fakeLevel(ChunkHolder instance) {
+    @Redirect(method = "setLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ChunkLevelManager;getChunkHolder(J)Lnet/minecraft/server/world/ChunkHolder;"))
+    private ChunkHolder fakeLevel(ChunkLevelManager instance, long l) {
+        return null;
+    }
+
+    @Redirect(method = "setLevel", at = @At(value = "FIELD", target = "Lnet/minecraft/server/world/TicketDistanceLevelPropagator;UNLOADED:I", opcode = Opcodes.GETSTATIC))
+    private int fakeLevel() {
         return Integer.MAX_VALUE;
     }
 
