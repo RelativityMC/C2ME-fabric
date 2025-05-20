@@ -1,6 +1,5 @@
 package com.ishland.c2me.rewrites.chunksystem.mixin;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.ishland.c2me.base.common.scheduler.IVanillaChunkManager;
 import com.ishland.c2me.rewrites.chunksystem.common.ChunkLoadingContext;
 import com.ishland.c2me.rewrites.chunksystem.common.ChunkState;
@@ -39,9 +38,6 @@ public class MixinThreadedAnvilChunkStorage implements IChunkSystemAccess {
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(CallbackInfo ci) {
         newSystem = new TheChunkSystem(
-                new ThreadFactoryBuilder()
-                        .setNameFormat("chunksystem-" + this.world.getRegistryKey().getValue().toUnderscoreSeparatedString())
-                        .build(),
                 (ServerChunkLoadingManager) (Object) this
         );
     }
@@ -92,10 +88,10 @@ public class MixinThreadedAnvilChunkStorage implements IChunkSystemAccess {
         return this.getCurrentChunkHolder(pos);
     }
 
-    @Inject(method = "close", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/poi/PointOfInterestStorage;close()V", shift = At.Shift.AFTER))
-    private void closeNewSystem(CallbackInfo ci) {
-        this.newSystem.shutdown();
-    }
+//    @Inject(method = "close", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/poi/PointOfInterestStorage;close()V", shift = At.Shift.AFTER))
+//    private void closeNewSystem(CallbackInfo ci) {
+//        this.newSystem.shutdown();
+//    }
 
     @Redirect(method = "save(Lnet/minecraft/world/chunk/Chunk;)Z", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/ChunkStatus;getChunkType()Lnet/minecraft/world/chunk/ChunkType;"), require = 0)
     private ChunkType alwaysSaveChunk(ChunkStatus instance) {

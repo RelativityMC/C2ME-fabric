@@ -22,7 +22,7 @@ public class MixinThreadedAnvilChunkStorage implements IVanillaChunkManager {
 
     @Inject(method = "setLevel", at = @At("RETURN"))
     private void onUpdateLevel(long pos, int level, ChunkHolder holder, int i, CallbackInfoReturnable<ChunkHolder> cir) {
-        this.c2me$schedulingManager.updatePriorityFromLevel(pos, level);
+        this.c2me$schedulingManager.updatePriorityFromLevelOnMain(pos, level);
     }
 
 }

@@ -1,19 +1,17 @@
 package com.ishland.c2me.rewrites.chunksystem.common;
 
-import com.ishland.c2me.base.common.GlobalExecutors;
 import com.ishland.c2me.base.common.scheduler.IVanillaChunkManager;
 import com.ishland.c2me.base.common.scheduler.SchedulingManager;
 import com.ishland.c2me.base.mixin.access.IThreadedAnvilChunkStorage;
 import com.ishland.c2me.base.mixin.access.IVersionedChunkStorage;
-import com.ishland.flowsched.scheduler.DaemonizedStatusAdvancingScheduler;
+import com.ishland.c2me.rewrites.chunksystem.common.structs.ChunkSystemExecutors;
 import com.ishland.flowsched.scheduler.ExceptionHandlingAction;
 import com.ishland.flowsched.scheduler.ItemHolder;
 import com.ishland.flowsched.scheduler.ItemStatus;
 import com.ishland.flowsched.scheduler.KeyStatusPair;
+import com.ishland.flowsched.scheduler.StatusAdvancingScheduler;
 import com.ishland.flowsched.util.Assertions;
-import io.netty.util.internal.PlatformDependent;
 import io.reactivex.rxjava3.core.Scheduler;
-import io.reactivex.rxjava3.schedulers.Schedulers;
 import it.unimi.dsi.fastutil.longs.Long2IntMap;
 import it.unimi.dsi.fastutil.longs.Long2IntMaps;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
@@ -21,54 +19,37 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.WorldGenerationProgressListener;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ServerChunkLoadingManager;
-import net.minecraft.util.Util;
 import net.minecraft.util.collection.BoundedRegionArray;
-import net.minecraft.util.crash.CrashException;
-import net.minecraft.util.crash.ReportType;
 import net.minecraft.util.math.ChunkPos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.file.Path;
-import java.util.Queue;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ThreadFactory;
 
-public class TheChunkSystem extends DaemonizedStatusAdvancingScheduler<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> {
+public class TheChunkSystem extends StatusAdvancingScheduler<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> {
 
     private final Logger LOGGER;
 
     private final Long2IntMap managedTickets = Long2IntMaps.synchronize(new Long2IntOpenHashMap());
     private final SchedulingManager schedulingManager;
-    private final Executor backingBackgroundExecutor = GlobalExecutors.prioritizedScheduler.executor(15);
-    private Queue<Runnable> backgroundTaskQueue = PlatformDependent.newSpscQueue();
-    private final Executor backgroundExecutor = command -> {
-        if (Thread.currentThread() != this.thread) {
-            command.run();
-        } else {
-            backgroundTaskQueue.add(command);
-        }
-    };
-    private final Scheduler backgroundScheduler = Schedulers.from(this.backgroundExecutor);
     private final ServerChunkLoadingManager tacs;
 
-    public TheChunkSystem(ThreadFactory threadFactory, ServerChunkLoadingManager tacs) {
-        super(threadFactory, TheSpeedyObjectFactory.INSTANCE);
+    public TheChunkSystem(ServerChunkLoadingManager tacs) {
+        super(TheSpeedyObjectFactory.INSTANCE);
         this.tacs = tacs;
         this.schedulingManager =  ((IVanillaChunkManager) tacs).c2me$getSchedulingManager();
         this.LOGGER = LoggerFactory.getLogger("Chunk System of %s".formatted(((IThreadedAnvilChunkStorage) tacs).getWorld().getRegistryKey().getValue()));
         managedTickets.defaultReturnValue(NewChunkStatus.vanillaLevelToStatus.length - 1);
-        this.thread.start();
     }
 
     @Override
     protected Executor getBackgroundExecutor() {
-        return this.backgroundExecutor;
+        return ChunkSystemExecutors.consolidatingBackgroundExecutor;
     }
 
     @Override
     protected Scheduler getSchedulerBackedByBackgroundExecutor() {
-        return this.backgroundScheduler;
+        return ChunkSystemExecutors.consolidatingBackgroundScheduler;
     }
 
     @Override
@@ -149,7 +130,7 @@ public class TheChunkSystem extends DaemonizedStatusAdvancingScheduler<ChunkPos,
     }
 
     public ChunkHolder vanillaIf$setLevel(long pos, int level) {
-        Assertions.assertTrue(!Thread.holdsLock(this.managedTickets));
+        assert !Thread.holdsLock(this.managedTickets);
         synchronized (this.managedTickets) {
             final int oldLevel = this.managedTickets.put(pos, level);
             NewChunkStatus oldStatus = c2me$getDeferredStatusFromVanillaLevel(oldLevel);
@@ -170,7 +151,7 @@ public class TheChunkSystem extends DaemonizedStatusAdvancingScheduler<ChunkPos,
                 Assertions.assertTrue(holder != null, "Holder should be managed by the vanilla interface");
                 assert holder != null;
                 vanillaHolder = holder.getUserData().get();
-                if (Config.lowMemoryMode) {
+                if (!Config.useLegacyScheduling) {
                     vanillaHolder.updateDeferredStatus(NewChunkStatus.fromVanillaLevel(level));
                 }
 
@@ -187,7 +168,7 @@ public class TheChunkSystem extends DaemonizedStatusAdvancingScheduler<ChunkPos,
                 } else {
                     vanillaHolder = null;
                 }
-                if (Config.lowMemoryMode && vanillaHolder != null) {
+                if (!Config.useLegacyScheduling && vanillaHolder != null) {
                     vanillaHolder.updateDeferredStatus(NewChunkStatus.fromVanillaLevel(level));
                 }
                 if (newStatus != this.getUnloadedStatus() && vanillaHolder != null) {
@@ -200,7 +181,7 @@ public class TheChunkSystem extends DaemonizedStatusAdvancingScheduler<ChunkPos,
 
     private static NewChunkStatus c2me$getDeferredStatusFromVanillaLevel(int level) {
         NewChunkStatus status = NewChunkStatus.fromVanillaLevel(level);
-        if (Config.lowMemoryMode) {
+        if (!Config.useLegacyScheduling) {
             if (status == NewChunkStatus.NEW) {
                 return status;
             } else if (status.ordinal() < NewChunkStatus.SERVER_ACCESSIBLE.ordinal()) {
@@ -215,25 +196,5 @@ public class TheChunkSystem extends DaemonizedStatusAdvancingScheduler<ChunkPos,
 
     public int vanillaIf$getManagedLevel(long pos) {
         return this.managedTickets.get(pos);
-    }
-
-    @Override
-    public boolean tick() {
-        boolean tick = super.tick();
-        if (!this.backgroundTaskQueue.isEmpty()) {
-            Queue<Runnable> queue = this.backgroundTaskQueue;
-            this.backgroundTaskQueue = PlatformDependent.newSpscQueue();
-            this.backingBackgroundExecutor.execute(() -> {
-                Runnable runnable;
-                while ((runnable = queue.poll()) != null) {
-                    try {
-                        runnable.run();
-                    } catch (Throwable t) {
-                        t.printStackTrace();
-                    }
-                }
-            });
-        }
-        return tick;
     }
 }

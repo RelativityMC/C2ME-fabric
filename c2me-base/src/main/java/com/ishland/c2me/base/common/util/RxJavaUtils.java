@@ -16,14 +16,20 @@ public class RxJavaUtils {
         List<Throwable> throwableList = Collections.synchronizedList(new ReferenceArrayList<>());
         throwableList.addAll(List.of(existingErrors));
         return errors -> errors.zipWith(Flowable.range(1, maxRetries + 1), (error, retryCount) -> {
+            throwableList.add(error);
             if (retryCount > maxRetries) {
-                final RuntimeException exception = new RuntimeException("Max retries reached", error);
+                final RuntimeException exception = new StacklessRuntimeException("Max retries reached");
                 throwableList.forEach(exception::addSuppressed);
                 throw exception;
             }
-            throwableList.add(error);
             return retryCount;
         }).flatMap(retryCount -> Flowable.timer((long) Math.pow(2, retryCount - 1) * initialDelayMillis, TimeUnit.MILLISECONDS));
+    }
+
+    public static class StacklessRuntimeException extends RuntimeException {
+        public StacklessRuntimeException(String message) {
+            super(message, null, true, false);
+        }
     }
 
 }

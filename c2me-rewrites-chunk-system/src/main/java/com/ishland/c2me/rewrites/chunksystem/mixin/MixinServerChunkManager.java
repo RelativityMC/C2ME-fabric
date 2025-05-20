@@ -2,9 +2,11 @@ package com.ishland.c2me.rewrites.chunksystem.mixin;
 
 import com.ishland.c2me.base.mixin.access.IThreadedAnvilChunkStorage;
 import com.ishland.c2me.rewrites.chunksystem.common.ducks.IChunkSystemAccess;
+import com.ishland.c2me.rewrites.chunksystem.common.structs.ChunkSystemExecutors;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.server.world.ChunkHolder;
+import net.minecraft.server.world.ChunkLevelManager;
 import net.minecraft.server.world.OptionalChunk;
 import net.minecraft.server.world.ServerChunkLoadingManager;
 import net.minecraft.server.world.ServerChunkManager;
@@ -24,6 +26,8 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.util.ArrayDeque;
+import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
 
 @Mixin(ServerChunkManager.class)
@@ -83,6 +87,34 @@ public abstract class MixinServerChunkManager {
     @Overwrite
     public String getDebugString() {
         return Integer.toString(((IChunkSystemAccess) this.chunkLoadingManager).c2me$getTheChunkSystem().itemCount()) + ", " + Integer.toString(this.getLoadedChunkCount());
+    }
+
+    @WrapOperation(method = "updateChunks", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ChunkLevelManager;update(Lnet/minecraft/server/world/ServerChunkLoadingManager;)Z"))
+    private boolean consolidateSchedules(ChunkLevelManager instance, ServerChunkLoadingManager chunkLoadingManager, Operation<Boolean> original) {
+        Queue<Runnable> runnables = ChunkSystemExecutors.CONSOLIDATING_QUEUE.get();
+        if (runnables != null) {
+            new Throwable("CONSOLIDATING_QUEUE leak").printStackTrace();
+            return original.call(instance, chunkLoadingManager);
+        }
+
+        ChunkSystemExecutors.CONSOLIDATING_QUEUE.set(runnables = new ArrayDeque<>());
+        try {
+            return original.call(instance, chunkLoadingManager);
+        } finally {
+            Queue<Runnable> finalRunnables = runnables;
+            if (!finalRunnables.isEmpty()) {
+                ChunkSystemExecutors.backingBackgroundExecutor.execute(() -> {
+                    while (!finalRunnables.isEmpty()) {
+                        try {
+                            finalRunnables.remove().run();
+                        } catch (Throwable t) {
+                            t.printStackTrace();
+                        }
+                    }
+                });
+            }
+            ChunkSystemExecutors.CONSOLIDATING_QUEUE.remove();
+        }
     }
 
 }
