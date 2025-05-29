@@ -56,6 +56,7 @@
     "access.IXoroshiro128PlusPlusRandomDeriver",
     "access.IXoroshiro128PlusPlusRandomImpl",
     "access.fapi.IArrayBackedEvent",
+    "client_movement.MixinPlayerEntity",
     "instrumentation.MixinServerChunkManager",
     "report.MixinDedicatedServerWatchdog",
     "scheduler.MixinServerChunkManager",

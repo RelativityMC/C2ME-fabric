@@ -1,22 +1,21 @@
 package com.ishland.c2me.base.mixin.client_movement;
 
-import com.ishland.c2me.base.mixin.access.IPlayerEntity;
-import com.mojang.authlib.GameProfile;
-import net.minecraft.client.network.AbstractClientPlayerEntity;
+import com.ishland.c2me.base.common.theinterface.PlayerEntityExtension;
+import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.world.ClientWorld;
+import net.minecraft.network.packet.c2s.play.PlayerLoadedC2SPacket;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(ClientPlayerEntity.class)
-public abstract class MixinClientPlayerEntity extends AbstractClientPlayerEntity {
+public class MixinClientPlayerEntity implements PlayerEntityExtension {
 
-    public MixinClientPlayerEntity(ClientWorld world, GameProfile profile) {
-        super(world, profile);
-    }
+    @Shadow @Final public ClientPlayNetworkHandler networkHandler;
 
     @Override
-    public boolean isLoaded() {
-        return ((IPlayerEntity) this).getLoaded();
+    public void c2me$onForcedLoaded() {
+        this.networkHandler.sendPacket(new PlayerLoadedC2SPacket());
     }
 
 }
