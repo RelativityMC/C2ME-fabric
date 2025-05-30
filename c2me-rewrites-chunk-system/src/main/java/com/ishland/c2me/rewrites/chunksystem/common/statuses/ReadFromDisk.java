@@ -198,7 +198,17 @@ public class ReadFromDisk extends NewChunkStatus {
                         return asyncSaveFuture;
                     }
                 }, ((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor())
-                .thenCompose(Function.identity());
+                .thenCompose(Function.identity())
+                .whenComplete((unused, throwable) -> {
+                    try {
+                        if ((context.holder().getFlags() & ItemHolder.FLAG_BROKEN) != 0) {
+                            LOGGER.warn("Broken chunk {} was unloaded", context.holder().getKey());
+                            context.holder().clearFlag(ItemHolder.FLAG_BROKEN);
+                        }
+                    } catch (Throwable t) {
+                        t.printStackTrace();
+                    }
+                });
     }
 
     private CompletionStage<Void> asyncSave(ChunkLoadingContext context, Chunk chunk) {
