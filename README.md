@@ -52,7 +52,7 @@ Our issue tracker: [link](https://github.com/RelativityMC/C2ME-fabric/issues)
 Our discord server: [link](https://discord.gg/Kdy8NM5HW4)
 
 ## Building and setting up
-JDK 24, Clang 18+ are required to build C2ME  
+JDK 24 and Clang 18+ are required to build C2ME  
 Run the following commands in the root directory:
 
 ```shell
