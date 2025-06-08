@@ -27,6 +27,7 @@ public class Config {
                     Whether to enable StructureWeightSampler optimizations to accelerate world generation
                     """)
             .incompatibleMod("porting_lib", "*")
+            .incompatibleMod("twilightforest", "*")
             .getBoolean(true, false);
 
 }
