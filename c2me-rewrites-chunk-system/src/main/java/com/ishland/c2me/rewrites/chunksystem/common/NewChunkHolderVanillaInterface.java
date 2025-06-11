@@ -186,7 +186,7 @@ public class NewChunkHolderVanillaInterface extends ChunkHolder implements IFast
         }
     }
 
-    private void triggerDeferredLoad(NewChunkStatus requestedStatus) {
+    public void triggerDeferredLoad(NewChunkStatus requestedStatus) {
         if (Config.useLegacyScheduling) return;
         synchronized (this) {
             if (this.loadedDeferredStatus != null && this.loadedDeferredStatus.ordinal() >= requestedStatus.ordinal()) {
