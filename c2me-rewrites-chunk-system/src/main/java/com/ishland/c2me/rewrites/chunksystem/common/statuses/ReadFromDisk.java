@@ -78,7 +78,12 @@ public class ReadFromDisk extends NewChunkStatus {
                         return Single.error(throwable);
                     }
                 })
-                .doOnSuccess(chunk -> context.holder().getItem().set(new ChunkState(chunk, chunk, ChunkStatus.EMPTY)))
+                .doOnSuccess(chunk -> {
+                    context.holder().getItem().set(new ChunkState(chunk, chunk, ChunkStatus.EMPTY));
+                    if (!Config.lowMemoryMode) {
+                        context.holder().getUserData().get().triggerDeferredLoad(NewChunkStatus.DISK);
+                    }
+                })
                 .ignoreElement()
                 .cache()
                 .toCompletionStage(null);
