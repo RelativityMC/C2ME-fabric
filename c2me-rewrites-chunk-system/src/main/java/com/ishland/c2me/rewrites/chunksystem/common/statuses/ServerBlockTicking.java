@@ -1,7 +1,7 @@
 package com.ishland.c2me.rewrites.chunksystem.common.statuses;
 
 import com.google.common.base.Suppliers;
-import com.ishland.c2me.base.common.config.LateModStatuses;
+import com.ishland.c2me.base.common.config.ModStatuses;
 import com.ishland.c2me.base.common.threadstate.ThreadInstrumentation;
 import com.ishland.c2me.base.mixin.access.IThreadedAnvilChunkStorage;
 import com.ishland.c2me.rewrites.chunksystem.common.ChunkLoadingContext;
@@ -74,7 +74,7 @@ public class ServerBlockTicking extends NewChunkStatus {
                 sendChunkToPlayer(context);
                 ((IThreadedAnvilChunkStorage) context.tacs()).getTotalChunksLoadedCount().incrementAndGet(); // never decremented in vanilla
                 ((WorldChunkExtension) chunk).c2me$setBlockTicking(true);
-                if (LateModStatuses.fabric_lifecycle_events_v1_CHUNK_LEVEL_TYPE_CHANGE) {
+                if (ModStatuses.fabric_lifecycle_events_v1) {
                     LifecycleEventInvoker.invokeChunkLevelTypeChange(serverWorld, chunk, ChunkLevelType.FULL, ChunkLevelType.BLOCK_TICKING);
                 }
             }
@@ -128,7 +128,7 @@ public class ServerBlockTicking extends NewChunkStatus {
         ServerWorld serverWorld = ((IThreadedAnvilChunkStorage) context.tacs()).getWorld();
         final WorldChunk chunk = (WorldChunk) context.holder().getItem().get().chunk();
         ((WorldChunkExtension) chunk).c2me$setBlockTicking(false);
-        if (LateModStatuses.fabric_lifecycle_events_v1_CHUNK_LEVEL_TYPE_CHANGE && LifecycleEventInvoker.needsInvokeChunkLevelTypeChange()) {
+        if (ModStatuses.fabric_lifecycle_events_v1 && LifecycleEventInvoker.needsInvokeChunkLevelTypeChange()) {
             return CompletableFuture.runAsync(() -> {
                 LifecycleEventInvoker.invokeChunkLevelTypeChange(serverWorld, chunk, ChunkLevelType.BLOCK_TICKING, ChunkLevelType.FULL);
             }, ((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor());

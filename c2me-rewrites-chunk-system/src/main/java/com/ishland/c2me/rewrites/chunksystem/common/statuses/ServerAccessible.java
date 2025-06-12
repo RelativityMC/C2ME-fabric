@@ -1,7 +1,6 @@
 package com.ishland.c2me.rewrites.chunksystem.common.statuses;
 
 import com.google.common.base.Preconditions;
-import com.ishland.c2me.base.common.config.LateModStatuses;
 import com.ishland.c2me.base.common.config.ModStatuses;
 import com.ishland.c2me.base.common.threadstate.ThreadInstrumentation;
 import com.ishland.c2me.base.mixin.access.IThreadedAnvilChunkStorage;
@@ -65,7 +64,7 @@ public class ServerAccessible extends NewChunkStatus {
                     }
                 }
 
-                if (LateModStatuses.fabric_lifecycle_events_v1_CHUNK_LEVEL_TYPE_CHANGE) {
+                if (ModStatuses.fabric_lifecycle_events_v1) {
                     LifecycleEventInvoker.invokeChunkLevelTypeChange(serverWorld, worldChunk, ChunkLevelType.INACCESSIBLE, ChunkLevelType.FULL);
                 }
 
@@ -105,7 +104,7 @@ public class ServerAccessible extends NewChunkStatus {
 //            worldChunk.setLoadedToWorld(false);
 //            worldChunk.removeChunkTickSchedulers(((IThreadedAnvilChunkStorage) context.tacs()).getWorld());
 
-            if (LateModStatuses.fabric_lifecycle_events_v1_CHUNK_LEVEL_TYPE_CHANGE) {
+            if (ModStatuses.fabric_lifecycle_events_v1) {
                 LifecycleEventInvoker.invokeChunkLevelTypeChange(serverWorld, worldChunk, ChunkLevelType.FULL, ChunkLevelType.INACCESSIBLE);
             }
             LithiumChunkStatusTrackerInvoker.invokeOnChunkInaccessible(((IThreadedAnvilChunkStorage) context.tacs()).getWorld(), context.holder().getKey());
