@@ -26,9 +26,9 @@
     ]
   },
   "depends": {
-    "fabricloader": ">=0.16.9",
+    "fabricloader": ">=0.16.14",
     "java": ">=21",
-    "minecraft": ">=1.21.4",
+    "minecraft": ">=1.21.6",
     "c2me-base": "*"
   },
   "conflicts": {
@@ -37,7 +37,6 @@
   },
   "breaks": {
     "tic_tacs": "*",
-    "optifabric": "*",
-    "fabric-api": "<0.107.0"
+    "optifabric": "*"
   }
 }
