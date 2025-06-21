@@ -86,10 +86,8 @@ public class Config {
                     Whether to use legacy scheduling for neighbor chunks
                     
                     Enabling this restores the behavior of always loading in neighbor chunks when a chunk is loaded.
-                    
-                    This is currently deprecated and will be removed in the future.
                     """)
-            .getBoolean(false, false);
+            .getBoolean(true, false);
 
     public static final boolean lowMemoryMode = new ConfigSystem.ConfigAccessor()
             .key("chunkSystem.lowMemoryMode")
