@@ -83,7 +83,7 @@ public final class ChunkDataSerializer {
     private static final byte[] STRING_STATUS = NbtWriter.getAsciiStringBytes("Status");
     private static final byte[] STRING_BLENDING_DATA = NbtWriter.getAsciiStringBytes("blending_data");
     private static final byte[] STRING_BELOW_ZERO_RETROGEN = NbtWriter.getAsciiStringBytes("below_zero_retrogen");
-    private static final byte[] STRING_UPGRADE_DATA = NbtWriter.getAsciiStringBytes("upgrade_data");
+    private static final byte[] STRING_UPGRADE_DATA = NbtWriter.getAsciiStringBytes("UpgradeData");
     private static final byte[] STRING_IS_LIGHT_ON = NbtWriter.getAsciiStringBytes("isLightOn");
     private static final byte[] STRING_BLOCK_ENTITIES = NbtWriter.getAsciiStringBytes("block_entities");
     private static final byte[] STRING_PALETTE = NbtWriter.getAsciiStringBytes("palette");
@@ -183,10 +183,12 @@ public final class ChunkDataSerializer {
 
         UpgradeData upgradeData = serializable.upgradeData();
         if (!upgradeData.isDone()) {
-            // Inline serialization
-            writer.startCompound(STRING_UPGRADE_DATA);
-            writeUpgradeData(writer, (IUpgradeData) upgradeData);
-            writer.finishCompound();
+//            // Inline serialization
+//            writer.startCompound(STRING_UPGRADE_DATA);
+//            writeUpgradeData(writer, (IUpgradeData) upgradeData);
+//            writer.finishCompound();
+            // uncommon path
+            writer.putElement(STRING_UPGRADE_DATA, upgradeData.toNbt());
         }
 
         List<SerializedChunk.SectionData> sectionData = serializable.sectionData();
@@ -525,36 +527,36 @@ public final class ChunkDataSerializer {
     }
 
 
-    private static void writeUpgradeData(NbtWriter writer, IUpgradeData upgradeData) {
-        long indicesStart = -1;
-        int indicesCount = 0;
-
-        int[][] centerIndicesToUpgrade = upgradeData.getCenterIndicesToUpgrade();
-
-        for (int i = 0; i < centerIndicesToUpgrade.length; ++i) {
-            if (centerIndicesToUpgrade[i] != null && centerIndicesToUpgrade[i].length != 0) {
-                String string = String.valueOf(i);
-                if (indicesStart == -1) {
-                    indicesStart = writer.startList(STRING_INDICES, NbtElement.INT_ARRAY_TYPE);
-                }
-                indicesCount++;
-                // TODO: cache this
-                writer.putIntArray(NbtWriter.getAsciiStringBytes(string), centerIndicesToUpgrade[i]);
-            }
-        }
-
-        if (indicesStart != -1) {
-            writer.finishList(indicesStart, indicesCount);
-        }
-
-        int i = 0;
-
-        for (EightWayDirection eightWayDirection : upgradeData.getSidesToUpgrade()) {
-            i |= 1 << eightWayDirection.ordinal();
-        }
-
-        writer.putByte(STRING_SIDES, (byte) i);
-    }
+//    private static void writeUpgradeData(NbtWriter writer, IUpgradeData upgradeData) {
+//        long indicesStart = -1;
+//        int indicesCount = 0;
+//
+//        int[][] centerIndicesToUpgrade = upgradeData.getCenterIndicesToUpgrade();
+//
+//        for (int i = 0; i < centerIndicesToUpgrade.length; ++i) {
+//            if (centerIndicesToUpgrade[i] != null && centerIndicesToUpgrade[i].length != 0) {
+//                String string = String.valueOf(i);
+//                if (indicesStart == -1) {
+//                    indicesStart = writer.startList(STRING_INDICES, NbtElement.INT_ARRAY_TYPE);
+//                }
+//                indicesCount++;
+//                // TODO: cache this
+//                writer.putIntArray(NbtWriter.getAsciiStringBytes(string), centerIndicesToUpgrade[i]);
+//            }
+//        }
+//
+//        if (indicesStart != -1) {
+//            writer.finishList(indicesStart, indicesCount);
+//        }
+//
+//        int i = 0;
+//
+//        for (EightWayDirection eightWayDirection : upgradeData.getSidesToUpgrade()) {
+//            i |= 1 << eightWayDirection.ordinal();
+//        }
+//
+//        writer.putByte(STRING_SIDES, (byte) i);
+//    }
 
     @Deprecated
     public static NbtList toNbt(ShortList[] lists) {
