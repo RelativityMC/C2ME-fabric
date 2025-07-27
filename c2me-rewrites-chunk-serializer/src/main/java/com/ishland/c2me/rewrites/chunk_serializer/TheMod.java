@@ -4,6 +4,7 @@ import com.ibm.asyncutil.util.Either;
 import com.ishland.c2me.base.common.registry.SerializerAccess;
 import com.ishland.c2me.rewrites.chunk_serializer.common.ChunkDataSerializer;
 import com.ishland.c2me.rewrites.chunk_serializer.common.NbtWriter;
+import com.ishland.c2me.rewrites.chunk_serializer.common.utils.ValidationUtils;
 import net.minecraft.nbt.NbtElement;
 
 public class TheMod implements net.fabricmc.api.ModInitializer {
@@ -17,6 +18,7 @@ public class TheMod implements net.fabricmc.api.ModInitializer {
                 nbtWriter.finishCompound();
                 final byte[] data = nbtWriter.toByteArray();
                 nbtWriter.release();
+                ValidationUtils.validateNbt(data);
                 return Either.right(data);
             });
         }

@@ -6,6 +6,7 @@ import com.ishland.c2me.base.mixin.access.IChunkHolder;
 import com.ishland.c2me.base.mixin.access.IVersionedChunkStorage;
 import com.ishland.c2me.rewrites.chunk_serializer.common.ChunkDataSerializer;
 import com.ishland.c2me.rewrites.chunk_serializer.common.NbtWriter;
+import com.ishland.c2me.rewrites.chunk_serializer.common.utils.ValidationUtils;
 import com.mojang.datafixers.DataFixer;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.server.world.ChunkHolder;
@@ -100,7 +101,9 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
                     nbtWriter.start(NbtElement.COMPOUND_TYPE);
                     ChunkDataSerializer.write(chunkSerializer, nbtWriter);
                     nbtWriter.finishCompound();
-                    return nbtWriter.toByteArray();
+                    byte[] byteArray = nbtWriter.toByteArray();
+                    ValidationUtils.validateNbt(byteArray);
+                    return byteArray;
                 } finally {
                     nbtWriter.release();
                 }

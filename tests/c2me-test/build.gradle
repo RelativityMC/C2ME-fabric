@@ -13,6 +13,7 @@ loom {
                     "-Dc2me.base.config.override.ioSystem.gcFreeChunkSerializer=true",
                     "-Dc2me.base.config.override.vanillaWorldGenOptimizations.useDensityFunctionCompiler=true",
                     "-Dc2me.base.config.override.vanillaWorldGenOptimizations.nativeAcceleration.enabled=true",
+                    "-Dc2me.gcFreeChunkSerializer.validateNbt=true",
                     "-Dcom.ishland.c2me.mixin.doAudit=true"
             if (System.getenv("GITHUB_WORKFLOW") != null) {
                 if (System.getenv("RUNNER_OS").equals("macOS")) {
