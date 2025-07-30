@@ -103,21 +103,20 @@ public abstract class MixinAquiferSamplerImpl {
 
     @Shadow @Final private DensityFunction depthDensityFunction;
 
+    @Shadow protected abstract AquiferSampler.FluidLevel getWaterLevel(int i);
+
     @Unique
-    private int c2me$dist1;
+    private int c2me$packed1;
     @Unique
-    private int c2me$dist2;
+    private int c2me$packed2;
     @Unique
-    private int c2me$dist3;
-    @Unique
-    private long c2me$pos1;
-    @Unique
-    private long c2me$pos2;
-    @Unique
-    private long c2me$pos3;
+    private int c2me$packed3;
 
     @Unique
     private double c2me$mutableDoubleThingy;
+
+    @Unique
+    private short[] c2me$packedBlockPositions;
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(CallbackInfo info) {
@@ -128,6 +127,8 @@ public abstract class MixinAquiferSamplerImpl {
 
         int sizeY = this.blockPositions.length / (this.sizeX * this.sizeZ);
 
+        this.c2me$packedBlockPositions = new short[this.blockPositions.length];
+
         final Random random = RandomUtils.getRandom(this.randomDeriver);
         // index: y, z, x
         for (int y = 0; y < sizeY; y++) {
@@ -137,11 +138,15 @@ public abstract class MixinAquiferSamplerImpl {
                     final int y1 = y + this.startY;
                     final int z1 = z + this.startZ;
                     RandomUtils.derive(this.randomDeriver, random, x1, y1, z1);
-                    int x2 = x1 * 16 + random.nextInt(10);
-                    int y2 = y1 * 12 + random.nextInt(9);
-                    int z2 = z1 * 16 + random.nextInt(10);
+                    int r0 = random.nextInt(10);
+                    int r1 = random.nextInt(9);
+                    int r2 = random.nextInt(10);
+                    int x2 = x1 * 16 + r0;
+                    int y2 = y1 * 12 + r1;
+                    int z2 = z1 * 16 + r2;
                     int index = this.index(x1, y1, z1);
                     this.blockPositions[index] = BlockPos.asLong(x2, y2, z2);
+                    this.c2me$packedBlockPositions[index] = (short) ((r0 << 8) | (r1 << 4) | r2);
                 }
             }
         }
@@ -150,6 +155,30 @@ public abstract class MixinAquiferSamplerImpl {
                 throw new AssertionError("Array initialization");
             }
         }
+    }
+
+    @Unique
+    private static int c2me$unpackPackedX(int packed) {
+        return packed >> 8;
+    }
+
+    @Unique
+    private static int c2me$unpackPackedY(int packed) {
+        return (packed >> 4) & 0b1111;
+    }
+
+    @Unique
+    private static int c2me$unpackPackedZ(int packed) {
+        return packed & 0b1111;
+    }
+
+    @Unique
+    private static int c2me$unpackPackedDist(int packed) {
+        return packed >> 20;
+    }
+
+    private static int c2me$unpackPackedPosIdx(int packed) {
+        return packed & 0xffff;
     }
 
     /**
@@ -178,8 +207,8 @@ public abstract class MixinAquiferSamplerImpl {
 
     @Unique
     private @Nullable BlockState aquiferExtracted$applyPost(DensityFunction.NoisePos pos, double density, int j, int i, int k) {
-        AquiferSampler.FluidLevel fluidLevel2 = this.getWaterLevel(this.c2me$pos1);
-        double d = maxDistance(this.c2me$dist1, this.c2me$dist2);
+        AquiferSampler.FluidLevel fluidLevel2 = this.c2me$getWaterLevelIndexed(c2me$unpackPackedPosIdx(this.c2me$packed1));
+        double d = maxDistance(c2me$unpackPackedDist(this.c2me$packed1), c2me$unpackPackedDist(this.c2me$packed2));
         BlockState blockState = fluidLevel2.getBlockState(j);
         if (d <= 0.0) {
             this.needsFluidTick = d >= NEEDS_FLUID_TICK_DISTANCE_THRESHOLD;
@@ -190,7 +219,7 @@ public abstract class MixinAquiferSamplerImpl {
         } else {
 //            MutableDouble mutableDouble = new MutableDouble(Double.NaN); // 234MB/s alloc rate at 480 cps
             this.c2me$mutableDoubleThingy = Double.NaN;
-            AquiferSampler.FluidLevel fluidLevel3 = this.getWaterLevel(this.c2me$pos2);
+            AquiferSampler.FluidLevel fluidLevel3 = this.c2me$getWaterLevelIndexed(c2me$unpackPackedPosIdx(this.c2me$packed2));
             double e = d * this.c2me$calculateDensityModified(pos, fluidLevel2, fluidLevel3);
             if (density + e > 0.0) {
                 this.needsFluidTick = false;
@@ -203,11 +232,12 @@ public abstract class MixinAquiferSamplerImpl {
 
     @Unique
     private BlockState aquiferExtracted$getFinalBlockState(DensityFunction.NoisePos pos, double density, double d, AquiferSampler.FluidLevel fluidLevel2, AquiferSampler.FluidLevel fluidLevel3, BlockState blockState) {
-        AquiferSampler.FluidLevel fluidLevel4 = this.getWaterLevel(this.c2me$pos3);
-        double f = maxDistance(this.c2me$dist1, this.c2me$dist3);
+        AquiferSampler.FluidLevel fluidLevel4 = this.c2me$getWaterLevelIndexed(c2me$unpackPackedPosIdx(this.c2me$packed3));
+        int dist3 = c2me$unpackPackedDist(this.c2me$packed3);
+        double f = maxDistance(c2me$unpackPackedDist(this.c2me$packed1), dist3);
         if (aquiferExtracted$extractedCheckFG(pos, density, d, fluidLevel2, f, fluidLevel4)) return null;
 
-        double g = maxDistance(this.c2me$dist2, this.c2me$dist3);
+        double g = maxDistance(c2me$unpackPackedDist(this.c2me$packed2), dist3);
         if (aquiferExtracted$extractedCheckFG(pos, density, d, fluidLevel3, g, fluidLevel4)) return null;
 
         this.needsFluidTick = true;
@@ -227,81 +257,78 @@ public abstract class MixinAquiferSamplerImpl {
     }
 
     @Unique
-    @NotNull
     private void aquiferExtracted$refreshDistPosIdx(int x, int y, int z) {
         int gx = (x - 5) >> 4;
         int gy = Math.floorDiv(y + 1, 12);
         int gz = (z - 5) >> 4;
-        int dist1 = Integer.MAX_VALUE;
-        int dist2 = Integer.MAX_VALUE;
-        int dist3 = Integer.MAX_VALUE;
-        long pos1 = 0;
-        long pos2 = 0;
-        long pos3 = 0;
+        int A = Integer.MAX_VALUE;
+        int B = Integer.MAX_VALUE;
+        int C = Integer.MAX_VALUE;
 
+        int index = 12; // 12 max
         for (int offY = -1; offY <= 1; ++offY) {
+            int gymul = (gy + offY) * 12;
             for (int offZ = 0; offZ <= 1; ++offZ) {
-                for (int offX = 0; offX <= 1; ++offX) {
-                    int posIdx = this.index(gx + offX, gy + offY, gz + offZ);
+                int gzmul = (gz + offZ) << 4;
 
-                    long position = this.blockPositions[posIdx];
+                int index0 = index - 1;
+                int posIdx0 = this.index(gx, gy + offY, gz + offZ);
+                int position0 = this.c2me$packedBlockPositions[posIdx0];
+                int dx0 = (gx << 4) + c2me$unpackPackedX(position0) - x;
+                int dy0 = gymul + c2me$unpackPackedY(position0) - y;
+                int dz0 = gzmul + c2me$unpackPackedZ(position0) - z;
+                int dist_0 = dx0 * dx0 + dy0 * dy0 + dz0 * dz0;
 
-                    int dx = BlockPos.unpackLongX(position) - x;
-                    int dy = BlockPos.unpackLongY(position) - y;
-                    int dz = BlockPos.unpackLongZ(position) - z;
-                    int dist = dx * dx + dy * dy + dz * dz;
+                int index1 = index - 2;
+                int posIdx1 = posIdx0 + 1;
+                int position1 = this.c2me$packedBlockPositions[posIdx1];
+                int dx1 = ((gx + 1) << 4) + c2me$unpackPackedX(position1) - x;
+                int dy1 = gymul + c2me$unpackPackedY(position1) - y;
+                int dz1 = gzmul + c2me$unpackPackedZ(position1) - z;
+                int dist_1 = dx1 * dx1 + dy1 * dy1 + dz1 * dz1;
 
-                    // unexplainable branch prediction magic
-                    if (dist3 >= dist) {
-                        pos3 = position;
-                        dist3 = dist;
-                    }
-                    if (dist2 >= dist) {
-                        pos3 = pos2;
-                        dist3 = dist2;
-                        pos2 = position;
-                        dist2 = dist;
-                    }
-                    if (dist1 >= dist) {
-                        pos2 = pos1;
-                        dist2 = dist1;
-                        pos1 = position;
-                        dist1 = dist;
-                    }
+                int p0 = (dist_0 << 20) | (index0 << 16) | posIdx0;
+                if (p0 <= C) {
+                    int n01 = Math.max(A, p0);
+                    A = Math.min(A, p0);
+
+                    int n02 = Math.max(B, n01);
+                    B = Math.min(B, n01);
+
+                    C = Math.min(C, n02);
                 }
+
+                int p1 = (dist_1 << 20) | (index1 << 16) | posIdx1;
+                if (p1 <= C) {
+                    int n11 = Math.max(A, p1);
+                    A = Math.min(A, p1);
+
+                    int n12 = Math.max(B, n11);
+                    B = Math.min(B, n11);
+
+                    C = Math.min(C, n12);
+                }
+
+                index -= 2;
             }
         }
 
-        this.c2me$dist1 = dist1;
-        this.c2me$dist2 = dist2;
-        this.c2me$dist3 = dist3;
-        this.c2me$pos1 = pos1;
-        this.c2me$pos2 = pos2;
-        this.c2me$pos3 = pos3;
+//        this.c2me$dist1 = A >> 20;
+//        this.c2me$dist2 = B >> 20;
+//        this.c2me$dist3 = C >> 20;
+//        this.c2me$pos1 = this.blockPositions[A & 0xffff];
+//        this.c2me$pos2 = this.blockPositions[B & 0xffff];
+//        this.c2me$pos3 = this.blockPositions[C & 0xffff];
+        this.c2me$packed1 = A;
+        this.c2me$packed2 = B;
+        this.c2me$packed3 = C;
     }
 
-    /**
-     * @author ishland
-     * @reason optimize
-     */
-    @Overwrite
-    private AquiferSampler.FluidLevel getWaterLevel(long pos) {
-        int i = BlockPos.unpackLongX(pos);
-        int j = BlockPos.unpackLongY(pos);
-        int k = BlockPos.unpackLongZ(pos);
-        int l = i >> 4; // C2ME - inline: floorDiv(i, 16)
-        int m = Math.floorDiv(j, 12); // C2ME - inline
-        int n = k >> 4; // C2ME - inline: floorDiv(k, 16)
-        int o = this.index(l, m, n);
-        AquiferSampler.FluidLevel fluidLevel = this.waterLevels[o];
-        if (fluidLevel != null) {
-            return fluidLevel;
-        } else {
-            AquiferSampler.FluidLevel fluidLevel2 = this.getFluidLevel(i, j, k);
-            this.waterLevels[o] = fluidLevel2;
-            return fluidLevel2;
-        }
+    @Unique
+    private AquiferSampler.FluidLevel c2me$getWaterLevelIndexed(int index) {
+        return this.getWaterLevel(index);
     }
+
 
     /**
      * @author ishland

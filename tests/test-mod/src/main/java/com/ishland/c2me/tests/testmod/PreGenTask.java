@@ -64,7 +64,7 @@ public class PreGenTask {
             Math.max(1,Runtime.getRuntime().availableProcessors() - 1),
             new ThreadFactoryBuilder().setDaemon(true).setPriority(Thread.NORM_PRIORITY - 2).setNameFormat("locator-%d").build()
     );
-    private static final ChunkTicketType TICKET = new ChunkTicketType(0, false, ChunkTicketType.Use.LOADING);
+    private static final ChunkTicketType TICKET = new ChunkTicketType(0, 2); // loading
 
     private static final int SEARCH_RADIUS = 512 * 16;
 
