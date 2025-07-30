@@ -105,6 +105,7 @@ public abstract class MixinAquiferSamplerImpl {
 
     @Shadow protected abstract AquiferSampler.FluidLevel getWaterLevel(int i);
 
+    @Shadow @Final private int field_61452;
     @Unique
     private int c2me$packed1;
     @Unique
@@ -195,7 +196,10 @@ public abstract class MixinAquiferSamplerImpl {
             return null;
         } else {
             AquiferSampler.FluidLevel fluidLevel = this.fluidLevelSampler.getFluidLevel(i, j, k);
-            if (fluidLevel.getBlockState(j).isOf(Blocks.LAVA)) {
+            if (j > this.field_61452) {
+                this.needsFluidTick = false;
+                return fluidLevel.getBlockState(j);
+            } if (fluidLevel.getBlockState(j).isOf(Blocks.LAVA)) {
                 this.needsFluidTick = false;
                 return Blocks.LAVA.getDefaultState();
             } else {
