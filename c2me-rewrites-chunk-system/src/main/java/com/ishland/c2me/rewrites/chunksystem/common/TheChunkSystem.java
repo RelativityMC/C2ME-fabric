@@ -16,7 +16,6 @@ import it.unimi.dsi.fastutil.longs.Long2IntMap;
 import it.unimi.dsi.fastutil.longs.Long2IntMaps;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.WorldGenerationProgressListener;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ServerChunkLoadingManager;
 import net.minecraft.util.collection.BoundedRegionArray;
@@ -104,10 +103,6 @@ public class TheChunkSystem extends StatusAdvancingScheduler<ChunkPos, ChunkStat
         super.onItemUpgrade(holder, statusReached);
         final NewChunkStatus statusReached1 = (NewChunkStatus) statusReached;
         final NewChunkStatus prevStatus = (NewChunkStatus) statusReached.getPrev();
-        final WorldGenerationProgressListener listener = ((IThreadedAnvilChunkStorage) this.tacs).getWorldGenerationProgressListener();
-        if (listener != null && prevStatus.getEffectiveVanillaStatus() != statusReached1.getEffectiveVanillaStatus()) {
-            listener.setChunkStatus(holder.getKey(), statusReached1.getEffectiveVanillaStatus());
-        }
         if (prevStatus.toChunkLevelType() != statusReached1.toChunkLevelType()) {
             ((IThreadedAnvilChunkStorage) this.tacs).getMainThreadExecutor().execute(
                     () -> ((IThreadedAnvilChunkStorage) this.tacs).invokeOnChunkStatusChange(holder.getKey(), statusReached1.toChunkLevelType()));
@@ -119,10 +114,6 @@ public class TheChunkSystem extends StatusAdvancingScheduler<ChunkPos, ChunkStat
         super.onItemDowngrade(holder, statusReached);
         final NewChunkStatus statusReached1 = (NewChunkStatus) statusReached;
         final NewChunkStatus prevStatus = (NewChunkStatus) statusReached.getNext();
-        final WorldGenerationProgressListener listener = ((IThreadedAnvilChunkStorage) this.tacs).getWorldGenerationProgressListener();
-        if (listener != null && prevStatus.getEffectiveVanillaStatus() != statusReached1.getEffectiveVanillaStatus()) {
-            listener.setChunkStatus(holder.getKey(), statusReached1.getEffectiveVanillaStatus());
-        }
         if (prevStatus.toChunkLevelType() != statusReached1.toChunkLevelType()) {
             ((IThreadedAnvilChunkStorage) this.tacs).getMainThreadExecutor().execute(
                     () -> ((IThreadedAnvilChunkStorage) this.tacs).invokeOnChunkStatusChange(holder.getKey(), statusReached1.toChunkLevelType()));

@@ -16,10 +16,12 @@ public abstract class MixinChunkNoiseSamplerFlatCache implements IFastCacheLike 
 
     @Shadow @Final private ChunkNoiseSampler field_36611;
 
-    @Shadow @Final private double[][] cache;
+    @Shadow @Final private double[] cache;
 
     @Mutable
     @Shadow @Final private DensityFunction delegate;
+
+    @Shadow @Final private int horizontalCacheSize;
 
     @Override
     public double c2me$getCached(int x, int y, int z, EvalType evalType) {
@@ -27,9 +29,9 @@ public abstract class MixinChunkNoiseSamplerFlatCache implements IFastCacheLike 
         int j = BiomeCoords.fromBlock(z);
         int k = i - ((IChunkNoiseSampler) this.field_36611).getStartBiomeX();
         int l = j - ((IChunkNoiseSampler) this.field_36611).getStartBiomeZ();
-        int m = this.cache.length;
+        int m = this.horizontalCacheSize;
         if (k >= 0 && l >= 0 && k < m && l < m) {
-            return this.cache[k][l];
+            return this.cache[k + l * this.horizontalCacheSize];
         } else {
             return Double.longBitsToDouble(CACHE_MISS_NAN_BITS);
         }
@@ -42,9 +44,9 @@ public abstract class MixinChunkNoiseSamplerFlatCache implements IFastCacheLike 
             int j1 = BiomeCoords.fromBlock(z[i]);
             int k = i1 - ((IChunkNoiseSampler) this.field_36611).getStartBiomeX();
             int l = j1 - ((IChunkNoiseSampler) this.field_36611).getStartBiomeZ();
-            int m = this.cache.length;
+            int m = this.horizontalCacheSize;
             if (k >= 0 && l >= 0 && k < m && l < m) {
-                res[i] = this.cache[k][l];
+                res[i] = this.cache[k + l * this.horizontalCacheSize];
             } else {
                 System.out.println("partial flat cache hit");
                 return false; // partial hit possible

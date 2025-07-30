@@ -31,7 +31,7 @@ public class MixinWorldChunk implements WorldChunkExtension {
 
     @WrapMethod(method = "canTickBlockEntity")
     private boolean wrapCanTickBlockEntity(BlockPos pos, Operation<Boolean> original) {
-        return (this.world.isClient || this.c2me$isBlockTicking()) && original.call(pos);
+        return (this.world.isClient() || this.c2me$isBlockTicking()) && original.call(pos);
     }
 
 }

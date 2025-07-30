@@ -40,7 +40,7 @@ public class MixinNoiseConfig {
                 BytecodeGen.compile(this.noiseRouter.erosion(), tempCache),
                 BytecodeGen.compile(this.noiseRouter.depth(), tempCache),
                 BytecodeGen.compile(this.noiseRouter.ridges(), tempCache),
-                BytecodeGen.compile(this.noiseRouter.initialDensityWithoutJaggedness(), tempCache),
+                BytecodeGen.compile(this.noiseRouter.preliminarySurfaceLevel(), tempCache),
                 BytecodeGen.compile(this.noiseRouter.finalDensity(), tempCache),
                 BytecodeGen.compile(this.noiseRouter.veinToggle(), tempCache),
                 BytecodeGen.compile(this.noiseRouter.veinRidged(), tempCache),

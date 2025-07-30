@@ -7,7 +7,6 @@ import com.sun.management.GcInfo;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.ServerTask;
-import net.minecraft.server.WorldGenerationProgressListener;
 import net.minecraft.server.command.CommandOutput;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.SystemDetails;
@@ -153,8 +152,8 @@ public abstract class MixinMinecraftServer extends ReentrantThreadExecutor<Serve
         return hasTask;
     }
 
-    @Redirect(method = "loadWorld", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;prepareStartRegion(Lnet/minecraft/server/WorldGenerationProgressListener;)V"))
-    private void redirectPrepareStartRegion(MinecraftServer server, WorldGenerationProgressListener worldGenerationProgressListener) {
+    @Redirect(method = "loadWorld", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;prepareStartRegion()V"))
+    private void redirectPrepareStartRegion(MinecraftServer server) {
         LOGGER.info("Not preparing start region");
     }
 

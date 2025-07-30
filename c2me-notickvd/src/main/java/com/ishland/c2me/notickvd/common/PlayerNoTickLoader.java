@@ -33,7 +33,7 @@ public class PlayerNoTickLoader {
     private static final Logger LOGGER = LogUtils.getLogger();
 
     public static final ItemTicket.TicketType TICKET_TYPE = new ItemTicket.TicketType("c2me:notickvd");
-    public static final ChunkTicketType VANILLA_TICKET_TYPE = new ChunkTicketType(0, false, ChunkTicketType.Use.LOADING);
+    public static final ChunkTicketType VANILLA_TICKET_TYPE = new ChunkTicketType(0, 2); // loading
 
     private final ServerChunkLoadingManager tacs;
     private final NoTickSystem noTickSystem;

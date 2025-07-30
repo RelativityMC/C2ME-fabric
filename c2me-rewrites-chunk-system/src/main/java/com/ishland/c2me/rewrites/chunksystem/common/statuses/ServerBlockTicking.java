@@ -72,7 +72,6 @@ public class ServerBlockTicking extends NewChunkStatus {
                 chunk.runPostProcessing(serverWorld);
                 serverWorld.disableTickSchedulers(chunk);
                 sendChunkToPlayer(context);
-                ((IThreadedAnvilChunkStorage) context.tacs()).getTotalChunksLoadedCount().incrementAndGet(); // never decremented in vanilla
                 ((WorldChunkExtension) chunk).c2me$setBlockTicking(true);
                 if (ModStatuses.fabric_lifecycle_events_v1) {
                     LifecycleEventInvoker.invokeChunkLevelTypeChange(serverWorld, chunk, ChunkLevelType.FULL, ChunkLevelType.BLOCK_TICKING);

@@ -5,6 +5,7 @@ import it.unimi.dsi.fastutil.objects.ObjectSet;
 import net.minecraft.Bootstrap;
 import net.minecraft.SharedConstants;
 import net.minecraft.block.entity.SkullBlockEntity;
+import net.minecraft.component.type.ProfileComponent;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.ChunkPos;
 import org.junit.jupiter.api.AfterAll;
@@ -47,7 +48,7 @@ public class TestIterators {
     @AfterAll
     public static void teardown() {
         Util.shutdownExecutors();
-        SkullBlockEntity.clearServices();
+        ProfileComponent.method_72521();
     }
 
 }

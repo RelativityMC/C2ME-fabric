@@ -6,24 +6,28 @@ import net.minecraft.structure.JigsawJunction;
 import net.minecraft.util.math.BlockBox;
 import net.minecraft.world.gen.StructureWeightSampler;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 
+import java.util.List;
+
 @Mixin(StructureWeightSampler.class)
 public abstract class MixinStructureWeightSampler {
 
-    @Shadow @Final private ObjectListIterator<StructureWeightSampler.Piece> pieceIterator;
+    @Shadow(aliases = "field_61465") @Final private List<StructureWeightSampler.Piece> pieceList;
 
-    @Shadow @Final private ObjectListIterator<JigsawJunction> junctionIterator;
+    @Shadow(aliases = "field_61466") @Final private List<JigsawJunction> junctionList;
 
     @Shadow
     private static double getStructureWeight(int x, int y, int z, int yy) {
         throw new AbstractMethodError();
     }
 
+    @Shadow @Final private @Nullable BlockBox field_61467;
     @Unique
     private StructureWeightSampler.Piece[] c2me$pieceArray;
 
@@ -32,10 +36,8 @@ public abstract class MixinStructureWeightSampler {
 
     @Unique
     private void c2me$initArrays() {
-        this.c2me$pieceArray = Iterators.toArray(this.pieceIterator, StructureWeightSampler.Piece.class);
-        this.pieceIterator.back(Integer.MAX_VALUE);
-        this.c2me$junctionArray = Iterators.toArray(this.junctionIterator, JigsawJunction.class);
-        this.junctionIterator.back(Integer.MAX_VALUE);
+        this.c2me$pieceArray = this.pieceList.toArray(StructureWeightSampler.Piece[]::new);
+        this.c2me$junctionArray = this.junctionList.toArray(JigsawJunction[]::new);
     }
 
     /**
@@ -44,14 +46,24 @@ public abstract class MixinStructureWeightSampler {
      */
     @Overwrite
     public double sample(DensityFunction.NoisePos pos) {
-        if (this.c2me$pieceArray == null || this.c2me$junctionArray == null) {
-            this.c2me$initArrays();
+        if (this.field_61467 == null) {
+            return 0.0;
         }
 
         int i = pos.blockX();
         int j = pos.blockY();
         int k = pos.blockZ();
+
+        if (!this.field_61467.contains(i, j, k)) {
+            return 0.0;
+        }
+
+        if (this.c2me$pieceArray == null || this.c2me$junctionArray == null) {
+            this.c2me$initArrays();
+        }
+
         double d = 0.0;
+
 
         for (StructureWeightSampler.Piece piece : this.c2me$pieceArray) {
             BlockBox blockBox = piece.box();

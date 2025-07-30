@@ -1,6 +1,7 @@
 package com.ishland.c2me.opts.dfc.common.ast;
 
 import com.ishland.c2me.opts.dfc.common.ast.binary.AddNode;
+import com.ishland.c2me.opts.dfc.common.ast.binary.DivNode;
 import com.ishland.c2me.opts.dfc.common.ast.binary.MaxNode;
 import com.ishland.c2me.opts.dfc.common.ast.binary.MaxShortNode;
 import com.ishland.c2me.opts.dfc.common.ast.binary.MinNode;
@@ -9,6 +10,7 @@ import com.ishland.c2me.opts.dfc.common.ast.binary.MulNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.CacheLikeNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.DelegateNode;
+import com.ishland.c2me.opts.dfc.common.ast.misc.FindTopSurfaceNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.RangeChoiceNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.YClampedGradientNode;
 import com.ishland.c2me.opts.dfc.common.ast.noise.DFTNoiseNode;
@@ -77,6 +79,7 @@ public class McToAst {
                 case CUBE -> new CubeNode(toAst(f.input()));
                 case HALF_NEGATIVE -> new NegMulNode(toAst(f.input()), 0.5);
                 case QUARTER_NEGATIVE -> new NegMulNode(toAst(f.input()), 0.25);
+                case INVERT -> new DivNode(new ConstantNode(1.0), toAst(f.input()));
                 case SQUEEZE -> new SqueezeNode(toAst(f.input()));
             };
             case DensityFunctionTypes.RangeChoice f -> new RangeChoiceNode(toAst(f.input()), f.minInclusive(), f.maxExclusive(), toAst(f.whenInRange()), toAst(f.whenOutOfRange()));
@@ -97,6 +100,7 @@ public class McToAst {
             case DensityFunctionTypes.YClampedGradient f -> new YClampedGradientNode(f.fromY(), f.toY(), f.fromValue(), f.toValue());
             case DensityFunctionTypes.WeirdScaledSampler f -> new DFTWeirdScaledSamplerNode(toAst(f.input()), f.noise(), f.rarityValueMapper());
             case DensityFunctionTypes.Spline f -> new SplineAstNode(f.spline());
+            case DensityFunctionTypes.FindTopSurface f -> new FindTopSurfaceNode(toAst(f.density()), toAst(f.upperBound()), new ConstantNode(f.lowerBound()), f.cellHeight());
 
             default -> {
 //                delegateStatistics.computeIfAbsent(df.getClass(), unused -> new LongAdder()).increment();;

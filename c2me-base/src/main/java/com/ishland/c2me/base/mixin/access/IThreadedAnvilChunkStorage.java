@@ -3,7 +3,6 @@ package com.ishland.c2me.base.mixin.access;
 import it.unimi.dsi.fastutil.longs.Long2LongMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.server.WorldGenerationProgressListener;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ChunkLevelType;
 import net.minecraft.server.world.ServerChunkLoadingManager;
@@ -46,12 +45,6 @@ public interface IThreadedAnvilChunkStorage {
 
     @Invoker
     void invokeSendToPlayers(ChunkHolder chunkHolder, WorldChunk chunk);
-
-    @Accessor
-    WorldGenerationProgressListener getWorldGenerationProgressListener();
-
-    @Accessor
-    AtomicInteger getTotalChunksLoadedCount();
 
     @Invoker
     ChunkHolder invokeGetChunkHolder(long pos);
