@@ -119,6 +119,7 @@ public class MixinServerAccessibleChunkSending {
     private static void sendChunkToPlayer(ServerChunkLoadingManager tacs, ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> holder) {
         final WorldChunk worldChunk = (WorldChunk) holder.getItem().get().chunk();
         NewChunkHolderVanillaInterface holderVanillaInterface = holder.getUserData().get();
+        holderVanillaInterface.combinePostProcessingFuture(((IThreadedAnvilChunkStorage) tacs).getLightingProvider().enqueue(holder.getKey().x, holder.getKey().z));
         CompletableFuture<?> completableFuturexx = holderVanillaInterface.getPostProcessingFuture();
         if (completableFuturexx.isDone()) {
             ((IThreadedAnvilChunkStorage) tacs).invokeSendToPlayers(holderVanillaInterface, worldChunk);
