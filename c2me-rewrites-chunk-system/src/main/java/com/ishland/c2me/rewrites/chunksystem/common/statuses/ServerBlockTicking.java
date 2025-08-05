@@ -115,12 +115,7 @@ public class ServerBlockTicking extends NewChunkStatus {
     private static void sendChunkToPlayer(ChunkLoadingContext context) {
         final WorldChunk chunk = (WorldChunk) context.holder().getItem().get().chunk();
         NewChunkHolderVanillaInterface holderVanillaInterface = context.holder().getUserData().get();
-        CompletableFuture<?> completableFuturexx = holderVanillaInterface.getPostProcessingFuture();
-        if (completableFuturexx.isDone()) {
-            ((IThreadedAnvilChunkStorage) context.tacs()).invokeSendToPlayers(holderVanillaInterface, chunk);
-        } else {
-            completableFuturexx.thenAcceptAsync(v -> ((IThreadedAnvilChunkStorage) context.tacs()).invokeSendToPlayers(holderVanillaInterface, chunk), ((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor());
-        }
+        ((IThreadedAnvilChunkStorage) context.tacs()).invokeSendToPlayers(holderVanillaInterface, chunk);
     }
 
     @Override
