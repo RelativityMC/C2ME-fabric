@@ -16,7 +16,7 @@ public abstract class MixinChunkHolder {
 
     @Shadow public abstract CompletableFuture<OptionalChunk<WorldChunk>> getAccessibleFuture();
 
-    @Redirect(method = {"markForBlockUpdate", "markForLightUpdate"}, at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ChunkHolder;getWorldChunk()Lnet/minecraft/world/chunk/WorldChunk;"), require = 2)
+    @Redirect(method = {"markForBlockUpdate", "markForLightUpdate", "getPostProcessedChunk"}, at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ChunkHolder;getWorldChunk()Lnet/minecraft/world/chunk/WorldChunk;"), require = 3)
     private WorldChunk redirectWorldChunk(ChunkHolder chunkHolder) {
         if (this instanceof IFastChunkHolder fastChunkHolder) {
             return fastChunkHolder.c2me$immediateWorldChunk();
