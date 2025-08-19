@@ -48,7 +48,6 @@ public class TestIterators {
     @AfterAll
     public static void teardown() {
         Util.shutdownExecutors();
-        ProfileComponent.method_72521();
     }
 
 }
