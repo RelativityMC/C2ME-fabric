@@ -1,14 +1,9 @@
 package com.ishland.c2me.rewrites.chunk_serializer.common;
 
 import com.ishland.c2me.base.mixin.access.IBelowZeroRetrogen;
-import com.ishland.c2me.base.mixin.access.IChunkTickScheduler;
-import com.ishland.c2me.base.mixin.access.ISimpleTickScheduler;
 import com.ishland.c2me.base.mixin.access.IState;
 import com.ishland.c2me.base.mixin.access.IStructurePiece;
 import com.ishland.c2me.base.mixin.access.IStructureStart;
-import com.ishland.c2me.base.mixin.access.IUpgradeData;
-import com.ishland.c2me.rewrites.chunk_serializer.common.utils.LithiumUtil;
-import com.ishland.c2me.rewrites.chunk_serializer.common.utils.StarLightUtil;
 import com.mojang.serialization.Codec;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.shorts.ShortList;
@@ -17,6 +12,7 @@ import net.minecraft.SharedConstants;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.class_11897;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
@@ -37,17 +33,14 @@ import net.minecraft.util.math.BlockBox;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.EightWayDirection;
 import net.minecraft.world.Heightmap;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeKeys;
 import net.minecraft.world.chunk.BelowZeroRetrogen;
 import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.ChunkType;
 import net.minecraft.world.chunk.PalettedContainer;
 import net.minecraft.world.chunk.ReadableContainer;
-import net.minecraft.world.chunk.ReadableContainer.Serialized;
 import net.minecraft.world.chunk.SerializedChunk;
 import net.minecraft.world.chunk.UpgradeData;
 import net.minecraft.world.gen.chunk.BlendingData;
@@ -60,13 +53,10 @@ import net.minecraft.world.tick.TickPriority;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.BitSet;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.LongStream;
@@ -193,11 +183,11 @@ public final class ChunkDataSerializer {
 
         List<SerializedChunk.SectionData> sectionData = serializable.sectionData();
 
-        Registry<Biome> biomeRegistry = serializable.biomeRegistry();
+        class_11897 containerFactory = serializable.containerFactory();
 
         checkLightFlag(serializable.lightCorrect(), writer);
 
-        writeSectionData(writer, chunkPos, sectionData, biomeRegistry);
+        writeSectionData(writer, chunkPos, sectionData, containerFactory);
 
 
         writer.startFixedList(STRING_BLOCK_ENTITIES, serializable.blockEntities().size(), NbtElement.COMPOUND_TYPE);
@@ -271,13 +261,9 @@ public final class ChunkDataSerializer {
             NbtWriter writer,
             ChunkPos chunkPos,
             List<SerializedChunk.SectionData> sectionData,
-            Registry<Biome> biomeRegistry
+            class_11897 containerFactory
     ) {
-//        if (STARLIGHT) {
-//            writeSectionDataStarlight(writer, chunkPos, sectionData, biomeRegistry);
-//        } else {
-            writeSectionDataVanilla(writer, chunkPos, sectionData, biomeRegistry);
-//        }
+        writeSectionDataVanilla(writer, chunkPos, sectionData, containerFactory);
     }
 
     /**
@@ -287,7 +273,7 @@ public final class ChunkDataSerializer {
             NbtWriter writer,
             ChunkPos chunkPos,
             List<SerializedChunk.SectionData> sectionData,
-            Registry<Biome> biomeRegistry
+            class_11897 containerFactory
     ) {
         long sectionsStart = writer.startList(STRING_SECTIONS, NbtElement.COMPOUND_TYPE);
         int sectionCount = 0;
@@ -301,8 +287,8 @@ public final class ChunkDataSerializer {
                     writer.compoundEntryStart();
                 }
 
-                writeBlockStates(writer, sectionDatum.chunkSection().getBlockStateContainer());
-                writeBiomes(writer, sectionDatum.chunkSection().getBiomeContainer(), biomeRegistry);
+                writeBlockStates(writer, sectionDatum.chunkSection().getBlockStateContainer(), containerFactory);
+                writeBiomes(writer, sectionDatum.chunkSection().getBiomeContainer(), containerFactory);
             }
             
             if (sectionDatum.blockLight() != null) {
@@ -333,103 +319,6 @@ public final class ChunkDataSerializer {
         writer.finishList(sectionsStart, sectionCount);
     }
 
-//    /**
-//     * Mirror section of {@link ChunkSerializer#serialize(ServerWorld, Chunk)}
-//     * with the changes by StarLight applied inline
-//     */
-//    private static void writeSectionDataStarlight(
-//            NbtWriter writer,
-//            ChunkPos chunkPos,
-//            List<ChunkSerializer.SectionData> sectionData,
-//            Registry<Biome> biomeRegistry
-//    ) {
-//        // START DIFF
-//        boolean lit = chunk.isLightOn();
-//        ChunkStatus status = chunk.getStatus();
-//        boolean shouldWrite = lit && status.isAtLeast(ChunkStatus.LIGHT);
-//        var blockNibbles = StarLightUtil.getBlockNibbles(chunk);
-//        var skyNibbles = StarLightUtil.getSkyNibbles(chunk);
-//        int minSection;
-//        // END DIFF
-//
-//        long sectionsStart = writer.startList(STRING_SECTIONS, NbtElement.COMPOUND_TYPE);
-//        int sectionCount = 0;
-//
-//        for (int i = minSection = lightingProvider.getBottomY(); i < lightingProvider.getTopY(); ++i) {
-//            int index = chunk.sectionCoordToIndex(i);
-//            boolean bl2 = index >= 0 && index < chunkSections.length;
-//
-//            // START DIFF
-////
-////            ChunkNibbleArray blockLight = lightingProvider.get(LightType.BLOCK)
-////                    .getLightSection(ChunkSectionPos.from(chunkPos, i));
-////            ChunkNibbleArray skyLight = lightingProvider.get(LightType.SKY)
-////                    .getLightSection(ChunkSectionPos.from(chunkPos, i));
-//
-//            var blockNibble = shouldWrite ? StarLightUtil.getSaveState(blockNibbles[i - minSection]) : null;
-//            var skyNibble = shouldWrite ? StarLightUtil.getSaveState(skyNibbles[i - minSection]) : null;
-//
-//            if (bl2 || blockNibble != null || skyNibble != null) {
-//                // END DIFF
-//                boolean hasInner = false;
-//                if (bl2) {
-//                    hasInner = true;
-//                    writer.compoundEntryStart();
-//                    IChunkSection chunkSection = chunkSections[index];
-//
-//                    writeBlockStates(writer, chunkSection.getBlockStateContainer());
-//                    writeBiomes(writer, chunkSection.getBiomeContainer(), biomeRegistry);
-//                }
-//
-//                // START DIFF
-////                if (blockLight != null && !blockLight.isUninitialized()) {
-////                    if (!hasInner) {
-////                        writer.compoundEntryStart();
-////                        hasInner = true;
-////                    }
-////                    writer.putByteArray(STRING_BLOCK_LIGHT, blockLight.asByteArray());
-////                }
-//
-////                if (skyLight != null && !skyLight.isUninitialized()) {
-////                    if (!hasInner) {
-////                        writer.compoundEntryStart();
-////                        hasInner = true;
-////                    }
-////                    writer.putByteArray(STRING_SKY_LIGHT, skyLight.asByteArray());
-////                }
-//
-//                if (blockNibble != null) {
-//                    if (blockNibble.getData() != null) {
-//                        writer.putByteArray(STRING_BLOCK_LIGHT, blockNibble.getData());
-//                    }
-//                    writer.putInt(STRING_BLOCKLIGHT_STATE_TAG, blockNibble.getState());
-//                }
-//
-//                if (skyNibble != null) {
-//                    if (skyNibble.getData() != null) {
-//                        writer.putByteArray(STRING_SKY_LIGHT, skyNibble.getData());
-//                    }
-//                    writer.putInt(STRING_SKYLIGHT_STATE_TAG, skyNibble.getState());
-//                }
-//
-//                // END DIFF
-//
-//
-//                if (hasInner) {
-//                    writer.putByte(STRING_CHAR_BIG_Y, (byte) i);
-//                    writer.finishCompound();
-//                    sectionCount++;
-//                }
-//            }
-//        }
-//
-//        writer.finishList(sectionsStart, sectionCount);
-//
-//        if (lit) {
-//            writer.putInt(STRING_STARLIGHT_VERSION_TAG, STARLIGHT_LIGHT_VERSION);
-//        }
-//    }
-
     /**
      * mirror of {@link SerializedChunk#CODEC}
      * created by {@link PalettedContainer#createPalettedContainerCodec(IndexedIterable, Codec, PalettedContainer.PaletteProvider, Object)}
@@ -439,13 +328,11 @@ public final class ChunkDataSerializer {
      * {@link Blocks#AIR}{@code .getDefaultState()} as defaultValue
      */
     @SuppressWarnings("unchecked")
-    private static void writeBlockStates(NbtWriter writer, PalettedContainer<BlockState> blockStateContainer) {
+    private static void writeBlockStates(NbtWriter writer, PalettedContainer<BlockState> blockStateContainer, class_11897 containerFactory) {
         writer.startCompound(STRING_BLOCK_STATES);
         // todo can this be optimized?
         // todo: does this conflict with lithium by any chance?
-        var data = blockStateContainer.serialize(
-                Block.STATE_IDS,
-                PalettedContainer.PaletteProvider.BLOCK_STATE);
+        var data = blockStateContainer.serialize(containerFactory.blockStatesStrategy());
 
         List<BlockState> paletteEntries = data.paletteEntries();
         writer.startFixedList(STRING_PALETTE, paletteEntries.size(), NbtElement.COMPOUND_TYPE);
@@ -478,13 +365,11 @@ public final class ChunkDataSerializer {
      * {@link PalettedContainer.PaletteProvider#BIOME} as paletteProvider,
      * {@link BiomeKeys#PLAINS} as defaultValue
      */
-    private static void writeBiomes(NbtWriter writer, ReadableContainer<RegistryEntry<Biome>> biomeContainer, Registry<Biome> biomeRegistry) {
+    private static void writeBiomes(NbtWriter writer, ReadableContainer<RegistryEntry<Biome>> biomeContainer, class_11897 containerFactory) {
         writer.startCompound(STRING_BIOMES);
         // todo can this be optimized?
         // todo: does this conflict with lithium by any chance?
-        var data = biomeContainer.serialize(
-                biomeRegistry.getIndexedEntries(),
-                PalettedContainer.PaletteProvider.BIOME);
+        var data = biomeContainer.serialize(containerFactory.biomeStrategy());
 
         List<RegistryEntry<Biome>> paletteEntries = data.paletteEntries();
         writer.startFixedList(STRING_PALETTE, paletteEntries.size(), NbtElement.STRING_TYPE);

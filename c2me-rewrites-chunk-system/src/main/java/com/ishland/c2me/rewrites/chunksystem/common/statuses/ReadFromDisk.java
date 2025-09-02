@@ -114,7 +114,7 @@ public class ReadFromDisk extends NewChunkStatus {
             final ServerWorld world = ((IThreadedAnvilChunkStorage) context.tacs()).getWorld();
             // blending
             final ChunkPos pos = context.holder().getKey();
-            protoChunk = protoChunk != null ? protoChunk : new ProtoChunk(pos, UpgradeData.NO_UPGRADE_DATA, world, world.getRegistryManager().getOrThrow(RegistryKeys.BIOME), null);
+            protoChunk = protoChunk != null ? protoChunk : new ProtoChunk(pos, UpgradeData.NO_UPGRADE_DATA, world, world.method_74142(), null);
             if (protoChunk.getBelowZeroRetrogen() != null || protoChunk.getStatus().getChunkType() == ChunkType.PROTOCHUNK) {
                 ProtoChunk finalProtoChunk = protoChunk;
                 return Single.defer(() -> Single.fromCompletionStage(BlendingInfoUtil.getBlendingInfos(((IVersionedChunkStorage) context.tacs()).getWorker(), pos)))
@@ -131,7 +131,7 @@ public class ReadFromDisk extends NewChunkStatus {
                 .map(optional -> optional.map(nbtCompound -> {
                     try (var ignored = ThreadInstrumentation.getCurrent().begin(new ChunkTaskWork(context, this, true))) {
                         ServerWorld world = ((IThreadedAnvilChunkStorage) context.tacs()).getWorld();
-                        SerializedChunk chunkSerializer = SerializedChunk.fromNbt(world, world.getRegistryManager(), nbtCompound);
+                        SerializedChunk chunkSerializer = SerializedChunk.fromNbt(world, world.method_74142(), nbtCompound);
                         if (chunkSerializer == null) {
                             LOGGER.error("Chunk file at {} is missing level data, skipping", context.holder().getKey());
                         }
@@ -148,7 +148,7 @@ public class ReadFromDisk extends NewChunkStatus {
     protected @NotNull ProtoChunk createEmptyProtoChunk(ChunkLoadingContext context) {
         try (var ignored = ThreadInstrumentation.getCurrent().begin(new ChunkTaskWork(context, this, true))) {
             final ServerWorld world = ((IThreadedAnvilChunkStorage) context.tacs()).getWorld();
-            return new ProtoChunk(context.holder().getKey(), UpgradeData.NO_UPGRADE_DATA, world, world.getRegistryManager().getOrThrow(RegistryKeys.BIOME), null);
+            return new ProtoChunk(context.holder().getKey(), UpgradeData.NO_UPGRADE_DATA, world, world.method_74142(), null);
         }
     }
 
