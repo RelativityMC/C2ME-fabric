@@ -12,7 +12,6 @@ import net.minecraft.SharedConstants;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
-import net.minecraft.class_11897;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
@@ -40,6 +39,7 @@ import net.minecraft.world.chunk.BelowZeroRetrogen;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkType;
 import net.minecraft.world.chunk.PalettedContainer;
+import net.minecraft.world.chunk.PalettesFactory;
 import net.minecraft.world.chunk.ReadableContainer;
 import net.minecraft.world.chunk.SerializedChunk;
 import net.minecraft.world.chunk.UpgradeData;
@@ -183,7 +183,7 @@ public final class ChunkDataSerializer {
 
         List<SerializedChunk.SectionData> sectionData = serializable.sectionData();
 
-        class_11897 containerFactory = serializable.containerFactory();
+        PalettesFactory containerFactory = serializable.containerFactory();
 
         checkLightFlag(serializable.lightCorrect(), writer);
 
@@ -261,7 +261,7 @@ public final class ChunkDataSerializer {
             NbtWriter writer,
             ChunkPos chunkPos,
             List<SerializedChunk.SectionData> sectionData,
-            class_11897 containerFactory
+            PalettesFactory containerFactory
     ) {
         writeSectionDataVanilla(writer, chunkPos, sectionData, containerFactory);
     }
@@ -273,7 +273,7 @@ public final class ChunkDataSerializer {
             NbtWriter writer,
             ChunkPos chunkPos,
             List<SerializedChunk.SectionData> sectionData,
-            class_11897 containerFactory
+            PalettesFactory containerFactory
     ) {
         long sectionsStart = writer.startList(STRING_SECTIONS, NbtElement.COMPOUND_TYPE);
         int sectionCount = 0;
@@ -328,7 +328,7 @@ public final class ChunkDataSerializer {
      * {@link Blocks#AIR}{@code .getDefaultState()} as defaultValue
      */
     @SuppressWarnings("unchecked")
-    private static void writeBlockStates(NbtWriter writer, PalettedContainer<BlockState> blockStateContainer, class_11897 containerFactory) {
+    private static void writeBlockStates(NbtWriter writer, PalettedContainer<BlockState> blockStateContainer, PalettesFactory containerFactory) {
         writer.startCompound(STRING_BLOCK_STATES);
         // todo can this be optimized?
         // todo: does this conflict with lithium by any chance?
@@ -365,7 +365,7 @@ public final class ChunkDataSerializer {
      * {@link PalettedContainer.PaletteProvider#BIOME} as paletteProvider,
      * {@link BiomeKeys#PLAINS} as defaultValue
      */
-    private static void writeBiomes(NbtWriter writer, ReadableContainer<RegistryEntry<Biome>> biomeContainer, class_11897 containerFactory) {
+    private static void writeBiomes(NbtWriter writer, ReadableContainer<RegistryEntry<Biome>> biomeContainer, PalettesFactory containerFactory) {
         writer.startCompound(STRING_BIOMES);
         // todo can this be optimized?
         // todo: does this conflict with lithium by any chance?
