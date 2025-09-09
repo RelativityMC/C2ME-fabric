@@ -3,10 +3,10 @@ package com.ishland.c2me.rewrites.chunksystem.common.statuses;
 import com.ishland.c2me.rewrites.chunksystem.common.ChunkLoadingContext;
 import com.ishland.c2me.rewrites.chunksystem.common.NewChunkStatus;
 import com.ishland.flowsched.scheduler.Cancellable;
+import io.reactivex.rxjava3.core.Completable;
 import net.minecraft.world.chunk.ChunkStatus;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
 
 public class Deferred extends NewChunkStatus {
 
@@ -15,13 +15,13 @@ public class Deferred extends NewChunkStatus {
     }
 
     @Override
-    public CompletionStage<Void> upgradeToThis(ChunkLoadingContext context, Cancellable cancellable) {
-        return CompletableFuture.completedFuture(null);
+    public Completable upgradeToThis(ChunkLoadingContext context, Cancellable cancellable) {
+        return Completable.complete();
     }
 
     @Override
-    public CompletionStage<Void> downgradeFromThis(ChunkLoadingContext context, Cancellable cancellable) {
-        return CompletableFuture.completedFuture(null);
+    public Completable downgradeFromThis(ChunkLoadingContext context, Cancellable cancellable) {
+        return Completable.complete();
     }
 
     @Override

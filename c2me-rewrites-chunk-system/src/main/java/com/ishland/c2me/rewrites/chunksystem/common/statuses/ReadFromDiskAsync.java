@@ -12,6 +12,7 @@ import com.ishland.flowsched.scheduler.Cancellable;
 import com.ishland.flowsched.scheduler.ItemHolder;
 import com.ishland.flowsched.scheduler.KeyStatusPair;
 import io.reactivex.rxjava3.annotations.NonNull;
+import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import it.unimi.dsi.fastutil.Pair;
@@ -20,8 +21,6 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.chunk.ProtoChunk;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.concurrent.CompletionStage;
 
 public class ReadFromDiskAsync extends ReadFromDisk {
 
@@ -32,7 +31,7 @@ public class ReadFromDiskAsync extends ReadFromDisk {
     }
 
     @Override
-    public CompletionStage<Void> upgradeToThis(ChunkLoadingContext context, Cancellable cancellable) {
+    public Completable upgradeToThis(ChunkLoadingContext context, Cancellable cancellable) {
         final Single<ProtoChunk> single = invokeAsyncLoad(context)
                 .retryWhen(RxJavaUtils.retryWithExponentialBackoff(3, 200))
                 .onErrorResumeNext(throwable -> {

@@ -1,5 +1,6 @@
 package com.ishland.c2me.rewrites.chunksystem.common.statuses;
 
+import com.ibm.asyncutil.util.Either;
 import com.ishland.c2me.base.common.GlobalExecutors;
 import com.ishland.c2me.base.common.config.ModStatuses;
 import com.ishland.c2me.base.common.registry.SerializerAccess;
@@ -22,12 +23,12 @@ import com.ishland.c2me.rewrites.chunksystem.common.threadstate.ChunkTaskWork;
 import com.ishland.flowsched.scheduler.Cancellable;
 import com.ishland.flowsched.scheduler.ItemHolder;
 import com.ishland.flowsched.scheduler.KeyStatusPair;
+import com.ishland.flowsched.util.Assertions;
 import io.reactivex.rxjava3.annotations.NonNull;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.registry.RegistryKeys;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.ChunkPos;
@@ -59,13 +60,13 @@ public class ReadFromDisk extends NewChunkStatus {
     }
 
     @Override
-    public CompletionStage<Void> upgradeToThis(ChunkLoadingContext context, Cancellable cancellable) {
+    public Completable upgradeToThis(ChunkLoadingContext context, Cancellable cancellable) {
         final Single<ProtoChunk> single = invokeVanillaLoad(context)
                 .retryWhen(RxJavaUtils.retryWithExponentialBackoff(5, 100));
         return finalizeLoading(context, single);
     }
 
-    protected @NotNull CompletionStage<Void> finalizeLoading(ChunkLoadingContext context, Single<ProtoChunk> single) {
+    protected @NotNull Completable finalizeLoading(ChunkLoadingContext context, Single<ProtoChunk> single) {
         return single
                 .doOnError(throwable -> {
                     MinecraftServer server = ((IThreadedAnvilChunkStorage) context.tacs()).getWorld().getServer();
@@ -85,14 +86,15 @@ public class ReadFromDisk extends NewChunkStatus {
                     }
                 })
                 .ignoreElement()
-                .cache()
-                .toCompletionStage(null);
+                .cache();
     }
 
     protected @NonNull Single<ProtoChunk> invokeVanillaLoad(ChunkLoadingContext context) {
         return invokeInitialChunkRead(context)
                 .observeOn(Schedulers.from(((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor()))
                 .map(chunkSerializer -> {
+                    Assertions.assertTrue(((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor().isOnThread());
+
                     try (var ignored = ThreadInstrumentation.getCurrent().begin(new ChunkTaskWork(context, this, true))) {
                         if (chunkSerializer.isPresent()) {
                             return chunkSerializer.get().convert(
@@ -153,14 +155,17 @@ public class ReadFromDisk extends NewChunkStatus {
     }
 
     @Override
-    public CompletionStage<Void> downgradeFromThis(ChunkLoadingContext context, Cancellable cancellable) {
+    public Completable downgradeFromThis(ChunkLoadingContext context, Cancellable cancellable) {
         final AtomicBoolean loadedToWorld = new AtomicBoolean(false);
-        return syncWithLightEngine(context).thenApplyAsync(unused -> {
+        return Completable.defer(() -> Completable.fromCompletionStage(syncWithLightEngine(context)))
+                .observeOn(Schedulers.from(((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor()))
+                .andThen(Completable.defer(() -> {
+                    Assertions.assertTrue(((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor().isOnThread());
+
                     try (var ignored = ThreadInstrumentation.getCurrent().begin(new ChunkTaskWork(context, this, false))) {
                         if (context.holder().getTargetStatus().ordinal() > this.ordinal()) { // saving cancelled
-//                            LOGGER.info("Cancelling unload of {}", context.holder().getKey());
                             cancellable.cancel();
-                            return CompletableFuture.<Void>failedFuture(new CancellationException());
+                            return Completable.error(new CancellationException());
                         }
                         final ChunkState chunkState = context.holder().getItem().get();
                         Chunk chunk = chunkState.chunk();
@@ -175,14 +180,14 @@ public class ReadFromDisk extends NewChunkStatus {
                             LifecycleEventInvoker.invokeChunkUnload(((IThreadedAnvilChunkStorage) context.tacs()).getWorld(), worldChunk);
                         }
 
-                        CompletionStage<Void> asyncSaveFuture;
+                        Completable asyncSaveFuture;
                         if ((context.holder().getFlags() & ItemHolder.FLAG_BROKEN) != 0 && chunk instanceof ProtoChunk) { // do not save broken ProtoChunks
                             LOGGER.warn("Not saving partially generated broken chunk {}", context.holder().getKey());
-                            asyncSaveFuture = CompletableFuture.completedStage((Void) null);
+                            asyncSaveFuture = Completable.complete();
                         } else if (chunk instanceof WorldChunk && !chunkState.reachedStatus().isAtLeast(ChunkStatus.FULL)) {
                             // do not save WorldChunks that doesn't reach full status: Vanilla behavior
                             // If saved, block entities will be lost
-                            asyncSaveFuture = CompletableFuture.completedStage((Void) null);
+                            asyncSaveFuture = Completable.complete();
                         } else {
                             asyncSaveFuture = asyncSave(context, chunk);
                         }
@@ -201,29 +206,30 @@ public class ReadFromDisk extends NewChunkStatus {
 
                         return asyncSaveFuture;
                     }
-                }, ((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor())
-                .thenCompose(Function.identity());
+                }));
     }
 
-    private CompletionStage<Void> asyncSave(ChunkLoadingContext context, Chunk chunk) {
+    private Completable asyncSave(ChunkLoadingContext context, Chunk chunk) {
         ((IThreadedAnvilChunkStorage) context.tacs()).getPointOfInterestStorage().saveChunk(chunk.getPos());
         if (!chunk.tryMarkSaved()) {
-            return CompletableFuture.completedStage(null);
+            return Completable.complete();
         } else {
             ChunkPos chunkPos = chunk.getPos();
 
             SerializedChunk serializer = SerializedChunk.fromChunk(((IThreadedAnvilChunkStorage) context.tacs()).getWorld(), chunk);
-            return CompletableFuture.supplyAsync(() -> {
+            return Single
+                    .<Either<NbtCompound, byte[]>>fromCallable(() -> {
                         try (var ignored = ThreadInstrumentation.getCurrent().begin(new ChunkTaskWork(context, this, false))) {
                             return SerializerAccess.getSerializer().serialize(serializer);
                         }
-                    }, GlobalExecutors.prioritizedScheduler.executor(16) /* boost priority as we are serializing an unloaded chunk */)
-                    .thenCompose((either) -> {
+                    })
+                    .subscribeOn(Schedulers.from(GlobalExecutors.prioritizedScheduler.executor(16) /* boost priority as we are serializing an unloaded chunk */))
+                    .flatMapCompletable(either -> {
                         if (either.left().isPresent()) {
                             NbtCompound nbtCompound = either.left().get();
-                            return context.tacs().setNbt(chunkPos, () -> nbtCompound);
+                            return Completable.fromCompletionStage(context.tacs().setNbt(chunkPos, () -> nbtCompound));
                         } else {
-                            return ((IDirectStorage) ((IVersionedChunkStorage) context.tacs()).getWorker()).setRawChunkData(chunkPos, either.right().get());
+                            return Completable.fromCompletionStage(((IDirectStorage) ((IVersionedChunkStorage) context.tacs()).getWorker()).setRawChunkData(chunkPos, either.right().get()));
                         }
                     });
         }
