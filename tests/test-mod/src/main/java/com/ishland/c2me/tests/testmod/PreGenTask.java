@@ -71,7 +71,7 @@ public class PreGenTask {
     public static CompletableFuture<Void> runPreGen(ServerWorld world, Consumer<ChunkGeneratedEventInfo> eventListener) {
         Preconditions.checkNotNull(eventListener);
         System.err.printf("Starting pre-generation in %s;%s\n", world.toString(), world.getRegistryKey().getValue().toString());
-        final BlockPos spawnPos = world.getSpawnPos();
+        final BlockPos spawnPos = world.method_74854().method_74897();
         final Set<ChunkPos> chunksHashed = Sets.newConcurrentHashSet();
         final List<ChunkPos> chunks = Collections.synchronizedList(new ArrayList<>());
         chunks.addAll(createPreGenChunks33(new ChunkPos(spawnPos), chunksHashed::add));
