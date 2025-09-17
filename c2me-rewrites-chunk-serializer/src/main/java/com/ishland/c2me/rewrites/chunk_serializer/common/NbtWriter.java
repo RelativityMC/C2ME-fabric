@@ -15,6 +15,7 @@ import java.io.UTFDataFormatException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.LongStream;
 
 @SuppressWarnings("WeakerAccess")
 public class NbtWriter {
@@ -106,10 +107,11 @@ public class NbtWriter {
     }
 
     private void insertLongArray(LongIterable value) {
-        value.forEach(i -> {
-            UNSAFE.putLong(this.pointer, Long.reverseBytes(i));
+        var iter = value.longIterator();
+        while (iter.hasNext()) {
+            UNSAFE.putLong(this.pointer, Long.reverseBytes(iter.nextLong()));
             this.pointer += 8;
-        });
+        }
     }
 
     //region list entries
@@ -395,6 +397,23 @@ public class NbtWriter {
         this.insertByteArray(name);
         this.insertInt(value.size());
         this.insertLongArray(value);
+    }
+
+    public void putLongArray(byte[] name, LongStream value) {
+        this.claimCapacity(1L + name.length + 4);
+        this.insertByte(NbtElement.LONG_ARRAY_TYPE);
+        this.insertByteArray(name);
+        long offset = this.getOffset();
+        this.insertInt(-1); //Holder
+        int count = 0;
+        var iter = value.iterator();
+        while (iter.hasNext()) {
+            this.claimCapacity(8);
+            UNSAFE.putLong(this.pointer, Long.reverseBytes(iter.nextLong()));
+            this.pointer += 8;
+            count++;
+        }
+        UNSAFE.putInt(this.buffer + offset, Integer.reverseBytes(count));
     }
 
 

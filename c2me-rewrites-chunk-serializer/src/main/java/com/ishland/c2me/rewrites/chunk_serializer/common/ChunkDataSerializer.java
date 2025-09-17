@@ -248,8 +248,9 @@ public final class ChunkDataSerializer {
         for (ShortList shortList : data) {
             if (shortList != null) {
                 writer.startFixedListEntry(shortList.size(), NbtElement.SHORT_TYPE);
-                for (Short short_ : shortList) {
-                    writer.putShortEntry(short_);
+                var iter = shortList.iterator();
+                while (iter.hasNext()) {
+                    writer.putShortEntry(iter.nextShort());
                 }
             } else {
                 writer.startFixedListEntry(0, NbtElement.SHORT_TYPE);
@@ -381,7 +382,7 @@ public final class ChunkDataSerializer {
         Optional<LongStream> storage = data.storage();
         //noinspection OptionalIsPresent
         if (storage.isPresent()) {
-            writer.putLongArray(STRING_DATA, storage.get().toArray());
+            writer.putLongArray(STRING_DATA, storage.get());
         }
         writer.finishCompound();
     }
@@ -450,8 +451,9 @@ public final class ChunkDataSerializer {
         for (ShortList shortList : lists) {
             NbtList nbtList2 = new NbtList();
             if (shortList != null) {
-                for (Short short_ : shortList) {
-                    nbtList2.add(NbtShort.of(short_));
+                var iter = shortList.iterator();
+                while (iter.hasNext()) {
+                    nbtList2.add(NbtShort.of((iter.nextShort())));
                 }
             }
 
