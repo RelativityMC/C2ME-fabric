@@ -6,8 +6,6 @@ import com.ishland.flowsched.scheduler.Cancellable;
 import io.reactivex.rxjava3.core.Completable;
 import net.minecraft.world.chunk.ChunkStatus;
 
-import java.util.concurrent.CompletableFuture;
-
 public class Deferred extends NewChunkStatus {
 
     public Deferred(int ordinal) {
@@ -20,7 +18,7 @@ public class Deferred extends NewChunkStatus {
     }
 
     @Override
-    public Completable downgradeFromThis(ChunkLoadingContext context, Cancellable cancellable) {
+    public Completable downgradeFromThis(ChunkLoadingContext context) {
         return Completable.complete();
     }
 

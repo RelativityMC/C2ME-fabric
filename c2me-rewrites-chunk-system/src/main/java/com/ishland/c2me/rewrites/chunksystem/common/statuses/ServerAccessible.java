@@ -96,7 +96,7 @@ public class ServerAccessible extends NewChunkStatus {
     }
 
     @Override
-    public Completable downgradeFromThis(ChunkLoadingContext context, Cancellable cancellable) {
+    public Completable downgradeFromThis(ChunkLoadingContext context) {
         ChunkState state = context.holder().getItem().get();
         final Chunk chunk = state.chunk();
         Preconditions.checkState(chunk instanceof WorldChunk, "Chunk must be a full chunk");

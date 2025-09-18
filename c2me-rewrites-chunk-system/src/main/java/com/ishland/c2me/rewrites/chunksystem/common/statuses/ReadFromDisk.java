@@ -26,6 +26,7 @@ import com.ishland.flowsched.scheduler.KeyStatusPair;
 import com.ishland.flowsched.util.Assertions;
 import io.reactivex.rxjava3.annotations.NonNull;
 import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.CompletableObserver;
 import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import net.minecraft.nbt.NbtCompound;
@@ -46,10 +47,8 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
 import java.util.concurrent.CancellationException;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Function;
 
 public class ReadFromDisk extends NewChunkStatus {
 
@@ -155,18 +154,26 @@ public class ReadFromDisk extends NewChunkStatus {
     }
 
     @Override
-    public Completable downgradeFromThis(ChunkLoadingContext context, Cancellable cancellable) {
-        final AtomicBoolean loadedToWorld = new AtomicBoolean(false);
+    public Completable preDowngradeFromThis(ChunkLoadingContext context, Cancellable cancellable) {
         return Completable.defer(() -> Completable.fromCompletionStage(syncWithLightEngine(context)))
                 .observeOn(Schedulers.from(((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor()))
-                .andThen(Completable.defer(() -> {
+                .andThen((CompletableObserver observer) -> {
+                    if (context.holder().getTargetStatus().ordinal() > this.ordinal()) { // saving cancelled
+                        cancellable.cancel();
+                        observer.onError(new CancellationException());
+                    } else {
+                        observer.onComplete();
+                    }
+                });
+    }
+
+    @Override
+    public Completable downgradeFromThis(ChunkLoadingContext context) {
+        final AtomicBoolean loadedToWorld = new AtomicBoolean(false);
+        return Completable.defer(() -> {
                     Assertions.assertTrue(((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor().isOnThread());
 
                     try (var ignored = ThreadInstrumentation.getCurrent().begin(new ChunkTaskWork(context, this, false))) {
-                        if (context.holder().getTargetStatus().ordinal() > this.ordinal()) { // saving cancelled
-                            cancellable.cancel();
-                            return Completable.error(new CancellationException());
-                        }
                         final ChunkState chunkState = context.holder().getItem().get();
                         Chunk chunk = chunkState.chunk();
                         if (chunk instanceof WrapperProtoChunk protoChunk) chunk = protoChunk.getWrappedChunk();
@@ -206,7 +213,7 @@ public class ReadFromDisk extends NewChunkStatus {
 
                         return asyncSaveFuture;
                     }
-                }));
+        });
     }
 
     private Completable asyncSave(ChunkLoadingContext context, Chunk chunk) {

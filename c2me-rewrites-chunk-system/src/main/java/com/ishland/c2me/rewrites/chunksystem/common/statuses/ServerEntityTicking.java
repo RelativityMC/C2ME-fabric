@@ -20,8 +20,6 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.WorldChunk;
 
-import java.util.concurrent.CompletableFuture;
-
 public class ServerEntityTicking extends NewChunkStatus {
 
     private static final KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] deps;
@@ -61,7 +59,7 @@ public class ServerEntityTicking extends NewChunkStatus {
     }
 
     @Override
-    public Completable downgradeFromThis(ChunkLoadingContext context, Cancellable cancellable) {
+    public Completable downgradeFromThis(ChunkLoadingContext context) {
         if (ModStatuses.fabric_lifecycle_events_v1 && LifecycleEventInvoker.needsInvokeChunkLevelTypeChange()) {
             return Completable
                     .fromRunnable(() -> {

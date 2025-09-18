@@ -50,7 +50,7 @@ public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState,
             }
 
             @Override
-            public Completable downgradeFromThis(ChunkLoadingContext context, Cancellable cancellable) {
+            public Completable downgradeFromThis(ChunkLoadingContext context) {
                 throw new UnsupportedOperationException();
             }
 

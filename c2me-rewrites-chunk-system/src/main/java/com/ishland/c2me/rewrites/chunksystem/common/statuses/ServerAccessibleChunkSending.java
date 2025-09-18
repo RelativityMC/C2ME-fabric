@@ -10,8 +10,6 @@ import io.reactivex.rxjava3.core.Completable;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.chunk.ChunkStatus;
 
-import java.util.concurrent.CompletableFuture;
-
 public class ServerAccessibleChunkSending extends NewChunkStatus {
 
     private static final KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] deps;
@@ -30,7 +28,7 @@ public class ServerAccessibleChunkSending extends NewChunkStatus {
     }
 
     @Override
-    public Completable downgradeFromThis(ChunkLoadingContext context, Cancellable cancellable) {
+    public Completable downgradeFromThis(ChunkLoadingContext context) {
         return Completable.complete();
     }
 

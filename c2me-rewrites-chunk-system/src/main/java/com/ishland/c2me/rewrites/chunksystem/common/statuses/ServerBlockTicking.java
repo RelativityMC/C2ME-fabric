@@ -129,7 +129,7 @@ public class ServerBlockTicking extends NewChunkStatus {
     }
 
     @Override
-    public Completable downgradeFromThis(ChunkLoadingContext context, Cancellable cancellable) {
+    public Completable downgradeFromThis(ChunkLoadingContext context) {
         ServerWorld serverWorld = ((IThreadedAnvilChunkStorage) context.tacs()).getWorld();
         final WorldChunk chunk = (WorldChunk) context.holder().getItem().get().chunk();
         ((WorldChunkExtension) chunk).c2me$setBlockTicking(false);
