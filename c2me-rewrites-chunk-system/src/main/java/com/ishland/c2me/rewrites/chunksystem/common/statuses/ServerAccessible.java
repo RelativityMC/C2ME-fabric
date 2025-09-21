@@ -27,7 +27,6 @@ import net.minecraft.world.chunk.WorldChunk;
 import net.minecraft.world.chunk.WrapperProtoChunk;
 
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
 public class ServerAccessible extends NewChunkStatus {
 

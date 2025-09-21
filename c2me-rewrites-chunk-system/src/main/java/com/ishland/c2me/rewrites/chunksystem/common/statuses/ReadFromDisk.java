@@ -20,6 +20,7 @@ import com.ishland.flowsched.scheduler.KeyStatusPair;
 import com.ishland.flowsched.util.Assertions;
 import io.reactivex.rxjava3.annotations.NonNull;
 import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.CompletableObserver;
 import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import net.minecraft.nbt.NbtElement;
@@ -120,18 +121,24 @@ public class ReadFromDisk extends NewChunkStatus {
     }
 
     @Override
-    public Completable downgradeFromThis(ChunkLoadingContext context, Cancellable cancellable) {
+    public Completable preDowngradeFromThis(ChunkLoadingContext context, Cancellable cancellable) {
         return Completable.defer(() -> Completable.fromCompletionStage(syncWithLightEngine(context)))
                 .observeOn(Schedulers.from(((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor()))
-                .doOnEvent(throwable -> {
-                    if (throwable != null) return;
+                .andThen((CompletableObserver observer) -> {
+                    if (context.holder().getTargetStatus().ordinal() >= this.ordinal()) { // saving cancelled
+                        cancellable.cancel();
+                        observer.onError(new CancellationException());
+                    } else {
+                        observer.onComplete();
+                    }
+                });
+    }
+
+    @Override
+    public Completable downgradeFromThis(ChunkLoadingContext context, Cancellable cancellable) {
+        return Completable.defer(() -> {
                     Assertions.assertTrue(((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor().isOnThread());
                     try (var ignored = ThreadInstrumentation.getCurrent().begin(new ChunkTaskWork(context, this, false))) {
-                        if (context.holder().getTargetStatus().ordinal() >= this.ordinal()) { // saving cancelled
-                            cancellable.cancel();
-                            throw new CancellationException();
-                        }
-
                         final ChunkState chunkState = context.holder().getItem().get();
                         Chunk chunk = chunkState.chunk();
                         if (chunk instanceof WrapperProtoChunk protoChunk) chunk = protoChunk.getWrappedChunk();
@@ -174,6 +181,8 @@ public class ReadFromDisk extends NewChunkStatus {
                         ((IPOIUnloading) ((IThreadedAnvilChunkStorage) context.tacs()).getPointOfInterestStorage()).c2me$unloadPoi(context.holder().getKey());
 
                         context.holder().getItem().set(new ChunkState(null, null, null));
+
+                        return Completable.complete();
                     }
                 })
                 .doOnError((throwable) -> {

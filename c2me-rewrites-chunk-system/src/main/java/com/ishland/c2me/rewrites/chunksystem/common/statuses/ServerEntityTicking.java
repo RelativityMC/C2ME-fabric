@@ -20,8 +20,6 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.WorldChunk;
 
-import java.util.concurrent.CompletableFuture;
-
 public class ServerEntityTicking extends NewChunkStatus {
 
     private static final KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] deps;
