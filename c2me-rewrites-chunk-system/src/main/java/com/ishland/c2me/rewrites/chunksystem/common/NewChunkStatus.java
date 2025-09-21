@@ -12,6 +12,7 @@ import com.ishland.flowsched.scheduler.Cancellable;
 import com.ishland.flowsched.scheduler.ItemHolder;
 import com.ishland.flowsched.scheduler.ItemStatus;
 import com.ishland.flowsched.scheduler.KeyStatusPair;
+import io.reactivex.rxjava3.core.Completable;
 import net.minecraft.server.world.ChunkLevelType;
 import net.minecraft.server.world.ChunkLevels;
 import net.minecraft.util.math.ChunkPos;
@@ -19,7 +20,6 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.chunk.ChunkStatus;
 
 import java.util.ArrayList;
-import java.util.concurrent.CompletionStage;
 import java.util.stream.IntStream;
 
 /**
@@ -45,12 +45,12 @@ public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState,
         ArrayList<NewChunkStatus> statuses = new ArrayList<>();
         NEW = new NewChunkStatus(statuses.size(), ChunkStatus.EMPTY) {
             @Override
-            public CompletionStage<Void> upgradeToThis(ChunkLoadingContext context, Cancellable cancellable) {
+            public Completable upgradeToThis(ChunkLoadingContext context, Cancellable cancellable) {
                 throw new UnsupportedOperationException();
             }
 
             @Override
-            public CompletionStage<Void> downgradeFromThis(ChunkLoadingContext context, Cancellable cancellable) {
+            public Completable downgradeFromThis(ChunkLoadingContext context, Cancellable cancellable) {
                 throw new UnsupportedOperationException();
             }
 

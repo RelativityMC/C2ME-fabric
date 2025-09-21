@@ -25,6 +25,10 @@ import com.ishland.c2me.rewrites.chunksystem.common.threadstate.ChunkTaskWork;
 import com.ishland.flowsched.scheduler.Cancellable;
 import com.ishland.flowsched.scheduler.ItemHolder;
 import com.ishland.flowsched.scheduler.KeyStatusPair;
+import com.ishland.flowsched.util.Assertions;
+import io.reactivex.rxjava3.annotations.NonNull;
+import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.CompletableSource;
 import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import it.unimi.dsi.fastutil.Pair;
@@ -47,7 +51,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 
@@ -60,7 +63,7 @@ public class ReadFromDiskAsync extends ReadFromDisk {
     }
 
     @Override
-    public CompletionStage<Void> upgradeToThis(ChunkLoadingContext context, Cancellable cancellable) {
+    public Completable upgradeToThis(ChunkLoadingContext context, Cancellable cancellable) {
         final Single<ProtoChunk> single = invokeAsyncLoad(context)
                 .retryWhen(RxJavaUtils.retryWithExponentialBackoff(3, 200))
                 .cache()
@@ -138,13 +141,16 @@ public class ReadFromDiskAsync extends ReadFromDisk {
     }
 
     @Override
-    public CompletionStage<Void> downgradeFromThis(ChunkLoadingContext context, Cancellable cancellable) {
+    public Completable downgradeFromThis(ChunkLoadingContext context, Cancellable cancellable) {
         final AtomicBoolean loadedToWorld = new AtomicBoolean(false);
-        return syncWithLightEngine(context).thenApplyAsync(unused -> {
+        return Completable.defer(() -> Completable.fromCompletionStage(syncWithLightEngine(context)))
+                .observeOn(Schedulers.from(((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor()))
+                .andThen(Completable.defer(() -> {
+                    Assertions.assertTrue(((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor().isOnThread());
                     try (var ignored = ThreadInstrumentation.getCurrent().begin(new ChunkTaskWork(context, this, false))) {
                         if (context.holder().getTargetStatus().ordinal() >= this.ordinal()) { // saving cancelled
                             cancellable.cancel();
-                            return CompletableFuture.<Void>failedFuture(new CancellationException());
+                            return Completable.error(new CancellationException());
                         }
 
                         final ChunkState chunkState = context.holder().getItem().get();
@@ -158,18 +164,20 @@ public class ReadFromDiskAsync extends ReadFromDisk {
 
                         if ((context.holder().getFlags() & ItemHolder.FLAG_BROKEN) != 0 && chunk instanceof ProtoChunk) { // do not save broken ProtoChunks
                             LOGGER.warn("Not saving partially generated broken chunk {}", context.holder().getKey());
-                            return CompletableFuture.completedStage((Void) null);
+                            return Completable.complete();
                         } else if (chunk instanceof WorldChunk && !chunkState.reachedStatus().isAtLeast(ChunkStatus.FULL)) {
                             // do not save WorldChunks that doesn't reach full status: Vanilla behavior
                             // If saved, block entities will be lost
-                            return CompletableFuture.completedStage((Void) null);
+                            return Completable.complete();
                         } else {
                             return asyncSave(context.tacs(), chunk);
                         }
                     }
-                }, ((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor())
-                .thenCompose(Function.identity())
-                .thenAcceptAsync(unused -> {
+                }))
+                .observeOn(Schedulers.from(((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor()))
+                .doOnEvent(throwable -> {
+                    if (throwable != null) return;
+                    Assertions.assertTrue(((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor().isOnThread());
                     try (var ignored = ThreadInstrumentation.getCurrent().begin(new ChunkTaskWork(context, this, false))) {
                         Chunk chunk = context.holder().getItem().get().chunk();
                         if (chunk instanceof WrapperProtoChunk protoChunk) chunk = protoChunk.getWrappedChunk();
@@ -198,19 +206,29 @@ public class ReadFromDiskAsync extends ReadFromDisk {
 
                         context.holder().getItem().set(new ChunkState(null, null, null));
                     }
-                }, ((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor());
+                })
+                .doOnError((throwable) -> {
+                    try {
+                        if ((context.holder().getFlags() & ItemHolder.FLAG_BROKEN) != 0) {
+                            LOGGER.warn("Broken chunk {} was unloaded", context.holder().getKey());
+                            context.holder().clearFlag(ItemHolder.FLAG_BROKEN);
+                        }
+                    } catch (Throwable t) {
+                        t.printStackTrace();
+                    }
+                });
     }
 
-    private CompletionStage<Void> asyncSave(ServerChunkLoadingManager tacs, Chunk chunk) {
+    private @NonNull Completable asyncSave(ServerChunkLoadingManager tacs, Chunk chunk) {
         ((IThreadedAnvilChunkStorage) tacs).getPointOfInterestStorage().saveChunk(chunk.getPos());
         if (!chunk.needsSaving()) {
-            return CompletableFuture.completedStage(null);
+            return Completable.complete();
         } else {
             chunk.setNeedsSaving(false);
             ChunkPos chunkPos = chunk.getPos();
 
             AsyncSerializationManager.Scope scope = new AsyncSerializationManager.Scope(chunk, ((IThreadedAnvilChunkStorage) tacs).getWorld());
-            return CompletableFuture.supplyAsync(() -> {
+            return Single.fromCallable(() -> {
                         try (var ignored = ThreadInstrumentation.getCurrent().begin(new ChunkTaskWork(((IThreadedAnvilChunkStorage) tacs).getWorld(), chunk.getPos(), this, false))) {
                             scope.open();
                             AsyncSerializationManager.push(scope);
@@ -220,22 +238,26 @@ public class ReadFromDiskAsync extends ReadFromDisk {
                                 AsyncSerializationManager.pop(scope);
                             }
                         }
-                    }, GlobalExecutors.prioritizedScheduler.executor(16) /* boost priority as we are serializing an unloaded chunk */)
-                    .thenAccept((either) -> {
+                    })
+                    .subscribeOn(Schedulers.from(GlobalExecutors.prioritizedScheduler.executor(16) /* boost priority as we are serializing an unloaded chunk */))
+                    .flatMapCompletable((either) -> {
                         try (var ignored = ThreadInstrumentation.getCurrent().begin(new ChunkTaskWork(((IThreadedAnvilChunkStorage) tacs).getWorld(), chunk.getPos(), this, false))) {
                             if (either.left().isPresent()) {
                                 tacs.setNbt(chunkPos, either.left().get());
                             } else {
                                 ((IDirectStorage) ((IVersionedChunkStorage) tacs).getWorker()).setRawChunkData(chunkPos, either.right().get());
                             }
+                            return Completable.complete();
                         }
                     })
-                    .exceptionallyCompose(throwable -> {
+                    .onErrorResumeNext(throwable -> {
                         LOGGER.error("Failed to save chunk {},{} asynchronously, falling back to sync saving", chunkPos.x, chunkPos.z, throwable);
-                        return CompletableFuture.runAsync(() -> {
-                            chunk.setNeedsSaving(true);
-                            ((IThreadedAnvilChunkStorage) tacs).invokeSave(chunk);
-                        }, ((IThreadedAnvilChunkStorage) tacs).getMainThreadExecutor());
+                        return Completable
+                                .fromRunnable(() -> {
+                                    chunk.setNeedsSaving(true);
+                                    ((IThreadedAnvilChunkStorage) tacs).invokeSave(chunk);
+                                })
+                                .subscribeOn(Schedulers.from(((IThreadedAnvilChunkStorage) tacs).getMainThreadExecutor()));
                     });
         }
     }

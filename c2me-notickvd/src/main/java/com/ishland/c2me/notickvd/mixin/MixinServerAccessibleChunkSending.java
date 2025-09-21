@@ -13,6 +13,9 @@ import com.ishland.c2me.rewrites.chunksystem.common.threadstate.ChunkTaskWork;
 import com.ishland.flowsched.scheduler.Cancellable;
 import com.ishland.flowsched.scheduler.ItemHolder;
 import com.ishland.flowsched.scheduler.KeyStatusPair;
+import com.ishland.flowsched.util.Assertions;
+import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 import it.unimi.dsi.fastutil.shorts.ShortList;
 import it.unimi.dsi.fastutil.shorts.ShortListIterator;
 import net.minecraft.block.Block;
@@ -28,6 +31,7 @@ import net.minecraft.world.chunk.ChunkGenerationSteps;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.ProtoChunk;
 import net.minecraft.world.chunk.WorldChunk;
+import org.spongepowered.asm.mixin.Dynamic;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
@@ -69,8 +73,9 @@ public class MixinServerAccessibleChunkSending {
      * @author ishland
      * @reason do chunk sending
      */
+    @Dynamic
     @Overwrite(remap = false)
-    public CompletionStage<Void> upgradeToThis(ChunkLoadingContext context, Cancellable cancellable) {
+    public Completable upgradeToThis(ChunkLoadingContext context, Cancellable cancellable) {
         ArrayList<BlockPos> blocksToRemove = new ArrayList<>();
         if (Config.suppressGhostMushrooms) {
             ServerWorld serverWorld = ((IThreadedAnvilChunkStorage) context.tacs()).getWorld();
@@ -97,22 +102,26 @@ public class MixinServerAccessibleChunkSending {
                 }
             }
         }
-        return CompletableFuture.runAsync(() -> {
-            try (var ignored = ThreadInstrumentation.getCurrent().begin(new ChunkTaskWork(context, (ServerAccessibleChunkSending) (Object) this, true))) {
-                if (Config.suppressGhostMushrooms) {
-                    ServerWorld serverWorld = ((IThreadedAnvilChunkStorage) context.tacs()).getWorld();
-                    ChunkState state = context.holder().getItem().get();
-                    Chunk chunk = state.chunk();
-                    for (BlockPos blockPos : blocksToRemove) {
-                        serverWorld.setBlockState(blockPos, Blocks.AIR.getDefaultState(), Block.NO_REDRAW | Block.FORCE_STATE);
+        return Completable
+                .fromRunnable(() -> {
+                    Assertions.assertTrue(((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor().isOnThread());
+
+                    try (var ignored = ThreadInstrumentation.getCurrent().begin(new ChunkTaskWork(context, (ServerAccessibleChunkSending) (Object) this, true))) {
+                        if (Config.suppressGhostMushrooms) {
+                            ServerWorld serverWorld = ((IThreadedAnvilChunkStorage) context.tacs()).getWorld();
+                            ChunkState state = context.holder().getItem().get();
+                            Chunk chunk = state.chunk();
+                            for (BlockPos blockPos : blocksToRemove) {
+                                serverWorld.setBlockState(blockPos, Blocks.AIR.getDefaultState(), Block.NO_REDRAW | Block.FORCE_STATE);
+                            }
+                            for (BlockPos blockPos2 : ImmutableList.copyOf(chunk.getBlockEntityPositions())) {
+                                chunk.getBlockEntity(blockPos2);
+                            }
+                        }
+                        sendChunkToPlayer(context.tacs(), context.holder());
                     }
-                    for (BlockPos blockPos2 : ImmutableList.copyOf(chunk.getBlockEntityPositions())) {
-                        chunk.getBlockEntity(blockPos2);
-                    }
-                }
-                sendChunkToPlayer(context.tacs(), context.holder());
-            }
-        }, ((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor());
+                })
+                .subscribeOn(Schedulers.from(((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor()));
     }
 
     @Unique

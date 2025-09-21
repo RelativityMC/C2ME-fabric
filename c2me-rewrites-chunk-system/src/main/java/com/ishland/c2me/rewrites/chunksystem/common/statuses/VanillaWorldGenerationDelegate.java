@@ -13,6 +13,7 @@ import com.ishland.flowsched.executor.LockToken;
 import com.ishland.flowsched.scheduler.Cancellable;
 import com.ishland.flowsched.scheduler.ItemHolder;
 import com.ishland.flowsched.scheduler.KeyStatusPair;
+import io.reactivex.rxjava3.core.Completable;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.minecraft.util.math.ChunkPos;
@@ -31,7 +32,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
 import java.util.function.Supplier;
 
 public class VanillaWorldGenerationDelegate extends NewChunkStatus {
@@ -106,32 +106,33 @@ public class VanillaWorldGenerationDelegate extends NewChunkStatus {
     }
 
     @Override
-    public CompletionStage<Void> upgradeToThis(ChunkLoadingContext context, Cancellable cancellable) {
+    public Completable upgradeToThis(ChunkLoadingContext context, Cancellable cancellable) {
 //        if (context.holder().getKey().equals(new ChunkPos(100, 100)) && this.status == ChunkStatus.FEATURES) {
 //            throw new RuntimeException("boom");
 //        }
         final ChunkState state = context.holder().getItem().get();
         if (state.reachedStatus().isAtLeast(this.status)) {
-            return CompletableFuture.completedStage(null);
+            return Completable.complete();
         }
         final ChunkGenerationContext chunkGenerationContext = ((IThreadedAnvilChunkStorage) context.tacs()).getGenerationContext();
         Chunk chunk = state.chunk();
         if (chunk.getStatus().isAtLeast(status)) {
             try (var ignored = ThreadInstrumentation.getCurrent().begin(new ChunkTaskWork(context, this, true))) {
-                return ChunkGenerationSteps.LOADING.get(status)
-                        .run(((IThreadedAnvilChunkStorage) context.tacs()).getGenerationContext(), context.chunks(), chunk)
-                        .whenComplete((chunk1, throwable) -> {
-                            if (chunk1 != null) {
-                                context.holder().getItem().set(new ChunkState(chunk1, (ProtoChunk) chunk1, this.status));
-                            }
-                        }).thenAccept(__ -> {
-                        });
+                return Completable.defer(() -> Completable.fromCompletionStage(
+                        ChunkGenerationSteps.LOADING.get(status)
+                                .run(((IThreadedAnvilChunkStorage) context.tacs()).getGenerationContext(), context.chunks(), chunk)
+                                .whenComplete((chunk1, throwable) -> {
+                                    if (chunk1 != null) {
+                                        context.holder().getItem().set(new ChunkState(chunk1, (ProtoChunk) chunk1, this.status));
+                                    }
+                                })
+                ));
             }
         } else {
             final ChunkGenerationStep step = ChunkGenerationSteps.GENERATION.get(status);
 
             int radius = Math.max(0, step.blockStateWriteRadius());
-            return runTaskWithLock(chunk.getPos(), radius, context.schedulingManager(),
+            return Completable.defer(() -> Completable.fromCompletionStage(runTaskWithLock(chunk.getPos(), radius, context.schedulingManager(),
                     () -> {
                         try (var ignored = ThreadInstrumentation.getCurrent().begin(new ChunkTaskWork(context, this, true))) {
                             return step.run(chunkGenerationContext, context.chunks(), chunk)
@@ -143,13 +144,13 @@ public class VanillaWorldGenerationDelegate extends NewChunkStatus {
                                     });
                         }
                     }
-            );
+            )));
         }
     }
 
     @Override
-    public CompletionStage<Void> downgradeFromThis(ChunkLoadingContext context, Cancellable cancellable) {
-        return CompletableFuture.completedStage(null);
+    public Completable downgradeFromThis(ChunkLoadingContext context, Cancellable cancellable) {
+        return Completable.complete();
     }
 
     @Override
