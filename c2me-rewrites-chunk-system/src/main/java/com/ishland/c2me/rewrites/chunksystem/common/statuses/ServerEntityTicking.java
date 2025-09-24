@@ -58,6 +58,16 @@ public class ServerEntityTicking extends NewChunkStatus {
     }
 
     @Override
+    public Completable postUpgradeToThis(ChunkLoadingContext context) {
+        return Completable.complete();
+    }
+
+    @Override
+    public Completable preDowngradeFromThis(ChunkLoadingContext context, Cancellable cancellable) {
+        return Completable.complete();
+    }
+
+    @Override
     public Completable downgradeFromThis(ChunkLoadingContext context, Cancellable cancellable) {
         if (LateModStatuses.fabric_lifecycle_events_v1_CHUNK_LEVEL_TYPE_CHANGE && LifecycleEventInvoker.needsInvokeChunkLevelTypeChange()) {
             return Completable

@@ -149,6 +149,16 @@ public class VanillaWorldGenerationDelegate extends NewChunkStatus {
     }
 
     @Override
+    public Completable postUpgradeToThis(ChunkLoadingContext context) {
+        return Completable.complete();
+    }
+
+    @Override
+    public Completable preDowngradeFromThis(ChunkLoadingContext context, Cancellable cancellable) {
+        return Completable.complete();
+    }
+
+    @Override
     public Completable downgradeFromThis(ChunkLoadingContext context, Cancellable cancellable) {
         return Completable.complete();
     }

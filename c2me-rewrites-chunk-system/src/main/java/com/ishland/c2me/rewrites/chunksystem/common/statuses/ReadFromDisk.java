@@ -121,6 +121,11 @@ public class ReadFromDisk extends NewChunkStatus {
     }
 
     @Override
+    public Completable postUpgradeToThis(ChunkLoadingContext context) {
+        return Completable.complete();
+    }
+
+    @Override
     public Completable preDowngradeFromThis(ChunkLoadingContext context, Cancellable cancellable) {
         return Completable.defer(() -> Completable.fromCompletionStage(syncWithLightEngine(context)))
                 .observeOn(Schedulers.from(((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor()))

@@ -50,6 +50,16 @@ public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState,
             }
 
             @Override
+            public Completable postUpgradeToThis(ChunkLoadingContext context) {
+                return Completable.complete();
+            }
+
+            @Override
+            public Completable preDowngradeFromThis(ChunkLoadingContext context, Cancellable cancellable) {
+                return Completable.complete();
+            }
+
+            @Override
             public Completable downgradeFromThis(ChunkLoadingContext context, Cancellable cancellable) {
                 throw new UnsupportedOperationException();
             }
@@ -57,6 +67,11 @@ public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState,
             @Override
             public int toVanillaLevel() {
                 return ChunkLevels.INACCESSIBLE + 1;
+            }
+
+            @Override
+            public String toString() {
+                return "unloaded";
             }
         };
         statuses.add(NEW);
