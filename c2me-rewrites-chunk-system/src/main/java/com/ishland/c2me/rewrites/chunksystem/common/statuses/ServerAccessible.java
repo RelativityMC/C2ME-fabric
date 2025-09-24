@@ -78,6 +78,11 @@ public class ServerAccessible extends NewChunkStatus {
                 .subscribeOn(Schedulers.from(((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor()));
     }
 
+    @Override
+    public Completable postUpgradeToThis(ChunkLoadingContext context) {
+        return Completable.complete();
+    }
+
     private static WorldChunk toFullChunk(ProtoChunk protoChunk, ServerWorld serverWorld) {
         WorldChunk worldChunk;
         if (protoChunk instanceof WrapperProtoChunk) {
@@ -96,7 +101,12 @@ public class ServerAccessible extends NewChunkStatus {
     }
 
     @Override
-    public Completable downgradeFromThis(ChunkLoadingContext context) {
+    public Completable preDowngradeFromThis(ChunkLoadingContext context, Cancellable cancellable) {
+        return Completable.complete();
+    }
+
+    @Override
+    public Completable downgradeFromThis(ChunkLoadingContext context, Cancellable cancellable) {
         ChunkState state = context.holder().getItem().get();
         final Chunk chunk = state.chunk();
         Preconditions.checkState(chunk instanceof WorldChunk, "Chunk must be a full chunk");

@@ -154,6 +154,11 @@ public class ReadFromDisk extends NewChunkStatus {
     }
 
     @Override
+    public Completable postUpgradeToThis(ChunkLoadingContext context) {
+        return Completable.complete();
+    }
+
+    @Override
     public Completable preDowngradeFromThis(ChunkLoadingContext context, Cancellable cancellable) {
         return Completable.defer(() -> Completable.fromCompletionStage(syncWithLightEngine(context)))
                 .observeOn(Schedulers.from(((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor()))
@@ -168,7 +173,7 @@ public class ReadFromDisk extends NewChunkStatus {
     }
 
     @Override
-    public Completable downgradeFromThis(ChunkLoadingContext context) {
+    public Completable downgradeFromThis(ChunkLoadingContext context, Cancellable cancellable) {
         final AtomicBoolean loadedToWorld = new AtomicBoolean(false);
         return Completable.defer(() -> {
                     Assertions.assertTrue(((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor().isOnThread());
