@@ -3,7 +3,7 @@ plugins {
     id 'fabric-loom' version '1.11-SNAPSHOT' apply false
     id "me.champeau.jmh" version "0.7.2"
     id 'com.modrinth.minotaur' version '2.+' apply false
-    id 'com.matthewprenger.cursegradle' version '1.4.0' apply false
+    id 'io.github.themrmilchmann.curseforge-publish' version '0.8.0' apply false
     id 'com.gradleup.shadow' version '8.3.0' apply false
     id 'io.github.tomtzook.gradle-cmake' version '1.2.2' apply false
 }
@@ -216,26 +216,44 @@ modrinth {
     changelog = com.ishland.c2me.gradle.ParseGItHubActionChangelog.getChangelog()
 }
 
-apply plugin: 'com.matthewprenger.cursegradle'
-if (System.getenv("CURSEFORGE_TOKEN")) {
+apply plugin: 'io.github.themrmilchmann.curseforge-publish'
+if (!project.minecraft_version.contains("w") && !project.minecraft_version.contains("-")) { // rough filter for snapshots
     curseforge {
-        apiKey = System.getenv("CURSEFORGE_TOKEN")
-        project {
-            id = '533097'
-            changelogType = "markdown"
-            changelog = com.ishland.c2me.gradle.ParseGItHubActionChangelog.getChangelog()
-            releaseType = 'alpha'
+        apiToken = System.getenv("CURSEFORGE_TOKEN")
+        publications {
+            register("main") {
+                projectId = "533097"
 
-            addGameVersion project.minecraft_version
-            addGameVersion "Fabric"
-            addGameVersion "Java 21"
+                def matcher = java.util.regex.Pattern.compile("^([0-9]+)\\.([0-9]+)(?:\\.([0-9]+))?").matcher(project.minecraft_version)
+                if (!matcher.find()) {
+                    throw new RuntimeException("version regex failed")
+                }
 
-            mainArtifact(remapJar) {
-                displayName = project.version + " devbuild for " + project.minecraft_version
+                gameVersion("minecraft-" + matcher.group(1) + "-" + matcher.group(2), project.minecraft_version.replace('.', '-'))
+                gameVersion("modloader", "fabric")
+                gameVersion("java", "java-22")
+                gameVersion("java", "java-21")
+                gameVersion("environment", "server")
+                gameVersion("environment", "client")
+
+                artifacts.register("main") {
+                    from(remapShadowJar)
+
+                    displayName = project.version + " devbuild for " + project.minecraft_version
+                    releaseType = io.github.themrmilchmann.gradle.publish.curseforge.ReleaseType.ALPHA
+
+                    changelog {
+                        format = io.github.themrmilchmann.gradle.publish.curseforge.ChangelogFormat.MARKDOWN
+                        from(com.ishland.buildscript.ParseGItHubActionChangelog.getChangelog())
+                    }
+                }
             }
         }
-        options {
-            forgeGradleIntegration = false
+    }
+} else {
+    tasks.register("publishMainPublicationToCurseForge") {
+        doLast {
+            logger.lifecycle("skipping curseforge publishing because snapshot")
         }
     }
 }
