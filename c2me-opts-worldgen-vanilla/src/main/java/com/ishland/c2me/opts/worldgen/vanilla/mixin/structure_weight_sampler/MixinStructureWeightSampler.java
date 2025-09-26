@@ -1,7 +1,5 @@
 package com.ishland.c2me.opts.worldgen.vanilla.mixin.structure_weight_sampler;
 
-import com.google.common.collect.Iterators;
-import it.unimi.dsi.fastutil.objects.ObjectListIterator;
 import net.minecraft.structure.JigsawJunction;
 import net.minecraft.util.math.BlockBox;
 import net.minecraft.world.gen.StructureWeightSampler;
@@ -18,9 +16,9 @@ import java.util.List;
 @Mixin(StructureWeightSampler.class)
 public abstract class MixinStructureWeightSampler {
 
-    @Shadow(aliases = "field_61465") @Final private List<StructureWeightSampler.Piece> pieceList;
+    @Shadow @Final private List<StructureWeightSampler.Piece> field_61465;
 
-    @Shadow(aliases = "field_61466") @Final private List<JigsawJunction> junctionList;
+    @Shadow @Final private List<JigsawJunction> field_61466;
 
     @Shadow
     private static double getStructureWeight(int x, int y, int z, int yy) {
@@ -36,8 +34,8 @@ public abstract class MixinStructureWeightSampler {
 
     @Unique
     private void c2me$initArrays() {
-        this.c2me$pieceArray = this.pieceList.toArray(StructureWeightSampler.Piece[]::new);
-        this.c2me$junctionArray = this.junctionList.toArray(JigsawJunction[]::new);
+        this.c2me$pieceArray = this.field_61465.toArray(StructureWeightSampler.Piece[]::new);
+        this.c2me$junctionArray = this.field_61466.toArray(JigsawJunction[]::new);
     }
 
     /**
