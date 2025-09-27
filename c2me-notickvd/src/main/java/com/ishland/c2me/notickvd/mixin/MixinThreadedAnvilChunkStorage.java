@@ -43,37 +43,4 @@ public abstract class MixinThreadedAnvilChunkStorage {
         return chunkHolder.getAccessibleFuture().getNow(ChunkHolder.UNLOADED_WORLD_CHUNK).orElse(null);
     }
 
-    // TODO ensureChunkCorrectness
-    @Inject(method = "makeChunkAccessible", at = @At("RETURN"))
-    private void onMakeChunkAccessible(ChunkHolder chunkHolder, CallbackInfoReturnable<CompletableFuture<OptionalChunk<WorldChunk>>> cir) {
-        cir.getReturnValue().thenAccept(either -> either.ifPresent(worldChunk -> {
-            if (Config.compatibilityMode) {
-                this.mainThreadExecutor.send(() -> this.sendToPlayers(chunkHolder, worldChunk));
-            } else {
-                this.sendToPlayers(chunkHolder, worldChunk);
-            }
-        }));
-    }
-
-    // private synthetic method_17243(Lorg/apache/commons/lang3/mutable/MutableObject;Lnet/minecraft/world/chunk/WorldChunk;Lnet/minecraft/server/network/ServerPlayerEntity;)V
-//    /**
-//     * @author ishland
-//     * @reason dont send chunks twice
-//     */
-//    @Overwrite
-//    private void method_17243(MutableObject<ChunkDataS2CPacket> mutableObject, WorldChunk worldChunk, ServerPlayerEntity player) {
-//        if (Config.ensureChunkCorrectness && NoTickChunkSendingInterceptor.onChunkSending(player, worldChunk.getPos().toLong()))
-//            this.sendChunkDataPackets(player, mutableObject, worldChunk);
-//    }
-
-    @WrapWithCondition(method = "method_61257", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerChunkLoadingManager;sendToPlayers(Lnet/minecraft/server/world/ChunkHolder;Lnet/minecraft/world/chunk/WorldChunk;)V"))
-    private boolean controlDuplicateChunkSending(ServerChunkLoadingManager instance, ChunkHolder chunkHolder, WorldChunk chunk) {
-        return Config.ensureChunkCorrectness;
-    }
-
-    @WrapWithCondition(method = "method_53687", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerChunkLoadingManager;sendToPlayers(Lnet/minecraft/server/world/ChunkHolder;Lnet/minecraft/world/chunk/WorldChunk;)V"))
-    private boolean controlDuplicateChunkSending1(ServerChunkLoadingManager instance, ChunkHolder chunkHolder, WorldChunk chunk) {
-        return Config.ensureChunkCorrectness; // TODO config set to false unfixes MC-264947
-    }
-
 }
