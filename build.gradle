@@ -237,7 +237,7 @@ if (!project.minecraft_version.contains("w") && !project.minecraft_version.conta
                 gameVersion("environment", "client")
 
                 artifacts.register("main") {
-                    from(remapShadowJar)
+                    from(remapJar)
 
                     displayName = project.version + " devbuild for " + project.minecraft_version
                     releaseType = io.github.themrmilchmann.gradle.publish.curseforge.ReleaseType.ALPHA
