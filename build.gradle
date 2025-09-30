@@ -244,7 +244,7 @@ if (!project.minecraft_version.contains("w") && !project.minecraft_version.conta
 
                     changelog {
                         format = io.github.themrmilchmann.gradle.publish.curseforge.ChangelogFormat.MARKDOWN
-                        from(com.ishland.buildscript.ParseGItHubActionChangelog.getChangelog())
+                        from(com.ishland.c2me.gradle.ParseGItHubActionChangelog.getChangelog())
                     }
                 }
             }
