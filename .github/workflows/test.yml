@@ -6,7 +6,7 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     strategy:
       fail-fast: false
@@ -14,13 +14,13 @@ jobs:
         testTask: [runTestC2MEServer]
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         fetch-depth: 0
         submodules: true
 
     - name: Set up JDK 25
-      uses: actions/setup-java@v2
+      uses: actions/setup-java@v5
       with:
         distribution: 'zulu'
         java-version: 25
@@ -29,20 +29,15 @@ jobs:
     - name: Install LLVM
       uses: KyleMayes/install-llvm-action@v2
       with:
-        version: "18.1.8"
+        version: "20.1.8"
+        force-url: "https://github.com/llvm/llvm-project/releases/download/llvmorg-20.1.8/LLVM-20.1.8-Linux-X64.tar.xz"
+        directory: ${{ runner.temp }}/llvm
 
-    - name: Install required dependencies
-      run: sudo apt update && sudo apt install libtinfo5
-
-    - uses: actions/cache@v4
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v4
       with:
-        path: |
-          ~/.gradle/caches
-          ~/.gradle/wrapper
-          ./.gradle/loom-cache
-        key: ${{ runner.os }}-gradle4-test-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-        restore-keys: |
-          ${{ runner.os }}-gradle4-test-
+        cache-read-only: false
+        cache-cleanup: never
         
     - name: Test C2ME
       run: |
