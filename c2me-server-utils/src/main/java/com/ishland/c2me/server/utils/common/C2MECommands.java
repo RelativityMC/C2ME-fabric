@@ -16,7 +16,7 @@ public class C2MECommands {
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
         dispatcher.register(
                 CommandManager.literal("c2me")
-                        .requires(CommandManager.requirePermissionLevel(CommandManager.field_31839))
+                        .requires(CommandManager.requirePermissionLevel(CommandManager.GAMEMASTERS_CHECK))
                         .then(
                                 CommandManager.literal("notick")
                                         .requires(unused -> com.ishland.c2me.notickvd.ModuleEntryPoint.enabled)
