@@ -239,7 +239,7 @@ public class ReadFromDisk extends NewChunkStatus {
                     .flatMapCompletable(either -> {
                         if (either.left().isPresent()) {
                             NbtCompound nbtCompound = either.left().get();
-                            return Completable.fromCompletionStage(context.tacs().setNbt(chunkPos, () -> nbtCompound));
+                            return Completable.fromCompletionStage(context.tacs().set(chunkPos, () -> nbtCompound));
                         } else {
                             return Completable.fromCompletionStage(((IDirectStorage) ((IVersionedChunkStorage) context.tacs()).getWorker()).setRawChunkData(chunkPos, either.right().get()));
                         }

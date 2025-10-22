@@ -2,7 +2,9 @@ package com.ishland.c2me.rewrites.chunksystem.mixin.async_serialization;
 
 import com.mojang.datafixers.DataFixer;
 import net.minecraft.SharedConstants;
+import net.minecraft.datafixer.DataFixTypes;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtHelper;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ServerChunkLoadingManager;
 import net.minecraft.util.Util;
@@ -20,8 +22,8 @@ import java.util.concurrent.CompletableFuture;
 @Mixin(ServerChunkLoadingManager.class)
 public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStorage implements ChunkHolder.PlayersWatchingChunkProvider {
 
-    public MixinThreadedAnvilChunkStorage(StorageKey arg, Path path, DataFixer dataFixer, boolean bl) {
-        super(arg, path, dataFixer, bl);
+    public MixinThreadedAnvilChunkStorage(StorageKey storageKey, Path path, DataFixer dataFixer, boolean bl, DataFixTypes dataFixTypes) {
+        super(storageKey, path, dataFixer, bl, dataFixTypes);
     }
 
     @Shadow protected abstract NbtCompound updateChunkNbt(NbtCompound nbt);
@@ -36,7 +38,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
         return this.getNbt(chunkPos).thenCompose(nbt -> {
             if (nbt.isPresent()) {
                 final NbtCompound compound = nbt.get();
-                if (VersionedChunkStorage.getDataVersion(compound) != SharedConstants.getGameVersion().dataVersion().id()) {
+                if (NbtHelper.getDataVersion(compound, -1) != SharedConstants.getGameVersion().dataVersion().id()) {
                     return CompletableFuture.supplyAsync(() -> Optional.of(updateChunkNbt(compound)), Util.getMainWorkerExecutor());
                 } else {
                     return CompletableFuture.completedFuture(nbt);

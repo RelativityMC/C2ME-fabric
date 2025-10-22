@@ -34,4 +34,13 @@ public class MixinThreadedAnvilChunkStorage {
         }
     }
 
+    @Inject(method = "markChunkNeedsSaving", at = @At("HEAD"))
+    private void onMarkChunkNeedsSaving(CallbackInfo ci) {
+        if (!this.mainThreadExecutor.isOnThread()) {
+            final ConcurrentModificationException e = new ConcurrentModificationException("Async chunk modification");
+            e.printStackTrace();
+            throw e;
+        }
+    }
+
 }
