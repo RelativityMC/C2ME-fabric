@@ -4,7 +4,9 @@ import com.ishland.c2me.fixes.worldgen.threading_issues.asm.MakeVolatile;
 import com.ishland.c2me.fixes.worldgen.threading_issues.common.XPieceDataExtension;
 import net.minecraft.structure.NetherFortressGenerator;
 import org.objectweb.asm.Opcodes;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -17,8 +19,8 @@ import java.util.List;
 @Mixin(NetherFortressGenerator.Start.class)
 public class MixinNetherFortressGeneratorStart {
 
-    @Shadow public List<NetherFortressGenerator.PieceData> bridgePieces;
-    @Shadow public List<NetherFortressGenerator.PieceData> corridorPieces;
+    @Shadow @Final @Mutable public List<NetherFortressGenerator.PieceData> bridgePieces;
+    @Shadow @Final @Mutable public List<NetherFortressGenerator.PieceData> corridorPieces;
 
     @MakeVolatile
     @Shadow public NetherFortressGenerator.PieceData lastPiece;
