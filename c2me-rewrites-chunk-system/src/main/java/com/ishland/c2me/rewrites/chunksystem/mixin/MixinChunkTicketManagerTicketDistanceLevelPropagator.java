@@ -1,30 +1,35 @@
 package com.ishland.c2me.rewrites.chunksystem.mixin;
 
+import com.ishland.c2me.rewrites.chunksystem.common.ducks.TicketDistanceLevelPropagatorExtension;
+import it.unimi.dsi.fastutil.longs.Long2IntLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2IntMap;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
-import net.minecraft.server.world.ChunkHolder;
-import net.minecraft.server.world.ChunkLevelManager;
 import net.minecraft.server.world.TicketDistanceLevelPropagator;
-import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(TicketDistanceLevelPropagator.class)
-public class MixinChunkTicketManagerTicketDistanceLevelPropagator {
+public class MixinChunkTicketManagerTicketDistanceLevelPropagator implements TicketDistanceLevelPropagatorExtension {
 
     @Shadow @Final private static int UNLOADED;
 
-    private final Long2IntMap levels = new Long2IntOpenHashMap();
+    @Unique
+    private Long2IntMap c2me$levels;
+
+    @Unique
+    private Long2IntLinkedOpenHashMap c2me$ticketLevelUpdates;
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void postInit(CallbackInfo ci) {
-        this.levels.defaultReturnValue(UNLOADED + 1);
+        this.c2me$levels = new Long2IntOpenHashMap();
+        this.c2me$levels.defaultReturnValue(UNLOADED + 1);
+        this.c2me$ticketLevelUpdates = new Long2IntLinkedOpenHashMap();
     }
 
     /**
@@ -33,26 +38,26 @@ public class MixinChunkTicketManagerTicketDistanceLevelPropagator {
      */
     @Overwrite
     public int getLevel(long id) {
-        return this.levels.get(id);
+        return this.c2me$levels.get(id);
     }
 
-    @Inject(method = "setLevel", at = @At("HEAD"))
-    private void preSetLevel(long id, int level, CallbackInfo ci) {
+    /**
+     * @author ishland
+     * @reason use internal levels, plus defer update
+     */
+    @Overwrite
+    protected void setLevel(long id, int level) {
         if (level >= UNLOADED) {
-            this.levels.remove(id);
+            this.c2me$levels.remove(id);
         } else {
-            this.levels.put(id, level);
+            this.c2me$levels.put(id, level);
         }
+        this.c2me$ticketLevelUpdates.putAndMoveToLast(id, level);
     }
 
-    @Redirect(method = "setLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ChunkLevelManager;getChunkHolder(J)Lnet/minecraft/server/world/ChunkHolder;"))
-    private ChunkHolder fakeLevel(ChunkLevelManager instance, long l) {
-        return null;
-    }
-
-    @Redirect(method = "setLevel", at = @At(value = "FIELD", target = "Lnet/minecraft/server/world/TicketDistanceLevelPropagator;UNLOADED:I", opcode = Opcodes.GETSTATIC))
-    private int fakeLevel() {
-        return Integer.MAX_VALUE;
+    @Override
+    public Long2IntLinkedOpenHashMap c2me$getTicketLevelUpdates() {
+        return this.c2me$ticketLevelUpdates;
     }
 
 }

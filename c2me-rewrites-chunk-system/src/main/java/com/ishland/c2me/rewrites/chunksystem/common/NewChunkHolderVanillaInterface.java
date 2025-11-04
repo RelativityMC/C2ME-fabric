@@ -174,8 +174,15 @@ public class NewChunkHolderVanillaInterface extends ChunkHolder implements IFast
             // both nonnull and different
             if (this.loadedDeferredStatus != null && this.loadedDeferredStatus.ordinal() > status.ordinal()) {
                 ChunkPos pos1 = this.getPos();
-                this.chunkSystem.removeTicket(pos1, TicketTypeExtension.VANILLA_DEFERRED_LOAD, pos1, this.loadedDeferredStatus);
-                this.loadedDeferredStatus = null;
+                if (status.getPrev() != null) { // don't add unloaded tickets
+                    ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> holder1 = this.chunkSystem.addTicket(pos1, TicketTypeExtension.VANILLA_DEFERRED_LOAD, pos1, status, StatusAdvancingScheduler.NO_OP);
+                    Assertions.assertTrue(holder1 == this.newHolder);
+                    this.chunkSystem.removeTicket(pos1, TicketTypeExtension.VANILLA_DEFERRED_LOAD, pos1, this.loadedDeferredStatus);
+                    this.loadedDeferredStatus = status;
+                } else {
+                    this.chunkSystem.removeTicket(pos1, TicketTypeExtension.VANILLA_DEFERRED_LOAD, pos1, this.loadedDeferredStatus);
+                    this.loadedDeferredStatus = null;
+                }
             }
             this.deferredStatus = status;
         }
