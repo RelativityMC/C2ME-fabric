@@ -3,8 +3,8 @@ package com.ishland.c2me.opts.dfc.common.ast.misc;
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
 import com.ishland.c2me.opts.dfc.common.ast.AstTransformer;
 import com.ishland.c2me.opts.dfc.common.ast.EvalType;
+import com.ishland.c2me.opts.dfc.common.ast.InvocationShim;
 import com.ishland.c2me.opts.dfc.common.gen.BytecodeGen;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.util.math.MathHelper;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.InstructionAdapter;
@@ -56,8 +56,8 @@ public class YClampedGradientNode implements AstNode {
         m.dconst(this.fromValue);
         m.dconst(this.toValue);
         m.invokestatic(
-                Type.getInternalName(MathHelper.class),
-                FabricLoader.getInstance().getMappingResolver().mapMethodName("intermediary", "net.minecraft.class_3532", "method_32854", "(DDDDD)D"),
+                Type.getInternalName(InvocationShim.class),
+                "invokeMathHelperClampedMap",
                 "(DDDDD)D",
                 false
         );
@@ -80,8 +80,8 @@ public class YClampedGradientNode implements AstNode {
                 m.dconst(this.fromValue);
                 m.dconst(this.toValue);
                 m.invokestatic(
-                        Type.getInternalName(MathHelper.class),
-                        FabricLoader.getInstance().getMappingResolver().mapMethodName("intermediary", "net.minecraft.class_3532", "method_32854", "(DDDDD)D"),
+                        Type.getInternalName(InvocationShim.class),
+                        "invokeMathHelperClampedMap",
                         "(DDDDD)D",
                         false
                 );

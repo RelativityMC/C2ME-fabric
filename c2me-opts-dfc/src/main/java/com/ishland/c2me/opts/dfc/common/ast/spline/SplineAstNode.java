@@ -3,13 +3,13 @@ package com.ishland.c2me.opts.dfc.common.ast.spline;
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
 import com.ishland.c2me.opts.dfc.common.ast.AstTransformer;
 import com.ishland.c2me.opts.dfc.common.ast.EvalType;
+import com.ishland.c2me.opts.dfc.common.ast.InvocationShim;
 import com.ishland.c2me.opts.dfc.common.ast.McToAst;
 import com.ishland.c2me.opts.dfc.common.gen.BytecodeGen;
 import com.ishland.c2me.opts.dfc.common.vif.NoisePosVanillaInterface;
 import com.ishland.flowsched.util.Assertions;
 import it.unimi.dsi.fastutil.Pair;
 import it.unimi.dsi.fastutil.ints.IntObjectPair;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Spline;
 import net.minecraft.world.gen.densityfunction.DensityFunctionTypes;
@@ -351,8 +351,8 @@ public class SplineAstNode implements AstNode {
                 m.load(n, Type.FLOAT_TYPE);
                 m.load(o, Type.FLOAT_TYPE);
                 m.invokestatic(
-                        Type.getInternalName(MathHelper.class),
-                        FabricLoader.getInstance().getMappingResolver().mapMethodName("intermediary", "net.minecraft.class_3532", "method_16439", "(FFF)F"),
+                        Type.getInternalName(InvocationShim.class),
+                        "invokeMathHelperLerp",
                         "(FFF)F",
                         false
                 );
@@ -365,8 +365,8 @@ public class SplineAstNode implements AstNode {
                 m.load(p, Type.FLOAT_TYPE);
                 m.load(q, Type.FLOAT_TYPE);
                 m.invokestatic(
-                        Type.getInternalName(MathHelper.class),
-                        FabricLoader.getInstance().getMappingResolver().mapMethodName("intermediary", "net.minecraft.class_3532", "method_16439", "(FFF)F"),
+                        Type.getInternalName(InvocationShim.class),
+                        "invokeMathHelperLerp",
                         "(FFF)F",
                         false
                 );

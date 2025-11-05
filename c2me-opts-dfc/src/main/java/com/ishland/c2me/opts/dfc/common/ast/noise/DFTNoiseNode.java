@@ -3,8 +3,8 @@ package com.ishland.c2me.opts.dfc.common.ast.noise;
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
 import com.ishland.c2me.opts.dfc.common.ast.AstTransformer;
 import com.ishland.c2me.opts.dfc.common.ast.EvalType;
+import com.ishland.c2me.opts.dfc.common.ast.InvocationShim;
 import com.ishland.c2me.opts.dfc.common.gen.BytecodeGen;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.InstructionAdapter;
@@ -67,10 +67,10 @@ public class DFTNoiseNode implements AstNode {
         m.dconst(this.xzScale);
         m.mul(Type.DOUBLE_TYPE);
 
-        m.invokevirtual(
-                Type.getInternalName(DensityFunction.Noise.class),
-                FabricLoader.getInstance().getMappingResolver().mapMethodName("intermediary", "net.minecraft.class_6910$class_7270", "method_42356", "(DDD)D"),
-                "(DDD)D",
+        m.invokestatic(
+                Type.getInternalName(InvocationShim.class),
+                "invokeDensityFunctionNoiseSample",
+                Type.getMethodDescriptor(Type.DOUBLE_TYPE, Type.getType(DensityFunction.Noise.class), Type.DOUBLE_TYPE, Type.DOUBLE_TYPE, Type.DOUBLE_TYPE),
                 false
         );
         m.areturn(Type.DOUBLE_TYPE);
@@ -109,10 +109,10 @@ public class DFTNoiseNode implements AstNode {
                 m.dconst(this.xzScale);
                 m.mul(Type.DOUBLE_TYPE);
 
-                m.invokevirtual(
-                        Type.getInternalName(DensityFunction.Noise.class),
-                        FabricLoader.getInstance().getMappingResolver().mapMethodName("intermediary", "net.minecraft.class_6910$class_7270", "method_42356", "(DDD)D"),
-                        "(DDD)D",
+                m.invokestatic(
+                        Type.getInternalName(InvocationShim.class),
+                        "invokeDensityFunctionNoiseSample",
+                        Type.getMethodDescriptor(Type.DOUBLE_TYPE, Type.getType(DensityFunction.Noise.class), Type.DOUBLE_TYPE, Type.DOUBLE_TYPE, Type.DOUBLE_TYPE),
                         false
                 );
             }

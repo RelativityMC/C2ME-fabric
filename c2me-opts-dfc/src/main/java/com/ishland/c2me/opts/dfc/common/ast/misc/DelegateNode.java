@@ -1,13 +1,13 @@
 package com.ishland.c2me.opts.dfc.common.ast.misc;
 
 import com.ishland.c2me.opts.dfc.common.ast.AstTransformer;
+import com.ishland.c2me.opts.dfc.common.ast.InvocationShim;
 import com.ishland.c2me.opts.dfc.common.gen.BytecodeGen;
 import com.ishland.c2me.opts.dfc.common.util.ArrayCache;
 import com.ishland.c2me.opts.dfc.common.vif.EachApplierVanillaInterface;
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
 import com.ishland.c2me.opts.dfc.common.ast.EvalType;
 import com.ishland.c2me.opts.dfc.common.vif.NoisePosVanillaInterface;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.Type;
@@ -62,10 +62,11 @@ public class DelegateNode implements AstNode {
         m.load(3, Type.INT_TYPE);
         m.load(4, InstructionAdapter.OBJECT_TYPE);
         m.invokespecial(Type.getInternalName(NoisePosVanillaInterface.class), "<init>", Type.getMethodDescriptor(Type.VOID_TYPE, Type.INT_TYPE, Type.INT_TYPE, Type.INT_TYPE, Type.getType(EvalType.class)), false);
-        m.invokeinterface(
-                Type.getInternalName(DensityFunction.class),
-                FabricLoader.getInstance().getMappingResolver().mapMethodName("intermediary", "net.minecraft.class_6910", "method_40464", "(Lnet/minecraft/class_6910$class_6912;)D"),
-                Type.getMethodDescriptor(Type.DOUBLE_TYPE, Type.getType(DensityFunction.NoisePos.class))
+        m.invokestatic(
+                Type.getInternalName(InvocationShim.class),
+                "invokeDensityFunctionSample",
+                Type.getMethodDescriptor(Type.DOUBLE_TYPE, Type.getType(DensityFunction.class), Type.getType(DensityFunction.NoisePos.class)),
+                false
         );
         m.areturn(Type.DOUBLE_TYPE);
     }
@@ -99,10 +100,11 @@ public class DelegateNode implements AstNode {
         m.aload(Type.INT_TYPE);
         m.load(5, InstructionAdapter.OBJECT_TYPE);
         m.invokespecial(Type.getInternalName(NoisePosVanillaInterface.class), "<init>", Type.getMethodDescriptor(Type.VOID_TYPE, Type.INT_TYPE, Type.INT_TYPE, Type.INT_TYPE, Type.getType(EvalType.class)), false);
-        m.invokeinterface(
-                Type.getInternalName(DensityFunction.class),
-                FabricLoader.getInstance().getMappingResolver().mapMethodName("intermediary", "net.minecraft.class_6910", "method_40464", "(Lnet/minecraft/class_6910$class_6912;)D"),
-                Type.getMethodDescriptor(Type.DOUBLE_TYPE, Type.getType(DensityFunction.NoisePos.class))
+        m.invokestatic(
+                Type.getInternalName(InvocationShim.class),
+                "invokeDensityFunctionSample",
+                Type.getMethodDescriptor(Type.DOUBLE_TYPE, Type.getType(DensityFunction.class), Type.getType(DensityFunction.NoisePos.class)),
+                false
         );
 
         m.astore(Type.DOUBLE_TYPE);
@@ -121,10 +123,11 @@ public class DelegateNode implements AstNode {
         m.load(5, InstructionAdapter.OBJECT_TYPE);
         m.load(6, InstructionAdapter.OBJECT_TYPE);
         m.invokespecial(Type.getInternalName(EachApplierVanillaInterface.class), "<init>", Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(int[].class), Type.getType(int[].class), Type.getType(int[].class), Type.getType(EvalType.class), Type.getType(ArrayCache.class)), false);
-        m.invokeinterface(
-                Type.getInternalName(DensityFunction.class),
-                FabricLoader.getInstance().getMappingResolver().mapMethodName("intermediary", "net.minecraft.class_6910", "method_40470", "([DLnet/minecraft/class_6910$class_6911;)V"),
-                Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(double[].class), Type.getType(DensityFunction.EachApplier.class))
+        m.invokestatic(
+                Type.getInternalName(InvocationShim.class),
+                "invokeDensityFunctionFill",
+                Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(DensityFunction.class), Type.getType(double[].class), Type.getType(DensityFunction.EachApplier.class)),
+                false
         );
         m.areturn(Type.VOID_TYPE);
     }
