@@ -4,5 +4,5 @@ moduleDependencies(project, [
 ])
 
 test {
-    enabled = false
+    jvmArgs "-Dfabric.gameVersion=1.21.11-alpha.25.45.a.unobfuscated"
 }
