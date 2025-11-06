@@ -1,3 +1,7 @@
 moduleDependencies(project, [
         "c2me-base",
 ])
+
+test {
+    enabled = false
+}

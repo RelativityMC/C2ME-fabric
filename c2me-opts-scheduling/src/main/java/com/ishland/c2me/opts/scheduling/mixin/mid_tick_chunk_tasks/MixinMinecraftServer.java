@@ -1,6 +1,7 @@
 package com.ishland.c2me.opts.scheduling.mixin.mid_tick_chunk_tasks;
 
 import com.ishland.c2me.base.mixin.access.IServerChunkManager;
+import com.ishland.c2me.base.mixin.access.IThreadExecutor;
 import com.ishland.c2me.opts.scheduling.common.Config;
 import com.ishland.c2me.opts.scheduling.common.ServerMidTickTask;
 import net.minecraft.server.MinecraftServer;
@@ -23,7 +24,7 @@ public abstract class MixinMinecraftServer implements ServerMidTickTask {
     public void executeTasksMidTick(ServerWorld world) {
         if (this.serverThread != Thread.currentThread()) return;
         if (System.nanoTime() - midTickChunkTasksLastRun < Config.midTickChunkTasksInterval) return;
-        ((ThreadExecutor<Runnable>) ((IServerChunkManager) world.getChunkManager()).getMainThreadExecutor()).runTask();
+        ((IThreadExecutor) ((ThreadExecutor<Runnable>) ((IServerChunkManager) world.getChunkManager()).getMainThreadExecutor())).invokeRunTask();
         midTickChunkTasksLastRun = System.nanoTime();
     }
 

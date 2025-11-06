@@ -1,5 +1,6 @@
 package com.ishland.c2me.opts.scheduling.mixin.shutdown;
 
+import com.ishland.c2me.base.mixin.access.IThreadExecutor;
 import com.ishland.c2me.opts.scheduling.common.ITryFlushable;
 import net.minecraft.entity.Entity;
 import net.minecraft.server.MinecraftServer;
@@ -28,7 +29,7 @@ public class MixinServerWorld {
     @Inject(method = "save", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerEntityManager;flush()V", shift = At.Shift.BEFORE))
     private void replaceEntityFlushLogic(ProgressListener progressListener, boolean flush, boolean savingDisabled, CallbackInfo ci) {
         while (!((ITryFlushable) this.entityManager).c2me$tryFlush()) {
-            this.server.runTask();
+            ((IThreadExecutor) this.server).invokeRunTask();
             while (this.chunkManager.executeQueuedTasks());
             LockSupport.parkNanos("waiting for completion", 1_000_000);
         }

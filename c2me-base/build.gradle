@@ -15,7 +15,7 @@ shadowJar {
     configurations = [ project.configurations.shadowInclude ]
 }
 
-remapJar {
+remapJarIntermediary {
     input = shadowJar.archiveFile
     archiveFileName = shadowJar.archiveFileName.get().replaceAll("-dev\\.jar\$", ".jar")
     addNestedDependencies = true

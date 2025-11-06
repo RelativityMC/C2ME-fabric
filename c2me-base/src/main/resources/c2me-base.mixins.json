@@ -47,6 +47,7 @@
     "access.ISyncedClientOptions",
     "access.IThreadedAnvilChunkStorage",
     "access.IThreadedAnvilChunkStorageLevelManager",
+    "access.IThreadExecutor",
     "access.IUpgradeData",
     "access.IVersionedChunkStorage",
     "access.IWeightedList",

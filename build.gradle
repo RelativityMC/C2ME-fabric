@@ -86,7 +86,34 @@ configure (allprojects - project(":tests")) {
         }
     }
 
+    // loom cannot remap named straight to official for some reason, workaround here
+    tasks.register("remapJarIntermediary", net.fabricmc.loom.task.RemapJarTask.class) {
+        input = jar.archiveFile
+        archiveClassifier = "intermediary-mapped"
+        sourceNamespace = "named"
+        targetNamespace = "intermediary"
+        addNestedDependencies = false
+        dependsOn jar
+    }
+
+    remapJar {
+        input = remapJarIntermediary.archiveFile
+        sourceNamespace = "intermediary"
+        targetNamespace = "official"
+        addNestedDependencies = true
+
+        afterEvaluate {
+            def theFiles = project.files(loom.getMinecraftJars(net.fabricmc.loom.api.mappings.layered.MappingsNamespace.INTERMEDIARY));
+            theFiles = theFiles.from(project.configurations.minecraftLibraries)
+            classpath = theFiles
+        }
+
+        dependsOn remapJarIntermediary
+    }
+
     loom {
+        intermediaryUrl = "https://gist.github.com/ishland/03287f2fc1edfd82085bf7a804832a05/raw/98a55f444baa550a60b5279bc85d06fa869ec1fc/intermediary-25w45a_unobfuscated-v2.jar"
+
         def file = project(":c2me-base").file("src/main/resources/c2me-base.accesswidener")
         accessWidenerPath = file
         enableTransitiveAccessWideners = false

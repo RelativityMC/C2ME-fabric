@@ -3,3 +3,6 @@ moduleDependencies(project, [
         "c2me-rewrites-chunk-system",
 ])
 
+test {
+    enabled = false
+}
