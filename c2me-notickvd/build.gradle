@@ -3,6 +3,3 @@ moduleDependencies(project, [
         "c2me-rewrites-chunk-system",
 ])
 
-test {
-    jvmArgs "-Dfabric.gameVersion=1.21.11-alpha.25.45.a.unobfuscated"
-}

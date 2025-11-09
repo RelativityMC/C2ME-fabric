@@ -26,9 +26,9 @@
     ]
   },
   "depends": {
-    "fabricloader": ">=0.16.14",
+    "fabricloader": ">=0.18.0",
     "java": ">=21",
-    "minecraft": ">=1.21.6-rc.1",
+    "minecraft": ">1.21.10",
     "c2me-base": "*"
   },
   "conflicts": {

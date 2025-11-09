@@ -14,8 +14,7 @@ loom {
                     "-Dc2me.base.config.override.vanillaWorldGenOptimizations.useDensityFunctionCompiler=true",
                     "-Dc2me.base.config.override.vanillaWorldGenOptimizations.nativeAcceleration.enabled=true",
                     "-Dc2me.gcFreeChunkSerializer.validateNbt=true",
-                    "-Dcom.ishland.c2me.mixin.doAudit=true",
-                    "-Dfabric.gameVersion=1.21.11-alpha.25.45.a.unobfuscated"
+                    "-Dcom.ishland.c2me.mixin.doAudit=true"
             if (System.getenv("GITHUB_WORKFLOW") != null) {
                 if (System.getenv("RUNNER_OS").equals("macOS")) {
                     vmArgs "-Xmx11G"
