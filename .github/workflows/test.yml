@@ -11,7 +11,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        testTask: [runTestC2MEServer]
+        testTask: [runTestC2MEServer, runProductionTestC2MEServer]
 
     steps:
     - uses: actions/checkout@v5

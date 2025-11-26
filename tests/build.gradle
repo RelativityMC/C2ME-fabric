@@ -56,8 +56,7 @@ allprojects {
     }
     afterEvaluate {
         tasks.forEach {
-            if (it.getName() == "remapJar"
-                    || it.getName() == "remapSourcesJar"
+            if (it.getName() == "remapSourcesJar"
                     || it.getName() == "runClient"
                     || it.getName() == "runServer"
                     || it.getName() == "build") {

@@ -3,18 +3,22 @@ import com.ishland.c2me.gradle.RedirectingOutputStream
 evaluationDependsOn(":tests")
 evaluationDependsOn(":tests:test-mod")
 
+def runVMArgs = [
+        "-Dc2me.base.config.override.asyncScheduling.enabled=true",
+        "-Dc2me.base.config.override.ioSystem.replaceImpl=true",
+        "-Dc2me.base.config.override.ioSystem.gcFreeChunkSerializer=true",
+        "-Dc2me.base.config.override.vanillaWorldGenOptimizations.useDensityFunctionCompiler=true",
+        "-Dc2me.base.config.override.vanillaWorldGenOptimizations.nativeAcceleration.enabled=true",
+        "-Dc2me.gcFreeChunkSerializer.validateNbt=true",
+        "-Dcom.ishland.c2me.mixin.doAudit=true",
+]
+
 loom {
     runs {
         testC2MEServer {
             server()
             runDir project.getProjectDir().toPath().relativize(project.getBuildDir().toPath()).resolve("testServer").toString()
-            vmArgs "-Dc2me.base.config.override.asyncScheduling.enabled=true",
-                    "-Dc2me.base.config.override.ioSystem.replaceImpl=true",
-                    "-Dc2me.base.config.override.ioSystem.gcFreeChunkSerializer=true",
-                    "-Dc2me.base.config.override.vanillaWorldGenOptimizations.useDensityFunctionCompiler=true",
-                    "-Dc2me.base.config.override.vanillaWorldGenOptimizations.nativeAcceleration.enabled=true",
-                    "-Dc2me.gcFreeChunkSerializer.validateNbt=true",
-                    "-Dcom.ishland.c2me.mixin.doAudit=true"
+            vmArgs runVMArgs
             if (System.getenv("GITHUB_WORKFLOW") != null) {
                 if (System.getenv("RUNNER_OS").equals("macOS")) {
                     vmArgs "-Xmx11G"
@@ -24,6 +28,24 @@ loom {
             }
         }
     }
+}
+
+def productionMods = project.files(project(":").remapJar.archiveFile, project(":tests:test-mod").remapJar.archiveFile)
+
+tasks.register("runProductionTestC2MEServer", net.fabricmc.loom.task.prod.ServerProductionRunTask) {
+    mods.setFrom productionMods
+    runDir = project.getProjectDir().toPath().relativize(project.getBuildDir().toPath()).resolve("testProductionServer").toFile()
+    jvmArgs.addAll(runVMArgs)
+    if (System.getenv("GITHUB_WORKFLOW") != null) {
+        if (System.getenv("RUNNER_OS").equals("macOS")) {
+            vmArgs "-Xmx11G"
+        } else if (System.getenv("RUNNER_OS").equals("Linux")) {
+            vmArgs "-Xmx5G"
+        }
+    }
+
+    dependsOn project(":").remapJar
+    dependsOn project(":tests:test-mod").remapJar
 }
 
 afterEvaluate {
