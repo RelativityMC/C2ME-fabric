@@ -13,19 +13,20 @@ def runVMArgs = [
         "-Dcom.ishland.c2me.mixin.doAudit=true",
 ]
 
+if (System.getenv("GITHUB_WORKFLOW") != null) {
+    if (System.getenv("RUNNER_OS").equals("macOS")) {
+        runVMArgs += "-Xmx11G"
+    } else if (System.getenv("RUNNER_OS").equals("Linux")) {
+        runVMArgs += "-Xmx5G"
+    }
+}
+
 loom {
     runs {
         testC2MEServer {
             server()
             runDir project.getProjectDir().toPath().relativize(project.getBuildDir().toPath()).resolve("testServer").toString()
             vmArgs runVMArgs
-            if (System.getenv("GITHUB_WORKFLOW") != null) {
-                if (System.getenv("RUNNER_OS").equals("macOS")) {
-                    vmArgs "-Xmx11G"
-                } else if (System.getenv("RUNNER_OS").equals("Linux")) {
-                    vmArgs "-Xmx5G"
-                }
-            }
         }
     }
 }
@@ -36,13 +37,6 @@ tasks.register("runProductionTestC2MEServer", net.fabricmc.loom.task.prod.Server
     mods.setFrom productionMods
     runDir = project.getProjectDir().toPath().relativize(project.getBuildDir().toPath()).resolve("testProductionServer").toFile()
     jvmArgs.addAll(runVMArgs)
-    if (System.getenv("GITHUB_WORKFLOW") != null) {
-        if (System.getenv("RUNNER_OS").equals("macOS")) {
-            vmArgs "-Xmx11G"
-        } else if (System.getenv("RUNNER_OS").equals("Linux")) {
-            vmArgs "-Xmx5G"
-        }
-    }
 
     dependsOn project(":").remapJar
     dependsOn project(":tests:test-mod").remapJar
