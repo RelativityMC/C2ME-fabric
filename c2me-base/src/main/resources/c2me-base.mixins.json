@@ -58,7 +58,6 @@
     "access.IXoroshiro128PlusPlusRandomImpl",
     "access.fapi.IArrayBackedEvent",
     "bugfixes.config_enforce_main.MixinServerConfigurationNetworkHandler",
-    "client_movement.MixinPlayerEntity",
     "instrumentation.MixinServerChunkManager",
     "report.MixinDedicatedServerWatchdog",
     "scheduler.MixinServerChunkManager",
@@ -66,8 +65,5 @@
     "theinterface.MixinStorageIoWorker",
     "util.log4j2shutdownhookisnomore.MixinMain",
     "util.log4j2shutdownhookisnomore.MixinMinecraftDedicatedServer"
-  ],
-  "client": [
-    "client_movement.MixinClientPlayerEntity"
   ]
 }
