@@ -6,7 +6,6 @@
   "mixins": [
     "ISimpleOption",
     "MixinGameOptions",
-    "MixinSodiumUserConfigCategories",
     "MixinSyncedClientOptions",
     "MixinVKModOptions",
     "rendering.MixinFogRenderer"
