@@ -10,6 +10,6 @@ repositories {
 }
 
 dependencies {
-    modImplementation "net.caffeinemc:sodium-fabric-api:0.8.0-SNAPSHOT+mc1.21.11-pre3-build.773"
+    modImplementation "net.caffeinemc:sodium-fabric-api:0.7.3-SNAPSHOT+mc1.21.10-build.778"
 }
 
