@@ -1,6 +1,6 @@
 plugins {
     id 'java-library'
-    id 'fabric-loom' version '1.14.0-alpha.29' apply false
+    id 'fabric-loom' version '1.14-SNAPSHOT' apply false
     id "me.champeau.jmh" version "0.7.2"
     id 'com.modrinth.minotaur' version '2.+' apply false
     id 'io.github.themrmilchmann.curseforge-publish' version '0.8.0' apply false
