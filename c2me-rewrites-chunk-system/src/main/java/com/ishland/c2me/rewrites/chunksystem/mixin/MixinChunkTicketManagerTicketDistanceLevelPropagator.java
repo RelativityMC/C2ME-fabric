@@ -29,7 +29,15 @@ public class MixinChunkTicketManagerTicketDistanceLevelPropagator implements Tic
     private void postInit(CallbackInfo ci) {
         this.c2me$levels = new Long2IntOpenHashMap();
         this.c2me$levels.defaultReturnValue(UNLOADED + 1);
-        this.c2me$ticketLevelUpdates = new Long2IntLinkedOpenHashMap();
+        this.c2me$ticketLevelUpdates = new Long2IntLinkedOpenHashMap() {
+            @Override
+            protected void rehash(int newN) {
+                if (newN < this.size) {
+                    return; // prevent shrinking
+                }
+                super.rehash(newN);
+            }
+        };
     }
 
     /**
