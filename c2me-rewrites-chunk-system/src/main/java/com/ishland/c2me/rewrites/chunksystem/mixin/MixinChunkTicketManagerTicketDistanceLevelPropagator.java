@@ -32,7 +32,7 @@ public class MixinChunkTicketManagerTicketDistanceLevelPropagator implements Tic
         this.c2me$ticketLevelUpdates = new Long2IntLinkedOpenHashMap() {
             @Override
             protected void rehash(int newN) {
-                if (newN < this.size) {
+                if (newN <= n) {
                     return; // prevent shrinking
                 }
                 super.rehash(newN);
