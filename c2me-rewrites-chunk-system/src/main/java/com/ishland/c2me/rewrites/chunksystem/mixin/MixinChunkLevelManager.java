@@ -6,6 +6,8 @@ import com.ishland.c2me.rewrites.chunksystem.common.ducks.TicketDistanceLevelPro
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import it.unimi.dsi.fastutil.longs.Long2IntLinkedOpenHashMap;
+import it.unimi.dsi.fastutil.longs.Long2IntMap;
+import it.unimi.dsi.fastutil.objects.ObjectBidirectionalIterator;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ChunkLevelManager;
 import net.minecraft.server.world.ServerChunkLoadingManager;
@@ -78,9 +80,11 @@ public abstract class MixinChunkLevelManager {
     private void postTicketPropagator(ServerChunkLoadingManager chunkLoadingManager, CallbackInfoReturnable<Boolean> cir) {
         if (this.ticketDistanceLevelPropagator != null) { // ignore if replaced
             Long2IntLinkedOpenHashMap updates = ((TicketDistanceLevelPropagatorExtension) this.ticketDistanceLevelPropagator).c2me$getTicketLevelUpdates();
-            updates.long2IntEntrySet().fastForEach(entry -> {
+            ObjectBidirectionalIterator<Long2IntMap.Entry> iterator = updates.long2IntEntrySet().fastIterator();
+            while (iterator.hasNext()) {
+                Long2IntMap.Entry entry = iterator.next();
                 this.setLevel(entry.getLongKey(), entry.getIntValue(), null, Integer.MAX_VALUE - 1); // holder and old level is ignored
-            });
+            }
             updates.clear();
         }
     }
