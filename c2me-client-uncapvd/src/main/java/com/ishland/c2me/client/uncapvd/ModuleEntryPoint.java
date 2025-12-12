@@ -9,6 +9,7 @@ public class ModuleEntryPoint {
             .key("clientSideConfig.modifyMaxVDConfig.enabled")
             .comment("Whether to modify maximum view distance")
             .incompatibleMod("bobby", "*")
+            .incompatibleMod("iris", "<1.10.2")
             .getBoolean(true, false);
 
     static {
