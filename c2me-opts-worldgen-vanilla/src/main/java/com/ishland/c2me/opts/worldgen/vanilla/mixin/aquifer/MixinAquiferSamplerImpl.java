@@ -348,7 +348,7 @@ public abstract class MixinAquiferSamplerImpl {
             e = -1.0;
         } else {
             int i = surfaceHeightEstimate + 8 - blockY;
-            double f = bl ? MathHelper.clampedLerp(1.0, 0.0, ((double) i) / 64.0) : 0.0; // inline
+            double f = bl ? MathHelper.clampedLerp((double) i / 64.0, 1.0, 0.0) : 0.0; // inline
             double g = MathHelper.clamp(this.fluidLevelFloodednessNoise.sample(unblendedNoisePos), -1.0, 1.0);
             d = g + 0.8 + (f - 1.0) * 1.2; // inline
             e = g + 0.3 + (f - 1.0) * 1.1; // inline
