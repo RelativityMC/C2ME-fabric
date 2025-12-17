@@ -28,6 +28,7 @@ allprojects {
     }
     loom {
         accessWidenerPath = project(":c2me-base").file("src/main/resources/c2me-base.accesswidener")
+        intermediaryUrl = 'https://repo.codemc.io/repository/relativitymc/org/relativitymc/intermediary/%1$s/intermediary-%1$s-v2.jar'
     }
     afterEvaluate {
         migrateMappings.configure {
@@ -39,7 +40,7 @@ allprojects {
     }
     dependencies {
         minecraft "com.mojang:minecraft:${project.minecraft_version}"
-        mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+        mappings "org.relativitymc:modern-yarn:${project.yarn_mappings}:v2"
         modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 //        modApi 'com.github.astei:lazydfu:0.1.2'
 //        modApi('com.github.RelativityMC:Starlight:03ab3acd94') {

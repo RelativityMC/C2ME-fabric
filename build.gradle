@@ -56,6 +56,9 @@ clean.dependsOn gradle.includedBuild('FlowSched').task(':clean')
 
 allprojects {
     repositories {
+        maven {
+            url = "https://repo.codemc.io/repository/relativitymc/"
+        }
         maven { url = 'https://jitpack.io' }
         maven {
             url = "https://maven.bawnorton.com/releases"
@@ -75,7 +78,7 @@ configure (allprojects - project(":tests")) {
     dependencies {
         //to change the versions see the gradle.properties file
         minecraft "com.mojang:minecraft:${project.minecraft_version}"
-        mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+        mappings "org.relativitymc:modern-yarn:${project.yarn_mappings}:v2"
         modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
         [
@@ -91,7 +94,7 @@ configure (allprojects - project(":tests")) {
     }
 
     loom {
-        intermediaryUrl = 'https://repo.codemc.io/repository/relativitymc/org/relativitymc/intermediary-experimental/%1$s/intermediary-experimental-%1$s-v2.jar'
+        intermediaryUrl = 'https://repo.codemc.io/repository/relativitymc/org/relativitymc/intermediary/%1$s/intermediary-%1$s-v2.jar'
 
         def file = project(":c2me-base").file("src/main/resources/c2me-base.accesswidener")
         accessWidenerPath = file
