@@ -6,6 +6,7 @@
   "mixins": [
     "asynccatchers.MixinMinecraftServer",
     "asynccatchers.MixinServerChunkManager",
-    "asynccatchers.MixinThreadedAnvilChunkStorage"
+    "asynccatchers.MixinThreadedAnvilChunkStorage",
+    "shutdown.MixinMinecraftServer"
   ]
 }
