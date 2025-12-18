@@ -9,7 +9,6 @@
     "c2me-opts-natives-math.mixins.json"
   ],
   "depends": {
-    "java": ">=22",
     "minecraft": "*",
     "fabricloader": "*",
     "c2me-base": "*"

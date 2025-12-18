@@ -27,8 +27,8 @@ configure(allprojects) {
     it.group = project.maven_group
     it.version = project.mod_version + "." + getVersionSuffix()
     java {
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
+        sourceCompatibility = JavaVersion.VERSION_25
+        targetCompatibility = JavaVersion.VERSION_25
     }
 
     afterEvaluate {
@@ -226,7 +226,7 @@ modrinth {
 }
 
 apply plugin: 'io.github.themrmilchmann.curseforge-publish'
-if (!project.minecraft_version.contains("w") && !project.minecraft_version.contains("-")) { // rough filter for snapshots
+if (!project.minecraft_version.contains("-")) { // rough filter for snapshots
     curseforge {
         apiToken = System.getenv("CURSEFORGE_TOKEN")
         publications {
@@ -240,8 +240,7 @@ if (!project.minecraft_version.contains("w") && !project.minecraft_version.conta
 
                 gameVersion("minecraft-" + matcher.group(1) + "-" + matcher.group(2), project.minecraft_version.replace('.', '-'))
                 gameVersion("modloader", "fabric")
-                gameVersion("java", "java-22")
-                gameVersion("java", "java-21")
+                gameVersion("java", "java-25")
                 gameVersion("environment", "server")
                 gameVersion("environment", "client")
 
