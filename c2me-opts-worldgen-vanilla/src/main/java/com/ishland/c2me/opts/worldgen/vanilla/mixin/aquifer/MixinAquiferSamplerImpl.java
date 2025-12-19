@@ -13,7 +13,6 @@ import net.minecraft.world.gen.chunk.AquiferSampler;
 import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
 import org.apache.commons.lang3.mutable.MutableDouble;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -112,6 +111,8 @@ public abstract class MixinAquiferSamplerImpl {
     private int c2me$packed2;
     @Unique
     private int c2me$packed3;
+    @Unique
+    private int c2me$packed4;
 
     @Unique
     private double c2me$mutableDoubleThingy;
@@ -215,7 +216,12 @@ public abstract class MixinAquiferSamplerImpl {
         double d = maxDistance(c2me$unpackPackedDist(this.c2me$packed1), c2me$unpackPackedDist(this.c2me$packed2));
         BlockState blockState = fluidLevel2.getBlockState(j);
         if (d <= 0.0) {
-            this.needsFluidTick = d >= NEEDS_FLUID_TICK_DISTANCE_THRESHOLD;
+            if (d >= NEEDS_FLUID_TICK_DISTANCE_THRESHOLD) {
+                AquiferSampler.FluidLevel fluidLevel3 = this.c2me$getWaterLevelIndexed(c2me$unpackPackedPosIdx(this.c2me$packed2));
+                this.needsFluidTick = !fluidLevel2.equals(fluidLevel3);
+            } else {
+                this.needsFluidTick = false;
+            }
             return blockState;
         } else if (blockState.isOf(Blocks.WATER) && this.fluidLevelSampler.getFluidLevel(i, j - 1, k).getBlockState(j - 1).isOf(Blocks.LAVA)) {
             this.needsFluidTick = true;
@@ -237,14 +243,27 @@ public abstract class MixinAquiferSamplerImpl {
     @Unique
     private BlockState aquiferExtracted$getFinalBlockState(DensityFunction.NoisePos pos, double density, double d, AquiferSampler.FluidLevel fluidLevel2, AquiferSampler.FluidLevel fluidLevel3, BlockState blockState) {
         AquiferSampler.FluidLevel fluidLevel4 = this.c2me$getWaterLevelIndexed(c2me$unpackPackedPosIdx(this.c2me$packed3));
+        int dist1 = c2me$unpackPackedDist(this.c2me$packed1);
+        int dist2 = c2me$unpackPackedDist(this.c2me$packed2);
         int dist3 = c2me$unpackPackedDist(this.c2me$packed3);
-        double f = maxDistance(c2me$unpackPackedDist(this.c2me$packed1), dist3);
+        int dist4 = c2me$unpackPackedDist(this.c2me$packed4);
+        double f = maxDistance(dist1, dist3);
         if (aquiferExtracted$extractedCheckFG(pos, density, d, fluidLevel2, f, fluidLevel4)) return null;
 
-        double g = maxDistance(c2me$unpackPackedDist(this.c2me$packed2), dist3);
-        if (aquiferExtracted$extractedCheckFG(pos, density, d, fluidLevel3, g, fluidLevel4)) return null;
+        double h = maxDistance(dist2, dist3);
+        if (aquiferExtracted$extractedCheckFG(pos, density, d, fluidLevel3, h, fluidLevel4)) return null;
 
-        this.needsFluidTick = true;
+//        this.needsFluidTick = true;
+        boolean bl = !fluidLevel2.equals(fluidLevel3);
+        boolean bl2 = h >= NEEDS_FLUID_TICK_DISTANCE_THRESHOLD && !fluidLevel3.equals(fluidLevel4);
+        boolean bl3 = f >= NEEDS_FLUID_TICK_DISTANCE_THRESHOLD && !fluidLevel2.equals(fluidLevel4);
+        if (!bl && !bl2 && !bl3) {
+            this.needsFluidTick = f >= NEEDS_FLUID_TICK_DISTANCE_THRESHOLD
+                    && maxDistance(dist1, dist4) >= NEEDS_FLUID_TICK_DISTANCE_THRESHOLD
+                    && !fluidLevel2.equals(this.c2me$getWaterLevelIndexed(c2me$unpackPackedPosIdx(this.c2me$packed4)));
+        } else {
+            this.needsFluidTick = true;
+        }
         return blockState;
     }
 
@@ -268,6 +287,7 @@ public abstract class MixinAquiferSamplerImpl {
         int A = Integer.MAX_VALUE;
         int B = Integer.MAX_VALUE;
         int C = Integer.MAX_VALUE;
+        int D = Integer.MAX_VALUE;
 
         int index = 12; // 12 max
         for (int offY = -1; offY <= 1; ++offY) {
@@ -299,7 +319,10 @@ public abstract class MixinAquiferSamplerImpl {
                     int n02 = Math.max(B, n01);
                     B = Math.min(B, n01);
 
+                    int n03 = Math.max(C, n02);
                     C = Math.min(C, n02);
+
+                    D = Math.min(D, n03);
                 }
 
                 int p1 = (dist_1 << 20) | (index1 << 16) | posIdx1;
@@ -310,7 +333,10 @@ public abstract class MixinAquiferSamplerImpl {
                     int n12 = Math.max(B, n11);
                     B = Math.min(B, n11);
 
+                    int n13 = Math.max(C, n12);
                     C = Math.min(C, n12);
+
+                    D = Math.min(D, n13);
                 }
 
                 index -= 2;
@@ -326,6 +352,7 @@ public abstract class MixinAquiferSamplerImpl {
         this.c2me$packed1 = A;
         this.c2me$packed2 = B;
         this.c2me$packed3 = C;
+        this.c2me$packed4 = C;
     }
 
     @Unique
