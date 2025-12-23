@@ -352,7 +352,7 @@ public abstract class MixinAquiferSamplerImpl {
         this.c2me$packed1 = A;
         this.c2me$packed2 = B;
         this.c2me$packed3 = C;
-        this.c2me$packed4 = C;
+        this.c2me$packed4 = D;
     }
 
     @Unique
