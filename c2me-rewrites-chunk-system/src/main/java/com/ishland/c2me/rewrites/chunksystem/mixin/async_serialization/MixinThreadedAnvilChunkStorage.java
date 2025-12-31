@@ -2,7 +2,7 @@ package com.ishland.c2me.rewrites.chunksystem.mixin.async_serialization;
 
 import com.mojang.datafixers.DataFixer;
 import net.minecraft.SharedConstants;
-import net.minecraft.datafixer.DataFixTypes;
+import net.minecraft.datafixer.DataFixType;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtHelper;
 import net.minecraft.server.world.ChunkHolder;
@@ -22,7 +22,7 @@ import java.util.concurrent.CompletableFuture;
 @Mixin(ServerChunkLoadingManager.class)
 public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStorage implements ChunkHolder.PlayersWatchingChunkProvider {
 
-    public MixinThreadedAnvilChunkStorage(StorageKey storageKey, Path path, DataFixer dataFixer, boolean bl, DataFixTypes dataFixTypes) {
+    public MixinThreadedAnvilChunkStorage(StorageKey storageKey, Path path, DataFixer dataFixer, boolean bl, DataFixType dataFixTypes) {
         super(storageKey, path, dataFixer, bl, dataFixTypes);
     }
 

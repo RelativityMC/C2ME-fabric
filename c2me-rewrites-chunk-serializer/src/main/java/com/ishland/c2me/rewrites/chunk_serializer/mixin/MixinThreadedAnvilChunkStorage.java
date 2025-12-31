@@ -8,7 +8,7 @@ import com.ishland.c2me.rewrites.chunk_serializer.common.ChunkDataSerializer;
 import com.ishland.c2me.rewrites.chunk_serializer.common.NbtWriter;
 import com.ishland.c2me.rewrites.chunk_serializer.common.utils.ValidationUtils;
 import com.mojang.datafixers.DataFixer;
-import net.minecraft.datafixer.DataFixTypes;
+import net.minecraft.datafixer.DataFixType;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ServerChunkLoadingManager;
@@ -49,7 +49,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
     @Shadow
     ServerWorld world;
 
-    public MixinThreadedAnvilChunkStorage(StorageKey storageKey, Path path, DataFixer dataFixer, boolean bl, DataFixTypes dataFixTypes) {
+    public MixinThreadedAnvilChunkStorage(StorageKey storageKey, Path path, DataFixer dataFixer, boolean bl, DataFixType dataFixTypes) {
         super(storageKey, path, dataFixer, bl, dataFixTypes);
     }
 

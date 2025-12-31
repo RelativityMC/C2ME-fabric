@@ -199,7 +199,7 @@ public abstract class MixinAquiferSamplerImpl {
             if (j > this.field_61452) {
                 this.needsFluidTick = false;
                 return fluidLevel.getBlockState(j);
-            } if (fluidLevel.getBlockState(j).method_1_371(Blocks.LAVA)) {
+            } if (fluidLevel.getBlockState(j).is(Blocks.LAVA)) {
                 this.needsFluidTick = false;
                 return Blocks.LAVA.getDefaultState();
             } else {
@@ -217,7 +217,7 @@ public abstract class MixinAquiferSamplerImpl {
         if (d <= 0.0) {
             this.needsFluidTick = d >= NEEDS_FLUID_TICK_DISTANCE_THRESHOLD;
             return blockState;
-        } else if (blockState.method_1_371(Blocks.WATER) && this.fluidLevelSampler.getFluidLevel(i, j - 1, k).getBlockState(j - 1).method_1_371(Blocks.LAVA)) {
+        } else if (blockState.is(Blocks.WATER) && this.fluidLevelSampler.getFluidLevel(i, j - 1, k).getBlockState(j - 1).is(Blocks.LAVA)) {
             this.needsFluidTick = true;
             return blockState;
         } else {
@@ -377,7 +377,7 @@ public abstract class MixinAquiferSamplerImpl {
         int i = pos.blockY();
         BlockState blockState = fluidLevel.getBlockState(i);
         BlockState blockState2 = fluidLevel2.getBlockState(i);
-        if ((!blockState.method_1_371(Blocks.LAVA) || !blockState2.method_1_371(Blocks.WATER)) && (!blockState.method_1_371(Blocks.WATER) || !blockState2.method_1_371(Blocks.LAVA))) {
+        if ((!blockState.is(Blocks.LAVA) || !blockState2.is(Blocks.WATER)) && (!blockState.is(Blocks.WATER) || !blockState2.is(Blocks.LAVA))) {
             int j = Math.abs(fluidLevel.y - fluidLevel2.y);
             if (j == 0) {
                 return 0.0;
@@ -398,7 +398,7 @@ public abstract class MixinAquiferSamplerImpl {
         int i = pos.blockY();
         BlockState blockState = fluidLevel.getBlockState(i);
         BlockState blockState2 = fluidLevel2.getBlockState(i);
-        if ((!blockState.method_1_371(Blocks.LAVA) || !blockState2.method_1_371(Blocks.WATER)) && (!blockState.method_1_371(Blocks.WATER) || !blockState2.method_1_371(Blocks.LAVA))) {
+        if ((!blockState.is(Blocks.LAVA) || !blockState2.is(Blocks.WATER)) && (!blockState.is(Blocks.WATER) || !blockState2.is(Blocks.LAVA))) {
             int j = Math.abs(fluidLevel.y - fluidLevel2.y);
             if (j == 0) {
                 return 0.0;
