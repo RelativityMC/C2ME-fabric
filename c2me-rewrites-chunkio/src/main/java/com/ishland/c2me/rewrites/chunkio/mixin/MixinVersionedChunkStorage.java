@@ -14,7 +14,7 @@ import java.nio.file.Path;
 @Mixin(VersionedChunkStorage.class)
 public class MixinVersionedChunkStorage {
 
-    @Redirect(method = "<init>(Lnet/minecraft/world/storage/StorageKey;Ljava/nio/file/Path;Lcom/mojang/datafixers/DataFixer;ZLnet/minecraft/datafixer/DataFixTypes;Ljava/util/function/Supplier;)V", at = @At(value = "NEW", target = "(Lnet/minecraft/world/storage/StorageKey;Ljava/nio/file/Path;Z)Lnet/minecraft/world/storage/StorageIoWorker;"))
+    @Redirect(method = "<init>(Lnet/minecraft/world/storage/StorageKey;Ljava/nio/file/Path;Lcom/mojang/datafixers/DataFixer;ZLnet/minecraft/datafixer/DataFixType;Ljava/util/function/Supplier;)V", at = @At(value = "NEW", target = "(Lnet/minecraft/world/storage/StorageKey;Ljava/nio/file/Path;Z)Lnet/minecraft/world/storage/StorageIoWorker;"))
     private StorageIoWorker redirectStorageIoWorker(StorageKey arg, Path path, boolean bl) {
         if (this instanceof IVanillaChunkManager vanillaChunkManager) {
             return new C2MEStorageVanillaInterface(arg, path, bl, pos -> vanillaChunkManager.c2me$getSchedulingManager().positionedExecutor(pos));
