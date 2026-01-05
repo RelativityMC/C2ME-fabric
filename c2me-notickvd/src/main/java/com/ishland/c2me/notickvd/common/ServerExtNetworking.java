@@ -16,7 +16,7 @@ public class ServerExtNetworking {
         ServerConfigurationNetworking.registerGlobalReceiver(
                 ExtRenderDistance.ID,
                 (payload, context) ->
-                        ((IRenderDistanceOverride) context.networkHandler()).c2me_notickvd$setRenderDistance(payload.renderDistance())
+                        ((IRenderDistanceOverride) context.packetListener()).c2me_notickvd$setRenderDistance(payload.renderDistance())
         );
     }
 

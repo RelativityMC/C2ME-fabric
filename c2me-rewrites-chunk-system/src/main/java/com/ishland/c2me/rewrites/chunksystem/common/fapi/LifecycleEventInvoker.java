@@ -14,7 +14,7 @@ public class LifecycleEventInvoker {
 
     public static void invokeChunkLoaded(ServerWorld world, WorldChunk chunk, boolean newChunk) {
         try {
-            ServerChunkEvents.CHUNK_LOAD.invoker().onChunkLoad(world, chunk);
+            ServerChunkEvents.CHUNK_LOAD.invoker().onChunkLoad(world, chunk, newChunk);
             if (newChunk) {
                 ServerChunkEvents.CHUNK_GENERATE.invoker().onChunkGenerate(world, chunk);
             }
@@ -36,14 +36,14 @@ public class LifecycleEventInvoker {
     public static boolean needsInvokeChunkLevelTypeChange() {
         if (cachedNeedsInvokeChunkLevelTypeChange) return true;
         try {
-            if (ServerChunkEvents.CHUNK_LEVEL_TYPE_CHANGE instanceof IArrayBackedEvent<?> accessor0) {
-                IArrayBackedEvent<ServerChunkEvents.LevelTypeChange> accessor = (IArrayBackedEvent<ServerChunkEvents.LevelTypeChange>) accessor0;
+            if (ServerChunkEvents.FULL_CHUNK_STATUS_CHANGE instanceof IArrayBackedEvent<?> accessor0) {
+                IArrayBackedEvent<ServerChunkEvents.FullChunkStatusChange> accessor = (IArrayBackedEvent<ServerChunkEvents.FullChunkStatusChange>) accessor0;
                 if (accessor.c2me$getHandlers().length > 0) {
                     cachedNeedsInvokeChunkLevelTypeChange = true;
                     return true;
                 }
             } else {
-                LOGGER.warn("Unexpected Event implementation of ServerChunkEvents.CHUNK_LEVEL_TYPE_CHANGE: {}", ServerChunkEvents.CHUNK_LEVEL_TYPE_CHANGE.getClass().getName());
+                LOGGER.warn("Unexpected Event implementation of ServerChunkEvents.CHUNK_LEVEL_TYPE_CHANGE: {}", ServerChunkEvents.FULL_CHUNK_STATUS_CHANGE.getClass().getName());
                 cachedNeedsInvokeChunkLevelTypeChange = true;
                 return true;
             }
@@ -57,7 +57,7 @@ public class LifecycleEventInvoker {
 
     public static void invokeChunkLevelTypeChange(ServerWorld world, WorldChunk chunk, ChunkLevelType oldLevelType, ChunkLevelType newLevelType) {
         try {
-            ServerChunkEvents.CHUNK_LEVEL_TYPE_CHANGE.invoker().onChunkLevelTypeChange(world, chunk, oldLevelType, newLevelType);
+            ServerChunkEvents.FULL_CHUNK_STATUS_CHANGE.invoker().onFullChunkStatusChange(world, chunk, oldLevelType, newLevelType);
         } catch (Throwable t) {
             LOGGER.error("Failed to invoke chunk level type change event (world={}, pos={}, oldLevelType={}, newLevelType={})", world, chunk.getPos(), oldLevelType, newLevelType, t);
         }

@@ -1,9 +1,9 @@
 package com.ishland.c2me.client.uncapvd.common;
 
 import com.ishland.c2me.base.common.network.ExtRenderDistance;
-import net.fabricmc.fabric.api.client.networking.v1.C2SPlayChannelEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientConfigurationNetworking;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.client.networking.v1.ServerboundPlayChannelEvents;
 import net.minecraft.client.MinecraftClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,7 +41,7 @@ public class ClientExtNetworking {
 
     public static void registerListeners() {
         ExtRenderDistance.init();
-        C2SPlayChannelEvents.REGISTER.register((handler, sender, client, channels) -> {
+        ServerboundPlayChannelEvents.REGISTER.register((handler, sender, client, channels) -> {
             if (channels.contains(ExtRenderDistance.ID.id())) {
                 if (Config.enableExtRenderDistanceProtocol) {
                     LOGGER.info("Joined server with {} support", ExtRenderDistance.ID.id());

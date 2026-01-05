@@ -13,8 +13,8 @@ public record ExtRenderDistance(int renderDistance) implements CustomPayload {
     public static final Id<ExtRenderDistance> ID = new Id<>(Identifier.of(C2MEConstants.MODID, C2MEConstants.EXT_RENDER_DISTANCE_ID));
 
     static {
-        PayloadTypeRegistry.configurationC2S().register(ExtRenderDistance.ID, ExtRenderDistance.CODEC);
-        PayloadTypeRegistry.playC2S().register(ExtRenderDistance.ID, ExtRenderDistance.CODEC);
+        PayloadTypeRegistry.serverboundConfiguration().register(ExtRenderDistance.ID, ExtRenderDistance.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(ExtRenderDistance.ID, ExtRenderDistance.CODEC);
     }
 
     public static void init() {
