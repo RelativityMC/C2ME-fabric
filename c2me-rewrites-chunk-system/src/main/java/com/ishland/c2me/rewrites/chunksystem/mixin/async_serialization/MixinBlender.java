@@ -13,7 +13,7 @@ public class MixinBlender {
 
     @Redirect(method = "getBlender", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/ChunkRegion;needsBlending(Lnet/minecraft/util/math/ChunkPos;I)Z"))
     private static boolean redirectNeedsBlending(ChunkRegion instance, ChunkPos chunkPos, int checkRadius) {
-        return ((ProtoChunkExtension) instance.getChunk(chunkPos.x, chunkPos.z)).getNeedBlending();
+        return ((ProtoChunkExtension) instance.getChunk(chunkPos.x(), chunkPos.z())).getNeedBlending();
     }
 
 }

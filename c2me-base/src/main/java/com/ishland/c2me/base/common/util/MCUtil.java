@@ -8,7 +8,7 @@ public class MCUtil {
     }
 
     public static long toLong(ChunkPos pos) {
-        return ((long)pos.x) | ((long)pos.z) << 32;
+        return ((long) pos.x()) | ((long) pos.z()) << 32;
     }
 
 }

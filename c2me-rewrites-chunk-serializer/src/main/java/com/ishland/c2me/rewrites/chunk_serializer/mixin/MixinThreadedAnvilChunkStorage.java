@@ -125,7 +125,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
             this.mark(chunkPos, chunkStatus.getChunkType());
             return true;
         } catch (Exception var5) {
-            LOGGER.error("Failed to save chunk {},{}", chunkPos.x, chunkPos.z, var5);
+            LOGGER.error("Failed to save chunk {},{}", chunkPos.x(), chunkPos.z(), var5);
             return false;
         }
     }

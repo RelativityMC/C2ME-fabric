@@ -151,7 +151,7 @@ public class PlayerNoTickLoader {
             while (iterator.hasNext()) {
                 ChunkPos pos = iterator.next();
                 if (this.managedChunks.add(pos.toLong())) {
-                    this.chunkLoadFutures.add(loadChunk(pos.x, pos.z));
+                    this.chunkLoadFutures.add(loadChunk(pos.x(), pos.z()));
                     this.iterators.getAndMoveToLast(entry.getLongKey());
                     return true;
                 }

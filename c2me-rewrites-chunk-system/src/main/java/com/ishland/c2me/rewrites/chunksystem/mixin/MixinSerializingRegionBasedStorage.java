@@ -40,7 +40,7 @@ public abstract class MixinSerializingRegionBasedStorage<R, P> implements IPOIUn
 
         this.saveChunk(pos);
         for (int i = this.world.getBottomSectionCoord(); i <= this.world.getTopSectionCoord(); i++) {
-            this.loadedElements.remove(ChunkSectionPos.asLong(pos.x, i, pos.z));
+            this.loadedElements.remove(ChunkSectionPos.asLong(pos.x(), i, pos.z()));
         }
         synchronized (this.lock) {
             this.loadedChunks.remove(pos.toLong());

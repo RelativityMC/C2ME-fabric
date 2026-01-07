@@ -1,6 +1,6 @@
 plugins {
     id 'java-library'
-    id 'net.fabricmc.fabric-loom-remap' version '1.15.0-alpha.22' apply false
+    id 'net.fabricmc.fabric-loom-remap' version '1.15.0-alpha.26' apply false
     id "me.champeau.jmh" version "0.7.2"
     id 'com.modrinth.minotaur' version '2.+' apply false
     id 'io.github.themrmilchmann.curseforge-publish' version '0.8.0' apply false
@@ -182,7 +182,6 @@ configure (allprojects - project(":tests")) {
 subprojects {
     afterEvaluate {
         afterEvaluate {
-            genSourcesWithFernFlower.enabled = false
             genSourcesWithVineflower.enabled = false
             genSourcesWithCfr.enabled = false
             downloadAssets.enabled = false

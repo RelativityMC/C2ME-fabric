@@ -70,7 +70,7 @@ public class TheChunkSystem extends StatusAdvancingScheduler<ChunkPos, ChunkStat
             Assertions.assertTrue((radius * 2 + 1) * (radius * 2 + 1) == actualDependencies);
         }
 
-        return new ChunkLoadingContext(holder, this.tacs, this.schedulingManager, BoundedRegionArray.create(holder.getKey().x, holder.getKey().z, radius,
+        return new ChunkLoadingContext(holder, this.tacs, this.schedulingManager, BoundedRegionArray.create(holder.getKey().x(), holder.getKey().z(), radius,
                 (x, z) -> this.getHolder(new ChunkPos(x, z)).getUserData().get()), dependencies);
     }
 
@@ -126,7 +126,7 @@ public class TheChunkSystem extends StatusAdvancingScheduler<ChunkPos, ChunkStat
             final int oldLevel = this.managedTickets.put(pos, level);
             NewChunkStatus oldStatus = c2me$getDeferredStatusFromVanillaLevel(oldLevel);
             NewChunkStatus newStatus = c2me$getDeferredStatusFromVanillaLevel(level);
-            final ChunkPos key = new ChunkPos(pos);
+            final ChunkPos key = ChunkPos.method_1_779(pos);
             if (oldStatus != newStatus) {
                 NewChunkHolderVanillaInterface vanillaHolder;
                 ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> holder;

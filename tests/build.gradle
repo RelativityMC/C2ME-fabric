@@ -66,7 +66,6 @@ allprojects {
             }
         }
         afterEvaluate {
-            genSourcesWithFernFlower.enabled = false
             genSourcesWithVineflower.enabled = false
             genSourcesWithCfr.enabled = false
             downloadAssets.enabled = false

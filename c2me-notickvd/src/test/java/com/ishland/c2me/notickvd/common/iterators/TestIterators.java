@@ -41,7 +41,7 @@ public class TestIterators {
             Assertions.fail();
         }
         for (ChunkPos chunk : chunks) {
-            Assertions.assertTrue(iterator.isInRange(chunk.x, chunk.z));
+            Assertions.assertTrue(iterator.isInRange(chunk.x(), chunk.z()));
         }
     }
 

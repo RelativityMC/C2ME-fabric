@@ -249,8 +249,8 @@ public class ReadFromDisk extends NewChunkStatus {
 
     protected CompletionStage<?> syncWithLightEngine(ChunkLoadingContext context) {
         return ((IThreadedAnvilChunkStorage) context.tacs()).getLightingProvider().enqueue(
-                context.holder().getKey().x,
-                context.holder().getKey().z
+                context.holder().getKey().x(),
+                context.holder().getKey().z()
         );
     }
 

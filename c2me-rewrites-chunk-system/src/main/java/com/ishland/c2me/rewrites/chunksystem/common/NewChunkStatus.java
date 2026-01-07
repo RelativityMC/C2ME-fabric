@@ -192,7 +192,7 @@ public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState,
         final KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] dependencies = new KeyStatusPair[relativeDependencies.length];
         for (int i = 0; i < relativeDependencies.length; i++) {
             final KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext> pair = relativeDependencies[i];
-            dependencies[i] = new KeyStatusPair<>(new ChunkPos(pair.key().x + holder.getKey().x, pair.key().z + holder.getKey().z), pair.status());
+            dependencies[i] = new KeyStatusPair<>(new ChunkPos(pair.key().x() + holder.getKey().x(), pair.key().z() + holder.getKey().z()), pair.status());
         }
         return dependencies;
     }

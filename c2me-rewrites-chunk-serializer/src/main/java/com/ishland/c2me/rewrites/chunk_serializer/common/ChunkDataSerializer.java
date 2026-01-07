@@ -148,9 +148,9 @@ public final class ChunkDataSerializer {
 
         writer.putString(STRING_C2ME, STRING_KROPPEB);
         writer.putInt(STRING_DATA_VERSION, SharedConstants.getGameVersion().dataVersion().id());
-        writer.putInt(STRING_X_POS, chunkPos.x);
+        writer.putInt(STRING_X_POS, chunkPos.x());
         writer.putInt(STRING_Y_POS, serializable.minSectionY());
-        writer.putInt(STRING_Z_POS, chunkPos.z);
+        writer.putInt(STRING_Z_POS, chunkPos.z());
         writer.putLong(STRING_LAST_UPDATE, serializable.lastUpdateTime());
         writer.putLong(STRING_INHABITED_TIME, serializable.inhabitedTime());
         writer.putString(STRING_STATUS, ((ChunkStatusAccessor) serializable.chunkStatus()).getIdBytes());
@@ -571,8 +571,8 @@ public final class ChunkDataSerializer {
         }
 
         writer.putRegistry(STRING_ID, context.registryManager().getOrThrow(RegistryKeys.STRUCTURE), structureStart.getStructure());
-        writer.putInt(STRING_CHUNK_X, pos.x);
-        writer.putInt(STRING_CHUNK_Z, pos.z);
+        writer.putInt(STRING_CHUNK_X, pos.x());
+        writer.putInt(STRING_CHUNK_Z, pos.z());
         writer.putInt(STRING_SMALL_REFERENCES, structureStart.getReferences());
 
         // section: StructurePiecesList#toNbt(StructureContext)
