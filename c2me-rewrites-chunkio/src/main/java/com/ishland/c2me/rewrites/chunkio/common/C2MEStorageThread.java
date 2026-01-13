@@ -257,7 +257,7 @@ public class C2MEStorageThread extends Thread {
                 cachedFuture.whenComplete((cached, throwable) -> { // mirror vanilla behavior: get the immediate result rather than latest
                     if (throwable != null) {
                         this.executor.execute(() -> {
-                            LOGGER.warn("Retrying read of chunk {} because previous write to chunk threw an exception", ChunkPos.method_1_779(pos));
+                            LOGGER.warn("Retrying read of chunk {} because previous write to chunk threw an exception", ChunkPos.fromLong(pos));
                             this.read0(pos, future, scanner);
                         }); // retry
                         return;
@@ -337,7 +337,7 @@ public class C2MEStorageThread extends Thread {
 
     private void scheduleChunkRead(long pos, CompletableFuture<NbtCompound> future, NbtScanner scanner) {
         try {
-            final ChunkPos pos1 = ChunkPos.method_1_779(pos);
+            final ChunkPos pos1 = ChunkPos.fromLong(pos);
             final RegionFile regionFile = ((IRegionBasedStorage) this.storage).invokeGetRegionFile(pos1);
             final DataInputStream chunkInputStream = regionFile.getChunkInputStream(pos1);
             if (chunkInputStream == null) {
@@ -373,18 +373,18 @@ public class C2MEStorageThread extends Thread {
             if (nbt == null) {
                 if (this.cache.get(pos) == nbtFuture) {
                     try {
-                        final ChunkPos pos1 = ChunkPos.method_1_779(pos);
+                        final ChunkPos pos1 = ChunkPos.fromLong(pos);
                         final RegionFile regionFile = ((IRegionBasedStorage) this.storage).invokeGetRegionFile(pos1);
                         regionFile.delete(pos1);
                     } catch (Throwable t) {
-                        LOGGER.error("Error writing chunk %s".formatted(ChunkPos.method_1_779(pos)), t);
+                        LOGGER.error("Error writing chunk %s".formatted(ChunkPos.fromLong(pos)), t);
                     }
                     this.cache.remove(pos);
                 } // discard old data
             } else {
                 ChunkCompressionFormat compressionFormat;
                 {
-                    final ChunkPos pos1 = ChunkPos.method_1_779(pos);
+                    final ChunkPos pos1 = ChunkPos.fromLong(pos);
                     try {
                         final RegionFile regionFile = ((IRegionBasedStorage) this.storage).invokeGetRegionFile(pos1);
                         compressionFormat = ((IRegionFile) regionFile).getCompressionFormat();
@@ -418,7 +418,7 @@ public class C2MEStorageThread extends Thread {
                 }, GlobalExecutors.prioritizedScheduler.executor(16)).thenAcceptAsync(bytes -> { // still use priority 16 for writes
                     if (this.cache.remove(pos, nbtFuture)) { // only write if match to avoid overwrites
                         try {
-                            final ChunkPos pos1 = ChunkPos.method_1_779(pos);
+                            final ChunkPos pos1 = ChunkPos.fromLong(pos);
                             final RegionFile regionFile = ((IRegionBasedStorage) this.storage).invokeGetRegionFile(pos1);
                             ByteBuffer byteBuffer = bytes.asByteBuffer();
                             // TODO [VanillaCopy] RegionFile.ChunkBuffer
@@ -430,7 +430,7 @@ public class C2MEStorageThread extends Thread {
                     }
                 }, this.executor).handleAsync((unused, throwable) -> {
                     if (throwable != null)
-                        LOGGER.error("Error writing chunk %s".formatted(ChunkPos.method_1_779(pos)), throwable);
+                        LOGGER.error("Error writing chunk %s".formatted(ChunkPos.fromLong(pos)), throwable);
                     // TODO error retry
 
                     return null;

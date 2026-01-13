@@ -59,7 +59,7 @@ public class MixinThreadedAnvilChunkStorage implements IChunkSystemAccess {
     @Overwrite
     @Nullable
     public ChunkHolder getCurrentChunkHolder(long pos) {
-        final ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> holder = this.newSystem.getHolder(ChunkPos.method_1_779(pos));
+        final ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> holder = this.newSystem.getHolder(ChunkPos.fromLong(pos));
         if (holder != null) {
             synchronized (holder) {
                 if (!holder.isOpen()) {

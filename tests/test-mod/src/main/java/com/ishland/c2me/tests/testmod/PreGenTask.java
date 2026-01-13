@@ -74,7 +74,7 @@ public class PreGenTask {
         final BlockPos spawnPos = world.getSpawnPoint().getPos();
         final Set<ChunkPos> chunksHashed = Sets.newConcurrentHashSet();
         final List<ChunkPos> chunks = Collections.synchronizedList(new ArrayList<>());
-        chunks.addAll(createPreGenChunks33(ChunkPos.method_1_778(spawnPos), chunksHashed::add));
+        chunks.addAll(createPreGenChunks33(ChunkPos.fromBlockPos(spawnPos), chunksHashed::add));
         final AtomicInteger locatedBiomes = new AtomicInteger();
         final AtomicInteger locatedStructures = new AtomicInteger();
         System.err.printf("Fetching structure and biome list\n");
@@ -134,7 +134,7 @@ public class PreGenTask {
                     final Pair<BlockPos, RegistryEntry<Structure>> pair = world.getChunkManager().getChunkGenerator().locateStructure(world, structureFeature, spawnPos, SEARCH_RADIUS / 16, false);
                     locatedStructures.incrementAndGet();
                     if (pair != null) {
-                        final ChunkPos chunkPos = ChunkPos.method_1_778(pair.getFirst());
+                        final ChunkPos chunkPos = ChunkPos.fromBlockPos(pair.getFirst());
                         chunks.addAll(createPreGenChunks25(chunkPos, chunksHashed::add));
                         return;
                     }

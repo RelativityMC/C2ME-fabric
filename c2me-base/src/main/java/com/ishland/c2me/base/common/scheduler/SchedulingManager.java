@@ -150,7 +150,7 @@ public class SchedulingManager {
         int fromSyncLoad;
         ChunkPos currentSyncLoad1 = currentSyncLoad;
         if (currentSyncLoad1 != null) {
-            final int chebyshevDistance = chebyshev(ChunkPos.method_1_779(pos), currentSyncLoad1);
+            final int chebyshevDistance = chebyshev(ChunkPos.fromLong(pos), currentSyncLoad1);
             if (chebyshevDistance <= 8) {
                 fromSyncLoad = chebyshevDistance;
 //                System.out.println("dist for chunk [%d,%d] is %d".formatted(currentSyncLoad.x, currentSyncLoad.z, chebyshevDistance));

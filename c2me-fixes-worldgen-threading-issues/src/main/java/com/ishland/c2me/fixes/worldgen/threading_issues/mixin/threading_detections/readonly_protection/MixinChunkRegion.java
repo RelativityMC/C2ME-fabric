@@ -31,7 +31,7 @@ public abstract class MixinChunkRegion {
         if (this.isValidForSetBlock(pos)) {
             return original.call(pos);
         } else {
-            LOGGER.warn("Detected block scheduled tick access in a far chunk {}, pos: {}, status: {}, currently generating: {}", ChunkPos.method_1_778(pos), pos, this.generationStep.targetStatus(), this.centerPos.getPos());
+            LOGGER.warn("Detected block scheduled tick access in a far chunk {}, pos: {}, status: {}, currently generating: {}", ChunkPos.fromBlockPos(pos), pos, this.generationStep.targetStatus(), this.centerPos.getPos());
             return EmptyTickSchedulers.getReadOnlyTickScheduler();
         }
     }
@@ -41,7 +41,7 @@ public abstract class MixinChunkRegion {
         if (this.isValidForSetBlock(pos)) {
             return original.call(pos);
         } else {
-            LOGGER.warn("Detected fluid scheduled tick access in a far chunk {}, pos: {}, status: {}, currently generating: {}", ChunkPos.method_1_778(pos), pos, this.generationStep.targetStatus(), this.centerPos.getPos());
+            LOGGER.warn("Detected fluid scheduled tick access in a far chunk {}, pos: {}, status: {}, currently generating: {}", ChunkPos.fromBlockPos(pos), pos, this.generationStep.targetStatus(), this.centerPos.getPos());
             return EmptyTickSchedulers.getReadOnlyTickScheduler();
         }
     }

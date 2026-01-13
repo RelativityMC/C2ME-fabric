@@ -126,7 +126,7 @@ public class TheChunkSystem extends StatusAdvancingScheduler<ChunkPos, ChunkStat
             final int oldLevel = this.managedTickets.put(pos, level);
             NewChunkStatus oldStatus = c2me$getDeferredStatusFromVanillaLevel(oldLevel);
             NewChunkStatus newStatus = c2me$getDeferredStatusFromVanillaLevel(level);
-            final ChunkPos key = ChunkPos.method_1_779(pos);
+            final ChunkPos key = ChunkPos.fromLong(pos);
             if (oldStatus != newStatus) {
                 NewChunkHolderVanillaInterface vanillaHolder;
                 ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> holder;

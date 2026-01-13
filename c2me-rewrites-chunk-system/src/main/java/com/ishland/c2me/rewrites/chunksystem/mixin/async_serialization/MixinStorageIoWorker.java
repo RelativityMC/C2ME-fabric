@@ -59,8 +59,8 @@ public abstract class MixinStorageIoWorker {
      */
     @Overwrite
     private CompletableFuture<BitSet> computeBlendingStatus(int chunkX, int chunkZ) {
-        ChunkPos chunkPos = ChunkPos.fromRegion(chunkX, chunkZ);
-        ChunkPos chunkPos2 = ChunkPos.fromRegionCenter(chunkX, chunkZ);
+        ChunkPos chunkPos = ChunkPos.fromRegionMin(chunkX, chunkZ);
+        ChunkPos chunkPos2 = ChunkPos.fromRegionMax(chunkX, chunkZ);
         BitSet bitSet = new BitSet();
         final CompletableFuture[] futures = ChunkPos.stream(chunkPos, chunkPos2)
                 .map(chunkPosx -> {
