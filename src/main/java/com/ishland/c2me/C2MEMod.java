@@ -1,13 +1,5 @@
 package com.ishland.c2me;
 
-import com.ibm.asyncutil.util.Combinators;
-import net.fabricmc.api.ModInitializer;
-import net.minecraft.util.math.random.ChunkRandom;
-import net.minecraft.util.math.random.LocalRandom;
-import net.minecraft.world.storage.ChunkCompressionFormat;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -19,6 +11,19 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import com.ibm.asyncutil.util.Combinators;
+import com.ishland.c2me.base.common.metrics.ChunkLoadingMetrics;
+import com.ishland.c2me.base.common.metrics.MetricsConfig;
+import com.ishland.c2me.base.common.network.ChunkLoadingMetricsPayload;
+import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.util.math.random.ChunkRandom;
+import net.minecraft.util.math.random.LocalRandom;
+import net.minecraft.world.storage.ChunkCompressionFormat;
 
 public class C2MEMod implements ModInitializer {
     public static final Logger LOGGER = LoggerFactory.getLogger("C2ME");
@@ -40,6 +45,44 @@ public class C2MEMod implements ModInitializer {
         if (Boolean.getBoolean("com.ishland.c2me.runConsistencyTest")) {
             consistencyTest();
         }
+
+        MetricsConfig.init();
+
+        // Setup metrics broadcasting
+        setupMetricsBroadcasting();
+    }
+
+    private void setupMetricsBroadcasting() {
+        if (!MetricsConfig.enabled) {
+            return;
+        }
+
+        ServerLifecycleEvents.SERVER_STARTED.register(server -> {
+            // Broadcast metrics every 500ms
+            Thread broadcaster = new Thread(() -> {
+                while (server.isRunning()) {
+                    try {
+                        long intervalMs = Math.max(50, MetricsConfig.broadcastIntervalMs);
+                        Thread.sleep(intervalMs);
+
+                        var snapshot = ChunkLoadingMetrics.getInstance().getSnapshot();
+                        var payload = new ChunkLoadingMetricsPayload(snapshot);
+
+                        // Send to all players
+                        for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+                            ServerPlayNetworking.send(player, payload);
+                        }
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        break;
+                    } catch (Exception e) {
+                        LOGGER.warn("Error broadcasting chunk loading metrics", e);
+                    }
+                }
+            }, "C2ME Metrics Broadcaster");
+            broadcaster.setDaemon(true);
+            broadcaster.start();
+        });
     }
 
     private void runBenchmark(String name, ChunkCompressionFormat version, boolean suppressLog) {

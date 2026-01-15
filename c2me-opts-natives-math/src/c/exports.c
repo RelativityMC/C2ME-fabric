@@ -32,3 +32,9 @@ TARGET_IMPL(c2me_natives_end_islands_sample, float, (const aligned_uint32_ptr si
 TARGET_IMPL(c2me_natives_biome_access_sample, uint32_t, (const int64_t theSeed, const int32_t x, const int32_t y, const int32_t z) {
     return math_biome_access_sample(theSeed, x, y, z);
 })
+
+TARGET_IMPL(c2me_natives_biome_access_sample_batch, void, (const int64_t theSeed, uint32_t *const res,
+                                                          const int32_t *const x, const int32_t *const y,
+                                                          const int32_t *const z, const uint32_t length) {
+    math_biome_access_sample_batch(theSeed, res, x, y, z, length);
+})

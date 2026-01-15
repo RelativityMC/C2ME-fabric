@@ -1,5 +1,7 @@
 package com.ishland.c2me.rewrites.chunksystem.common;
 
+import com.ishland.c2me.base.common.metrics.ChunkLoadingMetrics;
+import com.ishland.c2me.base.common.metrics.Stopwatch;
 import com.ishland.c2me.base.common.scheduler.IVanillaChunkManager;
 import com.ishland.c2me.base.common.scheduler.SchedulingManager;
 import com.ishland.c2me.base.mixin.access.IThreadedAnvilChunkStorage;
@@ -15,6 +17,9 @@ import io.reactivex.rxjava3.core.Scheduler;
 import it.unimi.dsi.fastutil.longs.Long2IntMap;
 import it.unimi.dsi.fastutil.longs.Long2IntMaps;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
+import it.unimi.dsi.fastutil.longs.Long2LongMap;
+import it.unimi.dsi.fastutil.longs.Long2LongMaps;
+import it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ServerChunkLoadingManager;
@@ -30,6 +35,7 @@ public class TheChunkSystem extends StatusAdvancingScheduler<ChunkPos, ChunkStat
     private final Logger LOGGER;
 
     private final Long2IntMap managedTickets = Long2IntMaps.synchronize(new Long2IntOpenHashMap());
+    private final Long2LongMap chunkCreationTimes = Long2LongMaps.synchronize(new Long2LongOpenHashMap());
     private final SchedulingManager schedulingManager;
     private final ServerChunkLoadingManager tacs;
 
@@ -91,6 +97,9 @@ public class TheChunkSystem extends StatusAdvancingScheduler<ChunkPos, ChunkStat
         super.onItemCreation(holder);
         holder.getUserData().set(new NewChunkHolderVanillaInterface(this, holder, ((IThreadedAnvilChunkStorage) this.tacs).getWorld(), ((IThreadedAnvilChunkStorage) this.tacs).getLightingProvider(), this.tacs));
         holder.getItem().set(new ChunkState(null, null, null));
+
+        // Track chunk creation time for metrics
+        chunkCreationTimes.put(holder.getKey().toLong(), System.nanoTime());
     }
 
     @Override
@@ -103,6 +112,17 @@ public class TheChunkSystem extends StatusAdvancingScheduler<ChunkPos, ChunkStat
         super.onItemUpgrade(holder, statusReached);
         final NewChunkStatus statusReached1 = (NewChunkStatus) statusReached;
         final NewChunkStatus prevStatus = (NewChunkStatus) statusReached.getPrev();
+
+        // Record chunk load time when reaching SERVER_ACCESSIBLE
+        if (statusReached1 == NewChunkStatus.SERVER_ACCESSIBLE) {
+            long creationTime = chunkCreationTimes.remove(holder.getKey().toLong());
+            if (creationTime != 0) {
+                long loadTimeNanos = System.nanoTime() - creationTime;
+                double loadTimeMs = loadTimeNanos / 1_000_000.0;
+                ChunkLoadingMetrics.getInstance().recordChunkLoadTime(loadTimeMs);
+            }
+        }
+
         if (prevStatus.toChunkLevelType() != statusReached1.toChunkLevelType()) {
             ((IThreadedAnvilChunkStorage) this.tacs).getMainThreadExecutor().execute(
                     () -> ((IThreadedAnvilChunkStorage) this.tacs).invokeOnChunkStatusChange(holder.getKey(), statusReached1.toChunkLevelType()));
@@ -123,6 +143,8 @@ public class TheChunkSystem extends StatusAdvancingScheduler<ChunkPos, ChunkStat
     public ChunkHolder vanillaIf$setLevel(long pos, int level) {
         assert !Thread.holdsLock(this.managedTickets);
         synchronized (this.managedTickets) {
+            // Record current chunk queue size for metrics
+            ChunkLoadingMetrics.getInstance().recordChunkQueueSize(this.itemCount());
             final int oldLevel = this.managedTickets.put(pos, level);
             NewChunkStatus oldStatus = c2me$getDeferredStatusFromVanillaLevel(oldLevel);
             NewChunkStatus newStatus = c2me$getDeferredStatusFromVanillaLevel(level);

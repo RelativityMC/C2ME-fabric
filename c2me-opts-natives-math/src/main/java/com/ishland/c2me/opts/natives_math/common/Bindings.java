@@ -89,10 +89,19 @@ public class Bindings {
     }
 
     private static final MethodHandle MH_c2me_natives_biome_access_sample = bind(BindingsTemplate.c2me_natives_biome_access_sample, "c2me_natives_biome_access_sample");
+    private static final MethodHandle MH_c2me_natives_biome_access_sample_batch = bind(BindingsTemplate.c2me_natives_biome_access_sample_batch, "c2me_natives_biome_access_sample_batch");
 
     public static int c2me_natives_biome_access_sample(long seed, int x, int y, int z) {
         try {
             return (int) MH_c2me_natives_biome_access_sample.invokeExact(seed, x, y, z);
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void c2me_natives_biome_access_sample_batch(long seed, MemorySegment res, MemorySegment x, MemorySegment y, MemorySegment z, int length) {
+        try {
+            MH_c2me_natives_biome_access_sample_batch.invokeExact(seed, res, x, y, z, length);
         } catch (Throwable e) {
             throw new RuntimeException(e);
         }

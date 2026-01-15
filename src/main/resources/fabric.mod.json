@@ -31,6 +31,9 @@
     "minecraft": ">=1.21.6-rc.1",
     "c2me-base": "*"
   },
+  "recommends": {
+    "c2me-client-metrics": "*"
+  },
   "conflicts": {
     "dynview": "*",
     "betterchunkloading": "*"

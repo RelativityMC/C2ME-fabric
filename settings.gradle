@@ -51,5 +51,6 @@ include 'c2me-rewrites-chunkio'
 include 'c2me-rewrites-chunk-system'
 include 'c2me-server-utils'
 include 'c2me-client-uncapvd'
+include 'c2me-client-metrics'
 include 'c2me-notickvd'
 

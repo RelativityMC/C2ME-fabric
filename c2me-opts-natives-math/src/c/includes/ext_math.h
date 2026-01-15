@@ -685,6 +685,15 @@ math_end_islands_sample(const aligned_uint32_ptr simplex_permutations, const int
     return f;
 }
 
+static inline void
+math_biome_access_sample_batch(const int64_t theSeed, uint32_t *const res, const int32_t *const x,
+                              const int32_t *const y, const int32_t *const z, const uint32_t length) {
+#pragma clang loop vectorize(enable) interleave(enable)
+    for (uint32_t i = 0; i < length; ++i) {
+        res[i] = math_biome_access_sample(theSeed, x[i], y[i], z[i]);
+    }
+}
+
 static inline __attribute__((const)) uint32_t
 math_biome_access_sample(const int64_t theSeed, const int32_t x, const int32_t y, const int32_t z) {
     const int32_t var0 = x - 2;

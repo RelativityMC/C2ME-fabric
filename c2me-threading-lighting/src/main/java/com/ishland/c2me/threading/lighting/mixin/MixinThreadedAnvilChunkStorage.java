@@ -29,7 +29,7 @@ public class MixinThreadedAnvilChunkStorage {
     private ServerWorld world;
     private ExecutorService lightThread = null;
 
-    @WrapOperation(method = "<init>", at = @At(value = "NEW", target = "(Ljava/util/concurrent/Executor;Ljava/lang/String;)Lnet/minecraft/util/thread/SimpleConsecutiveExecutor;"))
+    @WrapOperation(method = "<init>", at = @At(value = "NEW", target = "(Ljava/util/concurrent/Executor;Ljava/lang/String;)Lnet/minecraft/util/thread/SimpleConsecutiveExecutor;"), require = 0)
     private SimpleConsecutiveExecutor onLightExecutorInit(Executor executor, String name, Operation<SimpleConsecutiveExecutor> original) {
         if (!name.equals("light")) return original.call(executor, name);
         lightThread = new ThreadPoolExecutor(
@@ -41,15 +41,22 @@ public class MixinThreadedAnvilChunkStorage {
         return original.call(lightThread, name);
     }
 
-    @WrapOperation(method = "<init>", at = @At(value = "NEW", target = "(Lnet/minecraft/util/thread/TaskExecutor;Ljava/util/concurrent/Executor;)Lnet/minecraft/server/world/ChunkTaskScheduler;"))
+    @WrapOperation(method = "<init>", at = @At(value = "NEW", target = "(Lnet/minecraft/util/thread/TaskExecutor;Ljava/util/concurrent/Executor;)Lnet/minecraft/server/world/ChunkTaskScheduler;"), require = 0)
     private ChunkTaskScheduler onLightExecutorInit1(TaskExecutor<?> arg, Executor executor, Operation<ChunkTaskScheduler> original) {
-        if (!arg.getName().equals("light")) original.call(arg, executor);
+        if (!arg.getName().equals("light")) {
+            return original.call(arg, executor);
+        }
+        if (lightThread == null) {
+            return original.call(arg, executor);
+        }
         return original.call(arg, lightThread);
     }
 
     @Inject(method = "close", at = @At("TAIL"))
     private void afterClose(CallbackInfo info) {
-        lightThread.shutdown();
+        if (lightThread != null) {
+            lightThread.shutdown();
+        }
     }
 
 }

@@ -1,5 +1,15 @@
 package com.ishland.c2me.opts.natives_math.common;
 
+import java.lang.foreign.Arena;
+import java.lang.foreign.FunctionDescriptor;
+import java.lang.foreign.MemoryLayout;
+import java.lang.foreign.MemorySegment;
+import java.lang.foreign.StructLayout;
+import java.lang.foreign.ValueLayout;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.VarHandle;
+import java.util.Objects;
+import java.util.stream.IntStream;
 import com.ishland.c2me.base.mixin.access.IInterpolatedNoiseSampler;
 import com.ishland.c2me.base.mixin.access.IOctavePerlinNoiseSampler;
 import com.ishland.c2me.base.mixin.access.IPerlinNoiseSampler;
@@ -7,12 +17,6 @@ import com.ishland.c2me.opts.natives_math.common.util.MemoryUtil;
 import net.minecraft.util.math.noise.InterpolatedNoiseSampler;
 import net.minecraft.util.math.noise.OctavePerlinNoiseSampler;
 import net.minecraft.util.math.noise.PerlinNoiseSampler;
-
-import java.lang.foreign.*;
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.VarHandle;
-import java.util.Objects;
-import java.util.stream.IntStream;
 
 public class BindingsTemplate {
 
@@ -29,8 +33,7 @@ public class BindingsTemplate {
                     ValueLayout.JAVA_DOUBLE,
                     ValueLayout.JAVA_DOUBLE,
                     ValueLayout.JAVA_DOUBLE
-            ),
-            Linker.Option.critical(true)
+            )
     );
 
     // c2me_natives_noise_perlin_double, double, (const double_octave_sampler_data_t *data, double x, double y, double z)
@@ -41,8 +44,7 @@ public class BindingsTemplate {
                     ValueLayout.JAVA_DOUBLE,
                     ValueLayout.JAVA_DOUBLE,
                     ValueLayout.JAVA_DOUBLE
-            ),
-            Linker.Option.critical(false)
+            )
     );
     public static final MethodHandle c2me_natives_noise_perlin_double_ptr = NativeLoader.linker.downcallHandle(
             FunctionDescriptor.of(
@@ -51,8 +53,7 @@ public class BindingsTemplate {
                     ValueLayout.JAVA_DOUBLE,
                     ValueLayout.JAVA_DOUBLE,
                     ValueLayout.JAVA_DOUBLE
-            ),
-            Linker.Option.critical(false)
+            )
     );
 
     // c2me_natives_noise_perlin_double_batch, void, (const double_octave_sampler_data_t *const data,
@@ -67,8 +68,7 @@ public class BindingsTemplate {
                     ValueLayout.ADDRESS,
                     ValueLayout.ADDRESS,
                     ValueLayout.JAVA_INT
-            ),
-            Linker.Option.critical(true)
+            )
     );
     public static final MethodHandle c2me_natives_noise_perlin_double_batch_ptr = NativeLoader.linker.downcallHandle(
             FunctionDescriptor.ofVoid(
@@ -78,8 +78,7 @@ public class BindingsTemplate {
                     ValueLayout.ADDRESS,
                     ValueLayout.ADDRESS,
                     ValueLayout.JAVA_INT
-            ),
-            Linker.Option.critical(true)
+            )
     );
 
 
@@ -186,8 +185,7 @@ public class BindingsTemplate {
                     ValueLayout.JAVA_DOUBLE,
                     ValueLayout.JAVA_DOUBLE,
                     ValueLayout.JAVA_DOUBLE
-            ),
-            Linker.Option.critical(false)
+            )
     );
     public static final MethodHandle c2me_natives_noise_interpolated_ptr = NativeLoader.linker.downcallHandle(
             FunctionDescriptor.of(
@@ -196,8 +194,7 @@ public class BindingsTemplate {
                     ValueLayout.JAVA_DOUBLE,
                     ValueLayout.JAVA_DOUBLE,
                     ValueLayout.JAVA_DOUBLE
-            ),
-            Linker.Option.critical(false)
+            )
     );
 
     // typedef const struct interpolated_noise_sub_sampler {
@@ -383,8 +380,7 @@ public class BindingsTemplate {
                     ValueLayout.ADDRESS,
                     ValueLayout.JAVA_INT,
                     ValueLayout.JAVA_INT
-            ),
-            Linker.Option.critical(true)
+            )
     );
     public static final MethodHandle c2me_natives_end_islands_sample_ptr = NativeLoader.linker.downcallHandle(
             FunctionDescriptor.of(
@@ -392,8 +388,7 @@ public class BindingsTemplate {
                     ValueLayout.JAVA_LONG,
                     ValueLayout.JAVA_INT,
                     ValueLayout.JAVA_INT
-            ),
-            Linker.Option.critical(false)
+            )
     );
 
     // c2me_natives_biome_access_sample, uint32_t, (const int64_t theSeed, const int32_t x, const int32_t y, const int32_t z)
@@ -404,8 +399,19 @@ public class BindingsTemplate {
                     ValueLayout.JAVA_INT,
                     ValueLayout.JAVA_INT,
                     ValueLayout.JAVA_INT
-            ),
-            Linker.Option.critical(false)
+            )
+    );
+
+    // c2me_natives_biome_access_sample_batch, void, (const int64_t theSeed, uint32_t *const res, const int32_t *const x, const int32_t *const y, const int32_t *const z, const uint32_t length)
+    public static final MethodHandle c2me_natives_biome_access_sample_batch = NativeLoader.linker.downcallHandle(
+            FunctionDescriptor.ofVoid(
+                    ValueLayout.JAVA_LONG,
+                    ValueLayout.ADDRESS,
+                    ValueLayout.ADDRESS,
+                    ValueLayout.ADDRESS,
+                    ValueLayout.ADDRESS,
+                    ValueLayout.JAVA_INT
+            )
     );
 
 }

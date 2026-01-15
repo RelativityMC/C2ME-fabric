@@ -1,6 +1,7 @@
 package com.ishland.c2me.base.common.scheduler;
 
 import com.ishland.c2me.base.common.GlobalExecutors;
+import com.ishland.c2me.base.common.metrics.ChunkLoadingMetrics;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import net.minecraft.server.world.ChunkLevels;
@@ -102,6 +103,7 @@ public class SchedulingManager {
             this.prioritiesLock.unlockWrite(stamp);
         }
         updatePriorityInternal(pos);
+        updateMetrics();
     }
 
     public void updatePriorityFromLevelOnMain(long pos, int level) {
@@ -197,6 +199,14 @@ public class SchedulingManager {
 
     public int getId() {
         return this.id;
+    }
+
+    /**
+     * Updates scheduler metrics for monitoring
+     */
+    public void updateMetrics() {
+        ChunkLoadingMetrics.getInstance().recordSchedulerQueueSize(GlobalExecutors.prioritizedScheduler.getQueueSize());
+        ChunkLoadingMetrics.getInstance().recordSchedulerActiveThreads(GlobalExecutors.prioritizedScheduler.getActiveThreadCount());
     }
 
     private void updateSyncLoadInternal(ChunkPos pos) {

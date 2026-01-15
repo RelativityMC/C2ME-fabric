@@ -58,6 +58,15 @@ public class ConfigSystem {
         CONFIG.save();
     }
 
+    public static void set(String key, Object value) {
+        visitedConfig.add(key);
+        CONFIG.set(key, value);
+    }
+
+    public static Object get(String key) {
+        return CONFIG.get(key);
+    }
+
     private static void purgeUnusedRecursively(String prefix, CommentedConfig config) {
         for (Iterator<? extends CommentedConfig.Entry> iterator = config.entrySet().iterator(); iterator.hasNext(); ) {
             CommentedConfig.Entry entry = iterator.next();

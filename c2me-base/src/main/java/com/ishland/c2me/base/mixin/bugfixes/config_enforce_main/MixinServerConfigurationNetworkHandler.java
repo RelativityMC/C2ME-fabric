@@ -27,7 +27,7 @@ public abstract class MixinServerConfigurationNetworkHandler extends ServerCommo
         NetworkThreadUtils.forceMainThread(packet, this, this.server.getPacketApplyBatcher());
     }
 
-    @Inject(method = "onAcceptCodeOfConduct", at = @At("HEAD"))
+    @Inject(method = "onAcceptCodeOfConduct", at = @At("HEAD"), require = 0)
     private void onAcceptCodeOfConduct(AcceptCodeOfConductC2SPacket packet, CallbackInfo ci) {
         NetworkThreadUtils.forceMainThread(packet, this, this.server.getPacketApplyBatcher());
     }

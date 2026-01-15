@@ -57,6 +57,8 @@ clean.dependsOn gradle.includedBuild('FlowSched').task(':clean')
 allprojects {
     repositories {
         maven { url = 'https://jitpack.io' }
+        maven { url = 'https://maven.terraformersmc.com/releases' }
+        maven { url = 'https://maven.shedaniel.me/' }
         maven {
             url = "https://maven.bawnorton.com/releases"
             content {
@@ -170,12 +172,9 @@ configure (allprojects - project(":tests")) {
 }
 
 subprojects {
-    afterEvaluate {
-        afterEvaluate {
-            genSourcesWithFernFlower.enabled = false
-            genSourcesWithVineflower.enabled = false
-            genSourcesWithCfr.enabled = false
-            downloadAssets.enabled = false
+    tasks.configureEach { task ->
+        if (task.name in ['genSourcesWithFernFlower', 'genSourcesWithVineflower', 'genSourcesWithCfr', 'downloadAssets']) {
+            task.enabled = false
         }
     }
 }

@@ -1,0 +1,27 @@
+plugins {
+    id 'fabric-loom'
+    id 'maven-publish'
+}
+
+base {
+    archivesName = "${project.name}-mc${project.minecraft_version}"
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+
+    implementation project(":c2me-base")
+    modImplementation "me.shedaniel.cloth:cloth-config-fabric:${project.cloth_config_version}"
+    modImplementation "com.terraformersmc:modmenu:${project.modmenu_version}"
+
+    [
+            "fabric-networking-api-v1",
+            "fabric-lifecycle-events-v1",
+            "fabric-key-binding-api-v1",
+            "fabric-rendering-v1",
+    ].forEach {
+        modCompileOnly(fabricApi.module(it, "${project.fabric_version}"))
+    }
+}

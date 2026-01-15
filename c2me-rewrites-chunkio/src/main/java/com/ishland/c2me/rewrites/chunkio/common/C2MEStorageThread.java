@@ -1,7 +1,28 @@
 package com.ishland.c2me.rewrites.chunkio.common;
 
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.file.Path;
+import java.util.Queue;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.Executor;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Function;
+import java.util.function.LongFunction;
+import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.ibm.asyncutil.util.Either;
 import com.ishland.c2me.base.common.GlobalExecutors;
+import com.ishland.c2me.base.common.metrics.ChunkLoadingMetrics;
+import com.ishland.c2me.base.common.metrics.Stopwatch;
 import com.ishland.c2me.base.common.structs.RawByteArrayOutputStream;
 import com.ishland.c2me.base.common.util.SneakyThrow;
 import com.ishland.c2me.base.mixin.access.IRegionBasedStorage;
@@ -18,27 +39,6 @@ import net.minecraft.world.storage.ChunkCompressionFormat;
 import net.minecraft.world.storage.RegionBasedStorage;
 import net.minecraft.world.storage.RegionFile;
 import net.minecraft.world.storage.StorageKey;
-import org.jetbrains.annotations.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.file.Path;
-import java.util.Queue;
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.Executor;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.LockSupport;
-import java.util.function.Function;
-import java.util.function.LongFunction;
 
 public class C2MEStorageThread extends Thread {
 
@@ -126,6 +126,11 @@ public class C2MEStorageThread extends Thread {
         boolean hasWork = false;
         hasWork = handleTasks() || hasWork;
         hasWork = writeBacklog() || hasWork;
+
+        // Record IO metrics
+        ChunkLoadingMetrics.getInstance().recordIoBacklogSize(writeBacklog.size());
+        ChunkLoadingMetrics.getInstance().recordIoPendingWrites(writeFutures.size());
+
         return hasWork;
     }
 
@@ -249,10 +254,15 @@ public class C2MEStorageThread extends Thread {
     }
 
     private void read0(long pos, CompletableFuture<NbtCompound> future, NbtScanner scanner) {
+        Stopwatch stopwatch = new Stopwatch();
+        stopwatch.start();
+
         if (this.cache.containsKey(pos)) {
             final CompletionStage<Either<NbtCompound, byte[]>> cachedFuture = this.cache.get(pos);
             if (cachedFuture == null) {
                 future.complete(null);
+                stopwatch.stop();
+                ChunkLoadingMetrics.getInstance().recordIoReadTime(stopwatch.elapsedMillis());
             } else {
                 cachedFuture.whenComplete((cached, throwable) -> { // mirror vanilla behavior: get the immediate result rather than latest
                     if (throwable != null) {
@@ -264,18 +274,24 @@ public class C2MEStorageThread extends Thread {
                     }
                     if (cached == null) {
                         future.complete(null);
+                        stopwatch.stop();
+                        ChunkLoadingMetrics.getInstance().recordIoReadTime(stopwatch.elapsedMillis());
                     } else if (cached.left().isPresent()) {
                         if (scanner != null) {
                             backgroundExecutorSupplier.apply(pos).execute(() -> {
                                 try {
                                     cached.left().get().accept(scanner);
                                     future.complete(null);
+                                    stopwatch.stop();
+                                    ChunkLoadingMetrics.getInstance().recordIoReadTime(stopwatch.elapsedMillis());
                                 } catch (Throwable t) {
                                     future.completeExceptionally(t);
                                 }
                             });
                         } else {
                             future.complete(cached.left().get());
+                            stopwatch.stop();
+                            ChunkLoadingMetrics.getInstance().recordIoReadTime(stopwatch.elapsedMillis());
                         }
                     } else {
                         CompletableFuture.supplyAsync(() -> {
@@ -293,7 +309,11 @@ public class C2MEStorageThread extends Thread {
                                         return null; // unreachable
                                     }
                                 }, backgroundExecutorSupplier.apply(pos))
-                                .thenAccept(future::complete)
+                                .thenAccept(result -> {
+                                    future.complete(result);
+                                    stopwatch.stop();
+                                    ChunkLoadingMetrics.getInstance().recordIoReadTime(stopwatch.elapsedMillis());
+                                })
                                 .exceptionally(throwable1 -> {
                                     future.completeExceptionally(throwable1);
                                     return null;
@@ -344,6 +364,8 @@ public class C2MEStorageThread extends Thread {
                 future.complete(null);
                 return;
             }
+            final Stopwatch stopwatch = new Stopwatch();
+            stopwatch.start();
             CompletableFuture.supplyAsync(() -> {
                 try {
                     try (DataInputStream inputStream = chunkInputStream) {
@@ -361,6 +383,8 @@ public class C2MEStorageThread extends Thread {
             }, backgroundExecutorSupplier.apply(pos)).handle((compound, throwable) -> {
                 if (throwable != null) future.completeExceptionally(throwable);
                 else future.complete(compound);
+                stopwatch.stop();
+                ChunkLoadingMetrics.getInstance().recordIoReadTime(stopwatch.elapsedMillis());
                 return null;
             });
         } catch (Throwable t) {
@@ -369,13 +393,17 @@ public class C2MEStorageThread extends Thread {
     }
 
     private void writeChunk(long pos, CompletionStage<Either<NbtCompound, byte[]>> nbtFuture) {
+        Stopwatch stopwatch = new Stopwatch();
         CompletionStage<Void> writeFuture1 = nbtFuture.thenAcceptAsync(nbt -> {
+            stopwatch.start();
             if (nbt == null) {
                 if (this.cache.get(pos) == nbtFuture) {
                     try {
                         final ChunkPos pos1 = new ChunkPos(pos);
                         final RegionFile regionFile = ((IRegionBasedStorage) this.storage).invokeGetRegionFile(pos1);
                         regionFile.delete(pos1);
+                        stopwatch.stop();
+                        ChunkLoadingMetrics.getInstance().recordIoWriteTime(stopwatch.elapsedMillis());
                     } catch (Throwable t) {
                         LOGGER.error("Error writing chunk %s".formatted(new ChunkPos(pos)), t);
                     }
@@ -428,13 +456,17 @@ public class C2MEStorageThread extends Thread {
                             SneakyThrow.sneaky(t);
                         }
                     }
-                }, this.executor).handleAsync((unused, throwable) -> {
-                    if (throwable != null)
+                }, this.executor).whenCompleteAsync((unused, throwable) -> {
+                    if (throwable != null) {
                         LOGGER.error("Error writing chunk %s".formatted(new ChunkPos(pos)), throwable);
-                    // TODO error retry
-
-                    return null;
-                }, this.executor);
+                        // TODO error retry
+                    }
+                }, this.executor).whenComplete((unused, throwable) -> {
+                    if (throwable == null) {
+                        stopwatch.stop();
+                        ChunkLoadingMetrics.getInstance().recordIoWriteTime(stopwatch.elapsedMillis());
+                    }
+                });
                 this.writeFutures.add(future);
             }
         }, this.executor);

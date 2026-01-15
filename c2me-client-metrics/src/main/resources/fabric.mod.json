@@ -1,26 +1,26 @@
 {
   "schemaVersion": 1,
-  "id": "c2me-base",
+  "id": "c2me-client-metrics",
   "version": "${version}",
-  "name": "Concurrent Chunk Management Engine (Base)",
-  "description": "Concurrent Chunk Management Engine Base",
-  "environment": "*",
+  "name": "Concurrent Chunk Management Engine (Client Metrics)",
+  "description": "Client-side metrics HUD for chunk loading performance monitoring",
+  "environment": "client",
   "mixins": [
-    "c2me-base.mixins.json"
+    "c2me-client-metrics.mixins.json"
   ],
-  "entrypoints": {
-    "preLaunch": [
-      "com.ishland.c2me.base.C2MEBaseMod"
-    ]
-  },
   "depends": {
     "minecraft": "*",
-    "fabricloader": "*"
+    "fabricloader": "*",
+    "c2me-base": "*",
+    "cloth-config2": "*",
+    "modmenu": "*"
   },
-  "accessWidener": "c2me-base.accesswidener",
   "entrypoints": {
-    "main": [
-      "com.ishland.c2me.base.C2MEBaseMod"
+    "client": [
+      "com.ishland.c2me.client.metrics.MetricsClientInitializer"
+    ],
+    "modmenu": [
+      "com.ishland.c2me.client.metrics.config.MetricsModMenuIntegration"
     ]
   },
 

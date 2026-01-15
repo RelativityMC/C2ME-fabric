@@ -35,11 +35,19 @@ public class MixinThreadedAnvilChunkStorage implements IChunkSystemAccess {
     @Shadow @Final private ServerWorld world;
     private TheChunkSystem newSystem;
 
-    @Inject(method = "<init>", at = @At("RETURN"))
+    @Inject(method = "<init>", at = @At("RETURN"), require = 0)
     private void onInit(CallbackInfo ci) {
         newSystem = new TheChunkSystem(
                 (ServerChunkLoadingManager) (Object) this
         );
+    }
+
+    private void ensureInitialized() {
+        if (this.newSystem == null) {
+            this.newSystem = new TheChunkSystem(
+                    (ServerChunkLoadingManager) (Object) this
+            );
+        }
     }
 
     /**
@@ -49,6 +57,7 @@ public class MixinThreadedAnvilChunkStorage implements IChunkSystemAccess {
     @Overwrite
     @Nullable
     public ChunkHolder setLevel(long pos, int level, @Nullable ChunkHolder holder, int i) {
+        ensureInitialized();
         return this.newSystem.vanillaIf$setLevel(pos, level);
     }
 
@@ -59,6 +68,7 @@ public class MixinThreadedAnvilChunkStorage implements IChunkSystemAccess {
     @Overwrite
     @Nullable
     public ChunkHolder getCurrentChunkHolder(long pos) {
+        ensureInitialized();
         final ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> holder = this.newSystem.getHolder(new ChunkPos(pos));
         if (holder != null) {
             synchronized (holder) {
@@ -75,6 +85,7 @@ public class MixinThreadedAnvilChunkStorage implements IChunkSystemAccess {
     
     @ModifyArg(method = "save(Lnet/minecraft/world/chunk/Chunk;)Z", at = @At(value = "INVOKE", target = "Ljava/util/concurrent/CompletableFuture;supplyAsync(Ljava/util/function/Supplier;Ljava/util/concurrent/Executor;)Ljava/util/concurrent/CompletableFuture;"), require = 0)
     private Executor redirectSavingExecutor(Executor executor, @Local(argsOnly = true) Chunk chunk) {
+        ensureInitialized();
         return ((IVanillaChunkManager) this).c2me$getSchedulingManager().positionedExecutor(chunk.getPos().toLong());
     }
 
@@ -85,6 +96,7 @@ public class MixinThreadedAnvilChunkStorage implements IChunkSystemAccess {
     @Overwrite
     @Nullable
     public ChunkHolder getChunkHolder(long pos) {
+        ensureInitialized();
         return this.getCurrentChunkHolder(pos);
     }
 
@@ -95,16 +107,19 @@ public class MixinThreadedAnvilChunkStorage implements IChunkSystemAccess {
 
     @Redirect(method = "save(Lnet/minecraft/world/chunk/Chunk;)Z", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/ChunkStatus;getChunkType()Lnet/minecraft/world/chunk/ChunkType;"), require = 0)
     private ChunkType alwaysSaveChunk(ChunkStatus instance) {
+        ensureInitialized();
         return ChunkType.LEVELCHUNK;
     }
 
     @ModifyReturnValue(method = "shouldDelayShutdown", at = @At("RETURN"))
     private boolean delayShutdown(boolean original) {
+        ensureInitialized();
         return original || this.newSystem.itemCount() != 0;
     }
 
     @Override
     public TheChunkSystem c2me$getTheChunkSystem() {
+        ensureInitialized();
         return this.newSystem;
     }
 }

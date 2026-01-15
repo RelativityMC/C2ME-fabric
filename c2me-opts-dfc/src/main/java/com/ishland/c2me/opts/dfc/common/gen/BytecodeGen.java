@@ -29,8 +29,14 @@ import org.objectweb.asm.commons.AnalyzerAdapter;
 import org.objectweb.asm.commons.InstructionAdapter;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -69,6 +75,21 @@ public class BytecodeGen {
         }
     };
     private static final Object2ReferenceMap<AstNode, Class<?>> compilationCache = Object2ReferenceMaps.synchronize(new Object2ReferenceOpenCustomHashMap<>(RELAXED_STRATEGY));
+    private static final Path cacheDir = Path.of(System.getProperty("user.home", "."), ".c2me-cache", "dfc");
+    private static MessageDigest digest;
+
+    static {
+        try {
+            digest = MessageDigest.getInstance("SHA-256");
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("SHA-256 not available", e);
+        }
+        try {
+            Files.createDirectories(cacheDir);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     public static DensityFunction compile(DensityFunction densityFunction, Reference2ReferenceMap<DensityFunction, DensityFunction> tempCache) {
         DensityFunction cached = tempCache.get(densityFunction);
@@ -90,6 +111,11 @@ public class BytecodeGen {
 
     public static synchronized CompiledEntry compile0(AstNode node) {
         Class<?> cached = compilationCache.get(node);
+
+        // Try to load from disk cache first
+        if (cached == null) {
+            cached = loadFromDiskCache(node);
+        }
 
         ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES);
         String name = cached != null ? String.format("DfcCompiled_discarded") : String.format("DfcCompiled_%d", ordinal.getAndIncrement());
@@ -131,6 +157,10 @@ public class BytecodeGen {
         dumpClass(genContext.className, bytes);
         Class<?> defined = defineClass(genContext.className, bytes);
         compilationCache.put(node, defined);
+
+        // Save to disk cache for future use
+        saveToDiskCache(node, bytes);
+
         try {
             return (CompiledEntry) defined.getConstructor(List.class).newInstance(args);
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
@@ -575,6 +605,45 @@ public class BytecodeGen {
     @FunctionalInterface
     public interface EvalMultiInterface {
         void evalMulti(double[] res, int[] x, int[] y, int[] z, EvalType type);
+    }
+
+    private static String getCacheKey(AstNode node) {
+        synchronized (digest) {
+            digest.reset();
+            digest.update(node.toString().getBytes());
+            byte[] hash = digest.digest();
+            StringBuilder sb = new StringBuilder();
+            for (byte b : hash) {
+                sb.append(String.format("%02x", b));
+            }
+            return sb.toString();
+        }
+    }
+
+    private static void saveToDiskCache(AstNode node, byte[] bytecode) {
+        try {
+            String key = getCacheKey(node);
+            Path cacheFile = cacheDir.resolve(key + ".class");
+            Files.write(cacheFile, bytecode);
+        } catch (IOException e) {
+            // Cache write failure - not critical, just log and continue
+            e.printStackTrace();
+        }
+    }
+
+    private static Class<?> loadFromDiskCache(AstNode node) {
+        try {
+            String key = getCacheKey(node);
+            Path cacheFile = cacheDir.resolve(key + ".class");
+            if (Files.exists(cacheFile)) {
+                byte[] bytecode = Files.readAllBytes(cacheFile);
+                return defineClass("DfcCompiled_cached_" + key, bytecode);
+            }
+        } catch (IOException e) {
+            // Cache read failure - not critical, just continue without cache
+            e.printStackTrace();
+        }
+        return null;
     }
 
 }

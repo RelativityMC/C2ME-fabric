@@ -16,7 +16,7 @@ public class C2MECommands {
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
         dispatcher.register(
                 CommandManager.literal("c2me")
-                        .requires(CommandManager.requirePermissionLevel(CommandManager.GAMEMASTERS_CHECK))
+                        .requires(source -> hasPermissionLevel(source, 2))
                         .then(
                                 CommandManager.literal("notick")
                                         .requires(unused -> com.ishland.c2me.notickvd.ModuleEntryPoint.enabled)
@@ -41,6 +41,16 @@ public class C2MECommands {
         ctx.getSource().sendFeedback(() -> Text.of(String.format("No-tick chunk pending chunk loads: %d", noTickPendingTicketUpdates)), true);
 
         return 0;
+    }
+
+    private static boolean hasPermissionLevel(ServerCommandSource source, int level) {
+        try {
+            return (boolean) source.getClass()
+                    .getMethod("hasPermissionLevel", int.class)
+                    .invoke(source, level);
+        } catch (ReflectiveOperationException ignored) {
+            return false;
+        }
     }
 
 //    private static int mobcapsCommand(CommandContext<ServerCommandSource> ctx) {

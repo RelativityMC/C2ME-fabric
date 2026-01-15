@@ -1,5 +1,7 @@
 package com.ishland.c2me.rewrites.chunksystem.common.statuses;
 
+import com.ishland.c2me.base.common.metrics.ChunkLoadingMetrics;
+import com.ishland.c2me.base.common.metrics.Stopwatch;
 import com.ishland.c2me.base.common.scheduler.LockTokenImpl;
 import com.ishland.c2me.base.common.scheduler.ScheduledTask;
 import com.ishland.c2me.base.common.scheduler.SchedulingManager;
@@ -117,6 +119,8 @@ public class VanillaWorldGenerationDelegate extends NewChunkStatus {
         final ChunkGenerationContext chunkGenerationContext = ((IThreadedAnvilChunkStorage) context.tacs()).getGenerationContext();
         Chunk chunk = state.chunk();
         if (chunk.getStatus().isAtLeast(status)) {
+            Stopwatch stopwatch = new Stopwatch();
+            stopwatch.start();
             try (var ignored = ThreadInstrumentation.getCurrent().begin(new ChunkTaskWork(context, this, true))) {
                 return Completable.defer(() -> Completable.fromCompletionStage(
                         ChunkGenerationSteps.LOADING.get(status)
@@ -125,6 +129,9 @@ public class VanillaWorldGenerationDelegate extends NewChunkStatus {
                                     if (chunk1 != null) {
                                         context.holder().getItem().set(new ChunkState(chunk1, (ProtoChunk) chunk1, this.status));
                                     }
+                                    // Record worldgen load time
+                                    stopwatch.stop();
+                                    ChunkLoadingMetrics.getInstance().recordWorldgenLoadTime(stopwatch.elapsedMillis());
                                 })
                 ));
             }
@@ -134,12 +141,17 @@ public class VanillaWorldGenerationDelegate extends NewChunkStatus {
             int radius = Math.max(0, step.blockStateWriteRadius());
             return Completable.defer(() -> Completable.fromCompletionStage(runTaskWithLock(chunk.getPos(), radius, context.schedulingManager(),
                     () -> {
+                        Stopwatch stopwatch = new Stopwatch();
+                        stopwatch.start();
                         try (var ignored = ThreadInstrumentation.getCurrent().begin(new ChunkTaskWork(context, this, true))) {
                             return step.run(chunkGenerationContext, context.chunks(), chunk)
                                     .whenComplete((chunk1, throwable) -> {
                                         if (chunk1 != null) {
                                             context.holder().getItem().set(new ChunkState(chunk1, (ProtoChunk) chunk1, this.status));
                                         }
+                                        // Record worldgen generation time
+                                        stopwatch.stop();
+                                        ChunkLoadingMetrics.getInstance().recordWorldgenTime(stopwatch.elapsedMillis());
                                     }).thenAccept(__ -> {
                                     });
                         }

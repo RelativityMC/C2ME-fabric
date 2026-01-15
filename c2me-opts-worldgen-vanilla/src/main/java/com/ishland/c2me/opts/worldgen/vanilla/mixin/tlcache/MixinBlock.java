@@ -1,20 +1,20 @@
 package com.ishland.c2me.opts.worldgen.vanilla.mixin.tlcache;
 
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.Unique;
 import it.unimi.dsi.fastutil.objects.Object2BooleanLinkedOpenHashMap;
 import net.minecraft.block.Block;
 import net.minecraft.util.function.BooleanBiFunction;
 import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.util.shape.VoxelShapes;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
-import org.spongepowered.asm.mixin.Unique;
 
 @Mixin(Block.class)
 public class MixinBlock {
 
     @Unique
     private static final ThreadLocal<Object2BooleanLinkedOpenHashMap<VoxelShape>> c2me$full_cube_shape_cache_tl =
-            ThreadLocal.withInitial(() -> new Object2BooleanLinkedOpenHashMap<>(256, 0.25F) {
+            ThreadLocal.withInitial(() -> new Object2BooleanLinkedOpenHashMap<VoxelShape>(256, 0.25F) {
                 @Override
                 protected void rehash(int newN) {
                     if (newN > n) {
