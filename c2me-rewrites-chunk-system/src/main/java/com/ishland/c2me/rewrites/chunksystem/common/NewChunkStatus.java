@@ -1,6 +1,7 @@
 package com.ishland.c2me.rewrites.chunksystem.common;
 
 import com.ishland.c2me.rewrites.chunksystem.common.statuses.Deferred;
+import com.ishland.c2me.rewrites.chunksystem.common.statuses.LazyWorldGenerationDelegate;
 import com.ishland.c2me.rewrites.chunksystem.common.statuses.ReadFromDisk;
 import com.ishland.c2me.rewrites.chunksystem.common.statuses.ReadFromDiskAsync;
 import com.ishland.c2me.rewrites.chunksystem.common.statuses.ServerAccessible;
@@ -88,7 +89,12 @@ public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState,
                 continue;
             }
 
-            final NewChunkStatus newChunkStatus = new VanillaWorldGenerationDelegate(statuses.size(), status);
+            final NewChunkStatus newChunkStatus;
+            if (status == ChunkStatus.FEATURES) {
+                newChunkStatus = new LazyWorldGenerationDelegate(statuses.size(), status);
+            } else {
+                newChunkStatus = new VanillaWorldGenerationDelegate(statuses.size(), status);
+            }
             statuses.add(newChunkStatus);
             VANILLA_WORLDGEN_PIPELINE[status.getIndex()] = newChunkStatus;
         }
@@ -187,8 +193,9 @@ public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState,
         return EMPTY_DEPENDENCIES;
     }
 
+    @SuppressWarnings("unchecked")
     protected static KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] relativeToAbsoluteDependencies(ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, ?> holder, KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] relativeDependencies) {
-        if (relativeDependencies.length == 0) return EMPTY_DEPENDENCIES;
+        if (relativeDependencies.length == 0) return (KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[]) EMPTY_DEPENDENCIES;
         final KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] dependencies = new KeyStatusPair[relativeDependencies.length];
         for (int i = 0; i < relativeDependencies.length; i++) {
             final KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext> pair = relativeDependencies[i];

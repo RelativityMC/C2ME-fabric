@@ -8,7 +8,6 @@ import org.jctools.util.UnsafeAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.security.PrivilegedAction;
 import java.util.Collections;
 import java.util.Queue;
 import java.util.Set;
@@ -26,10 +25,7 @@ public class TheSpeedyObjectFactory implements ObjectFactory {
         Object unsafe = null;
         if (PlatformDependent.hasUnsafe()) {
             try {
-                unsafe = java.security.AccessController.doPrivileged((PrivilegedAction<Object>) () -> {
-                    // force JCTools to initialize unsafe
-                    return UnsafeAccess.UNSAFE;
-                });
+                unsafe = UnsafeAccess.UNSAFE;
             } catch (Throwable ignored) {
             }
         }

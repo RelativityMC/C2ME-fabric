@@ -310,9 +310,7 @@ public class ComparisonSession implements Closeable {
         for (RegistryKey<World> world : worldKeys) {
             System.out.printf("%s: Counting chunks for world %s\n", description, world);
             //noinspection ConstantConditions
-            // TODO
-            throw new UnsupportedOperationException("Replace with proper implementation");
-//            chunkPosesMap.put(world, ((IWorldUpdater) worldUpdater).invokeGetChunkPositions(world));
+            chunkPosesMap.put(world, ((IWorldUpdater) worldUpdater).invokeGetChunkPositions(world));
         }
         final HashMap<RegistryKey<World>, StorageIoWorker> regionIoWorkers = new HashMap<>();
         final HashMap<RegistryKey<World>, StorageIoWorker> poiIoWorkers = new HashMap<>();

@@ -1,5 +1,6 @@
 package com.ishland.c2me.rewrites.chunksystem.common;
 
+import com.ishland.c2me.base.common.logging.C2MELogger;
 import com.ishland.c2me.base.common.metrics.ChunkLoadingMetrics;
 import com.ishland.c2me.base.common.metrics.Stopwatch;
 import com.ishland.c2me.base.common.scheduler.IVanillaChunkManager;
@@ -45,6 +46,8 @@ public class TheChunkSystem extends StatusAdvancingScheduler<ChunkPos, ChunkStat
         this.schedulingManager =  ((IVanillaChunkManager) tacs).c2me$getSchedulingManager();
         this.LOGGER = LoggerFactory.getLogger("Chunk System of %s".formatted(((IThreadedAnvilChunkStorage) tacs).getWorld().getRegistryKey().getValue()));
         managedTickets.defaultReturnValue(NewChunkStatus.vanillaLevelToStatus.length - 1);
+
+        C2MELogger.info("TheChunkSystem", "Initialized chunk system for world: " + ((IThreadedAnvilChunkStorage) tacs).getWorld().getRegistryKey().getValue());
     }
 
     @Override

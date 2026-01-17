@@ -29,4 +29,7 @@ public interface IStructurePiece {
 
     @Accessor
     int getChainLength();
+
+    @org.spongepowered.asm.mixin.gen.Invoker
+    void invokeWriteNbt(net.minecraft.structure.StructureContext context, net.minecraft.nbt.NbtCompound nbt);
 }

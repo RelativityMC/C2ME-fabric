@@ -38,6 +38,7 @@ public class PlayerNoTickLoader {
     private final ServerChunkLoadingManager tacs;
     private final NoTickSystem noTickSystem;
     private final Long2ReferenceLinkedOpenHashMap<ChunkIterator> iterators = new Long2ReferenceLinkedOpenHashMap<>();
+    private final it.unimi.dsi.fastutil.longs.Long2LongMap lastPositions = new it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap();
     private final LongSet managedChunks = new LongLinkedOpenHashSet();
     private final LongFunction<ChunkIterator> createFunction = pos -> new SpiralIterator(ChunkPos.getPackedX(pos), ChunkPos.getPackedZ(pos), this.viewDistance);
     private final ReferenceArrayList<CompletableFuture<Void>> chunkLoadFutures = new ReferenceArrayList<>();
@@ -54,7 +55,19 @@ public class PlayerNoTickLoader {
     }
 
     public void addSource(ChunkPos chunkPos) {
-        this.iterators.computeIfAbsent(chunkPos.toLong(), this.createFunction);
+        long packed = chunkPos.toLong();
+        if (this.lastPositions.containsKey(packed)) {
+            long lastPacked = this.lastPositions.get(packed);
+            int dx = chunkPos.x - ChunkPos.getPackedX(lastPacked);
+            int dz = chunkPos.z - ChunkPos.getPackedZ(lastPacked);
+            if (dx != 0 || dz != 0) {
+                // Predict next chunk
+                ChunkPos predicted = new ChunkPos(chunkPos.x + dx, chunkPos.z + dz);
+                this.iterators.computeIfAbsent(predicted.toLong(), this.createFunction);
+            }
+        }
+        this.lastPositions.put(packed, packed);
+        this.iterators.computeIfAbsent(packed, this.createFunction);
     }
 
     public void removeSource(ChunkPos chunkPos) {

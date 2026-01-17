@@ -1,7 +1,6 @@
 {
   "category.c2me.metrics": "C2ME Metrics",
   "key.categories.c2me.metrics": "C2ME Metrics",
-  "key.c2me.metrics.toggle": "Open Metrics HUD",
   "title.c2me.metrics.config": "C2ME Metrics",
   "option.c2me.metrics.enabled": "Enable metrics",
   "option.c2me.metrics.enabled.tooltip": "Master switch for chunk loading metrics collection",
@@ -9,8 +8,6 @@
   "option.c2me.metrics.maxHistorySize.tooltip": "Number of samples kept on the server (requires restart to resize buffers)",
   "option.c2me.metrics.broadcastIntervalMs": "Broadcast interval (ms)",
   "option.c2me.metrics.broadcastIntervalMs.tooltip": "How often the server sends metrics to clients",
-  "option.c2me.metrics.clientHudEnabled": "Show HUD",
-  "option.c2me.metrics.clientHudEnabled.tooltip": "Show the metrics HUD when opened",
-  "option.c2me.metrics.clientHistorySize": "Client history size",
-  "option.c2me.metrics.clientHistorySize.tooltip": "Number of samples kept in the HUD history"
+  "option.c2me.metrics.fileLoggingEnabled": "Log to file",
+  "option.c2me.metrics.fileLoggingEnabled.tooltip": "Whether to record metrics to c2me-metrics.csv in the config folder"
 }

@@ -7,8 +7,7 @@ public class MetricsConfig {
     public static boolean enabled;
     public static int maxHistorySize;
     public static int broadcastIntervalMs;
-    public static boolean clientHudEnabled;
-    public static int clientHistorySize;
+    public static boolean fileLoggingEnabled;
 
     static {
         reload();
@@ -40,21 +39,12 @@ public class MetricsConfig {
                         .getLong(500, 500, ConfigSystem.LongChecks.POSITIVE_VALUES_ONLY)
         );
 
-        clientHudEnabled = new ConfigSystem.ConfigAccessor()
-                .key("metrics.client.hudEnabled")
+        fileLoggingEnabled = new ConfigSystem.ConfigAccessor()
+                .key("metrics.client.fileLoggingEnabled")
                 .comment("""
-                        Whether to show the client-side metrics HUD
+                        Whether to log metrics to a file in the config directory
                         """)
-                .getBoolean(true, true);
-
-        clientHistorySize = Math.toIntExact(
-                new ConfigSystem.ConfigAccessor()
-                        .key("metrics.client.historySize")
-                        .comment("""
-                                Number of samples to keep in the client HUD history
-                                """)
-                        .getLong(120, 120, ConfigSystem.LongChecks.POSITIVE_VALUES_ONLY)
-        );
+                .getBoolean(false, false);
 
         ConfigSystem.flushConfig();
     }
@@ -63,8 +53,7 @@ public class MetricsConfig {
         ConfigSystem.set("metrics.enabled", enabled);
         ConfigSystem.set("metrics.maxHistorySize", maxHistorySize);
         ConfigSystem.set("metrics.broadcastIntervalMs", broadcastIntervalMs);
-        ConfigSystem.set("metrics.client.hudEnabled", clientHudEnabled);
-        ConfigSystem.set("metrics.client.historySize", clientHistorySize);
+        ConfigSystem.set("metrics.client.fileLoggingEnabled", fileLoggingEnabled);
         ConfigSystem.flushConfig();
     }
 

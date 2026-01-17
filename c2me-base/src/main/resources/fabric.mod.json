@@ -11,6 +11,9 @@
   "entrypoints": {
     "preLaunch": [
       "com.ishland.c2me.base.C2MEBaseMod"
+    ],
+    "main": [
+      "com.ishland.c2me.base.C2MEBaseMod"
     ]
   },
   "depends": {
@@ -18,12 +21,6 @@
     "fabricloader": "*"
   },
   "accessWidener": "c2me-base.accesswidener",
-  "entrypoints": {
-    "main": [
-      "com.ishland.c2me.base.C2MEBaseMod"
-    ]
-  },
-
   "authors": [
     "RelativityMC",
     "ishland"

@@ -19,4 +19,7 @@ public interface IRegionFile {
     @Accessor
     ChunkCompressionFormat getCompressionFormat();
 
+    @Accessor
+    java.nio.file.Path getPath();
+
 }

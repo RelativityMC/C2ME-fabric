@@ -452,7 +452,16 @@ public class NewChunkHolderVanillaInterface extends ChunkHolder implements IFast
     @Nullable
     @Override
     protected ChunkStatus getMaxPendingStatus(@Nullable ChunkStatus checkUpperBound) {
-        throw new UnsupportedOperationException(); // TODO
+        for (int i = CHUNK_STATUSES.size() - 1; i >= 0; i--) {
+            ChunkStatus chunkStatus = CHUNK_STATUSES.get(i);
+            if (checkUpperBound == null || !chunkStatus.isLaterThan(checkUpperBound)) {
+                CompletableFuture<Void> future = this.newHolder.getFutureForStatus0(NewChunkStatus.fromVanillaStatus(chunkStatus));
+                if (future.isDone() && !future.isCompletedExceptionally()) {
+                    return chunkStatus;
+                }
+            }
+        }
+        return null;
     }
 
     @Override

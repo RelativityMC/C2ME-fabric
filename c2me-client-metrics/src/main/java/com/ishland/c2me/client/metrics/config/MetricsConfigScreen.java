@@ -1,7 +1,6 @@
 package com.ishland.c2me.client.metrics.config;
 
 import com.ishland.c2me.base.common.metrics.MetricsConfig;
-import com.ishland.c2me.client.metrics.common.MetricsClientState;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.ConfigCategory;
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
@@ -48,25 +47,16 @@ public final class MetricsConfigScreen {
                 .build());
 
         general.addEntry(entryBuilder.startBooleanToggle(
-                        Text.translatable("option.c2me.metrics.clientHudEnabled"),
-                        MetricsConfig.clientHudEnabled)
-                .setDefaultValue(true)
-                .setTooltip(Text.translatable("option.c2me.metrics.clientHudEnabled.tooltip"))
-                .setSaveConsumer(value -> MetricsConfig.clientHudEnabled = value)
-                .build());
-
-        general.addEntry(entryBuilder.startIntField(
-                        Text.translatable("option.c2me.metrics.clientHistorySize"),
-                        MetricsConfig.clientHistorySize)
-                .setDefaultValue(120)
-                .setMin(1)
-                .setTooltip(Text.translatable("option.c2me.metrics.clientHistorySize.tooltip"))
-                .setSaveConsumer(value -> MetricsConfig.clientHistorySize = value)
+                        Text.translatable("option.c2me.metrics.fileLoggingEnabled"),
+                        MetricsConfig.fileLoggingEnabled)
+                .setDefaultValue(false)
+                .setTooltip(Text.translatable("option.c2me.metrics.fileLoggingEnabled.tooltip"))
+                .setSaveConsumer(value -> MetricsConfig.fileLoggingEnabled = value)
                 .build());
 
         builder.setSavingRunnable(() -> {
             MetricsConfig.save();
-            MetricsClientState.getInstance().applyConfig();
+            MetricsConfig.reload();
         });
 
         return builder.build();

@@ -205,6 +205,7 @@ public class SchedulingManager {
      * Updates scheduler metrics for monitoring
      */
     public void updateMetrics() {
+        // Update scheduler metrics
         ChunkLoadingMetrics.getInstance().recordSchedulerQueueSize(GlobalExecutors.prioritizedScheduler.getQueueSize());
         ChunkLoadingMetrics.getInstance().recordSchedulerActiveThreads(GlobalExecutors.prioritizedScheduler.getActiveThreadCount());
     }

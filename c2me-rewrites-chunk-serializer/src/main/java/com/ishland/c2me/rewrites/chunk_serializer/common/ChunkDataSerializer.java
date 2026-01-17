@@ -138,6 +138,8 @@ public final class ChunkDataSerializer {
     // TODO: validating starlight compatibility?
     private static final boolean STARLIGHT = FabricLoader.getInstance().isModLoaded("starlight");
 
+    private static final java.util.concurrent.ConcurrentHashMap<BlockState, NbtElement> BLOCK_STATE_PROPERTIES_CACHE = new java.util.concurrent.ConcurrentHashMap<>();
+
     /**
      * Mirror of {@link SerializedChunk#serialize(ServerWorld, Chunk)}
      */
@@ -342,10 +344,9 @@ public final class ChunkDataSerializer {
             writer.compoundEntryStart();
             writer.putRegistry(STRING_NAME, Registries.BLOCK, paletteEntry.getBlock());
             if (!paletteEntry.getEntries().isEmpty()) {
-                // TODO: optimize this
-                writer.putElement(STRING_PROPERTIES, ((IState<BlockState>) paletteEntry).getCodec().codec()
-                        .encodeStart(NbtOps.INSTANCE, paletteEntry)
-                        .getOrThrow(SerializedChunk.ChunkLoadingException::new));
+                writer.putElement(STRING_PROPERTIES, BLOCK_STATE_PROPERTIES_CACHE.computeIfAbsent(paletteEntry, state -> ((IState<BlockState>) state).getCodec().codec()
+                        .encodeStart(NbtOps.INSTANCE, state)
+                        .getOrThrow(SerializedChunk.ChunkLoadingException::new)));
             }
             writer.finishCompound();
         }
@@ -578,12 +579,10 @@ public final class ChunkDataSerializer {
         // section: StructurePiecesList#toNbt(StructureContext)
         writer.startFixedList(STRING_CHILDREN, children.pieces().size(), NbtElement.COMPOUND_TYPE);
         for (StructurePiece piece : children.pieces()) {
-            writer.putElementEntry(piece.toNbt(context));
-            // TODO: writeStructurePiece(writer,(StructurePieceAccessor) piece, context);
+            writeStructurePiece(writer, (IStructurePiece) piece, context);
         }
     }
 
-    @SuppressWarnings("unused")
     private static void writeStructurePiece(NbtWriter writer, IStructurePiece structurePiece, StructureContext context) {
         writer.compoundEntryStart();
         writer.putRegistry(STRING_ID, Registries.STRUCTURE_PIECE, structurePiece.getType());
@@ -598,8 +597,13 @@ public final class ChunkDataSerializer {
         Direction direction = structurePiece.getFacing();
         writer.putInt(STRING_O, direction == null ? -1 : direction.getHorizontalQuarterTurns());
         writer.putInt(STRING_GD, structurePiece.getChainLength());
-        // FML, didn't think about this one
-        // this.writeNbt(context, nbtCompound);
+        
+        NbtCompound nbt = new NbtCompound();
+        structurePiece.invokeWriteNbt(context, nbt);
+        for (String key : nbt.getKeys()) {
+            writer.putElement(NbtWriter.getAsciiStringBytes(key), nbt.get(key));
+        }
+        
         writer.finishCompound();
     }
 

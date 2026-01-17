@@ -11,8 +11,13 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import com.ishland.c2me.base.common.logging.C2MELogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import com.ibm.asyncutil.util.Combinators;
 import com.ishland.c2me.base.common.metrics.ChunkLoadingMetrics;
 import com.ishland.c2me.base.common.metrics.MetricsConfig;
@@ -30,6 +35,17 @@ public class C2MEMod implements ModInitializer {
 
     @Override
     public void onInitialize() {
+        // Create C2ME log directory
+        try {
+            Path logDir = net.fabricmc.loader.api.FabricLoader.getInstance().getConfigDir().resolve("c2me");
+            Files.createDirectories(logDir);
+            LOGGER.info("Created C2ME log directory: {}", logDir);
+            C2MELogger.info("C2MEMod", "C2ME mod initialized successfully");
+        } catch (IOException e) {
+            LOGGER.error("Failed to create C2ME log directory", e);
+            C2MELogger.error("C2MEMod", "Failed to create C2ME log directory", e);
+        }
+
         if (Boolean.getBoolean("com.ishland.c2me.runCompressionBenchmark")) {
             LOGGER.info("Benchmarking chunk stream speed");
             LOGGER.info("Warming up");
@@ -50,6 +66,16 @@ public class C2MEMod implements ModInitializer {
 
         // Setup metrics broadcasting
         setupMetricsBroadcasting();
+
+        // Setup shutdown hook for logger
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            try {
+                com.ishland.c2me.base.common.logging.C2MELogger.getInstance().shutdown();
+                LOGGER.info("C2ME logger shutdown completed");
+            } catch (Exception e) {
+                LOGGER.error("Error during C2ME logger shutdown", e);
+            }
+        }, "C2ME-Logger-Shutdown"));
     }
 
     private void setupMetricsBroadcasting() {

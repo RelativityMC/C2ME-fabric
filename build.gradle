@@ -84,7 +84,7 @@ configure (allprojects - project(":tests")) {
                 "fabric-networking-api-v1",
                 "fabric-lifecycle-events-v1",
         ].forEach {
-            modCompileOnly(fabricApi.module(it, "${project.fabric_version}"))
+            modApi(fabricApi.module(it, "${project.fabric_version}"))
         }
     }
 

@@ -1,5 +1,6 @@
 package com.ishland.c2me.rewrites.chunkio.common;
 
+import com.ishland.c2me.base.common.logging.C2MELogger;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -65,6 +66,9 @@ public class C2MEStorageThread extends Thread {
         }
     };
     private final ObjectArraySet<CompletableFuture<Void>> writeFutures = new ObjectArraySet<>();
+    private final it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap writeRetryCounts = new it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap();
+    private final OffHeapChunkCache offHeapCache = new OffHeapChunkCache();
+    private final java.util.concurrent.ConcurrentHashMap<Path, MMapRegionFile> mmapCache = new java.util.concurrent.ConcurrentHashMap<>();
     private final Object sync = new Object();
 
     public C2MEStorageThread(StorageKey arg, Path path, boolean dsync, LongFunction<Executor> backgroundExecutorSupplier) {
@@ -78,11 +82,15 @@ public class C2MEStorageThread extends Thread {
         this.setName("C2ME Storage #%d".formatted(SERIAL.incrementAndGet()));
         this.setDaemon(true);
         this.setUncaughtExceptionHandler((t, e) -> LOGGER.error("Thread %s died".formatted(t), e));
+        C2MELogger.info("C2MEStorageThread", "Started storage thread: " + this.getName());
         this.start();
     }
 
     @Override
     public void run() {
+        C2MELogger.info("C2MEStorageThread", "Storage thread started: " + this.getName());
+        long lastLogTime = System.currentTimeMillis();
+
         main_loop:
         while (true) {
             boolean hasWork = false;
@@ -91,6 +99,14 @@ public class C2MEStorageThread extends Thread {
             runWriteFutureGC();
 
             if (!hasWork) {
+                // Log status every 30 seconds
+                long currentTime = System.currentTimeMillis();
+                if (currentTime - lastLogTime > 30000) {
+                    C2MELogger.info("C2MEStorageThread", String.format("Storage thread %s status: tasks=%d, backlog=%d, cache=%d",
+                            this.getName(), taskSize.get(), writeBacklog.size(), cache.size()));
+                    lastLogTime = currentTime;
+                }
+
                 if (this.closing.get()) {
                     flush0(true);
                     try {
@@ -230,7 +246,17 @@ public class C2MEStorageThread extends Thread {
     public CompletableFuture<Void> close() {
         this.closing.set(true);
         this.wakeUp();
-        return this.closeFuture.thenApply(Function.identity());
+        return this.closeFuture.thenAccept(unused -> {
+            mmapCache.values().forEach(mMapRegionFile -> {
+                try {
+                    mMapRegionFile.close();
+                } catch (IOException e) {
+                    LOGGER.error("Error closing MMapRegionFile", e);
+                }
+            });
+            mmapCache.clear();
+            offHeapCache.clear();
+        });
     }
 
     private boolean handleTasks() {
@@ -356,10 +382,58 @@ public class C2MEStorageThread extends Thread {
     }
 
     private void scheduleChunkRead(long pos, CompletableFuture<NbtCompound> future, NbtScanner scanner) {
+        byte[] cachedData = offHeapCache.get(pos);
+        if (cachedData != null) {
+            CompletableFuture.supplyAsync(() -> {
+                try {
+                    DataInputStream rawInputStream = new DataInputStream(new ByteArrayInputStream(cachedData));
+                    rawInputStream.skipBytes(4); // skip length (might be 0 if not yet updated)
+                    byte compressionTypeId = rawInputStream.readByte();
+                    int compressionId = compressionTypeId & 0xFF;
+                    ChunkCompressionFormat compressionFormat;
+                    if (compressionId == ChunkCompressionFormat.GZIP.getId()) compressionFormat = ChunkCompressionFormat.GZIP;
+                    else if (compressionId == ChunkCompressionFormat.DEFLATE.getId()) compressionFormat = ChunkCompressionFormat.DEFLATE;
+                    else if (compressionId == ChunkCompressionFormat.UNCOMPRESSED.getId()) compressionFormat = ChunkCompressionFormat.UNCOMPRESSED;
+                    else compressionFormat = ChunkCompressionFormat.getCurrentFormat();
+
+                    try (DataInputStream inputStream = new DataInputStream(compressionFormat.wrap(rawInputStream))) {
+                        if (scanner != null) {
+                            NbtIo.scan(inputStream, scanner, NbtSizeTracker.ofUnlimitedBytes());
+                            return null;
+                        } else {
+                            return NbtIo.readCompound(inputStream);
+                        }
+                    }
+                } catch (Throwable t) {
+                    SneakyThrow.sneaky(t);
+                    return null;
+                }
+            }, backgroundExecutorSupplier.apply(pos)).handle((compound, throwable) -> {
+                if (throwable != null) future.completeExceptionally(throwable);
+                else future.complete(compound);
+                return null;
+            });
+            return;
+        }
         try {
             final ChunkPos pos1 = new ChunkPos(pos);
             final RegionFile regionFile = ((IRegionBasedStorage) this.storage).invokeGetRegionFile(pos1);
-            final DataInputStream chunkInputStream = regionFile.getChunkInputStream(pos1);
+            final Path path = ((IRegionFile) regionFile).getPath();
+            final MMapRegionFile mmapRegionFile = mmapCache.computeIfAbsent(path, p -> {
+                try {
+                    return new MMapRegionFile(p);
+                } catch (IOException e) {
+                    return null;
+                }
+            });
+
+            final DataInputStream chunkInputStream;
+            if (mmapRegionFile != null) {
+                chunkInputStream = mmapRegionFile.getChunkInputStream(pos1);
+            } else {
+                chunkInputStream = regionFile.getChunkInputStream(pos1);
+            }
+
             if (chunkInputStream == null) {
                 future.complete(null);
                 return;
@@ -438,6 +512,10 @@ public class C2MEStorageThread extends Thread {
                                 dataOutputStream.write(nbt.right().get());
                             }
                         }
+                        byte[] bytes1 = out.toByteArray();
+                        ByteBuffer byteBuffer1 = ByteBuffer.wrap(bytes1);
+                        byteBuffer1.putInt(0, bytes1.length - 5 + 1);
+                        offHeapCache.put(pos, bytes1);
                         return out;
                     } catch (Throwable t) {
                         SneakyThrow.sneaky(t);
@@ -459,7 +537,17 @@ public class C2MEStorageThread extends Thread {
                 }, this.executor).whenCompleteAsync((unused, throwable) -> {
                     if (throwable != null) {
                         LOGGER.error("Error writing chunk %s".formatted(new ChunkPos(pos)), throwable);
-                        // TODO error retry
+                        int retryCount = writeRetryCounts.get(pos);
+                        if (retryCount < 3) {
+                            writeRetryCounts.put(pos, retryCount + 1);
+                            LOGGER.info("Retrying write of chunk {} (attempt {})", new ChunkPos(pos), retryCount + 1);
+                            this.writeChunk(pos, nbtFuture);
+                        } else {
+                            writeRetryCounts.remove(pos);
+                            LOGGER.error("Failed to write chunk {} after {} retries", new ChunkPos(pos), retryCount);
+                        }
+                    } else {
+                        writeRetryCounts.remove(pos);
                     }
                 }, this.executor).whenComplete((unused, throwable) -> {
                     if (throwable == null) {
