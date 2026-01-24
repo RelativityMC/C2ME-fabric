@@ -163,7 +163,7 @@ public class PlayerNoTickLoader {
 
     private CompletableFuture<Void> loadChunk(int x, int z) {
         CompletableFuture<Void> future = this.loadChunk0(x, z);
-        future.thenRunAsync(() -> {
+        future.whenCompleteAsync((unused, throwable) -> { // instead of thehRunAsync because chunkload can be cancelled
             try {
                 this.chunkLoadFutures.remove(future);
                 this.tickFutures();
