@@ -6,6 +6,7 @@
   "mixins": [
     "deadlocks.MixinDataFixerType",
     "threading.MixinChunk",
+    "threading.MixinChunkRegion",
     "threading.MixinDesertTempleGenerator",
     "threading.MixinJungleTempleGenerator",
     "threading.MixinMineshaftGeneratorMineshaftCorridor",
