@@ -25,8 +25,8 @@ public abstract class MixinMinecraftServer extends ReentrantThreadExecutor<Serve
 
     @Shadow @Final private ServerTickManager tickManager;
 
-    public MixinMinecraftServer(String string) {
-        super(string);
+    public MixinMinecraftServer(String name, boolean propagatesCrashes) {
+        super(name, propagatesCrashes);
     }
 
     @Unique

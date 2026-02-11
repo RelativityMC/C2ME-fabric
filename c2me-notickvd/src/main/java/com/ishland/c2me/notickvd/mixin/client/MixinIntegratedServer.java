@@ -21,8 +21,8 @@ import java.util.Optional;
 @Mixin(IntegratedServer.class)
 public abstract class MixinIntegratedServer extends MinecraftServer {
 
-    public MixinIntegratedServer(Thread serverThread, LevelStorage.Session session, ResourcePackManager dataPackManager, SaveLoader saveLoader, Optional<GameRules> gameRules, Proxy proxy, DataFixer fixerUpper, ApiServices apiServices, ChunkLoadProgress chunkLoadProgress) {
-        super(serverThread, session, dataPackManager, saveLoader, gameRules, proxy, fixerUpper, apiServices, chunkLoadProgress);
+    public MixinIntegratedServer(Thread serverThread, LevelStorage.Session session, ResourcePackManager dataPackManager, SaveLoader saveLoader, Optional<GameRules> gameRules, Proxy proxy, DataFixer fixerUpper, ApiServices apiServices, ChunkLoadProgress chunkLoadProgress, boolean propagatesCrashes) {
+        super(serverThread, session, dataPackManager, saveLoader, gameRules, proxy, fixerUpper, apiServices, chunkLoadProgress, propagatesCrashes);
     }
 
     @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/integrated/IntegratedServer;incrementTotalWorldTimeStat()V", shift = At.Shift.AFTER))

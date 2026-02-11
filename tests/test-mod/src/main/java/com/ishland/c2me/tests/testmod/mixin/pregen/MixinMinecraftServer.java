@@ -44,8 +44,8 @@ public abstract class MixinMinecraftServer extends ReentrantThreadExecutor<Serve
     @Shadow
     private volatile boolean running;
 
-    public MixinMinecraftServer(String string) {
-        super(string);
+    public MixinMinecraftServer(String name, boolean propagatesCrashes) {
+        super(name, propagatesCrashes);
     }
 
     @Shadow
