@@ -59,11 +59,10 @@ allprojects {
         maven {
             url = "https://repo.codemc.io/repository/relativitymc/"
         }
-        maven { url = 'https://jitpack.io' }
         maven {
             url = "https://maven.bawnorton.com/releases"
             content {
-                includeGroup "com.bawnorton.mixinsquared"
+                includeGroup "com.github.bawnorton.mixinsquared"
             }
         }
     }
