@@ -5,6 +5,7 @@ import net.minecraft.state.property.IntProperty;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.intprovider.IntProvider;
 import net.minecraft.util.math.random.Random;
+import net.minecraft.world.StructureWorldAccess;
 import net.minecraft.world.gen.stateprovider.BlockStateProvider;
 import net.minecraft.world.gen.stateprovider.RandomizedIntBlockStateProvider;
 import org.jetbrains.annotations.Nullable;
@@ -35,19 +36,19 @@ public abstract class MixinRandomizedIntBlockStateProvider {
      * @reason ensure proper behavior
      */
     @Overwrite
-    public BlockState get(Random random, BlockPos pos) {
-        BlockState blockState = this.source.get(random, pos);
-        IntProperty propertyLocal = this.property; // used as cache only
-        if (propertyLocal == null || !blockState.contains(propertyLocal)) {
-            IntProperty intProperty = getIntPropertyByName(blockState, this.propertyName);
-            if (intProperty == null) {
-                return blockState;
+    public BlockState get(final StructureWorldAccess level, final Random random, final BlockPos pos) {
+        BlockState unmodifiedState = this.source.get(level, random, pos);
+        IntProperty propertyLocal = this.property;
+        if (propertyLocal == null || !unmodifiedState.contains(propertyLocal)) {
+            IntProperty property = getIntPropertyByName(unmodifiedState, this.propertyName);
+            if (property == null) {
+                return unmodifiedState;
             }
 
-            this.property = propertyLocal = intProperty;
+            propertyLocal = this.property = property;
         }
 
-        return blockState.with(propertyLocal, Integer.valueOf(this.values.get(random)));
+        return unmodifiedState.with(propertyLocal, this.values.get(random));
     }
 
 }
