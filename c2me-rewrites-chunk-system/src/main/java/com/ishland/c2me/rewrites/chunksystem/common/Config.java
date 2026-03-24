@@ -101,6 +101,17 @@ public class Config {
                     """)
             .getBoolean(false, false);
 
+    public static final boolean delayFullChunkEvents = new ConfigSystem.ConfigAccessor()
+            .key("chunkSystem.delayFullChunkEvents")
+            .comment("""
+                    Whether to delay full chunk events to after full chunk future have been completed
+                    This restores the buggy behavior in NeoForge that the ecosystem have been relying on
+                    
+                    Enabling this will almost certainly break vanilla behavior, disabled by default on fabric
+                    Do not change this unless you know what you are doing
+                    """)
+            .getBoolean(false, false);
+
     public static void init() {
         // intentionally empty
     }

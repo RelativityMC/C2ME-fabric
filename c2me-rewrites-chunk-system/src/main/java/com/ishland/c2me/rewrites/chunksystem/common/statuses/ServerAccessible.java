@@ -69,34 +69,48 @@ public class ServerAccessible extends NewChunkStatus {
         Assertions.assertTrue(((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor().isOnThread());
 
         try (var ignored = ThreadInstrumentation.getCurrent().begin(new ChunkTaskWork(context, this, true))) {
-            ServerWorld serverWorld = ((IThreadedAnvilChunkStorage) context.tacs()).getWorld();
-
             worldChunk.setLevelTypeProvider(context.holder().getUserData().get()::getLevelType);
             worldChunk.setUnsavedListener(((IThreadedAnvilChunkStorage) context.tacs()).getGenerationContext().unsavedListener());
             ((WorldChunkExtension) worldChunk).c2me$setBlockTicking(false); // not necessary, but just in case
-            context.holder().getItem().set(new ChunkState(worldChunk, newProtoChunk, ChunkStatus.FULL));
-            if (!((IWorldChunk) worldChunk).isLoadedToWorld()) {
-                worldChunk.loadEntities();
-                worldChunk.setLoadedToWorld(true);
-                worldChunk.updateAllBlockEntities();
-                worldChunk.addChunkTickSchedulers(serverWorld);
-                if (ModStatuses.fabric_lifecycle_events_v1) {
-                    LifecycleEventInvoker.invokeChunkLoaded(serverWorld, worldChunk, !(protoChunk instanceof WrapperProtoChunk));
-                }
-            }
+            boolean wasFullChunk = protoChunk instanceof WrapperProtoChunk;
 
-            if (ModStatuses.fabric_lifecycle_events_v1) {
-                LifecycleEventInvoker.invokeChunkLevelTypeChange(serverWorld, worldChunk, ChunkLevelType.INACCESSIBLE, ChunkLevelType.FULL);
+            context.holder().getItem().set(new ChunkState(worldChunk, newProtoChunk, ChunkStatus.FULL, wasFullChunk));
+            if (!Config.delayFullChunkEvents) {
+                invokeFullChunkEvents(context, worldChunk, wasFullChunk);
             }
-
-            ((IThreadedAnvilChunkStorage) context.tacs()).getCurrentChunkHolders().put(context.holder().getKey().toLong(), context.holder().getUserData().get());
-            ((IThreadedAnvilChunkStorage) context.tacs()).setChunkHolderListDirty(true);
         }
     }
 
     @Override
     public Completable postUpgradeToThis(ChunkLoadingContext context) {
-        return Completable.complete();
+        if (!Config.delayFullChunkEvents) return Completable.complete();
+
+        return Completable.fromRunnable(() -> {
+            Assertions.assertTrue(((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor().isOnThread());
+            ChunkState chunkState = context.holder().getItem().get();
+            WorldChunk worldChunk = (WorldChunk) chunkState.chunk();
+            invokeFullChunkEvents(context, worldChunk, chunkState.wasFullChunk());
+        });
+    }
+
+    private static void invokeFullChunkEvents(ChunkLoadingContext context, WorldChunk worldChunk, boolean wasFullChunk) {
+        ServerWorld serverWorld = ((IThreadedAnvilChunkStorage) context.tacs()).getWorld();
+        if (!((IWorldChunk) worldChunk).isLoadedToWorld()) {
+            worldChunk.loadEntities();
+            worldChunk.setLoadedToWorld(true);
+            worldChunk.updateAllBlockEntities();
+            worldChunk.addChunkTickSchedulers(serverWorld);
+            if (ModStatuses.fabric_lifecycle_events_v1) {
+                LifecycleEventInvoker.invokeChunkLoaded(serverWorld, worldChunk, !wasFullChunk);
+            }
+        }
+
+        if (ModStatuses.fabric_lifecycle_events_v1) {
+            LifecycleEventInvoker.invokeChunkLevelTypeChange(serverWorld, worldChunk, ChunkLevelType.INACCESSIBLE, ChunkLevelType.FULL);
+        }
+
+        ((IThreadedAnvilChunkStorage) context.tacs()).getCurrentChunkHolders().put(context.holder().getKey().toLong(), context.holder().getUserData().get());
+        ((IThreadedAnvilChunkStorage) context.tacs()).setChunkHolderListDirty(true);
     }
 
     private static WorldChunk toFullChunk(ProtoChunk protoChunk, ServerWorld serverWorld) {
@@ -144,7 +158,7 @@ public class ServerAccessible extends NewChunkStatus {
                         worldChunk.setLevelTypeProvider(null);
                         worldChunk.setUnsavedListener(pos -> {
                         });
-                        context.holder().getItem().set(new ChunkState(state.protoChunk(), state.protoChunk(), ChunkStatus.FULL));
+                        context.holder().getItem().set(new ChunkState(state.protoChunk(), state.protoChunk(), ChunkStatus.FULL, true));
                     }
                 })
                 .subscribeOn(Schedulers.from(((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor()));

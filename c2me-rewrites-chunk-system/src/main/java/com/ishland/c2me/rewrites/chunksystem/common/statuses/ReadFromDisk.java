@@ -79,7 +79,7 @@ public class ReadFromDisk extends NewChunkStatus {
                     }
                 })
                 .doOnSuccess(chunk -> {
-                    context.holder().getItem().set(new ChunkState(chunk, chunk, ChunkStatus.EMPTY));
+                    context.holder().getItem().set(new ChunkState(chunk, chunk, ChunkStatus.EMPTY, chunk instanceof WrapperProtoChunk));
                     if (!Config.lowMemoryMode) {
                         context.holder().getUserData().get().triggerDeferredLoad(NewChunkStatus.DISK);
                     }
@@ -214,7 +214,7 @@ public class ReadFromDisk extends NewChunkStatus {
 
                         ((IPOIUnloading) ((IThreadedAnvilChunkStorage) context.tacs()).getPointOfInterestStorage()).c2me$unloadPoi(context.holder().getKey());
 
-                        context.holder().getItem().set(new ChunkState(null, null, null));
+                        context.holder().getItem().set(new ChunkState(null, null, null, false));
 
                         return asyncSaveFuture;
                     }

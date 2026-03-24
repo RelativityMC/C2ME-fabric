@@ -90,7 +90,7 @@ public class TheChunkSystem extends StatusAdvancingScheduler<ChunkPos, ChunkStat
     protected void onItemCreation(ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> holder) {
         super.onItemCreation(holder);
         holder.getUserData().setPlain(new NewChunkHolderVanillaInterface(this, holder, ((IThreadedAnvilChunkStorage) this.tacs).getWorld(), ((IThreadedAnvilChunkStorage) this.tacs).getLightingProvider(), this.tacs));
-        holder.getItem().setPlain(new ChunkState(null, null, null));
+        holder.getItem().setPlain(new ChunkState(null, null, null, true));
     }
 
     @Override

@@ -24,6 +24,7 @@ import net.minecraft.world.chunk.ChunkGenerationSteps;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.GenerationDependencies;
 import net.minecraft.world.chunk.ProtoChunk;
+import net.minecraft.world.chunk.WrapperProtoChunk;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -123,7 +124,7 @@ public class VanillaWorldGenerationDelegate extends NewChunkStatus {
                                 .run(((IThreadedAnvilChunkStorage) context.tacs()).getGenerationContext(), context.chunks(), chunk)
                                 .whenComplete((chunk1, throwable) -> {
                                     if (chunk1 != null) {
-                                        context.holder().getItem().set(new ChunkState(chunk1, (ProtoChunk) chunk1, this.status));
+                                        context.holder().getItem().set(new ChunkState(chunk1, (ProtoChunk) chunk1, this.status, chunk1 instanceof WrapperProtoChunk));
                                     }
                                 })
                 ));
@@ -138,7 +139,7 @@ public class VanillaWorldGenerationDelegate extends NewChunkStatus {
                             return step.run(chunkGenerationContext, context.chunks(), chunk)
                                     .whenComplete((chunk1, throwable) -> {
                                         if (chunk1 != null) {
-                                            context.holder().getItem().set(new ChunkState(chunk1, (ProtoChunk) chunk1, this.status));
+                                            context.holder().getItem().set(new ChunkState(chunk1, (ProtoChunk) chunk1, this.status, chunk1 instanceof WrapperProtoChunk));
                                         }
                                     }).thenAccept(__ -> {
                                     });
