@@ -225,7 +225,7 @@ modrinth {
 }
 
 apply plugin: 'io.github.themrmilchmann.curseforge-publish'
-if (!project.minecraft_version.contains("-")) { // rough filter for snapshots
+if (false) { // april fools branch
     curseforge {
         apiToken = System.getenv("CURSEFORGE_TOKEN")
         publications {
