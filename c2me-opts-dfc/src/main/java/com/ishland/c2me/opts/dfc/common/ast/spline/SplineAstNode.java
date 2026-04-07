@@ -10,6 +10,7 @@ import com.ishland.c2me.opts.dfc.common.vif.NoisePosVanillaInterface;
 import com.ishland.flowsched.util.Assertions;
 import it.unimi.dsi.fastutil.Pair;
 import it.unimi.dsi.fastutil.ints.IntObjectPair;
+import net.minecraft.util.function.ToFloatFunction;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Spline;
 import net.minecraft.world.gen.densityfunction.DensityFunctionTypes;
@@ -26,15 +27,17 @@ import java.util.List;
 public class SplineAstNode implements AstNode {
 
     public static final String SPLINE_METHOD_DESC = Type.getMethodDescriptor(Type.getType(float.class), Type.getType(int.class), Type.getType(int.class), Type.getType(int.class), Type.getType(EvalType.class));
-    private final Spline<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> spline;
+    private final Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper> spline;
+    private final ToFloatFunction<DensityFunctionTypes.Spline.SplinePos> applier;
 
-    public SplineAstNode(Spline<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> spline) {
+    public SplineAstNode(Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper> spline) {
         this.spline = spline;
+        this.applier = Spline.method_1_3942(spline);
     }
 
     @Override
     public double evalSingle(int x, int y, int z, EvalType type) {
-        return spline.apply(new DensityFunctionTypes.Spline.SplinePos(new NoisePosVanillaInterface(x, y, z, type)));
+        return applier.apply(new DensityFunctionTypes.Spline.SplinePos(new NoisePosVanillaInterface(x, y, z, type)));
     }
 
     @Override
@@ -62,14 +65,14 @@ public class SplineAstNode implements AstNode {
         m.areturn(Type.DOUBLE_TYPE);
     }
 
-    private static ValuesMethodDef doBytecodeGenSpline(BytecodeGen.Context context, Spline<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> spline) {
+    private static ValuesMethodDef doBytecodeGenSpline(BytecodeGen.Context context, Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper> spline) {
         {
             String cachedSplineMethod = context.getCachedSplineMethod(spline);
             if (cachedSplineMethod != null) {
                 return new ValuesMethodDef(false, cachedSplineMethod, 0.0F);
             }
         }
-        if (spline instanceof Spline.FixedFloatFunction<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> spline1) {
+        if (spline instanceof Spline.FixedFloatFunction<DensityFunctionTypes.Spline.DensityFunctionWrapper> spline1) {
             return new ValuesMethodDef(true, null, spline1.value());
         }
         String name = context.nextMethodName("Spline");
@@ -98,7 +101,7 @@ public class SplineAstNode implements AstNode {
             return ordinal;
         };
 
-        if (spline instanceof Spline.Implementation<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> impl) {
+        if (spline instanceof Spline.Implementation<DensityFunctionTypes.Spline.DensityFunctionWrapper> impl) {
             ValuesMethodDef[] valuesMethods = impl.values().stream()
                     .map(spline1 -> doBytecodeGenSpline(context, spline1))
                     .toArray(ValuesMethodDef[]::new);
@@ -111,7 +114,7 @@ public class SplineAstNode implements AstNode {
 
             int lastConst = impl.locations().length - 1;
 
-            String locationFunction = context.newSingleMethod(McToAst.toAst(impl.locationFunction().function().value()));
+            String locationFunction = context.newSingleMethod(McToAst.toAst(impl.locationFunction().function()));
             context.callDelegateSingle(m, locationFunction);
             m.cast(Type.DOUBLE_TYPE, Type.FLOAT_TYPE);
             m.store(point, Type.FLOAT_TYPE);
@@ -375,7 +378,7 @@ public class SplineAstNode implements AstNode {
                 m.areturn(Type.FLOAT_TYPE);
             }
 
-        } else if (spline instanceof Spline.FixedFloatFunction<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> floatFunction) {
+        } else if (spline instanceof Spline.FixedFloatFunction<DensityFunctionTypes.Spline.DensityFunctionWrapper> floatFunction) {
             m.fconst(floatFunction.value());
             m.areturn(Type.FLOAT_TYPE);
         } else {
@@ -420,17 +423,17 @@ public class SplineAstNode implements AstNode {
         m.areturn(Type.VOID_TYPE);
     }
 
-    private static boolean deepEquals(Spline<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> a,
-                                      Spline<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> b) {
-        if (a instanceof Spline.FixedFloatFunction<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> a1 &&
-                b instanceof Spline.FixedFloatFunction<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> b1) {
+    private static boolean deepEquals(Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper> a,
+                                      Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper> b) {
+        if (a instanceof Spline.FixedFloatFunction<DensityFunctionTypes.Spline.DensityFunctionWrapper> a1 &&
+                b instanceof Spline.FixedFloatFunction<DensityFunctionTypes.Spline.DensityFunctionWrapper> b1) {
             return a1.value() == b1.value();
-        } else if (a instanceof Spline.Implementation<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> a1 &&
-                b instanceof Spline.Implementation<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> b1) {
+        } else if (a instanceof Spline.Implementation<DensityFunctionTypes.Spline.DensityFunctionWrapper> a1 &&
+                b instanceof Spline.Implementation<DensityFunctionTypes.Spline.DensityFunctionWrapper> b1) {
             boolean equals1 = Arrays.equals(a1.derivatives(), b1.derivatives()) &&
                     Arrays.equals(a1.locations(), b1.locations()) &&
                     a1.values().size() == b1.values().size() &&
-                    McToAst.toAst(a1.locationFunction().function().value()).equals(McToAst.toAst(b1.locationFunction().function().value()));
+                    McToAst.toAst(a1.locationFunction().function()).equals(McToAst.toAst(b1.locationFunction().function()));
             if (!equals1) return false;
             int size = a1.values().size();
             for (int i = 0; i < size; i++) {
@@ -445,15 +448,15 @@ public class SplineAstNode implements AstNode {
         }
     }
 
-    private static boolean deepRelaxedEquals(Spline<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> a,
-                                      Spline<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> b) {
-        if (a instanceof Spline.FixedFloatFunction<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> a1 &&
-                b instanceof Spline.FixedFloatFunction<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> b1) {
+    private static boolean deepRelaxedEquals(Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper> a,
+                                      Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper> b) {
+        if (a instanceof Spline.FixedFloatFunction<DensityFunctionTypes.Spline.DensityFunctionWrapper> a1 &&
+                b instanceof Spline.FixedFloatFunction<DensityFunctionTypes.Spline.DensityFunctionWrapper> b1) {
             return a1.value() == b1.value();
-        } else if (a instanceof Spline.Implementation<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> a1 &&
-                b instanceof Spline.Implementation<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> b1) {
+        } else if (a instanceof Spline.Implementation<DensityFunctionTypes.Spline.DensityFunctionWrapper> a1 &&
+                b instanceof Spline.Implementation<DensityFunctionTypes.Spline.DensityFunctionWrapper> b1) {
             boolean equals1 = a1.values().size() == b1.values().size() &&
-                    McToAst.toAst(a1.locationFunction().function().value()).relaxedEquals(McToAst.toAst(b1.locationFunction().function().value()));
+                    McToAst.toAst(a1.locationFunction().function()).relaxedEquals(McToAst.toAst(b1.locationFunction().function()));
             if (!equals1) return false;
             int size = a1.values().size();
             for (int i = 0; i < size; i++) {
@@ -468,18 +471,18 @@ public class SplineAstNode implements AstNode {
         }
     }
 
-    private static int deepHashcode(Spline<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> a) {
-        if (a instanceof Spline.FixedFloatFunction<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> a1) {
+    private static int deepHashcode(Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper> a) {
+        if (a instanceof Spline.FixedFloatFunction<DensityFunctionTypes.Spline.DensityFunctionWrapper> a1) {
             return Float.hashCode(a1.value());
-        } else if (a instanceof Spline.Implementation<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> a1) {
+        } else if (a instanceof Spline.Implementation<DensityFunctionTypes.Spline.DensityFunctionWrapper> a1) {
             int result = 1;
 
             result = 31 * result + Arrays.hashCode(a1.derivatives());
             result = 31 * result + Arrays.hashCode(a1.locations());
-            for (Spline<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> spline : a1.values()) {
+            for (Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper> spline : a1.values()) {
                 result = 31 * result + deepHashcode(spline);
             }
-            result = 31 * result + McToAst.toAst(a1.locationFunction().function().value()).hashCode();
+            result = 31 * result + McToAst.toAst(a1.locationFunction().function()).hashCode();
 
             return result;
         } else {
@@ -487,16 +490,16 @@ public class SplineAstNode implements AstNode {
         }
     }
 
-    private static int deepRelaxedHashcode(Spline<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> a) {
-        if (a instanceof Spline.FixedFloatFunction<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> a1) {
+    private static int deepRelaxedHashcode(Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper> a) {
+        if (a instanceof Spline.FixedFloatFunction<DensityFunctionTypes.Spline.DensityFunctionWrapper> a1) {
             return Float.hashCode(a1.value());
-        } else if (a instanceof Spline.Implementation<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> a1) {
+        } else if (a instanceof Spline.Implementation<DensityFunctionTypes.Spline.DensityFunctionWrapper> a1) {
             int result = 1;
 
-            for (Spline<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> spline : a1.values()) {
+            for (Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper> spline : a1.values()) {
                 result = 31 * result + deepRelaxedHashcode(spline);
             }
-            result = 31 * result + McToAst.toAst(a1.locationFunction().function().value()).relaxedHashCode();
+            result = 31 * result + McToAst.toAst(a1.locationFunction().function()).relaxedHashCode();
 
             return result;
         } else {

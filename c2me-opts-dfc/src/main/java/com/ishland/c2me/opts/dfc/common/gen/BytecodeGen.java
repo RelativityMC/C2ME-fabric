@@ -318,7 +318,7 @@ public class BytecodeGen {
         private int methodIdx = 0;
         private final Object2ReferenceOpenHashMap<AstNode, String> singleMethods = new Object2ReferenceOpenHashMap<>();
         private final Object2ReferenceOpenHashMap<AstNode, String> multiMethods = new Object2ReferenceOpenHashMap<>();
-        private final Object2ReferenceOpenHashMap<Spline<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper>, String> splineMethods = new Object2ReferenceOpenHashMap<>();
+        private final Object2ReferenceOpenHashMap<Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper>, String> splineMethods = new Object2ReferenceOpenHashMap<>();
         private final ObjectOpenHashSet<String> postProcessMethods = new ObjectOpenHashSet<>();
         private final Reference2ObjectOpenHashMap<Object, FieldRecord> args = new Reference2ObjectOpenHashMap<>();
 
@@ -438,11 +438,11 @@ public class BytecodeGen {
             adapter.visitMaxs(0, 0);
         }
 
-        public String getCachedSplineMethod(Spline<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> spline) {
+        public String getCachedSplineMethod(Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper> spline) {
             return this.splineMethods.get(spline);
         }
 
-        public void cacheSplineMethod(Spline<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> spline, String method) {
+        public void cacheSplineMethod(Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper> spline, String method) {
             this.splineMethods.put(spline, method);
         }
 

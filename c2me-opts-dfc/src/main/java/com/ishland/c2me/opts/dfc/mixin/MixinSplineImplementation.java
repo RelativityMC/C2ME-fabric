@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Objects;
 
 @Mixin(Spline.Implementation.class)
-public abstract class MixinSplineImplementation<C, I extends ToFloatFunction<C>> {
+public abstract class MixinSplineImplementation<I extends ToFloatFunction<?>> {
 
     /**
      * @author ishland
@@ -47,42 +47,15 @@ public abstract class MixinSplineImplementation<C, I extends ToFloatFunction<C>>
         throw new AbstractMethodError();
     }
 
-    @Shadow @Final private List<Spline<C, I>> values;
+    @Shadow @Final private List<Spline<I>> values;
 
     @Shadow @Final private float[] derivatives;
-
-    /**
-     * @author ishland
-     * @reason simplify method a bit
-     */
-    @Overwrite
-    public float apply(C x) {
-        float point = this.locationFunction.apply(x);
-        int rangeForLocation = findRangeForLocation(this.locations, point);
-        int last = this.locations.length - 1;
-        if (rangeForLocation < 0) {
-            return sampleOutsideRange(point, this.locations, this.values.get(0).apply(x), this.derivatives, 0);
-        } else if (rangeForLocation == last) {
-            return sampleOutsideRange(point, this.locations, this.values.get(last).apply(x), this.derivatives, last);
-        } else {
-            float loc0 = this.locations[rangeForLocation];
-            float loc1 = this.locations[rangeForLocation + 1];
-            float locDist = loc1 - loc0;
-            float k = (point - loc0) / locDist;
-            float n = this.values.get(rangeForLocation).apply(x);
-            float o = this.values.get(rangeForLocation + 1).apply(x);
-            float onDist = o - n;
-            float p = this.derivatives[rangeForLocation] * locDist - onDist;
-            float q = -this.derivatives[rangeForLocation + 1] * locDist + onDist;
-            return MathHelper.lerp(k, n, o) + k * (1.0F - k) * MathHelper.lerp(k, p, q);
-        }
-    }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Spline.Implementation<?, ?> that = (Spline.Implementation<?, ?>) o;
+        Spline.Implementation<?> that = (Spline.Implementation<?>) o;
         return Objects.equals(locationFunction, that.locationFunction()) && Arrays.equals(locations, that.locations()) && Objects.equals(values, that.values()) && Arrays.equals(derivatives, that.derivatives());
     }
 
