@@ -32,7 +32,7 @@ public class SplineAstNode implements AstNode {
 
     public SplineAstNode(Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper> spline) {
         this.spline = spline;
-        this.applier = Spline.method_1_3942(spline);
+        this.applier = Spline.toFunction(spline);
     }
 
     @Override
