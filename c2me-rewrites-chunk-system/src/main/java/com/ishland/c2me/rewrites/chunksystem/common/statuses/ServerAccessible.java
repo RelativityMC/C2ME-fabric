@@ -91,7 +91,7 @@ public class ServerAccessible extends NewChunkStatus {
                 return Completable.fromCompletionStage(future)
                         .observeOn(Schedulers.from(((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor()));
             } else {
-                LOGGER.warn("Entities for chunk {} is already loaded, for some reason", context.holder().getKey());
+                // entities can be already loaded because empty chunks
                 return Completable.complete();
             }
         });
