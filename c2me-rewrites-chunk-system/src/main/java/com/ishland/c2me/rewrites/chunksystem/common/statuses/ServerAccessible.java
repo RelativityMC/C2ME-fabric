@@ -3,6 +3,8 @@ package com.ishland.c2me.rewrites.chunksystem.common.statuses;
 import com.google.common.base.Preconditions;
 import com.ishland.c2me.base.common.config.ModStatuses;
 import com.ishland.c2me.base.common.threadstate.ThreadInstrumentation;
+import com.ishland.c2me.base.mixin.access.IServerEntityManager;
+import com.ishland.c2me.base.mixin.access.IServerWorld;
 import com.ishland.c2me.base.mixin.access.IThreadedAnvilChunkStorage;
 import com.ishland.c2me.base.mixin.access.IWorldChunk;
 import com.ishland.c2me.rewrites.chunksystem.common.ChunkLoadingContext;
@@ -10,6 +12,7 @@ import com.ishland.c2me.rewrites.chunksystem.common.ChunkState;
 import com.ishland.c2me.rewrites.chunksystem.common.Config;
 import com.ishland.c2me.rewrites.chunksystem.common.NewChunkStatus;
 import com.ishland.c2me.rewrites.chunksystem.common.compat.lithium.LithiumChunkStatusTrackerInvoker;
+import com.ishland.c2me.rewrites.chunksystem.common.ducks.SignallingServerEntityManager;
 import com.ishland.c2me.rewrites.chunksystem.common.ducks.WorldChunkExtension;
 import com.ishland.c2me.rewrites.chunksystem.common.fapi.LifecycleEventInvoker;
 import com.ishland.c2me.rewrites.chunksystem.common.threadstate.ChunkTaskWork;
@@ -17,9 +20,11 @@ import com.ishland.flowsched.scheduler.Cancellable;
 import com.ishland.flowsched.util.Assertions;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.server.world.ChunkLevelType;
+import net.minecraft.server.world.ServerEntityManager;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.storage.NbtReadView;
 import net.minecraft.storage.ReadView;
@@ -31,6 +36,8 @@ import net.minecraft.world.chunk.WorldChunk;
 import net.minecraft.world.chunk.WrapperProtoChunk;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.CompletableFuture;
 
 public class ServerAccessible extends NewChunkStatus {
 
@@ -52,7 +59,8 @@ public class ServerAccessible extends NewChunkStatus {
             final WrapperProtoChunk wrapperProtoChunk = new WrapperProtoChunk(worldChunk, false);
             return Completable
                     .fromRunnable(() -> upgrade0(context, protoChunk, worldChunk, wrapperProtoChunk))
-                    .subscribeOn(Schedulers.from(((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor()));
+                    .subscribeOn(Schedulers.from(((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor()))
+                    .andThen(this.postProcessUpgrade(context));
         } else {
             return Completable
                     .fromRunnable(() -> {
@@ -61,8 +69,32 @@ public class ServerAccessible extends NewChunkStatus {
                         final WrapperProtoChunk wrapperProtoChunk = new WrapperProtoChunk(worldChunk, false);
                         upgrade0(context, protoChunk, worldChunk, wrapperProtoChunk);
                     })
-                    .subscribeOn(Schedulers.from(((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor()));
+                    .subscribeOn(Schedulers.from(((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor()))
+                    .andThen(this.postProcessUpgrade(context));
         }
+    }
+
+    private Completable postProcessUpgrade(ChunkLoadingContext context) {
+        if (!Config.syncEntityManager) {
+            return Completable.complete();
+        }
+        return Completable.defer(() -> {
+            Assertions.assertTrue(((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor().isOnThread());
+
+            ServerWorld world = ((IThreadedAnvilChunkStorage) context.tacs()).getWorld();
+            ServerEntityManager<Entity> entityManager = ((IServerWorld) world).getEntityManager();
+            long pos = context.holder().getKey().toLong();
+            ((IServerEntityManager) entityManager).invokeReadIfFresh(pos);
+            entityManager.tick();
+            CompletableFuture<Void> future = ((SignallingServerEntityManager) entityManager).c2me$getReadFuture(pos);
+            if (future != null) {
+                return Completable.fromCompletionStage(future)
+                        .observeOn(Schedulers.from(((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor()));
+            } else {
+                LOGGER.warn("Entities for chunk {} is already loaded, for some reason", context.holder().getKey());
+                return Completable.complete();
+            }
+        });
     }
 
     private void upgrade0(ChunkLoadingContext context, ProtoChunk protoChunk, WorldChunk worldChunk, WrapperProtoChunk newProtoChunk) {
@@ -96,7 +128,12 @@ public class ServerAccessible extends NewChunkStatus {
 
     @Override
     public Completable postUpgradeToThis(ChunkLoadingContext context) {
-        return Completable.complete();
+        return Completable.fromRunnable(() -> {
+            Assertions.assertTrue(((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor().isOnThread());
+            try (var ignored = ThreadInstrumentation.getCurrent().begin(new ChunkTaskWork(context, this, true))) {
+                ((IThreadedAnvilChunkStorage) context.tacs()).invokeOnChunkStatusChange(context.holder().getKey(), ChunkLevelType.FULL);
+            }
+        });
     }
 
     private static WorldChunk toFullChunk(ProtoChunk protoChunk, ServerWorld serverWorld) {
@@ -127,7 +164,7 @@ public class ServerAccessible extends NewChunkStatus {
         final Chunk chunk = state.chunk();
         Preconditions.checkState(chunk instanceof WorldChunk, "Chunk must be a full chunk");
         return Completable
-                .fromRunnable(() -> {
+                .defer(() -> {
                     Assertions.assertTrue(((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor().isOnThread());
 
                     try (var ignored = ThreadInstrumentation.getCurrent().begin(new ChunkTaskWork(context, this, false))) {
@@ -145,9 +182,36 @@ public class ServerAccessible extends NewChunkStatus {
                         worldChunk.setUnsavedListener(pos -> {
                         });
                         context.holder().getItem().set(new ChunkState(state.protoChunk(), state.protoChunk(), ChunkStatus.FULL));
+
+                        ((IThreadedAnvilChunkStorage) context.tacs()).invokeOnChunkStatusChange(context.holder().getKey(), ChunkLevelType.INACCESSIBLE);
                     }
+
+                    return this.postProcessDowngrade(context);
                 })
                 .subscribeOn(Schedulers.from(((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor()));
+    }
+
+    private Completable postProcessDowngrade(ChunkLoadingContext context) {
+        if (!Config.syncEntityManager) {
+            return Completable.complete();
+        }
+        return Completable
+                .defer(() -> {
+                    Assertions.assertTrue(((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor().isOnThread());
+
+                    ServerWorld world = ((IThreadedAnvilChunkStorage) context.tacs()).getWorld();
+                    ServerEntityManager<Entity> entityManager = ((IServerWorld) world).getEntityManager();
+                    long pos = context.holder().getKey().toLong();
+                    CompletableFuture<Void> future = ((SignallingServerEntityManager) entityManager).c2me$getUnloadFuture(pos);
+                    entityManager.tick();
+                    if (future != null) {
+                        return Completable.fromCompletionStage(future)
+                                .observeOn(Schedulers.from(((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor()));
+                    } else {
+                        LOGGER.warn("Entities for chunk {} is already unloaded, for some reason", context.holder().getKey());
+                        return Completable.complete();
+                    }
+                });
     }
 
     @Override

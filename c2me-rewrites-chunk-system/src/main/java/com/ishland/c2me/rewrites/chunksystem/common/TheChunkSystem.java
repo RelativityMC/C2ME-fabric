@@ -101,23 +101,11 @@ public class TheChunkSystem extends StatusAdvancingScheduler<ChunkPos, ChunkStat
     @Override
     protected void onItemUpgrade(ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> holder, ItemStatus<ChunkPos, ChunkState, ChunkLoadingContext> statusReached) {
         super.onItemUpgrade(holder, statusReached);
-        final NewChunkStatus statusReached1 = (NewChunkStatus) statusReached;
-        final NewChunkStatus prevStatus = (NewChunkStatus) statusReached.getPrev();
-        if (prevStatus.toChunkLevelType() != statusReached1.toChunkLevelType()) {
-            ((IThreadedAnvilChunkStorage) this.tacs).getMainThreadExecutor().execute(
-                    () -> ((IThreadedAnvilChunkStorage) this.tacs).invokeOnChunkStatusChange(holder.getKey(), statusReached1.toChunkLevelType()));
-        }
     }
 
     @Override
     protected void onItemDowngrade(ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> holder, ItemStatus<ChunkPos, ChunkState, ChunkLoadingContext> statusReached) {
         super.onItemDowngrade(holder, statusReached);
-        final NewChunkStatus statusReached1 = (NewChunkStatus) statusReached;
-        final NewChunkStatus prevStatus = (NewChunkStatus) statusReached.getNext();
-        if (prevStatus.toChunkLevelType() != statusReached1.toChunkLevelType()) {
-            ((IThreadedAnvilChunkStorage) this.tacs).getMainThreadExecutor().execute(
-                    () -> ((IThreadedAnvilChunkStorage) this.tacs).invokeOnChunkStatusChange(holder.getKey(), statusReached1.toChunkLevelType()));
-        }
     }
 
     public ChunkHolder vanillaIf$setLevel(long pos, int level) {

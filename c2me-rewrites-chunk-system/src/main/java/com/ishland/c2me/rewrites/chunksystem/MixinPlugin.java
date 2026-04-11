@@ -20,6 +20,9 @@ public class MixinPlugin extends ModuleMixinPlugin {
         if (mixinClassName.startsWith("com.ishland.c2me.rewrites.chunksystem.mixin.fluid_postprocessing"))
             return Config.fluidPostProcessingToScheduledTick;
 
+        if (mixinClassName.startsWith("com.ishland.c2me.rewrites.chunksystem.mixin.sync_entities."))
+            return Config.syncEntityManager;
+
         return true;
     }
 

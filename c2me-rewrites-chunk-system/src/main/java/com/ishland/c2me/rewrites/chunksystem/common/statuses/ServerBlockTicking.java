@@ -77,10 +77,10 @@ public class ServerBlockTicking extends NewChunkStatus {
                         chunk.runPostProcessing(serverWorld);
                         serverWorld.disableTickSchedulers(chunk);
                         sendChunkToPlayer(context);
-                        ((WorldChunkExtension) chunk).c2me$setBlockTicking(true);
                         if (ModStatuses.fabric_lifecycle_events_v1) {
                             LifecycleEventInvoker.invokeChunkLevelTypeChange(serverWorld, chunk, ChunkLevelType.FULL, ChunkLevelType.BLOCK_TICKING);
                         }
+                        ((WorldChunkExtension) chunk).c2me$setBlockTicking(true);
                     }
                 })
                 .subscribeOn(Schedulers.from(((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor()));
@@ -130,7 +130,12 @@ public class ServerBlockTicking extends NewChunkStatus {
 
     @Override
     public Completable postUpgradeToThis(ChunkLoadingContext context) {
-        return Completable.complete();
+        return Completable.fromRunnable(() -> {
+            Assertions.assertTrue(((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor().isOnThread());
+            try (var ignored = ThreadInstrumentation.getCurrent().begin(new ChunkTaskWork(context, this, true))) {
+                ((IThreadedAnvilChunkStorage) context.tacs()).invokeOnChunkStatusChange(context.holder().getKey(), ChunkLevelType.BLOCK_TICKING);
+            }
+        });
     }
 
     @Override
@@ -142,20 +147,19 @@ public class ServerBlockTicking extends NewChunkStatus {
     public Completable downgradeFromThis(ChunkLoadingContext context, Cancellable cancellable) {
         ServerWorld serverWorld = ((IThreadedAnvilChunkStorage) context.tacs()).getWorld();
         final WorldChunk chunk = (WorldChunk) context.holder().getItem().get().chunk();
-        ((WorldChunkExtension) chunk).c2me$setBlockTicking(false);
-        if (ModStatuses.fabric_lifecycle_events_v1 && LifecycleEventInvoker.needsInvokeChunkLevelTypeChange()) {
-            return Completable
-                    .fromRunnable(() -> {
-                        Assertions.assertTrue(((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor().isOnThread());
+        return Completable
+                .fromRunnable(() -> {
+                    Assertions.assertTrue(((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor().isOnThread());
 
-                        try (var ignored = ThreadInstrumentation.getCurrent().begin(new ChunkTaskWork(context, this, false))) {
+                    try (var ignored = ThreadInstrumentation.getCurrent().begin(new ChunkTaskWork(context, this, false))) {
+                        ((WorldChunkExtension) chunk).c2me$setBlockTicking(false);
+                        if (ModStatuses.fabric_lifecycle_events_v1) {
                             LifecycleEventInvoker.invokeChunkLevelTypeChange(serverWorld, chunk, ChunkLevelType.BLOCK_TICKING, ChunkLevelType.FULL);
                         }
-                    })
-                    .subscribeOn(Schedulers.from(((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor()));
-        }
-        return Completable.complete();
-        // TODO check if syncing is needed
+                        ((IThreadedAnvilChunkStorage) context.tacs()).invokeOnChunkStatusChange(context.holder().getKey(), ChunkLevelType.FULL);
+                    }
+                })
+                .subscribeOn(Schedulers.from(((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor()));
     }
 
     @Override

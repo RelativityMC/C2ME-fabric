@@ -35,6 +35,8 @@
     "access.IServerChunkManager",
     "access.IServerEntityManager",
     "access.IServerLightingProvider",
+    "access.IServerWorld",
+    "access.IServerWorldServerEntityHandler",
     "access.ISimpleRandom",
     "access.ISimpleTickScheduler",
     "access.ISimplexNoiseSampler",

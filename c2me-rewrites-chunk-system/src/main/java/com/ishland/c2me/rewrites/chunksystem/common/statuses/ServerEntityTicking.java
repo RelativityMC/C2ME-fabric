@@ -43,24 +43,29 @@ public class ServerEntityTicking extends NewChunkStatus {
 
     @Override
     public Completable upgradeToThis(ChunkLoadingContext context, Cancellable cancellable) {
-        if (ModStatuses.fabric_lifecycle_events_v1 && LifecycleEventInvoker.needsInvokeChunkLevelTypeChange()) {
-            return Completable.fromRunnable(() -> {
-                        Assertions.assertTrue(((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor().isOnThread());
+        return Completable
+                .fromRunnable(() -> {
+                    Assertions.assertTrue(((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor().isOnThread());
 
-                        try (var ignored = ThreadInstrumentation.getCurrent().begin(new ChunkTaskWork(context, this, true))) {
-                            ServerWorld serverWorld = ((IThreadedAnvilChunkStorage) context.tacs()).getWorld();
-                            final WorldChunk chunk = (WorldChunk) context.holder().getItem().get().chunk();
+                    try (var ignored = ThreadInstrumentation.getCurrent().begin(new ChunkTaskWork(context, this, true))) {
+                        ServerWorld serverWorld = ((IThreadedAnvilChunkStorage) context.tacs()).getWorld();
+                        final WorldChunk chunk = (WorldChunk) context.holder().getItem().get().chunk();
+                        if (ModStatuses.fabric_lifecycle_events_v1) {
                             LifecycleEventInvoker.invokeChunkLevelTypeChange(serverWorld, chunk, ChunkLevelType.BLOCK_TICKING, ChunkLevelType.ENTITY_TICKING);
                         }
-                    })
-                    .subscribeOn(Schedulers.from(((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor()));
-        }
-        return Completable.complete();
+                    }
+                })
+                .subscribeOn(Schedulers.from(((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor()));
     }
 
     @Override
     public Completable postUpgradeToThis(ChunkLoadingContext context) {
-        return Completable.complete();
+        return Completable.fromRunnable(() -> {
+            Assertions.assertTrue(((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor().isOnThread());
+            try (var ignored = ThreadInstrumentation.getCurrent().begin(new ChunkTaskWork(context, this, true))) {
+                ((IThreadedAnvilChunkStorage) context.tacs()).invokeOnChunkStatusChange(context.holder().getKey(), ChunkLevelType.ENTITY_TICKING);
+            }
+        });
     }
 
     @Override
@@ -70,20 +75,20 @@ public class ServerEntityTicking extends NewChunkStatus {
 
     @Override
     public Completable downgradeFromThis(ChunkLoadingContext context, Cancellable cancellable) {
-        if (ModStatuses.fabric_lifecycle_events_v1 && LifecycleEventInvoker.needsInvokeChunkLevelTypeChange()) {
-            return Completable
-                    .fromRunnable(() -> {
-                        Assertions.assertTrue(((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor().isOnThread());
+        return Completable
+                .fromRunnable(() -> {
+                    Assertions.assertTrue(((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor().isOnThread());
 
-                        try (var ignored = ThreadInstrumentation.getCurrent().begin(new ChunkTaskWork(context, this, false))) {
-                            ServerWorld serverWorld = ((IThreadedAnvilChunkStorage) context.tacs()).getWorld();
-                            final WorldChunk chunk = (WorldChunk) context.holder().getItem().get().chunk();
+                    try (var ignored = ThreadInstrumentation.getCurrent().begin(new ChunkTaskWork(context, this, false))) {
+                        ServerWorld serverWorld = ((IThreadedAnvilChunkStorage) context.tacs()).getWorld();
+                        final WorldChunk chunk = (WorldChunk) context.holder().getItem().get().chunk();
+                        if (ModStatuses.fabric_lifecycle_events_v1) {
                             LifecycleEventInvoker.invokeChunkLevelTypeChange(serverWorld, chunk, ChunkLevelType.ENTITY_TICKING, ChunkLevelType.BLOCK_TICKING);
                         }
-                    })
-                    .subscribeOn(Schedulers.from(((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor()));
-        }
-        return Completable.complete();
+                        ((IThreadedAnvilChunkStorage) context.tacs()).invokeOnChunkStatusChange(context.holder().getKey(), ChunkLevelType.BLOCK_TICKING);
+                    }
+                })
+                .subscribeOn(Schedulers.from(((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor()));
     }
 
     @Override

@@ -101,6 +101,16 @@ public class Config {
                     """)
             .getBoolean(false, false);
 
+    public static final boolean syncEntityManager = new ConfigSystem.ConfigAccessor()
+            .key("chunkSystem.syncEntityManager")
+            .comment("""
+                    Whether to synchronize entity chunks with normal chunks
+                    
+                    This option will mitigate the case where entity chunks are behind normal chunks,
+                    but this will cause additional synchronization overhead.
+                    """)
+            .getBoolean(true, false);
+
     public static void init() {
         // intentionally empty
     }

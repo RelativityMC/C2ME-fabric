@@ -11,4 +11,7 @@ public interface IServerEntityManager {
     @Invoker
     LongSet invokeGetLoadedChunks();
 
+    @Invoker
+    void invokeReadIfFresh(long chunkPos);
+
 }
