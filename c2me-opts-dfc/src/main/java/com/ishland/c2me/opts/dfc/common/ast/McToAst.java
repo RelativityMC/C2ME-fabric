@@ -99,7 +99,7 @@ public class McToAst {
             case DensityFunctionTypes.ShiftB f -> new DFTShiftBNode(f.offsetNoise());
             case DensityFunctionTypes.YClampedGradient f -> new YClampedGradientNode(f.fromY(), f.toY(), f.fromValue(), f.toValue());
             case DensityFunctionTypes.WeirdScaledSampler f -> new DFTWeirdScaledSamplerNode(toAst(f.input()), f.noise(), f.rarityValueMapper());
-            case DensityFunctionTypes.Spline f -> new SplineAstNode(f.method_1_4461());
+            case DensityFunctionTypes.Spline f -> new SplineAstNode(f.getSpline());
             case DensityFunctionTypes.FindTopSurface f -> new FindTopSurfaceNode(toAst(f.density()), toAst(f.upperBound()), new ConstantNode(f.lowerBound()), f.cellHeight());
 
             default -> {

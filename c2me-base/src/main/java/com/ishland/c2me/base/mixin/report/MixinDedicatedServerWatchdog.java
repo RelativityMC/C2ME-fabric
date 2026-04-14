@@ -13,10 +13,8 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import java.lang.management.ThreadInfo;
-import java.lang.management.ThreadMXBean;
 import java.util.Map;
 
 @Mixin(DedicatedServerWatchdog.class)
@@ -37,9 +35,9 @@ public class MixinDedicatedServerWatchdog {
         }
     }
 
-    @Inject(method = "createCrashReport", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/crash/CrashReport;addElement(Ljava/lang/String;)Lnet/minecraft/util/crash/CrashReportSection;", ordinal = 0), locals = LocalCapture.CAPTURE_FAILHARD)
-    private static void addInstrumentationData(String message, long threadId, CallbackInfoReturnable<CrashReport> cir, ThreadMXBean threadMXBean, ThreadInfo[] threadInfos, StringBuilder stringBuilder, Error error, CrashReport crashReport) {
-        CrashReportSection section = crashReport.addElement("Thread trace dump (obtained on a best-effort basis)");
+    @Inject(method = "createCrashReport", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/crash/CrashReport;addElement(Ljava/lang/String;)Lnet/minecraft/util/crash/CrashReportSection;", ordinal = 0))
+    private static void addInstrumentationData(String message, long threadId, CallbackInfoReturnable<CrashReport> cir, @Local CrashReport report) {
+        CrashReportSection section = report.addElement("Thread trace dump (obtained on a best-effort basis)");
         try {
             for (Map.Entry<Thread, ThreadState> entry : ThreadInstrumentation.entrySet()) {
                 try {
