@@ -14,7 +14,6 @@
     "predicates.MixinAnyOfBlockPredicate",
     "predicates.MixinCombinedBlockPredicate",
     "predicates.MixinOffsetPredicate",
-    "surfacebuilder.MixinMaterialRuleContext",
     "surfacebuilder.MixinMaterialRulesSequenceBlockStateRule",
     "surfacebuilder.MixinMaterialRulesSequenceMaterialRule"
   ]

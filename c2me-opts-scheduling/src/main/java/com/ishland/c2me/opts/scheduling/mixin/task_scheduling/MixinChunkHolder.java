@@ -29,14 +29,14 @@ public abstract class MixinChunkHolder implements DuckChunkHolder {
     private void onInit(ChunkPos pos, int level, HeightLimitView world, LightingProvider lightingProvider, ChunkHolder.LevelUpdateListener levelUpdateListener, ChunkHolder.PlayersWatchingChunkProvider playersWatchingChunkProvider, CallbackInfo ci) {
         c2me$dirtyLightSections = new AtomicIntegerArray[LightType.values().length];
         for (int i = 0; i < c2me$dirtyLightSections.length; i++) {
-            c2me$dirtyLightSections[i] = new AtomicIntegerArray(this.lightingProvider.getTopY() - this.lightingProvider.getBottomY() + 1);
+            c2me$dirtyLightSections[i] = new AtomicIntegerArray(this.lightingProvider.getMaxSectionY() - this.lightingProvider.getMinSectionY() + 1);
         }
     }
 
     @Override
     public void c2me$queueLightSectionDirty(LightType lightType, int sectionY) {
-        if (sectionY >= this.lightingProvider.getBottomY() && sectionY <= this.lightingProvider.getTopY())
-            this.c2me$dirtyLightSections[lightType.ordinal()].set(sectionY - this.lightingProvider.getBottomY(), 1);
+        if (sectionY >= this.lightingProvider.getMinSectionY() && sectionY <= this.lightingProvider.getMaxSectionY())
+            this.c2me$dirtyLightSections[lightType.ordinal()].set(sectionY - this.lightingProvider.getMinSectionY(), 1);
     }
 
     @Override
@@ -51,7 +51,7 @@ public abstract class MixinChunkHolder implements DuckChunkHolder {
         }
         boolean hasDirtyLight = false;
         AtomicIntegerArray[] me$dirtyLightSections = this.c2me$dirtyLightSections;
-        final int bottomY = this.lightingProvider.getBottomY();
+        final int bottomY = this.lightingProvider.getMinSectionY();
         for (int __i = 0, me$dirtyLightSectionsLength = me$dirtyLightSections.length; __i < me$dirtyLightSectionsLength; __i++) {
             AtomicIntegerArray section = me$dirtyLightSections[__i];
             LightType lightType = LightType.values()[__i];

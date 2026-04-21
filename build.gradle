@@ -1,6 +1,5 @@
 plugins {
     id 'java-library'
-    id 'net.fabricmc.fabric-loom-remap' version '1.15-SNAPSHOT' apply false
     id "me.champeau.jmh" version "0.7.2"
     id 'com.modrinth.minotaur' version '2.+' apply false
     id 'io.github.themrmilchmann.curseforge-publish' version '0.8.0' apply false
@@ -65,6 +64,22 @@ allprojects {
                 includeGroup "com.github.bawnorton.mixinsquared"
             }
         }
+        if (project.hasProperty("maven_use_gpr")) {
+            maven {
+                url = uri("https://maven.pkg.github.com/RelativityMC/yarn")
+                credentials {
+                    username = project.findProperty("gpr.maven.user") ?: System.getenv("GPR_MAVEN_USER")
+                    password = project.findProperty("gpr.maven.token") ?: System.getenv("GPR_MAVEN_TOKEN")
+                }
+            }
+            maven {
+                url = uri("https://maven.pkg.github.com/RelativityMC/intermediary")
+                credentials {
+                    username = project.findProperty("gpr.maven.user") ?: System.getenv("GPR_MAVEN_USER")
+                    password = project.findProperty("gpr.maven.token") ?: System.getenv("GPR_MAVEN_TOKEN")
+                }
+            }
+        }
     }
 }
 
@@ -93,7 +108,12 @@ configure (allprojects - project(":tests")) {
     }
 
     loom {
-        intermediaryUrl = 'https://repo.codemc.io/repository/relativitymc/org/relativitymc/intermediary/%1$s/intermediary-%1$s-v2.jar'
+//        intermediaryUrl = 'https://repo.codemc.io/repository/relativitymc/org/relativitymc/intermediary/%1$s/intermediary-%1$s-v2.jar'
+        setIntermediateMappingsProvider(com.ishland.c2me.gradle.MavenIntermediaryProvider.class) {
+            it.refreshDeps = loom.refreshDeps()
+            it.intermediaryUrl = 'https://repo.codemc.io/repository/relativitymc/org/relativitymc/intermediary/%1$s/intermediary-%1$s-v2.jar' // placeholder
+            it.intermediaryNotation = "org.relativitymc:intermediary:${minecraft_version}:v2"
+        }
         useIntermediateMappings = true
 
         def file = project(":c2me-base").file("src/main/resources/c2me-base.accesswidener")

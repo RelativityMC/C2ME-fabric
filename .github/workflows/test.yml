@@ -4,6 +4,9 @@ on:
   push: {}
   pull_request: {}
 
+permissions:
+  packages: read
+
 jobs:
   test:
     runs-on: ubuntu-24.04
@@ -42,3 +45,6 @@ jobs:
     - name: Test C2ME
       run: |
         ./gradlew clean ${{ matrix.testTask }}
+      env:
+        GPR_MAVEN_USER: ${{ github.actor }}
+        GPR_MAVEN_TOKEN: ${{ secrets.GITHUB_TOKEN }}

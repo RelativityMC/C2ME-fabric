@@ -28,7 +28,12 @@ allprojects {
     }
     loom {
         accessWidenerPath = project(":c2me-base").file("src/main/resources/c2me-base.accesswidener")
-        intermediaryUrl = 'https://repo.codemc.io/repository/relativitymc/org/relativitymc/intermediary/%1$s/intermediary-%1$s-v2.jar'
+//        intermediaryUrl = 'https://repo.codemc.io/repository/relativitymc/org/relativitymc/intermediary/%1$s/intermediary-%1$s-v2.jar'
+        setIntermediateMappingsProvider(com.ishland.c2me.gradle.MavenIntermediaryProvider.class) {
+            it.refreshDeps = loom.refreshDeps()
+            it.intermediaryUrl = 'https://repo.codemc.io/repository/relativitymc/org/relativitymc/intermediary/%1$s/intermediary-%1$s-v2.jar' // placeholder
+            it.intermediaryNotation = "org.relativitymc:intermediary:${minecraft_version}:v2"
+        }
     }
     afterEvaluate {
         migrateMappings.configure {

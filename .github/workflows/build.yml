@@ -4,6 +4,9 @@ on:
   push: {}
   pull_request: {}
 
+permissions:
+  packages: read
+
 jobs:
   build:
 
@@ -38,6 +41,9 @@ jobs:
     - name: Build C2ME
       run: |
         ./gradlew clean build --stacktrace
+      env:
+        GPR_MAVEN_USER: ${{ github.actor }}
+        GPR_MAVEN_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: upload to modrinth and curseforge
       run: ./gradlew modrinth publishMainPublicationToCurseForge
@@ -46,6 +52,8 @@ jobs:
         MODRINTH_TOKEN: ${{ secrets.MODRINTH_UPLOAD_TOKEN }}
         CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_API_TOKEN }}
         GITHUB_EVENT_RAW_PATH: ${{ github.event_path }}
+        GPR_MAVEN_USER: ${{ github.actor }}
+        GPR_MAVEN_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       continue-on-error: true
 
     - name: Upload Artifact
