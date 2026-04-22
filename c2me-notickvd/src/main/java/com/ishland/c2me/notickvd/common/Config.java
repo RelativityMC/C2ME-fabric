@@ -29,6 +29,16 @@ public class Config {
                     " This will send chunks twice increasing network load")
             .getBoolean(false, true);
 
+    public static final long chunkSendingSpeedMultiplierPercentage = new ConfigSystem.ConfigAccessor()
+            .key("noTickViewDistance.chunkSendingSpeedMultiplierPercentage")
+            .comment("""
+                    Applies a multiplier *in percentage* to the target chunk sending rate from vanilla
+                    Setting this to 0 disables rate limiting
+                    
+                    Defaults to 200, which is 200%
+                    """)
+            .getLong(200L, 100L, ConfigSystem.LongChecks.NON_NEGATIVE_VALUE_ONLY);
+
     public static final int maxViewDistance = 1 << 16;
 
     public static void init() {

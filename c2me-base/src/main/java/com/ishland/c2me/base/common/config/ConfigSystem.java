@@ -315,7 +315,14 @@ public class ConfigSystem {
             public boolean test(long value) {
                 return value >= 1;
             }
-        };
+        },
+        NON_NEGATIVE_VALUE_ONLY() {
+            @Override
+            public boolean test(long value) {
+                return value >= 0;
+            }
+        },
+        ;
 
         public abstract boolean test(long value);
 
