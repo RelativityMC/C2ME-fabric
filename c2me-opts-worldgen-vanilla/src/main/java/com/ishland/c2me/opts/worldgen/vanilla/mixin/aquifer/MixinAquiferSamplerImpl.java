@@ -28,21 +28,21 @@ public abstract class MixinAquiferSamplerImpl {
 
     @Shadow
     @Final
-    private int startX;
+    private int startCellX;
 
     @Shadow
     @Final
-    private int startY;
+    private int startCellY;
 
     @Shadow
     @Final
-    private int startZ;
+    private int startCellZ;
 
     @Shadow
     @Final
-    private int sizeZ;
+    private int cellCountZ;
 
-    @Shadow @Final private int sizeX;
+    @Shadow @Final private int cellCountX;
 
     @Shadow @Final private long[] blockPositions;
 
@@ -78,7 +78,7 @@ public abstract class MixinAquiferSamplerImpl {
 
     @Shadow
     @Final
-    private static double NEEDS_FLUID_TICK_DISTANCE_THRESHOLD;
+    private static double FLUID_TICK_DENSITY_FACTOR_THRESHOLD;
 
     @Shadow
     private boolean needsFluidTick;
@@ -90,13 +90,11 @@ public abstract class MixinAquiferSamplerImpl {
     @Shadow protected abstract int index(int x, int y, int z);
 
     @Shadow
-    protected static double maxDistance(int i, int a) {
+    protected static double densityFactor(int i, int a) {
         throw new AbstractMethodError();
     }
 
     @Shadow protected abstract int getNoiseBasedFluidLevel(int blockX, int blockY, int blockZ, int surfaceHeightEstimate);
-
-    @Shadow protected abstract AquiferSampler.FluidLevel getFluidLevel(int blockX, int blockY, int blockZ);
 
     @Shadow @Final private DensityFunction erosionDensityFunction;
 
@@ -104,7 +102,7 @@ public abstract class MixinAquiferSamplerImpl {
 
     @Shadow protected abstract AquiferSampler.FluidLevel getWaterLevel(int i);
 
-    @Shadow @Final private int field_61452;
+    @Shadow @Final private int maxY;
     @Unique
     private int c2me$packed1;
     @Unique
@@ -123,22 +121,22 @@ public abstract class MixinAquiferSamplerImpl {
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(CallbackInfo info) {
         // preload position cache
-        if (this.blockPositions.length % (this.sizeX * this.sizeZ) != 0) {
+        if (this.blockPositions.length % (this.cellCountX * this.cellCountZ) != 0) {
             throw new AssertionError("Array length");
         }
 
-        int sizeY = this.blockPositions.length / (this.sizeX * this.sizeZ);
+        int sizeY = this.blockPositions.length / (this.cellCountX * this.cellCountZ);
 
         this.c2me$packedBlockPositions = new short[this.blockPositions.length];
 
         final Random random = RandomUtils.getRandom(this.randomDeriver);
         // index: y, z, x
         for (int y = 0; y < sizeY; y++) {
-            for (int z = 0; z < this.sizeZ; z++) {
-                for (int x = 0; x < this.sizeX; x++) {
-                    final int x1 = x + this.startX;
-                    final int y1 = y + this.startY;
-                    final int z1 = z + this.startZ;
+            for (int z = 0; z < this.cellCountZ; z++) {
+                for (int x = 0; x < this.cellCountX; x++) {
+                    final int x1 = x + this.startCellX;
+                    final int y1 = y + this.startCellY;
+                    final int z1 = z + this.startCellZ;
                     RandomUtils.derive(this.randomDeriver, random, x1, y1, z1);
                     int r0 = random.nextInt(10);
                     int r1 = random.nextInt(9);
@@ -197,7 +195,7 @@ public abstract class MixinAquiferSamplerImpl {
             return null;
         } else {
             AquiferSampler.FluidLevel fluidLevel = this.fluidLevelSampler.getFluidLevel(i, j, k);
-            if (j > this.field_61452) {
+            if (j > this.maxY) {
                 this.needsFluidTick = false;
                 return fluidLevel.getBlockState(j);
             } if (fluidLevel.getBlockState(j).is(Blocks.LAVA)) {
@@ -213,10 +211,10 @@ public abstract class MixinAquiferSamplerImpl {
     @Unique
     private @Nullable BlockState aquiferExtracted$applyPost(DensityFunction.NoisePos pos, double density, int j, int i, int k) {
         AquiferSampler.FluidLevel fluidLevel2 = this.c2me$getWaterLevelIndexed(c2me$unpackPackedPosIdx(this.c2me$packed1));
-        double d = maxDistance(c2me$unpackPackedDist(this.c2me$packed1), c2me$unpackPackedDist(this.c2me$packed2));
+        double d = densityFactor(c2me$unpackPackedDist(this.c2me$packed1), c2me$unpackPackedDist(this.c2me$packed2));
         BlockState blockState = fluidLevel2.getBlockState(j);
         if (d <= 0.0) {
-            if (d >= NEEDS_FLUID_TICK_DISTANCE_THRESHOLD) {
+            if (d >= FLUID_TICK_DENSITY_FACTOR_THRESHOLD) {
                 AquiferSampler.FluidLevel fluidLevel3 = this.c2me$getWaterLevelIndexed(c2me$unpackPackedPosIdx(this.c2me$packed2));
                 this.needsFluidTick = !fluidLevel2.equals(fluidLevel3);
             } else {
@@ -247,19 +245,19 @@ public abstract class MixinAquiferSamplerImpl {
         int dist2 = c2me$unpackPackedDist(this.c2me$packed2);
         int dist3 = c2me$unpackPackedDist(this.c2me$packed3);
         int dist4 = c2me$unpackPackedDist(this.c2me$packed4);
-        double f = maxDistance(dist1, dist3);
+        double f = densityFactor(dist1, dist3);
         if (aquiferExtracted$extractedCheckFG(pos, density, d, fluidLevel2, f, fluidLevel4)) return null;
 
-        double h = maxDistance(dist2, dist3);
+        double h = densityFactor(dist2, dist3);
         if (aquiferExtracted$extractedCheckFG(pos, density, d, fluidLevel3, h, fluidLevel4)) return null;
 
 //        this.needsFluidTick = true;
         boolean bl = !fluidLevel2.equals(fluidLevel3);
-        boolean bl2 = h >= NEEDS_FLUID_TICK_DISTANCE_THRESHOLD && !fluidLevel3.equals(fluidLevel4);
-        boolean bl3 = f >= NEEDS_FLUID_TICK_DISTANCE_THRESHOLD && !fluidLevel2.equals(fluidLevel4);
+        boolean bl2 = h >= FLUID_TICK_DENSITY_FACTOR_THRESHOLD && !fluidLevel3.equals(fluidLevel4);
+        boolean bl3 = f >= FLUID_TICK_DENSITY_FACTOR_THRESHOLD && !fluidLevel2.equals(fluidLevel4);
         if (!bl && !bl2 && !bl3) {
-            this.needsFluidTick = f >= NEEDS_FLUID_TICK_DISTANCE_THRESHOLD
-                    && maxDistance(dist1, dist4) >= NEEDS_FLUID_TICK_DISTANCE_THRESHOLD
+            this.needsFluidTick = f >= FLUID_TICK_DENSITY_FACTOR_THRESHOLD
+                    && densityFactor(dist1, dist4) >= FLUID_TICK_DENSITY_FACTOR_THRESHOLD
                     && !fluidLevel2.equals(this.c2me$getWaterLevelIndexed(c2me$unpackPackedPosIdx(this.c2me$packed4)));
         } else {
             this.needsFluidTick = true;
@@ -387,7 +385,7 @@ public abstract class MixinAquiferSamplerImpl {
         } else if (d > 0.0) {
             i = this.getNoiseBasedFluidLevel(blockX, blockY, blockZ, surfaceHeightEstimate);
         } else {
-            i = DimensionType.field_35479;
+            i = DimensionType.BELOW_MIN_HEIGHT;
         }
 
         return i;
@@ -508,7 +506,7 @@ public abstract class MixinAquiferSamplerImpl {
     @Overwrite
     private BlockState getFluidBlockState(int blockX, int blockY, int blockZ, AquiferSampler.FluidLevel defaultFluidLevel, int fluidLevel) {
         BlockState blockState = defaultFluidLevel.state;
-        if (fluidLevel <= -10 && fluidLevel != DimensionType.field_35479 && defaultFluidLevel.state != Blocks.LAVA.getDefaultState()) {
+        if (fluidLevel <= -10 && fluidLevel != DimensionType.BELOW_MIN_HEIGHT && defaultFluidLevel.state != Blocks.LAVA.getDefaultState()) {
             int k = blockX >> 6; // floorDiv(blockX, 64)
             int l = Math.floorDiv(blockY, 40);
             int m = blockZ >> 6; // floorDiv(blockZ, 64)

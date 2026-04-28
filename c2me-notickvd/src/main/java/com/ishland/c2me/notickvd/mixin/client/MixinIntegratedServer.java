@@ -5,6 +5,7 @@ import net.minecraft.resource.ResourcePackManager;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.SaveLoader;
 import net.minecraft.server.integrated.IntegratedServer;
+import net.minecraft.server.dedicated.management.listener.CompositeManagementListener;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.ApiServices;
 import net.minecraft.world.chunk.ChunkLoadProgress;
@@ -21,8 +22,8 @@ import java.util.Optional;
 @Mixin(IntegratedServer.class)
 public abstract class MixinIntegratedServer extends MinecraftServer {
 
-    public MixinIntegratedServer(Thread serverThread, LevelStorage.Session session, ResourcePackManager dataPackManager, SaveLoader saveLoader, Optional<GameRules> gameRules, Proxy proxy, DataFixer fixerUpper, ApiServices apiServices, ChunkLoadProgress chunkLoadProgress, boolean propagatesCrashes) {
-        super(serverThread, session, dataPackManager, saveLoader, gameRules, proxy, fixerUpper, apiServices, chunkLoadProgress, propagatesCrashes);
+    public MixinIntegratedServer(Thread serverThread, LevelStorage.Session session, ResourcePackManager dataPackManager, SaveLoader saveLoader, Optional<GameRules> gameRules, Proxy proxy, DataFixer fixerUpper, ApiServices apiServices, ChunkLoadProgress chunkLoadProgress, boolean propagatesCrashes, CompositeManagementListener compositeManagementListener) {
+        super(serverThread, session, dataPackManager, saveLoader, gameRules, proxy, fixerUpper, apiServices, chunkLoadProgress, propagatesCrashes, compositeManagementListener);
     }
 
     @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/integrated/IntegratedServer;incrementTotalWorldTimeStat()V", shift = At.Shift.AFTER))

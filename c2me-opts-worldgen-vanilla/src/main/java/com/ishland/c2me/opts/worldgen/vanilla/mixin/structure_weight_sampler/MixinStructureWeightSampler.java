@@ -16,16 +16,16 @@ import java.util.List;
 @Mixin(StructureWeightSampler.class)
 public abstract class MixinStructureWeightSampler {
 
-    @Shadow @Final private List<StructureWeightSampler.Piece> field_61465;
+    @Shadow @Final private List<StructureWeightSampler.Piece> pieces;
 
-    @Shadow @Final private List<JigsawJunction> field_61466;
+    @Shadow @Final private List<JigsawJunction> junctions;
 
     @Shadow
     private static double getStructureWeight(int x, int y, int z, int yy) {
         throw new AbstractMethodError();
     }
 
-    @Shadow @Final private @Nullable BlockBox field_61467;
+    @Shadow @Final private @Nullable BlockBox boundingBox;
     @Unique
     private StructureWeightSampler.Piece[] c2me$pieceArray;
 
@@ -34,8 +34,8 @@ public abstract class MixinStructureWeightSampler {
 
     @Unique
     private void c2me$initArrays() {
-        this.c2me$pieceArray = this.field_61465.toArray(StructureWeightSampler.Piece[]::new);
-        this.c2me$junctionArray = this.field_61466.toArray(JigsawJunction[]::new);
+        this.c2me$pieceArray = this.pieces.toArray(StructureWeightSampler.Piece[]::new);
+        this.c2me$junctionArray = this.junctions.toArray(JigsawJunction[]::new);
     }
 
     /**
@@ -44,7 +44,7 @@ public abstract class MixinStructureWeightSampler {
      */
     @Overwrite
     public double sample(DensityFunction.NoisePos pos) {
-        if (this.field_61467 == null) {
+        if (this.boundingBox == null) {
             return 0.0;
         }
 
@@ -52,7 +52,7 @@ public abstract class MixinStructureWeightSampler {
         int j = pos.blockY();
         int k = pos.blockZ();
 
-        if (!this.field_61467.contains(i, j, k)) {
+        if (!this.boundingBox.contains(i, j, k)) {
             return 0.0;
         }
 
