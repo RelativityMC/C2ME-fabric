@@ -12,6 +12,7 @@ import net.minecraft.fluid.FlowableFluid;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.fluid.Fluids;
+import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.world.BlockView;
@@ -23,12 +24,22 @@ public class FlowableFluidUtils {
         if (!fluidState.isStill()) {
             return true;
         }
-        return canFlowNormally(world, pos, blockState, fluidState);
+        if (fluidState.isEmpty()) {
+            return false;
+        }
+        return canFormBubbleColumn(world, pos, blockState, fluidState) || canFlowNormally(world, pos, blockState, fluidState);
+    }
+
+    private static boolean canFormBubbleColumn(WorldView world, BlockPos pos, BlockState blockState, FluidState fluidState) {
+        BlockPos belowPos = pos.down();
+        BlockState belowBlockState = world.getBlockState(belowPos);
+        if (belowBlockState.isIn(BlockTags.ENABLES_BUBBLE_COLUMN_DRAG_DOWN) || belowBlockState.isIn(BlockTags.ENABLES_BUBBLE_COLUMN_PUSH_UP)) {
+            return true;
+        }
+        return false;
     }
 
     private static boolean canFlowNormally(WorldView world, BlockPos pos, BlockState blockState, FluidState fluidState) {
-        if (fluidState.isEmpty()) return false;
-
         BlockPos belowPos = pos.down();
         BlockState belowBlockState = world.getBlockState(belowPos);
         FluidState belowFluidState = belowBlockState.getFluidState();
