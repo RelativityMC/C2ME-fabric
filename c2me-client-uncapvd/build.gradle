@@ -2,3 +2,17 @@ moduleDependencies(project, [
         "c2me-base",
 ])
 
+repositories {
+    maven {
+        name = "CaffeineMC snapshots"
+        url = "https://maven.caffeinemc.net/snapshots"
+    }
+    maven {
+        name = "CaffeineMC releases"
+        url = "https://maven.caffeinemc.net/releases"
+    }
+}
+
+dependencies {
+    modImplementation "net.caffeinemc:sodium-fabric-api:0.8.7+mc1.21.11"
+}

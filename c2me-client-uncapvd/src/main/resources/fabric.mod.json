@@ -16,6 +16,9 @@
   "entrypoints": {
     "client": [
       "com.ishland.c2me.client.uncapvd.common.UncapVDInitializer"
+    ],
+    "sodium:config_api_user": [
+      "com.ishland.c2me.client.uncapvd.common.SodiumConfigBuilder"
     ]
   },
 
