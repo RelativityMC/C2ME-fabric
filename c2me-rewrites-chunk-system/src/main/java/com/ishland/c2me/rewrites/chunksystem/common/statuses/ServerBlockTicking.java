@@ -89,7 +89,7 @@ public class ServerBlockTicking extends NewChunkStatus {
     private static void filterFluidTicks(ChunkLoadingContext context) {
         final WorldChunk chunk = (WorldChunk) context.holder().getItem().get().chunk();
 
-        Supplier<ChunkRegion> chunkRegionSupplier = Suppliers.memoize(() -> new ChunkRegion(((IThreadedAnvilChunkStorage) context.tacs()).getWorld(), context.chunks(), ChunkGenerationSteps.GENERATION.get(ChunkStatus.LIGHT), chunk));
+        Supplier<ChunkRegion> chunkRegionSupplier = Suppliers.memoize(() -> new ChunkRegion(((IThreadedAnvilChunkStorage) context.tacs()).getWorld(), context.chunks(), ChunkGenerationSteps.GENERATION.get(ChunkStatus.FEATURES), chunk));
 
         int total = 0;
         int eliminated = 0;
