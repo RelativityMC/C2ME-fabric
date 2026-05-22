@@ -21,16 +21,6 @@ jobs:
         java-version: 17
         java-package: jdk
         
-    - uses: actions/cache@v2
-      with:
-        path: |
-          ~/.gradle/caches
-          ~/.gradle/wrapper
-          ./.gradle/loom-cache
-        key: ${{ runner.os }}-gradle4-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-        restore-keys: |
-          ${{ runner.os }}-gradle4-
-        
     - name: Build C2ME
       run: |
         ./gradlew clean build --stacktrace
