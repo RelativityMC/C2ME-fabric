@@ -13,7 +13,7 @@ public class SimplifiedAtomicSimpleRandom extends CheckedRandom { // TODO [Vanil
 
     public SimplifiedAtomicSimpleRandom(long seed) {
         super(0);
-        this.seed = seed;
+        this.setSeed(seed);
     }
 
     @Override
