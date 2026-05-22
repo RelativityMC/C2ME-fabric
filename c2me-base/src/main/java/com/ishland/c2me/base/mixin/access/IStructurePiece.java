@@ -2,8 +2,8 @@ package com.ishland.c2me.base.mixin.access;
 
 import net.minecraft.structure.StructurePiece;
 import net.minecraft.structure.StructurePieceType;
-import net.minecraft.util.BlockMirror;
-import net.minecraft.util.BlockRotation;
+import net.minecraft.util.math.BlockMirror;
+import net.minecraft.util.math.BlockRotation;
 import net.minecraft.util.math.BlockBox;
 import net.minecraft.util.math.Direction;
 import org.spongepowered.asm.mixin.Mixin;
