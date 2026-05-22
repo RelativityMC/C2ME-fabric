@@ -23,22 +23,21 @@ public class Config {
                     """.formatted(C2MEConstants.EXT_RENDER_DISTANCE_ID, ModStatuses.fabric_networking_api_v1 ? "available" : "unavailable"))
             .getBoolean(true, false);
 
-    public static final boolean smoothChunkSendingRate = new ConfigSystem.ConfigAccessor()
-            .key("noTickViewDistance.smoothChunkSendingRate")
-            .comment("""
-                    Whether to attempt to smooth out chunk sending rate
-                    
-                    Due to the nature of chunk loading and generation, chunks reach full status in bursts,
-                    which can cause frame time stability if the server also delivers chunks in a bursty way
-                    This config attempts to smooth out the bursty stream of chunks to help frame time stability
-                    """)
-            .getBoolean(true, false);
-
     public static final boolean ensureChunkCorrectness = new ConfigSystem.ConfigAccessor()
             .key("noTickViewDistance.ensureChunkCorrectness")
             .comment("Whether to ensure correct chunks within normal render distance \n" +
                     " This will send chunks twice increasing network load")
             .getBoolean(false, true);
+
+    public static final long chunkSendingSpeedMultiplierPercentage = new ConfigSystem.ConfigAccessor()
+            .key("noTickViewDistance.chunkSendingSpeedMultiplierPercentage")
+            .comment("""
+                    Applies a multiplier *in percentage* to the target chunk sending rate from vanilla
+                    Setting this to 0 disables rate limiting
+                    
+                    Defaults to 200, which is 200%
+                    """)
+            .getLong(200L, 100L, ConfigSystem.LongChecks.NON_NEGATIVE_VALUE_ONLY);
 
     public static final int maxViewDistance = 1 << 16;
 

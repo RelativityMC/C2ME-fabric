@@ -13,10 +13,6 @@ public class MixinPlugin extends ModuleMixinPlugin {
             return Config.enableExtRenderDistanceProtocol;
         }
 
-        if (mixinClassName.startsWith("com.ishland.c2me.notickvd.mixin.smooth_sending_rate.")) {
-            return Config.smoothChunkSendingRate;
-        }
-
         return true;
     }
 }
