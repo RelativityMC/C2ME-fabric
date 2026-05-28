@@ -1,10 +1,10 @@
 package com.ishland.c2me.base.mixin.access;
 
-import net.minecraft.util.collection.WeightedList;
+import net.minecraft.util.collection.ShufflingList;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Invoker;
 
-@Mixin(WeightedList.Entry.class)
+@Mixin(ShufflingList.Entry.class)
 public interface IWeightedListEntry {
 
     @Invoker
