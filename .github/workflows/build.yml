@@ -40,7 +40,7 @@ jobs:
         ./gradlew clean build --stacktrace
 
     - name: upload to modrinth and curseforge
-      run: ./gradlew modrinth publishMainPublicationToCurseForge
+      run: ./gradlew publishMods
       if: github.ref == 'refs/heads/dev/26.1.2'
       env:
         MODRINTH_TOKEN: ${{ secrets.MODRINTH_UPLOAD_TOKEN }}
