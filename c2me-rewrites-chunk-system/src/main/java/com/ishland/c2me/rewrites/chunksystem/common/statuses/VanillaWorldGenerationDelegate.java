@@ -1,3 +1,27 @@
+/*
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2021-2026 ishland
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 package com.ishland.c2me.rewrites.chunksystem.common.statuses;
 
 import com.ishland.c2me.base.common.scheduler.LockTokenImpl;
@@ -16,7 +40,9 @@ import com.ishland.flowsched.scheduler.KeyStatusPair;
 import io.reactivex.rxjava3.core.Completable;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
+import net.minecraft.util.collection.BoundedRegionArray;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.world.chunk.AbstractChunkHolder;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkGenerationContext;
 import net.minecraft.world.chunk.ChunkGenerationStep;
@@ -56,14 +82,18 @@ public class VanillaWorldGenerationDelegate extends NewChunkStatus {
         return deps.toArray(KeyStatusPair[]::new);
     }
 
-    private static <T> CompletableFuture<T> runTaskWithLock(ChunkPos target, int radius, SchedulingManager schedulingManager, Supplier<CompletableFuture<T>> action) {
-        ObjectArrayList<LockToken> lockTargets = new ObjectArrayList<>((2 * radius + 1) * (2 * radius + 1) + 1);
-        for (int x = target.x() - radius; x <= target.x() + radius; x++)
-            for (int z = target.z() - radius; z <= target.z() + radius; z++)
-                lockTargets.add(new LockTokenImpl(schedulingManager.getId(), ChunkPos.toLong(x, z), LockTokenImpl.Usage.WORLDGEN));
+    public static <T> CompletableFuture<T> runTaskWithLockRadius(ChunkPos target, int radius, SchedulingManager schedulingManager, Supplier<CompletableFuture<T>> action) {
+        return runTaskWithLockArea(target.x() - radius, target.z() - radius, radius * 2 + 1, radius * 2 + 1, schedulingManager, action);
+    }
+
+    public static <T> CompletableFuture<T> runTaskWithLockArea(int baseChunkX, int baseChunkZ, int sizeX, int sizeZ, SchedulingManager schedulingManager, Supplier<CompletableFuture<T>> action) {
+        ObjectArrayList<LockToken> lockTargets = new ObjectArrayList<>(sizeX * sizeZ + 1);
+        for (int dx = 0; dx < sizeX; dx++)
+            for (int dz = 0; dz < sizeZ; dz++)
+                lockTargets.add(new LockTokenImpl(schedulingManager.getId(), ChunkPos.toLong(baseChunkX + dx, baseChunkZ + dz), LockTokenImpl.Usage.WORLDGEN));
 
         final ScheduledTask<T> task = new ScheduledTask<>(
-                target.toLong(),
+                ChunkPos.toLong(baseChunkX, baseChunkZ),
                 action,
                 lockTargets.toArray(LockToken[]::new));
         schedulingManager.enqueue(task);
@@ -73,6 +103,8 @@ public class VanillaWorldGenerationDelegate extends NewChunkStatus {
     private final ChunkStatus status;
     private final KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] genDeps;
     private final KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] loadDeps;
+    private final int genDepsRadius;
+    private final int loadDepsRadius;
     @Nullable
     private final KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] toRemove;
     @Nullable
@@ -85,6 +117,8 @@ public class VanillaWorldGenerationDelegate extends NewChunkStatus {
         final ChunkGenerationStep loadStep = ChunkGenerationSteps.LOADING.get(status);
         this.genDeps = getDependencyFromStep(genStep);
         this.loadDeps = getDependencyFromStep(loadStep);
+        this.genDepsRadius = genStep.directDependencies().getMaxLevel();
+        this.loadDepsRadius = loadStep.directDependencies().getMaxLevel();
 
         if (this.genDeps.length != this.loadDeps.length) {
             ObjectOpenHashSet<KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>> toRemove = new ObjectOpenHashSet<>(genDeps);
@@ -118,10 +152,11 @@ public class VanillaWorldGenerationDelegate extends NewChunkStatus {
         final ChunkGenerationContext chunkGenerationContext = ((IThreadedAnvilChunkStorage) context.tacs()).getGenerationContext();
         Chunk chunk = state.chunk();
         if (chunk.getStatus().isAtLeast(status)) {
+            BoundedRegionArray<AbstractChunkHolder> boundedRegionArray = BoundedRegionArray.create(chunk.getPos().x(), chunk.getPos().z(), this.loadDepsRadius, (x, z) -> context.theChunkSystem().getHolder(new ChunkPos(x, z)).getUserData().get());
             try (var ignored = ThreadInstrumentation.getCurrent().begin(new ChunkTaskWork(context, this, true))) {
                 return Completable.defer(() -> Completable.fromCompletionStage(
                         ChunkGenerationSteps.LOADING.get(status)
-                                .run(((IThreadedAnvilChunkStorage) context.tacs()).getGenerationContext(), context.chunks(), chunk)
+                                .run(((IThreadedAnvilChunkStorage) context.tacs()).getGenerationContext(), boundedRegionArray, chunk)
                                 .whenComplete((chunk1, throwable) -> {
                                     if (chunk1 != null) {
                                         context.holder().getItem().set(new ChunkState(chunk1, (ProtoChunk) chunk1, this.status, chunk1 instanceof WrapperProtoChunk));
@@ -132,11 +167,13 @@ public class VanillaWorldGenerationDelegate extends NewChunkStatus {
         } else {
             final ChunkGenerationStep step = ChunkGenerationSteps.GENERATION.get(status);
 
+            BoundedRegionArray<AbstractChunkHolder> boundedRegionArray = BoundedRegionArray.create(chunk.getPos().x(), chunk.getPos().z(), this.genDepsRadius, (x, z) -> context.theChunkSystem().getHolder(new ChunkPos(x, z)).getUserData().get());
+
             int radius = Math.max(0, step.blockStateWriteRadius());
-            return Completable.defer(() -> Completable.fromCompletionStage(runTaskWithLock(chunk.getPos(), radius, context.schedulingManager(),
+            return Completable.defer(() -> Completable.fromCompletionStage(runTaskWithLockRadius(chunk.getPos(), radius, context.schedulingManager(),
                     () -> {
                         try (var ignored = ThreadInstrumentation.getCurrent().begin(new ChunkTaskWork(context, this, true))) {
-                            return step.run(chunkGenerationContext, context.chunks(), chunk)
+                            return step.run(chunkGenerationContext, boundedRegionArray, chunk)
                                     .whenComplete((chunk1, throwable) -> {
                                         if (chunk1 != null) {
                                             context.holder().getItem().set(new ChunkState(chunk1, (ProtoChunk) chunk1, this.status, chunk1 instanceof WrapperProtoChunk));
@@ -178,9 +215,9 @@ public class VanillaWorldGenerationDelegate extends NewChunkStatus {
     @Override
     public KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] getDependenciesToRemove(ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, ?> holder) {
         if (this.toRemove == null) return super.getDependenciesToRemove(holder);
-        final KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] curDep = holder.getDependencies(this);
-        if (curDep.length == this.loadDeps.length) return EMPTY_DEPENDENCIES;
-        if (curDep.length == this.genDeps.length) {
+        int curDepLen = getCurDepLen(holder);
+        if (curDepLen == this.loadDeps.length) return EMPTY_DEPENDENCIES;
+        if (curDepLen == this.genDeps.length) {
             final Chunk chunk = holder.getItem().get().chunk();
             if (chunk == null) return EMPTY_DEPENDENCIES;
             if (!chunk.getStatus().isAtLeast(status)) return EMPTY_DEPENDENCIES;
@@ -193,9 +230,9 @@ public class VanillaWorldGenerationDelegate extends NewChunkStatus {
     @Override
     public KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] getDependenciesToAdd(ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, ?> holder) {
         if (this.toAdd == null) return super.getDependenciesToAdd(holder);
-        final KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] curDep = holder.getDependencies(this);
-        if (curDep.length == this.loadDeps.length) return EMPTY_DEPENDENCIES;
-        if (curDep.length == this.genDeps.length) {
+        int curDepLen = getCurDepLen(holder);
+        if (curDepLen == this.loadDeps.length) return EMPTY_DEPENDENCIES;
+        if (curDepLen == this.genDeps.length) {
             final Chunk chunk = holder.getItem().get().chunk();
             if (chunk == null) return EMPTY_DEPENDENCIES;
             if (!chunk.getStatus().isAtLeast(status)) return EMPTY_DEPENDENCIES;
@@ -203,6 +240,11 @@ public class VanillaWorldGenerationDelegate extends NewChunkStatus {
         }
         LOGGER.warn("Suspicious dependencies length for VanillaWorldGenerationDelegate with status {} on holder {}", this.status, holder.getKey());
         return super.getDependenciesToAdd(holder);
+    }
+
+    private int getCurDepLen(ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, ?> holder) {
+        final KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] curDep = holder.getDependencies(this);
+        return curDep.length;
     }
 
     @Override

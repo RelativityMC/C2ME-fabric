@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "id": "c2me-opts-accel-opencl",
+  "version": "${version}",
+  "name": "Concurrent Chunk Management Engine (Optimizations/Acceleration/OpenCL)",
+  "description": "OpenCL acceleration for world generation",
+  "environment": "*",
+  "mixins": [
+    "c2me-opts-accel-opencl.mixins.json"
+  ],
+  "depends": {
+    "minecraft": "*",
+    "fabricloader": "*",
+    "c2me-base": "*",
+    "c2me-opts-dfc": "*",
+    "c2me-rewrites-chunk-system": "*"
+  },
+  "recommends": {
+    "scalablelux": "*"
+  },
+
+  "authors": [
+    "RelativityMC",
+    "ishland"
+  ],
+  "contact": {
+    "sources": "https://github.com/RelativityMC/C2ME-fabric",
+    "issues": "https://github.com/RelativityMC/C2ME-fabric/issues",
+    "discord": "https://discord.gg/Kdy8NM5HW4",
+    "homepage": "https://modrinth.com/mod/c2me-fabric"
+  },
+  "license": "All-Rights-Reserved",
+  "custom": {
+    "modmenu": {
+      "parent": "c2me"
+    }
+  }
+}

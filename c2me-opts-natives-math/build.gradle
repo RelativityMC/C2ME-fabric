@@ -4,11 +4,6 @@ moduleDependencies(project, [
         "c2me-base",
 ])
 
-java {
-    sourceCompatibility = JavaVersion.VERSION_22
-    targetCompatibility = JavaVersion.VERSION_22
-}
-
 def addTarget(String target, String outputName) {
     addTarget(target, outputName, outputName)
 }

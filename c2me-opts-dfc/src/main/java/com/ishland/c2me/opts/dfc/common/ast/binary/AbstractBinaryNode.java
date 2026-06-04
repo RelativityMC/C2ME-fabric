@@ -1,18 +1,38 @@
+/*
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2021-2026 ishland
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 package com.ishland.c2me.opts.dfc.common.ast.binary;
 
-import com.ishland.c2me.opts.dfc.common.ast.AstTransformer;
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
-import com.ishland.c2me.opts.dfc.common.gen.BytecodeGen;
-import com.ishland.c2me.opts.dfc.common.util.ArrayCache;
-import org.objectweb.asm.Type;
-import org.objectweb.asm.commons.InstructionAdapter;
+import com.ishland.c2me.opts.dfc.common.ast.AstTransformer;
 
 import java.util.Objects;
 
 public abstract class AbstractBinaryNode implements AstNode {
 
-    protected final AstNode left;
-    protected final AstNode right;
+    public final AstNode left;
+    public final AstNode right;
 
     public AbstractBinaryNode(AstNode left, AstNode right) {
         this.left = Objects.requireNonNull(left);
@@ -75,48 +95,12 @@ public abstract class AbstractBinaryNode implements AstNode {
         }
     }
 
-    @Override
-    public void doBytecodeGenSingle(BytecodeGen.Context context, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
-        String leftMethod = context.newSingleMethod(this.left);
-        String rightMethod = context.newSingleMethod(this.right);
-
-        context.callDelegateSingle(m, leftMethod);
-        context.callDelegateSingle(m, rightMethod);
+    public AstNode swapOperands() {
+        return newInstance(this.right, this.left);
     }
 
-    @Override
-    public void doBytecodeGenMulti(BytecodeGen.Context context, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
-        String leftMethod = context.newMultiMethod(this.left);
-        String rightMethod = context.newMultiMethod(this.right);
-
-        int res1 = localVarConsumer.createLocalVariable("res1", Type.getDescriptor(double[].class));
-
-        m.load(6, InstructionAdapter.OBJECT_TYPE);
-        m.load(1, InstructionAdapter.OBJECT_TYPE);
-        m.arraylength();
-        m.iconst(0);
-        m.invokevirtual(Type.getInternalName(ArrayCache.class), "getDoubleArray", Type.getMethodDescriptor(Type.getType(double[].class), Type.INT_TYPE, Type.BOOLEAN_TYPE), false);
-        m.store(res1, InstructionAdapter.OBJECT_TYPE);
-        context.callDelegateMulti(m, leftMethod);
-        m.load(0, InstructionAdapter.OBJECT_TYPE);
-        m.load(res1, InstructionAdapter.OBJECT_TYPE);
-        m.load(2, InstructionAdapter.OBJECT_TYPE);
-        m.load(3, InstructionAdapter.OBJECT_TYPE);
-        m.load(4, InstructionAdapter.OBJECT_TYPE);
-        m.load(5, InstructionAdapter.OBJECT_TYPE);
-        m.load(6, InstructionAdapter.OBJECT_TYPE);
-        m.invokevirtual(context.className, rightMethod, BytecodeGen.Context.MULTI_DESC, false);
-
-        context.doCountedLoop(m, localVarConsumer, idx -> bytecodeGenMultiBody(m, idx, res1));
-
-        m.load(6, InstructionAdapter.OBJECT_TYPE);
-        m.load(res1, InstructionAdapter.OBJECT_TYPE);
-        m.invokevirtual(Type.getInternalName(ArrayCache.class), "recycle", Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(double[].class)), false);
-
-        m.areturn(Type.VOID_TYPE);
+    public boolean canSwapOperandsSafely() {
+        return true;
     }
-
-    protected abstract void bytecodeGenMultiBody(InstructionAdapter m, int idx, int res1);
-
 
 }

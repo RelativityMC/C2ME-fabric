@@ -1,0 +1,23 @@
+moduleDependencies(project, [
+        "c2me-base",
+        "c2me-opts-dfc",
+        "c2me-rewrites-chunk-system",
+])
+
+dependencies {
+    include implementation(platform("org.lwjgl:lwjgl-bom:${lwjgl_version}"))
+    include implementation("org.lwjgl:lwjgl")
+    include implementation("org.lwjgl:lwjgl-opencl")
+    include implementation("org.lwjgl:lwjgl-zstd")
+    include implementation("org.apache.commons:commons-compress:${apache_commons_compress_version}") {
+        transitive = false
+    }
+
+    include runtimeOnly(group: 'org.lwjgl', name: 'lwjgl', classifier: 'natives-linux')
+    include runtimeOnly(group: 'org.lwjgl', name: 'lwjgl', classifier: 'natives-linux-arm64')
+    include runtimeOnly(group: 'org.lwjgl', name: 'lwjgl', classifier: 'natives-windows')
+    include runtimeOnly(group: 'org.lwjgl', name: 'lwjgl', classifier: 'natives-macos')
+    include runtimeOnly(group: 'org.lwjgl', name: 'lwjgl', classifier: 'natives-macos-arm64')
+    include runtimeOnly(group: 'org.lwjgl', name: 'lwjgl-zstd', classifier: 'natives-linux')
+    include runtimeOnly(group: 'org.lwjgl', name: 'lwjgl-zstd', classifier: 'natives-windows')
+}

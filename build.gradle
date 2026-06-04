@@ -1,11 +1,13 @@
 plugins {
     id 'java-library'
-    id 'net.fabricmc.fabric-loom-remap' version '1.15-SNAPSHOT' apply false
+    id 'net.fabricmc.fabric-loom-remap' version '1.16-SNAPSHOT' apply false
     id "me.champeau.jmh" version "0.7.2"
     id 'com.modrinth.minotaur' version '2.+' apply false
     id 'io.github.themrmilchmann.curseforge-publish' version '0.8.0' apply false
     id 'com.gradleup.shadow' version '8.3.0' apply false
     id 'io.github.tomtzook.gradle-cmake' version '1.2.2' apply false
+    id 'dev.yumi.gradle.licenser' version '4.0.0' apply false
+    id 'me.modmuss50.mod-publish-plugin' version "2.0.0-beta.2" apply false
 }
 
 @SuppressWarnings('unused')
@@ -20,6 +22,7 @@ static def moduleDependencies(project, List<String> depNames) {
 configure(allprojects) {
     apply plugin: 'java'
     apply plugin: 'java-library'
+    apply plugin: 'dev.yumi.gradle.licenser'
 
     base {
         archivesName = "${project.name}-mc${project.minecraft_version}"
@@ -29,6 +32,29 @@ configure(allprojects) {
     java {
         sourceCompatibility = JavaVersion.VERSION_25
         targetCompatibility = JavaVersion.VERSION_25
+    }
+
+    license {
+        include("**/*.java")
+        include("**/*.cl")
+
+        headerCommentManager.register(dev.yumi.gradle.licenser.api.comment.CStyleHeaderComment.INSTANCE, "cl")
+    }
+
+    if (it.name == "c2me-opts-accel-opencl") {
+        license {
+            rule(rootProject.file("licenses/LICENSE-ARR.txt"))
+        }
+        jar {
+            from(rootProject.file("licenses/LICENSE-ARR.txt"))
+        }
+    } else {
+        license {
+            rule(rootProject.file("licenses/LICENSE-MIT.txt"))
+        }
+        jar {
+            from(rootProject.file("licenses/LICENSE-MIT.txt"))
+        }
     }
 
     afterEvaluate {
@@ -96,6 +122,8 @@ configure (allprojects - project(":tests")) {
         intermediaryUrl = 'https://repo.codemc.io/repository/relativitymc/org/relativitymc/intermediary/%1$s/intermediary-%1$s-v2.jar'
         useIntermediateMappings = true
 
+        uncompressNestedJars = true
+
         def file = project(":c2me-base").file("src/main/resources/c2me-base.accesswidener")
         accessWidenerPath = file
         enableTransitiveAccessWideners = false
@@ -116,10 +144,6 @@ configure (allprojects - project(":tests")) {
         filesMatching("fabric.mod.json") {
             expand "version": version + "+" + minecraft_version
         }
-    }
-
-    jar {
-        from rootProject.file("LICENSE")
     }
 
     java {
@@ -161,8 +185,31 @@ configure (allprojects - project(":tests")) {
         implementation "com.electronwill.night-config:toml:${night_config_version}"
         implementation "net.objecthunter:exp4j:${exp4j_version}"
         implementation "org.jctools:jctools-core:${jctools_version}"
+        implementation "com.github.ben-manes.caffeine:caffeine:${caffeine_version}"
         implementation annotationProcessor("com.github.bawnorton.mixinsquared:mixinsquared-fabric:${mixinsquared_version}")
         api "com.ishland.flowsched:flowsched"
+
+        // workaround loom issue for devlaunch
+        afterEvaluate {
+            minecraftServerRuntimeLibraries "org.lwjgl:lwjgl:${lwjgl_version}"
+            minecraftServerRuntimeLibraries "org.lwjgl:lwjgl-opencl:${lwjgl_version}"
+            minecraftServerRuntimeLibraries "org.lwjgl:lwjgl-zstd:${lwjgl_version}"
+            minecraftServerRuntimeLibraries("org.apache.commons:commons-compress:${apache_commons_compress_version}") {
+                transitive = false
+            }
+        }
+
+        if (project == rootProject) {
+            include implementation("com.ibm.async:asyncutil:${async_util_version}")
+            include implementation("com.electronwill.night-config:toml:${night_config_version}")
+            include implementation("com.electronwill.night-config:core:${night_config_version}")
+            include implementation("net.objecthunter:exp4j:${exp4j_version}")
+            include implementation("org.jctools:jctools-core:${jctools_version}")
+            include implementation(annotationProcessor("com.github.bawnorton.mixinsquared:mixinsquared-fabric:${mixinsquared_version}"))
+            include "io.reactivex.rxjava3:rxjava:${rxjava_version}"
+            include "org.reactivestreams:reactive-streams:${reactive_streams_version}"
+            include implementation("com.github.ben-manes.caffeine:caffeine:${caffeine_version}")
+        }
 
         testImplementation platform("org.junit:junit-bom:${junit_version}")
         testImplementation 'org.junit.jupiter:junit-jupiter'
@@ -188,79 +235,56 @@ subprojects {
     }
 }
 
+def ghaChangelog = System.getenv("OVERRIDE_CHANGELOG")
+if (ghaChangelog == null) {
+    ghaChangelog = com.ishland.c2me.gradle.ParseGItHubActionChangelog.getChangelog()
+}
+
 afterEvaluate {
     logger.lifecycle("Version String: ${version}")
-    logger.lifecycle(com.ishland.c2me.gradle.ParseGItHubActionChangelog.getChangelog())
+    logger.lifecycle(ghaChangelog)
 }
 
-dependencies {
-//    includeApi project(":libs")
-//    include project(":libs")
-    include implementation("com.ibm.async:asyncutil:${async_util_version}")
-    include implementation("com.electronwill.night-config:toml:${night_config_version}")
-    include implementation("com.electronwill.night-config:core:${night_config_version}")
-    include implementation("net.objecthunter:exp4j:${exp4j_version}")
-    include implementation("org.jctools:jctools-core:${jctools_version}")
-    include implementation(annotationProcessor("com.github.bawnorton.mixinsquared:mixinsquared-fabric:${mixinsquared_version}"))
-    include "io.reactivex.rxjava3:rxjava:${rxjava_version}"
-    include "org.reactivestreams:reactive-streams:${reactive_streams_version}"
-//    include implementation("com.ishland.flowsched:flowsched")
+apply plugin: 'me.modmuss50.mod-publish-plugin'
 
-    // PSA: Some older mods, compiled on Loom 0.2.1, might have outdated Maven POMs.
-    // You may need to force-disable transitiveness on them.
+publishMods {
+    changelog = ghaChangelog
 
-}
+    def envDisplayName = System.getenv("OVERRIDE_DISPLAY_NAME")
+    displayName = envDisplayName != null ? envDisplayName : (project.version + " devbuild for " + project.minecraft_version)
 
-apply plugin: 'com.modrinth.minotaur'
-modrinth {
-    token = System.getenv("MODRINTH_TOKEN") // This is the default. Remember to have the MODRINTH_TOKEN environment variable set or else this will fail, or set it to whatever you want - just make sure it stays private!
-    projectId = "c2me-fabric" // This can be the project ID or the slug. Either will work!
-    versionNumber = project.version + "+" + project.minecraft_version.replaceAll("-snapshot-", "-snap-") // You don't need to set this manually. Will fail if Modrinth has this version already
-    versionName = project.version + " devbuild for " + project.minecraft_version
-    versionType = "alpha" // This is the default -- can also be `beta` or `alpha`
-    uploadFile = remapJar // With Loom, this MUST be set to `remapJar` instead of `jar`!
-    gameVersions = [project.minecraft_version] // Must be an array, even with only one version
-    loaders = ["fabric"] // Must also be an array - no need to specify this if you're using Loom or ForgeGradle
-    changelog = com.ishland.c2me.gradle.ParseGItHubActionChangelog.getChangelog()
-}
+    def envType = System.getenv("OVERRIDE_RELEASE_TYPE")
+    type = envType != null ? me.modmuss50.mpp.ReleaseType.valueOf(envType) : me.modmuss50.mpp.ReleaseType.ALPHA
 
-apply plugin: 'io.github.themrmilchmann.curseforge-publish'
-if (!project.minecraft_version.contains("-")) { // rough filter for snapshots
-    curseforge {
-        apiToken = System.getenv("CURSEFORGE_TOKEN")
-        publications {
-            register("main") {
-                projectId = "533097"
+    version = project.version + "+" + project.minecraft_version.replaceAll("-snapshot-", "-snap-")
 
-                def matcher = java.util.regex.Pattern.compile("^([0-9]+)\\.([0-9]+)(?:\\.([0-9]+))?").matcher(project.minecraft_version)
-                if (!matcher.find()) {
-                    throw new RuntimeException("version regex failed")
-                }
+    def cfVersions = project.curseforge_minecraft_versions.split(",")
+    if (cfVersions.length != 0) {
+        def cfOptions = curseforgeOptions {
+            accessToken = System.getenv("CURSEFORGE_TOKEN")
+            cfVersions.each { minecraftVersions.add(it.trim()) }
+            client = true
+            server = true
+            changelogType = "markdown"
+        }
 
-                gameVersion("minecraft-" + matcher.group(1) + "-" + matcher.group(2), project.minecraft_version.replace('.', '-'))
-                gameVersion("modloader", "fabric")
-                gameVersion("java", "java-25")
-                gameVersion("environment", "server")
-                gameVersion("environment", "client")
-
-                artifacts.register("main") {
-                    from(remapJar)
-
-                    displayName = project.version + " devbuild for " + project.minecraft_version
-                    releaseType = io.github.themrmilchmann.gradle.publish.curseforge.ReleaseType.ALPHA
-
-                    changelog {
-                        format = io.github.themrmilchmann.gradle.publish.curseforge.ChangelogFormat.MARKDOWN
-                        from(com.ishland.c2me.gradle.ParseGItHubActionChangelog.getChangelog())
-                    }
-                }
-            }
+        curseforge("curseforgeMITPackage") {
+            from cfOptions
+            file = remapJar.archiveFile
+            projectId = "533097"
         }
     }
-} else {
-    tasks.register("publishMainPublicationToCurseForge") {
-        doLast {
-            logger.lifecycle("skipping curseforge publishing because snapshot")
+
+    {
+        def mrOptions = modrinthOptions {
+            accessToken = System.getenv("MODRINTH_TOKEN")
+            minecraftVersions.add(project.minecraft_version)
+        }
+
+        modrinth("modrinthMITPackage") {
+            from mrOptions
+            file = remapJar.archiveFile
+            projectId = "VSNURh3q"
         }
     }
 }
@@ -274,7 +298,9 @@ dependencies {
 
             def projectName = it.name
             api project(path: ":${projectName}", configuration: "namedElements")
-            include project("${projectName}:")
+            if (projectName != "c2me-opts-accel-opencl") {
+                include project(":${projectName}")
+            }
         }
     }
 }
@@ -300,9 +326,8 @@ String getVersionSuffix() {
     return split[split.length - 2] + suffix
 }
 
-compileJmhJava {
-    sourceCompatibility = JavaVersion.VERSION_22
-    targetCompatibility = JavaVersion.VERSION_22
+jmhJar {
+    zip64 = true;
 }
 
 jmh {

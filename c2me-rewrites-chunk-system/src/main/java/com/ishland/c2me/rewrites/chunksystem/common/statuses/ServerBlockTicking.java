@@ -1,3 +1,27 @@
+/*
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2021-2026 ishland
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 package com.ishland.c2me.rewrites.chunksystem.common.statuses;
 
 import com.google.common.base.Suppliers;
@@ -26,9 +50,11 @@ import net.minecraft.fluid.FlowableFluid;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.server.world.ChunkLevelType;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.collection.BoundedRegionArray;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.ChunkRegion;
+import net.minecraft.world.chunk.AbstractChunkHolder;
 import net.minecraft.world.chunk.ChunkGenerationSteps;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.ProtoChunk;
@@ -88,8 +114,10 @@ public class ServerBlockTicking extends NewChunkStatus {
 
     private static void filterFluidTicks(ChunkLoadingContext context) {
         final WorldChunk chunk = (WorldChunk) context.holder().getItem().get().chunk();
+        ChunkPos pos = context.holder().getKey();
 
-        Supplier<ChunkRegion> chunkRegionSupplier = Suppliers.memoize(() -> new ChunkRegion(((IThreadedAnvilChunkStorage) context.tacs()).getWorld(), context.chunks(), ChunkGenerationSteps.GENERATION.get(ChunkStatus.LIGHT), chunk));
+        BoundedRegionArray<AbstractChunkHolder> boundedRegionArray = BoundedRegionArray.create(pos.x(), pos.z(), 1, (x, z) -> context.theChunkSystem().getHolder(new ChunkPos(x, z)).getUserData().get());
+        Supplier<ChunkRegion> chunkRegionSupplier = Suppliers.memoize(() -> new ChunkRegion(((IThreadedAnvilChunkStorage) context.tacs()).getWorld(), boundedRegionArray, ChunkGenerationSteps.GENERATION.get(ChunkStatus.LIGHT), chunk));
 
         int total = 0;
         int eliminated = 0;

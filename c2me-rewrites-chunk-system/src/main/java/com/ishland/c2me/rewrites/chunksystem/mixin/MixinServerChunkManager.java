@@ -1,3 +1,27 @@
+/*
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2021-2026 ishland
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 package com.ishland.c2me.rewrites.chunksystem.mixin;
 
 import com.ishland.c2me.base.mixin.access.IThreadedAnvilChunkStorage;
@@ -27,7 +51,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.ArrayDeque;
-import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
 
 @Mixin(ServerChunkManager.class)
@@ -91,30 +114,18 @@ public abstract class MixinServerChunkManager {
 
     @WrapOperation(method = "updateChunks", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ChunkLevelManager;update(Lnet/minecraft/server/world/ServerChunkLoadingManager;)Z"))
     private boolean consolidateSchedules(ChunkLevelManager instance, ServerChunkLoadingManager chunkLoadingManager, Operation<Boolean> original) {
-        Queue<Runnable> runnables = ChunkSystemExecutors.CONSOLIDATING_QUEUE.get();
-        if (runnables != null) {
-            new Throwable("CONSOLIDATING_QUEUE leak").printStackTrace();
-            return original.call(instance, chunkLoadingManager);
-        }
-
-        ChunkSystemExecutors.CONSOLIDATING_QUEUE.set(runnables = new ArrayDeque<>());
-        try {
-            return original.call(instance, chunkLoadingManager);
-        } finally {
-            Queue<Runnable> finalRunnables = runnables;
-            if (!finalRunnables.isEmpty()) {
-                ChunkSystemExecutors.backingBackgroundExecutor.execute(() -> {
-                    while (!finalRunnables.isEmpty()) {
-                        try {
-                            finalRunnables.remove().run();
-                        } catch (Throwable t) {
-                            t.printStackTrace();
+        ArrayDeque<Runnable> runnables;
+        return ScopedValue
+                .where(ChunkSystemExecutors.CONSOLIDATING_QUEUE, runnables = new ArrayDeque<>())
+                .call(() -> {
+                    try {
+                        return original.call(instance, chunkLoadingManager);
+                    } finally {
+                        if (!runnables.isEmpty()) {
+                            ChunkSystemExecutors.consolidatingRoot0(runnables);
                         }
                     }
                 });
-            }
-            ChunkSystemExecutors.CONSOLIDATING_QUEUE.remove();
-        }
     }
 
 }

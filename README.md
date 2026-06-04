@@ -61,5 +61,5 @@ git submodule update --init --recursive
 ```
 
 ## License
-License information can be found [here](/LICENSE).
+License information can be found [here](/licenses/LICENSE).
 

@@ -59,6 +59,12 @@ accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctions$
 accessible    class    net/minecraft/world/gen/blockpredicate/CombinedBlockPredicate
 accessible    class    net/minecraft/world/gen/blockpredicate/AllOfBlockPredicate
 accessible    class    net/minecraft/world/gen/blockpredicate/AnyOfBlockPredicate
+accessible    class    net/minecraft/world/biome/source/util/MultiNoiseUtil$SearchTree
+accessible    class    net/minecraft/world/biome/source/util/MultiNoiseUtil$SearchTree$TreeNode
+accessible    class    net/minecraft/world/biome/source/util/MultiNoiseUtil$SearchTree$TreeBranchNode
+accessible    class    net/minecraft/world/biome/source/util/MultiNoiseUtil$SearchTree$TreeLeafNode
+accessible    class    net/minecraft/world/biome/source/util/MultiNoiseUtil$NodeDistanceFunction
+accessible    class    net/minecraft/world/chunk/PalettedContainer$Data
 
 extendable    class    net/minecraft/client/option/SimpleOption
 extendable    class    net/minecraft/world/storage/RegionBasedStorage
@@ -71,6 +77,7 @@ accessible    method    net/minecraft/world/gen/surfacebuilder/MaterialRules$Seq
 accessible    method    net/minecraft/world/storage/RegionBasedStorage                                 <init>              (Lnet/minecraft/world/storage/StorageKey;Ljava/nio/file/Path;Z)V
 accessible    method    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$Wrapping          <init>              (Lnet/minecraft/world/gen/densityfunction/DensityFunctionTypes$Wrapping$Type;Lnet/minecraft/world/gen/densityfunction/DensityFunction;)V
 accessible    method    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$RangeChoice       <init>              (Lnet/minecraft/world/gen/densityfunction/DensityFunction;DDLnet/minecraft/world/gen/densityfunction/DensityFunction;Lnet/minecraft/world/gen/densityfunction/DensityFunction;)V
+accessible    method    net/minecraft/util/collection/BoundedRegionArray                               <init>              (IIIILnet/minecraft/util/collection/BoundedRegionArray$Getter;)V
 
 extendable    method    net/minecraft/server/world/ChunkHolder           setCompletedLevel      (I)V
 extendable    method    net/minecraft/world/chunk/AbstractChunkHolder    generate               (Lnet/minecraft/world/chunk/ChunkGenerationStep;Lnet/minecraft/world/ChunkLoadingManager;Lnet/minecraft/util/collection/BoundedRegionArray;)Ljava/util/concurrent/CompletableFuture;

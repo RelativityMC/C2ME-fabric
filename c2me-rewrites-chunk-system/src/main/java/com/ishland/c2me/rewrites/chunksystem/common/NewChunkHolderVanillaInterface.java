@@ -1,8 +1,33 @@
+/*
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2021-2026 ishland
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 package com.ishland.c2me.rewrites.chunksystem.common;
 
 import com.ishland.c2me.base.common.theinterface.IFastChunkHolder;
 import com.ishland.c2me.base.common.util.SneakyThrow;
 import com.ishland.flowsched.scheduler.ItemHolder;
+import com.ishland.flowsched.scheduler.ItemTicket;
 import com.ishland.flowsched.scheduler.StatusAdvancingScheduler;
 import com.ishland.flowsched.util.Assertions;
 import com.mojang.datafixers.util.Pair;
@@ -175,9 +200,15 @@ public class NewChunkHolderVanillaInterface extends ChunkHolder implements IFast
             if (this.loadedDeferredStatus != null && this.loadedDeferredStatus.ordinal() > status.ordinal()) {
                 ChunkPos pos1 = this.getPos();
                 if (status.getPrev() != null) { // don't add unloaded tickets
-                    ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> holder1 = this.chunkSystem.addTicket(pos1, TicketTypeExtension.VANILLA_DEFERRED_LOAD, pos1, status, StatusAdvancingScheduler.NO_OP);
-                    Assertions.assertTrue(holder1 == this.newHolder);
-                    this.chunkSystem.removeTicket(pos1, TicketTypeExtension.VANILLA_DEFERRED_LOAD, pos1, this.loadedDeferredStatus);
+                    ItemTicket ticket = new ItemTicket(TicketTypeExtension.VANILLA_DEFERRED_LOAD, pos1, null);
+                    this.chunkSystem.addTicket0(
+                            pos1,
+                            status, ticket
+                    );
+                    this.chunkSystem.removeTicket0(
+                            pos1,
+                            this.loadedDeferredStatus, ticket
+                    );
                     this.loadedDeferredStatus = status;
                 } else {
                     this.chunkSystem.removeTicket(pos1, TicketTypeExtension.VANILLA_DEFERRED_LOAD, pos1, this.loadedDeferredStatus);
@@ -200,10 +231,19 @@ public class NewChunkHolderVanillaInterface extends ChunkHolder implements IFast
             // the holder should be valid here
             NewChunkStatus ticketToDiscard = this.loadedDeferredStatus;
             ChunkPos pos1 = this.getPos();
-            ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> holder1 = this.chunkSystem.addTicket(pos1, TicketTypeExtension.VANILLA_DEFERRED_LOAD, pos1, requestedStatus, StatusAdvancingScheduler.NO_OP);
-            Assertions.assertTrue(holder1 == this.newHolder);
             if (ticketToDiscard != null) {
-                this.chunkSystem.removeTicket(pos1, TicketTypeExtension.VANILLA_DEFERRED_LOAD, pos1, ticketToDiscard);
+                ItemTicket ticket = new ItemTicket(TicketTypeExtension.VANILLA_DEFERRED_LOAD, pos1, null);
+                this.chunkSystem.addTicket0(
+                        pos1,
+                        requestedStatus, ticket
+                );
+                this.chunkSystem.removeTicket0(
+                        pos1,
+                        ticketToDiscard, ticket
+                );
+            } else {
+                ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> holder1 = this.chunkSystem.addTicket(pos1, TicketTypeExtension.VANILLA_DEFERRED_LOAD, pos1, requestedStatus, null);
+                Assertions.assertTrue(holder1 == this.newHolder);
             }
             this.loadedDeferredStatus = requestedStatus;
         }

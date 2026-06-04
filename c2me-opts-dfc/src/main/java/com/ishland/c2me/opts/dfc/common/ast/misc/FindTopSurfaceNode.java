@@ -1,64 +1,46 @@
+/*
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2021-2026 ishland
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 package com.ishland.c2me.opts.dfc.common.ast.misc;
 
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
 import com.ishland.c2me.opts.dfc.common.ast.AstTransformer;
-import com.ishland.c2me.opts.dfc.common.ast.EvalType;
-import com.ishland.c2me.opts.dfc.common.ast.InvocationShim;
-import com.ishland.c2me.opts.dfc.common.gen.BytecodeGen;
-import net.minecraft.util.math.MathHelper;
-import org.objectweb.asm.Label;
-import org.objectweb.asm.Type;
-import org.objectweb.asm.commons.InstructionAdapter;
 
 import java.util.Objects;
 
 public class FindTopSurfaceNode implements AstNode {
 
-    private final AstNode density;
-    private final AstNode upperBound;
-    private final AstNode lowerBound;
-    private final int cellHeight;
+    public final AstNode density;
+    public final AstNode upperBound;
+    public final AstNode lowerBound;
+    public final int cellHeight;
 
     public FindTopSurfaceNode(AstNode density, AstNode upperBound, AstNode lowerBound, int cellHeight) {
         this.density = Objects.requireNonNull(density);
         this.upperBound = Objects.requireNonNull(upperBound);
         this.lowerBound = Objects.requireNonNull(lowerBound);
         this.cellHeight = cellHeight;
-    }
-
-    @Override
-    public double evalSingle(int x, int y, int z, EvalType type) {
-        int topCellBlockY = MathHelper.floor(this.upperBound.evalSingle(x, y, z, type) / this.cellHeight) * this.cellHeight;
-        int lowerBoundEval = (int) this.lowerBound.evalSingle(x, y, z, type);
-        for (int y1 = topCellBlockY; y1 > lowerBoundEval; y1 -= this.cellHeight) {
-            if (this.density.evalSingle(x, y1, z, EvalType.NORMAL) > 0.0) {
-                return y1;
-            }
-        }
-        return lowerBoundEval;
-    }
-
-    @Override
-    public void evalMulti(double[] res, int[] x, int[] y, int[] z, EvalType type) {
-        this.upperBound.evalMulti(res, x, y, z, type);
-        int[] topCellBlockY = new int[res.length];
-        for (int i = 0; i < res.length; i++) {
-            topCellBlockY[i] = MathHelper.floor(res[i] / this.cellHeight) * this.cellHeight;
-        }
-        this.lowerBound.evalMulti(res, x, y, z, type);
-        int[] lowerBoundEval = new int[res.length];
-        for (int i = 0; i < res.length; i++) {
-            lowerBoundEval[i] = (int) res[i];
-        }
-        for (int i = 0; i < res.length; i ++) {
-            res[i] = lowerBoundEval[i]; // default to lower bound
-            for (int y1 = topCellBlockY[i]; y1 > lowerBoundEval[i]; y1 -= this.cellHeight) {
-                if (this.density.evalSingle(x[i], y1, z[i], type) > 0.0) {
-                    res[i] = y1;
-                    break;
-                }
-            }
-        }
     }
 
     @Override
@@ -76,82 +58,6 @@ public class FindTopSurfaceNode implements AstNode {
         } else {
             return transformer.transform(new FindTopSurfaceNode(density, upperBound, lowerBound, this.cellHeight));
         }
-    }
-
-    @Override
-    public void doBytecodeGenSingle(BytecodeGen.Context ctx, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
-        String densityMethod = ctx.newSingleMethod(this.density);
-        String upperBoundMethod = ctx.newSingleMethod(this.upperBound);
-        String lowerBoundMethod = ctx.newSingleMethod(this.lowerBound);
-
-        int topCellBlockY = localVarConsumer.createLocalVariable("topCellBlockY", Type.INT_TYPE.getDescriptor());
-        int lowerBoundEval = localVarConsumer.createLocalVariable("lowerBoundEval", Type.INT_TYPE.getDescriptor());
-        ctx.callDelegateSingle(m, upperBoundMethod);
-        m.dconst(this.cellHeight);
-        m.div(Type.DOUBLE_TYPE);
-        m.invokestatic(
-                Type.getInternalName(InvocationShim.class),
-                "invokeFloor",
-                "(D)I",
-                false
-        );
-        m.iconst(this.cellHeight);
-        m.mul(Type.INT_TYPE);
-        m.store(topCellBlockY, Type.INT_TYPE);
-
-        ctx.callDelegateSingle(m, lowerBoundMethod);
-        m.cast(Type.DOUBLE_TYPE, Type.INT_TYPE);
-        m.store(lowerBoundEval, Type.INT_TYPE);
-
-        Label loopStart = new Label();
-        Label loopEnd = new Label();
-
-        int y1 = localVarConsumer.createLocalVariable("y1", Type.INT_TYPE.getDescriptor());
-        m.load(topCellBlockY, Type.INT_TYPE);
-        m.store(y1, Type.INT_TYPE);
-
-        m.visitLabel(loopStart);
-
-        m.load(y1, Type.INT_TYPE);
-        m.load(lowerBoundEval, Type.INT_TYPE);
-        m.ificmple(loopEnd);
-        m.load(0, InstructionAdapter.OBJECT_TYPE);
-        m.load(1, Type.INT_TYPE);
-        m.load(y1, Type.INT_TYPE);
-        m.load(3, Type.INT_TYPE);
-        m.getstatic(
-                Type.getInternalName(EvalType.class),
-                "NORMAL",
-                Type.getDescriptor(EvalType.class)
-        );
-        m.invokevirtual(ctx.className, densityMethod, BytecodeGen.Context.SINGLE_DESC, false);
-        m.dconst(0.0);
-        m.cmpl(Type.DOUBLE_TYPE);
-
-        Label notSatisfied = new Label();
-        m.ifle(notSatisfied);
-        m.load(y1, Type.INT_TYPE);
-        m.cast(Type.INT_TYPE, Type.DOUBLE_TYPE);
-        m.areturn(Type.DOUBLE_TYPE);
-        m.visitLabel(notSatisfied);
-
-        m.load(y1, Type.INT_TYPE);
-        m.iconst(this.cellHeight);
-        m.sub(Type.INT_TYPE);
-        m.store(y1, Type.INT_TYPE);
-        m.goTo(loopStart);
-
-        m.visitLabel(loopEnd);
-
-        m.load(lowerBoundEval, Type.INT_TYPE);
-        m.cast(Type.INT_TYPE, Type.DOUBLE_TYPE);
-        m.areturn(Type.DOUBLE_TYPE);
-    }
-
-    @Override
-    public void doBytecodeGenMulti(BytecodeGen.Context ctx, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
-        ctx.delegateToSingle(m, localVarConsumer, this);
-        m.areturn(Type.VOID_TYPE);
     }
 
     @Override

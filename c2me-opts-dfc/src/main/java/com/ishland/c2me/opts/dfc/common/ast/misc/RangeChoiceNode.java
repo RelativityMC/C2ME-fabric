@@ -1,22 +1,41 @@
+/*
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2021-2026 ishland
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 package com.ishland.c2me.opts.dfc.common.ast.misc;
 
-import com.ishland.c2me.opts.dfc.common.ast.AstTransformer;
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
-import com.ishland.c2me.opts.dfc.common.ast.EvalType;
-import com.ishland.c2me.opts.dfc.common.gen.BytecodeGen;
-import org.objectweb.asm.Label;
-import org.objectweb.asm.Type;
-import org.objectweb.asm.commons.InstructionAdapter;
+import com.ishland.c2me.opts.dfc.common.ast.AstTransformer;
 
 import java.util.Objects;
 
 public class RangeChoiceNode implements AstNode {
 
-    private final AstNode input;
-    private final double minInclusive;
-    private final double maxExclusive;
-    private final AstNode whenInRange;
-    private final AstNode whenOutOfRange;
+    public final AstNode input;
+    public final double minInclusive;
+    public final double maxExclusive;
+    public final AstNode whenInRange;
+    public final AstNode whenOutOfRange;
 
     public RangeChoiceNode(AstNode input, double minInclusive, double maxExclusive, AstNode whenInRange, AstNode whenOutOfRange) {
         this.input = Objects.requireNonNull(input);
@@ -24,162 +43,6 @@ public class RangeChoiceNode implements AstNode {
         this.maxExclusive = maxExclusive;
         this.whenInRange = Objects.requireNonNull(whenInRange);
         this.whenOutOfRange = Objects.requireNonNull(whenOutOfRange);
-    }
-
-    @Override
-    public double evalSingle(int x, int y, int z, EvalType type) {
-        double v = this.input.evalSingle(x, y, z, type);
-        return v >= this.minInclusive && v < this.maxExclusive ? this.whenInRange.evalSingle(x, y, z, type) : this.whenOutOfRange.evalSingle(x, y, z, type);
-    }
-
-    @Override
-    public void evalMulti(double[] res, int[] x, int[] y, int[] z, EvalType type) {
-        this.input.evalMulti(res, x, y, z, type);
-
-//        for (int i = 0; i < res.length; i ++) {
-//            double v = res[i];
-//            if (v >= this.minInclusive && v < this.maxExclusive) {
-//                res[i] = this.whenInRange.evalSingle(x[i], y[i], z[i], type);
-//            } else {
-//                res[i] = this.whenOutOfRange.evalSingle(x[i], y[i], z[i], type);
-//            }
-//        }
-
-        int numInRange = 0;
-        for (int i = 0; i < x.length; i++) {
-            double v = res[i];
-            if (v >= this.minInclusive && v < this.maxExclusive) {
-                numInRange++;
-            }
-        }
-        int numOutOfRange = res.length - numInRange;
-
-        if (numInRange == 0) {
-            evalChildMulti(this.whenOutOfRange, res, x, y, z, type);
-        } else if (numInRange == res.length) {
-            evalChildMulti(this.whenInRange, res, x, y, z, type);
-        } else {
-            int idx1 = 0;
-            int[] i1 = new int[numInRange];
-            double[] res1 = new double[numInRange];
-            int[] x1 = new int[numInRange];
-            int[] y1 = new int[numInRange];
-            int[] z1 = new int[numInRange];
-            int idx2 = 0;
-            int[] i2 = new int[numOutOfRange];
-            double[] res2 = new double[numOutOfRange];
-            int[] x2 = new int[numOutOfRange];
-            int[] y2 = new int[numOutOfRange];
-            int[] z2 = new int[numOutOfRange];
-            for (int i = 0; i < res.length; i++) {
-                double v = res[i];
-                if (v >= this.minInclusive && v < this.maxExclusive) {
-                    int index = idx1++;
-                    i1[index] = i;
-                    x1[index] = x[i];
-                    y1[index] = y[i];
-                    z1[index] = z[i];
-                } else {
-                    int index = idx2++;
-                    i2[index] = i;
-                    x2[index] = x[i];
-                    y2[index] = y[i];
-                    z2[index] = z[i];
-                }
-            }
-            evalChildMulti(this.whenInRange, res1, x1, y1, z1, type);
-            evalChildMulti(this.whenOutOfRange, res2, x2, y2, z2, type);
-            for (int i = 0; i < numInRange; i++) {
-                res[i1[i]] = res1[i];
-            }
-            for (int i = 0; i < numOutOfRange; i++) {
-                res[i2[i]] = res2[i];
-            }
-        }
-    }
-
-    // called by generated code
-    public static void evalMultiStatic(double[] res, int[] x, int[] y, int[] z, EvalType type, double minInclusive, double maxExclusive,
-                                       BytecodeGen.EvalSingleInterface whenInRangeSingle, BytecodeGen.EvalSingleInterface whenOutOfRangeSingle,
-                                       BytecodeGen.EvalMultiInterface inputMulti, BytecodeGen.EvalMultiInterface whenInRangeMulti, BytecodeGen.EvalMultiInterface whenOutOfRangeMulti) {
-        inputMulti.evalMulti(res, x, y, z, type);
-
-//        for (int i = 0; i < res.length; i ++) {
-//            double v = res[i];
-//            if (v >= this.minInclusive && v < this.maxExclusive) {
-//                res[i] = this.whenInRange.evalSingle(x[i], y[i], z[i], type);
-//            } else {
-//                res[i] = this.whenOutOfRange.evalSingle(x[i], y[i], z[i], type);
-//            }
-//        }
-
-        int numInRange = 0;
-        for (int i = 0; i < x.length; i++) {
-            double v = res[i];
-            if (v >= minInclusive && v < maxExclusive) {
-                numInRange++;
-            }
-        }
-        int numOutOfRange = res.length - numInRange;
-
-        if (numInRange == 0) {
-            evalChildMulti(whenOutOfRangeSingle, whenOutOfRangeMulti, res, x, y, z, type);
-        } else if (numInRange == res.length) {
-            evalChildMulti(whenInRangeSingle, whenInRangeMulti, res, x, y, z, type);
-        } else {
-            int idx1 = 0;
-            int[] i1 = new int[numInRange];
-            double[] res1 = new double[numInRange];
-            int[] x1 = new int[numInRange];
-            int[] y1 = new int[numInRange];
-            int[] z1 = new int[numInRange];
-            int idx2 = 0;
-            int[] i2 = new int[numOutOfRange];
-            double[] res2 = new double[numOutOfRange];
-            int[] x2 = new int[numOutOfRange];
-            int[] y2 = new int[numOutOfRange];
-            int[] z2 = new int[numOutOfRange];
-            for (int i = 0; i < res.length; i++) {
-                double v = res[i];
-                if (v >= minInclusive && v < maxExclusive) {
-                    int index = idx1++;
-                    i1[index] = i;
-                    x1[index] = x[i];
-                    y1[index] = y[i];
-                    z1[index] = z[i];
-                } else {
-                    int index = idx2++;
-                    i2[index] = i;
-                    x2[index] = x[i];
-                    y2[index] = y[i];
-                    z2[index] = z[i];
-                }
-            }
-            evalChildMulti(whenInRangeSingle, whenInRangeMulti, res1, x1, y1, z1, type);
-            evalChildMulti(whenOutOfRangeSingle, whenOutOfRangeMulti, res2, x2, y2, z2, type);
-            for (int i = 0; i < numInRange; i++) {
-                res[i1[i]] = res1[i];
-            }
-            for (int i = 0; i < numOutOfRange; i++) {
-                res[i2[i]] = res2[i];
-            }
-        }
-    }
-
-    private static void evalChildMulti(BytecodeGen.EvalSingleInterface single, BytecodeGen.EvalMultiInterface multi, double[] res, int[] x, int[] y, int[] z, EvalType type) {
-        if (res.length == 1) {
-            res[0] = single.evalSingle(x[0], y[0], z[0], type);
-        } else {
-            multi.evalMulti(res, x, y, z, type);
-        }
-    }
-
-    private void evalChildMulti(AstNode child, double[] res, int[] x, int[] y, int[] z, EvalType type) {
-        if (res.length == 1) {
-            res[0] = child.evalSingle(x[0], y[0], z[0], type);
-        } else {
-            child.evalMulti(res, x, y, z, type);
-        }
     }
 
     @Override
@@ -197,127 +60,6 @@ public class RangeChoiceNode implements AstNode {
         } else {
             return transformer.transform(new RangeChoiceNode(input, minInclusive, maxExclusive, whenInRange, whenOutOfRange));
         }
-    }
-
-    @Override
-    public void doBytecodeGenSingle(BytecodeGen.Context context, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
-        String inputMethod = context.newSingleMethod(this.input);
-        String whenInRangeMethod = context.newSingleMethod(this.whenInRange);
-        String whenOutOfRangeMethod = context.newSingleMethod(this.whenOutOfRange);
-
-        int inputValue = localVarConsumer.createLocalVariable("inputValue", Type.DOUBLE_TYPE.getDescriptor());
-        context.callDelegateSingle(m, inputMethod);
-        m.store(inputValue, Type.DOUBLE_TYPE);
-
-        Label whenOutOfRangeLabel = new Label();
-        Label end = new Label();
-
-        m.load(inputValue, Type.DOUBLE_TYPE);
-        m.dconst(this.minInclusive);
-        m.cmpl(Type.DOUBLE_TYPE);
-        m.iflt(whenOutOfRangeLabel); // inputValue < minInclusive
-        m.load(inputValue, Type.DOUBLE_TYPE);
-        m.dconst(this.maxExclusive);
-        m.cmpg(Type.DOUBLE_TYPE);
-        m.ifge(whenOutOfRangeLabel); // inputValue >= maxExclusive
-
-        if (whenInRangeMethod.equals(inputMethod)) {
-            m.load(inputValue, Type.DOUBLE_TYPE);
-        } else {
-            context.callDelegateSingle(m, whenInRangeMethod);
-        }
-        m.goTo(end);
-
-        m.visitLabel(whenOutOfRangeLabel);
-        if (whenOutOfRangeMethod.equals(inputMethod)) {
-            m.load(inputValue, Type.DOUBLE_TYPE);
-        } else {
-            context.callDelegateSingle(m, whenOutOfRangeMethod);
-        }
-
-        m.visitLabel(end);
-        m.areturn(Type.DOUBLE_TYPE);
-    }
-
-    @Override
-    public void doBytecodeGenMulti(BytecodeGen.Context context, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
-        String inputSingle = context.newSingleMethod(this.input);
-        String whenInRangeSingle = context.newSingleMethod(this.whenInRange);
-        String whenOutOfRangeSingle = context.newSingleMethod(this.whenOutOfRange);
-        String inputMulti = context.newMultiMethod(this.input);
-//        String whenInRangeMulti = context.newMultiMethod(this.whenInRange);
-//        String whenOutOfRangeMulti = context.newMultiMethod(this.whenOutOfRange);
-
-        context.callDelegateMulti(m, inputMulti);
-
-        context.doCountedLoop(m, localVarConsumer, idx -> {
-            Label whenOutOfRangeLabel = new Label();
-            Label end = new Label();
-
-            m.load(1, InstructionAdapter.OBJECT_TYPE);
-            m.load(idx, Type.INT_TYPE);
-
-//            m.load(inputValue, Type.DOUBLE_TYPE);
-            m.load(1, InstructionAdapter.OBJECT_TYPE);
-            m.load(idx, Type.INT_TYPE);
-            m.aload(Type.DOUBLE_TYPE);
-            m.dconst(this.minInclusive);
-            m.cmpl(Type.DOUBLE_TYPE);
-            m.iflt(whenOutOfRangeLabel); // inputValue < minInclusive
-//            m.load(inputValue, Type.DOUBLE_TYPE);
-            m.load(1, InstructionAdapter.OBJECT_TYPE);
-            m.load(idx, Type.INT_TYPE);
-            m.aload(Type.DOUBLE_TYPE);
-            m.dconst(this.maxExclusive);
-            m.cmpg(Type.DOUBLE_TYPE);
-            m.ifge(whenOutOfRangeLabel); // inputValue >= maxExclusive
-
-//            context.callDelegateSingle(m, whenInRangeSingle);
-            if (whenInRangeSingle.equals(inputSingle)) {
-                m.load(1, InstructionAdapter.OBJECT_TYPE);
-                m.load(idx, Type.INT_TYPE);
-                m.aload(Type.DOUBLE_TYPE);
-            } else {
-                m.load(0, InstructionAdapter.OBJECT_TYPE);
-                m.load(2, InstructionAdapter.OBJECT_TYPE);
-                m.load(idx, Type.INT_TYPE);
-                m.aload(Type.INT_TYPE);
-                m.load(3, InstructionAdapter.OBJECT_TYPE);
-                m.load(idx, Type.INT_TYPE);
-                m.aload(Type.INT_TYPE);
-                m.load(4, InstructionAdapter.OBJECT_TYPE);
-                m.load(idx, Type.INT_TYPE);
-                m.aload(Type.INT_TYPE);
-                m.load(5, InstructionAdapter.OBJECT_TYPE);
-                m.invokevirtual(context.className, whenInRangeSingle, BytecodeGen.Context.SINGLE_DESC, false);
-            }
-            m.goTo(end);
-
-            m.visitLabel(whenOutOfRangeLabel);
-            if (whenOutOfRangeSingle.equals(inputSingle)) {
-                m.load(1, InstructionAdapter.OBJECT_TYPE);
-                m.load(idx, Type.INT_TYPE);
-                m.aload(Type.DOUBLE_TYPE);
-            } else {
-                m.load(0, InstructionAdapter.OBJECT_TYPE);
-                m.load(2, InstructionAdapter.OBJECT_TYPE);
-                m.load(idx, Type.INT_TYPE);
-                m.aload(Type.INT_TYPE);
-                m.load(3, InstructionAdapter.OBJECT_TYPE);
-                m.load(idx, Type.INT_TYPE);
-                m.aload(Type.INT_TYPE);
-                m.load(4, InstructionAdapter.OBJECT_TYPE);
-                m.load(idx, Type.INT_TYPE);
-                m.aload(Type.INT_TYPE);
-                m.load(5, InstructionAdapter.OBJECT_TYPE);
-                m.invokevirtual(context.className, whenOutOfRangeSingle, BytecodeGen.Context.SINGLE_DESC, false);
-            }
-
-            m.visitLabel(end);
-            m.astore(Type.DOUBLE_TYPE);
-        });
-
-        m.areturn(Type.VOID_TYPE);
     }
 
     @Override

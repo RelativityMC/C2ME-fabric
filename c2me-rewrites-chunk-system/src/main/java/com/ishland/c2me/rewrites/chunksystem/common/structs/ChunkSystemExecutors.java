@@ -1,3 +1,27 @@
+/*
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2021-2026 ishland
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 package com.ishland.c2me.rewrites.chunksystem.common.structs;
 
 import com.ishland.c2me.base.common.GlobalExecutors;
@@ -10,50 +34,39 @@ import java.util.concurrent.Executor;
 
 public class ChunkSystemExecutors {
 
-    public static final ThreadLocal<Queue<Runnable>> CONSOLIDATING_QUEUE = new ThreadLocal<>();
+    public static final ScopedValue<Queue<Runnable>> CONSOLIDATING_QUEUE = ScopedValue.newInstance();
 
     public static final Executor backingBackgroundExecutor = GlobalExecutors.prioritizedScheduler.executor(15);
     public static final Scheduler backgroundScheduler = Schedulers.from(backingBackgroundExecutor);
     public static final Executor consolidatingBackgroundExecutor = command -> {
-        Queue<Runnable> runnables = CONSOLIDATING_QUEUE.get();
-        if (runnables == null) { // first entry
+        if (!CONSOLIDATING_QUEUE.isBound()) { // first entry
             consolidatingRoot(command);
-            CONSOLIDATING_QUEUE.remove(); // get() initielizes threadlocal
-            return;
+        } else {
+            Queue<Runnable> runnables = CONSOLIDATING_QUEUE.get();
+            runnables.add(command);
         }
-        runnables.add(command);
     };
     public static final Scheduler consolidatingBackgroundScheduler = Schedulers.from(consolidatingBackgroundExecutor);
 
     private static void consolidatingRoot(Runnable initialCommand) {
-        backingBackgroundExecutor.execute(() -> {
-            Queue<Runnable> runnables = CONSOLIDATING_QUEUE.get();
-            if (runnables != null) {
-                new Throwable("CONSOLIDATING_QUEUE leak").printStackTrace();
-                try {
-                    initialCommand.run();
-                } catch (Throwable t) {
-                    t.printStackTrace();
-                }
-                return;
-            }
+        ArrayDeque<Runnable> runnables = new ArrayDeque<>();
+        runnables.add(initialCommand);
+        consolidatingRoot0(runnables);
+    }
 
-            CONSOLIDATING_QUEUE.set(runnables = new ArrayDeque<>());
-            runnables.add(initialCommand);
-            try {
-                while (!runnables.isEmpty()) {
-                    try {
-                        runnables.remove().run();
-                    } catch (Throwable t) {
-                        t.printStackTrace();
-                    }
-                }
-            } finally {
-                if (!runnables.isEmpty()) {
-                    new Throwable("runnable leak").printStackTrace();
-                }
-                CONSOLIDATING_QUEUE.remove();
-            }
+    public static void consolidatingRoot0(ArrayDeque<Runnable> runnables) {
+        backingBackgroundExecutor.execute(() -> {
+            ScopedValue
+                    .where(CONSOLIDATING_QUEUE, runnables)
+                    .run(() -> {
+                        while (!runnables.isEmpty()) {
+                            try {
+                                runnables.remove().run();
+                            } catch (Throwable t) {
+                                t.printStackTrace();
+                            }
+                        }
+                    });
         });
     }
 

@@ -1,7 +1,31 @@
+/*
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2021-2026 ishland
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 package natives;
 
 import com.ishland.c2me.opts.natives_math.common.BindingsTemplate;
-import com.ishland.c2me.opts.natives_math.common.util.MemoryUtil;
+import com.ishland.c2me.base.common.util.MemoryUtil;
 import it.unimi.dsi.fastutil.doubles.DoubleList;
 import natives.support.ReflectUtils;
 import net.minecraft.util.math.noise.DoublePerlinNoiseSampler;
@@ -42,25 +66,33 @@ public class DoublePerlinNoiseBenchmark extends Base_x86_64 {
             }
         }
         final Arena arena = Arena.ofShared(); // this is fine
-        final MemorySegment data = arena.allocate(BindingsTemplate.double_octave_sampler_data.byteSize(), 64);
-        final MemorySegment need_shift = arena.allocate(nonNullSamplerCount, 64);
-        final MemorySegment lacunarity_powd = arena.allocate(nonNullSamplerCount * 8, 64);
-        final MemorySegment persistence_powd = arena.allocate(nonNullSamplerCount * 8, 64);
-        final MemorySegment sampler_permutations = arena.allocate(nonNullSamplerCount * 256 * 4, 64);
-        final MemorySegment sampler_originX = arena.allocate(nonNullSamplerCount * 8, 64);
-        final MemorySegment sampler_originY = arena.allocate(nonNullSamplerCount * 8, 64);
-        final MemorySegment sampler_originZ = arena.allocate(nonNullSamplerCount * 8, 64);
-        final MemorySegment amplitudes = arena.allocate(nonNullSamplerCount * 8, 64);
+        final long need_shift_offset = BindingsTemplate.double_octave_sampler_data.byteSize();
+        final long lacunarity_powd_offset = MemoryUtil.roundUp(need_shift_offset + nonNullSamplerCount, 64);
+        final long persistence_powd_offset = MemoryUtil.roundUp(lacunarity_powd_offset + nonNullSamplerCount * 8, 64);
+        final long sampler_permutations_offset = MemoryUtil.roundUp(persistence_powd_offset + nonNullSamplerCount * 8, 64);
+        final long sampler_originX_offset = MemoryUtil.roundUp(sampler_permutations_offset + nonNullSamplerCount * 256 * 4, 64);
+        final long sampler_originY_offset = MemoryUtil.roundUp(sampler_originX_offset + nonNullSamplerCount * 8, 64);
+        final long sampler_originZ_offset = MemoryUtil.roundUp(sampler_originY_offset + nonNullSamplerCount * 8, 64);
+        final long amplitudes_offset = MemoryUtil.roundUp(sampler_originZ_offset + nonNullSamplerCount * 8, 64);
+        final MemorySegment data = arena.allocate(MemoryUtil.roundUp(amplitudes_offset + nonNullSamplerCount * 8, 64), 64);
+        final MemorySegment need_shift = data.asSlice(need_shift_offset, nonNullSamplerCount, 1);
+        final MemorySegment lacunarity_powd = data.asSlice(lacunarity_powd_offset, nonNullSamplerCount * 8, 64);
+        final MemorySegment persistence_powd = data.asSlice(persistence_powd_offset, nonNullSamplerCount * 8, 64);
+        final MemorySegment sampler_permutations = data.asSlice(sampler_permutations_offset, nonNullSamplerCount * 256 * 4, 64);
+        final MemorySegment sampler_originX = data.asSlice(sampler_originX_offset, nonNullSamplerCount * 8, 64);
+        final MemorySegment sampler_originY = data.asSlice(sampler_originY_offset, nonNullSamplerCount * 8, 64);
+        final MemorySegment sampler_originZ = data.asSlice(sampler_originZ_offset, nonNullSamplerCount * 8, 64);
+        final MemorySegment amplitudes = data.asSlice(amplitudes_offset, nonNullSamplerCount * 8, 64);
         BindingsTemplate.double_octave_sampler_data$length.set(data, 0L, nonNullSamplerCount);
         BindingsTemplate.double_octave_sampler_data$amplitude.set(data, 0L, amplitude);
-        BindingsTemplate.double_octave_sampler_data$need_shift.set(data, 0L, need_shift);
-        BindingsTemplate.double_octave_sampler_data$lacunarity_powd.set(data, 0L, lacunarity_powd);
-        BindingsTemplate.double_octave_sampler_data$persistence_powd.set(data, 0L, persistence_powd);
-        BindingsTemplate.double_octave_sampler_data$sampler_permutations.set(data, 0L, sampler_permutations);
-        BindingsTemplate.double_octave_sampler_data$sampler_originX.set(data, 0L, sampler_originX);
-        BindingsTemplate.double_octave_sampler_data$sampler_originY.set(data, 0L, sampler_originY);
-        BindingsTemplate.double_octave_sampler_data$sampler_originZ.set(data, 0L, sampler_originZ);
-        BindingsTemplate.double_octave_sampler_data$amplitudes.set(data, 0L, amplitudes);
+        BindingsTemplate.double_octave_sampler_data$need_shift.set(data, 0L, (int) need_shift_offset);
+        BindingsTemplate.double_octave_sampler_data$lacunarity_powd.set(data, 0L, (int) lacunarity_powd_offset);
+        BindingsTemplate.double_octave_sampler_data$persistence_powd.set(data, 0L, (int) persistence_powd_offset);
+        BindingsTemplate.double_octave_sampler_data$sampler_permutations.set(data, 0L, (int) sampler_permutations_offset);
+        BindingsTemplate.double_octave_sampler_data$sampler_originX.set(data, 0L, (int) sampler_originX_offset);
+        BindingsTemplate.double_octave_sampler_data$sampler_originY.set(data, 0L, (int) sampler_originY_offset);
+        BindingsTemplate.double_octave_sampler_data$sampler_originZ.set(data, 0L, (int) sampler_originZ_offset);
+        BindingsTemplate.double_octave_sampler_data$amplitudes.set(data, 0L, (int) amplitudes_offset);
         long index = 0;
         {
             PerlinNoiseSampler[] octaveSamplers = (PerlinNoiseSampler[]) ReflectUtils.getField(OctavePerlinNoiseSampler.class, firstSampler, "octaveSamplers");

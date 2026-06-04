@@ -1,3 +1,27 @@
+/*
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2021-2026 ishland
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 package natives.support;
 
 import java.lang.foreign.Arena;
@@ -10,7 +34,7 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import com.ishland.c2me.opts.natives_math.common.BindingsTemplate;
-import com.ishland.c2me.opts.natives_math.common.util.MemoryUtil;
+import com.ishland.c2me.base.common.util.MemoryUtil;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.noise.OctavePerlinNoiseSampler;
 import net.minecraft.util.math.noise.PerlinNoiseSampler;
@@ -21,7 +45,7 @@ public class InterpolatedNoiseSamplerCopy {
 
     public static MemorySegment interpolated_noise_sampler$create(InterpolatedNoiseSamplerCopy interpolated) {
         final Arena arena = Arena.ofShared(); // this is fine
-        final MemorySegment data = arena.allocate(BindingsTemplate.interpolated_noise_sampler.byteSize(), 64);
+        final MemorySegment data = arena.allocate(MemoryUtil.roundUp(BindingsTemplate.interpolated_noise_sampler.byteSize(), 64) + 40 * 256L * 4L + 40 * 8L * 4, 64);
         BindingsTemplate.interpolated_noise_sampler$scaledXzScale.set(data, 0L, interpolated.scaledXzScale);
         BindingsTemplate.interpolated_noise_sampler$scaledYScale.set(data, 0L, interpolated.scaledYScale);
         BindingsTemplate.interpolated_noise_sampler$xzFactor.set(data, 0L, interpolated.xzFactor);
@@ -40,11 +64,17 @@ public class InterpolatedNoiseSamplerCopy {
         System.out.println(String.format("upper: %d", IntStream.range(0, 16).mapToObj(interpolated.upperInterpolatedNoise::getOctave).filter(Objects::nonNull).count()));
         System.out.println(String.format("normal: %d", IntStream.range(0, 8).mapToObj(interpolated.interpolationNoise::getOctave).filter(Objects::nonNull).count()));
 
-        final MemorySegment sampler_permutations = arena.allocate(40 * 256L * 4L, 64);
-        final MemorySegment sampler_originX = arena.allocate(40 * 8L, 64);
-        final MemorySegment sampler_originY = arena.allocate(40 * 8L, 64);
-        final MemorySegment sampler_originZ = arena.allocate(40 * 8L, 64);
-        final MemorySegment sampler_mulFactor = arena.allocate(40 * 8L, 64);
+        final long sampler_permutations_offset = MemoryUtil.roundUp(BindingsTemplate.interpolated_noise_sampler.byteSize(), 64);
+        final long sampler_originX_offset = sampler_permutations_offset + 40 * 256L * 4L;
+        final long sampler_originY_offset = sampler_originX_offset + 40 * 8L;
+        final long sampler_originZ_offset = sampler_originY_offset + 40 * 8L;
+        final long sampler_mulFactor_offset = sampler_originZ_offset + 40 * 8L;
+
+        final MemorySegment sampler_permutations = data.asSlice(sampler_permutations_offset, 40 * 256L * 4L, 64);
+        final MemorySegment sampler_originX = data.asSlice(sampler_originX_offset, 40 * 8L, 64);
+        final MemorySegment sampler_originY = data.asSlice(sampler_originY_offset, 40 * 8L, 64);
+        final MemorySegment sampler_originZ = data.asSlice(sampler_originZ_offset, 40 * 8L, 64);
+        final MemorySegment sampler_mulFactor = data.asSlice(sampler_mulFactor_offset, 40 * 8L, 64);
 
         int index = 0;
 
@@ -63,11 +93,11 @@ public class InterpolatedNoiseSamplerCopy {
                 }
             }
 
-            BindingsTemplate.interpolated_noise_sampler$normal$sampler_permutations.set(data, 0L, sampler_permutations.asSlice(startIndex * 256L * 4L));
-            BindingsTemplate.interpolated_noise_sampler$normal$sampler_originX.set(data, 0L, sampler_originX.asSlice(startIndex * 8L));
-            BindingsTemplate.interpolated_noise_sampler$normal$sampler_originY.set(data, 0L, sampler_originY.asSlice(startIndex * 8L));
-            BindingsTemplate.interpolated_noise_sampler$normal$sampler_originZ.set(data, 0L, sampler_originZ.asSlice(startIndex * 8L));
-            BindingsTemplate.interpolated_noise_sampler$normal$sampler_mulFactor.set(data, 0L, sampler_mulFactor.asSlice(startIndex * 8L));
+            BindingsTemplate.interpolated_noise_sampler$normal$sampler_permutations.set(data, 0L, (int) (sampler_permutations_offset + startIndex * 256L * 4L));
+            BindingsTemplate.interpolated_noise_sampler$normal$sampler_originX.set(data, 0L, (int) (sampler_originX_offset + startIndex * 8L));
+            BindingsTemplate.interpolated_noise_sampler$normal$sampler_originY.set(data, 0L, (int) (sampler_originY_offset + startIndex * 8L));
+            BindingsTemplate.interpolated_noise_sampler$normal$sampler_originZ.set(data, 0L, (int) (sampler_originZ_offset + startIndex * 8L));
+            BindingsTemplate.interpolated_noise_sampler$normal$sampler_mulFactor.set(data, 0L, (int) (sampler_mulFactor_offset + startIndex * 8L));
             BindingsTemplate.interpolated_noise_sampler$normal$length.set(data, 0L, index - startIndex);
         }
 
@@ -86,11 +116,11 @@ public class InterpolatedNoiseSamplerCopy {
                 }
             }
 
-            BindingsTemplate.interpolated_noise_sampler$lower$sampler_permutations.set(data, 0L, sampler_permutations.asSlice(startIndex * 256L * 4L));
-            BindingsTemplate.interpolated_noise_sampler$lower$sampler_originX.set(data, 0L, sampler_originX.asSlice(startIndex * 8L));
-            BindingsTemplate.interpolated_noise_sampler$lower$sampler_originY.set(data, 0L, sampler_originY.asSlice(startIndex * 8L));
-            BindingsTemplate.interpolated_noise_sampler$lower$sampler_originZ.set(data, 0L, sampler_originZ.asSlice(startIndex * 8L));
-            BindingsTemplate.interpolated_noise_sampler$lower$sampler_mulFactor.set(data, 0L, sampler_mulFactor.asSlice(startIndex * 8L));
+            BindingsTemplate.interpolated_noise_sampler$lower$sampler_permutations.set(data, 0L, (int) (sampler_permutations_offset + startIndex * 256L * 4L));
+            BindingsTemplate.interpolated_noise_sampler$lower$sampler_originX.set(data, 0L, (int) (sampler_originX_offset + startIndex * 8L));
+            BindingsTemplate.interpolated_noise_sampler$lower$sampler_originY.set(data, 0L, (int) (sampler_originY_offset + startIndex * 8L));
+            BindingsTemplate.interpolated_noise_sampler$lower$sampler_originZ.set(data, 0L, (int) (sampler_originZ_offset + startIndex * 8L));
+            BindingsTemplate.interpolated_noise_sampler$lower$sampler_mulFactor.set(data, 0L, (int) (sampler_mulFactor_offset + startIndex * 8L));
             BindingsTemplate.interpolated_noise_sampler$lower$length.set(data, 0L, index - startIndex);
         }
 
@@ -109,11 +139,11 @@ public class InterpolatedNoiseSamplerCopy {
                 }
             }
 
-            BindingsTemplate.interpolated_noise_sampler$upper$sampler_permutations.set(data, 0L, sampler_permutations.asSlice(startIndex * 256L * 4L));
-            BindingsTemplate.interpolated_noise_sampler$upper$sampler_originX.set(data, 0L, sampler_originX.asSlice(startIndex * 8L));
-            BindingsTemplate.interpolated_noise_sampler$upper$sampler_originY.set(data, 0L, sampler_originY.asSlice(startIndex * 8L));
-            BindingsTemplate.interpolated_noise_sampler$upper$sampler_originZ.set(data, 0L, sampler_originZ.asSlice(startIndex * 8L));
-            BindingsTemplate.interpolated_noise_sampler$upper$sampler_mulFactor.set(data, 0L, sampler_mulFactor.asSlice(startIndex * 8L));
+            BindingsTemplate.interpolated_noise_sampler$upper$sampler_permutations.set(data, 0L, (int) (sampler_permutations_offset + startIndex * 256L * 4L));
+            BindingsTemplate.interpolated_noise_sampler$upper$sampler_originX.set(data, 0L, (int) (sampler_originX_offset + startIndex * 8L));
+            BindingsTemplate.interpolated_noise_sampler$upper$sampler_originY.set(data, 0L, (int) (sampler_originY_offset + startIndex * 8L));
+            BindingsTemplate.interpolated_noise_sampler$upper$sampler_originZ.set(data, 0L, (int) (sampler_originZ_offset + startIndex * 8L));
+            BindingsTemplate.interpolated_noise_sampler$upper$sampler_mulFactor.set(data, 0L, (int) (sampler_mulFactor_offset + startIndex * 8L));
             BindingsTemplate.interpolated_noise_sampler$upper$length.set(data, 0L, index - startIndex);
         }
 

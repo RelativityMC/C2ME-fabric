@@ -1,3 +1,27 @@
+/*
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2021-2026 ishland
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 package com.ishland.c2me.opts.worldgen.vanilla.mixin.structure_weight_sampler;
 
 import net.minecraft.structure.JigsawJunction;
@@ -48,56 +72,40 @@ public abstract class MixinStructureWeightSampler {
             return 0.0;
         }
 
-        int i = pos.blockX();
-        int j = pos.blockY();
-        int k = pos.blockZ();
+        int x = pos.blockX();
+        int y = pos.blockY();
+        int z = pos.blockZ();
 
-        if (!this.field_61467.contains(i, j, k)) {
+        if (!this.field_61467.contains(x, y, z)) {
             return 0.0;
         }
 
         if (this.c2me$pieceArray == null || this.c2me$junctionArray == null) {
             this.c2me$initArrays();
         }
-
         double d = 0.0;
 
 
         for (StructureWeightSampler.Piece piece : this.c2me$pieceArray) {
             BlockBox blockBox = piece.box();
-            int l = piece.groundLevelDelta();
-            int m = Math.max(0, Math.max(blockBox.getMinX() - i, i - blockBox.getMaxX()));
-            int n = Math.max(0, Math.max(blockBox.getMinZ() - k, k - blockBox.getMaxZ()));
-            int o = blockBox.getMinY() + l;
-            int p = j - o;
-
-//            int q = switch (piece.terrainAdjustment()) {
-//                case NONE -> 0;
-//                case BURY, BEARD_THIN -> p;
-//                case BEARD_BOX -> Math.max(0, Math.max(o - j, j - blockBox.getMaxY()));
-//                case ENCAPSULATE -> Math.max(0, Math.max(blockBox.getMinY() - j, j - blockBox.getMaxY()));
-//            };
-//
-//            d += switch (piece.terrainAdjustment()) {
-//                case NONE -> 0.0;
-//                case BURY -> getMagnitudeWeight(m, (double)q / 2.0, n);
-//                case BEARD_THIN, BEARD_BOX -> getStructureWeight(m, q, n, p) * 0.8;
-//                case ENCAPSULATE -> getMagnitudeWeight((double)m / 2.0, (double)q / 2.0, (double)n / 2.0) * 0.8;
-//            };
+            int m = Math.max(0, Math.max(blockBox.getMinX() - x, x - blockBox.getMaxX()));
+            int n = Math.max(0, Math.max(blockBox.getMinZ() - z, z - blockBox.getMaxZ()));
+            int o = blockBox.getMinY() + piece.groundLevelDelta();
+            int p = y - o;
 
             d += switch (piece.terrainAdjustment()) { // 2 switch statement merged
                 case NONE -> 0.0;
                 case BURY -> getMagnitudeWeight(m, (double)p / 2.0, n);
                 case BEARD_THIN -> getStructureWeight(m, p, n, p) * 0.8;
-                case BEARD_BOX -> getStructureWeight(m, Math.max(0, Math.max(o - j, j - blockBox.getMaxY())), n, p) * 0.8;
-                case ENCAPSULATE -> getMagnitudeWeight((double)m / 2.0, (double)Math.max(0, Math.max(blockBox.getMinY() - j, j - blockBox.getMaxY())) / 2.0, (double)n / 2.0) * 0.8;
+                case BEARD_BOX -> getStructureWeight(m, Math.max(0, Math.max(o - y, y - blockBox.getMaxY())), n, p) * 0.8;
+                case ENCAPSULATE -> getMagnitudeWeight((double)m / 2.0, (double)Math.max(0, Math.max(blockBox.getMinY() - y, y - blockBox.getMaxY())) / 2.0, (double)n / 2.0) * 0.8;
             };
         }
 
         for (JigsawJunction jigsawJunction : this.c2me$junctionArray) {
-            int r = i - jigsawJunction.getSourceX();
-            int l = j - jigsawJunction.getSourceGroundY();
-            int m = k - jigsawJunction.getSourceZ();
+            int r = x - jigsawJunction.getSourceX();
+            int l = y - jigsawJunction.getSourceGroundY();
+            int m = z - jigsawJunction.getSourceZ();
             d += getStructureWeight(r, l, m, l) * 0.4;
         }
 

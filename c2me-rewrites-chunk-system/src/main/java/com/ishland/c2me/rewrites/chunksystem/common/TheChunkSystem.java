@@ -1,3 +1,27 @@
+/*
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2021-2026 ishland
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 package com.ishland.c2me.rewrites.chunksystem.common;
 
 import com.ishland.c2me.base.common.scheduler.IVanillaChunkManager;
@@ -59,19 +83,10 @@ public class TheChunkSystem extends StatusAdvancingScheduler<ChunkPos, ChunkStat
     @Override
     protected ChunkLoadingContext makeContext(ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> holder, ItemStatus<ChunkPos, ChunkState, ChunkLoadingContext> nextStatus, KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] dependencies, boolean isUpgrade) {
         Assertions.assertTrue(nextStatus instanceof NewChunkStatus);
+        assert nextStatus != null;
         final NewChunkStatus nextStatus1 = (NewChunkStatus) nextStatus;
 
-        int radius;
-        if (dependencies.length == 0) {
-            radius = 0;
-        } else {
-            int actualDependencies = dependencies.length + 1;
-            radius = (int) ((Math.sqrt(actualDependencies) - 1) / 2);
-            Assertions.assertTrue((radius * 2 + 1) * (radius * 2 + 1) == actualDependencies);
-        }
-
-        return new ChunkLoadingContext(holder, this.tacs, this.schedulingManager, BoundedRegionArray.create(holder.getKey().x(), holder.getKey().z(), radius,
-                (x, z) -> this.getHolder(new ChunkPos(x, z)).getUserData().get()), dependencies);
+        return new ChunkLoadingContext(holder, this.tacs, this.schedulingManager, this, dependencies);
     }
 
     @Override
@@ -87,10 +102,15 @@ public class TheChunkSystem extends StatusAdvancingScheduler<ChunkPos, ChunkStat
     }
 
     @Override
-    protected void onItemCreation(ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> holder) {
-        super.onItemCreation(holder);
+    protected void onItemConstruct(ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> holder) {
+        super.onItemConstruct(holder);
         holder.getUserData().setPlain(new NewChunkHolderVanillaInterface(this, holder, ((IThreadedAnvilChunkStorage) this.tacs).getWorld(), ((IThreadedAnvilChunkStorage) this.tacs).getLightingProvider(), this.tacs));
         holder.getItem().setPlain(new ChunkState(null, null, null, true));
+    }
+
+    @Override
+    protected void onItemCreation(ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> holder) {
+        super.onItemCreation(holder);
     }
 
     @Override
@@ -132,7 +152,7 @@ public class TheChunkSystem extends StatusAdvancingScheduler<ChunkPos, ChunkStat
                 ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> holder;
                 boolean shouldReturnVanillaHolder;
                 if (newStatus != this.getUnloadedStatus()) {
-                    holder = this.addTicket(key, TicketTypeExtension.VANILLA_LEVEL, key, newStatus, NO_OP);
+                    holder = this.addTicket(key, TicketTypeExtension.VANILLA_LEVEL, key, newStatus, null);
                     shouldReturnVanillaHolder = true;
                 } else {
                     this.managedTickets.remove(pos);

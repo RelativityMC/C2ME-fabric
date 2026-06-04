@@ -47,6 +47,13 @@ allprojects {
 //            transitive = false
 //        }
         implementation "com.ibm.async:asyncutil:${async_util_version}"
+
+        implementation platform("org.lwjgl:lwjgl-bom:${lwjgl_version}")
+        minecraftServerRuntimeLibraries implementation("org.lwjgl:lwjgl:${lwjgl_version}")
+        minecraftServerRuntimeLibraries implementation("org.lwjgl:lwjgl-opencl:${lwjgl_version}")
+        implementation group: 'org.lwjgl', name: 'lwjgl', classifier: 'natives-linux'
+        implementation group: 'org.lwjgl', name: 'lwjgl', classifier: 'natives-linux-arm64'
+        implementation group: 'org.lwjgl', name: 'lwjgl', classifier: 'natives-windows'
     }
     processResources {
         inputs.property "version", version
