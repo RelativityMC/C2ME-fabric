@@ -256,7 +256,7 @@ publishMods {
     def envType = System.getenv("OVERRIDE_RELEASE_TYPE")
     type = envType != null ? me.modmuss50.mpp.ReleaseType.valueOf(envType) : me.modmuss50.mpp.ReleaseType.ALPHA
 
-    version = project.version + "+" + project.minecraft_version.replaceAll("-snapshot-", "-snap-")
+    it.version = project.version + "+" + project.minecraft_version.replaceAll("-snapshot-", "-snap-")
 
     def cfVersions = project.curseforge_minecraft_versions.split(",")
     if (cfVersions.length != 0) {
@@ -310,6 +310,7 @@ String getVersionSuffix() {
         commandLine 'git', 'describe', '--tags', '--dirty', '--broken'
     }.standardOutput.asText.get()
     stdout = stdout.toString().strip()
+    stdout = stdout.substring(stdout.indexOf('-') + 1) // strip the existing dash
     def suffix = ""
     if (stdout.endsWith("-dirty")) {
         stdout = stdout.substring(0, stdout.length() - "-dirty".length())
