@@ -1,3 +1,27 @@
+/*
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2021-2026 ishland
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 package com.ishland.c2me.rewrites.chunk_serializer.common;
 
 import com.ishland.c2me.base.mixin.access.IBelowZeroRetrogen;
@@ -129,15 +153,6 @@ public final class ChunkDataSerializer {
     private static final byte[] STRING_MARKER_FLUID_FULL = NbtWriter.getAsciiStringBytes("fluid:full");
     private static final byte[] STRING_MARKER_FLUID_FALLBACK = NbtWriter.getAsciiStringBytes("fluid:fallback");
 
-    // STARLIGHT
-    private static final byte[] STRING_BLOCKLIGHT_STATE_TAG = NbtWriter.getAsciiStringBytes("starlight.blocklight_state");
-    private static final byte[] STRING_SKYLIGHT_STATE_TAG = NbtWriter.getAsciiStringBytes("starlight.skylight_state");
-    private static final byte[] STRING_STARLIGHT_VERSION_TAG = NbtWriter.getAsciiStringBytes("starlight.light_version");
-    private static final int STARLIGHT_LIGHT_VERSION = 8;
-
-    // TODO: validating starlight compatibility?
-    private static final boolean STARLIGHT = FabricLoader.getInstance().isModLoaded("starlight");
-
     /**
      * Mirror of {@link SerializedChunk#serialize(ServerWorld, Chunk)}
      */
@@ -230,15 +245,8 @@ public final class ChunkDataSerializer {
     }
 
     private static void checkLightFlag(boolean lightCorrect, NbtWriter writer) {
-        if (STARLIGHT) {
-            // starlight also has a check to see if the "level" isn't a "serverlevel"???
-            if (lightCorrect) {
-                writer.putBoolean(STRING_IS_LIGHT_ON, false);
-            }
-        } else {
-            if (lightCorrect) {
-                writer.putBoolean(STRING_IS_LIGHT_ON, true);
-            }
+        if (lightCorrect) {
+            writer.putBoolean(STRING_IS_LIGHT_ON, true);
         }
     }
 

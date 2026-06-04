@@ -34,7 +34,20 @@ typedef const double *aligned_double_ptr __attribute__((align_value(64)));
 typedef const uint8_t *aligned_uint8_ptr __attribute__((align_value(64)));
 typedef const uint32_t *aligned_uint32_ptr __attribute__((align_value(64)));
 
+#define max(a, b) \
+   ({ __typeof__ (a) _a = (a); \
+       __typeof__ (b) _b = (b); \
+     _a >= _b ? _a : _b; })
+#define min(a, b) \
+   ({ __typeof__ (a) _a = (a); \
+       __typeof__ (b) _b = (b); \
+     _a <= _b ? _a : _b; })
+
 #pragma clang attribute push (__attribute__((always_inline)), apply_to = function)
+
+static inline __attribute__((const)) void *ptr_shift(const void * const ptr, const int32_t shift) {
+    return (void *) (((uint8_t *) ptr) + shift);
+}
 
 static inline __attribute__((const)) float fminf(const float x, const float y) {
     return __builtin_fminf(x, y);
@@ -303,14 +316,14 @@ math_noise_perlin_sample(const aligned_uint32_ptr permutations,
 typedef const struct double_octave_sampler_data {
     const uint64_t length;
     const double amplitude;
-    const bool *const need_shift;
-    const aligned_double_ptr lacunarity_powd;
-    const aligned_double_ptr persistence_powd;
-    const aligned_uint32_ptr sampler_permutations;
-    const aligned_double_ptr sampler_originX;
-    const aligned_double_ptr sampler_originY;
-    const aligned_double_ptr sampler_originZ;
-    const aligned_double_ptr amplitudes;
+    const int32_t need_shift;
+    const int32_t lacunarity_powd;
+    const int32_t persistence_powd;
+    const int32_t sampler_permutations;
+    const int32_t sampler_originX;
+    const int32_t sampler_originY;
+    const int32_t sampler_originZ;
+    const int32_t amplitudes;
 } double_octave_sampler_data_t;
 
 static inline __attribute__((const)) double
@@ -319,31 +332,40 @@ math_noise_perlin_double_octave_sample_impl(const double_octave_sampler_data_t *
                                             const double yScale, const double yMax, const uint8_t useOrigin) {
     double ds[data->length];
 
+    const bool *const need_shift = ptr_shift(data, data->need_shift);
+    const aligned_double_ptr lacunarity_powd = ptr_shift(data, data->lacunarity_powd);
+    const aligned_double_ptr persistence_powd = ptr_shift(data, data->persistence_powd);
+    const aligned_uint32_ptr sampler_permutations = ptr_shift(data, data->sampler_permutations);
+    const aligned_double_ptr sampler_originX = ptr_shift(data, data->sampler_originX);
+    const aligned_double_ptr sampler_originY = ptr_shift(data, data->sampler_originY);
+    const aligned_double_ptr sampler_originZ = ptr_shift(data, data->sampler_originZ);
+    const aligned_double_ptr amplitudes = ptr_shift(data, data->amplitudes);
+
 #pragma clang loop vectorize(enable) interleave(enable) interleave_count(2)
     for (uint32_t i = 0; i < data->length; i++) {
-        const double e = data->lacunarity_powd[i];
-        const double f = data->persistence_powd[i];
-        const aligned_uint32_ptr permutations = data->sampler_permutations + 256 * i;
-        const double sampleX = data->need_shift[i] ? x * 1.0181268882175227 : x;
-        const double sampleY = data->need_shift[i] ? y * 1.0181268882175227 : y;
-        const double sampleZ = data->need_shift[i] ? z * 1.0181268882175227 : z;
+        const double e = lacunarity_powd[i];
+        const double f = persistence_powd[i];
+        const aligned_uint32_ptr permutations = sampler_permutations + 256 * i;
+        const double sampleX = need_shift[i] ? x * 1.0181268882175227 : x;
+        const double sampleY = need_shift[i] ? y * 1.0181268882175227 : y;
+        const double sampleZ = need_shift[i] ? z * 1.0181268882175227 : z;
         const double g = math_noise_perlin_sample(
                 permutations,
-                data->sampler_originX[i],
-                data->sampler_originY[i],
-                data->sampler_originZ[i],
+                sampler_originX[i],
+                sampler_originY[i],
+                sampler_originZ[i],
                 math_octave_maintainPrecision(sampleX * e),
-                useOrigin ? -(data->sampler_originY[i]) : math_octave_maintainPrecision(sampleY * e),
+                useOrigin ? -(sampler_originY[i]) : math_octave_maintainPrecision(sampleY * e),
                 math_octave_maintainPrecision(sampleZ * e),
                 yScale * e,
                 yMax * e);
-        ds[i] = data->amplitudes[i] * g * f;
+        ds[i] = amplitudes[i] * g * f;
     }
 
     double d1 = 0.0;
     double d2 = 0.0;
     for (uint32_t i = 0; i < data->length; i++) {
-        if (!data->need_shift[i]) {
+        if (!need_shift[i]) {
             d1 += ds[i];
         } else {
             d2 += ds[i];
@@ -507,12 +529,12 @@ math_noise_perlin_double_octave_sample_batch(const double_octave_sampler_data_t 
 }
 
 typedef const struct interpolated_noise_sub_sampler {
-    const aligned_uint32_ptr sampler_permutations;
-    const aligned_double_ptr sampler_originX;
-    const aligned_double_ptr sampler_originY;
-    const aligned_double_ptr sampler_originZ;
-    const aligned_double_ptr sampler_mulFactor;
     const uint32_t length;
+    const int32_t sampler_permutations;
+    const int32_t sampler_originX;
+    const int32_t sampler_originY;
+    const int32_t sampler_originZ;
+    const int32_t sampler_mulFactor;
 } interpolated_noise_sub_sampler_t;
 
 typedef const struct interpolated_noise_sampler {
@@ -548,17 +570,22 @@ math_noise_perlin_interpolated_sample(const interpolated_noise_sampler_t *const 
     double ns[data->normal.length];
 #pragma clang loop vectorize(enable)
     for (uint32_t offset = 0; offset < data->normal.length; offset++) {
+        const aligned_uint32_ptr sampler_permutations = ptr_shift(data, data->normal.sampler_permutations);
+        const aligned_double_ptr sampler_originX = ptr_shift(data, data->normal.sampler_originX);
+        const aligned_double_ptr sampler_originY = ptr_shift(data, data->normal.sampler_originY);
+        const aligned_double_ptr sampler_originZ = ptr_shift(data, data->normal.sampler_originZ);
+        const aligned_double_ptr sampler_mulFactor = ptr_shift(data, data->normal.sampler_mulFactor);
         ns[offset] = math_noise_perlin_sample(
-                data->normal.sampler_permutations + 256 * offset,
-                data->normal.sampler_originX[offset],
-                data->normal.sampler_originY[offset],
-                data->normal.sampler_originZ[offset],
-                math_octave_maintainPrecision(g * data->normal.sampler_mulFactor[offset]),
-                math_octave_maintainPrecision(h * data->normal.sampler_mulFactor[offset]),
-                math_octave_maintainPrecision(i * data->normal.sampler_mulFactor[offset]),
-                k * data->normal.sampler_mulFactor[offset],
-                h * data->normal.sampler_mulFactor[offset]
-        ) / data->normal.sampler_mulFactor[offset];
+                sampler_permutations + 256 * offset,
+                sampler_originX[offset],
+                sampler_originY[offset],
+                sampler_originZ[offset],
+                math_octave_maintainPrecision(g * sampler_mulFactor[offset]),
+                math_octave_maintainPrecision(h * sampler_mulFactor[offset]),
+                math_octave_maintainPrecision(i * sampler_mulFactor[offset]),
+                k * sampler_mulFactor[offset],
+                h * sampler_mulFactor[offset]
+        ) / sampler_mulFactor[offset];
     }
 
     for (uint32_t offset = 0; offset < data->normal.length; offset++) {
@@ -573,17 +600,22 @@ math_noise_perlin_interpolated_sample(const interpolated_noise_sampler_t *const 
         double ls[data->lower.length];
 #pragma clang loop vectorize(enable) interleave_count(2)
         for (uint32_t offset = 0; offset < data->lower.length; offset++) {
+            const aligned_uint32_ptr sampler_permutations = ptr_shift(data, data->lower.sampler_permutations);
+            const aligned_double_ptr sampler_originX = ptr_shift(data, data->lower.sampler_originX);
+            const aligned_double_ptr sampler_originY = ptr_shift(data, data->lower.sampler_originY);
+            const aligned_double_ptr sampler_originZ = ptr_shift(data, data->lower.sampler_originZ);
+            const aligned_double_ptr sampler_mulFactor = ptr_shift(data, data->lower.sampler_mulFactor);
             ls[offset] = math_noise_perlin_sample(
-                    data->lower.sampler_permutations + 256 * offset,
-                    data->lower.sampler_originX[offset],
-                    data->lower.sampler_originY[offset],
-                    data->lower.sampler_originZ[offset],
-                    math_octave_maintainPrecision(d * data->lower.sampler_mulFactor[offset]),
-                    math_octave_maintainPrecision(e * data->lower.sampler_mulFactor[offset]),
-                    math_octave_maintainPrecision(f * data->lower.sampler_mulFactor[offset]),
-                    j * data->lower.sampler_mulFactor[offset],
-                    e * data->lower.sampler_mulFactor[offset]
-            ) / data->lower.sampler_mulFactor[offset];
+                    sampler_permutations + 256 * offset,
+                    sampler_originX[offset],
+                    sampler_originY[offset],
+                    sampler_originZ[offset],
+                    math_octave_maintainPrecision(d * sampler_mulFactor[offset]),
+                    math_octave_maintainPrecision(e * sampler_mulFactor[offset]),
+                    math_octave_maintainPrecision(f * sampler_mulFactor[offset]),
+                    j * sampler_mulFactor[offset],
+                    e * sampler_mulFactor[offset]
+            ) / sampler_mulFactor[offset];
         }
 
         for (uint32_t offset = 0; offset < data->lower.length; offset++) {
@@ -595,17 +627,22 @@ math_noise_perlin_interpolated_sample(const interpolated_noise_sampler_t *const 
         double ms[data->upper.length];
 #pragma clang loop vectorize(enable) interleave_count(2)
         for (uint32_t offset = 0; offset < data->upper.length; offset++) {
+            const aligned_uint32_ptr sampler_permutations = ptr_shift(data, data->upper.sampler_permutations);
+            const aligned_double_ptr sampler_originX = ptr_shift(data, data->upper.sampler_originX);
+            const aligned_double_ptr sampler_originY = ptr_shift(data, data->upper.sampler_originY);
+            const aligned_double_ptr sampler_originZ = ptr_shift(data, data->upper.sampler_originZ);
+            const aligned_double_ptr sampler_mulFactor = ptr_shift(data, data->upper.sampler_mulFactor);
             ms[offset] = math_noise_perlin_sample(
-                    data->upper.sampler_permutations + 256 * offset,
-                    data->upper.sampler_originX[offset],
-                    data->upper.sampler_originY[offset],
-                    data->upper.sampler_originZ[offset],
-                    math_octave_maintainPrecision(d * data->upper.sampler_mulFactor[offset]),
-                    math_octave_maintainPrecision(e * data->upper.sampler_mulFactor[offset]),
-                    math_octave_maintainPrecision(f * data->upper.sampler_mulFactor[offset]),
-                    j * data->upper.sampler_mulFactor[offset],
-                    e * data->upper.sampler_mulFactor[offset]
-            ) / data->upper.sampler_mulFactor[offset];
+                    sampler_permutations + 256 * offset,
+                    sampler_originX[offset],
+                    sampler_originY[offset],
+                    sampler_originZ[offset],
+                    math_octave_maintainPrecision(d * sampler_mulFactor[offset]),
+                    math_octave_maintainPrecision(e * sampler_mulFactor[offset]),
+                    math_octave_maintainPrecision(f * sampler_mulFactor[offset]),
+                    j * sampler_mulFactor[offset],
+                    e * sampler_mulFactor[offset]
+            ) / sampler_mulFactor[offset];
         }
         for (uint32_t offset = 0; offset < data->upper.length; offset++) {
             m += ms[offset];
@@ -621,11 +658,11 @@ math_end_islands_sample(const aligned_uint32_ptr simplex_permutations, const int
     const int32_t j = z / 2;
     const int32_t k = x % 2;
     const int32_t l = z % 2;
-    const int32_t muld = x * x + z * z; // int32_t intentionally
-    if (muld < 0) {
+    volatile int32_t muld = x * x + z * z; // int32_t intentionally
+    if (muld & 0x80000000) {
         return __builtin_nanf("");
     }
-    float f = 100.0F - sqrtf((float) muld) * 8.0F;
+    float f = 100.0F - sqrtf((float) (muld & 0xffffffff)) * 8.0F;
     f = clampf(f, -100.0F, 80.0F);
 
     int8_t ms[25 * 25], ns[25 * 25], hit[25 * 25];
@@ -738,6 +775,245 @@ math_biome_access_sample(const int64_t theSeed, const int32_t x, const int32_t y
     }
 
     return var9;
+}
+
+typedef const struct aquifer_data {
+    int32_t startX;
+    int32_t startY;
+    int32_t startZ;
+    int32_t sizeX;
+    int32_t sizeZ;
+} aquifer_data_t;
+
+static inline __attribute__((const)) uint32_t
+math_aquifer_index(const aquifer_data_t *restrict const aquiferData, const int32_t x, const int32_t y,
+                   const int32_t z) {
+    int i = x - aquiferData->startX;
+    int j = y - aquiferData->startY;
+    int k = z - aquiferData->startZ;
+    return (j * aquiferData->sizeZ + k) * aquiferData->sizeX + i;
+}
+
+static inline __attribute__((const)) int32_t
+math_aquifer_unpackPackedX(uint32_t packed) {
+    return packed >> 8;
+}
+
+static inline __attribute__((const)) int32_t
+math_aquifer_unpackPackedY(uint32_t packed) {
+    return (packed >> 4) & 0b1111;
+}
+
+static inline __attribute__((const)) int32_t
+math_aquifer_unpackPackedZ(uint32_t packed) {
+    return packed & 0b1111;
+}
+
+static inline void
+math_aquifer_refreshDistPosIdx(const uint16_t *restrict const packedBlockPositions, uint32_t *restrict const res,
+                               const aquifer_data_t *restrict const aquiferData,
+                               const int32_t x, const int32_t y, const int32_t z) {
+    int32_t gx = (x - 5) >> 4;
+    int32_t gy = math_floorDiv(y + 1, 12) - 1;
+    int32_t gz = (z - 5) >> 4;
+    uint32_t A = UINT32_MAX;
+    uint32_t B = UINT32_MAX;
+    uint32_t C = UINT32_MAX;
+    uint32_t D = UINT32_MAX;
+
+    uint32_t ps[12];
+
+    uint32_t index = 12; // 12 max
+    for (int32_t offY = 0; offY <= 2; ++offY) {
+        int32_t gymul = gy * 12 + offY * 12;
+        for (int32_t offZ = 0; offZ <= 1; ++offZ) {
+            int32_t gzmul = (gz + offZ) << 4;
+
+            uint32_t index0 = index - 1;
+            uint32_t posIdx0 = math_aquifer_index(aquiferData, gx, gy + offY, gz + offZ);
+            uint32_t position0 = packedBlockPositions[posIdx0];
+            int32_t dx0 = (gx << 4) + math_aquifer_unpackPackedX(position0) - x;
+            int32_t dy0 = gymul + math_aquifer_unpackPackedY(position0) - y;
+            int32_t dz0 = gzmul + math_aquifer_unpackPackedZ(position0) - z;
+            uint32_t dist_0 = dx0 * dx0 + dy0 * dy0 + dz0 * dz0;
+
+            uint32_t index1 = index - 2;
+            uint32_t posIdx1 = posIdx0 + 1;
+            uint32_t position1 = packedBlockPositions[posIdx1];
+            int32_t dx1 = ((gx + 1) << 4) + math_aquifer_unpackPackedX(position1) - x;
+            int32_t dy1 = gymul + math_aquifer_unpackPackedY(position1) - y;
+            int32_t dz1 = gzmul + math_aquifer_unpackPackedZ(position1) - z;
+            uint32_t dist_1 = dx1 * dx1 + dy1 * dy1 + dz1 * dz1;
+
+            ps[12 - index] = (dist_0 << 20) | (index0 << 16) | posIdx0;
+            ps[13 - index] = (dist_1 << 20) | (index1 << 16) | posIdx1;
+
+            index -= 2;
+        }
+    }
+
+    A = ps[0];
+
+    for (uint32_t i = 1; i < 12; i ++) {
+        uint32_t p1 = ps[i];
+        if (p1 <= C) {
+            uint32_t n11 = max(A, p1);
+            A = min(A, p1);
+
+            uint32_t n12 = max(B, n11);
+            B = min(B, n11);
+
+            uint32_t n13 = max(C, n12);
+            C = min(C, n12);
+
+            D = min(D, n13);
+        }
+    }
+
+    res[0] = A;
+    res[1] = B;
+    res[2] = C;
+    res[3] = D;
+}
+
+// branch node: occupies two slots, first with node_minmacs, second with branch_children
+// bit 31 set for both slots, bit 30 set for second slot
+// leaf node: occupies one slot, with biome ID in state
+
+typedef const struct biome_search_tree_node {
+    // bit 31: set if branch node, clear if leaf node
+    // bit 30: set if is branch node children offsets
+    // bit 0-29: biome ID (only valid for leaf nodes)
+    uint32_t state;
+    union {
+        struct {
+            uint32_t children_offset[7]; // at most 7 children, 0 is reserved and means no child
+        } branch_children;
+        struct {
+            int16_t maxs[7];
+            int16_t mins[7];
+        } node_minmaxs;
+    };
+} biome_search_tree_node_t;
+
+static inline bool __attribute__((pure))
+__math_biome_search_tree_is_branch(const biome_search_tree_node_t * restrict const node) {
+    return (node->state & (1U << 31)) != 0;
+}
+
+static inline bool __attribute__((pure))
+__math_biome_search_tree_is_branch_children(const biome_search_tree_node_t * restrict const node) {
+    return (node->state & (1U << 30)) != 0;
+}
+
+static inline void
+__math_biome_search_tree_validate_node(const biome_search_tree_node_t * restrict const node) {
+    if (!__math_biome_search_tree_is_branch(node) && __math_biome_search_tree_is_branch_children(node)) {
+        // invalid state
+        __builtin_trap();
+    }
+    if (__math_biome_search_tree_is_branch(node)) {
+        if (!__math_biome_search_tree_is_branch(node + 1) || !__math_biome_search_tree_is_branch_children(node + 1)) {
+            // branch node must have children offsets in the next slot
+            __builtin_trap();
+        }
+        if (!__math_biome_search_tree_is_branch(node + 1) && __math_biome_search_tree_is_branch_children(node + 1)) {
+            // branch node children offsets must be in a branch node
+            __builtin_trap();
+        }
+    }
+}
+
+static inline uint64_t __attribute__((pure))
+__math_biome_search_tree_distance_func(const biome_search_tree_node_t * restrict const node,
+                                       const int16_t * restrict const target) {
+    if (__math_biome_search_tree_is_branch_children(node)) {
+        __builtin_trap();
+    }
+
+    uint64_t res = 0;
+
+    for (uint32_t i = 0; i < 7; i ++) {
+        int64_t l = (int32_t) target[i] - (int32_t) node->node_minmaxs.maxs[i];
+        int64_t m = (int32_t) node->node_minmaxs.mins[i] - (int32_t) target[i];
+        int64_t dist = l >= 0L ? l : max(m, 0L);
+        res += dist * dist;
+    }
+
+    return res;
+}
+
+typedef struct __biome_search_stack_element {
+    uint32_t node;
+    uint8_t iter_i;
+} __biome_search_stack_element_t;
+
+static inline uint32_t __attribute__((pure))
+math_biome_search_tree_calc(const biome_search_tree_node_t * restrict const nodes,
+                            const int16_t * restrict const target,
+                            const uint32_t nodes_c, const uint32_t tree_depth) {
+    // no recursion allowed, because this needs to be eventually ported to GPU
+
+    if (!__math_biome_search_tree_is_branch(nodes + 1)) {
+        return nodes[1].state & 0x3FFFFFFF;
+    }
+
+    __biome_search_stack_element_t working[tree_depth];
+    uint32_t top = 0;
+    uint32_t current_optimal_node = 1;
+    uint64_t current_optimal_dist = UINT64_MAX;
+
+    working[top ++] = (__biome_search_stack_element_t) { .node = 1, .iter_i = 0 };
+    __math_biome_search_tree_validate_node(nodes + 1);
+
+    loop_start:
+    while (top) {
+        uint32_t cur_node = working[top - 1].node;
+        uint32_t iter_i = working[top - 1].iter_i;
+        __math_biome_search_tree_validate_node(nodes + cur_node);
+
+        uint32_t child_node;
+        if (iter_i >= 7 || !(child_node = nodes[cur_node + 1].branch_children.children_offset[iter_i])) {
+            // no more children, pop the stack
+            top --;
+            continue;
+        }
+
+        // bump iter index for the current node
+        working[top - 1].iter_i ++;
+
+        __math_biome_search_tree_validate_node(nodes + child_node);
+
+        uint64_t d = __math_biome_search_tree_distance_func(nodes + child_node, target);
+
+        if (d >= current_optimal_dist) {
+            // this child cannot be better than the current optimal, skip it
+            continue;
+        }
+
+        if (__math_biome_search_tree_is_branch(nodes + child_node)) {
+            // this is a branch node, push it to the stack
+            working[top ++] = (__biome_search_stack_element_t) { .node = child_node, .iter_i = 0 };
+            if (top >= tree_depth) {
+                // stack overflow, this should never happen
+                __builtin_trap();
+            }
+        } else {
+            current_optimal_dist = d;
+            current_optimal_node = child_node;
+        }
+    }
+
+    return nodes[current_optimal_node].state & 0x3FFFFFFF;
+}
+
+static inline uint32_t __attribute__((pure))
+math_biome_search_tree_calc_args(const biome_search_tree_node_t * restrict const nodes,
+                                 const uint32_t nodes_c, const uint32_t tree_depth,
+                                 int16_t p0, int16_t p1, int16_t p2, int16_t p3,
+                                 int16_t p4, int16_t p5, int16_t p6) {
+    const int16_t target[7] = { p0, p1, p2, p3, p4, p5, p6 };
+    return math_biome_search_tree_calc(nodes, target, nodes_c, tree_depth);
 }
 
 #pragma clang attribute pop

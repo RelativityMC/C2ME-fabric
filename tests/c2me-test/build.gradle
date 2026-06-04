@@ -9,8 +9,10 @@ def runVMArgs = [
         "-Dc2me.base.config.override.ioSystem.gcFreeChunkSerializer=true",
         "-Dc2me.base.config.override.vanillaWorldGenOptimizations.useDensityFunctionCompiler=true",
         "-Dc2me.base.config.override.vanillaWorldGenOptimizations.nativeAcceleration.enabled=true",
+        "-Dc2me.base.config.override.openclAccel.enabled=false",
         "-Dc2me.gcFreeChunkSerializer.validateNbt=true",
         "-Dcom.ishland.c2me.mixin.doAudit=true",
+        "-Dc2me.base.config.override.openclAccel.allowCPUDevices=true",
 ]
 
 if (System.getenv("GITHUB_WORKFLOW") != null) {

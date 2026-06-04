@@ -1,0 +1,22 @@
+{
+  "parent": "c2me.mixins.json",
+  "required": true,
+  "package": "com.ishland.c2me.opts.accel.opencl.mixin",
+  "plugin": "com.ishland.c2me.opts.accel.opencl.MixinPlugin",
+  "mixins": [
+    "MixinChunkGenerating",
+    "MixinChunkNoiseSampler",
+    "MixinMinecraftServer",
+    "MixinOpenCLGenContext",
+    "MixinPalettedContainer",
+    "MixinThreadedAnvilChunkStorage",
+    "chunksystem_integration.MixinNewStatusHook",
+    "chunksystem_integration.MixinVanillaWorldGenerationDelegate",
+    "debug.disable_features_surface_rules.MixinChunkGenerating",
+    "deobf.MixinNoiseChunkGenerator",
+    "workarounds.MixinCL"
+  ],
+  "client": [
+    "client.MixinGameRenderer"
+  ]
+}

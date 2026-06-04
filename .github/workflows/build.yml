@@ -46,7 +46,7 @@ jobs:
         GPR_MAVEN_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: upload to modrinth and curseforge
-      run: ./gradlew modrinth publishMainPublicationToCurseForge
+      run: ./gradlew publishMods
       if: github.ref == 'refs/heads/dev/26.2.0'
       env:
         MODRINTH_TOKEN: ${{ secrets.MODRINTH_UPLOAD_TOKEN }}
