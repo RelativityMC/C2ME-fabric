@@ -55,7 +55,7 @@ public class DotGen {
 
     public static class Context {
         private final Object2ReferenceOpenHashMap<AstNode, Builder.Impl> allocatedNodes = new Object2ReferenceOpenHashMap<>();
-        private final Object2ReferenceOpenHashMap<Spline<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper>, Builder.Impl> allocatedSplines = new Object2ReferenceOpenHashMap<>();
+        private final Object2ReferenceOpenHashMap<Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper>, Builder.Impl> allocatedSplines = new Object2ReferenceOpenHashMap<>();
         // don't merge constant nodes, otherwise the graph is going to be a mess
         private final ReferenceArrayList<Builder.Impl> constants = new ReferenceArrayList<>();
         private final ReferenceArrayList<Builder.Impl> extras = new ReferenceArrayList<>();
@@ -308,7 +308,7 @@ public class DotGen {
         /**
          * Callers should check {@code builder.frozen}
          */
-        public Builder getSplineBuilder(Spline<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> spline) {
+        public Builder getSplineBuilder(Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper> spline) {
             final Builder.Impl builder;
             builder = allocatedSplines.computeIfAbsent(spline, _ -> new Builder.Impl(counter++));
             return builder;

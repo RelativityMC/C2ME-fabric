@@ -36,13 +36,13 @@ import java.util.List;
 @Mixin(StructureWeightSampler.class)
 public interface IStructureWeightSampler {
 
-    @Accessor(value = "field_61465")
+    @Accessor(value = "pieces")
     List<StructureWeightSampler.Piece> getPiecesList();
 
-    @Accessor(value = "field_61466")
+    @Accessor(value = "junctions")
     List<JigsawJunction> getJunctionsList();
 
-    @Accessor(value = "field_61467")
+    @Accessor(value = "boundingBox")
     BlockBox getAffectedBox();
 
     @Accessor

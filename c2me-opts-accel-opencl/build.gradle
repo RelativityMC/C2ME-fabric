@@ -6,7 +6,7 @@ moduleDependencies(project, [
 
 dependencies {
     include implementation(platform("org.lwjgl:lwjgl-bom:${lwjgl_version}"))
-    include implementation("org.lwjgl:lwjgl")
+    include implementation("org.lwjgl:lwjgl:${lwjgl_version}:unsafe")
     include implementation("org.lwjgl:lwjgl-opencl")
     include implementation("org.lwjgl:lwjgl-zstd")
     include implementation("org.apache.commons:commons-compress:${apache_commons_compress_version}") {

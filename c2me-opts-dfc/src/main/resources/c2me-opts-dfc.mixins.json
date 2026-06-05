@@ -11,6 +11,7 @@
     "MixinChunkNoiseSamplerCellCache",
     "MixinChunkNoiseSamplerDensityInterpolator",
     "MixinChunkNoiseSamplerFlatCache",
+    "MixinDensityFunctionVisitorWrapper",
     "MixinDFTBinaryOperation",
     "MixinDFTWrapping",
     "MixinNoiseConfig",

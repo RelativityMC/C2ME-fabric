@@ -47,6 +47,67 @@ public class CompiledDensityFunction extends SubCompiledDensityFunction {
     }
 
     @Override
+    public DensityFunction applyInternal(DensityFunctionVisitor visitor) {
+        if (visitor instanceof IBlendingAwareVisitor blendingAwareVisitor && blendingAwareVisitor.c2me$isBlendingEnabled()) {
+            DensityFunction fallback1 = this.getFallback();
+            if (fallback1 == null) {
+                throw new IllegalStateException("blendingFallback is no more");
+            }
+            return visitor.apply(fallback1);
+        }
+        boolean modified = false;
+        Object[] args = this.compiledEntry.getArgs();
+        for (int i = 0; i < args.length; i ++) {
+            Object next = args[i];
+            if (next instanceof DensityFunction df) {
+                if (!(df instanceof IFastCacheLike)) {
+                    DensityFunction applied = visitor.apply(df);
+                    if (df != applied) {
+                        args[i] = applied;
+                        modified = true;
+                    }
+                }
+            }
+            if (next instanceof Noise noise) {
+                Noise applied = visitor.apply(noise);
+                if (noise != applied) {
+                    args[i] = applied;
+                    modified = true;
+                }
+            }
+        }
+
+        for (int i = 0; i < args.length; i ++) {
+            Object next = args[i];
+            if (next instanceof IFastCacheLike cacheLike) {
+                DensityFunction applied = visitor.apply(cacheLike);
+                if (applied == cacheLike.c2me$getDelegate()) {
+                    args[i] = null; // cache removed
+                    modified = true;
+                } else if (applied instanceof IFastCacheLike newCacheLike) {
+                    args[i] = newCacheLike;
+                    modified = true;
+                } else {
+                    throw new UnsupportedOperationException("Unsupported transformation on Wrapping node");
+                }
+            }
+        }
+
+        Supplier<DensityFunction> fallback = this.blendingFallback != null ? Suppliers.memoize(() -> {
+            DensityFunction densityFunction = this.blendingFallback.get();
+            return densityFunction != null ? visitor.apply(densityFunction) : null;
+        }) : null;
+        if (fallback != this.blendingFallback) {
+            modified = true;
+        }
+        if (modified) {
+            return new CompiledDensityFunction(this.compiledEntry.newInstance(args), fallback);
+        } else {
+            return this;
+        }
+    }
+
+    @Override
     public DensityFunction apply(DensityFunctionVisitor visitor) {
         if (visitor instanceof IBlendingAwareVisitor blendingAwareVisitor && blendingAwareVisitor.c2me$isBlendingEnabled()) {
             DensityFunction fallback1 = this.getFallback();

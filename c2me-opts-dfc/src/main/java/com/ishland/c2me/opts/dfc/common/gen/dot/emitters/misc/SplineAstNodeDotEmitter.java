@@ -48,10 +48,10 @@ public class SplineAstNodeDotEmitter implements DotEmitter<SplineAstNode> {
                 .build();
     }
 
-    private static int doDotGenSpline(SplineAstNode node, DotGen.Context context, Spline<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> spline) {
-        if (spline instanceof Spline.FixedFloatFunction<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> a1) {
+    private static int doDotGenSpline(SplineAstNode node, DotGen.Context context, Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper> spline) {
+        if (spline instanceof Spline.FixedFloatFunction<DensityFunctionTypes.Spline.DensityFunctionWrapper> a1) {
             return context.generate(new ConstantNode(a1.value()));
-        } else if (spline instanceof Spline.Implementation<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> a1) {
+        } else if (spline instanceof Spline.Implementation<DensityFunctionTypes.Spline.DensityFunctionWrapper> a1) {
             DotGen.Context.Builder builder = context.getSplineBuilder(spline);
             if (builder.isFrozen()) {
                 return builder.getId();
@@ -70,15 +70,15 @@ public class SplineAstNodeDotEmitter implements DotEmitter<SplineAstNode> {
             table.append("<TABLE>");
             table.append("<TR><TD>idx</TD><TD>derivatives</TD><TD>locations</TD><TD>values</TD></TR>");
 
-            List<Spline<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper>> values = a1.values();
+            List<Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper>> values = a1.values();
             for (int i = 0, valuesSize = values.size(); i < valuesSize; i++) {
-                Spline<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> child = values.get(i);
+                Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper> child = values.get(i);
                 table.append("<TR>")
                         .append("<TD>").append(i).append("</TD>")
                         .append("<TD>").append(a1.derivatives()[i]).append("</TD>")
                         .append("<TD>").append(a1.locations()[i]).append("</TD>");
 
-                if (child instanceof Spline.FixedFloatFunction<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> fixedFloatFunction) {
+                if (child instanceof Spline.FixedFloatFunction<DensityFunctionTypes.Spline.DensityFunctionWrapper> fixedFloatFunction) {
                     table.append("<TD>").append(fixedFloatFunction.value()).append("</TD>");
                 } else {
                     int childId = doDotGenSpline(node, context, child);

@@ -22,57 +22,25 @@
  * THE SOFTWARE.
  */
 
-package com.ishland.c2me.base.mixin.access;
+package com.ishland.c2me.opts.dfc.mixin;
 
-import net.minecraft.util.math.random.RandomSplitter;
-import net.minecraft.world.gen.chunk.AquiferSampler;
+import com.ishland.c2me.opts.dfc.common.ducks.IBlendingAwareVisitor;
+import net.minecraft.world.gen.densityfunction.DensityFunction;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.gen.Accessor;
-import org.spongepowered.asm.mixin.gen.Invoker;
+import org.spongepowered.asm.mixin.Shadow;
 
-@Mixin(AquiferSampler.Impl.class)
-public interface IAquiferSamplerImpl {
+@Mixin(targets = "net/minecraft/world/gen/densityfunction/DensityFunction$Wrapper")
+public class MixinDensityFunctionVisitorWrapper implements IBlendingAwareVisitor {
 
-    @Accessor("startCellX")
-    int getStartX();
+    @Shadow
+    private DensityFunction.DensityFunctionVisitor field_1_6131;
 
-    @Accessor("startCellY")
-    int getStartY();
+    @Override
+    public boolean c2me$isBlendingEnabled() {
+        if (this.field_1_6131 instanceof IBlendingAwareVisitor blendingAwareVisitor) {
+            return blendingAwareVisitor.c2me$isBlendingEnabled();
+        }
 
-    @Accessor("startCellZ")
-    int getStartZ();
-
-    @Accessor("cellCountX")
-    int getSizeX();
-
-    @Accessor("cellCountZ")
-    int getSizeZ();
-
-    @Accessor
-    long[] getBlockPositions();
-
-    @Accessor
-    RandomSplitter getRandomDeriver();
-
-    @Accessor
-    AquiferSampler.FluidLevelSampler getFluidLevelSampler();
-
-    @Accessor(value = "maxY")
-    int getSamplingYLowPassCutoff();
-
-    @Invoker("getCellX")
-    static int invokeGetLocalX(int i) {
-        throw new AbstractMethodError();
+        return false;
     }
-
-    @Invoker("getCellY")
-    static int invokeGetLocalY(int i) {
-        throw new AbstractMethodError();
-    }
-
-    @Invoker("getCellZ")
-    static int invokeGetLocalZ(int i) {
-        throw new AbstractMethodError();
-    }
-
 }

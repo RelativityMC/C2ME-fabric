@@ -38,7 +38,7 @@ import java.util.Map;
 
 public class SplineAstNode implements AstNode {
 
-    public final Spline<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> spline;
+    public final Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper> spline;
     public final Reference2ReferenceOpenHashMap<DensityFunctionTypes.Spline.DensityFunctionWrapper, AstNode> children = new Reference2ReferenceOpenHashMap<>();
 
     public SplineAstNode(Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper> spline) {
@@ -46,7 +46,7 @@ public class SplineAstNode implements AstNode {
         this.populateChildrenMap(this.spline);
     }
 
-    private SplineAstNode(Spline<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> spline, Reference2ReferenceMap<DensityFunctionTypes.Spline.DensityFunctionWrapper, AstNode> children) {
+    private SplineAstNode(Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper> spline, Reference2ReferenceMap<DensityFunctionTypes.Spline.DensityFunctionWrapper, AstNode> children) {
         this.spline = spline;
         this.children.putAll(children);
     }
@@ -75,11 +75,11 @@ public class SplineAstNode implements AstNode {
         }
     }
 
-    public static AstNode needOptimizeSameLocationFunction(SplineAstNode node, Spline<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper>... splines) {
+    public static AstNode needOptimizeSameLocationFunction(SplineAstNode node, Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper>... splines) {
         if (splines.length == 0) return null;
 
         AstNode a1Ast;
-        if (splines[0] instanceof Spline.Implementation<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> spline0) {
+        if (splines[0] instanceof Spline.Implementation<DensityFunctionTypes.Spline.DensityFunctionWrapper> spline0) {
             a1Ast = node.children.get(spline0.locationFunction());
             if (a1Ast instanceof ConstantNode) {
                 return null;
@@ -89,8 +89,8 @@ public class SplineAstNode implements AstNode {
         }
 
         for (int i = 1, splinesLength = splines.length; i < splinesLength; i++) {
-            Spline<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> b = splines[i];
-            if (b instanceof Spline.Implementation<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> b1) {
+            Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper> b = splines[i];
+            if (b instanceof Spline.Implementation<DensityFunctionTypes.Spline.DensityFunctionWrapper> b1) {
                 AstNode b1Ast = node.children.get(b1.locationFunction());
                 if (!a1Ast.equals(b1Ast)) {
                     return null;
@@ -103,13 +103,13 @@ public class SplineAstNode implements AstNode {
         return a1Ast;
     }
 
-    private void populateChildrenMap(Spline<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> a) {
-        if (a instanceof Spline.Implementation<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> a1) {
-            for (Spline<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> spline : a1.values()) {
+    private void populateChildrenMap(Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper> a) {
+        if (a instanceof Spline.Implementation<DensityFunctionTypes.Spline.DensityFunctionWrapper> a1) {
+            for (Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper> spline : a1.values()) {
                 populateChildrenMap(spline);
             }
             DensityFunctionTypes.Spline.DensityFunctionWrapper locationFunction = a1.locationFunction();
-            this.children.put(locationFunction, McToAst.toAst(locationFunction.function().value()));
+            this.children.put(locationFunction, McToAst.toAst(locationFunction.function()));
         }
     }
 
@@ -147,8 +147,8 @@ public class SplineAstNode implements AstNode {
         if (a instanceof Spline.FixedFloatFunction<DensityFunctionTypes.Spline.DensityFunctionWrapper> a1 &&
                 b instanceof Spline.FixedFloatFunction<DensityFunctionTypes.Spline.DensityFunctionWrapper> b1) {
             return a1.value() == b1.value();
-        } else if (a instanceof Spline.Implementation<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> a1 &&
-                b instanceof Spline.Implementation<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> b1) {
+        } else if (a instanceof Spline.Implementation<DensityFunctionTypes.Spline.DensityFunctionWrapper> a1 &&
+                b instanceof Spline.Implementation<DensityFunctionTypes.Spline.DensityFunctionWrapper> b1) {
             boolean equals1 = Arrays.equals(a1.derivatives(), b1.derivatives()) &&
                     Arrays.equals(a1.locations(), b1.locations()) &&
                     a1.values().size() == b1.values().size() &&

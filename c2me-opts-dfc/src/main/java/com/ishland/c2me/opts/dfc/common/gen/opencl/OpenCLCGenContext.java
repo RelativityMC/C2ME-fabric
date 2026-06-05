@@ -52,9 +52,9 @@ public interface OpenCLCGenContext {
 
     int getGlobalDynamicDataOffset(Object data);
 
-    String getCachedSplineMethod(Spline<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> spline, boolean cache1);
+    String getCachedSplineMethod(Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper> spline, boolean cache1);
 
-    void cacheSplineMethod(Spline<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> spline, String method, boolean cache1);
+    void cacheSplineMethod(Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper> spline, String method, boolean cache1);
 
     int registerFlatCache(CacheLikeNode node);
 

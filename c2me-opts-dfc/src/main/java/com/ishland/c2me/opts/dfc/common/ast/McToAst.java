@@ -39,9 +39,9 @@ import com.ishland.c2me.opts.dfc.common.ast.misc.DelegateNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.EndIslandsNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.FindTopSurfaceNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.InterpolatedNoiseSamplerNode;
+import com.ishland.c2me.opts.dfc.common.ast.misc.IntervalSelectNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.RangeChoiceNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.YClampedGradientNode;
-import com.ishland.c2me.opts.dfc.common.ast.noise.DFTWeirdScaledSamplerNode;
 import com.ishland.c2me.opts.dfc.common.ast.noise.GenericShiftedNoiseNode;
 import com.ishland.c2me.opts.dfc.common.ast.opto.OptoPasses;
 import com.ishland.c2me.opts.dfc.common.ast.spline.SplineAstNode;
@@ -93,7 +93,6 @@ public class McToAst {
                     }
                 }
             };
-            case DensityFunctionTypes.BlendDensity f -> toAst(f.input());
             case DensityFunctionTypes.Clamp f -> new MinNode(new ConstantNode(f.maxValue()), new MaxNode(new ConstantNode(f.minValue()), toAst(f.input())));
             case DensityFunctionTypes.Constant f -> new ConstantNode(f.value());
             case DensityFunctionTypes.RegistryEntryHolder f -> toAst(f.function().value());
@@ -107,13 +106,11 @@ public class McToAst {
                 case SQUEEZE -> new SqueezeNode(toAst(f.input()));
             };
             case DensityFunctionTypes.RangeChoice f -> new RangeChoiceNode(toAst(f.input()), f.minInclusive(), f.maxExclusive(), toAst(f.whenInRange()), toAst(f.whenOutOfRange()));
-            case IFastCacheLike f -> new CacheLikeNode(f, toAst(f.c2me$getDelegate()));
-            case DensityFunctionTypes.Wrapping f -> {
-//                if ((Object) f instanceof IFastCacheLike fastCacheLike && f.type() != DensityFunctionTypes.Wrapping.Type.INTERPOLATED) {
-//                    yield new CacheLikeNode(fastCacheLike, toAst(fastCacheLike.c2me$getDelegate()));
-//                }
-                DensityFunctionTypes.Wrapping wrapping = new DensityFunctionTypes.Wrapping(f.type(), new CompiledDensityFunction(BytecodeGen.compile0("unknown", OptoPasses.AstPair.ofOptimizedOnly(toAst(f.wrapped()))), null));
-                yield new DelegateNode(wrapping);
+            case IFastCacheLike f -> {
+                if ((Object) f instanceof DensityFunctionTypes.Wrapping wrapping && wrapping.type() == DensityFunctionTypes.Wrapping.Type.BLEND_DENSITY) {
+                    yield toAst(f.c2me$getDelegate());
+                }
+                yield new CacheLikeNode(f, toAst(f.c2me$getDelegate()));
             }
             case DensityFunctionTypes.ShiftedNoise f -> new GenericShiftedNoiseNode(
                     new AddNode(new MulNode(CoordinateNode.AXIS_X, new ConstantNode(f.xzScale())), toAst(f.shiftX())),
@@ -155,7 +152,7 @@ public class McToAst {
                     new ConstantNode(4.0)
             );
             case DensityFunctionTypes.YClampedGradient f -> new YClampedGradientNode(f.fromY(), f.toY(), f.fromValue(), f.toValue());
-            case DensityFunctionTypes.WeirdScaledSampler f -> new DFTWeirdScaledSamplerNode(toAst(f.input()), f.noise(), f.rarityValueMapper());
+            case DensityFunctionTypes.IntervalSelect f -> new IntervalSelectNode(toAst(f.input()), f.thresholds().toDoubleArray(), f.functions().stream().map(McToAst::toAst).toArray(AstNode[]::new));
             case DensityFunctionTypes.Spline f -> new SplineAstNode(f.getSpline());
             case DensityFunctionTypes.FindTopSurface f -> new FindTopSurfaceNode(toAst(f.density()), toAst(f.upperBound()), new ConstantNode(f.lowerBound()), f.cellHeight());
 

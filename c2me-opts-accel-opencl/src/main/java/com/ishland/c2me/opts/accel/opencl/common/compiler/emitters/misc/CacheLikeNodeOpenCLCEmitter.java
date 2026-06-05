@@ -88,6 +88,7 @@ public class CacheLikeNodeOpenCLCEmitter implements OpenCLCEmitter<CacheLikeNode
                         "}\n" +
                         "return " + context.callDelegate(valuesMethodDefD) + ";\n";
             }
+            case BLEND_DENSITY -> throw new UnsupportedOperationException("BLEND_DENSITY should not be here");
         };
     }
 }

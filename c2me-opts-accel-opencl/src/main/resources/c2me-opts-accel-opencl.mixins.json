@@ -17,6 +17,6 @@
     "workarounds.MixinCL"
   ],
   "client": [
-    "client.MixinGameRenderer"
+    "client.MixinGuiManager"
   ]
 }

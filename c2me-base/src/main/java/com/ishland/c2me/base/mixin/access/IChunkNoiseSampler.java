@@ -25,6 +25,7 @@
 package com.ishland.c2me.base.mixin.access;
 
 import net.minecraft.block.BlockState;
+import net.minecraft.world.gen.chunk.Blender;
 import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
 import net.minecraft.world.gen.densityfunction.DensityFunctionTypes;
 import org.spongepowered.asm.mixin.Mixin;
@@ -93,5 +94,8 @@ public interface IChunkNoiseSampler {
 
     @Accessor
     int getStartCellZ();
+
+    @Accessor
+    Blender getBlender();
 
 }

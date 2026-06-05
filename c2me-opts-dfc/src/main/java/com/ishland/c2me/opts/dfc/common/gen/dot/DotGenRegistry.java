@@ -33,16 +33,18 @@ import com.ishland.c2me.opts.dfc.common.ast.misc.DelegateNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.EndIslandsNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.FindTopSurfaceNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.InterpolatedNoiseSamplerNode;
+import com.ishland.c2me.opts.dfc.common.ast.misc.IntervalSelectNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.RangeChoiceNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.RootNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.YClampedGradientNode;
-import com.ishland.c2me.opts.dfc.common.ast.noise.DFTWeirdScaledSamplerNode;
 import com.ishland.c2me.opts.dfc.common.ast.noise.GenericShiftedNoiseNode;
 import com.ishland.c2me.opts.dfc.common.ast.spline.SplineAstNode;
 import com.ishland.c2me.opts.dfc.common.gen.CodeGenRegistry;
 import com.ishland.c2me.opts.dfc.common.gen.dot.emitters.BinaryNodeDotEmitters;
 import com.ishland.c2me.opts.dfc.common.gen.dot.emitters.UnaryNodeDotEmitters;
 import com.ishland.c2me.opts.dfc.common.gen.dot.emitters.misc.SplineAstNodeDotEmitter;
+
+import java.util.Arrays;
 
 public class DotGenRegistry {
 
@@ -140,14 +142,19 @@ public class DotGenRegistry {
                                 .build()
         );
         REGISTRY.registerExactMatch(
-                DFTWeirdScaledSamplerNode.class,
-                (DotEmitter<DFTWeirdScaledSamplerNode>) (node, context, builder) ->
-                        builder
-                                .hexagonShape()
-                                .label("WeirdScaledSampler\\nmapper=" + node.mapper.asString() + "\\nnoise=" + node.noise.noiseData().getIdAsString())
-                                .tooltip(node.noise.noiseData().value().toString())
-                                .edge(context.generate(node.input)).label("input").finish()
-                                .build()
+                IntervalSelectNode.class,
+                (DotEmitter<IntervalSelectNode>) (node, context, builder) -> {
+                    builder
+                            .boxShape()
+                            .label("IntervalSelect\\nthresholds=" + Arrays.toString(node.thresholds));
+
+                    AstNode[] functions = node.functions;
+                    for (int i = 0, functionsLength = functions.length; i < functionsLength; i++) {
+                        AstNode function = functions[i];
+                        builder.edge(context.generate(function)).label(String.valueOf(i)).finish();
+                    }
+                    return builder.build();
+                }
         );
         REGISTRY.registerExactMatch(SplineAstNode.class, SplineAstNodeDotEmitter.INSTANCE);
 

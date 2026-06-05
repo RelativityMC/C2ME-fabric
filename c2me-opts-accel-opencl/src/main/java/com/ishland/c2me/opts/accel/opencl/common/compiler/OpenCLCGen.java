@@ -161,8 +161,8 @@ public class OpenCLCGen {
 
         private final StringBuilder pendingSource = new StringBuilder();
         private final Object2ReferenceOpenHashMap<AstNode, String> methods = new Object2ReferenceOpenHashMap<>();
-        private final Object2ReferenceOpenHashMap<Spline<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper>, String> splineMethods = new Object2ReferenceOpenHashMap<>();
-        private final Object2ReferenceOpenHashMap<Spline<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper>, String> splineMethodsCache1 = new Object2ReferenceOpenHashMap<>();
+        private final Object2ReferenceOpenHashMap<Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper>, String> splineMethods = new Object2ReferenceOpenHashMap<>();
+        private final Object2ReferenceOpenHashMap<Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper>, String> splineMethodsCache1 = new Object2ReferenceOpenHashMap<>();
         private final Reference2IntLinkedOpenHashMap<Object> globalDynamicDataOffsets = new Reference2IntLinkedOpenHashMap<>();
         private final ArrayList<CacheLikeNode> flatCaches = new ArrayList<>();
         private final ArrayList<CacheLikeNode> interpolators = new ArrayList<>();
@@ -311,12 +311,12 @@ public class OpenCLCGen {
         }
 
         @Override
-        public String getCachedSplineMethod(Spline<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> spline, boolean cache1) {
+        public String getCachedSplineMethod(Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper> spline, boolean cache1) {
             return (cache1 ? this.splineMethodsCache1 : this.splineMethods).get(spline);
         }
 
         @Override
-        public void cacheSplineMethod(Spline<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> spline, String method, boolean cache1) {
+        public void cacheSplineMethod(Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper> spline, String method, boolean cache1) {
             (cache1 ? this.splineMethodsCache1 : this.splineMethods).put(spline, method);
         }
 

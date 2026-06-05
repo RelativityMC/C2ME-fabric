@@ -81,13 +81,14 @@ public abstract class MixinChunkNoiseSampler implements IArrayCacheCapable, ICoo
     @Unique
     ChunkNoiseSampler.DensityInterpolator[] c2me$interpolatorsArray;
 
-    @Shadow public abstract Blender getBlender();
-
     @Shadow @Final private List<ChunkNoiseSampler.DensityInterpolator> interpolators;
     @Shadow private int cellBlockY;
     @Shadow private int cellBlockX;
     @Shadow private int cellBlockZ;
     @Shadow private long sampleUniqueIndex;
+    @Shadow
+    @Final
+    private Blender blender;
     private final ArrayCache c2me$arrayCache = new ArrayCache();
 
     @Override
@@ -164,7 +165,7 @@ public abstract class MixinChunkNoiseSampler implements IArrayCacheCapable, ICoo
 
     @Unique
     private @NotNull DelegatingBlendingAwareVisitor c2me$getDelegatingBlendingAwareVisitor(DensityFunction.DensityFunctionVisitor visitor) {
-        return new DelegatingBlendingAwareVisitor(visitor, this.getBlender() != Blender.getNoBlending());
+        return new DelegatingBlendingAwareVisitor(visitor, !this.blender.isEmpty());
     }
 
     @ModifyArg(method = {"<init>", "createMultiNoiseSampler"}, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/gen/densityfunction/DensityFunction;apply(Lnet/minecraft/world/gen/densityfunction/DensityFunction$DensityFunctionVisitor;)Lnet/minecraft/world/gen/densityfunction/DensityFunction;"), require = 7, expect = 7)

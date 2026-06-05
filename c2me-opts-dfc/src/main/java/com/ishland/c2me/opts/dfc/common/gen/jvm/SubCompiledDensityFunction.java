@@ -25,6 +25,7 @@
 package com.ishland.c2me.opts.dfc.common.gen.jvm;
 
 import com.google.common.base.Suppliers;
+import com.ishland.c2me.base.mixin.access.IChunkNoiseSampler;
 import com.ishland.c2me.opts.dfc.common.ast.EvalType;
 import com.ishland.c2me.opts.dfc.common.ducks.IArrayCacheCapable;
 import com.ishland.c2me.opts.dfc.common.ducks.IBlendingAwareVisitor;
@@ -71,21 +72,22 @@ public class SubCompiledDensityFunction implements DensityFunction {
 
     @Override
     public double sample(NoisePos pos) {
-        if (pos.getBlender() != Blender.getNoBlending()) {
-            DensityFunction fallback = this.getFallback();
-            if (fallback == null) {
-                throw new IllegalStateException("blendingFallback is no more");
+        if (pos instanceof ChunkNoiseSampler sampler) {
+            if (!((IChunkNoiseSampler) sampler).getBlender().isEmpty()) {
+                DensityFunction fallback = this.getFallback();
+                if (fallback == null) {
+                    throw new IllegalStateException("blendingFallback is no more");
+                }
+                return fallback.sample(pos);
             }
-            return fallback.sample(pos);
-        } else {
-            return this.singleMethod.evalSingle(pos.blockX(), pos.blockY(), pos.blockZ(), EvalType.from(pos));
         }
+        return this.singleMethod.evalSingle(pos.blockX(), pos.blockY(), pos.blockZ(), EvalType.from(pos));
     }
 
     @Override
     public void fill(double[] densities, EachApplier applier) {
         if (applier instanceof ChunkNoiseSampler sampler) {
-            if (sampler.getBlender() != Blender.getNoBlending()) {
+            if (!((IChunkNoiseSampler) sampler).getBlender().isEmpty()) {
                 DensityFunction fallback = this.getFallback();
                 if (fallback == null) {
                     throw new IllegalStateException("blendingFallback is no more");
@@ -123,6 +125,33 @@ public class SubCompiledDensityFunction implements DensityFunction {
             }
         }
         this.multiMethod.evalMulti(densities, x, y, z, EvalType.from(applier), cache);
+    }
+
+    @Override
+    public DensityFunction applyInternal(DensityFunctionVisitor visitor) {
+        if (this.getClass() != SubCompiledDensityFunction.class) {
+            throw new AbstractMethodError();
+        }
+        if (visitor instanceof IBlendingAwareVisitor blendingAwareVisitor && blendingAwareVisitor.c2me$isBlendingEnabled()) {
+            DensityFunction fallback1 = this.getFallback();
+            if (fallback1 == null) {
+                throw new IllegalStateException("blendingFallback is no more");
+            }
+            return visitor.apply(fallback1);
+        }
+        boolean modified = false;
+        Supplier<DensityFunction> fallback = this.blendingFallback != null ? Suppliers.memoize(() -> {
+            DensityFunction densityFunction = this.blendingFallback.get();
+            return densityFunction != null ? visitor.apply(densityFunction) : null;
+        }) : null;
+        if (fallback != this.blendingFallback) {
+            modified = true;
+        }
+        if (modified) {
+            return new SubCompiledDensityFunction(this.singleMethod, this.multiMethod, fallback);
+        } else {
+            return this;
+        }
     }
 
     @Override

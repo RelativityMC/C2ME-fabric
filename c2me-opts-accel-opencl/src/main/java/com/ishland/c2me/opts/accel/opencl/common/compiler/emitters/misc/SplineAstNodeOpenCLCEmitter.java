@@ -43,14 +43,14 @@ public class SplineAstNodeOpenCLCEmitter implements OpenCLCEmitter<SplineAstNode
         return "return (double) " + callSpline(valuesMethodDefF, null) + ";\n";
     }
 
-    private static ValuesMethodDefF doCLGenSpline(SplineAstNode node, OpenCLCGenContext context, Spline<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> spline, boolean cache1) {
+    private static ValuesMethodDefF doCLGenSpline(SplineAstNode node, OpenCLCGenContext context, Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper> spline, boolean cache1) {
         {
             String cachedSplineMethod = context.getCachedSplineMethod(spline, cache1);
             if (cachedSplineMethod != null) {
                 return new ValuesMethodDefF(cachedSplineMethod);
             }
         }
-        if (spline instanceof Spline.FixedFloatFunction<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> spline1) {
+        if (spline instanceof Spline.FixedFloatFunction<DensityFunctionTypes.Spline.DensityFunctionWrapper> spline1) {
             return new ValuesMethodDefF(spline1.value());
         }
         String name = context.nextMethodName("Spline");
@@ -60,7 +60,7 @@ public class SplineAstNodeOpenCLCEmitter implements OpenCLCEmitter<SplineAstNode
 
         boolean noinline = false;
 
-        if (spline instanceof Spline.Implementation<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> impl) {
+        if (spline instanceof Spline.Implementation<DensityFunctionTypes.Spline.DensityFunctionWrapper> impl) {
 
             String locations = name + "_locations";
             String derivatives = name + "_derivatives";
@@ -91,7 +91,7 @@ public class SplineAstNodeOpenCLCEmitter implements OpenCLCEmitter<SplineAstNode
                 if (allSameLocationFunction != null) {
                     body.append("cache1Local = (float) ").append(context.callDelegate(context.newMethod(allSameLocationFunction))).append(";\n");
                 } else {
-                    if (impl.values().stream().filter(child -> child instanceof Spline.Implementation<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper>).count() > 5) { // some abitrary number
+                    if (impl.values().stream().filter(child -> child instanceof Spline.Implementation<DensityFunctionTypes.Spline.DensityFunctionWrapper>).count() > 5) { // some abitrary number
                         noinline = true;
                     }
                 }
@@ -169,7 +169,7 @@ public class SplineAstNodeOpenCLCEmitter implements OpenCLCEmitter<SplineAstNode
                         .append("float q = -").append(derivatives).append("[rangeForLocation + 1] * locDist + onDist;\n")
                         .append("return math_lerpf(k, n, o) + k * (1.0F - k) * math_lerpf(k, p, q);\n");
             }
-        } else if (spline instanceof Spline.FixedFloatFunction<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> floatFunction) {
+        } else if (spline instanceof Spline.FixedFloatFunction<DensityFunctionTypes.Spline.DensityFunctionWrapper> floatFunction) {
             body.append("return ").append(literal(floatFunction.value())).append(";\n");
         } else {
             throw new UnsupportedOperationException(String.format("Unsupported spline implementation: %s", spline.getClass().getName()));

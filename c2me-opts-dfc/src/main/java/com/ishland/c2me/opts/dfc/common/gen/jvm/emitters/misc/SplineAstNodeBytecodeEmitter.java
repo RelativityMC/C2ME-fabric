@@ -64,14 +64,14 @@ public class SplineAstNodeBytecodeEmitter implements BytecodeEmitter<SplineAstNo
         m.areturn(Type.DOUBLE_TYPE);
     }
 
-    private static ValuesMethodDefF doBytecodeGenSpline(SplineAstNode node, BytecodeGen.Context context, Spline<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> spline, boolean cache1) {
+    private static ValuesMethodDefF doBytecodeGenSpline(SplineAstNode node, BytecodeGen.Context context, Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper> spline, boolean cache1) {
         {
             String cachedSplineMethod = context.getCachedSplineMethod(spline, cache1);
             if (cachedSplineMethod != null) {
                 return new ValuesMethodDefF(cachedSplineMethod);
             }
         }
-        if (spline instanceof Spline.FixedFloatFunction<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> spline1) {
+        if (spline instanceof Spline.FixedFloatFunction<DensityFunctionTypes.Spline.DensityFunctionWrapper> spline1) {
             return new ValuesMethodDefF(spline1.value());
         }
         String name = context.nextMethodName("Spline");
@@ -100,7 +100,7 @@ public class SplineAstNodeBytecodeEmitter implements BytecodeEmitter<SplineAstNo
             return ordinal;
         };
 
-        if (spline instanceof Spline.Implementation<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> impl) {
+        if (spline instanceof Spline.Implementation<DensityFunctionTypes.Spline.DensityFunctionWrapper> impl) {
 //            BytecodeGen.Context.ValuesMethodDefF[] valuesMethods = impl.values().stream()
 //                    .map(spline1 -> doBytecodeGenSpline(context, spline1))
 //                    .toArray(BytecodeGen.Context.ValuesMethodDefF[]::new);
@@ -392,7 +392,7 @@ public class SplineAstNodeBytecodeEmitter implements BytecodeEmitter<SplineAstNo
                 m.areturn(Type.FLOAT_TYPE);
             }
 
-        } else if (spline instanceof Spline.FixedFloatFunction<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> floatFunction) {
+        } else if (spline instanceof Spline.FixedFloatFunction<DensityFunctionTypes.Spline.DensityFunctionWrapper> floatFunction) {
             m.fconst(floatFunction.value());
             m.areturn(Type.FLOAT_TYPE);
         } else {
