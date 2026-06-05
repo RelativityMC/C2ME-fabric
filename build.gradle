@@ -269,6 +269,7 @@ apply plugin: 'me.modmuss50.mod-publish-plugin'
 
 publishMods {
     changelog = ghaChangelog
+    modLoaders.add("fabric")
 
     def envDisplayName = System.getenv("OVERRIDE_DISPLAY_NAME")
     displayName = envDisplayName != null ? envDisplayName : (project.version + " devbuild for " + project.minecraft_version)
@@ -286,6 +287,7 @@ publishMods {
             client = true
             server = true
             changelogType = "markdown"
+            javaVersions.add(JavaVersion.VERSION_25)
         }
 
         curseforge("curseforgeMITPackage") {
