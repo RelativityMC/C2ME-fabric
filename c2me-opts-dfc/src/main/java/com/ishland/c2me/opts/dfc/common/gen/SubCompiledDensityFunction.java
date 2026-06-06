@@ -88,7 +88,13 @@ public class SubCompiledDensityFunction implements DensityFunction {
                 z[i] = pos.blockZ();
             }
         }
-        this.multiMethod.evalMulti(densities, x, y, z, EvalType.from(applier), cache);
+        try {
+            this.multiMethod.evalMulti(densities, x, y, z, EvalType.from(applier), cache);
+        } finally {
+            cache.recycle(x);
+            cache.recycle(y);
+            cache.recycle(z);
+        }
     }
 
     @Override
