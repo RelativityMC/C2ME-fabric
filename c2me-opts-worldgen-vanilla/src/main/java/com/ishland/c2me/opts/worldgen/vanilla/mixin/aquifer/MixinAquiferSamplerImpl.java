@@ -230,7 +230,8 @@ public abstract class MixinAquiferSamplerImpl {
     @NotNull
     private void aquiferExtracted$refreshDistPosIdx(int x, int y, int z) {
         int gx = (x - 5) >> 4;
-        int gy = Math.floorDiv(y + 1, 12);
+        int shiftedY = y + 1;
+        int gy = shiftedY >= 0 ? shiftedY / 12 : (shiftedY - 11) / 12;
         int gz = (z - 5) >> 4;
         int dist1 = Integer.MAX_VALUE;
         int dist2 = Integer.MAX_VALUE;
