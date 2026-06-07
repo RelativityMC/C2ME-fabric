@@ -7,6 +7,7 @@
     "MixinChunkNoiseSampler",
     "MixinChunkPos",
     "MixinOctavePerlinNoiseSampler",
+    "MixinPalettedContainer",
     "MixinPerlinNoiseSampler"
   ]
 }
