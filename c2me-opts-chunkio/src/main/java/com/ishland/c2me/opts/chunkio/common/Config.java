@@ -18,6 +18,11 @@ public class Config {
             .comment("Hard limit for io worker nbt cache")
             .getLong(32678, 32678, ConfigSystem.LongChecks.POSITIVE_VALUES_ONLY);
 
+    public static final boolean reuseDeflaters = new ConfigSystem.ConfigAccessor()
+            .key("ioSystem.reuseDeflaters")
+            .comment("Reuse a per-thread Deflater for region file chunk writes instead of allocating one per write. Output is byte-identical.")
+            .getBoolean(true, false);
+
     public static void init() {
     }
 

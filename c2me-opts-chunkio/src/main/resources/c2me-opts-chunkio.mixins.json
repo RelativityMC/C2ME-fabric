@@ -5,6 +5,7 @@
   "plugin": "com.ishland.c2me.opts.chunkio.MixinPlugin",
   "mixins": [
     "hide_sync_disk_writes_behind_flag.MixinRegionBasedStorage",
-    "limit_nbt_cache.MixinStorageIoWorker"
+    "limit_nbt_cache.MixinStorageIoWorker",
+    "reuse_deflater.MixinChunkCompressionFormat"
   ]
 }
