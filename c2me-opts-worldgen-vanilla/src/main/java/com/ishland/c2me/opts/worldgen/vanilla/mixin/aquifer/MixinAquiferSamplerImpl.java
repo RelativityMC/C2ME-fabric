@@ -29,6 +29,10 @@ public abstract class MixinAquiferSamplerImpl {
 
     @Unique
     private static final int C2ME_AQUIFER_CANDIDATE_COUNT = 12;
+    @Unique
+    private static final int C2ME_AQUIFER_HIGH_AIR_MARGIN = 5;
+    @Unique
+    private static final BlockState C2ME_AIR = Blocks.AIR.getDefaultState();
 
     @Shadow
     @Final
@@ -135,6 +139,10 @@ public abstract class MixinAquiferSamplerImpl {
     private final int[] c2me$candidateIdx = new int[C2ME_AQUIFER_CANDIDATE_COUNT];
     @Unique
     private final int[] c2me$candidateDist = new int[C2ME_AQUIFER_CANDIDATE_COUNT];
+    @Unique
+    private boolean c2me$candidateMaxFluidYValid;
+    @Unique
+    private int c2me$candidateMaxFluidY;
 
     @Unique
     private double c2me$mutableDoubleThingy;
@@ -190,6 +198,14 @@ public abstract class MixinAquiferSamplerImpl {
                 this.needsFluidTick = false;
                 return Blocks.LAVA.getDefaultState();
             } else {
+                int highAirY = j - C2ME_AQUIFER_HIGH_AIR_MARGIN;
+                if (highAirY >= fluidLevel.y) {
+                    this.c2me$refreshCandidateSet(i, j, k);
+                    if (highAirY >= this.c2me$getCandidateMaxFluidY()) {
+                        this.needsFluidTick = false;
+                        return C2ME_AIR;
+                    }
+                }
                 aquiferExtracted$refreshDistPosIdx(i, j, k);
                 return aquiferExtracted$applyPost(pos, density, j, i, k);
             }
@@ -249,7 +265,7 @@ public abstract class MixinAquiferSamplerImpl {
 
     @Unique
     @NotNull
-    private void aquiferExtracted$refreshDistPosIdx(int x, int y, int z) {
+    private void c2me$refreshCandidateSet(int x, int y, int z) {
         int gx = (x - 5) >> 4;
         int shiftedY = y + 1;
         int gy = shiftedY >= 0 ? shiftedY / 12 : (shiftedY - 11) / 12;
@@ -260,6 +276,12 @@ public abstract class MixinAquiferSamplerImpl {
             this.c2me$lastGy = gy;
             this.c2me$lastGz = gz;
         }
+    }
+
+    @Unique
+    @NotNull
+    private void aquiferExtracted$refreshDistPosIdx(int x, int y, int z) {
+        this.c2me$refreshCandidateSet(x, y, z);
 
         int dist1 = Integer.MAX_VALUE;
         int dist2 = Integer.MAX_VALUE;
@@ -308,6 +330,23 @@ public abstract class MixinAquiferSamplerImpl {
                 }
             }
         }
+        this.c2me$candidateMaxFluidYValid = false;
+    }
+
+    @Unique
+    private int c2me$getCandidateMaxFluidY() {
+        if (!this.c2me$candidateMaxFluidYValid) {
+            int maxFluidY = DimensionType.field_35479;
+            for (int i = 0; i < C2ME_AQUIFER_CANDIDATE_COUNT; i++) {
+                int fluidY = this.c2me$getWaterLevelIndexed(this.c2me$candidateIdx[i]).y;
+                if (fluidY > maxFluidY) {
+                    maxFluidY = fluidY;
+                }
+            }
+            this.c2me$candidateMaxFluidY = maxFluidY;
+            this.c2me$candidateMaxFluidYValid = true;
+        }
+        return this.c2me$candidateMaxFluidY;
     }
 
     @Unique
