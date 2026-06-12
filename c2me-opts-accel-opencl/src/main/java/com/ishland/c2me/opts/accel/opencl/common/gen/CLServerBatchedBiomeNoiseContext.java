@@ -354,7 +354,9 @@ public class CLServerBatchedBiomeNoiseContext {
                 eventsToRelease.add(event.get(0));
             }
 
-            CLUtil.checkCLError(CL12.clFlush(commandQueue.getCommandQueue()));
+            if (Config.doExplicitFlushes) {
+                CLUtil.checkCLError(CL12.clFlush(commandQueue.getCommandQueue()));
+            }
 
             deviceWithProgram.device().getEventCallbackManager().registerCallback(
                     event.get(0),

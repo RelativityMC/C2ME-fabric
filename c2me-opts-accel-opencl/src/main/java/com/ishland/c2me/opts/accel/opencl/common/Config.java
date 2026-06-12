@@ -125,6 +125,13 @@ public class Config {
                     """)
             .getBoolean(true, false);
 
+    public static final boolean doExplicitFlushes = new ConfigSystem.ConfigAccessor()
+            .key("openclAccel.doExplicitFlushes")
+            .comment("""
+                    Whether to perform explicit flushes after every batch
+                    """)
+            .getBoolean(false, false);
+
     public static final String deviceUUIDBlacklistRaw = new ConfigSystem.ConfigAccessor()
             .key("openclAccel.deviceUUIDBlacklist")
             .comment("""
