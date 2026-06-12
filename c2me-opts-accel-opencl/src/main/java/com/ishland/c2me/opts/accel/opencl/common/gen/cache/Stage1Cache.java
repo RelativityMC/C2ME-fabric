@@ -219,7 +219,9 @@ public class Stage1Cache {
                 }
             }
 
-            CLUtil.checkCLError(CL12.clFlush(commandQueue.getCommandQueue()));
+            if (Config.doExplicitFlushes) {
+                CLUtil.checkCLError(CL12.clFlush(commandQueue.getCommandQueue()));
+            }
 
             AtomicInteger counter = new AtomicInteger(eventList.size());
             CLEventCallbackI callback = (event1, event_command_exec_status, user_data) -> {
