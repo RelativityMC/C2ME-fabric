@@ -25,7 +25,7 @@ configure(allprojects) {
     apply plugin: 'dev.yumi.gradle.licenser'
 
     base {
-        archivesName = "${project.name}-mc${project.minecraft_version}"
+        archivesName = "${project.name.replace("c2me", project.archives_base_name)}-mc${project.minecraft_version}"
     }
     it.group = project.maven_group
     it.version = project.mod_version + "." + getVersionSuffix()
