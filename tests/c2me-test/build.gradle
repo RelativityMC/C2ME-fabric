@@ -58,8 +58,8 @@ afterEvaluate {
 }
 
 dependencies {
-    runtimeOnly project(":tests:test-mod").sourceSets.main.output
-    runtimeOnly project(":").sourceSets.main.output
+    runtimeOnly project(path: ":tests:test-mod", configuration: "namedElements")
+    runtimeOnly project(path: ":", configuration: "namedElements")
 }
 
 dependencies {

@@ -91,6 +91,33 @@ allprojects {
                 includeGroup "com.github.bawnorton.mixinsquared"
             }
         }
+        def lwjglCentral = mavenCentral {
+            content {
+                includeGroup "org.lwjgl"
+            }
+        }
+        exclusiveContent {
+            forRepositories lwjglCentral
+            filter {
+                includeGroup "org.lwjgl"
+            }
+        }
+        if (project.hasProperty("maven_use_gpr")) {
+            maven {
+                url = uri("https://maven.pkg.github.com/RelativityMC/yarn")
+                credentials {
+                    username = project.findProperty("gpr.maven.user") ?: System.getenv("GPR_MAVEN_USER")
+                    password = project.findProperty("gpr.maven.token") ?: System.getenv("GPR_MAVEN_TOKEN")
+                }
+            }
+            maven {
+                url = uri("https://maven.pkg.github.com/RelativityMC/intermediary")
+                credentials {
+                    username = project.findProperty("gpr.maven.user") ?: System.getenv("GPR_MAVEN_USER")
+                    password = project.findProperty("gpr.maven.token") ?: System.getenv("GPR_MAVEN_TOKEN")
+                }
+            }
+        }
     }
 }
 
@@ -296,7 +323,7 @@ subprojects.forEach { remapJar.dependsOn("${it.path}:remapJar") }
 dependencies {
     afterEvaluate {
         (subprojects - project(":tests")).forEach {
-            if (it.parent != project(":")) return
+            if (it.parent != rootProject) return
 
             def projectName = it.name
             api project(path: ":${projectName}", configuration: "namedElements")
