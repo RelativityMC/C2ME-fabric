@@ -41,7 +41,7 @@ afterEvaluate {
 }
 
 dependencies {
-    testmodImplementation project(":tests:test-mod").sourceSets.main.output
+    testmodImplementation project(path: ":tests:test-mod", configuration: "namedElements")
 }
 
 test {

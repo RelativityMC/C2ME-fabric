@@ -1,21 +1,17 @@
 allprojects {
-//    apply plugin: 'com.ishland.curseforge.modpackresolver'
     apply plugin: 'fabric-loom'
     apply plugin: 'java-library'
 
     java {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_25
+        targetCompatibility = JavaVersion.VERSION_25
     }
 
     group = project.maven_group + ".tests"
     repositories {
-        mavenLocal()
         mavenCentral()
-        // maven { url "https://nexus.resourcefulbees.com/repository/maven-public/" }
         maven { url = "https://maven.terraformersmc.com/releases/" }
         maven { url = "https://maven.shedaniel.me/" }
-//        maven { url "https://ladysnake.jfrog.io/artifactory/mods/" }
         maven { url = "https://jitpack.io" }
         maven {
             url = "https://api.modrinth.com/maven/"
@@ -40,25 +36,15 @@ allprojects {
             outputDir = project.file("src/main/java")
         }
     }
-    repositories {
-        maven { url = 'https://jitpack.io' }
-    }
     dependencies {
         minecraft "com.mojang:minecraft:${project.minecraft_version}"
         mappings "org.relativitymc:modern-yarn:${project.yarn_mappings}:v2"
         modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-//        modApi 'com.github.astei:lazydfu:0.1.2'
-//        modApi('com.github.RelativityMC:Starlight:03ab3acd94') {
-//            transitive = false
-//        }
         implementation "com.ibm.async:asyncutil:${async_util_version}"
 
         implementation platform("org.lwjgl:lwjgl-bom:${lwjgl_version}")
         minecraftServerRuntimeLibraries implementation("org.lwjgl:lwjgl:${lwjgl_version}")
         minecraftServerRuntimeLibraries implementation("org.lwjgl:lwjgl-opencl:${lwjgl_version}")
-        implementation group: 'org.lwjgl', name: 'lwjgl', classifier: 'natives-linux'
-        implementation group: 'org.lwjgl', name: 'lwjgl', classifier: 'natives-linux-arm64'
-        implementation group: 'org.lwjgl', name: 'lwjgl', classifier: 'natives-windows'
     }
     processResources {
         inputs.property "version", version

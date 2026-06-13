@@ -13,11 +13,11 @@ dependencies {
         transitive = false
     }
 
-    include runtimeOnly(group: 'org.lwjgl', name: 'lwjgl', classifier: 'natives-linux')
-    include runtimeOnly(group: 'org.lwjgl', name: 'lwjgl', classifier: 'natives-linux-arm64')
-    include runtimeOnly(group: 'org.lwjgl', name: 'lwjgl', classifier: 'natives-windows')
-    include runtimeOnly(group: 'org.lwjgl', name: 'lwjgl', classifier: 'natives-macos')
-    include runtimeOnly(group: 'org.lwjgl', name: 'lwjgl', classifier: 'natives-macos-arm64')
-    include runtimeOnly(group: 'org.lwjgl', name: 'lwjgl-zstd', classifier: 'natives-linux')
-    include runtimeOnly(group: 'org.lwjgl', name: 'lwjgl-zstd', classifier: 'natives-windows')
+    include runtimeOnly("org.lwjgl:lwjgl::natives-linux")
+    include runtimeOnly("org.lwjgl:lwjgl::natives-linux-arm64")
+    include runtimeOnly("org.lwjgl:lwjgl::natives-windows")
+    include runtimeOnly("org.lwjgl:lwjgl::natives-macos")
+    include runtimeOnly("org.lwjgl:lwjgl::natives-macos-arm64")
+    include runtimeOnly("org.lwjgl:lwjgl-zstd::natives-linux")
+    include runtimeOnly("org.lwjgl:lwjgl-zstd::natives-windows")
 }
