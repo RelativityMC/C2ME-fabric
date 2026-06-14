@@ -80,6 +80,7 @@ base {
 clean.dependsOn gradle.includedBuild('FlowSched').task(':clean')
 
 allprojects {
+    apply plugin: 'net.fabricmc.fabric-loom-repositories'
     repositories {
         maven {
             url = "https://repo.codemc.io/repository/relativitymc/"
