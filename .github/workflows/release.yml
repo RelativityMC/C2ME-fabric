@@ -1,0 +1,81 @@
+name: C2ME Release Script
+
+on:
+  workflow_dispatch:
+    inputs:
+      changelog:
+        required: true
+        type: string
+        description: changelog
+      display_name:
+        required: true
+        type: string
+        description: display name
+      release_type:
+        required: true
+        type: choice
+        description: release type
+        options:
+          - ALPHA
+          - BETA
+          - RELEASE
+      dry_run:
+        required: true
+        type: choice
+        description: dry run
+        default: YES_DRYRUN
+        options:
+          - YES_DRYRUN
+          - NO_DRYRUN
+
+jobs:
+  release:
+
+    runs-on: ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          submodules: true
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'zulu'
+          java-version: 25
+          java-package: jdk
+
+      - name: Install LLVM
+        uses: KyleMayes/install-llvm-action@v2
+        with:
+          version: "20.1.8"
+          force-url: "https://github.com/llvm/llvm-project/releases/download/llvmorg-20.1.8/LLVM-20.1.8-Linux-X64.tar.xz"
+          directory: ${{ runner.temp }}/llvm
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: false
+          cache-cleanup: never
+
+      - name: Build C2ME
+        run: |
+          ./gradlew clean build --stacktrace
+
+      - name: upload to modrinth and curseforge
+        run: ./gradlew publishMods
+        env:
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_UPLOAD_TOKEN }}
+          CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_API_TOKEN }}
+          OVERRIDE_CHANGELOG: ${{ inputs.changelog }}
+          OVERRIDE_DISPLAY_NAME: ${{ inputs.display_name }}
+          OVERRIDE_RELEASE_TYPE: ${{ inputs.release_type }}
+          PUBLISH_DRY_RUN: ${{ inputs.dry_run }}
+        continue-on-error: true
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: c2me-artifact
+          path: 'build/libs/*.jar'

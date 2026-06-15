@@ -265,6 +265,8 @@ subprojects {
 def ghaChangelog = System.getenv("OVERRIDE_CHANGELOG")
 if (ghaChangelog == null) {
     ghaChangelog = com.ishland.c2me.gradle.ParseGItHubActionChangelog.getChangelog()
+} else {
+    ghaChangelog = ghaChangelog.replace("\\n", "\n")
 }
 
 afterEvaluate {
@@ -285,6 +287,8 @@ publishMods {
     type = envType != null ? me.modmuss50.mpp.ReleaseType.valueOf(envType) : me.modmuss50.mpp.ReleaseType.ALPHA
 
     it.version = project.version + "+" + project.minecraft_version.replaceAll("-snapshot-", "-snap-")
+
+    dryRun = providers.environmentVariable("PUBLISH_DRY_RUN").getOrNull() == "YES_DRYRUN"
 
     def cfVersions = project.curseforge_minecraft_versions.split(",")
     if (cfVersions.length != 0) {
