@@ -35,7 +35,7 @@ function applyPatch {
     patch_folder=$4
 
     cd "$basedir/$what" || exit
-    git fetch --all
+    #git fetch --all
     git branch -f upstream "$branch" >/dev/null
 
     cd "$basedir" || exit

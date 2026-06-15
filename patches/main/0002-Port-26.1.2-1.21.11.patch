@@ -1,0 +1,1329 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: ishland <ishlandmc@yeah.net>
+Date: Thu, 16 Apr 2026 21:59:19 +0800
+Subject: [PATCH] Port 26.1.2 -> 1.21.11
+
+
+diff --git a/build.gradle b/build.gradle
+index 386c51a5..a35aa66c 100644
+--- a/build.gradle
++++ b/build.gradle
+@@ -82,9 +82,6 @@ clean.dependsOn gradle.includedBuild('FlowSched').task(':clean')
+ allprojects {
+     apply plugin: 'net.fabricmc.fabric-loom-repositories'
+     repositories {
+-        maven {
+-            url = "https://repo.codemc.io/repository/relativitymc/"
+-        }
+         maven {
+             url = "https://maven.bawnorton.com/releases"
+             content {
+@@ -130,7 +127,7 @@ configure (allprojects - project(":tests")) {
+     dependencies {
+         //to change the versions see the gradle.properties file
+         minecraft "com.mojang:minecraft:${project.minecraft_version}"
+-        mappings "org.relativitymc:modern-yarn:${project.yarn_mappings}:v2"
++        mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+         modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+ 
+         [
+@@ -146,9 +143,6 @@ configure (allprojects - project(":tests")) {
+     }
+ 
+     loom {
+-        intermediaryUrl = 'https://repo.codemc.io/repository/relativitymc/org/relativitymc/intermediary/%1$s/intermediary-%1$s-v2.jar'
+-        useIntermediateMappings = true
+-
+         uncompressNestedJars = true
+ 
+         def file = project(":c2me-base").file("src/main/resources/c2me-base.accesswidener")
+diff --git a/c2me-base/src/main/java/com/ishland/c2me/base/common/network/ExtRenderDistance.java b/c2me-base/src/main/java/com/ishland/c2me/base/common/network/ExtRenderDistance.java
+index 98604ae1..f29ea63e 100644
+--- a/c2me-base/src/main/java/com/ishland/c2me/base/common/network/ExtRenderDistance.java
++++ b/c2me-base/src/main/java/com/ishland/c2me/base/common/network/ExtRenderDistance.java
+@@ -37,8 +37,8 @@ public record ExtRenderDistance(int renderDistance) implements CustomPayload {
+     public static final Id<ExtRenderDistance> ID = new Id<>(Identifier.of(C2MEConstants.MODID, C2MEConstants.EXT_RENDER_DISTANCE_ID));
+ 
+     static {
+-        PayloadTypeRegistry.serverboundConfiguration().register(ExtRenderDistance.ID, ExtRenderDistance.CODEC);
+-        PayloadTypeRegistry.serverboundPlay().register(ExtRenderDistance.ID, ExtRenderDistance.CODEC);
++        PayloadTypeRegistry.configurationC2S().register(ExtRenderDistance.ID, ExtRenderDistance.CODEC);
++        PayloadTypeRegistry.playC2S().register(ExtRenderDistance.ID, ExtRenderDistance.CODEC);
+     }
+ 
+     public static void init() {
+diff --git a/c2me-base/src/main/java/com/ishland/c2me/base/common/scheduler/SchedulingManager.java b/c2me-base/src/main/java/com/ishland/c2me/base/common/scheduler/SchedulingManager.java
+index 1992e792..8d6a6b62 100644
+--- a/c2me-base/src/main/java/com/ishland/c2me/base/common/scheduler/SchedulingManager.java
++++ b/c2me-base/src/main/java/com/ishland/c2me/base/common/scheduler/SchedulingManager.java
+@@ -173,7 +173,7 @@ public class SchedulingManager {
+         int fromSyncLoad;
+         ChunkPos currentSyncLoad1 = currentSyncLoad;
+         if (currentSyncLoad1 != null) {
+-            final int chebyshevDistance = chebyshev(ChunkPos.fromLong(pos), currentSyncLoad1);
++            final int chebyshevDistance = chebyshev(new ChunkPos(pos), currentSyncLoad1);
+             if (chebyshevDistance <= 8) {
+                 fromSyncLoad = chebyshevDistance;
+ //                System.out.println("dist for chunk [%d,%d] is %d".formatted(currentSyncLoad.x, currentSyncLoad.z, chebyshevDistance));
+@@ -226,14 +226,14 @@ public class SchedulingManager {
+         long startTime = System.nanoTime();
+         for (int xOff = -8; xOff <= 8; xOff++) {
+             for (int zOff = -8; zOff <= 8; zOff++) {
+-                updatePriorityInternal(ChunkPos.toLong(pos.x() + xOff, pos.z() + zOff));
++                updatePriorityInternal(ChunkPos.toLong(pos.x + xOff, pos.z + zOff));
+             }
+         }
+         long endTime = System.nanoTime();
+     }
+ 
+     private static int chebyshev(ChunkPos a, ChunkPos b) {
+-        return Math.max(Math.abs(a.x() - b.x()), Math.abs(a.z() - b.z()));
++        return Math.max(Math.abs(a.x - b.x), Math.abs(a.z - b.z));
+     }
+ 
+     private static int chebyshev(long a, long b) {
+diff --git a/c2me-base/src/main/java/com/ishland/c2me/base/common/util/MCUtil.java b/c2me-base/src/main/java/com/ishland/c2me/base/common/util/MCUtil.java
+index 06dc0693..41aa18fe 100644
+--- a/c2me-base/src/main/java/com/ishland/c2me/base/common/util/MCUtil.java
++++ b/c2me-base/src/main/java/com/ishland/c2me/base/common/util/MCUtil.java
+@@ -32,7 +32,7 @@ public class MCUtil {
+     }
+ 
+     public static long toLong(ChunkPos pos) {
+-        return ((long) pos.x()) | ((long) pos.z()) << 32;
++        return ((long)pos.x) | ((long)pos.z) << 32;
+     }
+ 
+ }
+diff --git a/c2me-base/src/main/java/com/ishland/c2me/base/mixin/access/IState.java b/c2me-base/src/main/java/com/ishland/c2me/base/mixin/access/IState.java
+index cdc68741..9866f41c 100644
+--- a/c2me-base/src/main/java/com/ishland/c2me/base/mixin/access/IState.java
++++ b/c2me-base/src/main/java/com/ishland/c2me/base/mixin/access/IState.java
+@@ -31,4 +31,6 @@ import org.spongepowered.asm.mixin.gen.Accessor;
+ 
+ @Mixin(State.class)
+ public interface IState<S> {
++    @Accessor
++    MapCodec<S> getCodec();
+ }
+diff --git a/c2me-client-uncapvd/build.gradle b/c2me-client-uncapvd/build.gradle
+index b8d867b3..2ed50fe9 100644
+--- a/c2me-client-uncapvd/build.gradle
++++ b/c2me-client-uncapvd/build.gradle
+@@ -14,6 +14,6 @@ repositories {
+ }
+ 
+ dependencies {
+-    modImplementation "net.caffeinemc:sodium-fabric-api:0.8.7+mc26.1"
++    modImplementation "net.caffeinemc:sodium-fabric-api:0.8.8+mc1.21.11"
+ }
+ 
+diff --git a/c2me-client-uncapvd/src/main/java/com/ishland/c2me/client/uncapvd/common/ClientExtNetworking.java b/c2me-client-uncapvd/src/main/java/com/ishland/c2me/client/uncapvd/common/ClientExtNetworking.java
+index 249ddf4b..fbb75425 100644
+--- a/c2me-client-uncapvd/src/main/java/com/ishland/c2me/client/uncapvd/common/ClientExtNetworking.java
++++ b/c2me-client-uncapvd/src/main/java/com/ishland/c2me/client/uncapvd/common/ClientExtNetworking.java
+@@ -27,7 +27,7 @@ package com.ishland.c2me.client.uncapvd.common;
+ import com.ishland.c2me.base.common.network.ExtRenderDistance;
+ import net.fabricmc.fabric.api.client.networking.v1.ClientConfigurationNetworking;
+ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+-import net.fabricmc.fabric.api.client.networking.v1.ServerboundPlayChannelEvents;
++import net.fabricmc.fabric.api.networking.v1.S2CPlayChannelEvents;
+ import net.minecraft.client.MinecraftClient;
+ import org.slf4j.Logger;
+ import org.slf4j.LoggerFactory;
+@@ -65,7 +65,7 @@ public class ClientExtNetworking {
+ 
+     public static void registerListeners() {
+         ExtRenderDistance.init();
+-        ServerboundPlayChannelEvents.REGISTER.register((handler, sender, client, channels) -> {
++        S2CPlayChannelEvents.REGISTER.register((handler, sender, client, channels) -> {
+             if (channels.contains(ExtRenderDistance.ID.id())) {
+                 if (Config.enableExtRenderDistanceProtocol) {
+                     LOGGER.info("Joined server with {} support", ExtRenderDistance.ID.id());
+diff --git a/c2me-client-uncapvd/src/main/java/com/ishland/c2me/client/uncapvd/mixin/rendering/MixinFogRenderer.java b/c2me-client-uncapvd/src/main/java/com/ishland/c2me/client/uncapvd/mixin/rendering/MixinFogRenderer.java
+index af121051..2fa200c1 100644
+--- a/c2me-client-uncapvd/src/main/java/com/ishland/c2me/client/uncapvd/mixin/rendering/MixinFogRenderer.java
++++ b/c2me-client-uncapvd/src/main/java/com/ishland/c2me/client/uncapvd/mixin/rendering/MixinFogRenderer.java
+@@ -32,7 +32,7 @@ import org.spongepowered.asm.mixin.injection.ModifyArg;
+ @Mixin(FogRenderer.class)
+ public class MixinFogRenderer {
+ 
+-    @ModifyArg(method = "prepareFog", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/fog/FogRenderer;getFogColor(Lnet/minecraft/client/render/Camera;FLnet/minecraft/client/world/ClientWorld;IFLorg/joml/Vector4f;)V"), index = 3)
++    @ModifyArg(method = "applyFog(Lnet/minecraft/client/render/Camera;ILnet/minecraft/client/render/RenderTickCounter;FLnet/minecraft/client/world/ClientWorld;)Lorg/joml/Vector4f;", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/fog/FogRenderer;getFogColor(Lnet/minecraft/client/render/Camera;FLnet/minecraft/client/world/ClientWorld;IF)Lorg/joml/Vector4f;"), index = 3)
+     private int overrideViewDistance(int viewDistance) {
+         return Math.clamp(viewDistance, 2, 32);
+     }
+diff --git a/c2me-fixes-worldgen-threading-issues/src/main/java/com/ishland/c2me/fixes/worldgen/threading_issues/mixin/threading/MixinRandomizedIntBlockStateProvider.java b/c2me-fixes-worldgen-threading-issues/src/main/java/com/ishland/c2me/fixes/worldgen/threading_issues/mixin/threading/MixinRandomizedIntBlockStateProvider.java
+index efa0ed05..88e11911 100644
+--- a/c2me-fixes-worldgen-threading-issues/src/main/java/com/ishland/c2me/fixes/worldgen/threading_issues/mixin/threading/MixinRandomizedIntBlockStateProvider.java
++++ b/c2me-fixes-worldgen-threading-issues/src/main/java/com/ishland/c2me/fixes/worldgen/threading_issues/mixin/threading/MixinRandomizedIntBlockStateProvider.java
+@@ -29,7 +29,6 @@ import net.minecraft.state.property.IntProperty;
+ import net.minecraft.util.math.BlockPos;
+ import net.minecraft.util.math.intprovider.IntProvider;
+ import net.minecraft.util.math.random.Random;
+-import net.minecraft.world.StructureWorldAccess;
+ import net.minecraft.world.gen.stateprovider.BlockStateProvider;
+ import net.minecraft.world.gen.stateprovider.RandomizedIntBlockStateProvider;
+ import org.jetbrains.annotations.Nullable;
+@@ -60,19 +59,19 @@ public abstract class MixinRandomizedIntBlockStateProvider {
+      * @reason ensure proper behavior
+      */
+     @Overwrite
+-    public BlockState get(final StructureWorldAccess level, final Random random, final BlockPos pos) {
+-        BlockState unmodifiedState = this.source.get(level, random, pos);
+-        IntProperty propertyLocal = this.property;
+-        if (propertyLocal == null || !unmodifiedState.contains(propertyLocal)) {
+-            IntProperty property = getIntPropertyByName(unmodifiedState, this.propertyName);
+-            if (property == null) {
+-                return unmodifiedState;
++    public BlockState get(Random random, BlockPos pos) {
++        BlockState blockState = this.source.get(random, pos);
++        IntProperty propertyLocal = this.property; // used as cache only
++        if (propertyLocal == null || !blockState.contains(propertyLocal)) {
++            IntProperty intProperty = getIntPropertyByName(blockState, this.propertyName);
++            if (intProperty == null) {
++                return blockState;
+             }
+ 
+-            propertyLocal = this.property = property;
++            this.property = propertyLocal = intProperty;
+         }
+ 
+-        return unmodifiedState.with(propertyLocal, this.values.get(random));
++        return blockState.with(propertyLocal, Integer.valueOf(this.values.get(random)));
+     }
+ 
+ }
+diff --git a/c2me-fixes-worldgen-threading-issues/src/main/java/com/ishland/c2me/fixes/worldgen/threading_issues/mixin/threading_detections/readonly_protection/MixinChunkRegion.java b/c2me-fixes-worldgen-threading-issues/src/main/java/com/ishland/c2me/fixes/worldgen/threading_issues/mixin/threading_detections/readonly_protection/MixinChunkRegion.java
+index f7ebc4a7..63fa666b 100644
+--- a/c2me-fixes-worldgen-threading-issues/src/main/java/com/ishland/c2me/fixes/worldgen/threading_issues/mixin/threading_detections/readonly_protection/MixinChunkRegion.java
++++ b/c2me-fixes-worldgen-threading-issues/src/main/java/com/ishland/c2me/fixes/worldgen/threading_issues/mixin/threading_detections/readonly_protection/MixinChunkRegion.java
+@@ -55,7 +55,7 @@ public abstract class MixinChunkRegion {
+         if (this.isValidForSetBlock(pos)) {
+             return original.call(pos);
+         } else {
+-            LOGGER.warn("Detected block scheduled tick access in a far chunk {}, pos: {}, status: {}, currently generating: {}", ChunkPos.fromBlockPos(pos), pos, this.generationStep.targetStatus(), this.centerPos.getPos());
++            LOGGER.warn("Detected block scheduled tick access in a far chunk {}, pos: {}, status: {}, currently generating: {}", new ChunkPos(pos), pos, this.generationStep.targetStatus(), this.centerPos.getPos());
+             return EmptyTickSchedulers.getReadOnlyTickScheduler();
+         }
+     }
+@@ -65,7 +65,7 @@ public abstract class MixinChunkRegion {
+         if (this.isValidForSetBlock(pos)) {
+             return original.call(pos);
+         } else {
+-            LOGGER.warn("Detected fluid scheduled tick access in a far chunk {}, pos: {}, status: {}, currently generating: {}", ChunkPos.fromBlockPos(pos), pos, this.generationStep.targetStatus(), this.centerPos.getPos());
++            LOGGER.warn("Detected fluid scheduled tick access in a far chunk {}, pos: {}, status: {}, currently generating: {}", new ChunkPos(pos), pos, this.generationStep.targetStatus(), this.centerPos.getPos());
+             return EmptyTickSchedulers.getReadOnlyTickScheduler();
+         }
+     }
+diff --git a/c2me-notickvd/src/main/java/com/ishland/c2me/notickvd/common/PlayerNoTickLoader.java b/c2me-notickvd/src/main/java/com/ishland/c2me/notickvd/common/PlayerNoTickLoader.java
+index 206d4ae1..203fa3a5 100644
+--- a/c2me-notickvd/src/main/java/com/ishland/c2me/notickvd/common/PlayerNoTickLoader.java
++++ b/c2me-notickvd/src/main/java/com/ishland/c2me/notickvd/common/PlayerNoTickLoader.java
+@@ -175,7 +175,7 @@ public class PlayerNoTickLoader {
+             while (iterator.hasNext()) {
+                 ChunkPos pos = iterator.next();
+                 if (this.managedChunks.add(pos.toLong())) {
+-                    this.chunkLoadFutures.add(loadChunk(pos.x(), pos.z()));
++                    this.chunkLoadFutures.add(loadChunk(pos.x, pos.z));
+                     this.iterators.getAndMoveToLast(entry.getLongKey());
+                     return true;
+                 }
+diff --git a/c2me-notickvd/src/main/java/com/ishland/c2me/notickvd/common/ServerExtNetworking.java b/c2me-notickvd/src/main/java/com/ishland/c2me/notickvd/common/ServerExtNetworking.java
+index dfe5bb50..fb7441ce 100644
+--- a/c2me-notickvd/src/main/java/com/ishland/c2me/notickvd/common/ServerExtNetworking.java
++++ b/c2me-notickvd/src/main/java/com/ishland/c2me/notickvd/common/ServerExtNetworking.java
+@@ -40,7 +40,7 @@ public class ServerExtNetworking {
+         ServerConfigurationNetworking.registerGlobalReceiver(
+                 ExtRenderDistance.ID,
+                 (payload, context) ->
+-                        ((IRenderDistanceOverride) context.packetListener()).c2me_notickvd$setRenderDistance(payload.renderDistance())
++                        ((IRenderDistanceOverride) context.networkHandler()).c2me_notickvd$setRenderDistance(payload.renderDistance())
+         );
+     }
+ 
+diff --git a/c2me-notickvd/src/main/java/com/ishland/c2me/notickvd/mixin/MixinServerAccessibleChunkSending.java b/c2me-notickvd/src/main/java/com/ishland/c2me/notickvd/mixin/MixinServerAccessibleChunkSending.java
+index 5eaa0058..3024d145 100644
+--- a/c2me-notickvd/src/main/java/com/ishland/c2me/notickvd/mixin/MixinServerAccessibleChunkSending.java
++++ b/c2me-notickvd/src/main/java/com/ishland/c2me/notickvd/mixin/MixinServerAccessibleChunkSending.java
+@@ -106,7 +106,7 @@ public class MixinServerAccessibleChunkSending {
+             ChunkState state = context.holder().getItem().get();
+             ChunkPos chunkPos = context.holder().getKey();
+ 
+-            BoundedRegionArray<AbstractChunkHolder> boundedRegionArray = BoundedRegionArray.create(chunkPos.x(), chunkPos.z(), 1, (x, z) -> context.theChunkSystem().getHolder(new ChunkPos(x, z)).getUserData().get());
++            BoundedRegionArray<AbstractChunkHolder> boundedRegionArray = BoundedRegionArray.create(chunkPos.x, chunkPos.z, 1, (x, z) -> context.theChunkSystem().getHolder(new ChunkPos(x, z)).getUserData().get());
+             ChunkRegion chunkRegion = new ChunkRegion(serverWorld, boundedRegionArray, ChunkGenerationSteps.GENERATION.get(ChunkStatus.FULL), state.protoChunk());
+             Chunk chunk = state.chunk();
+ 
+diff --git a/c2me-notickvd/src/main/java/com/ishland/c2me/notickvd/mixin/client/MixinIntegratedServer.java b/c2me-notickvd/src/main/java/com/ishland/c2me/notickvd/mixin/client/MixinIntegratedServer.java
+index 71953fab..1bdb010f 100644
+--- a/c2me-notickvd/src/main/java/com/ishland/c2me/notickvd/mixin/client/MixinIntegratedServer.java
++++ b/c2me-notickvd/src/main/java/com/ishland/c2me/notickvd/mixin/client/MixinIntegratedServer.java
+@@ -33,20 +33,18 @@ import net.minecraft.server.network.ServerPlayerEntity;
+ import net.minecraft.util.ApiServices;
+ import net.minecraft.world.chunk.ChunkLoadProgress;
+ import net.minecraft.world.level.storage.LevelStorage;
+-import net.minecraft.world.rule.GameRules;
+ import org.spongepowered.asm.mixin.Mixin;
+ import org.spongepowered.asm.mixin.injection.At;
+ import org.spongepowered.asm.mixin.injection.Inject;
+ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+ 
+ import java.net.Proxy;
+-import java.util.Optional;
+ 
+ @Mixin(IntegratedServer.class)
+ public abstract class MixinIntegratedServer extends MinecraftServer {
+ 
+-    public MixinIntegratedServer(Thread serverThread, LevelStorage.Session session, ResourcePackManager dataPackManager, SaveLoader saveLoader, Optional<GameRules> gameRules, Proxy proxy, DataFixer fixerUpper, ApiServices apiServices, ChunkLoadProgress chunkLoadProgress, boolean propagatesCrashes) {
+-        super(serverThread, session, dataPackManager, saveLoader, gameRules, proxy, fixerUpper, apiServices, chunkLoadProgress, propagatesCrashes);
++    public MixinIntegratedServer(Thread serverThread, LevelStorage.Session session, ResourcePackManager dataPackManager, SaveLoader saveLoader, Proxy proxy, DataFixer dataFixer, ApiServices apiServices, ChunkLoadProgress chunkLoadProgress) {
++        super(serverThread, session, dataPackManager, saveLoader, proxy, dataFixer, apiServices, chunkLoadProgress);
+     }
+ 
+     @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/integrated/IntegratedServer;incrementTotalWorldTimeStat()V", shift = At.Shift.AFTER))
+diff --git a/c2me-notickvd/src/test/java/com/ishland/c2me/notickvd/common/iterators/TestIterators.java b/c2me-notickvd/src/test/java/com/ishland/c2me/notickvd/common/iterators/TestIterators.java
+index fef930a8..8a8b71bd 100644
+--- a/c2me-notickvd/src/test/java/com/ishland/c2me/notickvd/common/iterators/TestIterators.java
++++ b/c2me-notickvd/src/test/java/com/ishland/c2me/notickvd/common/iterators/TestIterators.java
+@@ -65,7 +65,7 @@ public class TestIterators {
+             Assertions.fail();
+         }
+         for (ChunkPos chunk : chunks) {
+-            Assertions.assertTrue(iterator.isInRange(chunk.x(), chunk.z()));
++            Assertions.assertTrue(iterator.isInRange(chunk.x, chunk.z));
+         }
+     }
+ 
+diff --git a/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/chunksystem_integration/BatchingBiomeNoiseStatus.java b/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/chunksystem_integration/BatchingBiomeNoiseStatus.java
+index ccee3192..7541d64d 100644
+--- a/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/chunksystem_integration/BatchingBiomeNoiseStatus.java
++++ b/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/chunksystem_integration/BatchingBiomeNoiseStatus.java
+@@ -74,7 +74,7 @@ public class BatchingBiomeNoiseStatus extends NewChunkStatus {
+         ChunkPos pos = context.holder().getKey();
+         final Chunk startingChunk = context.holder().getItem().get().chunk();
+ 
+-        if (!CLServerBatchedBiomeNoiseContext.isAligned(pos.x(), pos.z()) || startingChunk.getStatus().isAtLeast(ChunkStatus.NOISE)) {
++        if (!CLServerBatchedBiomeNoiseContext.isAligned(pos.x, pos.z) || startingChunk.getStatus().isAtLeast(ChunkStatus.NOISE)) {
+             return Completable.complete();
+         }
+ 
+@@ -84,21 +84,21 @@ public class BatchingBiomeNoiseStatus extends NewChunkStatus {
+         }
+ 
+         Long2ReferenceOpenHashMap<ChunkHolder> holderCache = new Long2ReferenceOpenHashMap<>();
+-        Long2ReferenceFunction<ChunkHolder> getHolder0 = posx -> context.theChunkSystem().getHolder(ChunkPos.fromLong(posx)).getUserData().get();
++        Long2ReferenceFunction<ChunkHolder> getHolder0 = posx -> context.theChunkSystem().getHolder(new ChunkPos(posx)).getUserData().get();
+         Long2ReferenceFunction<ChunkHolder> getHolder = posx -> holderCache.computeIfAbsent(posx, getHolder0);
+         BoundedRegionArray.Getter<AbstractChunkHolder> getHolder1 = (x1, z1) -> getHolder.get(ChunkPos.toLong(x1, z1));
+ 
+         BoundedRegionArray<ProtoChunk> boundedRegionArray = new BoundedRegionArray<>(
+-                pos.x(),
+-                pos.z(),
++                pos.x,
++                pos.z,
+                 CLServerBatchedBiomeNoiseContext.BATCH_SIZE,
+                 CLServerBatchedBiomeNoiseContext.BATCH_SIZE,
+                 (x, z) -> (ProtoChunk) getHolder1.get(x, z).getUncheckedOrNull(ChunkStatus.STRUCTURE_REFERENCES)
+         );
+ 
+         BoundedRegionArray<ChunkRegion> chunkRegions = new BoundedRegionArray<>(
+-                pos.x(),
+-                pos.z(),
++                pos.x,
++                pos.z,
+                 CLServerBatchedBiomeNoiseContext.BATCH_SIZE,
+                 CLServerBatchedBiomeNoiseContext.BATCH_SIZE,
+                 (x, z) -> {
+@@ -114,7 +114,7 @@ public class BatchingBiomeNoiseStatus extends NewChunkStatus {
+ 
+         for (int dx = 0; dx < CLServerBatchedBiomeNoiseContext.BATCH_SIZE; dx++) {
+             for (int dz = 0; dz < CLServerBatchedBiomeNoiseContext.BATCH_SIZE; dz++) {
+-                ChunkRegion region = chunkRegions.get(pos.x() + dx, pos.z() + dz);
++                ChunkRegion region = chunkRegions.get(pos.x + dx, pos.z + dz);
+                 if (Blender.getBlender(region) != Blender.getNoBlending()) {
+                     return Completable.complete();
+                 }
+@@ -122,8 +122,8 @@ public class BatchingBiomeNoiseStatus extends NewChunkStatus {
+         }
+ 
+         BoundedRegionArray<StructureAccessor> structureAccessors = new BoundedRegionArray<>(
+-                pos.x(),
+-                pos.z(),
++                pos.x,
++                pos.z,
+                 CLServerBatchedBiomeNoiseContext.BATCH_SIZE,
+                 CLServerBatchedBiomeNoiseContext.BATCH_SIZE,
+                 (x, z) -> chunkGenerationContext.world().getStructureAccessor().forRegion(chunkRegions.get(x, z))
+@@ -132,7 +132,7 @@ public class BatchingBiomeNoiseStatus extends NewChunkStatus {
+         boolean allPostNoise = true;
+         for (int dx = 0; dx < CLServerBatchedBiomeNoiseContext.BATCH_SIZE; dx++) {
+             for (int dz = 0; dz < CLServerBatchedBiomeNoiseContext.BATCH_SIZE; dz++) {
+-                ProtoChunk chunk = boundedRegionArray.get(pos.x() + dx, pos.z() + dz);
++                ProtoChunk chunk = boundedRegionArray.get(pos.x + dx, pos.z + dz);
+                 if (chunk == null || !chunk.getStatus().isAtLeast(ChunkStatus.NOISE)) {
+                     allPostNoise = false;
+                     break;
+@@ -147,8 +147,8 @@ public class BatchingBiomeNoiseStatus extends NewChunkStatus {
+         return Completable.defer(() -> {
+             CLServerWorldContext clContext = ((TACSExtension) context.tacs()).c2me$getCLContext();
+             return Completable.fromCompletionStage(VanillaWorldGenerationDelegate.runTaskWithLockArea(
+-                    pos.x(),
+-                    pos.z(),
++                    pos.x,
++                    pos.z,
+                     CLServerBatchedBiomeNoiseContext.BATCH_SIZE,
+                     CLServerBatchedBiomeNoiseContext.BATCH_SIZE,
+                     context.schedulingManager(),
+@@ -180,7 +180,7 @@ public class BatchingBiomeNoiseStatus extends NewChunkStatus {
+         ChunkPos pos = holder.getKey();
+         final Chunk chunk = holder.getItem().get().chunk();
+         // depend on BATCH_SIZExBATCH_SIZE if aligned, nothing otherwise
+-        if (CLServerBatchedBiomeNoiseContext.isAligned(pos.x(), pos.z()) && !chunk.getStatus().isAtLeast(ChunkStatus.NOISE)) {
++        if (CLServerBatchedBiomeNoiseContext.isAligned(pos.x, pos.z) && !chunk.getStatus().isAtLeast(ChunkStatus.NOISE)) {
+             return getGenDeps(pos);
+         } else {
+             return EMPTY_DEPENDENCIES;
+@@ -194,9 +194,9 @@ public class BatchingBiomeNoiseStatus extends NewChunkStatus {
+             for (int dz = -8; dz < CLServerBatchedBiomeNoiseContext.BATCH_SIZE + 8; dz++) {
+                 if (dx == 0 && dz == 0) continue; // skip self
+                 if (dx >= 0 && dx < CLServerBatchedBiomeNoiseContext.BATCH_SIZE && dz >= 0 && dz < CLServerBatchedBiomeNoiseContext.BATCH_SIZE) {
+-                    deps[index++] = new KeyStatusPair<>(new ChunkPos(pos.x() + dx, pos.z() + dz), Objects.requireNonNull(this.getPrev()));
++                    deps[index++] = new KeyStatusPair<>(new ChunkPos(pos.x + dx, pos.z + dz), Objects.requireNonNull(this.getPrev()));
+                 } else {
+-                    deps[index++] = new KeyStatusPair<>(new ChunkPos(pos.x() + dx, pos.z() + dz), Objects.requireNonNull(NewChunkStatus.fromVanillaStatus(ChunkStatus.STRUCTURE_STARTS)));
++                    deps[index++] = new KeyStatusPair<>(new ChunkPos(pos.x + dx, pos.z + dz), Objects.requireNonNull(NewChunkStatus.fromVanillaStatus(ChunkStatus.STRUCTURE_STARTS)));
+                 }
+             }
+         }
+diff --git a/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/gen/CLDataUtil.java b/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/gen/CLDataUtil.java
+index c22f8972..b027664d 100644
+--- a/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/gen/CLDataUtil.java
++++ b/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/gen/CLDataUtil.java
+@@ -111,8 +111,8 @@ public class CLDataUtil {
+ 
+         ByteBuffer byteBuffer = MemoryUtil.memAlloc(roundUp(currentTail, 32));
+         MemorySegment segment = MemorySegment.ofBuffer(byteBuffer);
+-        OpenCLStructs.worldgen_params$startBiomeX.set(segment, 0L, BiomeCoords.fromChunk(base.x()));
+-        OpenCLStructs.worldgen_params$startBiomeZ.set(segment, 0L, BiomeCoords.fromChunk(base.z()));
++        OpenCLStructs.worldgen_params$startBiomeX.set(segment, 0L, BiomeCoords.fromChunk(base.x));
++        OpenCLStructs.worldgen_params$startBiomeZ.set(segment, 0L, BiomeCoords.fromChunk(base.z));
+         OpenCLStructs.worldgen_params$sizeBiomeX.set(segment, 0L, (chunkSize * 4) - (extendByOne ? 0 : 1));
+         OpenCLStructs.worldgen_params$sizeBiomeZ.set(segment, 0L, (chunkSize * 4) - (extendByOne ? 0 : 1));
+         OpenCLStructs.worldgen_params$startCellX.set(segment, 0L, Integer.MAX_VALUE);
+@@ -166,7 +166,7 @@ public class CLDataUtil {
+ 
+         Function<ProtoChunk, ChunkNoiseSampler> toChunkNoiseSampler =
+                 chunkx -> chunkx.getOrCreateChunkNoiseSampler(chunkxx -> {
+-                    StructureAccessor structureAccessor = structureAccessors.get(chunkxx.getPos().x(), chunkxx.getPos().z());
++                    StructureAccessor structureAccessor = structureAccessors.get(chunkxx.getPos().x, chunkxx.getPos().z);
+                     return ((INoiseChunkGenerator) (Object) generator).invokeCreateChunkNoiseSampler(chunkxx, structureAccessor, Blender.getNoBlending(), noiseConfig);
+                 });
+ 
+@@ -218,7 +218,7 @@ public class CLDataUtil {
+                         int startX = IAquiferSamplerImpl.invokeGetLocalX(basePos.getStartX() - 5) + 0;
+                         int startY = IAquiferSamplerImpl.invokeGetLocalY(generationShapeConfig.minimumY() + 1) - 1;
+                         int startZ = IAquiferSamplerImpl.invokeGetLocalZ(basePos.getStartZ() - 5) + 0;
+-                        ChunkPos endChunkPos = new ChunkPos(basePos.x() + horizontalChunkSize - 1, basePos.z() + horizontalChunkSize - 1);
++                        ChunkPos endChunkPos = new ChunkPos(basePos.x + horizontalChunkSize - 1, basePos.z + horizontalChunkSize - 1);
+                         int endX = IAquiferSamplerImpl.invokeGetLocalX(endChunkPos.getEndX() + 5 - 1) + 1;
+                         int endY = IAquiferSamplerImpl.invokeGetLocalY(generationShapeConfig.minimumY() + generationShapeConfig.height() - 1) + 1;
+                         int endZ = IAquiferSamplerImpl.invokeGetLocalZ(endChunkPos.getEndZ() + 5 - 1) + 1;
+@@ -227,8 +227,8 @@ public class CLDataUtil {
+ 
+                         for (int dx = 0; dx < horizontalChunkSize; dx++) {
+                             for (int dz = 0; dz < horizontalChunkSize; dz++) {
+-                                int x = basePos.x() + dx;
+-                                int z = basePos.z() + dz;
++                                int x = basePos.x + dx;
++                                int z = basePos.z + dz;
+                                 ProtoChunk chunk = regionArray.get(x, z);
+                                 ChunkNoiseSampler sampler = toChunkNoiseSampler.apply(chunk);
+                                 AquiferSampler.Impl aquiferSampler = (AquiferSampler.Impl) sampler.getAquiferSampler();
+@@ -309,8 +309,8 @@ public class CLDataUtil {
+ 
+         ByteBuffer byteBuffer = MemoryUtil.memAlloc(roundUp(currentTail, 32));
+         MemorySegment segment = MemorySegment.ofBuffer(byteBuffer);
+-        OpenCLStructs.worldgen_params$startBiomeX.set(segment, 0L, BiomeCoords.fromChunk(basePos.x()));
+-        OpenCLStructs.worldgen_params$startBiomeZ.set(segment, 0L, BiomeCoords.fromChunk(basePos.z()));
++        OpenCLStructs.worldgen_params$startBiomeX.set(segment, 0L, BiomeCoords.fromChunk(basePos.x));
++        OpenCLStructs.worldgen_params$startBiomeZ.set(segment, 0L, BiomeCoords.fromChunk(basePos.z));
+         OpenCLStructs.worldgen_params$sizeBiomeX.set(segment, 0L, horizontalChunkSize << 2);
+         OpenCLStructs.worldgen_params$sizeBiomeZ.set(segment, 0L, horizontalChunkSize << 2);
+         OpenCLStructs.worldgen_params$startCellX.set(segment, 0L, Math.floorDiv(basePos.getStartX(), generationShapeConfig.horizontalCellBlockCount()));
+@@ -319,8 +319,8 @@ public class CLDataUtil {
+         OpenCLStructs.worldgen_params$sizeCellX.set(segment, 0L, horizontalCellCount);
+         OpenCLStructs.worldgen_params$sizeCellY.set(segment, 0L, verticalCellCount);
+         OpenCLStructs.worldgen_params$sizeCellZ.set(segment, 0L, horizontalCellCount);
+-        OpenCLStructs.worldgen_params$estimateSurfaceHeight_startBiomeX.set(segment, 0L, (basePos.x() - 4) << 2);
+-        OpenCLStructs.worldgen_params$estimateSurfaceHeight_startBiomeZ.set(segment, 0L, (basePos.z() - 4) << 2);
++        OpenCLStructs.worldgen_params$estimateSurfaceHeight_startBiomeX.set(segment, 0L, (basePos.x - 4) << 2);
++        OpenCLStructs.worldgen_params$estimateSurfaceHeight_startBiomeZ.set(segment, 0L, (basePos.z - 4) << 2);
+         OpenCLStructs.worldgen_params$estimateSurfaceHeight_sizeBiomeX.set(segment, 0L, 32 + (4 * horizontalChunkSize));
+         OpenCLStructs.worldgen_params$estimateSurfaceHeight_sizeBiomeZ.set(segment, 0L, 32 + (4 * horizontalChunkSize));
+         OpenCLStructs.worldgen_params$cache2d_startX.set(segment, 0L, basePos.getStartX());
+diff --git a/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/gen/CLServerBatchedBiomeNoiseContext.java b/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/gen/CLServerBatchedBiomeNoiseContext.java
+index 49075e3d..84bc203a 100644
+--- a/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/gen/CLServerBatchedBiomeNoiseContext.java
++++ b/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/gen/CLServerBatchedBiomeNoiseContext.java
+@@ -96,7 +96,7 @@ public class CLServerBatchedBiomeNoiseContext {
+     }
+ 
+     public CompletableFuture<Void> execute(ChunkLoadingContext context, BoundedRegionArray<ProtoChunk> chunks, BoundedRegionArray<StructureAccessor> structureAccessors) {
+-        return this.worldContext.getEstimateSurfaceHeightCache().getAreaCache(startingPos.x(), startingPos.z(), BATCH_SIZE, BATCH_SIZE)
++        return this.worldContext.getEstimateSurfaceHeightCache().getAreaCache(startingPos.x, startingPos.z, BATCH_SIZE, BATCH_SIZE)
+                 .thenComposeAsync(cacheEntry -> {
+                     ByteBuffer rwData = ScopedValue.where(TLUtil.stage1CachePassing, cacheEntry).call(() -> {
+                         return CLDataUtil.worldgen_data_root$createForArea(
+@@ -139,7 +139,7 @@ public class CLServerBatchedBiomeNoiseContext {
+             int biomeHeight;
+             HeightLimitView heightLimitView;
+             {
+-                ProtoChunk startingChunk = chunks.get(this.startingPos.x(), this.startingPos.z());
++                ProtoChunk startingChunk = chunks.get(this.startingPos.x, this.startingPos.z);
+                 heightLimitView = startingChunk.getHeightLimitView();
+                 biomeHeight = (heightLimitView.getTopSectionCoord() - heightLimitView.getBottomSectionCoord() + 1) * 4;
+             }
+@@ -266,7 +266,7 @@ public class CLServerBatchedBiomeNoiseContext {
+                     int startX = IAquiferSamplerImpl.invokeGetLocalX(this.startingPos.getStartX() - 5) + 0;
+                     int startY = IAquiferSamplerImpl.invokeGetLocalY(settings.generationShapeConfig().minimumY() + 1) - 1;
+                     int startZ = IAquiferSamplerImpl.invokeGetLocalZ(this.startingPos.getStartZ() - 5) + 0;
+-                    ChunkPos endChunkPos = new ChunkPos(this.startingPos.x() + BATCH_SIZE - 1, this.startingPos.z() + BATCH_SIZE - 1);
++                    ChunkPos endChunkPos = new ChunkPos(this.startingPos.x + BATCH_SIZE - 1, this.startingPos.z + BATCH_SIZE - 1);
+                     int endX = IAquiferSamplerImpl.invokeGetLocalX(endChunkPos.getEndX() + 5 - 1) + 1;
+                     int endY = IAquiferSamplerImpl.invokeGetLocalY(settings.generationShapeConfig().minimumY() + settings.generationShapeConfig().height() - 1) + 1;
+                     int endZ = IAquiferSamplerImpl.invokeGetLocalZ(endChunkPos.getEndZ() + 5 - 1) + 1;
+@@ -328,8 +328,8 @@ public class CLServerBatchedBiomeNoiseContext {
+                 CLUtil.checkCLError(CL12.clSetKernelArg1p(kernel, 0, deviceWithProgram.programConstDataBuffer()));
+                 CLUtil.checkCLError(CL12.clSetKernelArg1p(kernel, 1, rwBuffer.buffer()));
+                 CLUtil.checkCLError(CL12.clSetKernelArg1p(kernel, 2, blockOutBuffer.buffer()));
+-                CLUtil.checkCLError(CL12.clSetKernelArg1i(kernel, 3, this.startingPos.x()));
+-                CLUtil.checkCLError(CL12.clSetKernelArg1i(kernel, 4, this.startingPos.z()));
++                CLUtil.checkCLError(CL12.clSetKernelArg1i(kernel, 3, this.startingPos.x));
++                CLUtil.checkCLError(CL12.clSetKernelArg1i(kernel, 4, this.startingPos.z));
+                 CLUtil.checkCLError(CL12.clEnqueueNDRangeKernel(commandQueue.getCommandQueue(), kernel, 3, null, globalWorkSize, localWorkSize, prevEvent, event));
+                 eventsToRelease.add(event.get(0));
+                 kernelsToRelease.add(kernel);
+@@ -442,11 +442,11 @@ public class CLServerBatchedBiomeNoiseContext {
+     private void genBiomesFallback(BoundedRegionArray<ProtoChunk> chunks, BoundedRegionArray<StructureAccessor> structureAccessors) {
+         for (int chunkOffX = 0; chunkOffX < BATCH_SIZE; chunkOffX++) {
+             for (int chunkOffZ = 0; chunkOffZ < BATCH_SIZE; chunkOffZ++) {
+-                ProtoChunk chunk = chunks.get(this.startingPos.x() + chunkOffX, this.startingPos.z() + chunkOffZ);
++                ProtoChunk chunk = chunks.get(this.startingPos.x + chunkOffX, this.startingPos.z + chunkOffZ);
+                 if (chunk.getStatus().isAtLeast(ChunkStatus.BIOMES)) {
+                     continue;
+                 }
+-                this.generator.populateBiomes(this.noiseConfig, Blender.getNoBlending(), structureAccessors.get(chunk.getPos().x(), chunk.getPos().z()), chunk); // fallback
++                this.generator.populateBiomes(this.noiseConfig, Blender.getNoBlending(), structureAccessors.get(chunk.getPos().x, chunk.getPos().z), chunk); // fallback
+                 chunk.setStatus(ChunkStatus.BIOMES);
+             }
+         }
+@@ -454,7 +454,7 @@ public class CLServerBatchedBiomeNoiseContext {
+ 
+     private void writeBiomes(BoundedRegionArray<ProtoChunk> chunks, GeneratedCLSource generatedCLSource, int biomeHeight, IntBuffer biomeOutBufferData) {
+         RegistryEntry<Biome>[] biomeMappings = generatedCLSource.getBiomeMappings();
+-        ProtoChunk startingChunk = chunks.get(this.startingPos.x(), this.startingPos.z());
++        ProtoChunk startingChunk = chunks.get(this.startingPos.x, this.startingPos.z);
+ 
+         int curSectionIndex = startingChunk.getSectionIndex(startingChunk.getBottomY());
+         ChunkSection[] chunkSection = new ChunkSection[BATCH_SIZE * BATCH_SIZE];
+@@ -464,7 +464,7 @@ public class CLServerBatchedBiomeNoiseContext {
+         for (int chunkOffZ = 0; chunkOffZ < BATCH_SIZE; chunkOffZ++) {
+             for (int chunkOffX = 0; chunkOffX < BATCH_SIZE; chunkOffX++) {
+                 int idx = (chunkOffZ << BATCH_SHIFT) + chunkOffX;
+-                ProtoChunk chunk = chunks.get(this.startingPos.x() + chunkOffX, this.startingPos.z() + chunkOffZ);
++                ProtoChunk chunk = chunks.get(this.startingPos.x + chunkOffX, this.startingPos.z + chunkOffZ);
+                 boolean writeProtected = chunk.getStatus().isAtLeast(ChunkStatus.BIOMES);
+                 if (writeProtected) {
+                     writeProtectedMask.set(idx);
+@@ -484,7 +484,7 @@ public class CLServerBatchedBiomeNoiseContext {
+                         int idx = (chunkOffZ << BATCH_SHIFT) + chunkOffX;
+                         if (writeProtectedMask.get(idx)) continue;
+                         ((IChunkSection) chunkSection[idx]).setBiomeContainer(sectionBiome[idx]);
+-                        chunkSection[idx] = chunks.get(this.startingPos.x() + chunkOffX, this.startingPos.z() + chunkOffZ).getSection(sectionIndex);
++                        chunkSection[idx] = chunks.get(this.startingPos.x + chunkOffX, this.startingPos.z + chunkOffZ).getSection(sectionIndex);
+                         sectionBiome[idx] = chunkSection[idx].getBiomeContainer().slice();
+                     }
+                 }
+@@ -509,14 +509,14 @@ public class CLServerBatchedBiomeNoiseContext {
+                 if (writeProtectedMask.get(idx)) continue;
+ 
+                 ((IChunkSection) chunkSection[idx]).setBiomeContainer(sectionBiome[idx]);
+-                ProtoChunk chunk = chunks.get(this.startingPos.x() + chunkOffX, this.startingPos.z() + chunkOffZ);
++                ProtoChunk chunk = chunks.get(this.startingPos.x + chunkOffX, this.startingPos.z + chunkOffZ);
+                 chunk.setStatus(ChunkStatus.BIOMES);
+             }
+         }
+     }
+ 
+     private void writeBlocks(BoundedRegionArray<ProtoChunk> chunks, CLBlockStateMappings clBlockStateMappings, int verticalSize, ChunkGeneratorSettings settings, int horizontalSize, ByteBuffer blockOutBufferData) {
+-        ProtoChunk startingChunk = chunks.get(this.startingPos.x(), this.startingPos.z());
++        ProtoChunk startingChunk = chunks.get(this.startingPos.x, this.startingPos.z);
+ 
+         int curSectionIndex = startingChunk.getSectionIndex(startingChunk.getBottomY());
+         ChunkSection[] chunkSection = new ChunkSection[BATCH_SIZE * BATCH_SIZE];
+@@ -527,7 +527,7 @@ public class CLServerBatchedBiomeNoiseContext {
+         for (int chunkOffZ = 0; chunkOffZ < BATCH_SIZE; chunkOffZ++) {
+             for (int chunkOffX = 0; chunkOffX < BATCH_SIZE; chunkOffX++) {
+                 int idx = (chunkOffZ << BATCH_SHIFT) + chunkOffX;
+-                ProtoChunk chunk = chunks.get(this.startingPos.x() + chunkOffX, this.startingPos.z() + chunkOffZ);
++                ProtoChunk chunk = chunks.get(this.startingPos.x + chunkOffX, this.startingPos.z + chunkOffZ);
+                 boolean writeProtected = chunk.getStatus().isAtLeast(ChunkStatus.NOISE);
+                 writeProtectedMask |= writeProtected ? (1 << idx) : 0;
+                 if (writeProtected) continue;
+@@ -546,7 +546,7 @@ public class CLServerBatchedBiomeNoiseContext {
+                         if ((writeProtectedMask & (1L << idx)) != 0) continue;
+                         chunkSection[idx].calculateCounts();
+                         chunkSection[idx].unlock();
+-                        chunkSection[idx] = chunks.get(this.startingPos.x() + chunkOffX, this.startingPos.z() + chunkOffZ).getSection(sectionIndex);
++                        chunkSection[idx] = chunks.get(this.startingPos.x + chunkOffX, this.startingPos.z + chunkOffZ).getSection(sectionIndex);
+                         chunkSection[idx].lock();
+                     }
+                 }
+@@ -568,7 +568,7 @@ public class CLServerBatchedBiomeNoiseContext {
+                     if (blockState != AIR) {
+                         ((PalettedContainerExtension<BlockState>) chunkSection[idx].getBlockStateContainer()).c2me$setUnsafe(x & 15, blockY & 15, z & 15, blockState);
+                         if (needsFluidTick) {
+-                            ProtoChunk chunk = chunks.get(this.startingPos.x() + chunkOffX, this.startingPos.z() + chunkOffZ);
++                            ProtoChunk chunk = chunks.get(this.startingPos.x + chunkOffX, this.startingPos.z + chunkOffZ);
+                             mutablePos.set(x + chunk.getPos().getStartX(), blockY, z + chunk.getPos().getStartZ());
+                             chunk.markBlockForPostProcessing(mutablePos);
+                         }
+@@ -585,7 +585,7 @@ public class CLServerBatchedBiomeNoiseContext {
+                 chunkSection[idx].calculateCounts();
+                 chunkSection[idx].unlock();
+ 
+-                ProtoChunk chunk = chunks.get(this.startingPos.x() + chunkOffX, this.startingPos.z() + chunkOffZ);
++                ProtoChunk chunk = chunks.get(this.startingPos.x + chunkOffX, this.startingPos.z + chunkOffZ);
+                 Heightmap.populateHeightmaps(chunk, EnumSet.of(Heightmap.Type.OCEAN_FLOOR_WG, Heightmap.Type.WORLD_SURFACE_WG));
+                 chunk.setStatus(ChunkStatus.NOISE);
+             }
+diff --git a/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/util/OpenCLStructs.java b/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/util/OpenCLStructs.java
+index 249fed6e..568197a9 100644
+--- a/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/util/OpenCLStructs.java
++++ b/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/util/OpenCLStructs.java
+@@ -247,8 +247,8 @@ public class OpenCLStructs {
+     public static MemorySegment sws_index$createForSingleChunk(Arena arena, ChunkPos pos, StructureWeightSampler sampler) {
+         MemorySegment memorySegment = sws_data$create(arena, sampler);
+         MemorySegment data = arena.allocate(sws_index.byteSize() + 4 + memorySegment.byteSize(), 4);
+-        sws_index$startX.set(data, 0L, pos.x());
+-        sws_index$startZ.set(data, 0L, pos.z());
++        sws_index$startX.set(data, 0L, pos.x);
++        sws_index$startZ.set(data, 0L, pos.z);
+         sws_index$sizeX.set(data, 0L, 1);
+         sws_index$sizeZ.set(data, 0L, 1);
+         data.set(ValueLayout.JAVA_INT, sws_index.byteSize(), (int) (sws_index.byteSize() + 4));
+@@ -258,8 +258,8 @@ public class OpenCLStructs {
+ 
+     public static MemorySegment sws_index$createForArea(Arena arena, ChunkPos pos, BoundedRegionArray<ProtoChunk> regionArray, Function<ProtoChunk, ChunkNoiseSampler> toChunkNoiseSampler, int sizeX, int sizeZ) {
+         MemorySegment data = arena.allocate(roundUp(sws_index.byteSize() * (sizeX * sizeZ) + 4, 512), 4);
+-        sws_index$startX.set(data, 0L, pos.x());
+-        sws_index$startZ.set(data, 0L, pos.z());
++        sws_index$startX.set(data, 0L, pos.x);
++        sws_index$startZ.set(data, 0L, pos.z);
+         sws_index$sizeX.set(data, 0L, sizeX);
+         sws_index$sizeZ.set(data, 0L, sizeZ);
+ 
+@@ -268,7 +268,7 @@ public class OpenCLStructs {
+ 
+         for (int dx = 0; dx < sizeX; dx ++) {
+             for (int dz = 0; dz < sizeZ; dz ++) {
+-                ProtoChunk chunk = regionArray.get(pos.x() + dx, pos.z() + dz);
++                ProtoChunk chunk = regionArray.get(pos.x + dx, pos.z + dz);
+                 ChunkNoiseSampler sampler = toChunkNoiseSampler.apply(chunk);
+                 StructureWeightSampler structureWeightSampler = (StructureWeightSampler) ((IChunkNoiseSampler) sampler).getBeardifying();
+                 if (structureWeightSampler == null || ((IStructureWeightSampler) structureWeightSampler).getAffectedBox() == null) {
+diff --git a/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/zstd/ZstdIOException.java b/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/zstd/ZstdIOException.java
+index 27c68e81..883ab30a 100644
+--- a/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/zstd/ZstdIOException.java
++++ b/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/zstd/ZstdIOException.java
+@@ -32,7 +32,7 @@ public class ZstdIOException extends IOException {
+      * @param result the return value of a Zstd library call
+      */
+     public ZstdIOException(long result) {
+-        this(Zstd.ZSTD_getErrorCode(result), Zstd.ZSTD_getErrorName(result));
++        this(result, Zstd.ZSTD_getErrorName(result));
+     }
+ 
+     /**
+diff --git a/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/mixin/MixinChunkGenerating.java b/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/mixin/MixinChunkGenerating.java
+index 7c1c69c2..56c0d892 100644
+--- a/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/mixin/MixinChunkGenerating.java
++++ b/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/mixin/MixinChunkGenerating.java
+@@ -44,7 +44,7 @@ public class MixinChunkGenerating {
+     @WrapMethod(method = "generateStructures")
+     private static CompletableFuture<Chunk> wrapStructureStarts(ChunkGenerationContext context, ChunkGenerationStep step, BoundedRegionArray<AbstractChunkHolder> chunks, Chunk chunk, Operation<CompletableFuture<Chunk>> original) {
+         CLServerWorldContext clContext = ((TACSExtension) context.world().getChunkManager().chunkLoadingManager).c2me$getCLContext();
+-        return clContext.getEstimateSurfaceHeightCache().getChunkCache(chunk.getPos().x(), chunk.getPos().z()).thenComposeAsync(cacheEntry -> {
++        return clContext.getEstimateSurfaceHeightCache().getChunkCache(chunk.getPos().x, chunk.getPos().z).thenComposeAsync(cacheEntry -> {
+             if (TLUtil.stage1CachePassing.isBound()) {
+                 throw new IllegalStateException("Reentrance");
+             }
+diff --git a/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/mixin/chunksystem_integration/MixinVanillaWorldGenerationDelegate.java b/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/mixin/chunksystem_integration/MixinVanillaWorldGenerationDelegate.java
+index a250c0f0..a5de3a1e 100644
+--- a/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/mixin/chunksystem_integration/MixinVanillaWorldGenerationDelegate.java
++++ b/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/mixin/chunksystem_integration/MixinVanillaWorldGenerationDelegate.java
+@@ -45,9 +45,9 @@ public abstract class MixinVanillaWorldGenerationDelegate {
+     private KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] appendBatchingDependency(KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] original, ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, ?> holder) {
+         if (this.status == ChunkStatus.BIOMES) {
+             ChunkPos pos = holder.getKey();
+-            if (!CLServerBatchedBiomeNoiseContext.isAligned(pos.x(), pos.z())) { // aligned pos implicitly depends on itself
++            if (!CLServerBatchedBiomeNoiseContext.isAligned(pos.x, pos.z)) { // aligned pos implicitly depends on itself
+                 KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] newArray = Arrays.copyOf(original, original.length + 1);
+-                newArray[original.length] = new KeyStatusPair<>(new ChunkPos(pos.x() & ~CLServerBatchedBiomeNoiseContext.BATCH_MASK, pos.z() & ~CLServerBatchedBiomeNoiseContext.BATCH_MASK), BatchingBiomeNoiseStatus.getInstance());
++                newArray[original.length] = new KeyStatusPair<>(new ChunkPos(pos.x & ~CLServerBatchedBiomeNoiseContext.BATCH_MASK, pos.z & ~CLServerBatchedBiomeNoiseContext.BATCH_MASK), BatchingBiomeNoiseStatus.getInstance());
+                 return newArray;
+             }
+         }
+@@ -60,7 +60,7 @@ public abstract class MixinVanillaWorldGenerationDelegate {
+     private int hackArrayLength(int original, ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, ?> holder) {
+         if (this.status == ChunkStatus.BIOMES) {
+             ChunkPos pos = holder.getKey();
+-            if (!CLServerBatchedBiomeNoiseContext.isAligned(pos.x(), pos.z())) { // aligned pos implicitly depends on itself
++            if (!CLServerBatchedBiomeNoiseContext.isAligned(pos.x, pos.z)) { // aligned pos implicitly depends on itself
+                 return original - 1;
+             }
+         }
+diff --git a/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/mixin/client/MixinGameRenderer.java b/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/mixin/client/MixinGameRenderer.java
+index 8937cdbb..f9fefc14 100644
+--- a/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/mixin/client/MixinGameRenderer.java
++++ b/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/mixin/client/MixinGameRenderer.java
+@@ -37,7 +37,7 @@ public class MixinGameRenderer {
+     @Final
+     private MinecraftClient client;
+ 
+-    @Inject(method = "renderGuiInternal", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/hud/InGameHud;renderDeferredSubtitles()V"))
++    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/hud/InGameHud;renderDeferredSubtitles()V"))
+     private void onRenderSubtitles(CallbackInfo ci, @Local DrawContext drawContext) {
+         String progressText = GlobalProgressStash.PROGRESS_TEXT;
+         if (progressText == null) {
+diff --git a/c2me-opts-allocs/src/main/java/com/ishland/c2me/opts/allocs/mixin/MixinNbtCompound1.java b/c2me-opts-allocs/src/main/java/com/ishland/c2me/opts/allocs/mixin/MixinNbtCompound1.java
+index 86d308b0..ec1a4c1e 100644
+--- a/c2me-opts-allocs/src/main/java/com/ishland/c2me/opts/allocs/mixin/MixinNbtCompound1.java
++++ b/c2me-opts-allocs/src/main/java/com/ishland/c2me/opts/allocs/mixin/MixinNbtCompound1.java
+@@ -40,13 +40,13 @@ import java.util.Map;
+ public abstract class MixinNbtCompound1 implements NbtType<NbtCompound> {
+ 
+     @SuppressWarnings("UnnecessaryQualifiedMemberReference")
+-    @ModifyVariable(method = "readCompound(Ljava/io/DataInput;Lnet/minecraft/nbt/NbtSizeTracker;)Lnet/minecraft/nbt/NbtCompound;", at = @At(value = "INVOKE_ASSIGN", target = "Lcom/google/common/collect/Maps;newHashMap()Ljava/util/HashMap;", remap = false))
++    @ModifyVariable(method = "Lnet/minecraft/nbt/NbtCompound$1;readCompound(Ljava/io/DataInput;Lnet/minecraft/nbt/NbtSizeTracker;)Lnet/minecraft/nbt/NbtCompound;", at = @At(value = "INVOKE_ASSIGN", target = "Lcom/google/common/collect/Maps;newHashMap()Ljava/util/HashMap;", remap = false))
+     private static Map<String, NbtElement> modifyMap(Map<String, NbtElement> map) {
+         return new Object2ObjectOpenHashMap<>();
+     }
+ 
+     @SuppressWarnings("UnnecessaryQualifiedMemberReference")
+-    @Redirect(method = "readCompound(Ljava/io/DataInput;Lnet/minecraft/nbt/NbtSizeTracker;)Lnet/minecraft/nbt/NbtCompound;", at = @At(value = "INVOKE", target = "Lcom/google/common/collect/Maps;newHashMap()Ljava/util/HashMap;", remap = false))
++    @Redirect(method = "Lnet/minecraft/nbt/NbtCompound$1;readCompound(Ljava/io/DataInput;Lnet/minecraft/nbt/NbtSizeTracker;)Lnet/minecraft/nbt/NbtCompound;", at = @At(value = "INVOKE", target = "Lcom/google/common/collect/Maps;newHashMap()Ljava/util/HashMap;", remap = false))
+     private static  <K, V> HashMap<K, V> redirectNewHashMap() {
+         return null; // avoid double map creation
+     }
+diff --git a/c2me-opts-scheduling/src/main/java/com/ishland/c2me/opts/scheduling/mixin/idle_tasks/autosave/enhanced_autosave/MixinMinecraftServer.java b/c2me-opts-scheduling/src/main/java/com/ishland/c2me/opts/scheduling/mixin/idle_tasks/autosave/enhanced_autosave/MixinMinecraftServer.java
+index 063e15ec..749c1c75 100644
+--- a/c2me-opts-scheduling/src/main/java/com/ishland/c2me/opts/scheduling/mixin/idle_tasks/autosave/enhanced_autosave/MixinMinecraftServer.java
++++ b/c2me-opts-scheduling/src/main/java/com/ishland/c2me/opts/scheduling/mixin/idle_tasks/autosave/enhanced_autosave/MixinMinecraftServer.java
+@@ -49,8 +49,8 @@ public abstract class MixinMinecraftServer extends ReentrantThreadExecutor<Serve
+ 
+     @Shadow @Final private ServerTickManager tickManager;
+ 
+-    public MixinMinecraftServer(String name, boolean propagatesCrashes) {
+-        super(name, propagatesCrashes);
++    public MixinMinecraftServer(String string) {
++        super(string);
+     }
+ 
+     @Unique
+diff --git a/c2me-opts-worldgen-vanilla/src/main/java/com/ishland/c2me/opts/worldgen/vanilla/mixin/aquifer/MixinAquiferSamplerImpl.java b/c2me-opts-worldgen-vanilla/src/main/java/com/ishland/c2me/opts/worldgen/vanilla/mixin/aquifer/MixinAquiferSamplerImpl.java
+index e6d05506..e7c20403 100644
+--- a/c2me-opts-worldgen-vanilla/src/main/java/com/ishland/c2me/opts/worldgen/vanilla/mixin/aquifer/MixinAquiferSamplerImpl.java
++++ b/c2me-opts-worldgen-vanilla/src/main/java/com/ishland/c2me/opts/worldgen/vanilla/mixin/aquifer/MixinAquiferSamplerImpl.java
+@@ -224,7 +224,7 @@ public abstract class MixinAquiferSamplerImpl {
+             if (j > this.field_61452) {
+                 this.needsFluidTick = false;
+                 return fluidLevel.getBlockState(j);
+-            } if (fluidLevel.getBlockState(j).is(Blocks.LAVA)) {
++            } if (fluidLevel.getBlockState(j).isOf(Blocks.LAVA)) {
+                 this.needsFluidTick = false;
+                 return Blocks.LAVA.getDefaultState();
+             } else {
+@@ -247,7 +247,7 @@ public abstract class MixinAquiferSamplerImpl {
+                 this.needsFluidTick = false;
+             }
+             return blockState;
+-        } else if (blockState.is(Blocks.WATER) && this.fluidLevelSampler.getFluidLevel(i, j - 1, k).getBlockState(j - 1).is(Blocks.LAVA)) {
++        } else if (blockState.isOf(Blocks.WATER) && this.fluidLevelSampler.getFluidLevel(i, j - 1, k).getBlockState(j - 1).isOf(Blocks.LAVA)) {
+             this.needsFluidTick = true;
+             return blockState;
+         } else {
+@@ -427,7 +427,7 @@ public abstract class MixinAquiferSamplerImpl {
+         int i = pos.blockY();
+         BlockState blockState = fluidLevel.getBlockState(i);
+         BlockState blockState2 = fluidLevel2.getBlockState(i);
+-        if ((!blockState.is(Blocks.LAVA) || !blockState2.is(Blocks.WATER)) && (!blockState.is(Blocks.WATER) || !blockState2.is(Blocks.LAVA))) {
++        if ((!blockState.isOf(Blocks.LAVA) || !blockState2.isOf(Blocks.WATER)) && (!blockState.isOf(Blocks.WATER) || !blockState2.isOf(Blocks.LAVA))) {
+             int j = Math.abs(fluidLevel.y - fluidLevel2.y);
+             if (j == 0) {
+                 return 0.0;
+@@ -448,7 +448,7 @@ public abstract class MixinAquiferSamplerImpl {
+         int i = pos.blockY();
+         BlockState blockState = fluidLevel.getBlockState(i);
+         BlockState blockState2 = fluidLevel2.getBlockState(i);
+-        if ((!blockState.is(Blocks.LAVA) || !blockState2.is(Blocks.WATER)) && (!blockState.is(Blocks.WATER) || !blockState2.is(Blocks.LAVA))) {
++        if ((!blockState.isOf(Blocks.LAVA) || !blockState2.isOf(Blocks.WATER)) && (!blockState.isOf(Blocks.WATER) || !blockState2.isOf(Blocks.LAVA))) {
+             int j = Math.abs(fluidLevel.y - fluidLevel2.y);
+             if (j == 0) {
+                 return 0.0;
+diff --git a/c2me-rewrites-chunk-serializer/src/main/java/com/ishland/c2me/rewrites/chunk_serializer/common/ChunkDataSerializer.java b/c2me-rewrites-chunk-serializer/src/main/java/com/ishland/c2me/rewrites/chunk_serializer/common/ChunkDataSerializer.java
+index 8c1a2e29..83509248 100644
+--- a/c2me-rewrites-chunk-serializer/src/main/java/com/ishland/c2me/rewrites/chunk_serializer/common/ChunkDataSerializer.java
++++ b/c2me-rewrites-chunk-serializer/src/main/java/com/ishland/c2me/rewrites/chunk_serializer/common/ChunkDataSerializer.java
+@@ -163,9 +163,9 @@ public final class ChunkDataSerializer {
+ 
+         writer.putString(STRING_C2ME, STRING_KROPPEB);
+         writer.putInt(STRING_DATA_VERSION, SharedConstants.getGameVersion().dataVersion().id());
+-        writer.putInt(STRING_X_POS, chunkPos.x());
++        writer.putInt(STRING_X_POS, chunkPos.x);
+         writer.putInt(STRING_Y_POS, serializable.minSectionY());
+-        writer.putInt(STRING_Z_POS, chunkPos.z());
++        writer.putInt(STRING_Z_POS, chunkPos.z);
+         writer.putLong(STRING_LAST_UPDATE, serializable.lastUpdateTime());
+         writer.putLong(STRING_INHABITED_TIME, serializable.inhabitedTime());
+         writer.putString(STRING_STATUS, ((ChunkStatusAccessor) serializable.chunkStatus()).getIdBytes());
+@@ -349,9 +349,9 @@ public final class ChunkDataSerializer {
+         for (BlockState paletteEntry : paletteEntries) {
+             writer.compoundEntryStart();
+             writer.putRegistry(STRING_NAME, Registries.BLOCK, paletteEntry.getBlock());
+-            if (!paletteEntry.hasNoProperties()) {
++            if (!paletteEntry.getEntries().isEmpty()) {
+                 // TODO: optimize this
+-                writer.putElement(STRING_PROPERTIES, paletteEntry.getBlock().getStateManager().getPropertiesCodec().codec()
++                writer.putElement(STRING_PROPERTIES, ((IState<BlockState>) paletteEntry).getCodec().codec()
+                         .encodeStart(NbtOps.INSTANCE, paletteEntry)
+                         .getOrThrow(SerializedChunk.ChunkLoadingException::new));
+             }
+@@ -579,8 +579,8 @@ public final class ChunkDataSerializer {
+         }
+ 
+         writer.putRegistry(STRING_ID, context.registryManager().getOrThrow(RegistryKeys.STRUCTURE), structureStart.getStructure());
+-        writer.putInt(STRING_CHUNK_X, pos.x());
+-        writer.putInt(STRING_CHUNK_Z, pos.z());
++        writer.putInt(STRING_CHUNK_X, pos.x);
++        writer.putInt(STRING_CHUNK_Z, pos.z);
+         writer.putInt(STRING_SMALL_REFERENCES, structureStart.getReferences());
+ 
+         // section: StructurePiecesList#toNbt(StructureContext)
+diff --git a/c2me-rewrites-chunk-serializer/src/main/java/com/ishland/c2me/rewrites/chunk_serializer/mixin/MixinThreadedAnvilChunkStorage.java b/c2me-rewrites-chunk-serializer/src/main/java/com/ishland/c2me/rewrites/chunk_serializer/mixin/MixinThreadedAnvilChunkStorage.java
+index ec9a24bb..913d2e8f 100644
+--- a/c2me-rewrites-chunk-serializer/src/main/java/com/ishland/c2me/rewrites/chunk_serializer/mixin/MixinThreadedAnvilChunkStorage.java
++++ b/c2me-rewrites-chunk-serializer/src/main/java/com/ishland/c2me/rewrites/chunk_serializer/mixin/MixinThreadedAnvilChunkStorage.java
+@@ -32,7 +32,7 @@ import com.ishland.c2me.rewrites.chunk_serializer.common.ChunkDataSerializer;
+ import com.ishland.c2me.rewrites.chunk_serializer.common.NbtWriter;
+ import com.ishland.c2me.rewrites.chunk_serializer.common.utils.ValidationUtils;
+ import com.mojang.datafixers.DataFixer;
+-import net.minecraft.datafixer.DataFixType;
++import net.minecraft.datafixer.DataFixTypes;
+ import net.minecraft.nbt.NbtElement;
+ import net.minecraft.server.world.ChunkHolder;
+ import net.minecraft.server.world.ServerChunkLoadingManager;
+@@ -73,8 +73,8 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
+     @Shadow
+     ServerWorld world;
+ 
+-    public MixinThreadedAnvilChunkStorage(StorageKey storageKey, Path path, DataFixer dataFixer, boolean bl, DataFixType dataFixTypes) {
+-        super(storageKey, path, dataFixer, bl, dataFixTypes);
++    public MixinThreadedAnvilChunkStorage(StorageKey storageKey, Path directory, DataFixer dataFixer, boolean dsync, DataFixTypes dataFixTypes) {
++        super(storageKey, directory, dataFixer, dsync, dataFixTypes);
+     }
+ 
+     @Shadow
+@@ -149,7 +149,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
+             this.mark(chunkPos, chunkStatus.getChunkType());
+             return true;
+         } catch (Exception var5) {
+-            LOGGER.error("Failed to save chunk {},{}", chunkPos.x(), chunkPos.z(), var5);
++            LOGGER.error("Failed to save chunk {},{}", chunkPos.x, chunkPos.z, var5);
+             return false;
+         }
+     }
+diff --git a/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/common/NewChunkStatus.java b/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/common/NewChunkStatus.java
+index 62707c29..4ed7ab8f 100644
+--- a/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/common/NewChunkStatus.java
++++ b/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/common/NewChunkStatus.java
+@@ -218,7 +218,7 @@ public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState,
+         final KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] dependencies = new KeyStatusPair[relativeDependencies.length];
+         for (int i = 0; i < relativeDependencies.length; i++) {
+             final KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext> pair = relativeDependencies[i];
+-            dependencies[i] = new KeyStatusPair<>(new ChunkPos(pair.key().x() + holder.getKey().x(), pair.key().z() + holder.getKey().z()), pair.status());
++            dependencies[i] = new KeyStatusPair<>(new ChunkPos(pair.key().x + holder.getKey().x, pair.key().z + holder.getKey().z), pair.status());
+         }
+         return dependencies;
+     }
+diff --git a/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/common/TheChunkSystem.java b/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/common/TheChunkSystem.java
+index 41d2de7a..c4731425 100644
+--- a/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/common/TheChunkSystem.java
++++ b/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/common/TheChunkSystem.java
+@@ -146,7 +146,7 @@ public class TheChunkSystem extends StatusAdvancingScheduler<ChunkPos, ChunkStat
+             final int oldLevel = this.managedTickets.put(pos, level);
+             NewChunkStatus oldStatus = c2me$getDeferredStatusFromVanillaLevel(oldLevel);
+             NewChunkStatus newStatus = c2me$getDeferredStatusFromVanillaLevel(level);
+-            final ChunkPos key = ChunkPos.fromLong(pos);
++            final ChunkPos key = new ChunkPos(pos);
+             if (oldStatus != newStatus) {
+                 NewChunkHolderVanillaInterface vanillaHolder;
+                 ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> holder;
+diff --git a/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/common/async_chunkio/BlendingInfoUtil.java b/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/common/async_chunkio/BlendingInfoUtil.java
+index 349ff356..4cd36024 100644
+--- a/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/common/async_chunkio/BlendingInfoUtil.java
++++ b/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/common/async_chunkio/BlendingInfoUtil.java
+@@ -42,8 +42,8 @@ public class BlendingInfoUtil {
+     public static CompletionStage<List<BitSet>> getBlendingInfos(StorageIoWorker worker, ChunkPos pos) {
+         final int radius = IBlender.getBLENDING_CHUNK_DISTANCE_THRESHOLD();
+         List<CompletableFuture<BitSet>> futures = new ArrayList<>((radius * 2 + 1) * (radius * 2 + 1));
+-        ChunkPos chunkPos2 = new ChunkPos(pos.x() - radius, pos.z() - radius);
+-        ChunkPos chunkPos3 = new ChunkPos(pos.x() + radius, pos.z() + radius);
++        ChunkPos chunkPos2 = new ChunkPos(pos.x - radius, pos.z - radius);
++        ChunkPos chunkPos3 = new ChunkPos(pos.x + radius, pos.z + radius);
+         for(int i = chunkPos2.getRegionX(); i <= chunkPos3.getRegionX(); ++i) {
+             for(int j = chunkPos2.getRegionZ(); j <= chunkPos3.getRegionZ(); ++j) {
+                 final CompletableFuture<BitSet> future = ((IStorageIoWorker) worker).invokeGetOrComputeBlendingStatus(i, j);
+diff --git a/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/common/fapi/LifecycleEventInvoker.java b/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/common/fapi/LifecycleEventInvoker.java
+index 7a79c5c9..323f676f 100644
+--- a/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/common/fapi/LifecycleEventInvoker.java
++++ b/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/common/fapi/LifecycleEventInvoker.java
+@@ -38,7 +38,7 @@ public class LifecycleEventInvoker {
+ 
+     public static void invokeChunkLoaded(ServerWorld world, WorldChunk chunk, boolean newChunk) {
+         try {
+-            ServerChunkEvents.CHUNK_LOAD.invoker().onChunkLoad(world, chunk, newChunk);
++            ServerChunkEvents.CHUNK_LOAD.invoker().onChunkLoad(world, chunk);
+             if (newChunk) {
+                 ServerChunkEvents.CHUNK_GENERATE.invoker().onChunkGenerate(world, chunk);
+             }
+@@ -60,14 +60,14 @@ public class LifecycleEventInvoker {
+     public static boolean needsInvokeChunkLevelTypeChange() {
+         if (cachedNeedsInvokeChunkLevelTypeChange) return true;
+         try {
+-            if (ServerChunkEvents.FULL_CHUNK_STATUS_CHANGE instanceof IArrayBackedEvent<?> accessor0) {
+-                IArrayBackedEvent<ServerChunkEvents.FullChunkStatusChange> accessor = (IArrayBackedEvent<ServerChunkEvents.FullChunkStatusChange>) accessor0;
++            if (ServerChunkEvents.CHUNK_LEVEL_TYPE_CHANGE instanceof IArrayBackedEvent<?> accessor0) {
++                IArrayBackedEvent<ServerChunkEvents.LevelTypeChange> accessor = (IArrayBackedEvent<ServerChunkEvents.LevelTypeChange>) accessor0;
+                 if (accessor.c2me$getHandlers().length > 0) {
+                     cachedNeedsInvokeChunkLevelTypeChange = true;
+                     return true;
+                 }
+             } else {
+-                LOGGER.warn("Unexpected Event implementation of ServerChunkEvents.CHUNK_LEVEL_TYPE_CHANGE: {}", ServerChunkEvents.FULL_CHUNK_STATUS_CHANGE.getClass().getName());
++                LOGGER.warn("Unexpected Event implementation of ServerChunkEvents.CHUNK_LEVEL_TYPE_CHANGE: {}", ServerChunkEvents.CHUNK_LEVEL_TYPE_CHANGE.getClass().getName());
+                 cachedNeedsInvokeChunkLevelTypeChange = true;
+                 return true;
+             }
+@@ -81,7 +81,7 @@ public class LifecycleEventInvoker {
+ 
+     public static void invokeChunkLevelTypeChange(ServerWorld world, WorldChunk chunk, ChunkLevelType oldLevelType, ChunkLevelType newLevelType) {
+         try {
+-            ServerChunkEvents.FULL_CHUNK_STATUS_CHANGE.invoker().onFullChunkStatusChange(world, chunk, oldLevelType, newLevelType);
++            ServerChunkEvents.CHUNK_LEVEL_TYPE_CHANGE.invoker().onChunkLevelTypeChange(world, chunk, oldLevelType, newLevelType);
+         } catch (Throwable t) {
+             LOGGER.error("Failed to invoke chunk level type change event (world={}, pos={}, oldLevelType={}, newLevelType={})", world, chunk.getPos(), oldLevelType, newLevelType, t);
+         }
+diff --git a/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/common/quirks/FlowableFluidUtils.java b/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/common/quirks/FlowableFluidUtils.java
+index 5c29949b..4a117d62 100644
+--- a/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/common/quirks/FlowableFluidUtils.java
++++ b/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/common/quirks/FlowableFluidUtils.java
+@@ -55,11 +55,7 @@ public class FlowableFluidUtils {
+     }
+ 
+     private static boolean canFormBubbleColumn(WorldView world, BlockPos pos, BlockState blockState, FluidState fluidState) {
+-        BlockPos belowPos = pos.down();
+-        BlockState belowBlockState = world.getBlockState(belowPos);
+-        if (belowBlockState.isIn(BlockTags.ENABLES_BUBBLE_COLUMN_DRAG_DOWN) || belowBlockState.isIn(BlockTags.ENABLES_BUBBLE_COLUMN_PUSH_UP)) {
+-            return true;
+-        }
++        // not needed for 1.21.11 and below
+         return false;
+     }
+ 
+diff --git a/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/common/statuses/ReadFromDisk.java b/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/common/statuses/ReadFromDisk.java
+index 0e87d65b..6d79ffcc 100644
+--- a/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/common/statuses/ReadFromDisk.java
++++ b/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/common/statuses/ReadFromDisk.java
+@@ -281,8 +281,8 @@ public class ReadFromDisk extends NewChunkStatus {
+ 
+     protected CompletionStage<?> syncWithLightEngine(ChunkLoadingContext context) {
+         return ((IThreadedAnvilChunkStorage) context.tacs()).getLightingProvider().enqueue(
+-                context.holder().getKey().x(),
+-                context.holder().getKey().z()
++                context.holder().getKey().x,
++                context.holder().getKey().z
+         );
+     }
+ 
+diff --git a/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/common/statuses/ServerBlockTicking.java b/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/common/statuses/ServerBlockTicking.java
+index eeb781a0..f527bd87 100644
+--- a/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/common/statuses/ServerBlockTicking.java
++++ b/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/common/statuses/ServerBlockTicking.java
+@@ -116,7 +116,7 @@ public class ServerBlockTicking extends NewChunkStatus {
+         final WorldChunk chunk = (WorldChunk) context.holder().getItem().get().chunk();
+         ChunkPos pos = context.holder().getKey();
+ 
+-        BoundedRegionArray<AbstractChunkHolder> boundedRegionArray = BoundedRegionArray.create(pos.x(), pos.z(), 1, (x, z) -> context.theChunkSystem().getHolder(new ChunkPos(x, z)).getUserData().get());
++        BoundedRegionArray<AbstractChunkHolder> boundedRegionArray = BoundedRegionArray.create(pos.x, pos.z, 1, (x, z) -> context.theChunkSystem().getHolder(new ChunkPos(x, z)).getUserData().get());
+         Supplier<ChunkRegion> chunkRegionSupplier = Suppliers.memoize(() -> new ChunkRegion(((IThreadedAnvilChunkStorage) context.tacs()).getWorld(), boundedRegionArray, ChunkGenerationSteps.GENERATION.get(ChunkStatus.LIGHT), chunk));
+ 
+         int total = 0;
+diff --git a/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/common/statuses/VanillaWorldGenerationDelegate.java b/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/common/statuses/VanillaWorldGenerationDelegate.java
+index a7f97db4..4c91503f 100644
+--- a/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/common/statuses/VanillaWorldGenerationDelegate.java
++++ b/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/common/statuses/VanillaWorldGenerationDelegate.java
+@@ -83,7 +83,7 @@ public class VanillaWorldGenerationDelegate extends NewChunkStatus {
+     }
+ 
+     public static <T> CompletableFuture<T> runTaskWithLockRadius(ChunkPos target, int radius, SchedulingManager schedulingManager, Supplier<CompletableFuture<T>> action) {
+-        return runTaskWithLockArea(target.x() - radius, target.z() - radius, radius * 2 + 1, radius * 2 + 1, schedulingManager, action);
++        return runTaskWithLockArea(target.x - radius, target.z - radius, radius * 2 + 1, radius * 2 + 1, schedulingManager, action);
+     }
+ 
+     public static <T> CompletableFuture<T> runTaskWithLockArea(int baseChunkX, int baseChunkZ, int sizeX, int sizeZ, SchedulingManager schedulingManager, Supplier<CompletableFuture<T>> action) {
+@@ -152,7 +152,7 @@ public class VanillaWorldGenerationDelegate extends NewChunkStatus {
+         final ChunkGenerationContext chunkGenerationContext = ((IThreadedAnvilChunkStorage) context.tacs()).getGenerationContext();
+         Chunk chunk = state.chunk();
+         if (chunk.getStatus().isAtLeast(status)) {
+-            BoundedRegionArray<AbstractChunkHolder> boundedRegionArray = BoundedRegionArray.create(chunk.getPos().x(), chunk.getPos().z(), this.loadDepsRadius, (x, z) -> context.theChunkSystem().getHolder(new ChunkPos(x, z)).getUserData().get());
++            BoundedRegionArray<AbstractChunkHolder> boundedRegionArray = BoundedRegionArray.create(chunk.getPos().x, chunk.getPos().z, this.loadDepsRadius, (x, z) -> context.theChunkSystem().getHolder(new ChunkPos(x, z)).getUserData().get());
+             try (var ignored = ThreadInstrumentation.getCurrent().begin(new ChunkTaskWork(context, this, true))) {
+                 return Completable.defer(() -> Completable.fromCompletionStage(
+                         ChunkGenerationSteps.LOADING.get(status)
+@@ -167,7 +167,7 @@ public class VanillaWorldGenerationDelegate extends NewChunkStatus {
+         } else {
+             final ChunkGenerationStep step = ChunkGenerationSteps.GENERATION.get(status);
+ 
+-            BoundedRegionArray<AbstractChunkHolder> boundedRegionArray = BoundedRegionArray.create(chunk.getPos().x(), chunk.getPos().z(), this.genDepsRadius, (x, z) -> context.theChunkSystem().getHolder(new ChunkPos(x, z)).getUserData().get());
++            BoundedRegionArray<AbstractChunkHolder> boundedRegionArray = BoundedRegionArray.create(chunk.getPos().x, chunk.getPos().z, this.genDepsRadius, (x, z) -> context.theChunkSystem().getHolder(new ChunkPos(x, z)).getUserData().get());
+ 
+             int radius = Math.max(0, step.blockStateWriteRadius());
+             return Completable.defer(() -> Completable.fromCompletionStage(runTaskWithLockRadius(chunk.getPos(), radius, context.schedulingManager(),
+diff --git a/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/mixin/MixinSerializingRegionBasedStorage.java b/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/mixin/MixinSerializingRegionBasedStorage.java
+index 699044b5..c2fedd91 100644
+--- a/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/mixin/MixinSerializingRegionBasedStorage.java
++++ b/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/mixin/MixinSerializingRegionBasedStorage.java
+@@ -64,7 +64,7 @@ public abstract class MixinSerializingRegionBasedStorage<R, P> implements IPOIUn
+ 
+         this.saveChunk(pos);
+         for (int i = this.world.getBottomSectionCoord(); i <= this.world.getTopSectionCoord(); i++) {
+-            this.loadedElements.remove(ChunkSectionPos.asLong(pos.x(), i, pos.z()));
++            this.loadedElements.remove(ChunkSectionPos.asLong(pos.x, i, pos.z));
+         }
+         synchronized (this.lock) {
+             this.loadedChunks.remove(pos.toLong());
+diff --git a/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/mixin/MixinThreadedAnvilChunkStorage.java b/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/mixin/MixinThreadedAnvilChunkStorage.java
+index 8334f8ce..91946c63 100644
+--- a/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/mixin/MixinThreadedAnvilChunkStorage.java
++++ b/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/mixin/MixinThreadedAnvilChunkStorage.java
+@@ -83,7 +83,7 @@ public class MixinThreadedAnvilChunkStorage implements IChunkSystemAccess {
+     @Overwrite
+     @Nullable
+     public ChunkHolder getCurrentChunkHolder(long pos) {
+-        final ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> holder = this.newSystem.getHolder(ChunkPos.fromLong(pos));
++        final ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> holder = this.newSystem.getHolder(new ChunkPos(pos));
+         if (holder != null) {
+             synchronized (holder) {
+                 if (!holder.isOpen()) {
+diff --git a/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/mixin/async_serialization/MixinBlender.java b/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/mixin/async_serialization/MixinBlender.java
+index 1ed25a30..a82517d7 100644
+--- a/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/mixin/async_serialization/MixinBlender.java
++++ b/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/mixin/async_serialization/MixinBlender.java
+@@ -37,7 +37,7 @@ public class MixinBlender {
+ 
+     @Redirect(method = "getBlender", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/ChunkRegion;needsBlending(Lnet/minecraft/util/math/ChunkPos;I)Z"))
+     private static boolean redirectNeedsBlending(ChunkRegion instance, ChunkPos chunkPos, int checkRadius) {
+-        return ((ProtoChunkExtension) instance.getChunk(chunkPos.x(), chunkPos.z())).getNeedBlending();
++        return ((ProtoChunkExtension) instance.getChunk(chunkPos.x, chunkPos.z)).getNeedBlending();
+     }
+ 
+ }
+diff --git a/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/mixin/async_serialization/MixinProtoChunk.java b/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/mixin/async_serialization/MixinProtoChunk.java
+index 2f0cf9ee..c9741d03 100644
+--- a/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/mixin/async_serialization/MixinProtoChunk.java
++++ b/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/mixin/async_serialization/MixinProtoChunk.java
+@@ -51,19 +51,19 @@ public class MixinProtoChunk implements ProtoChunkExtension {
+     public void setBlendingInfo(ChunkPos pos, List<BitSet> bitSets) {
+         final int radius = IBlender.getBLENDING_CHUNK_DISTANCE_THRESHOLD();
+         final int width = (radius * 2 + 1);
+-        ChunkPos chunkPos2 = new ChunkPos(pos.x() - radius, pos.z() - radius);
+-        ChunkPos chunkPos3 = new ChunkPos(pos.x() + radius, pos.z() + radius);
++        ChunkPos chunkPos2 = new ChunkPos(pos.x - radius, pos.z - radius);
++        ChunkPos chunkPos3 = new ChunkPos(pos.x + radius, pos.z + radius);
+ 
+         int index = 0;
+         for(int i = chunkPos2.getRegionX(); i <= chunkPos3.getRegionX(); ++i) {
+             for(int j = chunkPos2.getRegionZ(); j <= chunkPos3.getRegionZ(); ++j) {
+                 BitSet bitSet = bitSets.get(index ++);
+                 if (!bitSet.isEmpty()) {
+-                    ChunkPos chunkPos4 = ChunkPos.fromRegionMin(i, j);
+-                    int k = Math.max(chunkPos2.x() - chunkPos4.x(), 0);
+-                    int l = Math.max(chunkPos2.z() - chunkPos4.z(), 0);
+-                    int m = Math.min(chunkPos3.x() - chunkPos4.x(), 31);
+-                    int n = Math.min(chunkPos3.z() - chunkPos4.z(), 31);
++                    ChunkPos chunkPos4 = ChunkPos.fromRegion(i, j);
++                    int k = Math.max(chunkPos2.x - chunkPos4.x, 0);
++                    int l = Math.max(chunkPos2.z - chunkPos4.z, 0);
++                    int m = Math.min(chunkPos3.x - chunkPos4.x, 31);
++                    int n = Math.min(chunkPos3.z - chunkPos4.z, 31);
+ 
+                     for(int o = k; o <= m; ++o) {
+                         for(int p = l; p <= n; ++p) {
+diff --git a/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/mixin/async_serialization/MixinStorageIoWorker.java b/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/mixin/async_serialization/MixinStorageIoWorker.java
+index 43f0c3b8..c325d70e 100644
+--- a/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/mixin/async_serialization/MixinStorageIoWorker.java
++++ b/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/mixin/async_serialization/MixinStorageIoWorker.java
+@@ -83,8 +83,8 @@ public abstract class MixinStorageIoWorker {
+      */
+     @Overwrite
+     private CompletableFuture<BitSet> computeBlendingStatus(int chunkX, int chunkZ) {
+-        ChunkPos chunkPos = ChunkPos.fromRegionMin(chunkX, chunkZ);
+-        ChunkPos chunkPos2 = ChunkPos.fromRegionMax(chunkX, chunkZ);
++        ChunkPos chunkPos = ChunkPos.fromRegion(chunkX, chunkZ);
++        ChunkPos chunkPos2 = ChunkPos.fromRegionCenter(chunkX, chunkZ);
+         BitSet bitSet = new BitSet();
+         final CompletableFuture[] futures = ChunkPos.stream(chunkPos, chunkPos2)
+                 .map(chunkPosx -> {
+diff --git a/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/mixin/async_serialization/MixinThreadedAnvilChunkStorage.java b/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/mixin/async_serialization/MixinThreadedAnvilChunkStorage.java
+index 47b2608e..cfb874a4 100644
+--- a/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/mixin/async_serialization/MixinThreadedAnvilChunkStorage.java
++++ b/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/mixin/async_serialization/MixinThreadedAnvilChunkStorage.java
+@@ -26,7 +26,7 @@ package com.ishland.c2me.rewrites.chunksystem.mixin.async_serialization;
+ 
+ import com.mojang.datafixers.DataFixer;
+ import net.minecraft.SharedConstants;
+-import net.minecraft.datafixer.DataFixType;
++import net.minecraft.datafixer.DataFixTypes;
+ import net.minecraft.nbt.NbtCompound;
+ import net.minecraft.nbt.NbtHelper;
+ import net.minecraft.server.world.ChunkHolder;
+@@ -46,7 +46,7 @@ import java.util.concurrent.CompletableFuture;
+ @Mixin(ServerChunkLoadingManager.class)
+ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStorage implements ChunkHolder.PlayersWatchingChunkProvider {
+ 
+-    public MixinThreadedAnvilChunkStorage(StorageKey storageKey, Path path, DataFixer dataFixer, boolean bl, DataFixType dataFixTypes) {
++    public MixinThreadedAnvilChunkStorage(StorageKey storageKey, Path path, DataFixer dataFixer, boolean bl, DataFixTypes dataFixTypes) {
+         super(storageKey, path, dataFixer, bl, dataFixTypes);
+     }
+ 
+diff --git a/c2me-rewrites-chunkio/src/main/java/com/ishland/c2me/rewrites/chunkio/common/C2MEStorageThread.java b/c2me-rewrites-chunkio/src/main/java/com/ishland/c2me/rewrites/chunkio/common/C2MEStorageThread.java
+index cfb530b4..febbd2bd 100644
+--- a/c2me-rewrites-chunkio/src/main/java/com/ishland/c2me/rewrites/chunkio/common/C2MEStorageThread.java
++++ b/c2me-rewrites-chunkio/src/main/java/com/ishland/c2me/rewrites/chunkio/common/C2MEStorageThread.java
+@@ -281,7 +281,7 @@ public class C2MEStorageThread extends Thread {
+                 cachedFuture.whenComplete((cached, throwable) -> { // mirror vanilla behavior: get the immediate result rather than latest
+                     if (throwable != null) {
+                         this.executor.execute(() -> {
+-                            LOGGER.warn("Retrying read of chunk {} because previous write to chunk threw an exception", ChunkPos.fromLong(pos));
++                            LOGGER.warn("Retrying read of chunk {} because previous write to chunk threw an exception", new ChunkPos(pos));
+                             this.read0(pos, future, scanner);
+                         }); // retry
+                         return;
+@@ -361,7 +361,7 @@ public class C2MEStorageThread extends Thread {
+ 
+     private void scheduleChunkRead(long pos, CompletableFuture<NbtCompound> future, NbtScanner scanner) {
+         try {
+-            final ChunkPos pos1 = ChunkPos.fromLong(pos);
++            final ChunkPos pos1 = new ChunkPos(pos);
+             final RegionFile regionFile = ((IRegionBasedStorage) this.storage).invokeGetRegionFile(pos1);
+             final DataInputStream chunkInputStream = regionFile.getChunkInputStream(pos1);
+             if (chunkInputStream == null) {
+@@ -397,18 +397,18 @@ public class C2MEStorageThread extends Thread {
+             if (nbt == null) {
+                 if (this.cache.get(pos) == nbtFuture) {
+                     try {
+-                        final ChunkPos pos1 = ChunkPos.fromLong(pos);
++                        final ChunkPos pos1 = new ChunkPos(pos);
+                         final RegionFile regionFile = ((IRegionBasedStorage) this.storage).invokeGetRegionFile(pos1);
+                         regionFile.delete(pos1);
+                     } catch (Throwable t) {
+-                        LOGGER.error("Error writing chunk %s".formatted(ChunkPos.fromLong(pos)), t);
++                        LOGGER.error("Error writing chunk %s".formatted(new ChunkPos(pos)), t);
+                     }
+                     this.cache.remove(pos);
+                 } // discard old data
+             } else {
+                 ChunkCompressionFormat compressionFormat;
+                 {
+-                    final ChunkPos pos1 = ChunkPos.fromLong(pos);
++                    final ChunkPos pos1 = new ChunkPos(pos);
+                     try {
+                         final RegionFile regionFile = ((IRegionBasedStorage) this.storage).invokeGetRegionFile(pos1);
+                         compressionFormat = ((IRegionFile) regionFile).getCompressionFormat();
+@@ -442,7 +442,7 @@ public class C2MEStorageThread extends Thread {
+                 }, GlobalExecutors.prioritizedScheduler.executor(16)).thenAcceptAsync(bytes -> { // still use priority 16 for writes
+                     if (this.cache.remove(pos, nbtFuture)) { // only write if match to avoid overwrites
+                         try {
+-                            final ChunkPos pos1 = ChunkPos.fromLong(pos);
++                            final ChunkPos pos1 = new ChunkPos(pos);
+                             final RegionFile regionFile = ((IRegionBasedStorage) this.storage).invokeGetRegionFile(pos1);
+                             ByteBuffer byteBuffer = bytes.asByteBuffer();
+                             // TODO [VanillaCopy] RegionFile.ChunkBuffer
+@@ -454,7 +454,7 @@ public class C2MEStorageThread extends Thread {
+                     }
+                 }, this.executor).handleAsync((unused, throwable) -> {
+                     if (throwable != null)
+-                        LOGGER.error("Error writing chunk %s".formatted(ChunkPos.fromLong(pos)), throwable);
++                        LOGGER.error("Error writing chunk %s".formatted(new ChunkPos(pos)), throwable);
+                     // TODO error retry
+ 
+                     return null;
+diff --git a/c2me-rewrites-chunkio/src/main/java/com/ishland/c2me/rewrites/chunkio/mixin/MixinVersionedChunkStorage.java b/c2me-rewrites-chunkio/src/main/java/com/ishland/c2me/rewrites/chunkio/mixin/MixinVersionedChunkStorage.java
+index 7dcaae00..7d4f01c3 100644
+--- a/c2me-rewrites-chunkio/src/main/java/com/ishland/c2me/rewrites/chunkio/mixin/MixinVersionedChunkStorage.java
++++ b/c2me-rewrites-chunkio/src/main/java/com/ishland/c2me/rewrites/chunkio/mixin/MixinVersionedChunkStorage.java
+@@ -38,7 +38,7 @@ import java.nio.file.Path;
+ @Mixin(VersionedChunkStorage.class)
+ public class MixinVersionedChunkStorage {
+ 
+-    @Redirect(method = "<init>", at = @At(value = "NEW", target = "(Lnet/minecraft/world/storage/StorageKey;Ljava/nio/file/Path;Z)Lnet/minecraft/world/storage/StorageIoWorker;"))
++    @Redirect(method = "<init>(Lnet/minecraft/world/storage/StorageKey;Ljava/nio/file/Path;Lcom/mojang/datafixers/DataFixer;ZLnet/minecraft/datafixer/DataFixTypes;Ljava/util/function/Supplier;)V", at = @At(value = "NEW", target = "(Lnet/minecraft/world/storage/StorageKey;Ljava/nio/file/Path;Z)Lnet/minecraft/world/storage/StorageIoWorker;"))
+     private StorageIoWorker redirectStorageIoWorker(StorageKey arg, Path path, boolean bl) {
+         if (this instanceof IVanillaChunkManager vanillaChunkManager) {
+             return new C2MEStorageVanillaInterface(arg, path, bl, pos -> vanillaChunkManager.c2me$getSchedulingManager().positionedExecutor(pos));
+diff --git a/gradle.properties b/gradle.properties
+index 8095b0b2..51eff29f 100644
+--- a/gradle.properties
++++ b/gradle.properties
+@@ -11,10 +11,10 @@ gradle-curseforge-publish.interop.neogradle=false
+ #org.gradle.configuration-cache=true
+ # Fabric Properties
+ # check these on https://fabricmc.net/versions.html
+-minecraft_version=26.1.2
+-yarn_mappings=26.1.2+build.1
++minecraft_version=1.21.11
++yarn_mappings=1.21.11+build.4
+ loader_version=0.19.3
+-fabric_version=0.145.4+26.1.2
++fabric_version=0.141.3+1.21.11
+ # Mod Properties
+ mod_version=0.4.0-alpha.0
+ maven_group=com.ishland.c2me
+@@ -30,6 +30,6 @@ reactive_streams_version=1.0.4
+ mixinsquared_version=0.3.7-beta.1
+ jctools_version=4.0.5
+ junit_version=5.11.3
+-lwjgl_version=3.4.1
++lwjgl_version=3.3.3
+ caffeine_version=3.2.1
+ apache_commons_compress_version=1.28.0
+diff --git a/src/main/resources/fabric.mod.json b/src/main/resources/fabric.mod.json
+index bf73b870..d67fbdc6 100644
+--- a/src/main/resources/fabric.mod.json
++++ b/src/main/resources/fabric.mod.json
+@@ -28,7 +28,7 @@
+   "depends": {
+     "fabricloader": ">=0.18.3",
+     "java": ">=25",
+-    "minecraft": ">1.21.11",
++    "minecraft": "=1.21.11",
+     "c2me-base": "*"
+   },
+   "conflicts": {
+diff --git a/tests/build.gradle b/tests/build.gradle
+index b6667690..e24ac242 100644
+--- a/tests/build.gradle
++++ b/tests/build.gradle
+@@ -33,7 +33,7 @@ allprojects {
+     }
+     dependencies {
+         minecraft "com.mojang:minecraft:${project.minecraft_version}"
+-        mappings "org.relativitymc:modern-yarn:${project.yarn_mappings}:v2"
++        mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+         modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+         implementation "com.ibm.async:asyncutil:${async_util_version}"
+ 
+diff --git a/tests/test-mod/src/main/java/com/ishland/c2me/tests/testmod/PreGenTask.java b/tests/test-mod/src/main/java/com/ishland/c2me/tests/testmod/PreGenTask.java
+index bc7725eb..aaf1577a 100644
+--- a/tests/test-mod/src/main/java/com/ishland/c2me/tests/testmod/PreGenTask.java
++++ b/tests/test-mod/src/main/java/com/ishland/c2me/tests/testmod/PreGenTask.java
+@@ -98,7 +98,7 @@ public class PreGenTask {
+         final BlockPos spawnPos = world.getSpawnPoint().getPos();
+         final Set<ChunkPos> chunksHashed = Sets.newConcurrentHashSet();
+         final List<ChunkPos> chunks = Collections.synchronizedList(new ArrayList<>());
+-        chunks.addAll(createPreGenChunks33(ChunkPos.fromBlockPos(spawnPos), chunksHashed::add));
++        chunks.addAll(createPreGenChunks33(new ChunkPos(spawnPos), chunksHashed::add));
+         final AtomicInteger locatedBiomes = new AtomicInteger();
+         final AtomicInteger locatedStructures = new AtomicInteger();
+         System.err.printf("Fetching structure and biome list\n");
+@@ -158,7 +158,7 @@ public class PreGenTask {
+                     final Pair<BlockPos, RegistryEntry<Structure>> pair = world.getChunkManager().getChunkGenerator().locateStructure(world, structureFeature, spawnPos, SEARCH_RADIUS / 16, false);
+                     locatedStructures.incrementAndGet();
+                     if (pair != null) {
+-                        final ChunkPos chunkPos = ChunkPos.fromBlockPos(pair.getFirst());
++                        final ChunkPos chunkPos = new ChunkPos(pair.getFirst());
+                         chunks.addAll(createPreGenChunks25(chunkPos, chunksHashed::add));
+                         return;
+                     }
+@@ -223,10 +223,10 @@ public class PreGenTask {
+      */
+     private static ArrayList<ChunkPos> createPreGenChunks33(ChunkPos center, Predicate<ChunkPos> shouldAdd) {
+         final ArrayList<ChunkPos> chunks = new ArrayList<>(33 * 33);
+-        chunks.addAll(createPreGenChunks17(new ChunkPos(center.x() - 8, center.z() - 8), shouldAdd));
+-        chunks.addAll(createPreGenChunks17(new ChunkPos(center.x() - 8, center.z() + 8), shouldAdd));
+-        chunks.addAll(createPreGenChunks17(new ChunkPos(center.x() + 8, center.z() - 8), shouldAdd));
+-        chunks.addAll(createPreGenChunks17(new ChunkPos(center.x() + 8, center.z() + 8), shouldAdd));
++        chunks.addAll(createPreGenChunks17(new ChunkPos(center.x - 8, center.z - 8), shouldAdd));
++        chunks.addAll(createPreGenChunks17(new ChunkPos(center.x - 8, center.z + 8), shouldAdd));
++        chunks.addAll(createPreGenChunks17(new ChunkPos(center.x + 8, center.z - 8), shouldAdd));
++        chunks.addAll(createPreGenChunks17(new ChunkPos(center.x + 8, center.z + 8), shouldAdd));
+         return chunks;
+     }
+ 
+@@ -235,10 +235,10 @@ public class PreGenTask {
+      */
+     private static ArrayList<ChunkPos> createPreGenChunks25(ChunkPos center, Predicate<ChunkPos> shouldAdd) {
+         final ArrayList<ChunkPos> chunks = new ArrayList<>(25 * 25);
+-        chunks.addAll(createPreGenChunks17(new ChunkPos(center.x() - 4, center.z() - 4), shouldAdd));
+-        chunks.addAll(createPreGenChunks17(new ChunkPos(center.x() - 4, center.z() + 4), shouldAdd));
+-        chunks.addAll(createPreGenChunks17(new ChunkPos(center.x() + 4, center.z() - 4), shouldAdd));
+-        chunks.addAll(createPreGenChunks17(new ChunkPos(center.x() + 4, center.z() + 4), shouldAdd));
++        chunks.addAll(createPreGenChunks17(new ChunkPos(center.x - 4, center.z - 4), shouldAdd));
++        chunks.addAll(createPreGenChunks17(new ChunkPos(center.x - 4, center.z + 4), shouldAdd));
++        chunks.addAll(createPreGenChunks17(new ChunkPos(center.x + 4, center.z - 4), shouldAdd));
++        chunks.addAll(createPreGenChunks17(new ChunkPos(center.x + 4, center.z + 4), shouldAdd));
+         return chunks;
+     }
+ 
+@@ -247,18 +247,18 @@ public class PreGenTask {
+      */
+     private static ArrayList<ChunkPos> createPreGenChunks17(ChunkPos center, Predicate<ChunkPos> shouldAdd) {
+         final ArrayList<ChunkPos> chunks = new ArrayList<>(17 * 17);
+-        chunks.addAll(createPreGenChunks0(new ChunkPos(center.x() - 4, center.z() - 4), 4, shouldAdd));
+-        chunks.addAll(createPreGenChunks0(new ChunkPos(center.x() - 4, center.z() + 4), 4, shouldAdd));
+-        chunks.addAll(createPreGenChunks0(new ChunkPos(center.x() + 4, center.z() - 4), 4, shouldAdd));
+-        chunks.addAll(createPreGenChunks0(new ChunkPos(center.x() + 4, center.z() + 4), 4, shouldAdd));
++        chunks.addAll(createPreGenChunks0(new ChunkPos(center.x - 4, center.z - 4), 4, shouldAdd));
++        chunks.addAll(createPreGenChunks0(new ChunkPos(center.x - 4, center.z + 4), 4, shouldAdd));
++        chunks.addAll(createPreGenChunks0(new ChunkPos(center.x + 4, center.z - 4), 4, shouldAdd));
++        chunks.addAll(createPreGenChunks0(new ChunkPos(center.x + 4, center.z + 4), 4, shouldAdd));
+         return chunks;
+     }
+ 
+     @NotNull
+     private static ArrayList<ChunkPos> createPreGenChunks0(ChunkPos center, int radius, Predicate<ChunkPos> shouldAdd) {
+         final ArrayList<ChunkPos> chunks = new ArrayList<>((radius * 2 + 1) * (radius * 2 + 1));
+-        for (int x = center.x() - radius; x <= center.x() + radius; x++)
+-            for (int z = center.z() - radius; z <= center.z() + radius; z++) {
++        for (int x = center.x - radius; x <= center.x + radius; x++)
++            for (int z = center.z - radius; z <= center.z + radius; z++) {
+                 final ChunkPos chunkPos = new ChunkPos(x, z);
+                 if (shouldAdd.test(chunkPos)) {
+                     chunks.add(chunkPos);
+diff --git a/tests/test-mod/src/main/java/com/ishland/c2me/tests/testmod/mixin/pregen/MixinMinecraftServer.java b/tests/test-mod/src/main/java/com/ishland/c2me/tests/testmod/mixin/pregen/MixinMinecraftServer.java
+index 86b75ab2..636b6a74 100644
+--- a/tests/test-mod/src/main/java/com/ishland/c2me/tests/testmod/mixin/pregen/MixinMinecraftServer.java
++++ b/tests/test-mod/src/main/java/com/ishland/c2me/tests/testmod/mixin/pregen/MixinMinecraftServer.java
+@@ -68,8 +68,8 @@ public abstract class MixinMinecraftServer extends ReentrantThreadExecutor<Serve
+     @Shadow
+     private volatile boolean running;
+ 
+-    public MixinMinecraftServer(String name, boolean propagatesCrashes) {
+-        super(name, propagatesCrashes);
++    public MixinMinecraftServer(String string) {
++        super(string);
+     }
+ 
+     @Shadow

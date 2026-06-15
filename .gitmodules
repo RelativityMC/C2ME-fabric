@@ -1,6 +1,6 @@
 [submodule "C2ME-fabric"]
 	path = C2ME-fabric
-	url = git@github.com:RelativityMC/C2ME-fabric-private.git
+	url = git@github.com:RelativityMC/C2ME-fabric.git
 [submodule "FlowSched"]
 	path = FlowSched
 	url = git@github.com:RelativityMC/FlowSched.git
