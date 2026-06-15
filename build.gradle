@@ -339,7 +339,6 @@ String getVersionSuffix() {
         commandLine 'git', 'describe', '--tags', '--dirty', '--broken'
     }.standardOutput.asText.get()
     stdout = stdout.toString().strip()
-    stdout = stdout.substring(stdout.indexOf('-') + 1) // strip the existing dash
     def suffix = ""
     if (stdout.endsWith("-dirty")) {
         stdout = stdout.substring(0, stdout.length() - "-dirty".length())
