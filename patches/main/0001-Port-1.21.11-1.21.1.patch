@@ -563,10 +563,34 @@ index 9ba2478a..e20c3bb2 100644
      static {
 diff --git a/c2me-client-uncapvd/src/main/java/com/ishland/c2me/client/uncapvd/mixin/MixinSodiumUserConfigCategories.java b/c2me-client-uncapvd/src/main/java/com/ishland/c2me/client/uncapvd/mixin/MixinSodiumUserConfigCategories.java
 new file mode 100644
-index 00000000..570e01c9
+index 00000000..0b201f87
 --- /dev/null
 +++ b/c2me-client-uncapvd/src/main/java/com/ishland/c2me/client/uncapvd/mixin/MixinSodiumUserConfigCategories.java
-@@ -0,0 +1,24 @@
+@@ -0,0 +1,48 @@
++/*
++ * The MIT License (MIT)
++ *
++ * Copyright (c) 2021-2026 ishland
++ *
++ * Permission is hereby granted, free of charge, to any person obtaining a copy
++ * of this software and associated documentation files (the "Software"), to deal
++ * in the Software without restriction, including without limitation the rights
++ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
++ * copies of the Software, and to permit persons to whom the Software is
++ * furnished to do so, subject to the following conditions:
++ *
++ * The above copyright notice and this permission notice shall be included in
++ * all copies or substantial portions of the Software.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
++ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
++ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
++ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
++ * THE SOFTWARE.
++ */
++
 +package com.ishland.c2me.client.uncapvd.mixin;
 +
 +import com.ishland.c2me.client.uncapvd.common.Config;
@@ -665,10 +689,34 @@ index 4a313e73..8d8e144d 100644
      @Shadow public NetherFortressGenerator.PieceData lastPiece;
 diff --git a/c2me-fixes-worldgen-threading-issues/src/main/java/com/ishland/c2me/fixes/worldgen/threading_issues/mixin/threading/math/MixinDirectionTransformation.java b/c2me-fixes-worldgen-threading-issues/src/main/java/com/ishland/c2me/fixes/worldgen/threading_issues/mixin/threading/math/MixinDirectionTransformation.java
 new file mode 100644
-index 00000000..d81b827e
+index 00000000..21155aa1
 --- /dev/null
 +++ b/c2me-fixes-worldgen-threading-issues/src/main/java/com/ishland/c2me/fixes/worldgen/threading_issues/mixin/threading/math/MixinDirectionTransformation.java
-@@ -0,0 +1,21 @@
+@@ -0,0 +1,45 @@
++/*
++ * The MIT License (MIT)
++ *
++ * Copyright (c) 2021-2026 ishland
++ *
++ * Permission is hereby granted, free of charge, to any person obtaining a copy
++ * of this software and associated documentation files (the "Software"), to deal
++ * in the Software without restriction, including without limitation the rights
++ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
++ * copies of the Software, and to permit persons to whom the Software is
++ * furnished to do so, subject to the following conditions:
++ *
++ * The above copyright notice and this permission notice shall be included in
++ * all copies or substantial portions of the Software.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
++ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
++ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
++ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
++ * THE SOFTWARE.
++ */
++
 +package com.ishland.c2me.fixes.worldgen.threading_issues.mixin.threading.math;
 +
 +import net.minecraft.util.math.Direction;
@@ -944,10 +992,34 @@ index 1bdb010f..fc457bff 100644
      @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/integrated/IntegratedServer;incrementTotalWorldTimeStat()V", shift = At.Shift.AFTER))
 diff --git a/c2me-notickvd/src/main/java/com/ishland/c2me/notickvd/mixin/servercore/MixinServerChunkManager.java b/c2me-notickvd/src/main/java/com/ishland/c2me/notickvd/mixin/servercore/MixinServerChunkManager.java
 new file mode 100644
-index 00000000..2eea9dce
+index 00000000..c5d71501
 --- /dev/null
 +++ b/c2me-notickvd/src/main/java/com/ishland/c2me/notickvd/mixin/servercore/MixinServerChunkManager.java
-@@ -0,0 +1,28 @@
+@@ -0,0 +1,52 @@
++/*
++ * The MIT License (MIT)
++ *
++ * Copyright (c) 2021-2026 ishland
++ *
++ * Permission is hereby granted, free of charge, to any person obtaining a copy
++ * of this software and associated documentation files (the "Software"), to deal
++ * in the Software without restriction, including without limitation the rights
++ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
++ * copies of the Software, and to permit persons to whom the Software is
++ * furnished to do so, subject to the following conditions:
++ *
++ * The above copyright notice and this permission notice shall be included in
++ * all copies or substantial portions of the Software.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
++ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
++ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
++ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
++ * THE SOFTWARE.
++ */
++
 +package com.ishland.c2me.notickvd.mixin.servercore;
 +
 +import com.bawnorton.mixinsquared.TargetHandler;
@@ -1417,10 +1489,34 @@ index 1a0ed8c5..93f92180 100644
  }
 diff --git a/c2me-opts-allocs/src/main/java/com/ishland/c2me/opts/allocs/mixin/MixinNbtList1.java b/c2me-opts-allocs/src/main/java/com/ishland/c2me/opts/allocs/mixin/MixinNbtList1.java
 new file mode 100644
-index 00000000..cf6e288f
+index 00000000..4a375943
 --- /dev/null
 +++ b/c2me-opts-allocs/src/main/java/com/ishland/c2me/opts/allocs/mixin/MixinNbtList1.java
-@@ -0,0 +1,15 @@
+@@ -0,0 +1,39 @@
++/*
++ * The MIT License (MIT)
++ *
++ * Copyright (c) 2021-2026 ishland
++ *
++ * Permission is hereby granted, free of charge, to any person obtaining a copy
++ * of this software and associated documentation files (the "Software"), to deal
++ * in the Software without restriction, including without limitation the rights
++ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
++ * copies of the Software, and to permit persons to whom the Software is
++ * furnished to do so, subject to the following conditions:
++ *
++ * The above copyright notice and this permission notice shall be included in
++ * all copies or substantial portions of the Software.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
++ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
++ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
++ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
++ * THE SOFTWARE.
++ */
++
 +package com.ishland.c2me.opts.allocs.mixin;
 +
 +import it.unimi.dsi.fastutil.objects.ObjectArrayList;
@@ -1490,10 +1586,34 @@ index 3ad91cdf..88064c05 100644
              case DensityFunctionTypes.EndIslands f -> new EndIslandsNode(f);
 diff --git a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/backports/FindTopSurface.java b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/backports/FindTopSurface.java
 new file mode 100644
-index 00000000..a1579771
+index 00000000..ad9a6a7e
 --- /dev/null
 +++ b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/backports/FindTopSurface.java
-@@ -0,0 +1,50 @@
+@@ -0,0 +1,74 @@
++/*
++ * The MIT License (MIT)
++ *
++ * Copyright (c) 2021-2026 ishland
++ *
++ * Permission is hereby granted, free of charge, to any person obtaining a copy
++ * of this software and associated documentation files (the "Software"), to deal
++ * in the Software without restriction, including without limitation the rights
++ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
++ * copies of the Software, and to permit persons to whom the Software is
++ * furnished to do so, subject to the following conditions:
++ *
++ * The above copyright notice and this permission notice shall be included in
++ * all copies or substantial portions of the Software.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
++ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
++ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
++ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
++ * THE SOFTWARE.
++ */
++
 +package com.ishland.c2me.opts.dfc.common.gen.backports;
 +
 +import net.minecraft.util.dynamic.CodecHolder;
@@ -2023,10 +2143,34 @@ index c4731425..90307d7e 100644
                      () -> ((IThreadedAnvilChunkStorage) this.tacs).invokeOnChunkStatusChange(holder.getKey(), statusReached1.toChunkLevelType()));
 diff --git a/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/common/async_chunkio/SerializingRegionBasedStorageExtension.java b/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/common/async_chunkio/SerializingRegionBasedStorageExtension.java
 new file mode 100644
-index 00000000..8e855db8
+index 00000000..dfdcc808
 --- /dev/null
 +++ b/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/common/async_chunkio/SerializingRegionBasedStorageExtension.java
-@@ -0,0 +1,10 @@
+@@ -0,0 +1,34 @@
++/*
++ * The MIT License (MIT)
++ *
++ * Copyright (c) 2021-2026 ishland
++ *
++ * Permission is hereby granted, free of charge, to any person obtaining a copy
++ * of this software and associated documentation files (the "Software"), to deal
++ * in the Software without restriction, including without limitation the rights
++ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
++ * copies of the Software, and to permit persons to whom the Software is
++ * furnished to do so, subject to the following conditions:
++ *
++ * The above copyright notice and this permission notice shall be included in
++ * all copies or substantial portions of the Software.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
++ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
++ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
++ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
++ * THE SOFTWARE.
++ */
++
 +package com.ishland.c2me.rewrites.chunksystem.common.async_chunkio;
 +
 +import net.minecraft.nbt.NbtCompound;
@@ -3255,10 +3399,34 @@ index 45efd191..714df885 100644
  }
 diff --git a/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/mixin/async_serialization/MixinSerializingRegionBasedStorage.java b/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/mixin/async_serialization/MixinSerializingRegionBasedStorage.java
 new file mode 100644
-index 00000000..ce795bb5
+index 00000000..837bcfa9
 --- /dev/null
 +++ b/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/mixin/async_serialization/MixinSerializingRegionBasedStorage.java
-@@ -0,0 +1,28 @@
+@@ -0,0 +1,52 @@
++/*
++ * The MIT License (MIT)
++ *
++ * Copyright (c) 2021-2026 ishland
++ *
++ * Permission is hereby granted, free of charge, to any person obtaining a copy
++ * of this software and associated documentation files (the "Software"), to deal
++ * in the Software without restriction, including without limitation the rights
++ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
++ * copies of the Software, and to permit persons to whom the Software is
++ * furnished to do so, subject to the following conditions:
++ *
++ * The above copyright notice and this permission notice shall be included in
++ * all copies or substantial portions of the Software.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
++ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
++ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
++ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
++ * THE SOFTWARE.
++ */
++
 +package com.ishland.c2me.rewrites.chunksystem.mixin.async_serialization;
 +
 +import com.ishland.c2me.rewrites.chunksystem.common.async_chunkio.SerializingRegionBasedStorageExtension;
@@ -3393,10 +3561,34 @@ index 46530699..6b03fa46 100644
          return this.backend.getChunkData(pos.toLong(), null).thenApply(Optional::ofNullable);
 diff --git a/c2me-rewrites-chunkio/src/main/java/com/ishland/c2me/rewrites/chunkio/mixin/MixinChunkPosKeyedStorage.java b/c2me-rewrites-chunkio/src/main/java/com/ishland/c2me/rewrites/chunkio/mixin/MixinChunkPosKeyedStorage.java
 new file mode 100644
-index 00000000..d2e24839
+index 00000000..bc838a8f
 --- /dev/null
 +++ b/c2me-rewrites-chunkio/src/main/java/com/ishland/c2me/rewrites/chunkio/mixin/MixinChunkPosKeyedStorage.java
-@@ -0,0 +1,21 @@
+@@ -0,0 +1,45 @@
++/*
++ * The MIT License (MIT)
++ *
++ * Copyright (c) 2021-2026 ishland
++ *
++ * Permission is hereby granted, free of charge, to any person obtaining a copy
++ * of this software and associated documentation files (the "Software"), to deal
++ * in the Software without restriction, including without limitation the rights
++ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
++ * copies of the Software, and to permit persons to whom the Software is
++ * furnished to do so, subject to the following conditions:
++ *
++ * The above copyright notice and this permission notice shall be included in
++ * all copies or substantial portions of the Software.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
++ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
++ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
++ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
++ * THE SOFTWARE.
++ */
++
 +package com.ishland.c2me.rewrites.chunkio.mixin;
 +
 +import com.ishland.c2me.rewrites.chunkio.common.C2MEStorageVanillaInterface;
@@ -3420,10 +3612,34 @@ index 00000000..d2e24839
 +}
 diff --git a/c2me-rewrites-chunkio/src/main/java/com/ishland/c2me/rewrites/chunkio/mixin/MixinRecreatedChunkStorage.java b/c2me-rewrites-chunkio/src/main/java/com/ishland/c2me/rewrites/chunkio/mixin/MixinRecreatedChunkStorage.java
 new file mode 100644
-index 00000000..45475c1e
+index 00000000..2e45805a
 --- /dev/null
 +++ b/c2me-rewrites-chunkio/src/main/java/com/ishland/c2me/rewrites/chunkio/mixin/MixinRecreatedChunkStorage.java
-@@ -0,0 +1,21 @@
+@@ -0,0 +1,45 @@
++/*
++ * The MIT License (MIT)
++ *
++ * Copyright (c) 2021-2026 ishland
++ *
++ * Permission is hereby granted, free of charge, to any person obtaining a copy
++ * of this software and associated documentation files (the "Software"), to deal
++ * in the Software without restriction, including without limitation the rights
++ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
++ * copies of the Software, and to permit persons to whom the Software is
++ * furnished to do so, subject to the following conditions:
++ *
++ * The above copyright notice and this permission notice shall be included in
++ * all copies or substantial portions of the Software.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
++ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
++ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
++ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
++ * THE SOFTWARE.
++ */
++
 +package com.ishland.c2me.rewrites.chunkio.mixin;
 +
 +import com.ishland.c2me.rewrites.chunkio.common.C2MEStorageVanillaInterface;
