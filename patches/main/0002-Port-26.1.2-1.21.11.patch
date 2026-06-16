@@ -1,6 +1,6 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
-From: ishland <ishlandmc@yeah.net>
-Date: Thu, 16 Apr 2026 21:59:19 +0800
+From: ishland <30385023+ishland@users.noreply.github.com>
+Date: Tue, 16 Jun 2026 14:57:01 +0800
 Subject: [PATCH] Port 26.1.2 -> 1.21.11
 
 
@@ -1184,10 +1184,10 @@ index 7dcaae00..7d4f01c3 100644
          if (this instanceof IVanillaChunkManager vanillaChunkManager) {
              return new C2MEStorageVanillaInterface(arg, path, bl, pos -> vanillaChunkManager.c2me$getSchedulingManager().positionedExecutor(pos));
 diff --git a/gradle.properties b/gradle.properties
-index 8095b0b2..51eff29f 100644
+index 8095b0b2..90814b35 100644
 --- a/gradle.properties
 +++ b/gradle.properties
-@@ -11,10 +11,10 @@ gradle-curseforge-publish.interop.neogradle=false
+@@ -11,16 +11,16 @@ gradle-curseforge-publish.interop.neogradle=false
  #org.gradle.configuration-cache=true
  # Fabric Properties
  # check these on https://fabricmc.net/versions.html
@@ -1201,6 +1201,13 @@ index 8095b0b2..51eff29f 100644
  # Mod Properties
  mod_version=0.4.0-alpha.0
  maven_group=com.ishland.c2me
+ archives_base_name=c2me-fabric
+ # Publishing metadtaa
+-curseforge_minecraft_versions=26.1.2
++curseforge_minecraft_versions=1.21.11
+ # Java Dependencies
+ async_util_version=0.1.0
+ night_config_version=3.6.5
 @@ -30,6 +30,6 @@ reactive_streams_version=1.0.4
  mixinsquared_version=0.3.7-beta.1
  jctools_version=4.0.5
