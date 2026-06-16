@@ -79,7 +79,7 @@ function enableCommitSigningIfNeeded {
 }
 
 (
-    (applyPatch C2ME-fabric C2ME-fabric-patched HEAD main) || exit 1
+    (applyPatch C2ME-fabric/C2ME-fabric-patched C2ME-fabric-patched HEAD main) || exit 1
     enableCommitSigningIfNeeded
 ) || (
     echo "Failed to apply patches"

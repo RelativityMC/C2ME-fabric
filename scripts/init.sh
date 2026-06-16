@@ -8,7 +8,7 @@ basedir=$(pwd -P)
 cd - || exit
 
 upstreamDir="C2ME-fabric"
-upstreamBranch="next/0.4-mainline-merge"
+upstreamBranch="backports/1.21.11"
 
 function bashColor() {
   if [ "$2" ]; then

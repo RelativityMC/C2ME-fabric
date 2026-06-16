@@ -1,0 +1,65 @@
+name: C2ME Build Script
+
+on:
+  push: {}
+  pull_request: {}
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'zulu'
+          java-version: 25
+          java-package: jdk
+
+      - name: Install LLVM
+        uses: KyleMayes/install-llvm-action@v2
+        with:
+          version: "20.1.8"
+          force-url: "https://github.com/llvm/llvm-project/releases/download/llvmorg-20.1.8/LLVM-20.1.8-Linux-X64.tar.xz"
+          directory: ${{ runner.temp }}/llvm
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: false
+          cache-cleanup: never
+
+      - name: setup project
+        run: |
+          git config --global user.email "no-reply@github.com"
+          git config --global user.name "Github Actions"
+          ./build.sh up
+          ./build.sh patch
+
+      - name: build
+        run: |
+          cd C2ME-fabric-patched
+          ./gradlew clean build
+
+      - name: upload to modrinth and curseforge
+        run: |
+          cd C2ME-fabric-patched
+          ./gradlew publishMods
+        if: false
+        env:
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_UPLOAD_TOKEN }}
+          CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_API_TOKEN }}
+          GITHUB_EVENT_RAW_PATH: ${{ github.event_path }}
+        continue-on-error: true
+
+      - name: capture build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Artifacts
+          path: |
+            C2ME-fabric-patched/build/libs/
+

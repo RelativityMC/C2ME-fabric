@@ -1,4 +1,6 @@
 [submodule "C2ME-fabric"]
 	path = C2ME-fabric
 	url = git@github.com:RelativityMC/C2ME-fabric-private.git
-	branch = next/0.4-mainline-merge
+[submodule "FlowSched"]
+	path = FlowSched
+	url = git@github.com:RelativityMC/FlowSched.git
