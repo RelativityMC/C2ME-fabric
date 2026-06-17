@@ -5,9 +5,20 @@ Subject: [PATCH] Port 26.1.2 -> 1.21.11
 
 
 diff --git a/build.gradle b/build.gradle
-index 386c51a5..a35aa66c 100644
+index 386c51a5..2db8eb37 100644
 --- a/build.gradle
 +++ b/build.gradle
+@@ -29,8 +29,8 @@ configure(allprojects) {
+     it.group = project.maven_group
+     it.version = project.mod_version + "." + getVersionSuffix()
+     java {
+-        sourceCompatibility = JavaVersion.VERSION_25
+-        targetCompatibility = JavaVersion.VERSION_25
++        sourceCompatibility = JavaVersion.VERSION_21
++        targetCompatibility = JavaVersion.VERSION_21
+     }
+ 
+     license {
 @@ -82,9 +82,6 @@ clean.dependsOn gradle.includedBuild('FlowSched').task(':clean')
  allprojects {
      apply plugin: 'net.fabricmc.fabric-loom-repositories'
@@ -295,6 +306,22 @@ index fef930a8..8a8b71bd 100644
          }
      }
  
+diff --git a/c2me-opts-accel-opencl/build.gradle b/c2me-opts-accel-opencl/build.gradle
+index 4cb9f6d1..368e98af 100644
+--- a/c2me-opts-accel-opencl/build.gradle
++++ b/c2me-opts-accel-opencl/build.gradle
+@@ -4,6 +4,11 @@ moduleDependencies(project, [
+         "c2me-rewrites-chunk-system",
+ ])
+ 
++java {
++    sourceCompatibility = JavaVersion.VERSION_25
++    targetCompatibility = JavaVersion.VERSION_25
++}
++
+ dependencies {
+     include implementation(platform("org.lwjgl:lwjgl-bom:${lwjgl_version}"))
+     include implementation("org.lwjgl:lwjgl")
 diff --git a/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/chunksystem_integration/BatchingBiomeNoiseStatus.java b/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/chunksystem_integration/BatchingBiomeNoiseStatus.java
 index ccee3192..7541d64d 100644
 --- a/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/chunksystem_integration/BatchingBiomeNoiseStatus.java
@@ -697,6 +724,18 @@ index 8937cdbb..f9fefc14 100644
      private void onRenderSubtitles(CallbackInfo ci, @Local DrawContext drawContext) {
          String progressText = GlobalProgressStash.PROGRESS_TEXT;
          if (progressText == null) {
+diff --git a/c2me-opts-accel-opencl/src/main/resources/fabric.mod.json b/c2me-opts-accel-opencl/src/main/resources/fabric.mod.json
+index 1a14882a..9aac92df 100644
+--- a/c2me-opts-accel-opencl/src/main/resources/fabric.mod.json
++++ b/c2me-opts-accel-opencl/src/main/resources/fabric.mod.json
+@@ -11,6 +11,7 @@
+   "depends": {
+     "minecraft": "*",
+     "fabricloader": "*",
++    "java": ">=25",
+     "c2me-base": "*",
+     "c2me-opts-dfc": "*",
+     "c2me-rewrites-chunk-system": "*"
 diff --git a/c2me-opts-allocs/src/main/java/com/ishland/c2me/opts/allocs/mixin/MixinNbtCompound1.java b/c2me-opts-allocs/src/main/java/com/ishland/c2me/opts/allocs/mixin/MixinNbtCompound1.java
 index 86d308b0..ec1a4c1e 100644
 --- a/c2me-opts-allocs/src/main/java/com/ishland/c2me/opts/allocs/mixin/MixinNbtCompound1.java
@@ -717,6 +756,56 @@ index 86d308b0..ec1a4c1e 100644
      private static  <K, V> HashMap<K, V> redirectNewHashMap() {
          return null; // avoid double map creation
      }
+diff --git a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/dot/DotGen.java b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/dot/DotGen.java
+index a1530ac8..69e6da1c 100644
+--- a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/dot/DotGen.java
++++ b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/dot/DotGen.java
+@@ -297,7 +297,7 @@ public class DotGen {
+                 builder = new Builder.Impl(counter++);
+                 constants.add(builder);
+             } else {
+-                builder = allocatedNodes.computeIfAbsent(node, _ -> new Builder.Impl(counter++));
++                builder = allocatedNodes.computeIfAbsent(node, unused -> new Builder.Impl(counter++));
+                 if (builder.frozen) {
+                     return builder.id;
+                 }
+@@ -310,7 +310,7 @@ public class DotGen {
+          */
+         public Builder getSplineBuilder(Spline<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> spline) {
+             final Builder.Impl builder;
+-            builder = allocatedSplines.computeIfAbsent(spline, _ -> new Builder.Impl(counter++));
++            builder = allocatedSplines.computeIfAbsent(spline, unused -> new Builder.Impl(counter++));
+             return builder;
+         }
+ 
+diff --git a/c2me-opts-natives-math/build.gradle b/c2me-opts-natives-math/build.gradle
+index 8581b449..e41e2d30 100644
+--- a/c2me-opts-natives-math/build.gradle
++++ b/c2me-opts-natives-math/build.gradle
+@@ -4,6 +4,11 @@ moduleDependencies(project, [
+         "c2me-base",
+ ])
+ 
++java {
++    sourceCompatibility = JavaVersion.VERSION_25
++    targetCompatibility = JavaVersion.VERSION_25
++}
++
+ def addTarget(String target, String outputName) {
+     addTarget(target, outputName, outputName)
+ }
+diff --git a/c2me-opts-natives-math/src/main/resources/fabric.mod.json b/c2me-opts-natives-math/src/main/resources/fabric.mod.json
+index 0fa5e026..d9b7c11d 100644
+--- a/c2me-opts-natives-math/src/main/resources/fabric.mod.json
++++ b/c2me-opts-natives-math/src/main/resources/fabric.mod.json
+@@ -11,6 +11,7 @@
+   "depends": {
+     "minecraft": "*",
+     "fabricloader": "*",
++    "java": ">=25",
+     "c2me-base": "*"
+   },
+ 
 diff --git a/c2me-opts-scheduling/src/main/java/com/ishland/c2me/opts/scheduling/mixin/idle_tasks/autosave/enhanced_autosave/MixinMinecraftServer.java b/c2me-opts-scheduling/src/main/java/com/ishland/c2me/opts/scheduling/mixin/idle_tasks/autosave/enhanced_autosave/MixinMinecraftServer.java
 index 063e15ec..749c1c75 100644
 --- a/c2me-opts-scheduling/src/main/java/com/ishland/c2me/opts/scheduling/mixin/idle_tasks/autosave/enhanced_autosave/MixinMinecraftServer.java
@@ -1217,14 +1306,16 @@ index 8095b0b2..90814b35 100644
  caffeine_version=3.2.1
  apache_commons_compress_version=1.28.0
 diff --git a/src/main/resources/fabric.mod.json b/src/main/resources/fabric.mod.json
-index bf73b870..d67fbdc6 100644
+index bf73b870..b4f71fd2 100644
 --- a/src/main/resources/fabric.mod.json
 +++ b/src/main/resources/fabric.mod.json
-@@ -28,7 +28,7 @@
+@@ -27,8 +27,8 @@
+   },
    "depends": {
      "fabricloader": ">=0.18.3",
-     "java": ">=25",
+-    "java": ">=25",
 -    "minecraft": ">1.21.11",
++    "java": ">=21",
 +    "minecraft": "=1.21.11",
      "c2me-base": "*"
    },
