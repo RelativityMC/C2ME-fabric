@@ -2386,16 +2386,17 @@ index 4a117d62..efc14fd2 100644
 -
  }
 diff --git a/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/common/statuses/ReadFromDisk.java b/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/common/statuses/ReadFromDisk.java
-index 6d79ffcc..0943bca7 100644
+index 6b57ee59..0943bca7 100644
 --- a/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/common/statuses/ReadFromDisk.java
 +++ b/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/common/statuses/ReadFromDisk.java
-@@ -24,12 +24,8 @@
+@@ -24,13 +24,8 @@
  
  package com.ishland.c2me.rewrites.chunksystem.common.statuses;
  
 -import com.ibm.asyncutil.util.Either;
 -import com.ishland.c2me.base.common.GlobalExecutors;
 -import com.ishland.c2me.base.common.config.ModStatuses;
+-import com.ishland.c2me.base.common.emulation.ScopedValueEmulation;
 -import com.ishland.c2me.base.common.registry.SerializerAccess;
 -import com.ishland.c2me.base.common.theinterface.IDirectStorage;
  import com.ishland.c2me.base.common.threadstate.ThreadInstrumentation;
@@ -2403,7 +2404,7 @@ index 6d79ffcc..0943bca7 100644
  import com.ishland.c2me.base.common.util.RxJavaUtils;
  import com.ishland.c2me.base.mixin.access.IServerLightingProvider;
  import com.ishland.c2me.base.mixin.access.IThreadedAnvilChunkStorage;
-@@ -39,9 +35,6 @@ import com.ishland.c2me.rewrites.chunksystem.common.ChunkLoadingContext;
+@@ -40,9 +35,6 @@ import com.ishland.c2me.rewrites.chunksystem.common.ChunkLoadingContext;
  import com.ishland.c2me.rewrites.chunksystem.common.ChunkState;
  import com.ishland.c2me.rewrites.chunksystem.common.Config;
  import com.ishland.c2me.rewrites.chunksystem.common.NewChunkStatus;
@@ -2413,7 +2414,7 @@ index 6d79ffcc..0943bca7 100644
  import com.ishland.c2me.rewrites.chunksystem.common.ducks.IPOIUnloading;
  import com.ishland.c2me.rewrites.chunksystem.common.fapi.LifecycleEventInvoker;
  import com.ishland.c2me.rewrites.chunksystem.common.threadstate.ChunkTaskWork;
-@@ -54,15 +47,17 @@ import io.reactivex.rxjava3.core.Completable;
+@@ -55,15 +47,17 @@ import io.reactivex.rxjava3.core.Completable;
  import io.reactivex.rxjava3.core.CompletableObserver;
  import io.reactivex.rxjava3.core.Single;
  import io.reactivex.rxjava3.schedulers.Schedulers;
@@ -2434,7 +2435,7 @@ index 6d79ffcc..0943bca7 100644
  import net.minecraft.world.chunk.UpgradeData;
  import net.minecraft.world.chunk.WorldChunk;
  import net.minecraft.world.chunk.WrapperProtoChunk;
-@@ -70,10 +65,9 @@ import org.jetbrains.annotations.NotNull;
+@@ -71,10 +65,9 @@ import org.jetbrains.annotations.NotNull;
  import org.slf4j.Logger;
  import org.slf4j.LoggerFactory;
  
@@ -2446,7 +2447,7 @@ index 6d79ffcc..0943bca7 100644
  
  public class ReadFromDisk extends NewChunkStatus {
  
-@@ -85,7 +79,7 @@ public class ReadFromDisk extends NewChunkStatus {
+@@ -86,7 +79,7 @@ public class ReadFromDisk extends NewChunkStatus {
  
      @Override
      public Completable upgradeToThis(ChunkLoadingContext context, Cancellable cancellable) {
@@ -2455,7 +2456,7 @@ index 6d79ffcc..0943bca7 100644
                  .retryWhen(RxJavaUtils.retryWithExponentialBackoff(5, 100));
          return finalizeLoading(context, single);
      }
-@@ -113,69 +107,39 @@ public class ReadFromDisk extends NewChunkStatus {
+@@ -114,69 +107,39 @@ public class ReadFromDisk extends NewChunkStatus {
                  .cache();
      }
  
@@ -2545,7 +2546,7 @@ index 6d79ffcc..0943bca7 100644
      }
  
      @Override
-@@ -188,7 +152,7 @@ public class ReadFromDisk extends NewChunkStatus {
+@@ -189,7 +152,7 @@ public class ReadFromDisk extends NewChunkStatus {
          return Completable.defer(() -> Completable.fromCompletionStage(syncWithLightEngine(context)))
                  .observeOn(Schedulers.from(((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor()))
                  .andThen((CompletableObserver observer) -> {
@@ -2554,7 +2555,7 @@ index 6d79ffcc..0943bca7 100644
                          cancellable.cancel();
                          observer.onError(new CancellationException());
                      } else {
-@@ -199,91 +163,77 @@ public class ReadFromDisk extends NewChunkStatus {
+@@ -200,91 +163,77 @@ public class ReadFromDisk extends NewChunkStatus {
  
      @Override
      public Completable downgradeFromThis(ChunkLoadingContext context, Cancellable cancellable) {
@@ -2628,7 +2629,7 @@ index 6d79ffcc..0943bca7 100644
 -
 -            SerializedChunk serializer;
 -            if (Config.asyncSerialization) {
--                serializer = ScopedValue
+-                serializer = ScopedValueEmulation
 -                        .where(AsyncSerializationUtil.duringUnloadSerialization, null)
 -                        .call(() -> SerializedChunk.fromChunk(((IThreadedAnvilChunkStorage) context.tacs()).getWorld(), chunk));
 -            } else {
@@ -3279,10 +3280,10 @@ index c2fedd91..e4d74877 100644
  
  }
 diff --git a/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/mixin/MixinServerChunkManager.java b/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/mixin/MixinServerChunkManager.java
-index 85ce2fd2..0c785e0d 100644
+index 56e77de8..37f81a2b 100644
 --- a/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/mixin/MixinServerChunkManager.java
 +++ b/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/mixin/MixinServerChunkManager.java
-@@ -30,7 +30,7 @@ import com.ishland.c2me.rewrites.chunksystem.common.structs.ChunkSystemExecutors
+@@ -31,7 +31,7 @@ import com.ishland.c2me.rewrites.chunksystem.common.structs.ChunkSystemExecutors
  import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
  import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
  import net.minecraft.server.world.ChunkHolder;
@@ -3291,7 +3292,7 @@ index 85ce2fd2..0c785e0d 100644
  import net.minecraft.server.world.OptionalChunk;
  import net.minecraft.server.world.ServerChunkLoadingManager;
  import net.minecraft.server.world.ServerChunkManager;
-@@ -112,8 +112,8 @@ public abstract class MixinServerChunkManager {
+@@ -113,8 +113,8 @@ public abstract class MixinServerChunkManager {
          return Integer.toString(((IChunkSystemAccess) this.chunkLoadingManager).c2me$getTheChunkSystem().itemCount()) + ", " + Integer.toString(this.getLoadedChunkCount());
      }
  
@@ -3300,7 +3301,7 @@ index 85ce2fd2..0c785e0d 100644
 +    @WrapOperation(method = "updateChunks", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ChunkTicketManager;update(Lnet/minecraft/server/world/ServerChunkLoadingManager;)Z"))
 +    private boolean consolidateSchedules(ChunkTicketManager instance, ServerChunkLoadingManager completablefuture, Operation<Boolean> original) {
          ArrayDeque<Runnable> runnables;
-         return ScopedValue
+         return ScopedValueEmulation
                  .where(ChunkSystemExecutors.CONSOLIDATING_QUEUE, runnables = new ArrayDeque<>())
 diff --git a/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/mixin/MixinThreadedAnvilChunkStorage.java b/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/mixin/MixinThreadedAnvilChunkStorage.java
 index 91946c63..1a34787d 100644
@@ -3843,13 +3844,13 @@ index 3634dbfd..cdd24948 100644
  include 'c2me-rewrites-chunk-system'
  include 'c2me-server-utils'
 diff --git a/src/main/resources/fabric.mod.json b/src/main/resources/fabric.mod.json
-index d67fbdc6..177bbb5f 100644
+index b4f71fd2..079f6f2b 100644
 --- a/src/main/resources/fabric.mod.json
 +++ b/src/main/resources/fabric.mod.json
 @@ -28,7 +28,7 @@
    "depends": {
      "fabricloader": ">=0.18.3",
-     "java": ">=25",
+     "java": ">=21",
 -    "minecraft": "=1.21.11",
 +    "minecraft": ["=1.21.1", "=1.21"],
      "c2me-base": "*"
