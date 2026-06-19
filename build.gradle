@@ -3,7 +3,7 @@ plugins {
     id "me.champeau.jmh" version "0.7.2"
     id 'com.modrinth.minotaur' version '2.+' apply false
     id 'io.github.themrmilchmann.curseforge-publish' version '0.8.0' apply false
-    id 'com.gradleup.shadow' version '8.3.0' apply false
+    id 'com.gradleup.shadow' version '9.4.2' apply false
     id 'io.github.tomtzook.gradle-cmake' version '1.2.2' apply false
     id 'dev.yumi.gradle.licenser' version '4.0.0' apply false
     id 'me.modmuss50.mod-publish-plugin' version "2.0.0-beta.2" apply false
