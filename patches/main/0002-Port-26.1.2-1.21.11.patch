@@ -5,7 +5,7 @@ Subject: [PATCH] Port 26.1.2 -> 1.21.11
 
 
 diff --git a/build.gradle b/build.gradle
-index 386c51a5..2db8eb37 100644
+index b5e07d77..8d2c502e 100644
 --- a/build.gradle
 +++ b/build.gradle
 @@ -29,8 +29,8 @@ configure(allprojects) {
@@ -48,6 +48,14 @@ index 386c51a5..2db8eb37 100644
          uncompressNestedJars = true
  
          def file = project(":c2me-base").file("src/main/resources/c2me-base.accesswidener")
+@@ -298,6 +292,7 @@ publishMods {
+             client = true
+             server = true
+             changelogType = "markdown"
++            javaVersions.add(JavaVersion.VERSION_21)
+             javaVersions.add(JavaVersion.VERSION_25)
+         }
+ 
 diff --git a/c2me-base/src/main/java/com/ishland/c2me/base/common/network/ExtRenderDistance.java b/c2me-base/src/main/java/com/ishland/c2me/base/common/network/ExtRenderDistance.java
 index 98604ae1..f29ea63e 100644
 --- a/c2me-base/src/main/java/com/ishland/c2me/base/common/network/ExtRenderDistance.java
