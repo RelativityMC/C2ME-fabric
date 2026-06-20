@@ -311,6 +311,13 @@ publishMods {
             file = remapJar.archiveFile
             projectId = "533097"
         }
+
+        curseforge("curseforgeOpenCLAccel") {
+            from cfOptions
+            file = project(":c2me-opts-accel-opencl").remapJar.archiveFile
+            projectId = "1563823"
+            requires("c2me")
+        }
     }
 
     {
@@ -323,6 +330,15 @@ publishMods {
             from mrOptions
             file = remapJar.archiveFile
             projectId = "VSNURh3q"
+        }
+
+        modrinth("modrinthOpenCLAccel") {
+            from mrOptions
+            file = project(":c2me-opts-accel-opencl").remapJar.archiveFile
+            projectId = "qtPMklut"
+            requires {
+                id = "VSNURh3q"
+            }
         }
     }
 }
