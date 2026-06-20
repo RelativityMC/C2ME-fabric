@@ -24,6 +24,7 @@ import com.ishland.c2me.opts.accel.opencl.common.Config;
 import com.ishland.c2me.opts.accel.opencl.common.ducks.PalettedContainerExtension;
 import com.ishland.c2me.opts.accel.opencl.common.gen.cache.CLBufferCache;
 import com.ishland.c2me.opts.accel.opencl.common.gen.cache.Stage1Cache;
+import com.ishland.c2me.opts.accel.opencl.common.integration.zfastnoise.ZFastNoiseBindings;
 import com.ishland.c2me.opts.accel.opencl.common.util.CLUtil;
 import com.ishland.c2me.opts.accel.opencl.common.util.TLUtil;
 import com.ishland.c2me.opts.accel.opencl.common.compiler.emitters.misc.CLBlockStateMappings;
@@ -516,6 +517,20 @@ public class CLServerBatchedBiomeNoiseContext {
     }
 
     private void writeBlocks(BoundedRegionArray<ProtoChunk> chunks, CLBlockStateMappings clBlockStateMappings, int verticalSize, ChunkGeneratorSettings settings, int horizontalSize, ByteBuffer blockOutBufferData) {
+        if (ZFastNoiseBindings.MH_FastCopyBufferDataIntoChunks$copyData != null) {
+            ZFastNoiseBindings.call_FastCopyBufferDataIntoChunks$copyData(
+                    chunks,
+                    clBlockStateMappings.getIdToBlockState(),
+                    verticalSize,
+                    settings,
+                    horizontalSize,
+                    blockOutBufferData,
+                    this.startingPos,
+                    BATCH_SIZE
+            );
+            return;
+        }
+
         ProtoChunk startingChunk = chunks.get(this.startingPos.x(), this.startingPos.z());
 
         int curSectionIndex = startingChunk.getSectionIndex(startingChunk.getBottomY());
