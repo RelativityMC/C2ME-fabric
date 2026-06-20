@@ -328,7 +328,7 @@ public class OpenCLDevice implements Closeable {
                     }
                 }
 
-                if (Config.enableNvidiaFastCompilation && this.metadata.deviceCaps.cl_nv_compiler_options) {
+                if (!this.workarounds.contains(Workarounds.Reference.NVIDIA_FAST_COMPILE_UNAVAILABLE) && Config.enableNvidiaFastCompilation && this.metadata.deviceCaps.cl_nv_compiler_options) {
                     option.append("-cl-nv-opt-level=1 -cl-nv-verbose -nv-use-200772613 ");
                 }
 

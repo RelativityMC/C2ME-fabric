@@ -19,11 +19,16 @@ package com.ishland.c2me.opts.accel.opencl.common.workarounds.nvidia;
 import com.ishland.c2me.opts.accel.opencl.common.enumeration.OpenCLDeviceMetadata;
 import com.ishland.c2me.opts.accel.opencl.common.util.CLUtil;
 import org.lwjgl.opencl.CL12;
+import org.lwjgl.opencl.NVDeviceAttributeQuery;
 import org.lwjgl.system.MemoryStack;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.IntBuffer;
 
 public class NvidiaWorkarounds {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(NvidiaWorkarounds.class);
 
     public static boolean isNvidia(OpenCLDeviceMetadata metadata) {
         try (MemoryStack stack = MemoryStack.stackPush()) {
@@ -34,4 +39,15 @@ public class NvidiaWorkarounds {
         }
     }
 
+    public static boolean isOlderThanSM50(OpenCLDeviceMetadata metadata) {
+        if (!isNvidia(metadata)) return false;
+
+        if (metadata.deviceCaps.cl_nv_device_attribute_query) {
+            int computeCapabilityMajor = CLUtil.getDeviceInfoInt(metadata.devicePtr, NVDeviceAttributeQuery.CL_DEVICE_COMPUTE_CAPABILITY_MAJOR_NV);
+            return computeCapabilityMajor < 5;
+        } else {
+            LOGGER.warn("Unable to determine compute capability for device {}: cl_nv_device_attribute_query not supported", metadata);
+            return false;
+        }
+    }
 }

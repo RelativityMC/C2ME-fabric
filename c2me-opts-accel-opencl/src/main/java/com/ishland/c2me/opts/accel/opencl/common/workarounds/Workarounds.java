@@ -43,6 +43,9 @@ public class Workarounds {
         }
         if (NvidiaWorkarounds.isNvidia(metadata)) {
             set.add(Reference.NVIDIA_INCOMPLETE_CL30_IMPLEMENTATION);
+            if (NvidiaWorkarounds.isOlderThanSM50(metadata)) {
+                set.add(Reference.NVIDIA_FAST_COMPILE_UNAVAILABLE);
+            }
         }
         return Collections.unmodifiableSet(set);
     }
@@ -60,6 +63,11 @@ public class Workarounds {
          * - -cl-no-subgroup-ifp being thrown as error
          */
         NVIDIA_INCOMPLETE_CL30_IMPLEMENTATION,
+
+        /**
+         * Fast compile is unavailable on older nvidia GPUs
+         */
+        NVIDIA_FAST_COMPILE_UNAVAILABLE,
 
         /**
          * The Intel compute driver hangs on cleanup during exit due to JVM running onexit hook with lock
