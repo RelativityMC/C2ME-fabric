@@ -19,6 +19,7 @@ package com.ishland.c2me.opts.accel.opencl.common.workarounds;
 import com.ishland.c2me.opts.accel.opencl.common.enumeration.OpenCLDeviceMetadata;
 import com.ishland.c2me.opts.accel.opencl.common.workarounds.amd.AMDBlocklists;
 import com.ishland.c2me.opts.accel.opencl.common.workarounds.intel.IntelBlocklists;
+import com.ishland.c2me.opts.accel.opencl.common.workarounds.mesa.MesaBlocklists;
 
 import java.util.Collections;
 import java.util.EnumSet;
@@ -36,6 +37,9 @@ public class Blocklists {
         }
         if (IntelBlocklists.isARL_S(metadata)) {
             set.add(Reference.SLOW_INTEL_IGPU_ARL_S);
+        }
+        if (MesaBlocklists.isRusticl(metadata) && !MesaBlocklists.isExplicitlyEnabled()) {
+            set.add(Reference.RUSTICL_ENABLED_BY_DISTRO);
         }
         return Collections.unmodifiableSet(set);
     }
@@ -56,6 +60,11 @@ public class Blocklists {
          * Intel ARL-S iGPUs are on the slower side
          */
         SLOW_INTEL_IGPU_ARL_S,
+
+        /**
+         * Block distro-enabled rusticl
+         */
+        RUSTICL_ENABLED_BY_DISTRO,
 
         ;
     }
