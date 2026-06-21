@@ -36,6 +36,7 @@ import com.ishland.c2me.opts.dfc.common.ast.misc.BeardifierNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.CacheLikeNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.CoordinateNode;
+import com.ishland.c2me.opts.dfc.common.ast.misc.DelegateNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.EndIslandsNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.FindTopSurfaceNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.InterpolatedNoiseSamplerNode;
@@ -67,6 +68,10 @@ public class OpenCLCGenRegistry {
         OpenCLCGenData.REGISTRY.registerExactMatch(RootNode.class, RootNodeOpenCLCEmitter.INSTANCE);
         OpenCLCGenData.REGISTRY.registerExactMatch(SplineAstNode.class, SplineAstNodeOpenCLCEmitter.INSTANCE);
         OpenCLCGenData.REGISTRY.registerExactMatch(YClampedGradientNode.class, YClampedGradientNodeOpenCLCEmitter.INSTANCE);
+
+        OpenCLCGenData.REGISTRY.registerExactMatch(DelegateNode.class, (OpenCLCEmitter<DelegateNode>) (node, context) -> {
+            throw new UnsupportedOperationException(String.format("Unsupported density function type: %s", node.getClass()));
+        });
     }
 
     public static <T extends AstNode> String doCLGen(T node, OpenCLCGen.ContextImpl context) {
