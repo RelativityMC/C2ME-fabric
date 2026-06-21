@@ -1,0 +1,101 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: ishland <30385023+ishland@users.noreply.github.com>
+Date: Sun, 21 Jun 2026 21:55:40 +0800
+Subject: [PATCH] new: add
+ dev.worldgen.tectonic.worldgen.densityfunction.Invert support
+
+
+diff --git a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/ast/McToAst.java b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/ast/McToAst.java
+index 88064c05..22013e99 100644
+--- a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/ast/McToAst.java
++++ b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/ast/McToAst.java
+@@ -31,6 +31,7 @@ import com.ishland.c2me.opts.dfc.common.ast.binary.MaxShortNode;
+ import com.ishland.c2me.opts.dfc.common.ast.binary.MinNode;
+ import com.ishland.c2me.opts.dfc.common.ast.binary.MinShortNode;
+ import com.ishland.c2me.opts.dfc.common.ast.binary.MulNode;
++import com.ishland.c2me.opts.dfc.common.ast.integration.tectonic.TectonicInvertParser;
+ import com.ishland.c2me.opts.dfc.common.ast.misc.BeardifierNode;
+ import com.ishland.c2me.opts.dfc.common.ast.misc.CacheLikeNode;
+ import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantNode;
+@@ -166,6 +167,11 @@ public class McToAst {
+             case DensityFunctionTypes.Beardifier f -> new BeardifierNode(f);
+ 
+             default -> {
++                {
++                    AstNode res = TectonicInvertParser.tryParseInvert(df);
++                    if (res != null) yield res;
++                }
++
+                 delegateStatistics.computeIfAbsent(df.getClass(), unused -> new LongAdder()).increment();
+                 yield new DelegateNode(df);
+             }
+diff --git a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/ast/integration/tectonic/TectonicInvertParser.java b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/ast/integration/tectonic/TectonicInvertParser.java
+new file mode 100644
+index 00000000..d02a898f
+--- /dev/null
++++ b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/ast/integration/tectonic/TectonicInvertParser.java
+@@ -0,0 +1,64 @@
++package com.ishland.c2me.opts.dfc.common.ast.integration.tectonic;
++
++import com.ishland.c2me.opts.dfc.common.ast.AstNode;
++import com.ishland.c2me.opts.dfc.common.ast.McToAst;
++import com.ishland.c2me.opts.dfc.common.ast.binary.DivNode;
++import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantNode;
++import net.fabricmc.loader.api.FabricLoader;
++import net.minecraft.world.gen.densityfunction.DensityFunction;
++import org.slf4j.Logger;
++import org.slf4j.LoggerFactory;
++
++import java.lang.invoke.MethodHandle;
++import java.lang.invoke.MethodHandles;
++import java.lang.invoke.MethodType;
++
++public class TectonicInvertParser {
++
++    private static final Logger LOGGER = LoggerFactory.getLogger(TectonicInvertParser.class);
++
++    private static final Class<?> CLASS_Invert;
++    private static final MethodHandle MH_input;
++    private static final boolean AVAILABLE;
++
++    static {
++        Class<?> class_Invert = null;
++        MethodHandle mh_input = null;
++        boolean available = false;
++
++        if (FabricLoader.getInstance().isModLoaded("tectonic")) {
++            try {
++                class_Invert = Class.forName("dev.worldgen.tectonic.worldgen.densityfunction.Invert");
++                mh_input = MethodHandles.lookup().findVirtual(
++                        class_Invert,
++                        "input",
++                        MethodType.methodType(DensityFunction.class)
++                );
++
++                LOGGER.info("Binding to tectonic dev.worldgen.tectonic.worldgen.densityfunction.Invert density function");
++                available = true;
++            } catch (Throwable t) {
++                LOGGER.warn("Failed to bind to tectonic dev.worldgen.tectonic.worldgen.densityfunction.Invert density function", t);
++            }
++        }
++
++        CLASS_Invert = class_Invert;
++        MH_input = mh_input;
++        AVAILABLE = available;
++    }
++
++    public static AstNode tryParseInvert(DensityFunction function) {
++        if (!AVAILABLE) return null;
++
++        if (CLASS_Invert.isInstance(function)) {
++            try {
++                return new DivNode(new ConstantNode(1.0), McToAst.toAst((DensityFunction) MH_input.invoke(function)));
++            } catch (Throwable e) {
++                throw new RuntimeException(e);
++            }
++        }
++
++        return null;
++    }
++
++}
