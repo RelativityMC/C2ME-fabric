@@ -1,0 +1,19 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: ishland <30385023+ishland@users.noreply.github.com>
+Date: Sun, 21 Jun 2026 19:51:08 +0800
+Subject: [PATCH] publishing changes
+
+
+diff --git a/build.gradle b/build.gradle
+index 0b6427d5..525cb000 100644
+--- a/build.gradle
++++ b/build.gradle
+@@ -275,7 +275,7 @@ publishMods {
+     modLoaders.add("fabric")
+ 
+     def envDisplayName = System.getenv("OVERRIDE_DISPLAY_NAME")
+-    displayName = envDisplayName != null ? envDisplayName : (project.version + " devbuild for " + project.minecraft_version)
++    displayName = envDisplayName != null ? envDisplayName : (project.version + " backport devbuild for " + project.minecraft_version)
+ 
+     def envType = System.getenv("OVERRIDE_RELEASE_TYPE")
+     type = envType != null ? me.modmuss50.mpp.ReleaseType.valueOf(envType) : me.modmuss50.mpp.ReleaseType.ALPHA
