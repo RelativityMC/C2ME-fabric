@@ -70,7 +70,7 @@ public class OpenCLCGenRegistry {
         OpenCLCGenData.REGISTRY.registerExactMatch(YClampedGradientNode.class, YClampedGradientNodeOpenCLCEmitter.INSTANCE);
 
         OpenCLCGenData.REGISTRY.registerExactMatch(DelegateNode.class, (OpenCLCEmitter<DelegateNode>) (node, context) -> {
-            throw new UnsupportedOperationException(String.format("Unsupported density function type: %s", node.getClass()));
+            throw new UnsupportedOperationException(String.format("Unsupported density function type: %s", node.getDelegate().getClass()));
         });
     }
 
