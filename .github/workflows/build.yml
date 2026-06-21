@@ -49,7 +49,7 @@ jobs:
         run: |
           cd C2ME-fabric-patched
           ./gradlew publishMods
-        if: false
+        if: github.ref == 'refs/heads/backports/1.21.11'
         env:
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_UPLOAD_TOKEN }}
           CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_API_TOKEN }}
