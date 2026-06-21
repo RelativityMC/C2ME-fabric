@@ -5,10 +5,10 @@ Subject: [PATCH] Buildscript setup
 
 
 diff --git a/build.gradle b/build.gradle
-index adfc66d0..7601b419 100644
+index 74ab2006..0cc35632 100644
 --- a/build.gradle
 +++ b/build.gradle
-@@ -357,6 +357,7 @@ dependencies {
+@@ -361,6 +361,7 @@ dependencies {
  String getVersionSuffix() {
      def stdout = providers.exec {
          commandLine 'git', 'describe', '--tags', '--dirty', '--broken'
