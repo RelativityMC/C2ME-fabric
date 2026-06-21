@@ -1158,7 +1158,7 @@ index b027664d..d3dc8bd7 100644
                          MemorySegment segment = OpenCLStructs.aquifer_data$create(
                                  arena1,
 diff --git a/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/gen/CLServerBatchedBiomeNoiseContext.java b/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/gen/CLServerBatchedBiomeNoiseContext.java
-index 84bc203a..7fc91bb7 100644
+index fbd9aef1..c1af6e21 100644
 --- a/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/gen/CLServerBatchedBiomeNoiseContext.java
 +++ b/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/gen/CLServerBatchedBiomeNoiseContext.java
 @@ -18,7 +18,6 @@ package com.ishland.c2me.opts.accel.opencl.common.gen;
@@ -1169,7 +1169,7 @@ index 84bc203a..7fc91bb7 100644
  import com.ishland.c2me.base.mixin.access.IChunkSection;
  import com.ishland.c2me.opts.accel.opencl.common.Config;
  import com.ishland.c2me.opts.accel.opencl.common.ducks.PalettedContainerExtension;
-@@ -141,7 +140,7 @@ public class CLServerBatchedBiomeNoiseContext {
+@@ -142,7 +141,7 @@ public class CLServerBatchedBiomeNoiseContext {
              {
                  ProtoChunk startingChunk = chunks.get(this.startingPos.x, this.startingPos.z);
                  heightLimitView = startingChunk.getHeightLimitView();
@@ -1178,7 +1178,7 @@ index 84bc203a..7fc91bb7 100644
              }
  
              if (TLUtil.stage1CachePassing.isBound()) {
-@@ -263,13 +262,13 @@ public class CLServerBatchedBiomeNoiseContext {
+@@ -264,13 +263,13 @@ public class CLServerBatchedBiomeNoiseContext {
                  try (MemoryStack _ = MemoryStack.stackPush()) {
  
                      // TODO [VanillaCopy] check when aquifer changes
