@@ -4,6 +4,8 @@
   "package": "com.ishland.c2me.opts.worldgen.general.mixin",
   "plugin": "com.ishland.c2me.base.common.ModuleMixinPlugin",
   "mixins": [
+    "MixinChunk",
+    "MixinNoiseChunkGenerator",
     "random_instances.MixinAtomicSimpleRandomFactory",
     "random_instances.MixinRedirectAtomicSimpleRandom",
     "random_instances.MixinRedirectAtomicSimpleRandomStatic"
