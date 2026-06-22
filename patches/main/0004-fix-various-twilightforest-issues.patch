@@ -1,0 +1,30 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: ishland <30385023+ishland@users.noreply.github.com>
+Date: Tue, 23 Jun 2026 01:10:10 +0800
+Subject: [PATCH] fix: various twilightforest issues
+
+
+diff --git a/c2me-opts-worldgen-vanilla/src/main/java/com/ishland/c2me/opts/worldgen/vanilla/common/Config.java b/c2me-opts-worldgen-vanilla/src/main/java/com/ishland/c2me/opts/worldgen/vanilla/common/Config.java
+index 5d905325..28427757 100644
+--- a/c2me-opts-worldgen-vanilla/src/main/java/com/ishland/c2me/opts/worldgen/vanilla/common/Config.java
++++ b/c2me-opts-worldgen-vanilla/src/main/java/com/ishland/c2me/opts/worldgen/vanilla/common/Config.java
+@@ -51,6 +51,7 @@ public class Config {
+                     Whether to enable StructureWeightSampler optimizations to accelerate world generation
+                     """)
+             .incompatibleMod("porting_lib", "*")
++            .incompatibleMod("twilightforest", "*")
+             .getBoolean(true, false);
+ 
+ }
+diff --git a/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/common/Config.java b/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/common/Config.java
+index a5e77df5..bed06e0b 100644
+--- a/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/common/Config.java
++++ b/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/common/Config.java
+@@ -66,6 +66,7 @@ public class Config {
+                     
+                     This should not affect other worldgen behavior and game mechanics in general
+                     """)
++            .incompatibleMod("twilightforest", "*")
+             .getBoolean(true, false);
+ 
+     public static final boolean syncPlayerTickets = new ConfigSystem.ConfigAccessor()
