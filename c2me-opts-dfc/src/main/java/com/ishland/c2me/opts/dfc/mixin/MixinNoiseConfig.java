@@ -94,8 +94,7 @@ public class MixinNoiseConfig {
                 BytecodeGen.compile("multiNoiseSampler_continents", this.multiNoiseSampler.continentalness(), optoCache, tempCache),
                 BytecodeGen.compile("multiNoiseSampler_erosion", this.multiNoiseSampler.erosion(), optoCache, tempCache),
                 BytecodeGen.compile("multiNoiseSampler_depth", this.multiNoiseSampler.depth(), optoCache, tempCache),
-                BytecodeGen.compile("multiNoiseSampler_ridges", this.multiNoiseSampler.weirdness(), optoCache, tempCache),
-                this.multiNoiseSampler.spawnTarget()
+                BytecodeGen.compile("multiNoiseSampler_ridges", this.multiNoiseSampler.weirdness(), optoCache, tempCache)
         );
         stopwatch.stop();
         System.out.println(String.format("Density function compilation finished in %s", stopwatch));
