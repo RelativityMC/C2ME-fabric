@@ -317,7 +317,7 @@ publishMods {
             file = project(":c2me-opts-accel-opencl").remapJar.archiveFile
             projectId = "1563823"
             requires("c2me")
-            requires("scalablelux")
+            optional("scalablelux")
         }
     }
 
@@ -340,7 +340,7 @@ publishMods {
             requires {
                 id = "VSNURh3q"
             }
-            requires {
+            optional {
                 id = "Ps1zyz6x"
             }
         }
