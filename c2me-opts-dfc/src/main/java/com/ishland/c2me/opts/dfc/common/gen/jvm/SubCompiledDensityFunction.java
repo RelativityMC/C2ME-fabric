@@ -103,10 +103,12 @@ public class SubCompiledDensityFunction implements DensityFunction {
         int[] x;
         int[] y;
         int[] z;
+        boolean allocatedOnDemand;
         if (applier instanceof IPreloadedCoordinates preloadedCoordinates) {
             x = preloadedCoordinates.c2me$getXArray();
             y = preloadedCoordinates.c2me$getYArray();
             z = preloadedCoordinates.c2me$getZArray();
+            allocatedOnDemand = false;
         } else {
             x = cache.getIntArray(densities.length, false);
             y = cache.getIntArray(densities.length, false);
@@ -121,8 +123,17 @@ public class SubCompiledDensityFunction implements DensityFunction {
                     z[i] = pos.blockZ();
                 }
             }
+            allocatedOnDemand = true;
         }
-        this.multiMethod.evalMulti(densities, x, y, z, EvalType.from(applier), cache);
+        try {
+            this.multiMethod.evalMulti(densities, x, y, z, EvalType.from(applier), cache);
+        } finally {
+            if (allocatedOnDemand) {
+                cache.recycle(x);
+                cache.recycle(y);
+                cache.recycle(z);
+            }
+        }
     }
 
     @Override
