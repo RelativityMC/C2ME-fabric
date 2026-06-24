@@ -24,6 +24,7 @@
 
 package com.ishland.c2me.opts.dfc.common.ast;
 
+import com.ishland.c2me.opts.dfc.common.Config;
 import com.ishland.c2me.opts.dfc.common.ast.binary.AddNode;
 import com.ishland.c2me.opts.dfc.common.ast.binary.DivNode;
 import com.ishland.c2me.opts.dfc.common.ast.binary.MaxNode;
@@ -168,14 +169,16 @@ public class McToAst {
             case DensityFunctionTypes.Beardifier f -> new BeardifierNode(f);
 
             default -> {
-                {
-                    AstNode node = ConfigClampBindings.tryParse(df);
-                    if (node != null) yield node;
-                }
+                if (Config.enableBuiltinIntegrations) {
+                    {
+                        AstNode node = ConfigClampBindings.tryParse(df);
+                        if (node != null) yield node;
+                    }
 
-                {
-                    AstNode node = ConfigNoiseBindings.tryParse(df);
-                    if (node != null) yield node;
+                    {
+                        AstNode node = ConfigNoiseBindings.tryParse(df);
+                        if (node != null) yield node;
+                    }
                 }
 
                 long known = delegateStatistics.computeIfAbsent(df.getClass(), unused -> new AtomicLong(0L)).getAndIncrement();

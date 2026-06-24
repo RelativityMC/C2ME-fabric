@@ -22,32 +22,26 @@
  * THE SOFTWARE.
  */
 
-package com.ishland.c2me.opts.dfc;
+package com.ishland.c2me.opts.dfc.common;
 
 import com.ishland.c2me.base.common.config.ConfigSystem;
-import com.ishland.c2me.opts.dfc.common.Config;
 
-public class ModuleEntryPoint {
+public class Config {
 
-    private static final boolean enabled = new ConfigSystem.ConfigAccessor()
-            .key("vanillaWorldGenOptimizations.useDensityFunctionCompiler")
+    public static final boolean enableBuiltinIntegrations = new ConfigSystem.ConfigAccessor()
+            .key("vanillaWorldGenOptimizations.enableBuiltinDFCIntegrations")
             .comment("""
-                    Whether to use density function compiler to accelerate world generation
+                    Enables the built-in integrations with other worldgen mods in density function compiler.
                     
-                    Density function: https://minecraft.wiki/w/Density_function
-                    
-                    This functionality compiles density functions from world generation
-                    datapacks (including vanilla generation) to JVM bytecode to increase
-                    performance by allowing JVM JIT to better optimize the code
-                    
-                    Currently, all functions provided by vanilla are implemented.
-                    Chunk upgrades from pre-1.18 versions are not implemented and will
-                    fall back to the unoptimized version of density functions.
+                    Depends on vanillaWorldGenOptimizations.useDensityFunctionCompiler
                     """)
             .getBoolean(true, false);
 
-    static {
-        Config.init();
+    public static void init() {
+        // intentionally empty
+    }
+
+    private Config() {
     }
 
 }
