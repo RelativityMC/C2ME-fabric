@@ -443,6 +443,10 @@ public class OpenCLDevice implements Closeable {
         return this.eventCallbackManager;
     }
 
+    public Set<Workarounds.Reference> getWorkarounds() {
+        return this.workarounds;
+    }
+
     @Override
     public String toString() {
         return this.deviceDescription;

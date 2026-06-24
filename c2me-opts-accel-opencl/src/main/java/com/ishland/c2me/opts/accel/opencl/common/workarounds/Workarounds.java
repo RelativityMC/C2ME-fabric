@@ -18,6 +18,7 @@ package com.ishland.c2me.opts.accel.opencl.common.workarounds;
 
 import com.ishland.c2me.opts.accel.opencl.common.enumeration.OpenCLDeviceMetadata;
 import com.ishland.c2me.opts.accel.opencl.common.workarounds.intel.IntelWorkarounds;
+import com.ishland.c2me.opts.accel.opencl.common.workarounds.mesa.MesaWorkarounds;
 import com.ishland.c2me.opts.accel.opencl.common.workarounds.nvidia.NvidiaWorkarounds;
 
 import java.util.Collections;
@@ -46,6 +47,9 @@ public class Workarounds {
             if (NvidiaWorkarounds.isOlderThanSM50(metadata)) {
                 set.add(Reference.NVIDIA_FAST_COMPILE_UNAVAILABLE);
             }
+        }
+        if (MesaWorkarounds.isRusticl(metadata)) {
+            set.add(Reference.REQUIRE_EXPLICIT_FLUSHES);
         }
         return Collections.unmodifiableSet(set);
     }
@@ -85,6 +89,12 @@ public class Workarounds {
          * Older Intel drivers does not have static profile guided trimming options
          */
         INTEL_STATIC_PROFILE_GUIDED_TRIMMING_UNAVAILABLE,
+
+        /**
+         * The driver requires explicit flushes to work
+         * TODO do flush consolidation for everything
+         */
+        REQUIRE_EXPLICIT_FLUSHES,
 
         ;
     }
