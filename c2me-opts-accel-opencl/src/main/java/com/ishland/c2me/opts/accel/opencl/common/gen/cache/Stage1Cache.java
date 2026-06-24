@@ -26,6 +26,7 @@ import com.ishland.c2me.opts.accel.opencl.common.gen.OpenCLDevice;
 import com.ishland.c2me.opts.accel.opencl.common.util.CLEventList;
 import com.ishland.c2me.opts.accel.opencl.common.util.CLUtil;
 import com.ishland.c2me.opts.accel.opencl.common.compiler.OpenCLCGen;
+import com.ishland.c2me.opts.accel.opencl.common.workarounds.Workarounds;
 import com.ishland.flowsched.util.Assertions;
 import it.unimi.dsi.fastutil.Pair;
 import it.unimi.dsi.fastutil.longs.Long2ReferenceArrayMap;
@@ -219,7 +220,7 @@ public class Stage1Cache {
                 }
             }
 
-            if (Config.doExplicitFlushes) {
+            if (Config.doExplicitFlushes || deviceWithProgram.device().getWorkarounds().contains(Workarounds.Reference.REQUIRE_EXPLICIT_FLUSHES)) {
                 CLUtil.checkCLError(CL12.clFlush(commandQueue.getCommandQueue()));
             }
 
