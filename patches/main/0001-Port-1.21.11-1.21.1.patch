@@ -1158,7 +1158,7 @@ index b027664d..d3dc8bd7 100644
                          MemorySegment segment = OpenCLStructs.aquifer_data$create(
                                  arena1,
 diff --git a/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/gen/CLServerBatchedBiomeNoiseContext.java b/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/gen/CLServerBatchedBiomeNoiseContext.java
-index fbd9aef1..c1af6e21 100644
+index 8b6dc7dc..d33f8026 100644
 --- a/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/gen/CLServerBatchedBiomeNoiseContext.java
 +++ b/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/gen/CLServerBatchedBiomeNoiseContext.java
 @@ -18,7 +18,6 @@ package com.ishland.c2me.opts.accel.opencl.common.gen;
@@ -1169,7 +1169,7 @@ index fbd9aef1..c1af6e21 100644
  import com.ishland.c2me.base.mixin.access.IChunkSection;
  import com.ishland.c2me.opts.accel.opencl.common.Config;
  import com.ishland.c2me.opts.accel.opencl.common.ducks.PalettedContainerExtension;
-@@ -142,7 +141,7 @@ public class CLServerBatchedBiomeNoiseContext {
+@@ -143,7 +142,7 @@ public class CLServerBatchedBiomeNoiseContext {
              {
                  ProtoChunk startingChunk = chunks.get(this.startingPos.x, this.startingPos.z);
                  heightLimitView = startingChunk.getHeightLimitView();
@@ -1178,7 +1178,7 @@ index fbd9aef1..c1af6e21 100644
              }
  
              if (TLUtil.stage1CachePassing.isBound()) {
-@@ -264,13 +263,13 @@ public class CLServerBatchedBiomeNoiseContext {
+@@ -265,13 +264,13 @@ public class CLServerBatchedBiomeNoiseContext {
                  try (MemoryStack _ = MemoryStack.stackPush()) {
  
                      // TODO [VanillaCopy] check when aquifer changes
@@ -1555,7 +1555,7 @@ index fecf2967..66b60d43 100644
          checkHardLimit();
      }
 diff --git a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/ast/McToAst.java b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/ast/McToAst.java
-index 3ad91cdf..88064c05 100644
+index 8d882605..b72e32b5 100644
 --- a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/ast/McToAst.java
 +++ b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/ast/McToAst.java
 @@ -51,6 +51,7 @@ import com.ishland.c2me.opts.dfc.common.ast.unary.NegMulNode;
