@@ -32,6 +32,7 @@ import com.ishland.c2me.opts.dfc.common.ast.binary.MaxShortNode;
 import com.ishland.c2me.opts.dfc.common.ast.binary.MinNode;
 import com.ishland.c2me.opts.dfc.common.ast.binary.MinShortNode;
 import com.ishland.c2me.opts.dfc.common.ast.binary.MulNode;
+import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.AxisBindings;
 import com.ishland.c2me.opts.dfc.common.ast.integration.tectonic.ConfigClampBindings;
 import com.ishland.c2me.opts.dfc.common.ast.integration.tectonic.ConfigNoiseBindings;
 import com.ishland.c2me.opts.dfc.common.ast.misc.BeardifierNode;
@@ -170,6 +171,13 @@ public class McToAst {
 
             default -> {
                 if (Config.enableBuiltinIntegrations) {
+                    // lithostitched
+                    {
+                        AstNode node = AxisBindings.tryParse(df);
+                        if (node != null) yield node;
+                    }
+
+                    // tectonic
                     {
                         AstNode node = ConfigClampBindings.tryParse(df);
                         if (node != null) yield node;
