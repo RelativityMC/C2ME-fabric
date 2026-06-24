@@ -94,7 +94,7 @@ public class McToAst {
                 }
             };
             case DensityFunctionTypes.BlendDensity f -> toAst(f.input());
-            case DensityFunctionTypes.Clamp f -> new MinNode(new ConstantNode(f.maxValue()), new MaxNode(new ConstantNode(f.minValue()), toAst(f.input())));
+            case DensityFunctionTypes.Clamp f -> new MaxNode(new ConstantNode(f.minValue()), new MinNode(new ConstantNode(f.maxValue()), toAst(f.input())));
             case DensityFunctionTypes.Constant f -> new ConstantNode(f.value());
             case DensityFunctionTypes.RegistryEntryHolder f -> toAst(f.function().value());
             case DensityFunctionTypes.UnaryOperation f -> switch (f.type()) {
