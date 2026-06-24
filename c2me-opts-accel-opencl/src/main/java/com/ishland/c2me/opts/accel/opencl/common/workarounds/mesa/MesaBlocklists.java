@@ -33,7 +33,7 @@ public class MesaBlocklists {
     }
 
     public static boolean isExplicitlyEnabled() {
-        return System.getenv("RUSTICL_ENABLE") == null;
+        return System.getenv("RUSTICL_ENABLE") != null;
     }
 
 }
