@@ -31,6 +31,8 @@ import com.ishland.c2me.opts.dfc.common.ast.binary.MaxShortNode;
 import com.ishland.c2me.opts.dfc.common.ast.binary.MinNode;
 import com.ishland.c2me.opts.dfc.common.ast.binary.MinShortNode;
 import com.ishland.c2me.opts.dfc.common.ast.binary.MulNode;
+import com.ishland.c2me.opts.dfc.common.ast.integration.tectonic.ConfigClampBindings;
+import com.ishland.c2me.opts.dfc.common.ast.integration.tectonic.ConfigNoiseBindings;
 import com.ishland.c2me.opts.dfc.common.ast.misc.BeardifierNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.CacheLikeNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantNode;
@@ -57,14 +59,18 @@ import net.minecraft.util.math.noise.InterpolatedNoiseSampler;
 import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
 import net.minecraft.world.gen.densityfunction.DensityFunctionTypes;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.LongAdder;
 
 public class McToAst {
 
-    private static final ConcurrentHashMap<Class<?>, LongAdder> delegateStatistics = new ConcurrentHashMap<>();
+    private static final Logger LOGGER = LoggerFactory.getLogger(McToAst.class);
+    private static final ConcurrentHashMap<Class<?>, AtomicLong> delegateStatistics = new ConcurrentHashMap<>();
 
     public static AstNode toAst(DensityFunction df) {
         Objects.requireNonNull(df);
@@ -162,7 +168,20 @@ public class McToAst {
             case DensityFunctionTypes.Beardifier f -> new BeardifierNode(f);
 
             default -> {
-                delegateStatistics.computeIfAbsent(df.getClass(), unused -> new LongAdder()).increment();
+                {
+                    AstNode node = ConfigClampBindings.tryParse(df);
+                    if (node != null) yield node;
+                }
+
+                {
+                    AstNode node = ConfigNoiseBindings.tryParse(df);
+                    if (node != null) yield node;
+                }
+
+                long known = delegateStatistics.computeIfAbsent(df.getClass(), unused -> new AtomicLong(0L)).getAndIncrement();
+                if (known == 0) {
+                    LOGGER.warn("warn_once: Generating DelegateNode for type: {}", df.getClass().toString());
+                }
                 yield new DelegateNode(df);
             }
         };
