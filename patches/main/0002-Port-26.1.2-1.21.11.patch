@@ -5,7 +5,7 @@ Subject: [PATCH] Port 26.1.2 -> 1.21.11
 
 
 diff --git a/build.gradle b/build.gradle
-index 7601b419..0b6427d5 100644
+index 0cc35632..94032ec7 100644
 --- a/build.gradle
 +++ b/build.gradle
 @@ -29,8 +29,8 @@ configure(allprojects) {
@@ -48,14 +48,14 @@ index 7601b419..0b6427d5 100644
          uncompressNestedJars = true
  
          def file = project(":c2me-base").file("src/main/resources/c2me-base.accesswidener")
-@@ -298,6 +292,7 @@ publishMods {
-             client = true
-             server = true
-             changelogType = "markdown"
+@@ -305,6 +299,7 @@ publishMods {
+             from cfOptions
+             file = remapJar.archiveFile
+             projectId = "533097"
 +            javaVersions.add(JavaVersion.VERSION_21)
-             javaVersions.add(JavaVersion.VERSION_25)
          }
  
+         curseforge("curseforgeOpenCLAccel") {
 diff --git a/c2me-base/src/main/java/com/ishland/c2me/base/common/network/ExtRenderDistance.java b/c2me-base/src/main/java/com/ishland/c2me/base/common/network/ExtRenderDistance.java
 index 98604ae1..f29ea63e 100644
 --- a/c2me-base/src/main/java/com/ishland/c2me/base/common/network/ExtRenderDistance.java
@@ -498,10 +498,10 @@ index c22f8972..b027664d 100644
          OpenCLStructs.worldgen_params$estimateSurfaceHeight_sizeBiomeZ.set(segment, 0L, 32 + (4 * horizontalChunkSize));
          OpenCLStructs.worldgen_params$cache2d_startX.set(segment, 0L, basePos.getStartX());
 diff --git a/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/gen/CLServerBatchedBiomeNoiseContext.java b/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/gen/CLServerBatchedBiomeNoiseContext.java
-index 516a0c70..fbd9aef1 100644
+index 1ea635af..8b6dc7dc 100644
 --- a/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/gen/CLServerBatchedBiomeNoiseContext.java
 +++ b/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/gen/CLServerBatchedBiomeNoiseContext.java
-@@ -97,7 +97,7 @@ public class CLServerBatchedBiomeNoiseContext {
+@@ -98,7 +98,7 @@ public class CLServerBatchedBiomeNoiseContext {
      }
  
      public CompletableFuture<Void> execute(ChunkLoadingContext context, BoundedRegionArray<ProtoChunk> chunks, BoundedRegionArray<StructureAccessor> structureAccessors) {
@@ -510,7 +510,7 @@ index 516a0c70..fbd9aef1 100644
                  .thenComposeAsync(cacheEntry -> {
                      ByteBuffer rwData = ScopedValue.where(TLUtil.stage1CachePassing, cacheEntry).call(() -> {
                          return CLDataUtil.worldgen_data_root$createForArea(
-@@ -140,7 +140,7 @@ public class CLServerBatchedBiomeNoiseContext {
+@@ -141,7 +141,7 @@ public class CLServerBatchedBiomeNoiseContext {
              int biomeHeight;
              HeightLimitView heightLimitView;
              {
@@ -519,7 +519,7 @@ index 516a0c70..fbd9aef1 100644
                  heightLimitView = startingChunk.getHeightLimitView();
                  biomeHeight = (heightLimitView.getTopSectionCoord() - heightLimitView.getBottomSectionCoord() + 1) * 4;
              }
-@@ -267,7 +267,7 @@ public class CLServerBatchedBiomeNoiseContext {
+@@ -268,7 +268,7 @@ public class CLServerBatchedBiomeNoiseContext {
                      int startX = IAquiferSamplerImpl.invokeGetLocalX(this.startingPos.getStartX() - 5) + 0;
                      int startY = IAquiferSamplerImpl.invokeGetLocalY(settings.generationShapeConfig().minimumY() + 1) - 1;
                      int startZ = IAquiferSamplerImpl.invokeGetLocalZ(this.startingPos.getStartZ() - 5) + 0;
@@ -528,7 +528,7 @@ index 516a0c70..fbd9aef1 100644
                      int endX = IAquiferSamplerImpl.invokeGetLocalX(endChunkPos.getEndX() + 5 - 1) + 1;
                      int endY = IAquiferSamplerImpl.invokeGetLocalY(settings.generationShapeConfig().minimumY() + settings.generationShapeConfig().height() - 1) + 1;
                      int endZ = IAquiferSamplerImpl.invokeGetLocalZ(endChunkPos.getEndZ() + 5 - 1) + 1;
-@@ -329,8 +329,8 @@ public class CLServerBatchedBiomeNoiseContext {
+@@ -330,8 +330,8 @@ public class CLServerBatchedBiomeNoiseContext {
                  CLUtil.checkCLError(CL12.clSetKernelArg1p(kernel, 0, deviceWithProgram.programConstDataBuffer()));
                  CLUtil.checkCLError(CL12.clSetKernelArg1p(kernel, 1, rwBuffer.buffer()));
                  CLUtil.checkCLError(CL12.clSetKernelArg1p(kernel, 2, blockOutBuffer.buffer()));
@@ -539,7 +539,7 @@ index 516a0c70..fbd9aef1 100644
                  CLUtil.checkCLError(CL12.clEnqueueNDRangeKernel(commandQueue.getCommandQueue(), kernel, 3, null, globalWorkSize, localWorkSize, prevEvent, event));
                  eventsToRelease.add(event.get(0));
                  kernelsToRelease.add(kernel);
-@@ -443,11 +443,11 @@ public class CLServerBatchedBiomeNoiseContext {
+@@ -444,11 +444,11 @@ public class CLServerBatchedBiomeNoiseContext {
      private void genBiomesFallback(BoundedRegionArray<ProtoChunk> chunks, BoundedRegionArray<StructureAccessor> structureAccessors) {
          for (int chunkOffX = 0; chunkOffX < BATCH_SIZE; chunkOffX++) {
              for (int chunkOffZ = 0; chunkOffZ < BATCH_SIZE; chunkOffZ++) {
@@ -553,7 +553,7 @@ index 516a0c70..fbd9aef1 100644
                  chunk.setStatus(ChunkStatus.BIOMES);
              }
          }
-@@ -455,7 +455,7 @@ public class CLServerBatchedBiomeNoiseContext {
+@@ -456,7 +456,7 @@ public class CLServerBatchedBiomeNoiseContext {
  
      private void writeBiomes(BoundedRegionArray<ProtoChunk> chunks, GeneratedCLSource generatedCLSource, int biomeHeight, IntBuffer biomeOutBufferData) {
          RegistryEntry<Biome>[] biomeMappings = generatedCLSource.getBiomeMappings();
@@ -562,7 +562,7 @@ index 516a0c70..fbd9aef1 100644
  
          int curSectionIndex = startingChunk.getSectionIndex(startingChunk.getBottomY());
          ChunkSection[] chunkSection = new ChunkSection[BATCH_SIZE * BATCH_SIZE];
-@@ -465,7 +465,7 @@ public class CLServerBatchedBiomeNoiseContext {
+@@ -466,7 +466,7 @@ public class CLServerBatchedBiomeNoiseContext {
          for (int chunkOffZ = 0; chunkOffZ < BATCH_SIZE; chunkOffZ++) {
              for (int chunkOffX = 0; chunkOffX < BATCH_SIZE; chunkOffX++) {
                  int idx = (chunkOffZ << BATCH_SHIFT) + chunkOffX;
@@ -571,7 +571,7 @@ index 516a0c70..fbd9aef1 100644
                  boolean writeProtected = chunk.getStatus().isAtLeast(ChunkStatus.BIOMES);
                  if (writeProtected) {
                      writeProtectedMask.set(idx);
-@@ -485,7 +485,7 @@ public class CLServerBatchedBiomeNoiseContext {
+@@ -486,7 +486,7 @@ public class CLServerBatchedBiomeNoiseContext {
                          int idx = (chunkOffZ << BATCH_SHIFT) + chunkOffX;
                          if (writeProtectedMask.get(idx)) continue;
                          ((IChunkSection) chunkSection[idx]).setBiomeContainer(sectionBiome[idx]);
@@ -580,7 +580,7 @@ index 516a0c70..fbd9aef1 100644
                          sectionBiome[idx] = chunkSection[idx].getBiomeContainer().slice();
                      }
                  }
-@@ -510,7 +510,7 @@ public class CLServerBatchedBiomeNoiseContext {
+@@ -511,7 +511,7 @@ public class CLServerBatchedBiomeNoiseContext {
                  if (writeProtectedMask.get(idx)) continue;
  
                  ((IChunkSection) chunkSection[idx]).setBiomeContainer(sectionBiome[idx]);
@@ -589,7 +589,7 @@ index 516a0c70..fbd9aef1 100644
                  chunk.setStatus(ChunkStatus.BIOMES);
              }
          }
-@@ -531,7 +531,7 @@ public class CLServerBatchedBiomeNoiseContext {
+@@ -532,7 +532,7 @@ public class CLServerBatchedBiomeNoiseContext {
              return;
          }
  
@@ -598,7 +598,7 @@ index 516a0c70..fbd9aef1 100644
  
          int curSectionIndex = startingChunk.getSectionIndex(startingChunk.getBottomY());
          ChunkSection[] chunkSection = new ChunkSection[BATCH_SIZE * BATCH_SIZE];
-@@ -542,7 +542,7 @@ public class CLServerBatchedBiomeNoiseContext {
+@@ -543,7 +543,7 @@ public class CLServerBatchedBiomeNoiseContext {
          for (int chunkOffZ = 0; chunkOffZ < BATCH_SIZE; chunkOffZ++) {
              for (int chunkOffX = 0; chunkOffX < BATCH_SIZE; chunkOffX++) {
                  int idx = (chunkOffZ << BATCH_SHIFT) + chunkOffX;
@@ -607,7 +607,7 @@ index 516a0c70..fbd9aef1 100644
                  boolean writeProtected = chunk.getStatus().isAtLeast(ChunkStatus.NOISE);
                  writeProtectedMask |= writeProtected ? (1 << idx) : 0;
                  if (writeProtected) continue;
-@@ -561,7 +561,7 @@ public class CLServerBatchedBiomeNoiseContext {
+@@ -562,7 +562,7 @@ public class CLServerBatchedBiomeNoiseContext {
                          if ((writeProtectedMask & (1L << idx)) != 0) continue;
                          chunkSection[idx].calculateCounts();
                          chunkSection[idx].unlock();
@@ -616,7 +616,7 @@ index 516a0c70..fbd9aef1 100644
                          chunkSection[idx].lock();
                      }
                  }
-@@ -583,7 +583,7 @@ public class CLServerBatchedBiomeNoiseContext {
+@@ -584,7 +584,7 @@ public class CLServerBatchedBiomeNoiseContext {
                      if (blockState != AIR) {
                          ((PalettedContainerExtension<BlockState>) chunkSection[idx].getBlockStateContainer()).c2me$setUnsafe(x & 15, blockY & 15, z & 15, blockState);
                          if (needsFluidTick) {
@@ -625,7 +625,7 @@ index 516a0c70..fbd9aef1 100644
                              mutablePos.set(x + chunk.getPos().getStartX(), blockY, z + chunk.getPos().getStartZ());
                              chunk.markBlockForPostProcessing(mutablePos);
                          }
-@@ -600,7 +600,7 @@ public class CLServerBatchedBiomeNoiseContext {
+@@ -601,7 +601,7 @@ public class CLServerBatchedBiomeNoiseContext {
                  chunkSection[idx].calculateCounts();
                  chunkSection[idx].unlock();
  
