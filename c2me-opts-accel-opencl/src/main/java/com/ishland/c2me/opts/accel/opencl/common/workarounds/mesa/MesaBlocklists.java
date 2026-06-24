@@ -16,21 +16,12 @@
 
 package com.ishland.c2me.opts.accel.opencl.common.workarounds.mesa;
 
-import com.ishland.c2me.opts.accel.opencl.common.enumeration.OpenCLDeviceMetadata;
-import com.ishland.c2me.opts.accel.opencl.common.util.CLUtil;
-import org.lwjgl.opencl.CL12;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class MesaBlocklists {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MesaBlocklists.class);
-
-    public static boolean isRusticl(OpenCLDeviceMetadata metadata) {
-        String platformName = CLUtil.getPlatformInfoStringUTF8(metadata.platformPtr, CL12.CL_PLATFORM_NAME);
-
-        return platformName.trim().equals("rusticl");
-    }
 
     public static boolean isExplicitlyEnabled() {
         return System.getenv("RUSTICL_ENABLE") != null;
