@@ -25,8 +25,8 @@
 package com.ishland.c2me.opts.dfc.common.gen.dot.emitters;
 
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
+import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.unary.*;
 import com.ishland.c2me.opts.dfc.common.ast.unary.*;
-import com.ishland.c2me.opts.dfc.common.ast.unary.integration.lithostitched.*;
 import com.ishland.c2me.opts.dfc.common.gen.CodeGenRegistry;
 import com.ishland.c2me.opts.dfc.common.gen.dot.DotEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.dot.DotGen;
