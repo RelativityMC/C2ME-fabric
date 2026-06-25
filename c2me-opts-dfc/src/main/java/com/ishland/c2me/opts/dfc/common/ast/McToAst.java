@@ -32,7 +32,7 @@ import com.ishland.c2me.opts.dfc.common.ast.binary.MaxShortNode;
 import com.ishland.c2me.opts.dfc.common.ast.binary.MinNode;
 import com.ishland.c2me.opts.dfc.common.ast.binary.MinShortNode;
 import com.ishland.c2me.opts.dfc.common.ast.binary.MulNode;
-import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.AxisBindings;
+import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.*;
 import com.ishland.c2me.opts.dfc.common.ast.integration.tectonic.ConfigClampBindings;
 import com.ishland.c2me.opts.dfc.common.ast.integration.tectonic.ConfigNoiseBindings;
 import com.ishland.c2me.opts.dfc.common.ast.misc.BeardifierNode;
@@ -174,6 +174,31 @@ public class McToAst {
                     // lithostitched
                     {
                         AstNode node = AxisBindings.tryParse(df);
+                        if (node != null) yield node;
+                    }
+
+                    {
+                        AstNode node = CeilBindings.tryParse(df);
+                        if (node != null) yield node;
+                    }
+
+                    {
+                        AstNode node = CosBindings.tryParse(df);
+                        if (node != null) yield node;
+                    }
+
+                    {
+                        AstNode node = FloorBindings.tryParse(df);
+                        if (node != null) yield node;
+                    }
+
+                    {
+                        AstNode node = SinBindings.tryParse(df);
+                        if (node != null) yield node;
+                    }
+
+                    {
+                        AstNode node = SqrtBindings.tryParse(df);
                         if (node != null) yield node;
                     }
 
