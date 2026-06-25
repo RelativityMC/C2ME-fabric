@@ -26,9 +26,8 @@ package com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched;
 
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
 import com.ishland.c2me.opts.dfc.common.ast.McToAst;
-import com.ishland.c2me.opts.dfc.common.ast.unary.CeilNode;
+import com.ishland.c2me.opts.dfc.common.ast.unary.integration.lithostitched.CeilNode;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.util.math.Direction;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

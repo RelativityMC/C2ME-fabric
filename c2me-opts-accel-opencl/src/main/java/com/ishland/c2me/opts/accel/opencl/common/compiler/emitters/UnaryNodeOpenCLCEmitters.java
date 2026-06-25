@@ -19,6 +19,7 @@ package com.ishland.c2me.opts.accel.opencl.common.compiler.emitters;
 import com.ishland.c2me.opts.accel.opencl.common.compiler.OpenCLCGen;
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
 import com.ishland.c2me.opts.dfc.common.ast.unary.*;
+import com.ishland.c2me.opts.dfc.common.ast.unary.integration.lithostitched.*;
 import com.ishland.c2me.opts.dfc.common.gen.CodeGenRegistry;
 import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefD;
 import com.ishland.c2me.opts.dfc.common.gen.opencl.OpenCLCEmitter;
