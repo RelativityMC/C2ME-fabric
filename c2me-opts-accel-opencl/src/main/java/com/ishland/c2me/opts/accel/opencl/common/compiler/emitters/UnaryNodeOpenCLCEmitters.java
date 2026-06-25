@@ -18,12 +18,7 @@ package com.ishland.c2me.opts.accel.opencl.common.compiler.emitters;
 
 import com.ishland.c2me.opts.accel.opencl.common.compiler.OpenCLCGen;
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
-import com.ishland.c2me.opts.dfc.common.ast.unary.AbsNode;
-import com.ishland.c2me.opts.dfc.common.ast.unary.AbstractUnaryNode;
-import com.ishland.c2me.opts.dfc.common.ast.unary.CubeNode;
-import com.ishland.c2me.opts.dfc.common.ast.unary.NegMulNode;
-import com.ishland.c2me.opts.dfc.common.ast.unary.SquareNode;
-import com.ishland.c2me.opts.dfc.common.ast.unary.SqueezeNode;
+import com.ishland.c2me.opts.dfc.common.ast.unary.*;
 import com.ishland.c2me.opts.dfc.common.gen.CodeGenRegistry;
 import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefD;
 import com.ishland.c2me.opts.dfc.common.gen.opencl.OpenCLCEmitter;
@@ -58,6 +53,30 @@ public class UnaryNodeOpenCLCEmitters {
         }
     }
 
+    public static class CeilNodeEmitter extends AbstractGenericUnaryNodeOpenCLCEmitter<CeilNode> {
+        public static final CeilNodeEmitter INSTANCE = new CeilNodeEmitter();
+
+        private CeilNodeEmitter() {
+        }
+
+        @Override
+        protected void genBody(CeilNode node, @UnknownNullability OpenCLCGenContext context, StringBuilder sb, ValuesMethodDefD operand) {
+            sb.append("return ceil(").append(context.callDelegate(operand)).append(");\n");
+        }
+    }
+
+    public static class CosNodeEmitter extends AbstractGenericUnaryNodeOpenCLCEmitter<CosNode> {
+        public static final CosNodeEmitter INSTANCE = new CosNodeEmitter();
+
+        private CosNodeEmitter() {
+        }
+
+        @Override
+        protected void genBody(CosNode node, @UnknownNullability OpenCLCGenContext context, StringBuilder sb, ValuesMethodDefD operand) {
+            sb.append("return cos(").append(context.callDelegate(operand)).append(");\n");
+        }
+    }
+
     public static class CubeNodeEmitter extends AbstractGenericUnaryNodeOpenCLCEmitter<CubeNode> {
         public static final CubeNodeEmitter INSTANCE = new CubeNodeEmitter();
 
@@ -72,6 +91,18 @@ public class UnaryNodeOpenCLCEmitters {
         }
     }
 
+    public static class FloorNodeEmitter extends AbstractGenericUnaryNodeOpenCLCEmitter<FloorNode> {
+        public static final FloorNodeEmitter INSTANCE = new FloorNodeEmitter();
+
+        private FloorNodeEmitter() {
+        }
+
+        @Override
+        protected void genBody(FloorNode node, @UnknownNullability OpenCLCGenContext context, StringBuilder sb, ValuesMethodDefD operand) {
+            sb.append("return floor(").append(context.callDelegate(operand)).append(");\n");
+        }
+    }
+
     public static class NegMulNodeEmitter extends AbstractGenericUnaryNodeOpenCLCEmitter<NegMulNode> {
         public static final NegMulNodeEmitter INSTANCE = new NegMulNodeEmitter();
 
@@ -83,6 +114,30 @@ public class UnaryNodeOpenCLCEmitters {
             sb
                     .append("double v = ").append(context.callDelegate(operand)).append(";\n")
                     .append("return v > 0.0 ? v : v * ").append(OpenCLCGen.literal(node.negMul)).append(";\n");
+        }
+    }
+
+    public static class SinNodeEmitter extends AbstractGenericUnaryNodeOpenCLCEmitter<SinNode> {
+        public static final SinNodeEmitter INSTANCE = new SinNodeEmitter();
+
+        private SinNodeEmitter() {
+        }
+
+        @Override
+        protected void genBody(SinNode node, @UnknownNullability OpenCLCGenContext context, StringBuilder sb, ValuesMethodDefD operand) {
+            sb.append("return sin(").append(context.callDelegate(operand)).append(");\n");
+        }
+    }
+
+    public static class SqrtNodeEmitter extends AbstractGenericUnaryNodeOpenCLCEmitter<SqrtNode> {
+        public static final SqrtNodeEmitter INSTANCE = new SqrtNodeEmitter();
+
+        private SqrtNodeEmitter() {
+        }
+
+        @Override
+        protected void genBody(SqrtNode node, @UnknownNullability OpenCLCGenContext context, StringBuilder sb, ValuesMethodDefD operand) {
+            sb.append("return sqrt(").append(context.callDelegate(operand)).append(");\n");
         }
     }
 
@@ -116,8 +171,13 @@ public class UnaryNodeOpenCLCEmitters {
 
     public static void register(CodeGenRegistry<OpenCLCEmitter<? extends AstNode>> registry) {
         registry.registerExactMatch(AbsNode.class, AbsNodeEmitter.INSTANCE);
+        registry.registerExactMatch(CeilNode.class, CeilNodeEmitter.INSTANCE);
+        registry.registerExactMatch(CosNode.class, CosNodeEmitter.INSTANCE);
         registry.registerExactMatch(CubeNode.class, CubeNodeEmitter.INSTANCE);
+        registry.registerExactMatch(FloorNode.class, FloorNodeEmitter.INSTANCE);
         registry.registerExactMatch(NegMulNode.class, NegMulNodeEmitter.INSTANCE);
+        registry.registerExactMatch(SinNode.class, SinNodeEmitter.INSTANCE);
+        registry.registerExactMatch(SqrtNode.class, SqrtNodeEmitter.INSTANCE);
         registry.registerExactMatch(SquareNode.class, SquareNodeEmitter.INSTANCE);
         registry.registerExactMatch(SqueezeNode.class, SqueezeNodeEmitter.INSTANCE);
     }

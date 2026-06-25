@@ -25,12 +25,7 @@
 package com.ishland.c2me.opts.dfc.common.gen.dot.emitters;
 
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
-import com.ishland.c2me.opts.dfc.common.ast.unary.AbsNode;
-import com.ishland.c2me.opts.dfc.common.ast.unary.AbstractUnaryNode;
-import com.ishland.c2me.opts.dfc.common.ast.unary.CubeNode;
-import com.ishland.c2me.opts.dfc.common.ast.unary.NegMulNode;
-import com.ishland.c2me.opts.dfc.common.ast.unary.SquareNode;
-import com.ishland.c2me.opts.dfc.common.ast.unary.SqueezeNode;
+import com.ishland.c2me.opts.dfc.common.ast.unary.*;
 import com.ishland.c2me.opts.dfc.common.gen.CodeGenRegistry;
 import com.ishland.c2me.opts.dfc.common.gen.dot.DotEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.dot.DotGen;
@@ -59,8 +54,13 @@ public class UnaryNodeDotEmitters {
 
     public static void register(CodeGenRegistry<DotEmitter<? extends AstNode>> registry) {
         registry.registerExactMatch(AbsNode.class, new UnaryNodeEmitter<>(node -> "abs"));
+        registry.registerExactMatch(CeilNode.class, new UnaryNodeEmitter<>(node -> "ceil"));
+        registry.registerExactMatch(CosNode.class, new UnaryNodeEmitter<>(node -> "cos"));
         registry.registerExactMatch(CubeNode.class, new UnaryNodeEmitter<>(node -> "cube"));
+        registry.registerExactMatch(FloorNode.class, new UnaryNodeEmitter<>(node -> "floor"));
         registry.registerExactMatch(NegMulNode.class, new UnaryNodeEmitter<>(node -> "NegMul" + node.negMul));
+        registry.registerExactMatch(SinNode.class, new UnaryNodeEmitter<>(node -> "sin"));
+        registry.registerExactMatch(SqrtNode.class, new UnaryNodeEmitter<>(node -> "sqrt"));
         registry.registerExactMatch(SquareNode.class, new UnaryNodeEmitter<>(node -> "square"));
         registry.registerExactMatch(SqueezeNode.class, new UnaryNodeEmitter<>(node -> "squeeze"));
     }

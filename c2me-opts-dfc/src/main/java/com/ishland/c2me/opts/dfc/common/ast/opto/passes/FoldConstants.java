@@ -34,11 +34,7 @@ import com.ishland.c2me.opts.dfc.common.ast.binary.MinShortNode;
 import com.ishland.c2me.opts.dfc.common.ast.binary.MulNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.CacheLikeNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantNode;
-import com.ishland.c2me.opts.dfc.common.ast.unary.AbsNode;
-import com.ishland.c2me.opts.dfc.common.ast.unary.CubeNode;
-import com.ishland.c2me.opts.dfc.common.ast.unary.NegMulNode;
-import com.ishland.c2me.opts.dfc.common.ast.unary.SquareNode;
-import com.ishland.c2me.opts.dfc.common.ast.unary.SqueezeNode;
+import com.ishland.c2me.opts.dfc.common.ast.unary.*;
 import com.ishland.c2me.opts.dfc.common.util.ZeroUtils;
 import net.minecraft.util.math.MathHelper;
 
@@ -123,6 +119,20 @@ public class FoldConstants implements AstTransformer {
 
                 yield absNode;
             }
+            case CeilNode ceilNode -> {
+                if (ceilNode.operand instanceof ConstantNode c) {
+                    yield new ConstantNode(Math.ceil(c.getValue()));
+                }
+
+                yield ceilNode;
+            }
+            case CosNode cosNode -> {
+                if (cosNode.operand instanceof ConstantNode c) {
+                    yield new ConstantNode(Math.cos(c.getValue()));
+                }
+
+                yield cosNode;
+            }
             case CubeNode cubeNode -> {
                 if (cubeNode.operand instanceof ConstantNode c) {
                     yield new ConstantNode(c.getValue() * c.getValue() * c.getValue());
@@ -130,12 +140,33 @@ public class FoldConstants implements AstTransformer {
 
                 yield cubeNode;
             }
+            case FloorNode floorNode -> {
+                if (floorNode.operand instanceof ConstantNode c) {
+                    yield new ConstantNode(Math.floor(c.getValue()));
+                }
+
+                yield floorNode;
+            }
             case NegMulNode negMulNode -> {
                 if (negMulNode.operand instanceof ConstantNode c) {
                     yield new ConstantNode(c.getValue() > 0.0 ? c.getValue() : c.getValue() * negMulNode.negMul);
                 }
 
                 yield negMulNode;
+            }
+            case SinNode sinNode -> {
+                if (sinNode.operand instanceof ConstantNode c) {
+                    yield new ConstantNode(Math.sin(c.getValue()));
+                }
+
+                yield sinNode;
+            }
+            case SqrtNode sqrtNode -> {
+                if (sqrtNode.operand instanceof ConstantNode c) {
+                    yield new ConstantNode(Math.sqrt(c.getValue()));
+                }
+
+                yield sqrtNode;
             }
             case SquareNode squareNode -> {
                 if (squareNode.operand instanceof ConstantNode c) {
