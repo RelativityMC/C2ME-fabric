@@ -26,7 +26,7 @@ package com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched;
 
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
 import com.ishland.c2me.opts.dfc.common.ast.McToAst;
-import com.ishland.c2me.opts.dfc.common.ast.unary.integration.lithostitched.SqrtNode;
+import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.unary.SqrtNode;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
 import org.slf4j.Logger;
