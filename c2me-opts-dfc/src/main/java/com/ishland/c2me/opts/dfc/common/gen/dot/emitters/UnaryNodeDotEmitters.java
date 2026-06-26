@@ -25,6 +25,7 @@
 package com.ishland.c2me.opts.dfc.common.gen.dot.emitters;
 
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
+import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.*;
 import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.unary.*;
 import com.ishland.c2me.opts.dfc.common.ast.unary.*;
 import com.ishland.c2me.opts.dfc.common.gen.CodeGenRegistry;
@@ -55,15 +56,16 @@ public class UnaryNodeDotEmitters {
 
     public static void register(CodeGenRegistry<DotEmitter<? extends AstNode>> registry) {
         registry.registerExactMatch(AbsNode.class, new UnaryNodeEmitter<>(node -> "abs"));
-        registry.registerExactMatch(CeilNode.class, new UnaryNodeEmitter<>(node -> "ceil"));
-        registry.registerExactMatch(CosNode.class, new UnaryNodeEmitter<>(node -> "cos"));
         registry.registerExactMatch(CubeNode.class, new UnaryNodeEmitter<>(node -> "cube"));
-        registry.registerExactMatch(FloorNode.class, new UnaryNodeEmitter<>(node -> "floor"));
         registry.registerExactMatch(NegMulNode.class, new UnaryNodeEmitter<>(node -> "NegMul" + node.negMul));
-        registry.registerExactMatch(SinNode.class, new UnaryNodeEmitter<>(node -> "sin"));
-        registry.registerExactMatch(SqrtNode.class, new UnaryNodeEmitter<>(node -> "sqrt"));
         registry.registerExactMatch(SquareNode.class, new UnaryNodeEmitter<>(node -> "square"));
         registry.registerExactMatch(SqueezeNode.class, new UnaryNodeEmitter<>(node -> "squeeze"));
+
+        if (CeilBindings.AVAILABLE) registry.registerExactMatch(CeilNode.class, new UnaryNodeEmitter<>(node -> "ceil"));
+        if (CosBindings.AVAILABLE) registry.registerExactMatch(CosNode.class, new UnaryNodeEmitter<>(node -> "cos"));
+        if (FloorBindings.AVAILABLE) registry.registerExactMatch(FloorNode.class, new UnaryNodeEmitter<>(node -> "floor"));
+        if (SinBindings.AVAILABLE) registry.registerExactMatch(SinNode.class, new UnaryNodeEmitter<>(node -> "sin"));
+        if (SqrtBindings.AVAILABLE) registry.registerExactMatch(SqrtNode.class, new UnaryNodeEmitter<>(node -> "sqrt"));
     }
 
 }

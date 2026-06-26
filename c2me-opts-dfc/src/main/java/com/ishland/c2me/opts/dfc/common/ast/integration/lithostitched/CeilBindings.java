@@ -42,7 +42,7 @@ public class CeilBindings {
 
     private static final Class<?> CLASS_CeilDensityFunction;
     private static final MethodHandle MH_argument;
-    private static final boolean AVAILABLE;
+    public static final boolean AVAILABLE;
 
     static {
         Class<?> class_CeilDensityFunction = null;

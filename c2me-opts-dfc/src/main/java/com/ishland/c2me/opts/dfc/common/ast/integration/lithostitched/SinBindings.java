@@ -42,7 +42,7 @@ public class SinBindings {
 
     private static final Class<?> CLASS_SinDensityFunction;
     private static final MethodHandle MH_argument;
-    private static final boolean AVAILABLE;
+    public static final boolean AVAILABLE;
 
     static {
         Class<?> class_SinDensityFunction = null;
