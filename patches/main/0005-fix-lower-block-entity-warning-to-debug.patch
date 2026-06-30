@@ -1,0 +1,19 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: ishland <30385023+ishland@users.noreply.github.com>
+Date: Mon, 22 Jun 2026 17:46:17 +0800
+Subject: [PATCH] fix: lower block entity warning to debug
+
+
+diff --git a/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/common/async_chunkio/AsyncSerializationManager.java b/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/common/async_chunkio/AsyncSerializationManager.java
+index c248833b..a2736799 100644
+--- a/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/common/async_chunkio/AsyncSerializationManager.java
++++ b/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/common/async_chunkio/AsyncSerializationManager.java
+@@ -77,7 +77,7 @@ public class AsyncSerializationManager {
+             for (BlockPos blockPos : chunk.getBlockEntityPositions()) {
+                 final NbtCompound nbt = chunk.getPackedBlockEntityNbt(blockPos, world.getRegistryManager());
+                 if (nbt == null) {
+-                    LOGGER.warn("Block entity at {} for block {} in chunk {} is missing", blockPos, chunk.getBlockState(blockPos), chunk.getPos());
++                    LOGGER.debug("Block entity at {} for block {} in chunk {} is missing", blockPos, chunk.getBlockState(blockPos), chunk.getPos());
+                 }
+                 if (blockEntities.containsKey(blockPos)) {
+                     LOGGER.warn("Duplicate block entity at {} in chunk {}", blockPos, chunk.getPos());
