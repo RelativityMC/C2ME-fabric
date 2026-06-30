@@ -6,34 +6,50 @@ Subject: [PATCH] new: add
 
 
 diff --git a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/ast/McToAst.java b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/ast/McToAst.java
-index 88064c05..22013e99 100644
+index 10a8e8a3..d15ae9e3 100644
 --- a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/ast/McToAst.java
 +++ b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/ast/McToAst.java
-@@ -31,6 +31,7 @@ import com.ishland.c2me.opts.dfc.common.ast.binary.MaxShortNode;
+@@ -26,7 +26,6 @@ package com.ishland.c2me.opts.dfc.common.ast;
+ 
+ import com.ishland.c2me.opts.dfc.common.Config;
+ import com.ishland.c2me.opts.dfc.common.ast.binary.AddNode;
+-import com.ishland.c2me.opts.dfc.common.ast.binary.DivNode;
+ import com.ishland.c2me.opts.dfc.common.ast.binary.MaxNode;
+ import com.ishland.c2me.opts.dfc.common.ast.binary.MaxShortNode;
  import com.ishland.c2me.opts.dfc.common.ast.binary.MinNode;
- import com.ishland.c2me.opts.dfc.common.ast.binary.MinShortNode;
+@@ -34,6 +33,7 @@ import com.ishland.c2me.opts.dfc.common.ast.binary.MinShortNode;
  import com.ishland.c2me.opts.dfc.common.ast.binary.MulNode;
-+import com.ishland.c2me.opts.dfc.common.ast.integration.tectonic.TectonicInvertParser;
+ import com.ishland.c2me.opts.dfc.common.ast.integration.tectonic.ConfigClampBindings;
+ import com.ishland.c2me.opts.dfc.common.ast.integration.tectonic.ConfigNoiseBindings;
++import com.ishland.c2me.opts.dfc.common.ast.integration.tectonic.TectonicInvertBindings;
  import com.ishland.c2me.opts.dfc.common.ast.misc.BeardifierNode;
  import com.ishland.c2me.opts.dfc.common.ast.misc.CacheLikeNode;
  import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantNode;
-@@ -166,6 +167,11 @@ public class McToAst {
-             case DensityFunctionTypes.Beardifier f -> new BeardifierNode(f);
+@@ -67,7 +67,6 @@ import org.slf4j.LoggerFactory;
+ import java.util.Objects;
+ import java.util.concurrent.ConcurrentHashMap;
+ import java.util.concurrent.atomic.AtomicLong;
+-import java.util.concurrent.atomic.LongAdder;
  
-             default -> {
-+                {
-+                    AstNode res = TectonicInvertParser.tryParseInvert(df);
-+                    if (res != null) yield res;
-+                }
+ public class McToAst {
+ 
+@@ -183,6 +182,11 @@ public class McToAst {
+                         AstNode node = ConfigNoiseBindings.tryParse(df);
+                         if (node != null) yield node;
+                     }
 +
-                 delegateStatistics.computeIfAbsent(df.getClass(), unused -> new LongAdder()).increment();
-                 yield new DelegateNode(df);
-             }
-diff --git a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/ast/integration/tectonic/TectonicInvertParser.java b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/ast/integration/tectonic/TectonicInvertParser.java
++                    {
++                        AstNode res = TectonicInvertBindings.tryParse(df);
++                        if (res != null) yield res;
++                    }
+                 }
+ 
+                 long known = delegateStatistics.computeIfAbsent(df.getClass(), unused -> new AtomicLong(0L)).getAndIncrement();
+diff --git a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/ast/integration/tectonic/TectonicInvertBindings.java b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/ast/integration/tectonic/TectonicInvertBindings.java
 new file mode 100644
-index 00000000..494599c0
+index 00000000..9c120e3e
 --- /dev/null
-+++ b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/ast/integration/tectonic/TectonicInvertParser.java
++++ b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/ast/integration/tectonic/TectonicInvertBindings.java
 @@ -0,0 +1,88 @@
 +/*
 + * The MIT License (MIT)
@@ -74,9 +90,9 @@ index 00000000..494599c0
 +import java.lang.invoke.MethodHandles;
 +import java.lang.invoke.MethodType;
 +
-+public class TectonicInvertParser {
++public class TectonicInvertBindings {
 +
-+    private static final Logger LOGGER = LoggerFactory.getLogger(TectonicInvertParser.class);
++    private static final Logger LOGGER = LoggerFactory.getLogger(TectonicInvertBindings.class);
 +
 +    private static final Class<?> CLASS_Invert;
 +    private static final MethodHandle MH_input;
@@ -108,7 +124,7 @@ index 00000000..494599c0
 +        AVAILABLE = available;
 +    }
 +
-+    public static AstNode tryParseInvert(DensityFunction function) {
++    public static AstNode tryParse(DensityFunction function) {
 +        if (!AVAILABLE) return null;
 +
 +        if (CLASS_Invert.isInstance(function)) {
