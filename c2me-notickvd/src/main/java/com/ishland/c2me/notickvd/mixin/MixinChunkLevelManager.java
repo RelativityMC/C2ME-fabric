@@ -31,6 +31,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ChunkLevelManager;
 import net.minecraft.server.world.ServerChunkLoadingManager;
 import net.minecraft.util.math.ChunkSectionPos;
+import org.slf4j.Logger;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -46,8 +47,13 @@ public class MixinChunkLevelManager implements ChunkLevelManagerExtension {
 
     @Shadow @Final private ChunkLevelManager.NearbyChunkTicketUpdater nearbyChunkTicketUpdater;
 
+    @Shadow
+    @Final
+    private static Logger LOGGER;
     @Unique
     private NoTickSystem noTickSystem;
+    @Unique
+    private int c2me$maximumSeenViewDistance;
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(CallbackInfo ci) {
@@ -86,6 +92,12 @@ public class MixinChunkLevelManager implements ChunkLevelManagerExtension {
      */
     @Overwrite
     public void setWatchDistance(int viewDistance) {
+        if (viewDistance > 32) {
+            if (viewDistance > this.c2me$maximumSeenViewDistance) {
+                LOGGER.warn("Setting server view distance to {} anyways, which is bigger than what vanilla allows. This have performance implications so please make sure this isn't a misconfiguration. ", viewDistance);
+                this.c2me$maximumSeenViewDistance = viewDistance;
+            }
+        }
         this.noTickSystem.setNoTickViewDistance(viewDistance + 1);
     }
 

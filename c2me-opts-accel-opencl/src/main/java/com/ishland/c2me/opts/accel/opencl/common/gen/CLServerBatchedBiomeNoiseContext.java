@@ -30,6 +30,7 @@ import com.ishland.c2me.opts.accel.opencl.common.util.TLUtil;
 import com.ishland.c2me.opts.accel.opencl.common.compiler.emitters.misc.CLBlockStateMappings;
 import com.ishland.c2me.opts.accel.opencl.common.compiler.GeneratedCLSource;
 import com.ishland.c2me.opts.accel.opencl.common.compiler.OpenCLCGen;
+import com.ishland.c2me.opts.accel.opencl.common.workarounds.Workarounds;
 import com.ishland.c2me.rewrites.chunksystem.common.ChunkLoadingContext;
 import com.ishland.flowsched.util.Assertions;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
@@ -355,7 +356,7 @@ public class CLServerBatchedBiomeNoiseContext {
                 eventsToRelease.add(event.get(0));
             }
 
-            if (Config.doExplicitFlushes) {
+            if (Config.doExplicitFlushes || deviceWithProgram.device().getWorkarounds().contains(Workarounds.Reference.REQUIRE_EXPLICIT_FLUSHES)) {
                 CLUtil.checkCLError(CL12.clFlush(commandQueue.getCommandQueue()));
             }
 

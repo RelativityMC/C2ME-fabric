@@ -20,6 +20,7 @@ import com.ishland.c2me.opts.accel.opencl.common.enumeration.OpenCLDeviceMetadat
 import com.ishland.c2me.opts.accel.opencl.common.workarounds.amd.AMDBlocklists;
 import com.ishland.c2me.opts.accel.opencl.common.workarounds.intel.IntelBlocklists;
 import com.ishland.c2me.opts.accel.opencl.common.workarounds.mesa.MesaBlocklists;
+import com.ishland.c2me.opts.accel.opencl.common.workarounds.mesa.MesaWorkarounds;
 
 import java.util.Collections;
 import java.util.EnumSet;
@@ -38,7 +39,7 @@ public class Blocklists {
         if (IntelBlocklists.isARL_S(metadata)) {
             set.add(Reference.SLOW_INTEL_IGPU_ARL_S);
         }
-        if (MesaBlocklists.isRusticl(metadata) && !MesaBlocklists.isExplicitlyEnabled()) {
+        if (MesaWorkarounds.isRusticl(metadata) && !MesaBlocklists.isExplicitlyEnabled()) {
             set.add(Reference.RUSTICL_ENABLED_BY_DISTRO);
         }
         return Collections.unmodifiableSet(set);
