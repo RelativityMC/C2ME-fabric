@@ -28,6 +28,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.StructureWorldAccess;
+import net.minecraft.world.WorldAccess;
 import net.minecraft.world.gen.blockpredicate.OffsetPredicate;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -46,16 +47,16 @@ public abstract class MixinOffsetPredicate {
      * @reason reduce allocs
      */
     @Overwrite
-    public final boolean test(StructureWorldAccess structureWorldAccess, BlockPos blockPos) {
+    public final boolean test(WorldAccess worldAccess, BlockPos blockPos) {
         if (blockPos instanceof BlockPos.Mutable mutable) {
             int savedX = mutable.getX();
             int savedY = mutable.getY();
             int savedZ = mutable.getZ();
-            boolean res = this.test(structureWorldAccess.getBlockState(mutable.set(savedX + this.offset.getX(), savedY + this.offset.getY(), savedZ + this.offset.getZ())));
+            boolean res = this.test(worldAccess.getBlockState(mutable.set(savedX + this.offset.getX(), savedY + this.offset.getY(), savedZ + this.offset.getZ())));
             mutable.set(savedX, savedY, savedZ);
             return res;
         } else {
-            return this.test(structureWorldAccess.getBlockState(blockPos.add(this.offset)));
+            return this.test(worldAccess.getBlockState(blockPos.add(this.offset)));
         }
     }
 

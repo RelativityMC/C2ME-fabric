@@ -221,10 +221,6 @@ public final class ChunkDataSerializer {
             }
 
 //            putShortListArray(j.getLightSourcesBySection(), writer, STRING_LIGHTS); // no longer exists after lighting update
-
-            if (serializable.carvingMask() != null) {
-                writer.putLongArray(STRING_CARVING_MASK, serializable.carvingMask());
-            }
         }
 
         serializeTicks(writer, serializable.packedTicks());

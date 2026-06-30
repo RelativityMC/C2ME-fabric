@@ -66,7 +66,7 @@ public class MixinThreadedAnvilChunkStorage implements TACSExtension {
         if (generator instanceof NoiseChunkGenerator noiseChunkGenerator) {
             settings = noiseChunkGenerator.getSettings().value();
         } else {
-            settings = ChunkGeneratorSettings.createMissingSettings();
+            return;
         }
         GenerationShapeConfig trimmed = settings.generationShapeConfig().trimHeight(this.world);
         Reference2ReferenceMap<DensityFunction, OptoPasses.AstPair> optoCache = new Reference2ReferenceOpenHashMap<>();

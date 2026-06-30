@@ -80,27 +80,33 @@ public class McToAst {
             case ChunkNoiseSampler.BlendOffsetDensityFunction f -> new ConstantNode(0.0);
             case DensityFunctionTypes.BlendAlpha f -> new ConstantNode(1.0);
             case DensityFunctionTypes.BlendOffset f -> new ConstantNode(0.0);
-            case DensityFunctionTypes.BinaryOperationLike f -> switch (f.type()) {
+            case DensityFunctionTypes.BinaryOperation f -> switch (f.type()) {
                 case ADD -> new AddNode(toAst(f.argument1()), toAst(f.argument2()));
                 case MUL -> new MulNode(toAst(f.argument1()), toAst(f.argument2()));
                 case MIN -> {
-                    double rightMin = f.argument2().minValue();
-                    if (f.argument1().minValue() < rightMin) {
+                    double rightMin = f.min();
+                    if (f.argument1().method_1_7456().method_1_7285() < rightMin) {
                         yield new MinShortNode(toAst(f.argument1()), toAst(f.argument2()), rightMin);
                     } else {
                         yield new MinNode(toAst(f.argument1()), toAst(f.argument2()));
                     }
                 }
                 case MAX -> {
-                    double rightMax = f.argument2().maxValue();
-                    if (f.argument1().maxValue() > rightMax) {
+                    double rightMax = f.max();
+                    if (f.argument1().method_1_7456().method_1_7283() > rightMax) {
                         yield new MaxShortNode(toAst(f.argument1()), toAst(f.argument2()), rightMax);
                     } else {
                         yield new MaxNode(toAst(f.argument1()), toAst(f.argument2()));
                     }
                 }
             };
-            case DensityFunctionTypes.Clamp f -> new MaxNode(new ConstantNode(f.minValue()), new MinNode(new ConstantNode(f.maxValue()), toAst(f.input())));
+            case DensityFunctionTypes.LinearOperation f -> switch (f.type()) {
+                case ADD -> new AddNode(toAst(f.argument1()), toAst(f.argument2()));
+                case MUL -> new MulNode(toAst(f.argument1()), toAst(f.argument2()));
+                case MIN -> throw new UnsupportedOperationException("MIN found in DensityFunctionTypes.LinearOperation");
+                case MAX -> throw new UnsupportedOperationException("MIN found in DensityFunctionTypes.LinearOperation");
+            };
+            case DensityFunctionTypes.Clamp f -> new MaxNode(new ConstantNode(f.min()), new MinNode(new ConstantNode(f.max()), toAst(f.input())));
             case DensityFunctionTypes.Constant f -> new ConstantNode(f.value());
             case DensityFunctionTypes.RegistryEntryHolder f -> toAst(f.function().value());
             case DensityFunctionTypes.UnaryOperation f -> switch (f.type()) {

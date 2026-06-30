@@ -33,6 +33,7 @@ import com.ishland.c2me.opts.dfc.common.ducks.ICoordinatesFilling;
 import com.ishland.c2me.opts.dfc.common.ducks.IPreloadedCoordinates;
 import com.ishland.c2me.opts.dfc.common.util.ArrayCache;
 import com.ishland.c2me.opts.dfc.common.vif.EachApplierVanillaInterface;
+import net.minecraft.class_1_1150;
 import net.minecraft.util.dynamic.CodecHolder;
 import net.minecraft.world.gen.chunk.Blender;
 import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
@@ -193,17 +194,8 @@ public class SubCompiledDensityFunction implements DensityFunction {
     }
 
     @Override
-    public double minValue() {
-//        DensityFunction fallback = this.getFallback();
-//        return fallback != null ? fallback.minValue() : Double.MIN_VALUE;
-        return Double.MIN_VALUE;
-    }
-
-    @Override
-    public double maxValue() {
-//        DensityFunction fallback = this.getFallback();
-//        return fallback != null ? fallback.maxValue() : Double.MAX_VALUE;
-        return Double.MAX_VALUE;
+    public class_1_1150 method_1_7456() {
+        return class_1_1150.field_1_7942;
     }
 
     @Override

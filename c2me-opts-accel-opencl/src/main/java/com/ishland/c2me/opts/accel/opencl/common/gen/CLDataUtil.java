@@ -28,6 +28,7 @@ import com.ishland.flowsched.util.Assertions;
 import it.unimi.dsi.fastutil.objects.ObjectBidirectionalIterator;
 import it.unimi.dsi.fastutil.objects.Reference2IntLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Reference2IntMap;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.collection.BoundedRegionArray;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.MathHelper;
@@ -240,7 +241,8 @@ public class CLDataUtil {
                                 arena1,
                                 startX, startY, startZ,
                                 endX - startX + 1, endY - startY + 1, endZ - startZ + 1,
-                                samplingYLowPassCutoff, noiseConfig.getAquiferRandomDeriver()
+                                samplingYLowPassCutoff,
+                                noiseConfig.getOrCreateRandomDeriver(Identifier.ofVanilla("aquifer"))
                         );
                         data = new byte[(int) segment.byteSize()];
                         MemorySegment.copy(segment, ValueLayout.JAVA_BYTE, 0L, data, 0, data.length);
@@ -272,7 +274,7 @@ public class CLDataUtil {
                     byte[] data;
                     try (Arena arena1 = Arena.ofConfined()) {
                         MemorySegment segment = arena1.allocate(24);
-                        OpenCLStructs.setRandomState(segment, noiseConfig.getOreRandomDeriver());
+                        OpenCLStructs.setRandomState(segment, noiseConfig.getOrCreateRandomDeriver(Identifier.ofVanilla("ore")));
                         data = new byte[(int) segment.byteSize()];
                         MemorySegment.copy(segment, ValueLayout.JAVA_BYTE, 0L, data, 0, data.length);
                     }

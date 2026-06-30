@@ -30,6 +30,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.intprovider.IntProvider;
 import net.minecraft.util.math.random.Random;
 import net.minecraft.world.StructureWorldAccess;
+import net.minecraft.world.WorldAccess;
 import net.minecraft.world.gen.stateprovider.BlockStateProvider;
 import net.minecraft.world.gen.stateprovider.RandomizedIntBlockStateProvider;
 import org.jetbrains.annotations.Nullable;
@@ -60,8 +61,8 @@ public abstract class MixinRandomizedIntBlockStateProvider {
      * @reason ensure proper behavior
      */
     @Overwrite
-    public BlockState get(final StructureWorldAccess level, final Random random, final BlockPos pos) {
-        BlockState unmodifiedState = this.source.get(level, random, pos);
+    public BlockState get(final WorldAccess worldAccess, final Random random, final BlockPos pos) {
+        BlockState unmodifiedState = this.source.get(worldAccess, random, pos);
         IntProperty propertyLocal = this.property;
         if (propertyLocal == null || !unmodifiedState.contains(propertyLocal)) {
             IntProperty property = getIntPropertyByName(unmodifiedState, this.propertyName);

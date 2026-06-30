@@ -30,6 +30,7 @@ import com.ishland.c2me.opts.dfc.common.ducks.NoiseRouterExtension;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.BytecodeGen;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceMap;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
+import net.minecraft.block.BlockState;
 import net.minecraft.registry.RegistryEntryLookup;
 import net.minecraft.util.math.noise.DoublePerlinNoiseSampler;
 import net.minecraft.world.biome.source.util.MultiNoiseUtil;
@@ -46,6 +47,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.List;
+
 @Mixin(value = NoiseConfig.class, priority = 900)
 public class MixinNoiseConfig {
 
@@ -56,7 +59,7 @@ public class MixinNoiseConfig {
     @Shadow @Final private MultiNoiseUtil.MultiNoiseSampler multiNoiseSampler;
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    private void postCreate(ChunkGeneratorSettings chunkGeneratorSettings, RegistryEntryLookup<DoublePerlinNoiseSampler.NoiseParameters> noiseParametersLookup, long seed, CallbackInfo ci) {
+    private void postCreate(CallbackInfo ci) {
         Stopwatch stopwatch = Stopwatch.createStarted();
         Reference2ReferenceMap<DensityFunction, OptoPasses.AstPair> optoCache = new Reference2ReferenceOpenHashMap<>();
         Reference2ReferenceMap<DensityFunction, DensityFunction> tempCache = new Reference2ReferenceOpenHashMap<>();
