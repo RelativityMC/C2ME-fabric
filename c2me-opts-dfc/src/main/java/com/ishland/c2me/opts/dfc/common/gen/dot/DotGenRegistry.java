@@ -25,6 +25,8 @@
 package com.ishland.c2me.opts.dfc.common.gen.dot;
 
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
+import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.SelectBindings;
+import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc.SelectNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.BeardifierNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.CacheLikeNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantNode;
@@ -194,6 +196,24 @@ public class DotGenRegistry {
                             .build();
                 }
         );
+        
+        if (SelectBindings.AVAILABLE) {
+            REGISTRY.registerExactMatch(
+                    SelectNode.class,
+                    (DotEmitter<SelectNode>) (node, context, builder) -> {
+                        builder
+                                .boxShape()
+                                .label("Select\\nminima=" + Arrays.toString(node.minima) + "\\nmaxima=" + Arrays.toString(node.maxima));
+
+                        AstNode[] functions = node.functions;
+                        for (int i = 0, functionsLength = functions.length; i < functionsLength; i++) {
+                            AstNode function = functions[i];
+                            builder.edge(context.generate(function)).label(String.valueOf(i)).finish();
+                        }
+                        return builder.build();
+                    }
+            );
+        }
     }
 
     public static <T extends AstNode> int doDotGen(T node, DotGen.Context context, DotGen.Context.Builder builder) {
