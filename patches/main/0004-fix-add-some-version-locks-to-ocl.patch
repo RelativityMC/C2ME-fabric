@@ -1,0 +1,23 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: ishland <30385023+ishland@users.noreply.github.com>
+Date: Thu, 2 Jul 2026 15:20:45 +0800
+Subject: [PATCH] fix: add some version locks to ocl
+
+
+diff --git a/c2me-opts-accel-opencl/src/main/resources/fabric.mod.json b/c2me-opts-accel-opencl/src/main/resources/fabric.mod.json
+index 9aac92df..ff5cf2dc 100644
+--- a/c2me-opts-accel-opencl/src/main/resources/fabric.mod.json
++++ b/c2me-opts-accel-opencl/src/main/resources/fabric.mod.json
+@@ -12,9 +12,9 @@
+     "minecraft": "*",
+     "fabricloader": "*",
+     "java": ">=25",
+-    "c2me-base": "*",
+-    "c2me-opts-dfc": "*",
+-    "c2me-rewrites-chunk-system": "*"
++    "c2me-base": ">=0.4-",
++    "c2me-opts-dfc": ">=0.4-",
++    "c2me-rewrites-chunk-system": ">=0.4-"
+   },
+   "recommends": {
+     "scalablelux": "*"
