@@ -32,6 +32,7 @@ import com.ishland.c2me.opts.dfc.common.ast.binary.MaxShortNode;
 import com.ishland.c2me.opts.dfc.common.ast.binary.MinNode;
 import com.ishland.c2me.opts.dfc.common.ast.binary.MinShortNode;
 import com.ishland.c2me.opts.dfc.common.ast.binary.MulNode;
+import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc.MixNode;
 import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.unary.*;
 import com.ishland.c2me.opts.dfc.common.ast.misc.CacheLikeNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantNode;
@@ -112,6 +113,29 @@ public class FoldConstants implements AstTransformer {
                 }
 
                 yield minShortNode;
+            }
+            case MixNode mixNode -> {
+                if (mixNode.input instanceof ConstantNode c1 && mixNode.argument1 instanceof ConstantNode c2 && mixNode.argument2 instanceof ConstantNode c3) {
+                    yield new ConstantNode(c2.getValue() * (1.0 - c1.getValue()) + c3.getValue() * c1.getValue());
+                }
+
+                if (mixNode.input instanceof ConstantNode c1 && mixNode.argument1 instanceof ConstantNode c2) {
+                    yield new AddNode(new ConstantNode(c2.getValue() * (1.0 - c1.getValue())), new MulNode(c1, mixNode.argument2)); // TreeNormalization: const left for consistency
+                }
+
+                if (mixNode.input instanceof ConstantNode c1 && mixNode.argument2 instanceof ConstantNode c2) {
+                    yield new AddNode(new ConstantNode(c2.getValue() * c1.getValue()), new MulNode(new ConstantNode(1.0 - c1.getValue()), mixNode.argument1)); // TreeNormalization: const left for consistency
+                }
+
+                if (mixNode.input instanceof ConstantNode c1 && c1.getValue() <= 0.0) {
+                    yield mixNode.argument1;
+                }
+
+                if (mixNode.input instanceof ConstantNode c1 && c1.getValue() >= 1.0) {
+                    yield mixNode.argument2;
+                }
+
+                yield mixNode;
             }
             case AbsNode absNode -> {
                 if (absNode.operand instanceof ConstantNode c) {

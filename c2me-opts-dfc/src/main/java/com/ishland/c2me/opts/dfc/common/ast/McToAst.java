@@ -193,6 +193,11 @@ public class McToAst {
                     }
 
                     {
+                        AstNode node = MixBindings.tryParse(df);
+                        if (node != null) yield node;
+                    }
+
+                    {
                         AstNode node = SelectBindings.tryParse(df);
                         if (node != null) yield node;
                     }

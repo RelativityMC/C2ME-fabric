@@ -25,7 +25,9 @@
 package com.ishland.c2me.opts.dfc.common.gen.dot;
 
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
+import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.MixBindings;
 import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.SelectBindings;
+import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc.MixNode;
 import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc.SelectNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.BeardifierNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.CacheLikeNode;
@@ -196,7 +198,20 @@ public class DotGenRegistry {
                             .build();
                 }
         );
-        
+
+        if (MixBindings.AVAILABLE) {
+            REGISTRY.registerExactMatch(
+                    MixNode.class,
+                    (DotEmitter<MixNode>) (node, context, builder) ->
+                            builder
+                                    .diamondShape()
+                                    .label("Mix")
+                                    .edge(context.generate(node.input)).label("input").color("blue").finish()
+                                    .edge(context.generate(node.argument1)).label("left").finish()
+                                    .edge(context.generate(node.argument2)).label("right").finish()
+                                    .build()
+            );
+        }
         if (SelectBindings.AVAILABLE) {
             REGISTRY.registerExactMatch(
                     SelectNode.class,
