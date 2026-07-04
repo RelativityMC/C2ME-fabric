@@ -27,8 +27,10 @@ package com.ishland.c2me.opts.dfc.common.gen.jvm;
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
 import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.MixBindings;
 import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.SelectBindings;
+import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.ShiftBindings;
 import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc.MixNode;
 import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc.SelectNode;
+import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc.ShiftNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.BeardifierNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.CacheLikeNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantNode;
@@ -48,6 +50,7 @@ import com.ishland.c2me.opts.dfc.common.gen.jvm.emitters.BinaryNodeBytecodeEmitt
 import com.ishland.c2me.opts.dfc.common.gen.jvm.emitters.UnaryNodeBytecodeEmitters;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.emitters.integration.lithostitched.misc.MixNodeBytecodeEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.emitters.integration.lithostitched.misc.SelectNodeBytecodeEmitter;
+import com.ishland.c2me.opts.dfc.common.gen.jvm.emitters.integration.lithostitched.misc.ShiftNodeBytecodeEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.emitters.misc.CacheLikeNodeBytecodeEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.emitters.misc.ConstantNodeBytecodeEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.emitters.misc.CoordinateNodeBytecodeEmitter;
@@ -87,6 +90,7 @@ public class BytecodeGenRegistry {
 
         if (MixBindings.AVAILABLE) REGISTRY.registerExactMatch(MixNode.class,  MixNodeBytecodeEmitter.INSTANCE);
         if (SelectBindings.AVAILABLE) REGISTRY.registerExactMatch(SelectNode.class, SelectNodeBytecodeEmitter.INSTANCE);
+        if (ShiftBindings.AVAILABLE) REGISTRY.registerExactMatch(ShiftNode.class, ShiftNodeBytecodeEmitter.INSTANCE);
     }
 
     public static <T extends AstNode> void doBytecodeGenSingle(T node, BytecodeGen.Context context, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {

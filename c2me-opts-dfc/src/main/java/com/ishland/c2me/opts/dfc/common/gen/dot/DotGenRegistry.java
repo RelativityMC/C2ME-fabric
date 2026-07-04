@@ -27,8 +27,10 @@ package com.ishland.c2me.opts.dfc.common.gen.dot;
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
 import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.MixBindings;
 import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.SelectBindings;
+import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.ShiftBindings;
 import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc.MixNode;
 import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc.SelectNode;
+import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc.ShiftNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.BeardifierNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.CacheLikeNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantNode;
@@ -227,6 +229,20 @@ public class DotGenRegistry {
                         }
                         return builder.build();
                     }
+            );
+        }
+        if (ShiftBindings.AVAILABLE) {
+            REGISTRY.registerExactMatch(
+                    ShiftNode.class,
+                    (DotEmitter<ShiftNode>) (node, context, builder) ->
+                            builder
+                                    .hexagonShape()
+                                    .label("Shift")
+                                    .edge(context.generate(node.input)).label("input").finish()
+                                    .edge(context.generate(node.inputX)).label("inputX").finish()
+                                    .edge(context.generate(node.inputY)).label("inputY").finish()
+                                    .edge(context.generate(node.inputZ)).label("inputZ").finish()
+                                    .build()
             );
         }
     }
