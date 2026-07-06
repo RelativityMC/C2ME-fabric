@@ -739,10 +739,10 @@ index 00000000..21155aa1
 +
 +}
 diff --git a/c2me-fixes-worldgen-threading-issues/src/main/resources/c2me-fixes-worldgen-threading-issues.mixins.json b/c2me-fixes-worldgen-threading-issues/src/main/resources/c2me-fixes-worldgen-threading-issues.mixins.json
-index 3bbc905a..df5c18e8 100644
+index e8f0d7f8..365f00ca 100644
 --- a/c2me-fixes-worldgen-threading-issues/src/main/resources/c2me-fixes-worldgen-threading-issues.mixins.json
 +++ b/c2me-fixes-worldgen-threading-issues/src/main/resources/c2me-fixes-worldgen-threading-issues.mixins.json
-@@ -37,6 +37,7 @@
+@@ -38,6 +38,7 @@
      "threading.MixinWoodlandMansionGeneratorGenerationPiece",
      "threading.MixinWoodlandMansionGeneratorMansionParameters",
      "threading.math.MixinAffineTransformation",
