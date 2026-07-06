@@ -44,6 +44,9 @@ public class MixinChunkGenerating {
     @WrapMethod(method = "generateStructures")
     private static CompletableFuture<Chunk> wrapStructureStarts(ChunkGenerationContext context, ChunkGenerationStep step, BoundedRegionArray<AbstractChunkHolder> chunks, Chunk chunk, Operation<CompletableFuture<Chunk>> original) {
         CLServerWorldContext clContext = ((TACSExtension) context.world().getChunkManager().chunkLoadingManager).c2me$getCLContext();
+        if (clContext == null) {
+            return original.call(context, step, chunks, chunk);
+        }
         return clContext.getEstimateSurfaceHeightCache().getChunkCache(chunk.getPos().x(), chunk.getPos().z()).thenComposeAsync(cacheEntry -> {
             if (TLUtil.stage1CachePassing.isBound()) {
                 throw new IllegalStateException("Reentrance");

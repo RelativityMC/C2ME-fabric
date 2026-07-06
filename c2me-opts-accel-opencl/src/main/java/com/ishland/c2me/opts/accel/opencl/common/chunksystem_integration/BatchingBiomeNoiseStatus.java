@@ -83,6 +83,11 @@ public class BatchingBiomeNoiseStatus extends NewChunkStatus {
             return Completable.complete();
         }
 
+        CLServerWorldContext clContext = ((TACSExtension) context.tacs()).c2me$getCLContext();
+        if (clContext == null) {
+            return Completable.complete();
+        }
+
         Long2ReferenceOpenHashMap<ChunkHolder> holderCache = new Long2ReferenceOpenHashMap<>();
         Long2ReferenceFunction<ChunkHolder> getHolder0 = posx -> context.theChunkSystem().getHolder(ChunkPos.fromLong(posx)).getUserData().get();
         Long2ReferenceFunction<ChunkHolder> getHolder = posx -> holderCache.computeIfAbsent(posx, getHolder0);
@@ -145,7 +150,6 @@ public class BatchingBiomeNoiseStatus extends NewChunkStatus {
         }
 
         return Completable.defer(() -> {
-            CLServerWorldContext clContext = ((TACSExtension) context.tacs()).c2me$getCLContext();
             return Completable.fromCompletionStage(VanillaWorldGenerationDelegate.runTaskWithLockArea(
                     pos.x(),
                     pos.z(),
