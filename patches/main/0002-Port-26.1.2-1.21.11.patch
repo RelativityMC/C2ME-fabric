@@ -347,7 +347,7 @@ index 4cb9f6d1..368e98af 100644
      include implementation(platform("org.lwjgl:lwjgl-bom:${lwjgl_version}"))
      include implementation("org.lwjgl:lwjgl")
 diff --git a/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/chunksystem_integration/BatchingBiomeNoiseStatus.java b/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/chunksystem_integration/BatchingBiomeNoiseStatus.java
-index ccee3192..7541d64d 100644
+index fb93418e..95707248 100644
 --- a/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/chunksystem_integration/BatchingBiomeNoiseStatus.java
 +++ b/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/chunksystem_integration/BatchingBiomeNoiseStatus.java
 @@ -74,7 +74,7 @@ public class BatchingBiomeNoiseStatus extends NewChunkStatus {
@@ -359,7 +359,7 @@ index ccee3192..7541d64d 100644
              return Completable.complete();
          }
  
-@@ -84,21 +84,21 @@ public class BatchingBiomeNoiseStatus extends NewChunkStatus {
+@@ -89,21 +89,21 @@ public class BatchingBiomeNoiseStatus extends NewChunkStatus {
          }
  
          Long2ReferenceOpenHashMap<ChunkHolder> holderCache = new Long2ReferenceOpenHashMap<>();
@@ -386,7 +386,7 @@ index ccee3192..7541d64d 100644
                  CLServerBatchedBiomeNoiseContext.BATCH_SIZE,
                  CLServerBatchedBiomeNoiseContext.BATCH_SIZE,
                  (x, z) -> {
-@@ -114,7 +114,7 @@ public class BatchingBiomeNoiseStatus extends NewChunkStatus {
+@@ -119,7 +119,7 @@ public class BatchingBiomeNoiseStatus extends NewChunkStatus {
  
          for (int dx = 0; dx < CLServerBatchedBiomeNoiseContext.BATCH_SIZE; dx++) {
              for (int dz = 0; dz < CLServerBatchedBiomeNoiseContext.BATCH_SIZE; dz++) {
@@ -395,7 +395,7 @@ index ccee3192..7541d64d 100644
                  if (Blender.getBlender(region) != Blender.getNoBlending()) {
                      return Completable.complete();
                  }
-@@ -122,8 +122,8 @@ public class BatchingBiomeNoiseStatus extends NewChunkStatus {
+@@ -127,8 +127,8 @@ public class BatchingBiomeNoiseStatus extends NewChunkStatus {
          }
  
          BoundedRegionArray<StructureAccessor> structureAccessors = new BoundedRegionArray<>(
@@ -406,7 +406,7 @@ index ccee3192..7541d64d 100644
                  CLServerBatchedBiomeNoiseContext.BATCH_SIZE,
                  CLServerBatchedBiomeNoiseContext.BATCH_SIZE,
                  (x, z) -> chunkGenerationContext.world().getStructureAccessor().forRegion(chunkRegions.get(x, z))
-@@ -132,7 +132,7 @@ public class BatchingBiomeNoiseStatus extends NewChunkStatus {
+@@ -137,7 +137,7 @@ public class BatchingBiomeNoiseStatus extends NewChunkStatus {
          boolean allPostNoise = true;
          for (int dx = 0; dx < CLServerBatchedBiomeNoiseContext.BATCH_SIZE; dx++) {
              for (int dz = 0; dz < CLServerBatchedBiomeNoiseContext.BATCH_SIZE; dz++) {
@@ -415,9 +415,9 @@ index ccee3192..7541d64d 100644
                  if (chunk == null || !chunk.getStatus().isAtLeast(ChunkStatus.NOISE)) {
                      allPostNoise = false;
                      break;
-@@ -147,8 +147,8 @@ public class BatchingBiomeNoiseStatus extends NewChunkStatus {
+@@ -151,8 +151,8 @@ public class BatchingBiomeNoiseStatus extends NewChunkStatus {
+ 
          return Completable.defer(() -> {
-             CLServerWorldContext clContext = ((TACSExtension) context.tacs()).c2me$getCLContext();
              return Completable.fromCompletionStage(VanillaWorldGenerationDelegate.runTaskWithLockArea(
 -                    pos.x(),
 -                    pos.z(),
@@ -426,7 +426,7 @@ index ccee3192..7541d64d 100644
                      CLServerBatchedBiomeNoiseContext.BATCH_SIZE,
                      CLServerBatchedBiomeNoiseContext.BATCH_SIZE,
                      context.schedulingManager(),
-@@ -180,7 +180,7 @@ public class BatchingBiomeNoiseStatus extends NewChunkStatus {
+@@ -184,7 +184,7 @@ public class BatchingBiomeNoiseStatus extends NewChunkStatus {
          ChunkPos pos = holder.getKey();
          final Chunk chunk = holder.getItem().get().chunk();
          // depend on BATCH_SIZExBATCH_SIZE if aligned, nothing otherwise
@@ -435,7 +435,7 @@ index ccee3192..7541d64d 100644
              return getGenDeps(pos);
          } else {
              return EMPTY_DEPENDENCIES;
-@@ -194,9 +194,9 @@ public class BatchingBiomeNoiseStatus extends NewChunkStatus {
+@@ -198,9 +198,9 @@ public class BatchingBiomeNoiseStatus extends NewChunkStatus {
              for (int dz = -8; dz < CLServerBatchedBiomeNoiseContext.BATCH_SIZE + 8; dz++) {
                  if (dx == 0 && dz == 0) continue; // skip self
                  if (dx >= 0 && dx < CLServerBatchedBiomeNoiseContext.BATCH_SIZE && dz >= 0 && dz < CLServerBatchedBiomeNoiseContext.BATCH_SIZE) {
@@ -699,13 +699,13 @@ index 27c68e81..883ab30a 100644
  
      /**
 diff --git a/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/mixin/MixinChunkGenerating.java b/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/mixin/MixinChunkGenerating.java
-index 7c1c69c2..56c0d892 100644
+index cd2fdd00..3f2a5481 100644
 --- a/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/mixin/MixinChunkGenerating.java
 +++ b/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/mixin/MixinChunkGenerating.java
-@@ -44,7 +44,7 @@ public class MixinChunkGenerating {
-     @WrapMethod(method = "generateStructures")
-     private static CompletableFuture<Chunk> wrapStructureStarts(ChunkGenerationContext context, ChunkGenerationStep step, BoundedRegionArray<AbstractChunkHolder> chunks, Chunk chunk, Operation<CompletableFuture<Chunk>> original) {
-         CLServerWorldContext clContext = ((TACSExtension) context.world().getChunkManager().chunkLoadingManager).c2me$getCLContext();
+@@ -47,7 +47,7 @@ public class MixinChunkGenerating {
+         if (clContext == null) {
+             return original.call(context, step, chunks, chunk);
+         }
 -        return clContext.getEstimateSurfaceHeightCache().getChunkCache(chunk.getPos().x(), chunk.getPos().z()).thenComposeAsync(cacheEntry -> {
 +        return clContext.getEstimateSurfaceHeightCache().getChunkCache(chunk.getPos().x, chunk.getPos().z).thenComposeAsync(cacheEntry -> {
              if (TLUtil.stage1CachePassing.isBound()) {
