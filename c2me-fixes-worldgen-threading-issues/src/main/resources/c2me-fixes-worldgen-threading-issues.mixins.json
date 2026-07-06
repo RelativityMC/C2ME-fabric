@@ -9,6 +9,7 @@
     "threading.MixinChunkRegion",
     "threading.MixinDesertTempleGenerator",
     "threading.MixinJungleTempleGenerator",
+    "threading.MixinLightStorage",
     "threading.MixinMineshaftGeneratorMineshaftCorridor",
     "threading.MixinMineshaftGeneratorMineshaftRoom",
     "threading.MixinNetherFortressGeneratorBridgePlatform",
