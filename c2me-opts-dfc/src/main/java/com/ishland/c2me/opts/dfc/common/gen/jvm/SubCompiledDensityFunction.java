@@ -33,8 +33,8 @@ import com.ishland.c2me.opts.dfc.common.ducks.ICoordinatesFilling;
 import com.ishland.c2me.opts.dfc.common.ducks.IPreloadedCoordinates;
 import com.ishland.c2me.opts.dfc.common.util.ArrayCache;
 import com.ishland.c2me.opts.dfc.common.vif.EachApplierVanillaInterface;
-import net.minecraft.class_1_1150;
 import net.minecraft.util.dynamic.CodecHolder;
+import net.minecraft.util.math.Interval;
 import net.minecraft.world.gen.chunk.Blender;
 import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
@@ -194,8 +194,8 @@ public class SubCompiledDensityFunction implements DensityFunction {
     }
 
     @Override
-    public class_1_1150 method_1_7456() {
-        return class_1_1150.field_1_7942;
+    public Interval getRange() {
+        return Interval.UNBOUNDED;
     }
 
     @Override

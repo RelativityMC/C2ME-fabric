@@ -85,7 +85,7 @@ public class McToAst {
                 case MUL -> new MulNode(toAst(f.argument1()), toAst(f.argument2()));
                 case MIN -> {
                     double rightMin = f.min();
-                    if (f.argument1().method_1_7456().method_1_7285() < rightMin) {
+                    if (f.argument1().getRange().getMin() < rightMin) {
                         yield new MinShortNode(toAst(f.argument1()), toAst(f.argument2()), rightMin);
                     } else {
                         yield new MinNode(toAst(f.argument1()), toAst(f.argument2()));
@@ -93,7 +93,7 @@ public class McToAst {
                 }
                 case MAX -> {
                     double rightMax = f.max();
-                    if (f.argument1().method_1_7456().method_1_7283() > rightMax) {
+                    if (f.argument1().getRange().getMax() > rightMax) {
                         yield new MaxShortNode(toAst(f.argument1()), toAst(f.argument2()), rightMax);
                     } else {
                         yield new MaxNode(toAst(f.argument1()), toAst(f.argument2()));
