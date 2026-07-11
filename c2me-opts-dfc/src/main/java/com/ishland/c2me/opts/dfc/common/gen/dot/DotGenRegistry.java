@@ -200,51 +200,43 @@ public class DotGenRegistry {
                             .build();
                 }
         );
-
-        if (MixBindings.AVAILABLE) {
-            REGISTRY.registerExactMatch(
-                    MixNode.class,
-                    (DotEmitter<MixNode>) (node, context, builder) ->
-                            builder
-                                    .diamondShape()
-                                    .label("Mix")
-                                    .edge(context.generate(node.input)).label("input").color("blue").finish()
-                                    .edge(context.generate(node.argument1)).label("left").finish()
-                                    .edge(context.generate(node.argument2)).label("right").finish()
-                                    .build()
-            );
-        }
-        if (SelectBindings.AVAILABLE) {
-            REGISTRY.registerExactMatch(
-                    SelectNode.class,
-                    (DotEmitter<SelectNode>) (node, context, builder) -> {
+        REGISTRY.registerExactMatch(
+                MixNode.class,
+                (DotEmitter<MixNode>) (node, context, builder) ->
                         builder
-                                .boxShape()
-                                .label("Select\\nminima=" + Arrays.toString(node.minima) + "\\nmaxima=" + Arrays.toString(node.maxima));
-
-                        AstNode[] functions = node.functions;
-                        for (int i = 0, functionsLength = functions.length; i < functionsLength; i++) {
-                            AstNode function = functions[i];
-                            builder.edge(context.generate(function)).label(String.valueOf(i)).finish();
-                        }
-                        return builder.build();
+                                .diamondShape()
+                                .label("Mix")
+                                .edge(context.generate(node.input)).label("input").color("blue").finish()
+                                .edge(context.generate(node.argument1)).label("left").finish()
+                                .edge(context.generate(node.argument2)).label("right").finish()
+                                .build()
+        );
+        REGISTRY.registerExactMatch(
+                SelectNode.class,
+                (DotEmitter<SelectNode>) (node, context, builder) -> {
+                    builder
+                            .boxShape()
+                            .label("Select\\nminima=" + Arrays.toString(node.minima) + "\\nmaxima=" + Arrays.toString(node.maxima));
+                    AstNode[] functions = node.functions;
+                    for (int i = 0, functionsLength = functions.length; i < functionsLength; i++) {
+                        AstNode function = functions[i];
+                        builder.edge(context.generate(function)).label(String.valueOf(i)).finish();
                     }
-            );
-        }
-        if (ShiftBindings.AVAILABLE) {
-            REGISTRY.registerExactMatch(
-                    ShiftNode.class,
-                    (DotEmitter<ShiftNode>) (node, context, builder) ->
-                            builder
-                                    .hexagonShape()
-                                    .label("Shift")
-                                    .edge(context.generate(node.input)).label("input").finish()
-                                    .edge(context.generate(node.inputX)).label("inputX").finish()
-                                    .edge(context.generate(node.inputY)).label("inputY").finish()
-                                    .edge(context.generate(node.inputZ)).label("inputZ").finish()
-                                    .build()
-            );
-        }
+                    return builder.build();
+                }
+        );
+        REGISTRY.registerExactMatch(
+                ShiftNode.class,
+                (DotEmitter<ShiftNode>) (node, context, builder) ->
+                        builder
+                                .hexagonShape()
+                                .label("Shift")
+                                .edge(context.generate(node.input)).label("input").finish()
+                                .edge(context.generate(node.inputX)).label("inputX").finish()
+                                .edge(context.generate(node.inputY)).label("inputY").finish()
+                                .edge(context.generate(node.inputZ)).label("inputZ").finish()
+                                .build()
+        );
     }
 
     public static <T extends AstNode> int doDotGen(T node, DotGen.Context context, DotGen.Context.Builder builder) {

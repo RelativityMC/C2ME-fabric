@@ -88,9 +88,9 @@ public class BytecodeGenRegistry {
         REGISTRY.registerExactMatch(EndIslandsNode.class, DelegateNodeBytecodeEmitter.instance());
         REGISTRY.registerExactMatch(InterpolatedNoiseSamplerNode.class, DelegateNodeBytecodeEmitter.instance());
 
-        if (MixBindings.AVAILABLE) REGISTRY.registerExactMatch(MixNode.class,  MixNodeBytecodeEmitter.INSTANCE);
-        if (SelectBindings.AVAILABLE) REGISTRY.registerExactMatch(SelectNode.class, SelectNodeBytecodeEmitter.INSTANCE);
-        if (ShiftBindings.AVAILABLE) REGISTRY.registerExactMatch(ShiftNode.class, ShiftNodeBytecodeEmitter.INSTANCE);
+        REGISTRY.registerExactMatch(MixNode.class,  MixNodeBytecodeEmitter.INSTANCE);
+        REGISTRY.registerExactMatch(SelectNode.class, SelectNodeBytecodeEmitter.INSTANCE);
+        REGISTRY.registerExactMatch(ShiftNode.class, ShiftNodeBytecodeEmitter.INSTANCE);
     }
 
     public static <T extends AstNode> void doBytecodeGenSingle(T node, BytecodeGen.Context context, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {

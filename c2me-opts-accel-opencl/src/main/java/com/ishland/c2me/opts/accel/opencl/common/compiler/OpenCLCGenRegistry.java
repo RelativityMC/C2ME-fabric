@@ -77,10 +77,9 @@ public class OpenCLCGenRegistry {
         OpenCLCGenData.REGISTRY.registerExactMatch(RootNode.class, RootNodeOpenCLCEmitter.INSTANCE);
         OpenCLCGenData.REGISTRY.registerExactMatch(SplineAstNode.class, SplineAstNodeOpenCLCEmitter.INSTANCE);
         OpenCLCGenData.REGISTRY.registerExactMatch(YClampedGradientNode.class, YClampedGradientNodeOpenCLCEmitter.INSTANCE);
-
-        if (MixBindings.AVAILABLE) OpenCLCGenData.REGISTRY.registerExactMatch(MixNode.class, MixNodeOpenCLCEmitter.INSTANCE);
-        if (SelectBindings.AVAILABLE) OpenCLCGenData.REGISTRY.registerExactMatch(SelectNode.class, SelectNodeOpenCLCEmitter.INSTANCE);
-        if (ShiftBindings.AVAILABLE) OpenCLCGenData.REGISTRY.registerExactMatch(ShiftNode.class, ShiftNodeOpenCLCEmitter.INSTANCE);
+        OpenCLCGenData.REGISTRY.registerExactMatch(MixNode.class, MixNodeOpenCLCEmitter.INSTANCE);
+        OpenCLCGenData.REGISTRY.registerExactMatch(SelectNode.class, SelectNodeOpenCLCEmitter.INSTANCE);
+        OpenCLCGenData.REGISTRY.registerExactMatch(ShiftNode.class, ShiftNodeOpenCLCEmitter.INSTANCE);
 
         OpenCLCGenData.REGISTRY.registerExactMatch(DelegateNode.class, (OpenCLCEmitter<DelegateNode>) (node, context) -> {
             throw new UnsupportedOperationException(String.format("Unsupported density function type: %s", node.getDelegate().getClass()));

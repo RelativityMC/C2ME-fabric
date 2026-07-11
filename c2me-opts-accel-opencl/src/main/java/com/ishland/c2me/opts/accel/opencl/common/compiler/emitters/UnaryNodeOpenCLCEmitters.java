@@ -173,16 +173,15 @@ public class UnaryNodeOpenCLCEmitters {
 
     public static void register(CodeGenRegistry<OpenCLCEmitter<? extends AstNode>> registry) {
         registry.registerExactMatch(AbsNode.class, AbsNodeEmitter.INSTANCE);
+        registry.registerExactMatch(CeilNode.class, CeilNodeEmitter.INSTANCE);
+        registry.registerExactMatch(CosNode.class, CosNodeEmitter.INSTANCE);
         registry.registerExactMatch(CubeNode.class, CubeNodeEmitter.INSTANCE);
+        registry.registerExactMatch(FloorNode.class, FloorNodeEmitter.INSTANCE);
         registry.registerExactMatch(NegMulNode.class, NegMulNodeEmitter.INSTANCE);
+        registry.registerExactMatch(SinNode.class, SinNodeEmitter.INSTANCE);
+        registry.registerExactMatch(SqrtNode.class, SqrtNodeEmitter.INSTANCE);
         registry.registerExactMatch(SquareNode.class, SquareNodeEmitter.INSTANCE);
         registry.registerExactMatch(SqueezeNode.class, SqueezeNodeEmitter.INSTANCE);
-
-        if (CeilBindings.AVAILABLE) registry.registerExactMatch(CeilNode.class, CeilNodeEmitter.INSTANCE);
-        if (CosBindings.AVAILABLE) registry.registerExactMatch(CosNode.class, CosNodeEmitter.INSTANCE);
-        if (FloorBindings.AVAILABLE) registry.registerExactMatch(FloorNode.class, FloorNodeEmitter.INSTANCE);
-        if (SinBindings.AVAILABLE) registry.registerExactMatch(SinNode.class, SinNodeEmitter.INSTANCE);
-        if (SqrtBindings.AVAILABLE) registry.registerExactMatch(SqrtNode.class, SqrtNodeEmitter.INSTANCE);
     }
 
 }
