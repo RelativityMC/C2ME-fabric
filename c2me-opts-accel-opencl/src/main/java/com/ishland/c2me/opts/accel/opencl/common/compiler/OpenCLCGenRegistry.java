@@ -18,9 +18,6 @@ package com.ishland.c2me.opts.accel.opencl.common.compiler;
 
 import com.ishland.c2me.opts.accel.opencl.common.compiler.emitters.BinaryNodeOpenCLCEmitters;
 import com.ishland.c2me.opts.accel.opencl.common.compiler.emitters.UnaryNodeOpenCLCEmitters;
-import com.ishland.c2me.opts.accel.opencl.common.compiler.emitters.integration.lithostitched.misc.MixNodeOpenCLCEmitter;
-import com.ishland.c2me.opts.accel.opencl.common.compiler.emitters.integration.lithostitched.misc.SelectNodeOpenCLCEmitter;
-import com.ishland.c2me.opts.accel.opencl.common.compiler.emitters.integration.lithostitched.misc.ShiftNodeOpenCLCEmitter;
 import com.ishland.c2me.opts.accel.opencl.common.compiler.emitters.misc.BeardifierNodeOpenCLCEmitter;
 import com.ishland.c2me.opts.accel.opencl.common.compiler.emitters.misc.CacheLikeNodeOpenCLCEmitter;
 import com.ishland.c2me.opts.accel.opencl.common.compiler.emitters.misc.ConstantNodeOpenCLCEmitter;
@@ -35,12 +32,6 @@ import com.ishland.c2me.opts.accel.opencl.common.compiler.emitters.misc.RootNode
 import com.ishland.c2me.opts.accel.opencl.common.compiler.emitters.misc.SplineAstNodeOpenCLCEmitter;
 import com.ishland.c2me.opts.accel.opencl.common.compiler.emitters.misc.YClampedGradientNodeOpenCLCEmitter;
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
-import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.MixBindings;
-import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.SelectBindings;
-import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.ShiftBindings;
-import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc.MixNode;
-import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc.SelectNode;
-import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc.ShiftNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.BeardifierNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.CacheLikeNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantNode;
@@ -77,9 +68,6 @@ public class OpenCLCGenRegistry {
         OpenCLCGenData.REGISTRY.registerExactMatch(RootNode.class, RootNodeOpenCLCEmitter.INSTANCE);
         OpenCLCGenData.REGISTRY.registerExactMatch(SplineAstNode.class, SplineAstNodeOpenCLCEmitter.INSTANCE);
         OpenCLCGenData.REGISTRY.registerExactMatch(YClampedGradientNode.class, YClampedGradientNodeOpenCLCEmitter.INSTANCE);
-        OpenCLCGenData.REGISTRY.registerExactMatch(MixNode.class, MixNodeOpenCLCEmitter.INSTANCE);
-        OpenCLCGenData.REGISTRY.registerExactMatch(SelectNode.class, SelectNodeOpenCLCEmitter.INSTANCE);
-        OpenCLCGenData.REGISTRY.registerExactMatch(ShiftNode.class, ShiftNodeOpenCLCEmitter.INSTANCE);
 
         OpenCLCGenData.REGISTRY.registerExactMatch(DelegateNode.class, (OpenCLCEmitter<DelegateNode>) (node, context) -> {
             throw new UnsupportedOperationException(String.format("Unsupported density function type: %s", node.getDelegate().getClass()));
