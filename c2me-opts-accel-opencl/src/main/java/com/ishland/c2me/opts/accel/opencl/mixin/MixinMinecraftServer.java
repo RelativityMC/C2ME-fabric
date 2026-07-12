@@ -68,6 +68,7 @@ public class MixinMinecraftServer implements MinecraftServerExtension {
                 if (!Config.allowIncompatibilityFallback) {
                     throw new IllegalStateException("No OpenCL devices found");
                 }
+                this.c2me$clContext = null;
                 return;
             }
         } catch (Throwable t) {
@@ -83,8 +84,10 @@ public class MixinMinecraftServer implements MinecraftServerExtension {
     @Inject(method = "shutdown", at = @At("RETURN"))
     private void postStopServer(CallbackInfo ci) {
         try {
-            this.c2me$clContext.closeAllDevices();
-            this.c2me$clContext = null;
+            if (this.c2me$clContext != null) {
+                this.c2me$clContext.closeAllDevices();
+                this.c2me$clContext = null;
+            }
         } catch (Throwable t) {
             LOGGER.error("Failed to release OpenCL context", t);
         }
