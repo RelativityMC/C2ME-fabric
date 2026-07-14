@@ -39,7 +39,7 @@ import com.ishland.c2me.opts.dfc.common.ast.unary.CubeNode;
 import com.ishland.c2me.opts.dfc.common.ast.unary.NegMulNode;
 import com.ishland.c2me.opts.dfc.common.ast.unary.SquareNode;
 import com.ishland.c2me.opts.dfc.common.ast.unary.SqueezeNode;
-import com.ishland.c2me.opts.dfc.common.util.ZeroUtils;
+import com.ishland.c2me.opts.dfc.common.gen.jvm.util.ZeroUtils;
 import net.minecraft.util.math.MathHelper;
 
 public class FoldConstants implements AstTransformer {

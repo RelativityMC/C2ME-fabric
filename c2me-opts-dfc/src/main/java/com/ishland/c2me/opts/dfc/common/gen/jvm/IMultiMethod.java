@@ -25,11 +25,11 @@
 package com.ishland.c2me.opts.dfc.common.gen.jvm;
 
 import com.ishland.c2me.opts.dfc.common.ast.EvalType;
-import com.ishland.c2me.opts.dfc.common.util.ArrayCache;
+import com.ishland.c2me.opts.dfc.common.gen.jvm.util.DfcObjectCache;
 
 @FunctionalInterface
 public interface IMultiMethod {
 
-    void evalMulti(double[] res, int[] x, int[] y, int[] z, EvalType type, ArrayCache arrayCache);
+    void evalMulti(double[] res, int[] x, int[] y, int[] z, EvalType type, DfcObjectCache dfcObjectCache);
 
 }

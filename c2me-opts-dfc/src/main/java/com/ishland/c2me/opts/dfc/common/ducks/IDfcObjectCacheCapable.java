@@ -22,44 +22,12 @@
  * THE SOFTWARE.
  */
 
-package com.ishland.c2me.opts.dfc.common.vif;
+package com.ishland.c2me.opts.dfc.common.ducks;
 
-import com.ishland.c2me.opts.dfc.common.ast.EvalType;
-import net.minecraft.world.gen.densityfunction.DensityFunction;
+import com.ishland.c2me.opts.dfc.common.gen.jvm.util.DfcObjectCache;
 
-import java.util.Objects;
+public interface IDfcObjectCacheCapable {
 
-public class NoisePosVanillaInterface implements DensityFunction.NoisePos {
-
-    private final int x;
-    private final int y;
-    private final int z;
-    private final EvalType type;
-
-    public NoisePosVanillaInterface(int x, int y, int z, EvalType type) {
-        this.x = x;
-        this.y = y;
-        this.z = z;
-        this.type = Objects.requireNonNull(type);
-    }
-
-    @Override
-    public int blockX() {
-        return x;
-    }
-
-    @Override
-    public int blockY() {
-        return y;
-    }
-
-    @Override
-    public int blockZ() {
-        return z;
-    }
-
-    public EvalType getType() {
-        return type;
-    }
+    DfcObjectCache c2me$getDfcObjectCache();
 
 }
