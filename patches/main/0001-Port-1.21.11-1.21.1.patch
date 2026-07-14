@@ -413,7 +413,7 @@ index db3792a6..dfa9613f 100644
          LOGGER.warn("This version include features that are still under development. Your world might crash, break. Use at your own risk!");
          list.add(ModExperimentalWarningScreen::new);
 diff --git a/c2me-base/src/main/java/com/ishland/c2me/base/mixin/report/MixinDedicatedServerWatchdog.java b/c2me-base/src/main/java/com/ishland/c2me/base/mixin/report/MixinDedicatedServerWatchdog.java
-index 7616f386..e257d632 100644
+index 0288f2ca..6a110fd5 100644
 --- a/c2me-base/src/main/java/com/ishland/c2me/base/mixin/report/MixinDedicatedServerWatchdog.java
 +++ b/c2me-base/src/main/java/com/ishland/c2me/base/mixin/report/MixinDedicatedServerWatchdog.java
 @@ -36,6 +36,7 @@ import org.spongepowered.asm.mixin.Mixin;
@@ -443,7 +443,7 @@ index 7616f386..e257d632 100644
 -    private static void addInstrumentationData(String message, long threadId, CallbackInfoReturnable<CrashReport> cir, ThreadMXBean threadMXBean, ThreadInfo[] threadInfos, StringBuilder stringBuilder, Error error, CrashReport crashReport) {
 +    @Inject(method = "run", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/crash/CrashReport;addElement(Ljava/lang/String;)Lnet/minecraft/util/crash/CrashReportSection;", ordinal = 0))
 +    private void addInstrumentationData(CallbackInfo ci, @Local CrashReport crashReport) {
-         CrashReportSection section = crashReport.addElement("Thread trace dump (obtained on a best-effort basis)");
+         CrashReportSection section = crashReport.addElement("Thread trace dump (obtained on a best-effort basis)", 1);
          try {
              for (Map.Entry<Thread, ThreadState> entry : ThreadInstrumentation.entrySet()) {
 diff --git a/c2me-base/src/main/java/com/ishland/c2me/base/mixin/scheduler/MixinServerChunkManager.java b/c2me-base/src/main/java/com/ishland/c2me/base/mixin/scheduler/MixinServerChunkManager.java
