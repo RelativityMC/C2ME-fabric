@@ -73,6 +73,7 @@ public abstract class MixinServerChunkManager implements ISyncLoadManager {
     @WrapOperation(method = {
             "getChunk(IILnet/minecraft/world/chunk/ChunkStatus;Z)Lnet/minecraft/world/chunk/Chunk;",
             "getChunkBlocking(IILnet/minecraft/world/chunk/ChunkStatus;Z)Lnet/minecraft/world/chunk/Chunk;",
+            "getChunkBlocking(IILnet/minecraft/world/level/chunk/status/ChunkStatus;Z)Lnet/minecraft/world/level/chunk/ChunkAccess;", // workaround tiny-remapper
             },
             at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerChunkManager$MainThreadExecutor;runTasks(Ljava/util/function/BooleanSupplier;)V"), require = 0)
     private void instrumentAwaitChunk(ServerChunkManager.MainThreadExecutor instance, BooleanSupplier stopCondition, Operation<Void> original, int x, int z, ChunkStatus leastStatus, boolean create) {
