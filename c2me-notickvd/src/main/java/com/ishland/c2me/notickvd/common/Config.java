@@ -25,7 +25,6 @@
 package com.ishland.c2me.notickvd.common;
 
 import com.ishland.c2me.base.common.C2MEConstants;
-import com.ishland.c2me.base.common.GlobalExecutors;
 import com.ishland.c2me.base.common.config.ConfigSystem;
 import com.ishland.c2me.base.common.config.ModStatuses;
 
@@ -35,7 +34,7 @@ public class Config {
             .key("noTickViewDistance.maxConcurrentChunkLoads")
             .comment("No-tick view distance max concurrent chunk loads \n" +
                     " Lower this for a better latency and higher this for a faster loading")
-            .getLong(GlobalExecutors.GLOBAL_EXECUTOR_PARALLELISM * 3L, GlobalExecutors.GLOBAL_EXECUTOR_PARALLELISM * 3L, ConfigSystem.LongChecks.POSITIVE_VALUES_ONLY);
+            .getLong(com.ishland.c2me.base.ModuleEntryPoint.globalExecutorParallelism * 3L, com.ishland.c2me.base.ModuleEntryPoint.globalExecutorParallelism * 3L, ConfigSystem.LongChecks.POSITIVE_VALUES_ONLY);
 
     public static final boolean enableExtRenderDistanceProtocol = new ConfigSystem.ConfigAccessor()
             .key("noTickViewDistance.enableExtRenderDistanceProtocol")
