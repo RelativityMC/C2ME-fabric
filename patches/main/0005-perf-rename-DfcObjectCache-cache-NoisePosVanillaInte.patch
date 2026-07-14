@@ -1,0 +1,1136 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: ishland <30385023+ishland@users.noreply.github.com>
+Date: Tue, 14 Jul 2026 16:25:34 +0800
+Subject: [PATCH] perf: rename DfcObjectCache, cache NoisePosVanillaInterface
+ instances
+
+Cherry-picked from 2ded25cba0f2172efcee977ee870d3ab66e12090
+
+diff --git a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/ast/EvalType.java b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/ast/EvalType.java
+index 36adcdc9..7924a4f9 100644
+--- a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/ast/EvalType.java
++++ b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/ast/EvalType.java
+@@ -24,7 +24,7 @@
+ 
+ package com.ishland.c2me.opts.dfc.common.ast;
+ 
+-import com.ishland.c2me.opts.dfc.common.vif.EachApplierVanillaInterface;
++import com.ishland.c2me.opts.dfc.common.gen.jvm.vif.EachApplierVanillaInterface;
+ import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
+ import net.minecraft.world.gen.densityfunction.DensityFunction;
+ 
+diff --git a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/ast/opto/passes/FoldConstants.java b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/ast/opto/passes/FoldConstants.java
+index 7ad94591..84e39b93 100644
+--- a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/ast/opto/passes/FoldConstants.java
++++ b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/ast/opto/passes/FoldConstants.java
+@@ -39,7 +39,7 @@ import com.ishland.c2me.opts.dfc.common.ast.unary.CubeNode;
+ import com.ishland.c2me.opts.dfc.common.ast.unary.NegMulNode;
+ import com.ishland.c2me.opts.dfc.common.ast.unary.SquareNode;
+ import com.ishland.c2me.opts.dfc.common.ast.unary.SqueezeNode;
+-import com.ishland.c2me.opts.dfc.common.util.ZeroUtils;
++import com.ishland.c2me.opts.dfc.common.gen.jvm.util.ZeroUtils;
+ import net.minecraft.util.math.MathHelper;
+ 
+ public class FoldConstants implements AstTransformer {
+diff --git a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/ducks/IArrayCacheCapable.java b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/ducks/IDfcObjectCacheCapable.java
+similarity index 88%
+rename from c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/ducks/IArrayCacheCapable.java
+rename to c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/ducks/IDfcObjectCacheCapable.java
+index d70edcca..70948a1a 100644
+--- a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/ducks/IArrayCacheCapable.java
++++ b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/ducks/IDfcObjectCacheCapable.java
+@@ -24,10 +24,10 @@
+ 
+ package com.ishland.c2me.opts.dfc.common.ducks;
+ 
+-import com.ishland.c2me.opts.dfc.common.util.ArrayCache;
++import com.ishland.c2me.opts.dfc.common.gen.jvm.util.DfcObjectCache;
+ 
+-public interface IArrayCacheCapable {
++public interface IDfcObjectCacheCapable {
+ 
+-    ArrayCache c2me$getArrayCache();
++    DfcObjectCache c2me$getDfcObjectCache();
+ 
+ }
+diff --git a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/jvm/BytecodeGen.java b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/jvm/BytecodeGen.java
+index 1efd8d10..bf0678ae 100644
+--- a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/jvm/BytecodeGen.java
++++ b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/jvm/BytecodeGen.java
+@@ -34,7 +34,7 @@ import com.ishland.c2me.opts.dfc.common.ast.misc.YClampedGradientNode;
+ import com.ishland.c2me.opts.dfc.common.ast.opto.OptoPasses;
+ import com.ishland.c2me.opts.dfc.common.gen.GenDumper;
+ import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefD;
+-import com.ishland.c2me.opts.dfc.common.util.ArrayCache;
++import com.ishland.c2me.opts.dfc.common.gen.jvm.util.DfcObjectCache;
+ import it.unimi.dsi.fastutil.Hash;
+ import it.unimi.dsi.fastutil.Pair;
+ import it.unimi.dsi.fastutil.ints.IntObjectPair;
+@@ -42,7 +42,7 @@ import it.unimi.dsi.fastutil.objects.Object2ReferenceMap;
+ import it.unimi.dsi.fastutil.objects.Object2ReferenceMaps;
+ import it.unimi.dsi.fastutil.objects.Object2ReferenceOpenCustomHashMap;
+ import it.unimi.dsi.fastutil.objects.Object2ReferenceOpenHashMap;
+-import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
++import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet;
+ import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
+ import it.unimi.dsi.fastutil.objects.Reference2ReferenceMap;
+ import net.minecraft.util.math.Spline;
+@@ -160,11 +160,11 @@ public class BytecodeGen {
+                         context.className,
+                         Opcodes.ACC_PUBLIC,
+                         "<init>",
+-                        Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(Object[].class)),
++                        Context.CONSTRUCTOR_DESC,
+                         context.classWriter.visitMethod(
+                                 Opcodes.ACC_PUBLIC,
+                                 "<init>",
+-                                Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(Object[].class)),
++                                Context.CONSTRUCTOR_DESC,
+                                 null,
+                                 null
+                         )
+@@ -191,9 +191,9 @@ public class BytecodeGen {
+             m.putfield(context.className, name, Type.getDescriptor(type));
+         }
+ 
+-        for (String postProcessingMethod : context.postProcessMethods.stream().sorted().toList()) {
++        for (String postProcessingMethod : context.postProcessMethods) {
+             m.load(0, InstructionAdapter.OBJECT_TYPE);
+-            m.invokevirtual(context.className, postProcessingMethod, "()V", false);
++            m.invokevirtual(context.className, postProcessingMethod, Context.POSTPROCESSING_DESC, false);
+         }
+ 
+         m.areturn(Type.VOID_TYPE);
+@@ -313,8 +313,10 @@ public class BytecodeGen {
+     }
+ 
+     public static class Context {
+-        public static final String SINGLE_DESC = Type.getMethodDescriptor(Type.getType(double.class), Type.getType(int.class), Type.getType(int.class), Type.getType(int.class), Type.getType(EvalType.class));
+-        public static final String MULTI_DESC = Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(double[].class), Type.getType(int[].class), Type.getType(int[].class), Type.getType(int[].class), Type.getType(EvalType.class), Type.getType(ArrayCache.class));
++        public static final String SINGLE_DESC = Type.getMethodDescriptor(Type.getType(double.class), Type.getType(int.class), Type.getType(int.class), Type.getType(int.class), Type.getType(EvalType.class), Type.getType(DfcObjectCache.class));
++        public static final String MULTI_DESC = Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(double[].class), Type.getType(int[].class), Type.getType(int[].class), Type.getType(int[].class), Type.getType(EvalType.class), Type.getType(DfcObjectCache.class));
++        public static final String POSTPROCESSING_DESC = Type.getMethodDescriptor(Type.VOID_TYPE);
++        public static final String CONSTRUCTOR_DESC = Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(Object[].class));
+         public final ClassWriter classWriter;
+         public final String className;
+         public final String classDesc;
+@@ -323,7 +325,7 @@ public class BytecodeGen {
+         private final Object2ReferenceOpenHashMap<AstNode, String> multiMethods = new Object2ReferenceOpenHashMap<>();
+         private final Object2ReferenceOpenHashMap<Spline<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper>, String> splineMethods = new Object2ReferenceOpenHashMap<>();
+         private final Object2ReferenceOpenHashMap<Spline<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper>, String> splineMethodsCache1 = new Object2ReferenceOpenHashMap<>();
+-        private final ObjectOpenHashSet<String> postProcessMethods = new ObjectOpenHashSet<>();
++        private final ObjectLinkedOpenHashSet<String> postProcessMethods = new ObjectLinkedOpenHashSet<>();
+         private final Reference2ObjectOpenHashMap<Object, FieldRecord> args = new Reference2ObjectOpenHashMap<>();
+ 
+         public Context(ClassWriter classWriter, String className) {
+@@ -392,7 +394,7 @@ public class BytecodeGen {
+             Label end = new Label();
+             adapter.visitLabel(start);
+             generator.accept(adapter, (localName, localDesc) -> {
+-                int ordinal = extraLocals.size() + 5;
++                int ordinal = extraLocals.size() + 6;
+                 extraLocals.add(IntObjectPair.of(ordinal, Pair.of(localName, localDesc)));
+                 return ordinal;
+             });
+@@ -402,6 +404,7 @@ public class BytecodeGen {
+             adapter.visitLocalVariable("y", Type.INT_TYPE.getDescriptor(), null, start, end, 2);
+             adapter.visitLocalVariable("z", Type.INT_TYPE.getDescriptor(), null, start, end, 3);
+             adapter.visitLocalVariable("evalType", Type.getType(EvalType.class).getDescriptor(), null, start, end, 4);
++            adapter.visitLocalVariable("dfcObjectCache", Type.getType(DfcObjectCache.class).getDescriptor(), null, start, end, 5);
+             for (IntObjectPair<Pair<String, String>> local : extraLocals) {
+                 adapter.visitLocalVariable(local.right().left(), local.right().right(), null, start, end, local.leftInt());
+             }
+@@ -451,7 +454,7 @@ public class BytecodeGen {
+             Label end = new Label();
+             adapter.visitLabel(start);
+             generator.accept(adapter, (localName, localDesc) -> {
+-                int ordinal = extraLocals.size() + 7;
++                int ordinal = extraLocals.size() + 8;
+                 extraLocals.add(IntObjectPair.of(ordinal, Pair.of(localName, localDesc)));
+                 return ordinal;
+             });
+@@ -462,7 +465,7 @@ public class BytecodeGen {
+             adapter.visitLocalVariable("y", Type.getType(double[].class).getDescriptor(), null, start, end, 3);
+             adapter.visitLocalVariable("z", Type.getType(double[].class).getDescriptor(), null, start, end, 4);
+             adapter.visitLocalVariable("evalType", Type.getType(EvalType.class).getDescriptor(), null, start, end, 5);
+-            adapter.visitLocalVariable("arrayCache", Type.getType(ArrayCache.class).getDescriptor(), null, start, end, 6);
++            adapter.visitLocalVariable("dfcObjectCache", Type.getType(DfcObjectCache.class).getDescriptor(), null, start, end, 6);
+             for (IntObjectPair<Pair<String, String>> local : extraLocals) {
+                 adapter.visitLocalVariable(local.right().left(), local.right().right(), null, start, end, local.leftInt());
+             }
+@@ -486,6 +489,7 @@ public class BytecodeGen {
+                 m.load(2, Type.INT_TYPE);
+                 m.load(3, Type.INT_TYPE);
+                 m.load(4, InstructionAdapter.OBJECT_TYPE);
++                m.load(5, InstructionAdapter.OBJECT_TYPE);
+                 m.invokevirtual(this.className, target.generatedMethod(), SINGLE_DESC, false);
+             }
+         }
+@@ -505,6 +509,7 @@ public class BytecodeGen {
+                 m.load(indexLocal, Type.INT_TYPE);
+                 m.aload(Type.INT_TYPE);
+                 m.load(5, InstructionAdapter.OBJECT_TYPE);
++                m.load(6, InstructionAdapter.OBJECT_TYPE);
+ 
+                 m.invokevirtual(
+                         this.className,
+@@ -590,11 +595,11 @@ public class BytecodeGen {
+                             this.className,
+                             Opcodes.ACC_PRIVATE | Opcodes.ACC_FINAL,
+                             name,
+-                            "()V",
++                            POSTPROCESSING_DESC,
+                             classWriter.visitMethod(
+                                     Opcodes.ACC_PRIVATE | Opcodes.ACC_FINAL,
+                                     name,
+-                                    "()V",
++                                    POSTPROCESSING_DESC,
+                                     null,
+                                     null
+                             )
+diff --git a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/jvm/CompiledEntry.java b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/jvm/CompiledEntry.java
+index 1dc940b9..30400fe9 100644
+--- a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/jvm/CompiledEntry.java
++++ b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/jvm/CompiledEntry.java
+@@ -25,13 +25,13 @@
+ package com.ishland.c2me.opts.dfc.common.gen.jvm;
+ 
+ import com.ishland.c2me.opts.dfc.common.ast.EvalType;
+-import com.ishland.c2me.opts.dfc.common.util.ArrayCache;
++import com.ishland.c2me.opts.dfc.common.gen.jvm.util.DfcObjectCache;
+ 
+ public interface CompiledEntry extends ISingleMethod, IMultiMethod {
+ 
+-    double evalSingle(int x, int y, int z, EvalType type);
++    double evalSingle(int x, int y, int z, EvalType type, DfcObjectCache dfcObjectCache);
+ 
+-    void evalMulti(double[] res, int[] x, int[] y, int[] z, EvalType type, ArrayCache arrayCache);
++    void evalMulti(double[] res, int[] x, int[] y, int[] z, EvalType type, DfcObjectCache dfcObjectCache);
+ 
+     CompiledEntry newInstance(Object[] args);
+ 
+diff --git a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/jvm/IMultiMethod.java b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/jvm/IMultiMethod.java
+index 564bf615..f9fe23c2 100644
+--- a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/jvm/IMultiMethod.java
++++ b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/jvm/IMultiMethod.java
+@@ -25,11 +25,11 @@
+ package com.ishland.c2me.opts.dfc.common.gen.jvm;
+ 
+ import com.ishland.c2me.opts.dfc.common.ast.EvalType;
+-import com.ishland.c2me.opts.dfc.common.util.ArrayCache;
++import com.ishland.c2me.opts.dfc.common.gen.jvm.util.DfcObjectCache;
+ 
+ @FunctionalInterface
+ public interface IMultiMethod {
+ 
+-    void evalMulti(double[] res, int[] x, int[] y, int[] z, EvalType type, ArrayCache arrayCache);
++    void evalMulti(double[] res, int[] x, int[] y, int[] z, EvalType type, DfcObjectCache dfcObjectCache);
+ 
+ }
+diff --git a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/jvm/ISingleMethod.java b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/jvm/ISingleMethod.java
+index 17600f45..caf5217d 100644
+--- a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/jvm/ISingleMethod.java
++++ b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/jvm/ISingleMethod.java
+@@ -25,10 +25,11 @@
+ package com.ishland.c2me.opts.dfc.common.gen.jvm;
+ 
+ import com.ishland.c2me.opts.dfc.common.ast.EvalType;
++import com.ishland.c2me.opts.dfc.common.gen.jvm.util.DfcObjectCache;
+ 
+ @FunctionalInterface
+ public interface ISingleMethod {
+ 
+-    double evalSingle(int x, int y, int z, EvalType type);
++    double evalSingle(int x, int y, int z, EvalType type, DfcObjectCache dfcObjectCache);
+ 
+ }
+diff --git a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/jvm/SubCompiledDensityFunction.java b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/jvm/SubCompiledDensityFunction.java
+index 12dfdaea..6abb9172 100644
+--- a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/jvm/SubCompiledDensityFunction.java
++++ b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/jvm/SubCompiledDensityFunction.java
+@@ -26,12 +26,12 @@ package com.ishland.c2me.opts.dfc.common.gen.jvm;
+ 
+ import com.google.common.base.Suppliers;
+ import com.ishland.c2me.opts.dfc.common.ast.EvalType;
+-import com.ishland.c2me.opts.dfc.common.ducks.IArrayCacheCapable;
++import com.ishland.c2me.opts.dfc.common.ducks.IDfcObjectCacheCapable;
+ import com.ishland.c2me.opts.dfc.common.ducks.IBlendingAwareVisitor;
+ import com.ishland.c2me.opts.dfc.common.ducks.ICoordinatesFilling;
+ import com.ishland.c2me.opts.dfc.common.ducks.IPreloadedCoordinates;
+-import com.ishland.c2me.opts.dfc.common.util.ArrayCache;
+-import com.ishland.c2me.opts.dfc.common.vif.EachApplierVanillaInterface;
++import com.ishland.c2me.opts.dfc.common.gen.jvm.util.DfcObjectCache;
++import com.ishland.c2me.opts.dfc.common.gen.jvm.vif.EachApplierVanillaInterface;
+ import net.minecraft.util.dynamic.CodecHolder;
+ import net.minecraft.world.gen.chunk.Blender;
+ import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
+@@ -78,7 +78,8 @@ public class SubCompiledDensityFunction implements DensityFunction {
+             }
+             return fallback.sample(pos);
+         } else {
+-            return this.singleMethod.evalSingle(pos.blockX(), pos.blockY(), pos.blockZ(), EvalType.from(pos));
++            DfcObjectCache cache = pos instanceof IDfcObjectCacheCapable cacheCapable ? cacheCapable.c2me$getDfcObjectCache() : DfcObjectCache.Noop.INSTANCE;
++        return this.singleMethod.evalSingle(pos.blockX(), pos.blockY(), pos.blockZ(), EvalType.from(pos), cache);
+         }
+     }
+ 
+@@ -95,11 +96,11 @@ public class SubCompiledDensityFunction implements DensityFunction {
+             }
+         }
+         if (applier instanceof EachApplierVanillaInterface vanillaInterface) {
+-            this.multiMethod.evalMulti(densities, vanillaInterface.getX(), vanillaInterface.getY(), vanillaInterface.getZ(), EvalType.from(applier), vanillaInterface.c2me$getArrayCache());
++            this.multiMethod.evalMulti(densities, vanillaInterface.getX(), vanillaInterface.getY(), vanillaInterface.getZ(), EvalType.from(applier), vanillaInterface.c2me$getDfcObjectCache());
+             return;
+         }
+ 
+-        ArrayCache cache = applier instanceof IArrayCacheCapable cacheCapable ? cacheCapable.c2me$getArrayCache() : new ArrayCache();
++        DfcObjectCache cache = applier instanceof IDfcObjectCacheCapable cacheCapable ? cacheCapable.c2me$getDfcObjectCache() : DfcObjectCache.Noop.INSTANCE;
+         int[] x;
+         int[] y;
+         int[] z;
+diff --git a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/jvm/emitters/BinaryNodeBytecodeEmitters.java b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/jvm/emitters/BinaryNodeBytecodeEmitters.java
+index 674531ed..66b451cf 100644
+--- a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/jvm/emitters/BinaryNodeBytecodeEmitters.java
++++ b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/jvm/emitters/BinaryNodeBytecodeEmitters.java
+@@ -36,7 +36,7 @@ import com.ishland.c2me.opts.dfc.common.gen.CodeGenRegistry;
+ import com.ishland.c2me.opts.dfc.common.gen.jvm.BytecodeEmitter;
+ import com.ishland.c2me.opts.dfc.common.gen.jvm.BytecodeGen;
+ import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefD;
+-import com.ishland.c2me.opts.dfc.common.util.ArrayCache;
++import com.ishland.c2me.opts.dfc.common.gen.jvm.util.DfcObjectCache;
+ import org.objectweb.asm.Label;
+ import org.objectweb.asm.Type;
+ import org.objectweb.asm.commons.InstructionAdapter;
+@@ -69,7 +69,7 @@ public class BinaryNodeBytecodeEmitters {
+                 m.load(1, InstructionAdapter.OBJECT_TYPE);
+                 m.arraylength();
+                 m.iconst(0);
+-                m.invokevirtual(Type.getInternalName(ArrayCache.class), "getDoubleArray", Type.getMethodDescriptor(Type.getType(double[].class), Type.INT_TYPE, Type.BOOLEAN_TYPE), false);
++                m.invokeinterface(Type.getInternalName(DfcObjectCache.class), "getDoubleArray", Type.getMethodDescriptor(Type.getType(double[].class), Type.INT_TYPE, Type.BOOLEAN_TYPE));
+                 m.store(res1, InstructionAdapter.OBJECT_TYPE);
+                 context.callDelegateMulti(m, leftMethod);
+                 context.callDelegateMulti(m, rightMethod, res1);
+@@ -78,7 +78,7 @@ public class BinaryNodeBytecodeEmitters {
+ 
+                 m.load(6, InstructionAdapter.OBJECT_TYPE);
+                 m.load(res1, InstructionAdapter.OBJECT_TYPE);
+-                m.invokevirtual(Type.getInternalName(ArrayCache.class), "recycle", Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(double[].class)), false);
++                m.invokeinterface(Type.getInternalName(DfcObjectCache.class), "recycle", Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(double[].class)));
+             }
+ 
+             m.areturn(Type.VOID_TYPE);
+diff --git a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/jvm/emitters/misc/CacheLikeNodeBytecodeEmitter.java b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/jvm/emitters/misc/CacheLikeNodeBytecodeEmitter.java
+index 1c7892aa..2b692fc1 100644
+--- a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/jvm/emitters/misc/CacheLikeNodeBytecodeEmitter.java
++++ b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/jvm/emitters/misc/CacheLikeNodeBytecodeEmitter.java
+@@ -32,6 +32,7 @@ import com.ishland.c2me.opts.dfc.common.gen.jvm.BytecodeGen;
+ import com.ishland.c2me.opts.dfc.common.gen.jvm.IMultiMethod;
+ import com.ishland.c2me.opts.dfc.common.gen.jvm.ISingleMethod;
+ import com.ishland.c2me.opts.dfc.common.gen.jvm.SubCompiledDensityFunction;
++import com.ishland.c2me.opts.dfc.common.gen.jvm.util.DfcObjectCache;
+ import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefD;
+ import net.minecraft.world.gen.densityfunction.DensityFunction;
+ import org.objectweb.asm.Handle;
+diff --git a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/jvm/emitters/misc/DelegateNodeBytecodeEmitter.java b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/jvm/emitters/misc/DelegateNodeBytecodeEmitter.java
+index 36cef264..7f417fd2 100644
+--- a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/jvm/emitters/misc/DelegateNodeBytecodeEmitter.java
++++ b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/jvm/emitters/misc/DelegateNodeBytecodeEmitter.java
+@@ -29,9 +29,9 @@ import com.ishland.c2me.opts.dfc.common.ast.misc.DelegateNode;
+ import com.ishland.c2me.opts.dfc.common.gen.jvm.BytecodeEmitter;
+ import com.ishland.c2me.opts.dfc.common.gen.jvm.BytecodeGen;
+ import com.ishland.c2me.opts.dfc.common.gen.jvm.InvocationShim;
+-import com.ishland.c2me.opts.dfc.common.util.ArrayCache;
+-import com.ishland.c2me.opts.dfc.common.vif.EachApplierVanillaInterface;
+-import com.ishland.c2me.opts.dfc.common.vif.NoisePosVanillaInterface;
++import com.ishland.c2me.opts.dfc.common.gen.jvm.util.DfcObjectCache;
++import com.ishland.c2me.opts.dfc.common.gen.jvm.vif.EachApplierVanillaInterface;
++import com.ishland.c2me.opts.dfc.common.gen.jvm.vif.NoisePosVanillaInterface;
+ import net.minecraft.world.gen.densityfunction.DensityFunction;
+ import org.objectweb.asm.Label;
+ import org.objectweb.asm.Type;
+@@ -50,21 +50,32 @@ public class DelegateNodeBytecodeEmitter<E extends DelegateNode> implements Byte
+     @Override
+     public void doBytecodeGenSingle(DelegateNode node, BytecodeGen.Context context, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
+         String newField = context.newField(DensityFunction.class, node.getDelegate());
+-        m.load(0, InstructionAdapter.OBJECT_TYPE);
+-        m.getfield(context.className, newField, Type.getDescriptor(DensityFunction.class));
+-        m.anew(Type.getType(NoisePosVanillaInterface.class));
+-        m.dup();
++
++        int borrowedNoisePos = localVarConsumer.createLocalVariable("noisePos", Type.getDescriptor(NoisePosVanillaInterface.class));
++
++        m.load(5, InstructionAdapter.OBJECT_TYPE);
+         m.load(1, Type.INT_TYPE);
+         m.load(2, Type.INT_TYPE);
+         m.load(3, Type.INT_TYPE);
+         m.load(4, InstructionAdapter.OBJECT_TYPE);
+-        m.invokespecial(Type.getInternalName(NoisePosVanillaInterface.class), "<init>", Type.getMethodDescriptor(Type.VOID_TYPE, Type.INT_TYPE, Type.INT_TYPE, Type.INT_TYPE, Type.getType(EvalType.class)), false);
++        m.load(5, InstructionAdapter.OBJECT_TYPE);
++        m.invokeinterface(Type.getInternalName(DfcObjectCache.class), "getNoisePosVanillaInterface", DfcObjectCache.GET_NOISE_POS_VANILLA_INTERFACE_DESC);
++        m.store(borrowedNoisePos, InstructionAdapter.OBJECT_TYPE);
++
++        m.load(0, InstructionAdapter.OBJECT_TYPE);
++        m.getfield(context.className, newField, Type.getDescriptor(DensityFunction.class));
++        m.load(borrowedNoisePos, InstructionAdapter.OBJECT_TYPE);
+         m.invokestatic(
+                 Type.getInternalName(InvocationShim.class),
+                 "invokeDensityFunctionSample",
+                 Type.getMethodDescriptor(Type.DOUBLE_TYPE, Type.getType(DensityFunction.class), Type.getType(DensityFunction.NoisePos.class)),
+                 false
+         );
++
++        m.load(5, InstructionAdapter.OBJECT_TYPE);
++        m.load(borrowedNoisePos, InstructionAdapter.OBJECT_TYPE);
++        m.invokeinterface(Type.getInternalName(DfcObjectCache.class), "recycle", Type.getMethodDescriptor(Type.getType(void.class), Type.getType(NoisePosVanillaInterface.class)));
++
+         m.areturn(Type.DOUBLE_TYPE);
+     }
+ 
+@@ -72,6 +83,8 @@ public class DelegateNodeBytecodeEmitter<E extends DelegateNode> implements Byte
+     public void doBytecodeGenMulti(DelegateNode node, BytecodeGen.Context context, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
+         String newField = context.newField(DensityFunction.class, node.getDelegate());
+ 
++        int borrowedNoisePos = localVarConsumer.createLocalVariable("noisePos", Type.getDescriptor(NoisePosVanillaInterface.class));
++
+         Label moreThanTwoLabel = new Label();
+ 
+         m.load(1, InstructionAdapter.OBJECT_TYPE);
+@@ -82,10 +95,7 @@ public class DelegateNodeBytecodeEmitter<E extends DelegateNode> implements Byte
+         m.load(1, InstructionAdapter.OBJECT_TYPE);
+         m.iconst(0);
+ 
+-        m.load(0, InstructionAdapter.OBJECT_TYPE);
+-        m.getfield(context.className, newField, Type.getDescriptor(DensityFunction.class));
+-        m.anew(Type.getType(NoisePosVanillaInterface.class));
+-        m.dup();
++        m.load(6, InstructionAdapter.OBJECT_TYPE);
+         m.load(2, InstructionAdapter.OBJECT_TYPE);
+         m.iconst(0);
+         m.aload(Type.INT_TYPE);
+@@ -96,7 +106,13 @@ public class DelegateNodeBytecodeEmitter<E extends DelegateNode> implements Byte
+         m.iconst(0);
+         m.aload(Type.INT_TYPE);
+         m.load(5, InstructionAdapter.OBJECT_TYPE);
+-        m.invokespecial(Type.getInternalName(NoisePosVanillaInterface.class), "<init>", Type.getMethodDescriptor(Type.VOID_TYPE, Type.INT_TYPE, Type.INT_TYPE, Type.INT_TYPE, Type.getType(EvalType.class)), false);
++        m.load(6, InstructionAdapter.OBJECT_TYPE);
++        m.invokeinterface(Type.getInternalName(DfcObjectCache.class), "getNoisePosVanillaInterface", DfcObjectCache.GET_NOISE_POS_VANILLA_INTERFACE_DESC);
++        m.store(borrowedNoisePos, InstructionAdapter.OBJECT_TYPE);
++
++        m.load(0, InstructionAdapter.OBJECT_TYPE);
++        m.getfield(context.className, newField, Type.getDescriptor(DensityFunction.class));
++        m.load(borrowedNoisePos, InstructionAdapter.OBJECT_TYPE);
+         m.invokestatic(
+                 Type.getInternalName(InvocationShim.class),
+                 "invokeDensityFunctionSample",
+@@ -104,6 +120,10 @@ public class DelegateNodeBytecodeEmitter<E extends DelegateNode> implements Byte
+                 false
+         );
+ 
++        m.load(6, InstructionAdapter.OBJECT_TYPE);
++        m.load(borrowedNoisePos, InstructionAdapter.OBJECT_TYPE);
++        m.invokeinterface(Type.getInternalName(DfcObjectCache.class), "recycle", Type.getMethodDescriptor(Type.getType(void.class), Type.getType(NoisePosVanillaInterface.class)));
++
+         m.astore(Type.DOUBLE_TYPE);
+         m.areturn(Type.VOID_TYPE);
+ 
+@@ -119,7 +139,7 @@ public class DelegateNodeBytecodeEmitter<E extends DelegateNode> implements Byte
+         m.load(4, InstructionAdapter.OBJECT_TYPE);
+         m.load(5, InstructionAdapter.OBJECT_TYPE);
+         m.load(6, InstructionAdapter.OBJECT_TYPE);
+-        m.invokespecial(Type.getInternalName(EachApplierVanillaInterface.class), "<init>", Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(int[].class), Type.getType(int[].class), Type.getType(int[].class), Type.getType(EvalType.class), Type.getType(ArrayCache.class)), false);
++        m.invokespecial(Type.getInternalName(EachApplierVanillaInterface.class), "<init>", Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(int[].class), Type.getType(int[].class), Type.getType(int[].class), Type.getType(EvalType.class), Type.getType(DfcObjectCache.class)), false);
+         m.invokestatic(
+                 Type.getInternalName(InvocationShim.class),
+                 "invokeDensityFunctionFill",
+diff --git a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/jvm/emitters/misc/FindTopSurfaceNodeBytecodeEmitter.java b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/jvm/emitters/misc/FindTopSurfaceNodeBytecodeEmitter.java
+index 4c68ff12..11baab5d 100644
+--- a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/jvm/emitters/misc/FindTopSurfaceNodeBytecodeEmitter.java
++++ b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/jvm/emitters/misc/FindTopSurfaceNodeBytecodeEmitter.java
+@@ -89,6 +89,7 @@ public class FindTopSurfaceNodeBytecodeEmitter implements BytecodeEmitter<FindTo
+                     "NORMAL",
+                     Type.getDescriptor(EvalType.class)
+             );
++            m.load(5, InstructionAdapter.OBJECT_TYPE);
+             m.invokevirtual(context.className, densityMethod.generatedMethod(), BytecodeGen.Context.SINGLE_DESC, false);
+         }
+         m.dconst(0.0);
+diff --git a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/jvm/emitters/misc/GenericShiftedNoiseNodeBytecodeEmitter.java b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/jvm/emitters/misc/GenericShiftedNoiseNodeBytecodeEmitter.java
+index 1fb2b920..ed455fb9 100644
+--- a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/jvm/emitters/misc/GenericShiftedNoiseNodeBytecodeEmitter.java
++++ b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/jvm/emitters/misc/GenericShiftedNoiseNodeBytecodeEmitter.java
+@@ -29,7 +29,7 @@ import com.ishland.c2me.opts.dfc.common.gen.jvm.BytecodeEmitter;
+ import com.ishland.c2me.opts.dfc.common.gen.jvm.BytecodeGen;
+ import com.ishland.c2me.opts.dfc.common.gen.jvm.InvocationShim;
+ import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefD;
+-import com.ishland.c2me.opts.dfc.common.util.ArrayCache;
++import com.ishland.c2me.opts.dfc.common.gen.jvm.util.DfcObjectCache;
+ import net.minecraft.world.gen.densityfunction.DensityFunction;
+ import org.objectweb.asm.Type;
+ import org.objectweb.asm.commons.InstructionAdapter;
+@@ -86,7 +86,7 @@ public class GenericShiftedNoiseNodeBytecodeEmitter implements BytecodeEmitter<G
+             m.load(1, InstructionAdapter.OBJECT_TYPE);
+             m.arraylength();
+             m.iconst(0);
+-            m.invokevirtual(Type.getInternalName(ArrayCache.class), "getDoubleArray", Type.getMethodDescriptor(Type.getType(double[].class), Type.INT_TYPE, Type.BOOLEAN_TYPE), false);
++            m.invokeinterface(Type.getInternalName(DfcObjectCache.class), "getDoubleArray", Type.getMethodDescriptor(Type.getType(double[].class), Type.INT_TYPE, Type.BOOLEAN_TYPE));
+             m.store(arrays[1], InstructionAdapter.OBJECT_TYPE);
+         }
+         if (arraysNeeded >= 3) {
+@@ -95,7 +95,7 @@ public class GenericShiftedNoiseNodeBytecodeEmitter implements BytecodeEmitter<G
+             m.load(1, InstructionAdapter.OBJECT_TYPE);
+             m.arraylength();
+             m.iconst(0);
+-            m.invokevirtual(Type.getInternalName(ArrayCache.class), "getDoubleArray", Type.getMethodDescriptor(Type.getType(double[].class), Type.INT_TYPE, Type.BOOLEAN_TYPE), false);
++            m.invokeinterface(Type.getInternalName(DfcObjectCache.class), "getDoubleArray", Type.getMethodDescriptor(Type.getType(double[].class), Type.INT_TYPE, Type.BOOLEAN_TYPE));
+             m.store(arrays[2], InstructionAdapter.OBJECT_TYPE);
+         }
+ 
+@@ -160,7 +160,7 @@ public class GenericShiftedNoiseNodeBytecodeEmitter implements BytecodeEmitter<G
+         for (int i = 1; i < arrays.length; i ++) {
+             m.load(6, InstructionAdapter.OBJECT_TYPE);
+             m.load(arrays[i], InstructionAdapter.OBJECT_TYPE);
+-            m.invokevirtual(Type.getInternalName(ArrayCache.class), "recycle", Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(double[].class)), false);
++            m.invokevirtual(Type.getInternalName(DfcObjectCache.class), "recycle", Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(double[].class)), false);
+         }
+ 
+         m.areturn(Type.VOID_TYPE);
+diff --git a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/jvm/emitters/misc/SplineAstNodeBytecodeEmitter.java b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/jvm/emitters/misc/SplineAstNodeBytecodeEmitter.java
+index 422794ed..01059a3b 100644
+--- a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/jvm/emitters/misc/SplineAstNodeBytecodeEmitter.java
++++ b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/jvm/emitters/misc/SplineAstNodeBytecodeEmitter.java
+@@ -31,6 +31,7 @@ import com.ishland.c2me.opts.dfc.common.gen.jvm.BytecodeEmitter;
+ import com.ishland.c2me.opts.dfc.common.gen.jvm.BytecodeGen;
+ import com.ishland.c2me.opts.dfc.common.gen.jvm.InvocationShim;
+ import com.ishland.c2me.opts.dfc.common.gen.jvm.SplineSupport;
++import com.ishland.c2me.opts.dfc.common.gen.jvm.util.DfcObjectCache;
+ import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefD;
+ import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefF;
+ import com.ishland.flowsched.util.Assertions;
+@@ -50,8 +51,8 @@ import java.util.List;
+ public class SplineAstNodeBytecodeEmitter implements BytecodeEmitter<SplineAstNode> {
+     public static final SplineAstNodeBytecodeEmitter INSTANCE = new SplineAstNodeBytecodeEmitter();
+ 
+-    public static final String SPLINE_METHOD_DESC = Type.getMethodDescriptor(Type.getType(float.class), Type.getType(int.class), Type.getType(int.class), Type.getType(int.class), Type.getType(EvalType.class));
+-    public static final String SPLINE_METHOD_DESC_CACHE1 = Type.getMethodDescriptor(Type.getType(float.class), Type.getType(int.class), Type.getType(int.class), Type.getType(int.class), Type.getType(EvalType.class), Type.getType(float.class));
++    public static final String SPLINE_METHOD_DESC = Type.getMethodDescriptor(Type.getType(float.class), Type.getType(int.class), Type.getType(int.class), Type.getType(int.class), Type.getType(EvalType.class), Type.getType(DfcObjectCache.class));
++    public static final String SPLINE_METHOD_DESC_CACHE1 = Type.getMethodDescriptor(Type.getType(float.class), Type.getType(int.class), Type.getType(int.class), Type.getType(int.class), Type.getType(EvalType.class), Type.getType(DfcObjectCache.class), Type.getType(float.class));
+ 
+     private SplineAstNodeBytecodeEmitter() {
+     }
+@@ -95,7 +96,7 @@ public class SplineAstNodeBytecodeEmitter implements BytecodeEmitter<SplineAstNo
+         Label end = new Label();
+         m.visitLabel(start);
+         BytecodeGen.Context.LocalVarConsumer localVarConsumer = (localName, localDesc) -> {
+-            int ordinal = extraLocals.size() + (cache1 ? 6 : 5);
++            int ordinal = extraLocals.size() + (cache1 ? 7 : 6);
+             extraLocals.add(IntObjectPair.of(ordinal, Pair.of(localName, localDesc)));
+             return ordinal;
+         };
+@@ -108,7 +109,7 @@ public class SplineAstNodeBytecodeEmitter implements BytecodeEmitter<SplineAstNo
+             String locations = context.newField(float[].class, impl.locations());
+             String derivatives = context.newField(float[].class, impl.derivatives());
+ 
+-            int point = cache1 ? 5 : localVarConsumer.createLocalVariable("point", Type.FLOAT_TYPE.getDescriptor());
++            int point = cache1 ? 6 : localVarConsumer.createLocalVariable("point", Type.FLOAT_TYPE.getDescriptor());
+             int rangeForLocation = localVarConsumer.createLocalVariable("rangeForLocation", Type.INT_TYPE.getDescriptor());
+ 
+             int lastConst = impl.locations().length - 1;
+@@ -405,8 +406,9 @@ public class SplineAstNodeBytecodeEmitter implements BytecodeEmitter<SplineAstNo
+         m.visitLocalVariable("y", Type.INT_TYPE.getDescriptor(), null, start, end, 2);
+         m.visitLocalVariable("z", Type.INT_TYPE.getDescriptor(), null, start, end, 3);
+         m.visitLocalVariable("evalType", Type.getType(EvalType.class).getDescriptor(), null, start, end, 4);
++        m.visitLocalVariable("dfcObjectCache", Type.getType(DfcObjectCache.class).getDescriptor(), null, start, end, 5);
+         if (cache1) {
+-            m.visitLocalVariable("pointCached", Type.FLOAT_TYPE.getDescriptor(), null, start, end, 5);
++            m.visitLocalVariable("pointCached", Type.FLOAT_TYPE.getDescriptor(), null, start, end, 6);
+         }
+         for (IntObjectPair<Pair<String, String>> local : extraLocals) {
+             m.visitLocalVariable(local.right().left(), local.right().right(), null, start, end, local.leftInt());
+@@ -428,6 +430,7 @@ public class SplineAstNodeBytecodeEmitter implements BytecodeEmitter<SplineAstNo
+             m.load(2, Type.INT_TYPE);
+             m.load(3, Type.INT_TYPE);
+             m.load(4, InstructionAdapter.OBJECT_TYPE);
++            m.load(5, InstructionAdapter.OBJECT_TYPE);
+             if (doCache1) {
+                 m.load(cache1Local, Type.FLOAT_TYPE);
+             }
+diff --git a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/jvm/util/DfcObjectCache.java b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/jvm/util/DfcObjectCache.java
+new file mode 100644
+index 00000000..f05c8495
+--- /dev/null
++++ b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/jvm/util/DfcObjectCache.java
+@@ -0,0 +1,151 @@
++/*
++ * The MIT License (MIT)
++ *
++ * Copyright (c) 2021-2026 ishland
++ *
++ * Permission is hereby granted, free of charge, to any person obtaining a copy
++ * of this software and associated documentation files (the "Software"), to deal
++ * in the Software without restriction, including without limitation the rights
++ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
++ * copies of the Software, and to permit persons to whom the Software is
++ * furnished to do so, subject to the following conditions:
++ *
++ * The above copyright notice and this permission notice shall be included in
++ * all copies or substantial portions of the Software.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
++ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
++ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
++ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
++ * THE SOFTWARE.
++ */
++
++package com.ishland.c2me.opts.dfc.common.gen.jvm.util;
++
++import com.ishland.c2me.opts.dfc.common.ast.EvalType;
++import com.ishland.c2me.opts.dfc.common.gen.jvm.vif.NoisePosVanillaInterface;
++import it.unimi.dsi.fastutil.ints.Int2ReferenceArrayMap;
++import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
++import org.objectweb.asm.Type;
++
++import java.util.Arrays;
++
++public interface DfcObjectCache {
++
++    public static final String GET_NOISE_POS_VANILLA_INTERFACE_DESC = Type.getMethodDescriptor(
++            Type.getType(NoisePosVanillaInterface.class), Type.getType(int.class), Type.getType(int.class), Type.getType(int.class), Type.getType(EvalType.class), Type.getType(DfcObjectCache.class)
++    );
++
++    double[] getDoubleArray(int size, boolean zero);
++
++    int[] getIntArray(int size, boolean zero);
++
++    NoisePosVanillaInterface getNoisePosVanillaInterface(int x, int y, int z, EvalType type, DfcObjectCache cache);
++
++    void recycle(double[] array);
++
++    void recycle(int[] array);
++
++    void recycle(NoisePosVanillaInterface noisePosVanillaInterface);
++
++    class Impl implements DfcObjectCache {
++
++        private final Int2ReferenceArrayMap<ReferenceArrayList<double[]>> doubleArrayCache = new Int2ReferenceArrayMap<>();
++        private final Int2ReferenceArrayMap<ReferenceArrayList<int[]>> intArrayCache = new Int2ReferenceArrayMap<>();
++//        private final ReferenceArrayList<NoisePosVanillaInterface> noisePosVanillaInterfacesCache = new ReferenceArrayList<>();
++        private final NoisePosVanillaInterface noisePosVanillaInterfaceSingleton = new NoisePosVanillaInterface();
++
++        public double[] getDoubleArray(int size, boolean zero) {
++            ReferenceArrayList<double[]> list = this.doubleArrayCache.computeIfAbsent(size, k -> new ReferenceArrayList<>());
++            if (list.isEmpty()) {
++                return new double[size];
++            } else {
++                double[] popped = list.pop();
++                if (zero) {
++                    Arrays.fill(popped, 0.0);
++                }
++                return popped;
++            }
++        }
++
++        public int[] getIntArray(int size, boolean zero) {
++            ReferenceArrayList<int[]> list = this.intArrayCache.computeIfAbsent(size, k -> new ReferenceArrayList<>());
++            if (list.isEmpty()) {
++                return new int[size];
++            } else {
++                int[] popped = list.pop();
++                if (zero) {
++                    Arrays.fill(popped, 0);
++                }
++                return popped;
++            }
++        }
++
++        @Override
++        public NoisePosVanillaInterface getNoisePosVanillaInterface(int x, int y, int z, EvalType type, DfcObjectCache cache) {
++//            ReferenceArrayList<NoisePosVanillaInterface> list = this.noisePosVanillaInterfacesCache;
++//            if (list.isEmpty()) {
++//                return new NoisePosVanillaInterface().at(x, y, z, type, cache);
++//            } else {
++//                return list.pop().at(x, y, z, type, cache);
++//            }
++            this.noisePosVanillaInterfaceSingleton.ensureUninitialized();
++            return this.noisePosVanillaInterfaceSingleton.at(x, y, z, type, cache);
++        }
++
++        public void recycle(double[] array) {
++            this.doubleArrayCache.computeIfAbsent(array.length, k -> new ReferenceArrayList<>()).add(array);
++        }
++
++        public void recycle(int[] array) {
++            this.intArrayCache.computeIfAbsent(array.length, k -> new ReferenceArrayList<>()).add(array);
++        }
++
++        @Override
++        public void recycle(NoisePosVanillaInterface noisePosVanillaInterface) {
++            noisePosVanillaInterface.deInit();
++//            this.noisePosVanillaInterfacesCache.add(noisePosVanillaInterface);
++        }
++
++    }
++
++    class Noop implements DfcObjectCache {
++
++        public static final Noop INSTANCE = new Noop();
++
++        private Noop() {
++        }
++
++        @Override
++        public double[] getDoubleArray(int size, boolean zero) {
++            return new double[size];
++        }
++
++        @Override
++        public int[] getIntArray(int size, boolean zero) {
++            return new int[size];
++        }
++
++        @Override
++        public NoisePosVanillaInterface getNoisePosVanillaInterface(int x, int y, int z, EvalType type, DfcObjectCache cache) {
++            return new NoisePosVanillaInterface().at(x, y, z, type, cache);
++        }
++
++        @Override
++        public void recycle(double[] array) {
++        }
++
++        @Override
++        public void recycle(int[] array) {
++        }
++
++        @Override
++        public void recycle(NoisePosVanillaInterface noisePosVanillaInterface) {
++            noisePosVanillaInterface.deInit();
++        }
++
++    }
++
++}
+diff --git a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/util/ZeroUtils.java b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/jvm/util/ZeroUtils.java
+similarity index 96%
+rename from c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/util/ZeroUtils.java
+rename to c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/jvm/util/ZeroUtils.java
+index bee20de1..d469c939 100644
+--- a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/util/ZeroUtils.java
++++ b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/jvm/util/ZeroUtils.java
+@@ -22,7 +22,7 @@
+  * THE SOFTWARE.
+  */
+ 
+-package com.ishland.c2me.opts.dfc.common.util;
++package com.ishland.c2me.opts.dfc.common.gen.jvm.util;
+ 
+ public class ZeroUtils {
+ 
+diff --git a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/vif/EachApplierVanillaInterface.java b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/jvm/vif/EachApplierVanillaInterface.java
+similarity index 78%
+rename from c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/vif/EachApplierVanillaInterface.java
+rename to c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/jvm/vif/EachApplierVanillaInterface.java
+index c5ccb401..e77d026b 100644
+--- a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/vif/EachApplierVanillaInterface.java
++++ b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/jvm/vif/EachApplierVanillaInterface.java
+@@ -22,28 +22,30 @@
+  * THE SOFTWARE.
+  */
+ 
+-package com.ishland.c2me.opts.dfc.common.vif;
++package com.ishland.c2me.opts.dfc.common.gen.jvm.vif;
+ 
+ import com.ishland.c2me.opts.dfc.common.ast.EvalType;
+-import com.ishland.c2me.opts.dfc.common.ducks.IArrayCacheCapable;
+-import com.ishland.c2me.opts.dfc.common.util.ArrayCache;
++import com.ishland.c2me.opts.dfc.common.ducks.IDfcObjectCacheCapable;
++import com.ishland.c2me.opts.dfc.common.gen.jvm.util.DfcObjectCache;
+ import net.minecraft.world.gen.densityfunction.DensityFunction;
+ 
+ import java.util.Objects;
+ 
+-public class EachApplierVanillaInterface implements DensityFunction.EachApplier, IArrayCacheCapable {
++public class EachApplierVanillaInterface implements DensityFunction.EachApplier, IDfcObjectCacheCapable {
+ 
+     private final int[] x;
+     private final int[] y;
+     private final int[] z;
+     private final EvalType type;
+-    private final ArrayCache cache;
++    private final DfcObjectCache cache;
++
++    private final NoisePosVanillaInterface noisePosVanillaInterface = new NoisePosVanillaInterface();
+ 
+     public EachApplierVanillaInterface(int[] x, int[] y, int[] z, EvalType type) {
+-        this(x, y, z, type, new ArrayCache());
++        this(x, y, z, type, DfcObjectCache.Noop.INSTANCE);
+     }
+ 
+-    public EachApplierVanillaInterface(int[] x, int[] y, int[] z, EvalType type, ArrayCache cache) {
++    public EachApplierVanillaInterface(int[] x, int[] y, int[] z, EvalType type, DfcObjectCache cache) {
+         this.x = Objects.requireNonNull(x);
+         this.y = Objects.requireNonNull(y);
+         this.z = Objects.requireNonNull(z);
+@@ -53,7 +55,7 @@ public class EachApplierVanillaInterface implements DensityFunction.EachApplier,
+ 
+     @Override
+     public DensityFunction.NoisePos at(int index) {
+-        return new NoisePosVanillaInterface(x[index], y[index], z[index], type);
++        return this.noisePosVanillaInterface.at(x[index], y[index], z[index], type, cache);
+     }
+ 
+     @Override
+@@ -61,6 +63,7 @@ public class EachApplierVanillaInterface implements DensityFunction.EachApplier,
+         for (int i = 0; i < x.length; i++) {
+             densities[i] = densityFunction.sample(this.at(i));
+         }
++        this.noisePosVanillaInterface.deInit();
+     }
+ 
+     public int[] getX() {
+@@ -80,7 +83,7 @@ public class EachApplierVanillaInterface implements DensityFunction.EachApplier,
+     }
+ 
+     @Override
+-    public ArrayCache c2me$getArrayCache() {
++    public DfcObjectCache c2me$getDfcObjectCache() {
+         return this.cache;
+     }
+ }
+diff --git a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/vif/NoisePosVanillaInterface.java b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/jvm/vif/NoisePosVanillaInterface.java
+similarity index 62%
+rename from c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/vif/NoisePosVanillaInterface.java
+rename to c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/jvm/vif/NoisePosVanillaInterface.java
+index 30b3a72b..bc1543ed 100644
+--- a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/vif/NoisePosVanillaInterface.java
++++ b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/jvm/vif/NoisePosVanillaInterface.java
+@@ -22,44 +22,72 @@
+  * THE SOFTWARE.
+  */
+ 
+-package com.ishland.c2me.opts.dfc.common.vif;
++package com.ishland.c2me.opts.dfc.common.gen.jvm.vif;
+ 
+ import com.ishland.c2me.opts.dfc.common.ast.EvalType;
++import com.ishland.c2me.opts.dfc.common.gen.jvm.util.DfcObjectCache;
+ import net.minecraft.world.gen.densityfunction.DensityFunction;
++import org.jspecify.annotations.NonNull;
+ 
+ import java.util.Objects;
+ 
+ public class NoisePosVanillaInterface implements DensityFunction.NoisePos {
+ 
+-    private final int x;
+-    private final int y;
+-    private final int z;
+-    private final EvalType type;
++    private int x;
++    private int y;
++    private int z;
++    private EvalType type;
++    private DfcObjectCache cache = DfcObjectCache.Noop.INSTANCE;
+ 
+-    public NoisePosVanillaInterface(int x, int y, int z, EvalType type) {
++    public NoisePosVanillaInterface() {
++    }
++
++    public void ensureUninitialized() {
++        if (type != null) throw new IllegalStateException("double use");
++    }
++
++    private void ensureInitialized() {
++        if (type == null) throw new IllegalStateException("uninitialized use");
++    }
++
++    public NoisePosVanillaInterface at(int x, int y, int z, EvalType type, DfcObjectCache cache) {
+         this.x = x;
+         this.y = y;
+         this.z = z;
+         this.type = Objects.requireNonNull(type);
++        this.cache = Objects.requireNonNull(cache);
++        return this;
+     }
+ 
+     @Override
+     public int blockX() {
++        ensureInitialized();
+         return x;
+     }
+ 
+     @Override
+     public int blockY() {
++        ensureInitialized();
+         return y;
+     }
+ 
+     @Override
+     public int blockZ() {
++        ensureInitialized();
+         return z;
+     }
+ 
+     public EvalType getType() {
++        ensureInitialized();
+         return type;
+     }
+ 
++    public void deInit() {
++        this.x = 0;
++        this.y = 0;
++        this.z = 0;
++        this.type = null;
++        this.cache = DfcObjectCache.Noop.INSTANCE;
++    }
++
+ }
+diff --git a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/util/ArrayCache.java b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/util/ArrayCache.java
+deleted file mode 100644
+index c699669a..00000000
+--- a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/util/ArrayCache.java
++++ /dev/null
+@@ -1,71 +0,0 @@
+-/*
+- * The MIT License (MIT)
+- *
+- * Copyright (c) 2021-2026 ishland
+- *
+- * Permission is hereby granted, free of charge, to any person obtaining a copy
+- * of this software and associated documentation files (the "Software"), to deal
+- * in the Software without restriction, including without limitation the rights
+- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+- * copies of the Software, and to permit persons to whom the Software is
+- * furnished to do so, subject to the following conditions:
+- *
+- * The above copyright notice and this permission notice shall be included in
+- * all copies or substantial portions of the Software.
+- *
+- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+- * THE SOFTWARE.
+- */
+-
+-package com.ishland.c2me.opts.dfc.common.util;
+-
+-import it.unimi.dsi.fastutil.ints.Int2ReferenceArrayMap;
+-import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
+-
+-import java.util.Arrays;
+-
+-public class ArrayCache {
+-
+-    private final Int2ReferenceArrayMap<ReferenceArrayList<double[]>> doubleArrayCache = new Int2ReferenceArrayMap<>();
+-    private final Int2ReferenceArrayMap<ReferenceArrayList<int[]>> intArrayCache = new Int2ReferenceArrayMap<>();
+-
+-    public double[] getDoubleArray(int size, boolean zero) {
+-        ReferenceArrayList<double[]> list = this.doubleArrayCache.computeIfAbsent(size, k -> new ReferenceArrayList<>());
+-        if (list.isEmpty()) {
+-            return new double[size];
+-        } else {
+-            double[] popped = list.pop();
+-            if (zero) {
+-                Arrays.fill(popped, 0.0);
+-            }
+-            return popped;
+-        }
+-    }
+-
+-    public int[] getIntArray(int size, boolean zero) {
+-        ReferenceArrayList<int[]> list = this.intArrayCache.computeIfAbsent(size, k -> new ReferenceArrayList<>());
+-        if (list.isEmpty()) {
+-            return new int[size];
+-        } else {
+-            int[] popped = list.pop();
+-            if (zero) {
+-                Arrays.fill(popped, 0);
+-            }
+-            return popped;
+-        }
+-    }
+-
+-    public void recycle(double[] array) {
+-        this.doubleArrayCache.computeIfAbsent(array.length, k -> new ReferenceArrayList<>()).add(array);
+-    }
+-
+-    public void recycle(int[] array) {
+-        this.intArrayCache.computeIfAbsent(array.length, k -> new ReferenceArrayList<>()).add(array);
+-    }
+-
+-}
+diff --git a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/mixin/MixinChunkNoiseSampler.java b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/mixin/MixinChunkNoiseSampler.java
+index ba4d100a..898e4e00 100644
+--- a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/mixin/MixinChunkNoiseSampler.java
++++ b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/mixin/MixinChunkNoiseSampler.java
+@@ -25,12 +25,12 @@
+ package com.ishland.c2me.opts.dfc.mixin;
+ 
+ import com.ishland.c2me.base.mixin.access.IChunkNoiseSamplerDensityInterpolator;
+-import com.ishland.c2me.opts.dfc.common.ducks.IArrayCacheCapable;
++import com.ishland.c2me.opts.dfc.common.ducks.IDfcObjectCacheCapable;
+ import com.ishland.c2me.opts.dfc.common.ducks.ICoordinatesFilling;
+ import com.ishland.c2me.opts.dfc.common.ducks.IPreloadedCoordinates;
+ import com.ishland.c2me.opts.dfc.common.ducks.NoiseRouterExtension;
+ import com.ishland.c2me.opts.dfc.common.gen.DelegatingBlendingAwareVisitor;
+-import com.ishland.c2me.opts.dfc.common.util.ArrayCache;
++import com.ishland.c2me.opts.dfc.common.gen.jvm.util.DfcObjectCache;
+ import com.llamalad7.mixinextras.expression.Definition;
+ import com.llamalad7.mixinextras.expression.Expression;
+ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+@@ -54,9 +54,10 @@ import org.spongepowered.asm.mixin.injection.ModifyArg;
+ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+ 
+ import java.util.List;
++import java.util.Objects;
+ 
+ @Mixin(ChunkNoiseSampler.class)
+-public abstract class MixinChunkNoiseSampler implements IArrayCacheCapable, ICoordinatesFilling, IPreloadedCoordinates {
++public abstract class MixinChunkNoiseSampler implements IDfcObjectCacheCapable, ICoordinatesFilling, IPreloadedCoordinates {
+ 
+     @Shadow @Final private int verticalCellBlockCount;
+     @Shadow @Final private int horizontalCellBlockCount;
+@@ -88,11 +89,11 @@ public abstract class MixinChunkNoiseSampler implements IArrayCacheCapable, ICoo
+     @Shadow private int cellBlockX;
+     @Shadow private int cellBlockZ;
+     @Shadow private long sampleUniqueIndex;
+-    private final ArrayCache c2me$arrayCache = new ArrayCache();
++    private final DfcObjectCache c2Me$dfcObjectCache = new DfcObjectCache.Impl();
+ 
+     @Override
+-    public ArrayCache c2me$getArrayCache() {
+-        return this.c2me$arrayCache != null ? this.c2me$arrayCache : new ArrayCache();
++    public DfcObjectCache c2me$getDfcObjectCache() {
++        return Objects.requireNonNull(this.c2Me$dfcObjectCache, "broken mixin");
+     }
+ 
+     @Override
+@@ -119,10 +120,10 @@ public abstract class MixinChunkNoiseSampler implements IArrayCacheCapable, ICoo
+     private void c2me$reloadCachedArrays() {
+         if (this.c2me$cachedXArray == null || this.c2me$cachedYArray == null || this.c2me$cachedZArray == null) {
+             int length = this.horizontalCellBlockCount * this.horizontalCellBlockCount * this.verticalCellBlockCount;
+-            ArrayCache arrayCache = this.c2me$getArrayCache();
+-            this.c2me$cachedXArray = arrayCache.getIntArray(length, false);
+-            this.c2me$cachedYArray = arrayCache.getIntArray(length, false);
+-            this.c2me$cachedZArray = arrayCache.getIntArray(length, false);
++            DfcObjectCache dfcObjectCache = this.c2me$getDfcObjectCache();
++            this.c2me$cachedXArray = dfcObjectCache.getIntArray(length, false);
++            this.c2me$cachedYArray = dfcObjectCache.getIntArray(length, false);
++            this.c2me$cachedZArray = dfcObjectCache.getIntArray(length, false);
+         }
+         if (this.c2me$oldStartBlockX != this.startBlockX || this.c2me$oldStartBlockY != this.startBlockY || this.c2me$oldStartBlockZ != this.startBlockZ) {
+             this.c2me$fillCoordinates(this.c2me$cachedXArray, this.c2me$cachedYArray, this.c2me$cachedZArray);
+diff --git a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/mixin/MixinChunkNoiseSampler1.java b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/mixin/MixinChunkNoiseSampler1.java
+index 3ea66e0c..982132a9 100644
+--- a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/mixin/MixinChunkNoiseSampler1.java
++++ b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/mixin/MixinChunkNoiseSampler1.java
+@@ -25,23 +25,23 @@
+ package com.ishland.c2me.opts.dfc.mixin;
+ 
+ import com.ishland.c2me.base.mixin.access.IChunkNoiseSampler;
+-import com.ishland.c2me.opts.dfc.common.ducks.IArrayCacheCapable;
++import com.ishland.c2me.opts.dfc.common.ducks.IDfcObjectCacheCapable;
+ import com.ishland.c2me.opts.dfc.common.ducks.ICoordinatesFilling;
+-import com.ishland.c2me.opts.dfc.common.util.ArrayCache;
++import com.ishland.c2me.opts.dfc.common.gen.jvm.util.DfcObjectCache;
+ import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
+ import org.spongepowered.asm.mixin.Final;
+ import org.spongepowered.asm.mixin.Mixin;
+ import org.spongepowered.asm.mixin.Shadow;
+ 
+ @Mixin(targets = "net/minecraft/world/gen/chunk/ChunkNoiseSampler$1")
+-public class MixinChunkNoiseSampler1 implements IArrayCacheCapable, ICoordinatesFilling {
++public class MixinChunkNoiseSampler1 implements IDfcObjectCacheCapable, ICoordinatesFilling {
+     @Shadow
+     @Final
+     ChunkNoiseSampler field_36595;
+ 
+     @Override
+-    public ArrayCache c2me$getArrayCache() {
+-        return ((IArrayCacheCapable) this.field_36595).c2me$getArrayCache();
++    public DfcObjectCache c2me$getDfcObjectCache() {
++        return ((IDfcObjectCacheCapable) this.field_36595).c2me$getDfcObjectCache();
+     }
+ 
+     @Override
+diff --git a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/mixin/MixinChunkNoiseSamplerCacheOnce.java b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/mixin/MixinChunkNoiseSamplerCacheOnce.java
+index 2de0783a..18d5c615 100644
+--- a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/mixin/MixinChunkNoiseSamplerCacheOnce.java
++++ b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/mixin/MixinChunkNoiseSamplerCacheOnce.java
+@@ -26,7 +26,7 @@ package com.ishland.c2me.opts.dfc.mixin;
+ 
+ import com.ishland.c2me.opts.dfc.common.ast.EvalType;
+ import com.ishland.c2me.opts.dfc.common.ducks.IFastCacheLike;
+-import com.ishland.c2me.opts.dfc.common.vif.EachApplierVanillaInterface;
++import com.ishland.c2me.opts.dfc.common.gen.jvm.vif.EachApplierVanillaInterface;
+ import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
+ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+ import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
+diff --git a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/mixin/MixinChunkNoiseSamplerCellCache.java b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/mixin/MixinChunkNoiseSamplerCellCache.java
+index d63cafb6..d6c3b4be 100644
+--- a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/mixin/MixinChunkNoiseSamplerCellCache.java
++++ b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/mixin/MixinChunkNoiseSamplerCellCache.java
+@@ -27,7 +27,7 @@ package com.ishland.c2me.opts.dfc.mixin;
+ import com.ishland.c2me.base.mixin.access.IChunkNoiseSampler;
+ import com.ishland.c2me.opts.dfc.common.ast.EvalType;
+ import com.ishland.c2me.opts.dfc.common.ducks.IFastCacheLike;
+-import com.ishland.c2me.opts.dfc.common.vif.NoisePosVanillaInterface;
++import com.ishland.c2me.opts.dfc.common.gen.jvm.vif.NoisePosVanillaInterface;
+ import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
+ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+ import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
+diff --git a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/mixin/MixinChunkNoiseSamplerDensityInterpolator.java b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/mixin/MixinChunkNoiseSamplerDensityInterpolator.java
+index 82dd2d26..2956ce0f 100644
+--- a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/mixin/MixinChunkNoiseSamplerDensityInterpolator.java
++++ b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/mixin/MixinChunkNoiseSamplerDensityInterpolator.java
+@@ -27,7 +27,7 @@ package com.ishland.c2me.opts.dfc.mixin;
+ import com.ishland.c2me.base.mixin.access.IChunkNoiseSampler;
+ import com.ishland.c2me.opts.dfc.common.ast.EvalType;
+ import com.ishland.c2me.opts.dfc.common.ducks.IFastCacheLike;
+-import com.ishland.c2me.opts.dfc.common.vif.NoisePosVanillaInterface;
++import com.ishland.c2me.opts.dfc.common.gen.jvm.vif.NoisePosVanillaInterface;
+ import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
+ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+ import net.minecraft.util.math.MathHelper;
+diff --git a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/mixin/MixinDFTBinaryOperation.java b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/mixin/MixinDFTBinaryOperation.java
+index da0405cf..0668f924 100644
+--- a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/mixin/MixinDFTBinaryOperation.java
++++ b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/mixin/MixinDFTBinaryOperation.java
+@@ -24,8 +24,8 @@
+ 
+ package com.ishland.c2me.opts.dfc.mixin;
+ 
+-import com.ishland.c2me.opts.dfc.common.ducks.IArrayCacheCapable;
+-import com.ishland.c2me.opts.dfc.common.util.ArrayCache;
++import com.ishland.c2me.opts.dfc.common.ducks.IDfcObjectCacheCapable;
++import com.ishland.c2me.opts.dfc.common.gen.jvm.util.DfcObjectCache;
+ import net.minecraft.world.gen.densityfunction.DensityFunction;
+ import net.minecraft.world.gen.densityfunction.DensityFunctionTypes;
+ import org.spongepowered.asm.mixin.Final;
+@@ -50,10 +50,10 @@ public class MixinDFTBinaryOperation {
+             this.argument1.fill(densities, applier);
+             double[] ds;
+ 
+-            ArrayCache arrayCache = applier instanceof IArrayCacheCapable arrayCacheCapable ? arrayCacheCapable.c2me$getArrayCache() : null;
++            DfcObjectCache dfcObjectCache = applier instanceof IDfcObjectCacheCapable arrayCacheCapable ? arrayCacheCapable.c2me$getDfcObjectCache() : null;
+ 
+-            if (arrayCache != null) {
+-                ds = arrayCache.getDoubleArray(densities.length, false);
++            if (dfcObjectCache != null) {
++                ds = dfcObjectCache.getDoubleArray(densities.length, false);
+             } else {
+                 ds = new double[densities.length];
+             }
+@@ -64,8 +64,8 @@ public class MixinDFTBinaryOperation {
+                 densities[i] += ds[i];
+             }
+ 
+-            if (arrayCache != null) {
+-                arrayCache.recycle(ds);
++            if (dfcObjectCache != null) {
++                dfcObjectCache.recycle(ds);
+             }
+ 
+             ci.cancel();
