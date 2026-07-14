@@ -25,12 +25,12 @@
 package com.ishland.c2me.opts.dfc.mixin;
 
 import com.ishland.c2me.base.mixin.access.IChunkNoiseSamplerDensityInterpolator;
-import com.ishland.c2me.opts.dfc.common.ducks.IArrayCacheCapable;
+import com.ishland.c2me.opts.dfc.common.ducks.IDfcObjectCacheCapable;
 import com.ishland.c2me.opts.dfc.common.ducks.ICoordinatesFilling;
 import com.ishland.c2me.opts.dfc.common.ducks.IPreloadedCoordinates;
 import com.ishland.c2me.opts.dfc.common.ducks.NoiseRouterExtension;
 import com.ishland.c2me.opts.dfc.common.gen.DelegatingBlendingAwareVisitor;
-import com.ishland.c2me.opts.dfc.common.util.ArrayCache;
+import com.ishland.c2me.opts.dfc.common.gen.jvm.util.DfcObjectCache;
 import com.llamalad7.mixinextras.expression.Definition;
 import com.llamalad7.mixinextras.expression.Expression;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
@@ -54,9 +54,10 @@ import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
+import java.util.Objects;
 
 @Mixin(ChunkNoiseSampler.class)
-public abstract class MixinChunkNoiseSampler implements IArrayCacheCapable, ICoordinatesFilling, IPreloadedCoordinates {
+public abstract class MixinChunkNoiseSampler implements IDfcObjectCacheCapable, ICoordinatesFilling, IPreloadedCoordinates {
 
     @Shadow @Final private int verticalCellBlockCount;
     @Shadow @Final private int horizontalCellBlockCount;
@@ -88,11 +89,11 @@ public abstract class MixinChunkNoiseSampler implements IArrayCacheCapable, ICoo
     @Shadow private int cellBlockX;
     @Shadow private int cellBlockZ;
     @Shadow private long sampleUniqueIndex;
-    private final ArrayCache c2me$arrayCache = new ArrayCache();
+    private final DfcObjectCache c2Me$dfcObjectCache = new DfcObjectCache.Impl();
 
     @Override
-    public ArrayCache c2me$getArrayCache() {
-        return this.c2me$arrayCache != null ? this.c2me$arrayCache : new ArrayCache();
+    public DfcObjectCache c2me$getDfcObjectCache() {
+        return Objects.requireNonNull(this.c2Me$dfcObjectCache, "broken mixin");
     }
 
     @Override
@@ -119,10 +120,10 @@ public abstract class MixinChunkNoiseSampler implements IArrayCacheCapable, ICoo
     private void c2me$reloadCachedArrays() {
         if (this.c2me$cachedXArray == null || this.c2me$cachedYArray == null || this.c2me$cachedZArray == null) {
             int length = this.horizontalCellBlockCount * this.horizontalCellBlockCount * this.verticalCellBlockCount;
-            ArrayCache arrayCache = this.c2me$getArrayCache();
-            this.c2me$cachedXArray = arrayCache.getIntArray(length, false);
-            this.c2me$cachedYArray = arrayCache.getIntArray(length, false);
-            this.c2me$cachedZArray = arrayCache.getIntArray(length, false);
+            DfcObjectCache dfcObjectCache = this.c2me$getDfcObjectCache();
+            this.c2me$cachedXArray = dfcObjectCache.getIntArray(length, false);
+            this.c2me$cachedYArray = dfcObjectCache.getIntArray(length, false);
+            this.c2me$cachedZArray = dfcObjectCache.getIntArray(length, false);
         }
         if (this.c2me$oldStartBlockX != this.startBlockX || this.c2me$oldStartBlockY != this.startBlockY || this.c2me$oldStartBlockZ != this.startBlockZ) {
             this.c2me$fillCoordinates(this.c2me$cachedXArray, this.c2me$cachedYArray, this.c2me$cachedZArray);

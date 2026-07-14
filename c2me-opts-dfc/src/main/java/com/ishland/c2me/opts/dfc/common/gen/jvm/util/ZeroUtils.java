@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-package com.ishland.c2me.opts.dfc.common.util;
+package com.ishland.c2me.opts.dfc.common.gen.jvm.util;
 
 public class ZeroUtils {
 

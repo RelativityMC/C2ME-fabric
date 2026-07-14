@@ -22,65 +22,72 @@
  * THE SOFTWARE.
  */
 
-package com.ishland.c2me.opts.dfc.common.vif;
+package com.ishland.c2me.opts.dfc.common.gen.jvm.vif;
 
 import com.ishland.c2me.opts.dfc.common.ast.EvalType;
-import com.ishland.c2me.opts.dfc.common.ducks.IArrayCacheCapable;
-import com.ishland.c2me.opts.dfc.common.util.ArrayCache;
+import com.ishland.c2me.opts.dfc.common.gen.jvm.util.DfcObjectCache;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
+import org.jspecify.annotations.NonNull;
 
 import java.util.Objects;
 
-public class EachApplierVanillaInterface implements DensityFunction.EachApplier, IArrayCacheCapable {
+public class NoisePosVanillaInterface implements DensityFunction.NoisePos {
 
-    private final int[] x;
-    private final int[] y;
-    private final int[] z;
-    private final EvalType type;
-    private final ArrayCache cache;
+    private int x;
+    private int y;
+    private int z;
+    private EvalType type;
+    private DfcObjectCache cache = DfcObjectCache.Noop.INSTANCE;
 
-    public EachApplierVanillaInterface(int[] x, int[] y, int[] z, EvalType type) {
-        this(x, y, z, type, new ArrayCache());
+    public NoisePosVanillaInterface() {
     }
 
-    public EachApplierVanillaInterface(int[] x, int[] y, int[] z, EvalType type, ArrayCache cache) {
-        this.x = Objects.requireNonNull(x);
-        this.y = Objects.requireNonNull(y);
-        this.z = Objects.requireNonNull(z);
+    public void ensureUninitialized() {
+        if (type != null) throw new IllegalStateException("double use");
+    }
+
+    private void ensureInitialized() {
+        if (type == null) throw new IllegalStateException("uninitialized use");
+    }
+
+    public NoisePosVanillaInterface at(int x, int y, int z, EvalType type, DfcObjectCache cache) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
         this.type = Objects.requireNonNull(type);
         this.cache = Objects.requireNonNull(cache);
+        return this;
     }
 
     @Override
-    public DensityFunction.NoisePos at(int index) {
-        return new NoisePosVanillaInterface(x[index], y[index], z[index], type);
-    }
-
-    @Override
-    public void fill(double[] densities, DensityFunction densityFunction) {
-        for (int i = 0; i < x.length; i++) {
-            densities[i] = densityFunction.sample(this.at(i));
-        }
-    }
-
-    public int[] getX() {
+    public int blockX() {
+        ensureInitialized();
         return x;
     }
 
-    public int[] getY() {
+    @Override
+    public int blockY() {
+        ensureInitialized();
         return y;
     }
 
-    public int[] getZ() {
+    @Override
+    public int blockZ() {
+        ensureInitialized();
         return z;
     }
 
     public EvalType getType() {
+        ensureInitialized();
         return type;
     }
 
-    @Override
-    public ArrayCache c2me$getArrayCache() {
-        return this.cache;
+    public void deInit() {
+        this.x = 0;
+        this.y = 0;
+        this.z = 0;
+        this.type = null;
+        this.cache = DfcObjectCache.Noop.INSTANCE;
     }
+
 }
