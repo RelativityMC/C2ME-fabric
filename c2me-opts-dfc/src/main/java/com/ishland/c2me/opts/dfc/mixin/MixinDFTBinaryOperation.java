@@ -24,8 +24,8 @@
 
 package com.ishland.c2me.opts.dfc.mixin;
 
-import com.ishland.c2me.opts.dfc.common.ducks.IArrayCacheCapable;
-import com.ishland.c2me.opts.dfc.common.util.ArrayCache;
+import com.ishland.c2me.opts.dfc.common.ducks.IDfcObjectCacheCapable;
+import com.ishland.c2me.opts.dfc.common.gen.jvm.util.DfcObjectCache;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
 import net.minecraft.world.gen.densityfunction.DensityFunctionTypes;
 import org.spongepowered.asm.mixin.Final;
@@ -50,10 +50,10 @@ public class MixinDFTBinaryOperation {
             this.argument1.fill(densities, applier);
             double[] ds;
 
-            ArrayCache arrayCache = applier instanceof IArrayCacheCapable arrayCacheCapable ? arrayCacheCapable.c2me$getArrayCache() : null;
+            DfcObjectCache dfcObjectCache = applier instanceof IDfcObjectCacheCapable arrayCacheCapable ? arrayCacheCapable.c2me$getDfcObjectCache() : null;
 
-            if (arrayCache != null) {
-                ds = arrayCache.getDoubleArray(densities.length, false);
+            if (dfcObjectCache != null) {
+                ds = dfcObjectCache.getDoubleArray(densities.length, false);
             } else {
                 ds = new double[densities.length];
             }
@@ -64,8 +64,8 @@ public class MixinDFTBinaryOperation {
                 densities[i] += ds[i];
             }
 
-            if (arrayCache != null) {
-                arrayCache.recycle(ds);
+            if (dfcObjectCache != null) {
+                dfcObjectCache.recycle(ds);
             }
 
             ci.cancel();

@@ -37,7 +37,7 @@ import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.unary.*;
 import com.ishland.c2me.opts.dfc.common.ast.misc.CacheLikeNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantNode;
 import com.ishland.c2me.opts.dfc.common.ast.unary.*;
-import com.ishland.c2me.opts.dfc.common.util.ZeroUtils;
+import com.ishland.c2me.opts.dfc.common.gen.jvm.util.ZeroUtils;
 import net.minecraft.util.math.MathHelper;
 
 public class FoldConstants implements AstTransformer {

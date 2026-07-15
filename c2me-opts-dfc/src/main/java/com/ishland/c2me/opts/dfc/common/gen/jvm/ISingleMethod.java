@@ -25,10 +25,11 @@
 package com.ishland.c2me.opts.dfc.common.gen.jvm;
 
 import com.ishland.c2me.opts.dfc.common.ast.EvalType;
+import com.ishland.c2me.opts.dfc.common.gen.jvm.util.DfcObjectCache;
 
 @FunctionalInterface
 public interface ISingleMethod {
 
-    double evalSingle(int x, int y, int z, EvalType type);
+    double evalSingle(int x, int y, int z, EvalType type, DfcObjectCache dfcObjectCache);
 
 }

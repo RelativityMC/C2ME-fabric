@@ -22,44 +22,31 @@
  * THE SOFTWARE.
  */
 
-package com.ishland.c2me.opts.dfc.common.vif;
+package com.ishland.c2me.fixes.worldgen.threading_issues.mixin.threading;
 
-import com.ishland.c2me.opts.dfc.common.ast.EvalType;
-import net.minecraft.world.gen.densityfunction.DensityFunction;
+import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import net.minecraft.world.chunk.ChunkNibbleArray;
+import net.minecraft.world.chunk.ChunkToNibbleArrayMap;
+import net.minecraft.world.chunk.light.ChunkLightProvider;
+import net.minecraft.world.chunk.light.LightStorage;
+import org.spongepowered.asm.mixin.Final;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 
-import java.util.Objects;
+@Mixin(LightStorage.class)
+public class MixinLightStorage<M extends ChunkToNibbleArrayMap<M>> {
 
-public class NoisePosVanillaInterface implements DensityFunction.NoisePos {
+    @Shadow
+    @Final
+    protected Long2ObjectMap<ChunkNibbleArray> queuedSections;
 
-    private final int x;
-    private final int y;
-    private final int z;
-    private final EvalType type;
-
-    public NoisePosVanillaInterface(int x, int y, int z, EvalType type) {
-        this.x = x;
-        this.y = y;
-        this.z = z;
-        this.type = Objects.requireNonNull(type);
-    }
-
-    @Override
-    public int blockX() {
-        return x;
-    }
-
-    @Override
-    public int blockY() {
-        return y;
-    }
-
-    @Override
-    public int blockZ() {
-        return z;
-    }
-
-    public EvalType getType() {
-        return type;
+    @WrapMethod(method = "updateLight")
+    private void wrapUpdateLight(ChunkLightProvider<M, ?> lightProvider, Operation<Void> original) {
+        synchronized (this.queuedSections) { // protect the iterator
+            original.call(lightProvider);
+        }
     }
 
 }

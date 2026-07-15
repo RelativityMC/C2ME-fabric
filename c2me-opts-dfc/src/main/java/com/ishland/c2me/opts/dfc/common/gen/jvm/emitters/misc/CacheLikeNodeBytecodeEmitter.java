@@ -32,6 +32,7 @@ import com.ishland.c2me.opts.dfc.common.gen.jvm.BytecodeGen;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.IMultiMethod;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.ISingleMethod;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.SubCompiledDensityFunction;
+import com.ishland.c2me.opts.dfc.common.gen.jvm.util.DfcObjectCache;
 import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefD;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
 import org.objectweb.asm.Handle;

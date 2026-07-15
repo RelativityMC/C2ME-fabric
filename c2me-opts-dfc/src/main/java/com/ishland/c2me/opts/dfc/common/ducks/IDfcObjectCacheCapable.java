@@ -22,18 +22,12 @@
  * THE SOFTWARE.
  */
 
-package com.ishland.c2me.opts.dfc.common.util;
+package com.ishland.c2me.opts.dfc.common.ducks;
 
-public class ZeroUtils {
+import com.ishland.c2me.opts.dfc.common.gen.jvm.util.DfcObjectCache;
 
-    public static boolean isPositiveZero(double x) {
-        if (x != 0.0) {
-            throw new IllegalArgumentException("x isn't zero");
-        }
-        return 1.0 / x > 0.0;
-    }
+public interface IDfcObjectCacheCapable {
 
-    private ZeroUtils() {
-    }
+    DfcObjectCache c2me$getDfcObjectCache();
 
 }
