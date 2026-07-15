@@ -160,7 +160,7 @@ public class GenericShiftedNoiseNodeBytecodeEmitter implements BytecodeEmitter<G
         for (int i = 1; i < arrays.length; i ++) {
             m.load(6, InstructionAdapter.OBJECT_TYPE);
             m.load(arrays[i], InstructionAdapter.OBJECT_TYPE);
-            m.invokevirtual(Type.getInternalName(DfcObjectCache.class), "recycle", Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(double[].class)), false);
+            m.invokeinterface(Type.getInternalName(DfcObjectCache.class), "recycle", Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(double[].class)));
         }
 
         m.areturn(Type.VOID_TYPE);
