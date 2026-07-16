@@ -52,3 +52,7 @@ TARGET_IMPL(c2me_natives_biome_search_tree_calc_args, uint32_t, (const biome_sea
                                                                  int16_t p4, int16_t p5, int16_t p6) {
     return math_biome_search_tree_calc_args(nodes, nodes_c, tree_depth, p0, p1, p2, p3, p4, p5, p6);
 })
+
+TARGET_IMPL(c2me_natives_fnlGetNoise3D, float, (const fnl_state *const state, double x, double y, double z) {
+    return fnlGetNoise3D(state, x, y, z);
+})
