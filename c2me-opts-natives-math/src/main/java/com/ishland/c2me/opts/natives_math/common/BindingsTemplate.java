@@ -674,17 +674,28 @@ public class BindingsTemplate {
     public record NativeBiomeSearchTree(MemorySegment segment, RegistryEntry<Biome>[] biomes, int node_c, int tree_depth) {
     }
 
-    // fnlGetNoise3D, float, const fnl_state *state, double x, double y, double z
-    // public static final MethodHandle c2me_natives_fnlGetNoise3D = NativeLoader.linker.downcallHandle(
-    //         FunctionDescriptor.of(
-    //                ValueLayout.JAVA_FLOAT,
-    //                ValueLayout.ADDRESS,
-    //                ValueLayout.JAVA_DOUBLE,
-    //                ValueLayout.JAVA_DOUBLE,
-    //                ValueLayout.JAVA_DOUBLE
-    //        ),
-    //        Linker.Option.critical(false)
-    //);
+    public static final MethodHandle c2me_natives_fnlGetNoise3D = NativeLoader.linker.downcallHandle(
+            FunctionDescriptor.of(
+                    ValueLayout.JAVA_FLOAT,
+                    ValueLayout.ADDRESS,
+                    ValueLayout.JAVA_DOUBLE,
+                    ValueLayout.JAVA_DOUBLE,
+                    ValueLayout.JAVA_DOUBLE
+            ),
+            Linker.Option.critical(false)
+    );
+
+    public static final MethodHandle c2me_natives_fnlGetNoise3D_ptr = NativeLoader.linker.downcallHandle(
+            FunctionDescriptor.of(
+                    ValueLayout.JAVA_FLOAT,
+                    ValueLayout.JAVA_LONG,
+                    ValueLayout.JAVA_DOUBLE,
+                    ValueLayout.JAVA_DOUBLE,
+                    ValueLayout.JAVA_DOUBLE
+            ),
+            Linker.Option.critical(false)
+    );
+
 
     public static final StructLayout fnl_state = MemoryLayout.structLayout(
             ValueLayout.JAVA_INT.withName("seed"),
