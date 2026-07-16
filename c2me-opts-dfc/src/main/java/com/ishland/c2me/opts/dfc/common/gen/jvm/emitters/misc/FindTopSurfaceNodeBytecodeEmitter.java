@@ -89,6 +89,7 @@ public class FindTopSurfaceNodeBytecodeEmitter implements BytecodeEmitter<FindTo
                     "NORMAL",
                     Type.getDescriptor(EvalType.class)
             );
+            m.load(5, InstructionAdapter.OBJECT_TYPE);
             m.invokevirtual(context.className, densityMethod.generatedMethod(), BytecodeGen.Context.SINGLE_DESC, false);
         }
         m.dconst(0.0);

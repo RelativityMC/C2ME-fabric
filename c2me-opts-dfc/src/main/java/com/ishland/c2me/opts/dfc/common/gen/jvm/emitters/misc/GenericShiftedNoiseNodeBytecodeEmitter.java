@@ -29,7 +29,7 @@ import com.ishland.c2me.opts.dfc.common.gen.jvm.BytecodeEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.BytecodeGen;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.InvocationShim;
 import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefD;
-import com.ishland.c2me.opts.dfc.common.util.ArrayCache;
+import com.ishland.c2me.opts.dfc.common.gen.jvm.util.DfcObjectCache;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.InstructionAdapter;
@@ -86,7 +86,7 @@ public class GenericShiftedNoiseNodeBytecodeEmitter implements BytecodeEmitter<G
             m.load(1, InstructionAdapter.OBJECT_TYPE);
             m.arraylength();
             m.iconst(0);
-            m.invokevirtual(Type.getInternalName(ArrayCache.class), "getDoubleArray", Type.getMethodDescriptor(Type.getType(double[].class), Type.INT_TYPE, Type.BOOLEAN_TYPE), false);
+            m.invokeinterface(Type.getInternalName(DfcObjectCache.class), "getDoubleArray", Type.getMethodDescriptor(Type.getType(double[].class), Type.INT_TYPE, Type.BOOLEAN_TYPE));
             m.store(arrays[1], InstructionAdapter.OBJECT_TYPE);
         }
         if (arraysNeeded >= 3) {
@@ -95,7 +95,7 @@ public class GenericShiftedNoiseNodeBytecodeEmitter implements BytecodeEmitter<G
             m.load(1, InstructionAdapter.OBJECT_TYPE);
             m.arraylength();
             m.iconst(0);
-            m.invokevirtual(Type.getInternalName(ArrayCache.class), "getDoubleArray", Type.getMethodDescriptor(Type.getType(double[].class), Type.INT_TYPE, Type.BOOLEAN_TYPE), false);
+            m.invokeinterface(Type.getInternalName(DfcObjectCache.class), "getDoubleArray", Type.getMethodDescriptor(Type.getType(double[].class), Type.INT_TYPE, Type.BOOLEAN_TYPE));
             m.store(arrays[2], InstructionAdapter.OBJECT_TYPE);
         }
 
@@ -160,7 +160,7 @@ public class GenericShiftedNoiseNodeBytecodeEmitter implements BytecodeEmitter<G
         for (int i = 1; i < arrays.length; i ++) {
             m.load(6, InstructionAdapter.OBJECT_TYPE);
             m.load(arrays[i], InstructionAdapter.OBJECT_TYPE);
-            m.invokevirtual(Type.getInternalName(ArrayCache.class), "recycle", Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(double[].class)), false);
+            m.invokeinterface(Type.getInternalName(DfcObjectCache.class), "recycle", Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(double[].class)));
         }
 
         m.areturn(Type.VOID_TYPE);

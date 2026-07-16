@@ -27,15 +27,14 @@ package com.ishland.c2me.opts.dfc.common.gen.jvm;
 import com.google.common.base.Suppliers;
 import com.ishland.c2me.base.mixin.access.IChunkNoiseSampler;
 import com.ishland.c2me.opts.dfc.common.ast.EvalType;
-import com.ishland.c2me.opts.dfc.common.ducks.IArrayCacheCapable;
+import com.ishland.c2me.opts.dfc.common.ducks.IDfcObjectCacheCapable;
 import com.ishland.c2me.opts.dfc.common.ducks.IBlendingAwareVisitor;
 import com.ishland.c2me.opts.dfc.common.ducks.ICoordinatesFilling;
 import com.ishland.c2me.opts.dfc.common.ducks.IPreloadedCoordinates;
-import com.ishland.c2me.opts.dfc.common.util.ArrayCache;
-import com.ishland.c2me.opts.dfc.common.vif.EachApplierVanillaInterface;
+import com.ishland.c2me.opts.dfc.common.gen.jvm.util.DfcObjectCache;
+import com.ishland.c2me.opts.dfc.common.gen.jvm.vif.EachApplierVanillaInterface;
 import net.minecraft.util.dynamic.CodecHolder;
 import net.minecraft.util.math.Interval;
-import net.minecraft.world.gen.chunk.Blender;
 import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
 import org.slf4j.Logger;
@@ -82,7 +81,8 @@ public class SubCompiledDensityFunction implements DensityFunction {
                 return fallback.sample(pos);
             }
         }
-        return this.singleMethod.evalSingle(pos.blockX(), pos.blockY(), pos.blockZ(), EvalType.from(pos));
+        DfcObjectCache cache = pos instanceof IDfcObjectCacheCapable cacheCapable ? cacheCapable.c2me$getDfcObjectCache() : DfcObjectCache.Noop.INSTANCE;
+        return this.singleMethod.evalSingle(pos.blockX(), pos.blockY(), pos.blockZ(), EvalType.from(pos), cache);
     }
 
     @Override
@@ -98,11 +98,11 @@ public class SubCompiledDensityFunction implements DensityFunction {
             }
         }
         if (applier instanceof EachApplierVanillaInterface vanillaInterface) {
-            this.multiMethod.evalMulti(densities, vanillaInterface.getX(), vanillaInterface.getY(), vanillaInterface.getZ(), EvalType.from(applier), vanillaInterface.c2me$getArrayCache());
+            this.multiMethod.evalMulti(densities, vanillaInterface.getX(), vanillaInterface.getY(), vanillaInterface.getZ(), EvalType.from(applier), vanillaInterface.c2me$getDfcObjectCache());
             return;
         }
 
-        ArrayCache cache = applier instanceof IArrayCacheCapable cacheCapable ? cacheCapable.c2me$getArrayCache() : new ArrayCache();
+        DfcObjectCache cache = applier instanceof IDfcObjectCacheCapable cacheCapable ? cacheCapable.c2me$getDfcObjectCache() : DfcObjectCache.Noop.INSTANCE;
         int[] x;
         int[] y;
         int[] z;

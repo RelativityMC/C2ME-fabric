@@ -26,7 +26,7 @@ package com.ishland.c2me.opts.dfc.mixin;
 
 import com.ishland.c2me.opts.dfc.common.ast.EvalType;
 import com.ishland.c2me.opts.dfc.common.ducks.IFastCacheLike;
-import com.ishland.c2me.opts.dfc.common.vif.EachApplierVanillaInterface;
+import com.ishland.c2me.opts.dfc.common.gen.jvm.vif.EachApplierVanillaInterface;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import net.minecraft.world.gen.chunk.ChunkNoiseSampler;

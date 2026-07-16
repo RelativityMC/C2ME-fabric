@@ -24,7 +24,7 @@
 
 package com.ishland.c2me.opts.dfc.common.ast;
 
-import com.ishland.c2me.opts.dfc.common.vif.EachApplierVanillaInterface;
+import com.ishland.c2me.opts.dfc.common.gen.jvm.vif.EachApplierVanillaInterface;
 import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
 
