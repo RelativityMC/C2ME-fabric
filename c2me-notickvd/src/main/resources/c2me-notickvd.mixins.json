@@ -14,6 +14,7 @@
     "MixinServerBlockTicking",
     "MixinServerChunkManager",
     "MixinSimulationDistanceLevelPropagator",
+    "MixinSpawnHelper",
     "MixinThreadedAnvilChunkStorage",
     "MixinWorld",
     "MixinWorldChunk",

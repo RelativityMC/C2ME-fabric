@@ -120,13 +120,16 @@ public abstract class MixinAquiferSamplerImpl {
 
     @Shadow protected abstract int getNoiseBasedFluidLevel(int blockX, int blockY, int blockZ, int surfaceHeightEstimate);
 
-    @Shadow @Final private DensityFunction erosionDensityFunction;
-
-    @Shadow @Final private DensityFunction depthDensityFunction;
-
     @Shadow protected abstract AquiferSampler.FluidLevel getWaterLevel(int i);
 
     @Shadow @Final private int maxY;
+    @Shadow
+    @Final
+    private DensityFunction field_1_9016;
+
+    @Shadow
+    protected abstract int adjustEstimatedHighestSurfaceLevel(int estimatedHighestSurfaceLevel);
+
     @Unique
     private int c2me$packed1;
     @Unique
@@ -391,11 +394,11 @@ public abstract class MixinAquiferSamplerImpl {
         DensityFunction.UnblendedNoisePos unblendedNoisePos = new DensityFunction.UnblendedNoisePos(blockX, blockY, blockZ);
         double d;
         double e;
-        if (VanillaBiomeParameters.inDeepDarkParameters(this.erosionDensityFunction, this.depthDensityFunction, unblendedNoisePos)) {
+        if (this.field_1_9016.sample(unblendedNoisePos) > (double)0.0F) {
             d = -1.0;
             e = -1.0;
         } else {
-            int i = surfaceHeightEstimate + 8 - blockY;
+            int i = this.adjustEstimatedHighestSurfaceLevel(surfaceHeightEstimate) - blockY;
             double f = bl ? MathHelper.clampedLerp((double) i / 64.0, 1.0, 0.0) : 0.0; // inline
             double g = MathHelper.clamp(this.fluidLevelFloodednessNoise.sample(unblendedNoisePos), -1.0, 1.0);
             d = g + 0.8 + (f - 1.0) * 1.2; // inline

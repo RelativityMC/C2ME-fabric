@@ -51,12 +51,6 @@ public class MixinServerChunkManager {
 
     @Shadow @Final public ServerChunkLoadingManager chunkLoadingManager;
 
-    @WrapOperation(method = "tickChunks(Lnet/minecraft/util/profiler/Profiler;J)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerWorld;iterateEntities()Ljava/lang/Iterable;"))
-    private Iterable<Entity> redirectIterateEntities(ServerWorld serverWorld, Operation<Iterable<Entity>> op) {
-        Long2ByteMap trackedChunks = ((ISimulationDistanceLevelPropagator) ((IChunkLevelManager) ((IThreadedAnvilChunkStorage) this.chunkLoadingManager).getLevelManager()).getSimulationDistanceLevelPropagator()).getLevels();
-        return new FilteringIterable<>(op.call(serverWorld), entity -> trackedChunks.containsKey(entity.getChunkPos().toLong()));
-    }
-
     @Redirect(method = "broadcastUpdates", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ChunkHolder;getWorldChunk()Lnet/minecraft/world/chunk/WorldChunk;"))
     private WorldChunk broadcastBorderChunks(ChunkHolder instance) {
         if (instance instanceof IFastChunkHolder fastChunkHolder) {

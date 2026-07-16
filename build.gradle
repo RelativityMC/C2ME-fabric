@@ -312,12 +312,14 @@ publishMods {
             projectId = "533097"
         }
 
-        curseforge("curseforgeOpenCLAccel") {
-            from cfOptions
-            file = project(":c2me-opts-accel-opencl").remapJar.archiveFile
-            projectId = "1563823"
-            requires("c2me")
-            optional("scalablelux")
+        if (findProject(":c2me-opts-accel-opencl") != null) {
+            curseforge("curseforgeOpenCLAccel") {
+                from cfOptions
+                file = project(":c2me-opts-accel-opencl").remapJar.archiveFile
+                projectId = "1563823"
+                requires("c2me")
+                optional("scalablelux")
+            }
         }
     }
 
@@ -333,15 +335,17 @@ publishMods {
             projectId = "VSNURh3q"
         }
 
-        modrinth("modrinthOpenCLAccel") {
-            from mrOptions
-            file = project(":c2me-opts-accel-opencl").remapJar.archiveFile
-            projectId = "qtPMklut"
-            requires {
-                id = "VSNURh3q"
-            }
-            optional {
-                id = "Ps1zyz6x"
+        if (findProject(":c2me-opts-accel-opencl") != null) {
+            modrinth("modrinthOpenCLAccel") {
+                from mrOptions
+                file = project(":c2me-opts-accel-opencl").remapJar.archiveFile
+                projectId = "qtPMklut"
+                requires {
+                    id = "VSNURh3q"
+                }
+                optional {
+                    id = "Ps1zyz6x"
+                }
             }
         }
     }
