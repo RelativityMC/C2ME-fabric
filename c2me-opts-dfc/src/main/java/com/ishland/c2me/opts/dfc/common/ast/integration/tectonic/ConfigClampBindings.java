@@ -24,7 +24,8 @@
 
 package com.ishland.c2me.opts.dfc.common.ast.integration.tectonic;
 
-import com.ishland.c2me.opts.dfc.common.ast.AstNode;
+import com.ishland.c2me.opts.dfc.common.ast.AstEmitter;
+import com.ishland.c2me.opts.dfc.common.ast.FrontendRegistry;
 import com.ishland.c2me.opts.dfc.common.ast.McToAst;
 import com.ishland.c2me.opts.dfc.common.ast.binary.MaxNode;
 import com.ishland.c2me.opts.dfc.common.ast.binary.MinNode;
@@ -74,10 +75,10 @@ public class ConfigClampBindings {
         AVAILABLE = available;
     }
 
-    public static AstNode tryParse(DensityFunction function) {
-        if (!AVAILABLE) return null;
+    public static void register(FrontendRegistry<AstEmitter<? extends DensityFunction>> registry) {
+        if (!AVAILABLE) return;
 
-        if (function.getClass() == CLASS_ConfigClamp) {
+        registry.registerExactMatch((Class<? extends DensityFunction>) CLASS_ConfigClamp, function -> {
             try {
                 return new MinNode(
                         new MaxNode(
@@ -89,9 +90,7 @@ public class ConfigClampBindings {
             } catch (Throwable e) {
                 throw new RuntimeException(e);
             }
-        }
-
-        return null;
+        });
     }
 
 }
