@@ -24,7 +24,9 @@
 
 package com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched;
 
+import com.ishland.c2me.opts.dfc.common.ast.AstEmitter;
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
+import com.ishland.c2me.opts.dfc.common.ast.FrontendRegistry;
 import com.ishland.c2me.opts.dfc.common.ast.McToAst;
 import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc.SelectNode;
 import net.fabricmc.loader.api.FabricLoader;
@@ -84,11 +86,10 @@ public class SelectBindings {
         AVAILABLE = available;
     }
 
-    @SuppressWarnings("unchecked")
-    public static AstNode tryParse(DensityFunction function) {
-        if (!AVAILABLE) return null;
+    public static void register(FrontendRegistry<AstEmitter<? extends DensityFunction>> registry) {
+        if (!AVAILABLE) return;
 
-        if (function.getClass() == CLASS_SelectDensityFunction) {
+        registry.registerExactMatch((Class<? extends DensityFunction>) CLASS_SelectDensityFunction, function -> {
             try {
                 List<?> selections = (List<?>) MH_selections.invoke(function);
 
@@ -111,8 +112,7 @@ public class SelectBindings {
             } catch (Throwable e) {
                 throw new RuntimeException(e);
             }
-        }
-
-        return null;
+        });
     }
+
 }

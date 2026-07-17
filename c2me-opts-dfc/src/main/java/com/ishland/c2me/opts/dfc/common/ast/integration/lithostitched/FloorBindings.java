@@ -24,7 +24,9 @@
 
 package com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched;
 
+import com.ishland.c2me.opts.dfc.common.ast.AstEmitter;
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
+import com.ishland.c2me.opts.dfc.common.ast.FrontendRegistry;
 import com.ishland.c2me.opts.dfc.common.ast.McToAst;
 import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.unary.FloorNode;
 import net.fabricmc.loader.api.FabricLoader;
@@ -65,17 +67,16 @@ public class FloorBindings {
         AVAILABLE = available;
     }
 
-    public static AstNode tryParse(DensityFunction function) {
-        if (!AVAILABLE) return null;
+    public static void register(FrontendRegistry<AstEmitter<? extends DensityFunction>> registry) {
+        if (!AVAILABLE) return;
 
-        if (function.getClass() == CLASS_FloorDensityFunction) {
+        registry.registerExactMatch((Class<? extends DensityFunction>) CLASS_FloorDensityFunction, function -> {
             try {
                return new FloorNode(McToAst.toAst((DensityFunction) MH_argument.invoke(function)));
             } catch (Throwable e) {
                 throw new RuntimeException(e);
             }
-        }
-
-        return null;
+        });
     }
+
 }

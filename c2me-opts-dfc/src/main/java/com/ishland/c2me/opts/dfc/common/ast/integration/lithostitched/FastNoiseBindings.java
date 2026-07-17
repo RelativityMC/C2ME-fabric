@@ -24,7 +24,9 @@
 
 package com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched;
 
+import com.ishland.c2me.opts.dfc.common.ast.AstEmitter;
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
+import com.ishland.c2me.opts.dfc.common.ast.FrontendRegistry;
 import com.ishland.c2me.opts.dfc.common.ast.McToAst;
 import com.ishland.c2me.opts.dfc.common.ast.binary.AddNode;
 import com.ishland.c2me.opts.dfc.common.ast.binary.MulNode;
@@ -97,10 +99,10 @@ public class FastNoiseBindings {
         AVAILABLE = available;
     }
 
-    public static AstNode tryParse(DensityFunction function) {
-        if (!AVAILABLE) return null;
+    public static void register(FrontendRegistry<AstEmitter<? extends DensityFunction>> registry) {
+        if (!AVAILABLE) return;
 
-        if (function.getClass() == CLASS_FastNoiseDensityFunction) {
+        registry.registerExactMatch((Class<? extends DensityFunction>) CLASS_FastNoiseDensityFunction, function -> {
             try {
                 return new FastNoiseNode(
                         new AddNode(new MulNode(CoordinateNode.AXIS_X, new ConstantNode((double) MH_xzScale.invoke(function))), McToAst.toAst((DensityFunction) MH_shiftX.invoke(function))),
@@ -111,8 +113,7 @@ public class FastNoiseBindings {
             } catch (Throwable e) {
                 throw new RuntimeException(e);
             }
-        }
-
-        return null;
+        });
     }
+
 }
