@@ -25,9 +25,7 @@
 package com.ishland.c2me.opts.dfc.common.gen.jvm;
 
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
-import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.MixBindings;
-import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.SelectBindings;
-import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.ShiftBindings;
+import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc.FastNoiseNode;
 import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc.MixNode;
 import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc.SelectNode;
 import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc.ShiftNode;
@@ -48,6 +46,7 @@ import com.ishland.c2me.opts.dfc.common.ast.spline.SplineAstNode;
 import com.ishland.c2me.opts.dfc.common.gen.CodeGenRegistry;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.emitters.BinaryNodeBytecodeEmitters;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.emitters.UnaryNodeBytecodeEmitters;
+import com.ishland.c2me.opts.dfc.common.gen.jvm.emitters.integration.lithostitched.misc.FastNoiseNodeBytecodeEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.emitters.integration.lithostitched.misc.MixNodeBytecodeEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.emitters.integration.lithostitched.misc.SelectNodeBytecodeEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.emitters.integration.lithostitched.misc.ShiftNodeBytecodeEmitter;
@@ -88,6 +87,7 @@ public class BytecodeGenRegistry {
         REGISTRY.registerExactMatch(EndIslandsNode.class, DelegateNodeBytecodeEmitter.instance());
         REGISTRY.registerExactMatch(InterpolatedNoiseSamplerNode.class, DelegateNodeBytecodeEmitter.instance());
 
+        REGISTRY.registerExactMatch(FastNoiseNode.class, FastNoiseNodeBytecodeEmitter.INSTANCE);
         REGISTRY.registerExactMatch(MixNode.class,  MixNodeBytecodeEmitter.INSTANCE);
         REGISTRY.registerExactMatch(SelectNode.class, SelectNodeBytecodeEmitter.INSTANCE);
         REGISTRY.registerExactMatch(ShiftNode.class, ShiftNodeBytecodeEmitter.INSTANCE);

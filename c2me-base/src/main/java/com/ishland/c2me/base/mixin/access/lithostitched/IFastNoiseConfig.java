@@ -26,57 +26,11 @@ package com.ishland.c2me.base.mixin.access.lithostitched;
 
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
-import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.gen.Invoker;
 
 @Pseudo
-@Mixin(targets = "dev.worldgen.lithostitched.api.worldgen.densityfunction.fastnoise.FNL", remap = false)
-public interface IFNL {
-
-    @Accessor("mSeed")
-    int getSeed();
-
-    @Accessor("mFrequency")
-    float getFrequency();
-
-    @Accessor("mNoiseType")
-    Object getNoiseType();
-
-    @Accessor("mRotationType3D")
-    Object getRotationType3D();
-
-    @Accessor("mFractalType")
-    Object getFractalType();
-
-    @Accessor("mOctaves")
-    int getOctaves();
-
-    @Accessor("mLacunarity")
-    float getLacunarity();
-
-    @Accessor("mGain")
-    float getGain();
-
-    @Accessor("mWeightedStrength")
-    float getWeightedStrength();
-
-    @Accessor("mPingPongStrength")
-    float getPingPongStrength();
-
-    @Accessor("mCellularDistanceFunction")
-    Object getCellularDistanceFunction();
-
-    @Accessor("mCellularReturnType")
-    Object getCellularReturnType();
-
-    @Accessor("mCellularJitterModifier")
-    float getCellularJitterModifier();
-
-    @Accessor("mDomainWarpType")
-    Object getDomainWarpType();
-
-    @Accessor("mDomainWarpAmp")
-    float getDomainWarpAmp();
+@Mixin(targets = "dev.worldgen.lithostitched.api.worldgen.densityfunction.fastnoise.FastNoiseConfig", remap = false)
+public interface IFastNoiseConfig {
 
     @Invoker("sample")
     double invokeSample(double x, double y, double z);

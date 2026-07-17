@@ -26,7 +26,6 @@ package com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc;
 
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
 import com.ishland.c2me.opts.dfc.common.ast.AstTransformer;
-import com.ishland.c2me.opts.natives_math.common.BindingsTemplate;
 
 import java.util.Objects;
 
@@ -34,13 +33,13 @@ public class FastNoiseNode implements AstNode {
     public final AstNode inputX;
     public final AstNode inputY;
     public final AstNode inputZ;
-    public final BindingsTemplate.FNLState state;
+    public final Object config;
 
-    public FastNoiseNode(AstNode inputX, AstNode inputY, AstNode inputZ, BindingsTemplate.FNLState state) {
+    public FastNoiseNode(AstNode inputX, AstNode inputY, AstNode inputZ, Object config) {
         this.inputX = Objects.requireNonNull(inputX);
         this.inputY = Objects.requireNonNull(inputY);
         this.inputZ = Objects.requireNonNull(inputZ);
-        this.state = Objects.requireNonNull(state);
+        this.config = Objects.requireNonNull(config);
     }
 
     @Override
@@ -56,7 +55,7 @@ public class FastNoiseNode implements AstNode {
         if (inputX == this.inputX && inputY == this.inputY && inputZ == this.inputZ) {
             return transformer.transform(this);
         } else {
-            return transformer.transform(new FastNoiseNode(inputX, inputY, inputZ, this.state));
+            return transformer.transform(new FastNoiseNode(inputX, inputY, inputZ, this.config));
         }
     }
 
@@ -64,7 +63,7 @@ public class FastNoiseNode implements AstNode {
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         FastNoiseNode that = (FastNoiseNode) o;
-        return inputX.equals(that.inputX) && inputY.equals(that.inputY) && inputZ.equals(that.inputZ) && state.equals(that.state);
+        return inputX.equals(that.inputX) && inputY.equals(that.inputY) && inputZ.equals(that.inputZ) && config.equals(that.config);
     }
 
     @Override
@@ -73,7 +72,7 @@ public class FastNoiseNode implements AstNode {
         result = 31 * result + inputX.hashCode();
         result = 31 * result + inputY.hashCode();
         result = 31 * result + inputZ.hashCode();
-        result = 31 * result + state.hashCode();
+        result = 31 * result + config.hashCode();
         return result;
     }
 
@@ -81,7 +80,7 @@ public class FastNoiseNode implements AstNode {
     public boolean relaxedEquals(AstNode o) {
         if (o == null || getClass() != o.getClass()) return false;
         FastNoiseNode that = (FastNoiseNode) o;
-        return inputX.relaxedEquals(that.inputX) && inputY.relaxedEquals(that.inputY) && inputZ.relaxedEquals(that.inputZ) && state.equals(that.state);
+        return inputX.relaxedEquals(that.inputX) && inputY.relaxedEquals(that.inputY) && inputZ.relaxedEquals(that.inputZ) && config.equals(that.config);
     }
 
     @Override
@@ -90,7 +89,7 @@ public class FastNoiseNode implements AstNode {
         result = 31 * result + inputX.relaxedHashCode();
         result = 31 * result + inputY.relaxedHashCode();
         result = 31 * result + inputZ.relaxedHashCode();
-        result = 31 * result + state.hashCode();
+        result = 31 * result + config.hashCode();
         return result;
     }
 }

@@ -25,9 +25,7 @@
 package com.ishland.c2me.opts.dfc.common.gen.dot;
 
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
-import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.MixBindings;
-import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.SelectBindings;
-import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.ShiftBindings;
+import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc.FastNoiseNode;
 import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc.MixNode;
 import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc.SelectNode;
 import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc.ShiftNode;
@@ -199,6 +197,17 @@ public class DotGenRegistry {
                             .tooltip(sb.toString())
                             .build();
                 }
+        );
+        REGISTRY.registerExactMatch(
+                FastNoiseNode.class,
+                (DotEmitter<FastNoiseNode>) (node, context, builder) ->
+                        builder
+                                .hexagonShape()
+                                .label("FastNoise")
+                                .edge(context.generate(node.inputX)).label("inputX").finish()
+                                .edge(context.generate(node.inputY)).label("inputY").finish()
+                                .edge(context.generate(node.inputZ)).label("inputZ").finish()
+                                .build()
         );
         REGISTRY.registerExactMatch(
                 MixNode.class,

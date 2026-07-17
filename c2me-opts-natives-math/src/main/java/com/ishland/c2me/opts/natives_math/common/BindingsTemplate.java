@@ -753,48 +753,5 @@ public class BindingsTemplate {
 
     public record FNLState(int seed, float frequency, int noise_type, int rotation_type_3d, int fractal_type, int octaves, float lacunarity, float gain, float weighted_strength,
                            float ping_pong_strength, int cellular_distance_func, int cellular_return_type, float cellular_jitter_mod, int domain_warp_type, float domain_warp_amp) {
-        @Override
-        public boolean equals(Object object) {
-            if (this == object) return true;
-            if (object == null || getClass() != object.getClass()) return false;
-            FNLState that = (FNLState) object;
-            return seed == that.seed
-                    && Float.compare(frequency, that.frequency) == 0
-                    && noise_type == that.noise_type
-                    && rotation_type_3d == that.rotation_type_3d
-                    && fractal_type == that.fractal_type
-                    && octaves == that.octaves
-                    && Float.compare(lacunarity, that.lacunarity) == 0
-                    && Float.compare(gain, that.gain) == 0
-                    && Float.compare(weighted_strength, that.weighted_strength) == 0
-                    && Float.compare(ping_pong_strength, that.ping_pong_strength) == 0
-                    && cellular_distance_func == that.cellular_distance_func
-                    && cellular_return_type == that.cellular_return_type
-                    && Float.compare(cellular_jitter_mod, that.cellular_jitter_mod) == 0
-                    && domain_warp_type == that.domain_warp_type
-                    && Float.compare(domain_warp_amp, that.domain_warp_amp) == 0;
-        }
-
-        @Override
-        public int hashCode() {
-            int result = 1;
-
-            result = 31 * result + Float.hashCode(frequency);
-            result =  31 * result + Integer.hashCode(noise_type);
-            result = 31 * result + Integer.hashCode(rotation_type_3d);
-            result = 31 * result + Integer.hashCode(fractal_type);
-            result = 31 * result + Integer.hashCode(octaves);
-            result = 31 * result + Float.hashCode(lacunarity);
-            result = 31 * result + Float.hashCode(gain);
-            result = 31 * result + Float.hashCode(weighted_strength);
-            result = 31 * result + Float.hashCode(ping_pong_strength);
-            result = 31 * result + Integer.hashCode(cellular_distance_func);
-            result = 31 * result + Integer.hashCode(cellular_return_type);
-            result = 31 * result + Float.hashCode(cellular_jitter_mod);
-            result = 31 * result + Integer.hashCode(domain_warp_type);
-            result = 31 * result + Float.hashCode(domain_warp_amp);
-
-            return result;
-        }
     }
 }

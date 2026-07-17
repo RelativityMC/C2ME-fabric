@@ -67,6 +67,7 @@
     "access.IXoroshiro128PlusPlusRandomImpl",
     "access.IXoroshiro128PlusPlusRandomSplitter",
     "access.fapi.IArrayBackedEvent",
+    "access.lithostitched.IFastNoiseConfig",
     "access.lithostitched.IFNL",
     "bugfixes.config_enforce_main.MixinServerConfigurationNetworkHandler",
     "exp_warning.MixinDedicatedServerMain",
