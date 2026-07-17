@@ -342,7 +342,7 @@ publishMods {
     }
 }
 
-subprojects.forEach { remapJar.dependsOn("${it.path}:remapJar") }
+//subprojects.forEach { remapJar.dependsOn("${it.path}:remapJar") }
 
 dependencies {
     afterEvaluate {
@@ -351,7 +351,7 @@ dependencies {
 
             def projectName = it.name
             api project(path: ":${projectName}", configuration: "namedElements")
-            if (projectName != "c2me-opts-accel-opencl") {
+            if (projectName != "c2me-opts-accel-opencl" && projectName != "tests") {
                 include project(":${projectName}")
             }
         }
