@@ -40,25 +40,27 @@ public class SqrtBindings {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SqrtBindings.class);
 
-    public static final String CLASS_SqrtDensityFunction = "dev.worldgen.lithostitched.impl.worldgen.densityfunction.SqrtDensityFunction";
+    private static final Class<?> CLASS_SqrtDensityFunction;
     private static final MethodHandle MH_argument;
     public static final boolean AVAILABLE;
 
     static {
+        Class<?> class_SqrtDensityFunction = null;
         MethodHandle mh_argument = null;
         boolean available = false;
 
         if (FabricLoader.getInstance().isModLoaded("lithostitched")) {
             try {
-                Class<?> class_SqrtDensityFunction = Class.forName(CLASS_SqrtDensityFunction);
+                class_SqrtDensityFunction = Class.forName("dev.worldgen.lithostitched.impl.worldgen.densityfunction.SqrtDensityFunction");
                 mh_argument = MethodHandles.lookup().findVirtual(class_SqrtDensityFunction, "argument", MethodType.methodType(DensityFunction.class));
                 available = true;
-                LOGGER.info("Bound to lithostitched " + CLASS_SqrtDensityFunction);
+                LOGGER.info("Bound to lithostitched dev.worldgen.lithostitched.impl.worldgen.densityfunction.SqrtDensityFunction");
             } catch (Throwable t) {
-                LOGGER.warn("Failed to bind to lithostitched " + CLASS_SqrtDensityFunction);
+                LOGGER.warn("Failed to bind to lithostitched dev.worldgen.lithostitched.impl.worldgen.densityfunction.SqrtDensityFunction");
             }
         }
 
+        CLASS_SqrtDensityFunction = class_SqrtDensityFunction;
         MH_argument = mh_argument;
         AVAILABLE = available;
     }
@@ -66,11 +68,14 @@ public class SqrtBindings {
     public static AstNode tryParse(DensityFunction function) {
         if (!AVAILABLE) return null;
 
-        try {
-            return new SqrtNode(McToAst.toAst((DensityFunction) MH_argument.invoke(function)));
-        } catch (Throwable e) {
-            throw new RuntimeException(e);
+        if (function.getClass() == CLASS_SqrtDensityFunction) {
+            try {
+               return new SqrtNode(McToAst.toAst((DensityFunction) MH_argument.invoke(function)));
+            } catch (Throwable e) {
+                throw new RuntimeException(e);
+            }
         }
-    }
 
+        return null;
+    }
 }

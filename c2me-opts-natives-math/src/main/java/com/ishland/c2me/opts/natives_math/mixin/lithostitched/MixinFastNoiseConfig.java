@@ -83,7 +83,7 @@ public class MixinFastNoiseConfig implements INativePointer, IFNLState {
         if (c2me$statePtr != 0L) {
             return Bindings.c2me_natives_fnlGetNoise3D(this.c2me$statePtr, x, y, z);
         } else {
-            return ((IFNL) this.fnl).invokeGetNoise(x, y, z);
+            return ((IFNL) this.fnl).invokeSample(x, y, z);
         }
     }
 

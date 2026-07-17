@@ -40,25 +40,27 @@ public class CeilBindings {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CeilBindings.class);
 
-    public static final String CLASS_CeilDensityFunction = "dev.worldgen.lithostitched.impl.worldgen.densityfunction.CeilDensityFunction";
+    private static final Class<?> CLASS_CeilDensityFunction;
     private static final MethodHandle MH_argument;
     public static final boolean AVAILABLE;
 
     static {
+        Class<?> class_CeilDensityFunction = null;
         MethodHandle mh_argument = null;
         boolean available = false;
 
         if (FabricLoader.getInstance().isModLoaded("lithostitched")) {
             try {
-                Class<?> class_CeilDensityFunction = Class.forName(CLASS_CeilDensityFunction);
+                class_CeilDensityFunction = Class.forName("dev.worldgen.lithostitched.impl.worldgen.densityfunction.CeilDensityFunction");
                 mh_argument = MethodHandles.lookup().findVirtual(class_CeilDensityFunction, "argument", MethodType.methodType(DensityFunction.class));
                 available = true;
-                LOGGER.info("Bound to lithostitched " + CLASS_CeilDensityFunction);
+                LOGGER.info("Bound to lithostitched dev.worldgen.lithostitched.impl.worldgen.densityfunction.CeilDensityFunction");
             } catch (Throwable t) {
-                LOGGER.warn("Failed to bind to lithostitched " + CLASS_CeilDensityFunction);
+                LOGGER.warn("Failed to bind to lithostitched dev.worldgen.lithostitched.impl.worldgen.densityfunction.CeilDensityFunction");
             }
         }
 
+        CLASS_CeilDensityFunction = class_CeilDensityFunction;
         MH_argument = mh_argument;
         AVAILABLE = available;
     }
@@ -66,11 +68,14 @@ public class CeilBindings {
     public static AstNode tryParse(DensityFunction function) {
         if (!AVAILABLE) return null;
 
-        try {
-            return new CeilNode(McToAst.toAst((DensityFunction) MH_argument.invoke(function)));
-        } catch (Throwable e) {
-            throw new RuntimeException(e);
+        if (function.getClass() == CLASS_CeilDensityFunction) {
+            try {
+               return new CeilNode(McToAst.toAst((DensityFunction) MH_argument.invoke(function)));
+            } catch (Throwable e) {
+                throw new RuntimeException(e);
+            }
         }
-    }
 
+        return null;
+    }
 }

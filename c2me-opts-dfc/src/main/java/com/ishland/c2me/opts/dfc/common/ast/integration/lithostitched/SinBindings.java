@@ -40,25 +40,27 @@ public class SinBindings {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SinBindings.class);
 
-    public static final String CLASS_SinDensityFunction = "dev.worldgen.lithostitched.impl.worldgen.densityfunction.SinDensityFunction";
+    private static final Class<?> CLASS_SinDensityFunction;
     private static final MethodHandle MH_argument;
     public static final boolean AVAILABLE;
 
     static {
+        Class<?> class_SinDensityFunction = null;
         MethodHandle mh_argument = null;
         boolean available = false;
 
         if (FabricLoader.getInstance().isModLoaded("lithostitched")) {
             try {
-                Class<?> class_SinDensityFunction = Class.forName(CLASS_SinDensityFunction);
+                class_SinDensityFunction = Class.forName("dev.worldgen.lithostitched.impl.worldgen.densityfunction.SinDensityFunction");
                 mh_argument = MethodHandles.lookup().findVirtual(class_SinDensityFunction, "argument", MethodType.methodType(DensityFunction.class));
                 available = true;
-                LOGGER.info("Bound to lithostitched " + CLASS_SinDensityFunction);
+                LOGGER.info("Bound to lithostitched dev.worldgen.lithostitched.impl.worldgen.densityfunction.SinDensityFunction");
             } catch (Throwable t) {
-                LOGGER.warn("Failed to bind to lithostitched " + CLASS_SinDensityFunction);
+                LOGGER.warn("Failed to bind to lithostitched dev.worldgen.lithostitched.impl.worldgen.densityfunction.SinDensityFunction");
             }
         }
 
+        CLASS_SinDensityFunction = class_SinDensityFunction;
         MH_argument = mh_argument;
         AVAILABLE = available;
     }
@@ -66,11 +68,14 @@ public class SinBindings {
     public static AstNode tryParse(DensityFunction function) {
         if (!AVAILABLE) return null;
 
-        try {
-            return new SinNode(McToAst.toAst((DensityFunction) MH_argument.invoke(function)));
-        } catch (Throwable e) {
-            throw new RuntimeException(e);
+        if (function.getClass() == CLASS_SinDensityFunction) {
+            try {
+               return new SinNode(McToAst.toAst((DensityFunction) MH_argument.invoke(function)));
+            } catch (Throwable e) {
+                throw new RuntimeException(e);
+            }
         }
-    }
 
+        return null;
+    }
 }

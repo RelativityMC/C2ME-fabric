@@ -41,7 +41,7 @@ public class ConfigClampBindings {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ConfigClampBindings.class);
 
-    public static final String CLASS_ConfigClamp = "dev.worldgen.tectonic.worldgen.densityfunction.ConfigClamp";
+    private static final Class<?> CLASS_ConfigClamp;
     private static final MethodHandle MH_input;
     private static final MethodHandle MH_min;
     private static final MethodHandle MH_max;
@@ -56,17 +56,18 @@ public class ConfigClampBindings {
 
         if (FabricLoader.getInstance().isModLoaded("tectonic")) {
             try {
-                class_ConfigClamp = Class.forName(CLASS_ConfigClamp);
+                class_ConfigClamp = Class.forName("dev.worldgen.tectonic.worldgen.densityfunction.ConfigClamp");
                 mh_input = MethodHandles.lookup().findVirtual(class_ConfigClamp, "input", MethodType.methodType(DensityFunction.class));
                 mh_min = MethodHandles.lookup().findVirtual(class_ConfigClamp, "min", MethodType.methodType(DensityFunction.class));
                 mh_max = MethodHandles.lookup().findVirtual(class_ConfigClamp, "max", MethodType.methodType(DensityFunction.class));
                 available = true;
-                LOGGER.info("Bound to tectonic " + CLASS_ConfigClamp);
+                LOGGER.info("Bound to tectonic dev.worldgen.tectonic.worldgen.densityfunction.ConfigClamp");
             } catch (Throwable t) {
-                LOGGER.warn("Failed to bind to tectonic " + CLASS_ConfigClamp);
+                LOGGER.warn("Failed to bind to tectonic dev.worldgen.tectonic.worldgen.densityfunction.ConfigClamp");
             }
         }
 
+        CLASS_ConfigClamp = class_ConfigClamp;
         MH_input = mh_input;
         MH_min = mh_min;
         MH_max = mh_max;
@@ -76,17 +77,21 @@ public class ConfigClampBindings {
     public static AstNode tryParse(DensityFunction function) {
         if (!AVAILABLE) return null;
 
-        try {
-            return new MinNode(
-                    new MaxNode(
-                            McToAst.toAst((DensityFunction) MH_input.invoke(function)),
-                            McToAst.toAst((DensityFunction) MH_min.invoke(function))
-                    ),
-                    McToAst.toAst((DensityFunction) MH_max.invoke(function))
-            );
-        } catch (Throwable e) {
-            throw new RuntimeException(e);
+        if (function.getClass() == CLASS_ConfigClamp) {
+            try {
+                return new MinNode(
+                        new MaxNode(
+                                McToAst.toAst((DensityFunction) MH_input.invoke(function)),
+                                McToAst.toAst((DensityFunction) MH_min.invoke(function))
+                        ),
+                        McToAst.toAst((DensityFunction) MH_max.invoke(function))
+                );
+            } catch (Throwable e) {
+                throw new RuntimeException(e);
+            }
         }
+
+        return null;
     }
 
 }

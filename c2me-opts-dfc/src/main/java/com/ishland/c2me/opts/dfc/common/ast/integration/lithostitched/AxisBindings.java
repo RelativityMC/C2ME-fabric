@@ -40,24 +40,27 @@ public class AxisBindings {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AxisBindings.class);
 
-    public static final String CLASS_AxisDensityFunction = "dev.worldgen.lithostitched.impl.worldgen.densityfunction.AxisDensityFunction";
+    private static final Class<?> CLASS_AxisDensityFunction;
     private static final MethodHandle MH_axis;
     private static final boolean AVAILABLE;
 
     static {
+        Class<?> class_AxisDensityFunction = null;
         MethodHandle mh_axis = null;
         boolean available = false;
+
         if (FabricLoader.getInstance().isModLoaded("lithostitched")) {
             try {
-                Class<?> class_AxisDensityFunction = Class.forName(CLASS_AxisDensityFunction);
+                class_AxisDensityFunction = Class.forName("dev.worldgen.lithostitched.impl.worldgen.densityfunction.AxisDensityFunction");
                 mh_axis = MethodHandles.lookup().findVirtual(class_AxisDensityFunction, "axis", MethodType.methodType(Direction.Axis.class));
                 available = true;
-                LOGGER.info("Bound to lithostitched " + CLASS_AxisDensityFunction);
+                LOGGER.info("Bound to lithostitched dev.worldgen.lithostitched.impl.worldgen.densityfunction.AxisDensityFunction");
             } catch (Throwable t) {
-                LOGGER.warn("Failed to bind to lithostitched " + CLASS_AxisDensityFunction);
+                LOGGER.warn("Failed to bind to lithostitched dev.worldgen.lithostitched.impl.worldgen.densityfunction.AxisDensityFunction");
             }
         }
 
+        CLASS_AxisDensityFunction = class_AxisDensityFunction;
         MH_axis = mh_axis;
         AVAILABLE = available;
     }
@@ -65,15 +68,18 @@ public class AxisBindings {
     public static AstNode tryParse(DensityFunction function) {
         if (!AVAILABLE) return null;
 
-        try {
-            return switch ((Direction.Axis) MH_axis.invoke(function)) {
-                case X -> CoordinateNode.AXIS_X;
-                case Y -> CoordinateNode.AXIS_Y;
-                case Z -> CoordinateNode.AXIS_Z;
-            };
-        } catch (Throwable e) {
-            throw new RuntimeException(e);
+        if (function.getClass() == CLASS_AxisDensityFunction) {
+            try {
+               return switch ((Direction.Axis) MH_axis.invoke(function)) {
+                   case X -> CoordinateNode.AXIS_X;
+                   case Y -> CoordinateNode.AXIS_Y;
+                   case Z -> CoordinateNode.AXIS_Z;
+               };
+            } catch (Throwable e) {
+                throw new RuntimeException(e);
+            }
         }
-    }
 
+        return null;
+    }
 }

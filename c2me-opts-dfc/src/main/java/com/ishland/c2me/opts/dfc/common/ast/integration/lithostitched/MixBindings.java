@@ -40,13 +40,14 @@ public class MixBindings {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MixBindings.class);
 
-    public static final String CLASS_MixDensityFunction = "dev.worldgen.lithostitched.impl.worldgen.densityfunction.MixDensityFunction";
+    private static final Class<?> CLASS_MixDensityFunction;
     private static final MethodHandle MH_input;
     private static final MethodHandle MH_argument1;
     private static final MethodHandle MH_argument2;
     public static final boolean AVAILABLE;
 
     static {
+        Class<?> class_MixDensityFunction = null;
         MethodHandle mh_input = null;
         MethodHandle mh_argument1 = null;
         MethodHandle mh_argument2 = null;
@@ -54,17 +55,18 @@ public class MixBindings {
 
         if (FabricLoader.getInstance().isModLoaded("lithostitched")) {
             try {
-                Class<?> class_MixDensityFunction = Class.forName(CLASS_MixDensityFunction);
+                class_MixDensityFunction = Class.forName("dev.worldgen.lithostitched.impl.worldgen.densityfunction.MixDensityFunction");
                 mh_input = MethodHandles.lookup().findVirtual(class_MixDensityFunction, "input", MethodType.methodType(DensityFunction.class));
                 mh_argument1 = MethodHandles.lookup().findVirtual(class_MixDensityFunction, "argument1", MethodType.methodType(DensityFunction.class));
                 mh_argument2 = MethodHandles.lookup().findVirtual(class_MixDensityFunction, "argument2", MethodType.methodType(DensityFunction.class));
                 available = true;
-                LOGGER.info("Bound to lithostitched " + CLASS_MixDensityFunction);
+                LOGGER.info("Bound to lithostitched dev.worldgen.lithostitched.impl.worldgen.densityfunction.MixDensityFunction");
             } catch (Throwable t) {
-                LOGGER.warn("Failed to bind to lithostitched " + CLASS_MixDensityFunction);
+                LOGGER.warn("Failed to bind to lithostitched dev.worldgen.lithostitched.impl.worldgen.densityfunction.MixDensityFunction");
             }
         }
 
+        CLASS_MixDensityFunction = class_MixDensityFunction;
         MH_input = mh_input;
         MH_argument1 = mh_argument1;
         MH_argument2 = mh_argument2;
@@ -74,15 +76,18 @@ public class MixBindings {
     public static AstNode tryParse(DensityFunction function) {
         if (!AVAILABLE) return null;
 
-        try {
-            return new MixNode(
-                    McToAst.toAst((DensityFunction) MH_input.invoke(function)),
-                    McToAst.toAst((DensityFunction) MH_argument1.invoke(function)),
-                    McToAst.toAst((DensityFunction) MH_argument2.invoke(function))
-            );
-        } catch (Throwable e) {
-            throw new RuntimeException(e);
+        if (function.getClass() == CLASS_MixDensityFunction) {
+            try {
+               return new MixNode(
+                       McToAst.toAst((DensityFunction) MH_input.invoke(function)),
+                       McToAst.toAst((DensityFunction) MH_argument1.invoke(function)),
+                       McToAst.toAst((DensityFunction) MH_argument2.invoke(function))
+               );
+            } catch (Throwable e) {
+                throw new RuntimeException(e);
+            }
         }
-    }
 
+        return null;
+    }
 }

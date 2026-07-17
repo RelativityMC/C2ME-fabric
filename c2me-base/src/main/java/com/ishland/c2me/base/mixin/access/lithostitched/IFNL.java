@@ -78,7 +78,7 @@ public interface IFNL {
     @Accessor("mDomainWarpAmp")
     float getDomainWarpAmp();
 
-    @Invoker("GetNoise")
-    float invokeGetNoise(double x, double y, double z);
+    @Invoker("sample")
+    double invokeSample(double x, double y, double z);
 
 }
