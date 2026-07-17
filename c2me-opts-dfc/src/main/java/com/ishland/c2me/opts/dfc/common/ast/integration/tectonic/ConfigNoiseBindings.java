@@ -46,7 +46,7 @@ public class ConfigNoiseBindings {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ConfigNoiseBindings.class);
 
-    private static final Class<?> CLASS_ConfigNoise;
+    public static final String CLASS_ConfigNoise = "dev.worldgen.tectonic.worldgen.densityfunction.ConfigNoise";
     private static final MethodHandle MH_noise;
     private static final MethodHandle MH_shiftX;
     private static final MethodHandle MH_shiftZ;
@@ -57,7 +57,6 @@ public class ConfigNoiseBindings {
     private static final boolean AVAILABLE;
 
     static {
-        Class<?> class_ConfigNoise = null;
         MethodHandle mh_noise = null;
         MethodHandle mh_shiftX = null;
         MethodHandle mh_shiftZ = null;
@@ -69,7 +68,7 @@ public class ConfigNoiseBindings {
 
         if (FabricLoader.getInstance().isModLoaded("tectonic")) {
             try {
-                class_ConfigNoise = Class.forName("dev.worldgen.tectonic.worldgen.densityfunction.ConfigNoise");
+                Class<?> class_ConfigNoise = Class.forName(CLASS_ConfigNoise);
                 mh_noise = MethodHandles.lookup().findVirtual(class_ConfigNoise, "noise", MethodType.methodType(DensityFunction.Noise.class));
                 mh_shiftX = MethodHandles.lookup().findVirtual(class_ConfigNoise, "shiftX", MethodType.methodType(DensityFunction.class));
                 mh_shiftZ = MethodHandles.lookup().findVirtual(class_ConfigNoise, "shiftZ", MethodType.methodType(DensityFunction.class));
@@ -78,13 +77,12 @@ public class ConfigNoiseBindings {
                 mh_offset = MethodHandles.lookup().findVirtual(class_ConfigNoise, "offset", MethodType.methodType(double.class));
                 mh_smootherScaling = MethodHandles.lookup().findVirtual(class_ConfigNoise, "smootherScaling", MethodType.methodType(boolean.class));
                 available = true;
-                LOGGER.info("Bound to tectonic dev.worldgen.tectonic.worldgen.densityfunction.ConfigNoise");
+                LOGGER.info("Bound to tectonic " + CLASS_ConfigNoise);
             } catch (Throwable t) {
-                LOGGER.warn("Failed to bind to tectonic dev.worldgen.tectonic.worldgen.densityfunction.ConfigNoise", t);
+                LOGGER.warn("Failed to bind to tectonic " + CLASS_ConfigNoise, t);
             }
         }
 
-        CLASS_ConfigNoise = class_ConfigNoise;
         MH_noise = mh_noise;
         MH_shiftX = mh_shiftX;
         MH_shiftZ = mh_shiftZ;
@@ -98,41 +96,37 @@ public class ConfigNoiseBindings {
     public static AstNode tryParse(DensityFunction function) {
         if (!AVAILABLE) return null;
 
-        if (function.getClass() == CLASS_ConfigNoise) {
-            try {
-                if ((boolean) MH_smootherScaling.invoke(function)) {
-                    return new AddNode(
-                            new MulNode(
-                                    new GenericShiftedNoiseNode(
-                                            new MulNode(new AddNode(CoordinateNode.AXIS_X, McToAst.toAst((DensityFunction) MH_shiftX.invoke(function))), new ConstantNode((double) MH_scale.invoke(function))),
-                                            new ConstantNode(0.0),
-                                            new MulNode(new AddNode(CoordinateNode.AXIS_Z, McToAst.toAst((DensityFunction) MH_shiftZ.invoke(function))), new ConstantNode((double) MH_scale.invoke(function))),
-                                            (DensityFunction.Noise) MH_noise.invoke(function)
-                                    ),
-                                    new ConstantNode((double) MH_multiplier.invoke(function))
-                            ),
-                            new ConstantNode((double) MH_offset.invoke(function))
-                    );
-                } else {
-                    return new AddNode(
-                            new MulNode(
-                                    new GenericShiftedNoiseNode(
-                                            new AddNode(new MulNode(CoordinateNode.AXIS_X, new ConstantNode((double) MH_scale.invoke(function))), McToAst.toAst((DensityFunction) MH_shiftX.invoke(function))),
-                                            new ConstantNode(0.0),
-                                            new AddNode(new MulNode(CoordinateNode.AXIS_Z, new ConstantNode((double) MH_scale.invoke(function))), McToAst.toAst((DensityFunction) MH_shiftZ.invoke(function))),
-                                            (DensityFunction.Noise) MH_noise.invoke(function)
-                                    ),
-                                    new ConstantNode((double) MH_multiplier.invoke(function))
-                            ),
-                            new ConstantNode((double) MH_offset.invoke(function))
-                    );
-                }
-            } catch (Throwable e) {
-                throw new RuntimeException(e);
+        try {
+            if ((boolean) MH_smootherScaling.invoke(function)) {
+                return new AddNode(
+                        new MulNode(
+                                new GenericShiftedNoiseNode(
+                                        new MulNode(new AddNode(CoordinateNode.AXIS_X, McToAst.toAst((DensityFunction) MH_shiftX.invoke(function))), new ConstantNode((double) MH_scale.invoke(function))),
+                                        new ConstantNode(0.0),
+                                        new MulNode(new AddNode(CoordinateNode.AXIS_Z, McToAst.toAst((DensityFunction) MH_shiftZ.invoke(function))), new ConstantNode((double) MH_scale.invoke(function))),
+                                        (DensityFunction.Noise) MH_noise.invoke(function)
+                                ),
+                                new ConstantNode((double) MH_multiplier.invoke(function))
+                        ),
+                        new ConstantNode((double) MH_offset.invoke(function))
+                );
+            } else {
+                return new AddNode(
+                        new MulNode(
+                                new GenericShiftedNoiseNode(
+                                        new AddNode(new MulNode(CoordinateNode.AXIS_X, new ConstantNode((double) MH_scale.invoke(function))), McToAst.toAst((DensityFunction) MH_shiftX.invoke(function))),
+                                        new ConstantNode(0.0),
+                                        new AddNode(new MulNode(CoordinateNode.AXIS_Z, new ConstantNode((double) MH_scale.invoke(function))), McToAst.toAst((DensityFunction) MH_shiftZ.invoke(function))),
+                                        (DensityFunction.Noise) MH_noise.invoke(function)
+                                ),
+                                new ConstantNode((double) MH_multiplier.invoke(function))
+                        ),
+                        new ConstantNode((double) MH_offset.invoke(function))
+                );
             }
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
         }
-
-        return null;
     }
 
 }

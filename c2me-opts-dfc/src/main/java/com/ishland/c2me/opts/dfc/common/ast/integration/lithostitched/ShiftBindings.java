@@ -42,7 +42,7 @@ public class ShiftBindings {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ShiftBindings.class);
 
-    private static final Class<?> CLASS_ShiftDensityFunction;
+    public static final String CLASS_ShiftDensityFunction = "dev.worldgen.lithostitched.impl.worldgen.densityfunction.ShiftDensityFunction";
     private static final MethodHandle MH_input;
     private static final MethodHandle MH_shiftX;
     private static final MethodHandle MH_shiftY;
@@ -50,7 +50,6 @@ public class ShiftBindings {
     public static final boolean AVAILABLE;
 
     static {
-        Class<?> class_ShiftDensityFunction = null;
         MethodHandle mh_input = null;
         MethodHandle mh_shiftX = null;
         MethodHandle mh_shiftY = null;
@@ -59,19 +58,18 @@ public class ShiftBindings {
 
         if (FabricLoader.getInstance().isModLoaded("lithostitched")) {
             try {
-                class_ShiftDensityFunction = Class.forName("dev.worldgen.lithostitched.impl.worldgen.densityfunction.ShiftDensityFunction");
+                Class<?> class_ShiftDensityFunction = Class.forName(CLASS_ShiftDensityFunction);
                 mh_input = MethodHandles.lookup().findVirtual(class_ShiftDensityFunction, "input", MethodType.methodType(DensityFunction.class));
                 mh_shiftX = MethodHandles.lookup().findVirtual(class_ShiftDensityFunction, "shiftX", MethodType.methodType(DensityFunction.class));
                 mh_shiftY = MethodHandles.lookup().findVirtual(class_ShiftDensityFunction, "shiftY", MethodType.methodType(DensityFunction.class));
                 mh_shiftZ = MethodHandles.lookup().findVirtual(class_ShiftDensityFunction, "shiftZ", MethodType.methodType(DensityFunction.class));
                 available = true;
-                LOGGER.info("Bound to lithostitched dev.worldgen.lithostitched.impl.worldgen.densityfunction.ShiftDensityFunction");
+                LOGGER.info("Bound to lithostitched " + CLASS_ShiftDensityFunction);
             } catch (Throwable t) {
-                LOGGER.warn("Failed to bind to lithostitched dev.worldgen.lithostitched.impl.worldgen.densityfunction.ShiftDensityFunction");
+                LOGGER.warn("Failed to bind to lithostitched " +  CLASS_ShiftDensityFunction);
             }
         }
 
-        CLASS_ShiftDensityFunction = class_ShiftDensityFunction;
         MH_input = mh_input;
         MH_shiftX = mh_shiftX;
         MH_shiftY = mh_shiftY;
@@ -82,19 +80,16 @@ public class ShiftBindings {
     public static AstNode tryParse(DensityFunction function) {
         if (!AVAILABLE) return null;
 
-        if (function.getClass() == CLASS_ShiftDensityFunction) {
-            try {
-               return new ShiftNode(
-                       McToAst.toAst((DensityFunction) MH_input.invoke(function)),
-                       new AddNode(CoordinateNode.AXIS_X, McToAst.toAst((DensityFunction) MH_shiftX.invoke(function))),
-                       new AddNode(CoordinateNode.AXIS_Y, McToAst.toAst((DensityFunction) MH_shiftY.invoke(function))),
-                       new AddNode(CoordinateNode.AXIS_Z, McToAst.toAst((DensityFunction) MH_shiftZ.invoke(function)))
-               );
-            } catch (Throwable e) {
-                throw new RuntimeException(e);
-            }
+        try {
+            return new ShiftNode(
+                    McToAst.toAst((DensityFunction) MH_input.invoke(function)),
+                    new AddNode(CoordinateNode.AXIS_X, McToAst.toAst((DensityFunction) MH_shiftX.invoke(function))),
+                    new AddNode(CoordinateNode.AXIS_Y, McToAst.toAst((DensityFunction) MH_shiftY.invoke(function))),
+                    new AddNode(CoordinateNode.AXIS_Z, McToAst.toAst((DensityFunction) MH_shiftZ.invoke(function)))
+            );
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
         }
-
-        return null;
     }
+
 }

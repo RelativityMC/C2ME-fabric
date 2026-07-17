@@ -40,27 +40,25 @@ public class FloorBindings {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FloorBindings.class);
 
-    private static final Class<?> CLASS_FloorDensityFunction;
+    public static final String CLASS_FloorDensityFunction = "dev.worldgen.lithostitched.impl.worldgen.densityfunction.FloorDensityFunction";
     private static final MethodHandle MH_argument;
     public static final boolean AVAILABLE;
 
     static {
-        Class<?> class_FloorDensityFunction = null;
         MethodHandle mh_argument = null;
         boolean available = false;
 
         if (FabricLoader.getInstance().isModLoaded("lithostitched")) {
             try {
-                class_FloorDensityFunction = Class.forName("dev.worldgen.lithostitched.impl.worldgen.densityfunction.FloorDensityFunction");
+                Class<?> class_FloorDensityFunction = Class.forName(CLASS_FloorDensityFunction);
                 mh_argument = MethodHandles.lookup().findVirtual(class_FloorDensityFunction, "argument", MethodType.methodType(DensityFunction.class));
                 available = true;
-                LOGGER.info("Bound to lithostitched dev.worldgen.lithostitched.impl.worldgen.densityfunction.FloorDensityFunction");
+                LOGGER.info("Bound to lithostitched " + CLASS_FloorDensityFunction);
             } catch (Throwable t) {
-                LOGGER.warn("Failed to bind to lithostitched dev.worldgen.lithostitched.impl.worldgen.densityfunction.FloorDensityFunction");
+                LOGGER.warn("Failed to bind to lithostitched " + CLASS_FloorDensityFunction);
             }
         }
 
-        CLASS_FloorDensityFunction = class_FloorDensityFunction;
         MH_argument = mh_argument;
         AVAILABLE = available;
     }
@@ -68,14 +66,11 @@ public class FloorBindings {
     public static AstNode tryParse(DensityFunction function) {
         if (!AVAILABLE) return null;
 
-        if (function.getClass() == CLASS_FloorDensityFunction) {
-            try {
-               return new FloorNode(McToAst.toAst((DensityFunction) MH_argument.invoke(function)));
-            } catch (Throwable e) {
-                throw new RuntimeException(e);
-            }
+        try {
+            return new FloorNode(McToAst.toAst((DensityFunction) MH_argument.invoke(function)));
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
         }
-
-        return null;
     }
+
 }

@@ -47,7 +47,7 @@ public class FastNoiseBindings {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FastNoiseBindings.class);
 
-    private static final Class<?> CLASS_FastNoiseDensityFunction;
+    public static final String CLASS_FastNoiseDensityFunction = "dev.worldgen.lithostitched.impl.worldgen.densityfunction.FastNoiseDensityFunction";
     public static final Class<?> CLASS_FastNoiseConfig;
     private static final MethodHandle MH_config;
     private static final MethodHandle MH_xzScale;
@@ -71,7 +71,7 @@ public class FastNoiseBindings {
 
         if (FabricLoader.getInstance().isModLoaded("lithostitched")) {
             try {
-                class_FastNoiseDensityFunction = Class.forName("dev.worldgen.lithostitched.impl.worldgen.densityfunction.FastNoiseDensityFunction");
+                class_FastNoiseDensityFunction = Class.forName(CLASS_FastNoiseDensityFunction);
                 class_FastNoiseConfig = Class.forName("dev.worldgen.lithostitched.api.worldgen.densityfunction.fastnoise.FastNoiseConfig");
                 mh_config = MethodHandles.lookup().findVirtual(class_FastNoiseDensityFunction, "config", MethodType.methodType(RegistryEntry.class));
                 mh_xzScale = MethodHandles.lookup().findVirtual(class_FastNoiseDensityFunction, "xzScale", MethodType.methodType(double.class));
@@ -80,13 +80,12 @@ public class FastNoiseBindings {
                 mh_shiftY = MethodHandles.lookup().findVirtual(class_FastNoiseDensityFunction, "shiftY", MethodType.methodType(DensityFunction.class));
                 mh_shiftZ = MethodHandles.lookup().findVirtual(class_FastNoiseDensityFunction, "shiftZ", MethodType.methodType(DensityFunction.class));
                 available = true;
-                LOGGER.info("Bound to lithostitched dev.worldgen.lithostitched.impl.worldgen.densityfunction.FastNoiseDensityFunction");
+                LOGGER.info("Bound to lithostitched " + CLASS_FastNoiseDensityFunction);
             } catch (Throwable t) {
-                LOGGER.warn("Failed to bind to lithostitched dev.worldgen.lithostitched.impl.worldgen.densityfunction.FastNoiseDensityFunction");
+                LOGGER.warn("Failed to bind to lithostitched " + CLASS_FastNoiseDensityFunction);
             }
         }
 
-        CLASS_FastNoiseDensityFunction = class_FastNoiseDensityFunction;
         CLASS_FastNoiseConfig = class_FastNoiseConfig;
         MH_config = mh_config;
         MH_xzScale = mh_xzScale;
@@ -100,19 +99,16 @@ public class FastNoiseBindings {
     public static AstNode tryParse(DensityFunction function) {
         if (!AVAILABLE) return null;
 
-        if (function.getClass() == CLASS_FastNoiseDensityFunction) {
-            try {
-                return new FastNoiseNode(
-                        new AddNode(new MulNode(CoordinateNode.AXIS_X, new ConstantNode((double) MH_xzScale.invoke(function))), McToAst.toAst((DensityFunction) MH_shiftX.invoke(function))),
-                        new AddNode(new MulNode(CoordinateNode.AXIS_Y, new ConstantNode((double) MH_yScale.invoke(function))), McToAst.toAst((DensityFunction) MH_shiftY.invoke(function))),
-                        new AddNode(new MulNode(CoordinateNode.AXIS_Z, new ConstantNode((double) MH_xzScale.invoke(function))), McToAst.toAst((DensityFunction) MH_shiftZ.invoke(function))),
-                        ((RegistryEntry<?>) MH_config.invoke(function)).value()
-                );
-            } catch (Throwable e) {
-                throw new RuntimeException(e);
-            }
+        try {
+            return new FastNoiseNode(
+                    new AddNode(new MulNode(CoordinateNode.AXIS_X, new ConstantNode((double) MH_xzScale.invoke(function))), McToAst.toAst((DensityFunction) MH_shiftX.invoke(function))),
+                    new AddNode(new MulNode(CoordinateNode.AXIS_Y, new ConstantNode((double) MH_yScale.invoke(function))), McToAst.toAst((DensityFunction) MH_shiftY.invoke(function))),
+                    new AddNode(new MulNode(CoordinateNode.AXIS_Z, new ConstantNode((double) MH_xzScale.invoke(function))), McToAst.toAst((DensityFunction) MH_shiftZ.invoke(function))),
+                    ((RegistryEntry<?>) MH_config.invoke(function)).value()
+            );
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
         }
-
-        return null;
     }
+
 }

@@ -42,7 +42,7 @@ public class SelectBindings {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SelectBindings.class);
 
-    private static final Class<?> CLASS_SelectDensityFunction;
+    public static final String CLASS_SelectDensityFunction = "dev.worldgen.lithostitched.impl.worldgen.densityfunction.SelectDensityFunction";
     private static final MethodHandle MH_input;
     private static final MethodHandle MH_fallback;
     private static final MethodHandle MH_selections;
@@ -51,7 +51,6 @@ public class SelectBindings {
     public static final boolean AVAILABLE;
 
     static {
-        Class<?> class_SelectDensityFunction = null;
         MethodHandle mh_input = null;
         MethodHandle mh_fallback = null;
         MethodHandle mh_selections = null;
@@ -61,11 +60,11 @@ public class SelectBindings {
 
         if (FabricLoader.getInstance().isModLoaded("lithostitched")) {
             try {
-                class_SelectDensityFunction = Class.forName("dev.worldgen.lithostitched.impl.worldgen.densityfunction.SelectDensityFunction");
+                Class<?> class_SelectDensityFunction = Class.forName(CLASS_SelectDensityFunction);
                 mh_input = MethodHandles.lookup().findVirtual(class_SelectDensityFunction, "input", MethodType.methodType(DensityFunction.class));
                 mh_fallback = MethodHandles.lookup().findVirtual(class_SelectDensityFunction, "fallback", MethodType.methodType(DensityFunction.class));
                 mh_selections = MethodHandles.lookup().findVirtual(class_SelectDensityFunction, "selections", MethodType.methodType(List.class));
-                Class<?> class_SelectDensityFunction$Selection = Class.forName("dev.worldgen.lithostitched.impl.worldgen.densityfunction.SelectDensityFunction$Selection");
+                Class<?> class_SelectDensityFunction$Selection = Class.forName(CLASS_SelectDensityFunction + "$Selection");
                 mh_range = MethodHandles.lookup().findVirtual(class_SelectDensityFunction$Selection, "range", MethodType.methodType(Range.class));
                 mh_function = MethodHandles.lookup().findVirtual(class_SelectDensityFunction$Selection, "function", MethodType.methodType(DensityFunction.class));
                 available = true;
@@ -75,7 +74,6 @@ public class SelectBindings {
             }
         }
 
-        CLASS_SelectDensityFunction = class_SelectDensityFunction;
         MH_input = mh_input;
         MH_fallback = mh_fallback;
         MH_selections = mh_selections;
@@ -88,31 +86,28 @@ public class SelectBindings {
     public static AstNode tryParse(DensityFunction function) {
         if (!AVAILABLE) return null;
 
-        if (function.getClass() == CLASS_SelectDensityFunction) {
-            try {
-                List<?> selections = (List<?>) MH_selections.invoke(function);
+        try {
+            List<?> selections = (List<?>) MH_selections.invoke(function);
 
-                AstNode input = McToAst.toAst((DensityFunction) MH_input.invoke(function));
-                AstNode fallback = McToAst.toAst((DensityFunction) MH_fallback.invoke(function));
-                AstNode[] functions = new AstNode[selections.size()];
-                double[] minima = new double[selections.size()];
-                double[] maxima = new double[selections.size()];
+            AstNode input = McToAst.toAst((DensityFunction) MH_input.invoke(function));
+            AstNode fallback = McToAst.toAst((DensityFunction) MH_fallback.invoke(function));
+            AstNode[] functions = new AstNode[selections.size()];
+            double[] minima = new double[selections.size()];
+            double[] maxima = new double[selections.size()];
 
-                for (int i = 0; i < selections.size(); i++) {
-                    Object selection = selections.get(i);
-                    Range<Double> range = (Range<Double>) MH_range.invoke(selection);
+            for (int i = 0; i < selections.size(); i++) {
+                Object selection = selections.get(i);
+                Range<Double> range = (Range<Double>) MH_range.invoke(selection);
 
-                    minima[i] = range.minInclusive();
-                    maxima[i] = range.maxInclusive();
-                    functions[i] = McToAst.toAst((DensityFunction) MH_function.invoke(selection));
-                }
-
-                return new SelectNode(input, fallback, minima, maxima, functions);
-            } catch (Throwable e) {
-                throw new RuntimeException(e);
+                minima[i] = range.minInclusive();
+                maxima[i] = range.maxInclusive();
+                functions[i] = McToAst.toAst((DensityFunction) MH_function.invoke(selection));
             }
-        }
 
-        return null;
+            return new SelectNode(input, fallback, minima, maxima, functions);
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
     }
+
 }

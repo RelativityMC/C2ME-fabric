@@ -47,7 +47,6 @@ import com.ishland.c2me.opts.dfc.common.ast.misc.IntervalSelectNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.RangeChoiceNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.YClampedGradientNode;
 import com.ishland.c2me.opts.dfc.common.ast.noise.GenericShiftedNoiseNode;
-import com.ishland.c2me.opts.dfc.common.ast.opto.OptoPasses;
 import com.ishland.c2me.opts.dfc.common.ast.spline.SplineAstNode;
 import com.ishland.c2me.opts.dfc.common.ast.unary.AbsNode;
 import com.ishland.c2me.opts.dfc.common.ast.unary.CubeNode;
@@ -55,8 +54,6 @@ import com.ishland.c2me.opts.dfc.common.ast.unary.NegMulNode;
 import com.ishland.c2me.opts.dfc.common.ast.unary.SquareNode;
 import com.ishland.c2me.opts.dfc.common.ast.unary.SqueezeNode;
 import com.ishland.c2me.opts.dfc.common.ducks.IFastCacheLike;
-import com.ishland.c2me.opts.dfc.common.gen.jvm.BytecodeGen;
-import com.ishland.c2me.opts.dfc.common.gen.jvm.CompiledDensityFunction;
 import net.minecraft.util.math.noise.InterpolatedNoiseSampler;
 import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
@@ -67,7 +64,6 @@ import org.slf4j.LoggerFactory;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.LongAdder;
 
 public class McToAst {
 
@@ -171,62 +167,28 @@ public class McToAst {
 
             default -> {
                 if (Config.enableBuiltinIntegrations) {
-                    // lithostitched
-                    {
-                        AstNode node = AxisBindings.tryParse(df);
-                        if (node != null) yield node;
-                    }
+                    AstNode node = switch (df.getClass().getName()) {
 
-                    {
-                        AstNode node = CeilBindings.tryParse(df);
-                        if (node != null) yield node;
-                    }
+                        // lithostitched
+                        case AxisBindings.CLASS_AxisDensityFunction -> AxisBindings.tryParse(df);
+                        case CeilBindings.CLASS_CeilDensityFunction -> CeilBindings.tryParse(df);
+                        case CosBindings.CLASS_CosDensityFunction -> CosBindings.tryParse(df);
+                        case FastNoiseBindings.CLASS_FastNoiseDensityFunction -> FastNoiseBindings.tryParse(df);
+                        case FloorBindings.CLASS_FloorDensityFunction -> FloorBindings.tryParse(df);
+                        case MixBindings.CLASS_MixDensityFunction -> MixBindings.tryParse(df);
+                        case SelectBindings.CLASS_SelectDensityFunction -> SelectBindings.tryParse(df);
+                        case ShiftBindings.CLASS_ShiftDensityFunction -> ShiftBindings.tryParse(df);
+                        case SinBindings.CLASS_SinDensityFunction -> SinBindings.tryParse(df);
+                        case SqrtBindings.CLASS_SqrtDensityFunction -> SqrtBindings.tryParse(df);
 
-                    {
-                        AstNode node = CosBindings.tryParse(df);
-                        if (node != null) yield node;
-                    }
+                        // tectonic
+                        case ConfigClampBindings.CLASS_ConfigClamp ->  ConfigClampBindings.tryParse(df);
+                        case ConfigNoiseBindings.CLASS_ConfigNoise ->  ConfigNoiseBindings.tryParse(df);
 
-                    {
-                        AstNode node = FloorBindings.tryParse(df);
-                        if (node != null) yield node;
-                    }
+                        default -> null;
+                    };
 
-                    {
-                        AstNode node = MixBindings.tryParse(df);
-                        if (node != null) yield node;
-                    }
-
-                    {
-                        AstNode node = SelectBindings.tryParse(df);
-                        if (node != null) yield node;
-                    }
-
-                    {
-                        AstNode node = ShiftBindings.tryParse(df);
-                        if (node != null) yield node;
-                    }
-
-                    {
-                        AstNode node = SinBindings.tryParse(df);
-                        if (node != null) yield node;
-                    }
-
-                    {
-                        AstNode node = SqrtBindings.tryParse(df);
-                        if (node != null) yield node;
-                    }
-
-                    // tectonic
-                    {
-                        AstNode node = ConfigClampBindings.tryParse(df);
-                        if (node != null) yield node;
-                    }
-
-                    {
-                        AstNode node = ConfigNoiseBindings.tryParse(df);
-                        if (node != null) yield node;
-                    }
+                    if (node != null) yield node;
                 }
 
                 long known = delegateStatistics.computeIfAbsent(df.getClass(), unused -> new AtomicLong(0L)).getAndIncrement();
