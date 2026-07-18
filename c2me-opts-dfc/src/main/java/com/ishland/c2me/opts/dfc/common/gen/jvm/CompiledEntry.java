@@ -28,15 +28,15 @@ import com.ishland.c2me.opts.dfc.common.ast.EvalType;
 import com.ishland.c2me.opts.dfc.common.ducks.IFastCacheLike;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.util.DfcObjectCache;
 
+import java.util.function.Function;
+
 public interface CompiledEntry extends ISingleMethod, IMultiMethod {
 
     double evalSingle(int x, int y, int z, EvalType type, DfcObjectCache dfcObjectCache);
 
     void evalMulti(double[] res, int[] x, int[] y, int[] z, EvalType type, DfcObjectCache dfcObjectCache);
 
-    CompiledEntry newInstance(Object[] args);
-
-    void setCacheField(int fieldIndex, IFastCacheLike cacheLike);
+    CompiledEntry newInstance(Object[] args, Function<IFastCacheLike, IFastCacheLike> cacheTransformer);
 
     Object[] getArgs();
 

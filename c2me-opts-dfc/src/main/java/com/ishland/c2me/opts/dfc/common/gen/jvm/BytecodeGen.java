@@ -43,7 +43,6 @@ import it.unimi.dsi.fastutil.objects.Object2ReferenceMap;
 import it.unimi.dsi.fastutil.objects.Object2ReferenceMaps;
 import it.unimi.dsi.fastutil.objects.Object2ReferenceOpenCustomHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ReferenceOpenHashMap;
-import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceMap;
 import net.minecraft.util.math.Spline;
@@ -67,6 +66,7 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.IntConsumer;
 
 public class BytecodeGen {
@@ -124,7 +124,7 @@ public class BytecodeGen {
 
         if (cached != null) {
             try {
-                return (CompiledEntry) cached.getConstructor(Object[].class).newInstance(new Object[]{args});
+                return (CompiledEntry) cached.getConstructor(Object[].class, Function.class).newInstance(new Object[]{args, Function.identity()});
             } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
                 throw new RuntimeException(e);
             }
@@ -133,7 +133,6 @@ public class BytecodeGen {
         genConstructor(genContext);
         genGetArgs(genContext);
         genNewInstance(genContext);
-        genSetCacheField(genContext);
 //        genFields(genContext);
 
 //        ListIterator<Object> iterator = args.listIterator();
@@ -150,7 +149,7 @@ public class BytecodeGen {
         Class<?> defined = defineClass(genContext.className, bytes);
         compilationCache.put(node, defined);
         try {
-            return (CompiledEntry) defined.getConstructor(Object[].class).newInstance(new Object[]{args});
+            return (CompiledEntry) defined.getConstructor(Object[].class, Function.class).newInstance(new Object[]{args, Function.identity()});
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
             throw new RuntimeException(e);
         }
@@ -180,28 +179,37 @@ public class BytecodeGen {
         m.load(0, InstructionAdapter.OBJECT_TYPE);
         m.invokespecial(Type.getInternalName(Object.class), "<init>", Type.getMethodDescriptor(Type.VOID_TYPE), false);
 
+        // A cache transformer may eagerly evaluate its rebound delegate. Field ordinals are
+        // dependency-ordered so every field used by that delegate has already been assigned.
         for (Map.Entry<Object, Context.FieldRecord> entry : context.args.entrySet().stream().sorted(Comparator.comparingInt(o -> o.getValue().ordinal())).toList()) {
             String name = entry.getValue().name();
             Class<?> type = entry.getValue().type();
             int ordinal = entry.getValue().ordinal();
+            String postProcessingMethod = context.postProcessMethods.get(name);
 
             m.load(0, InstructionAdapter.OBJECT_TYPE);
-            m.load(1, InstructionAdapter.OBJECT_TYPE);
-            m.iconst(ordinal);
-            m.aload(InstructionAdapter.OBJECT_TYPE);
-            m.checkcast(Type.getType(type));
+            if (postProcessingMethod != null) {
+                m.load(0, InstructionAdapter.OBJECT_TYPE);
+                m.load(1, InstructionAdapter.OBJECT_TYPE);
+                m.iconst(ordinal);
+                m.aload(InstructionAdapter.OBJECT_TYPE);
+                m.checkcast(Type.getType(type));
+                m.load(2, InstructionAdapter.OBJECT_TYPE);
+                m.invokevirtual(context.className, postProcessingMethod, Context.POSTPROCESSING_DESC, false);
+            } else {
+                m.load(1, InstructionAdapter.OBJECT_TYPE);
+                m.iconst(ordinal);
+                m.aload(InstructionAdapter.OBJECT_TYPE);
+                m.checkcast(Type.getType(type));
+            }
             m.putfield(context.className, name, Type.getDescriptor(type));
-        }
-
-        for (String postProcessingMethod : context.postProcessMethods) {
-            m.load(0, InstructionAdapter.OBJECT_TYPE);
-            m.invokevirtual(context.className, postProcessingMethod, Context.POSTPROCESSING_DESC, false);
         }
 
         m.areturn(Type.VOID_TYPE);
         m.visitLabel(end);
         m.visitLocalVariable("this", context.classDesc, null, start, end, 0);
         m.visitLocalVariable("args", Type.getDescriptor(Object[].class), null, start, end, 1);
+        m.visitLocalVariable("cacheTransformer", Type.getDescriptor(Function.class), null, start, end, 2);
         m.visitMaxs(0, 0);
     }
 
@@ -254,11 +262,11 @@ public class BytecodeGen {
                         context.className,
                         Opcodes.ACC_PUBLIC | Opcodes.ACC_FINAL,
                         "newInstance",
-                        Type.getMethodDescriptor(Type.getType(CompiledEntry.class), Type.getType(Object[].class)),
+                        Type.getMethodDescriptor(Type.getType(CompiledEntry.class), Type.getType(Object[].class), Type.getType(Function.class)),
                         context.classWriter.visitMethod(
                                 Opcodes.ACC_PUBLIC | Opcodes.ACC_FINAL,
                                 "newInstance",
-                                Type.getMethodDescriptor(Type.getType(CompiledEntry.class), Type.getType(Object[].class)),
+                                Type.getMethodDescriptor(Type.getType(CompiledEntry.class), Type.getType(Object[].class), Type.getType(Function.class)),
                                 null,
                                 null
                         )
@@ -271,62 +279,14 @@ public class BytecodeGen {
         m.anew(Type.getType(context.classDesc));
         m.dup();
         m.load(1, InstructionAdapter.OBJECT_TYPE);
-        m.invokespecial(context.className, "<init>", Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(Object[].class)), false);
+        m.load(2, InstructionAdapter.OBJECT_TYPE);
+        m.invokespecial(context.className, "<init>", Context.CONSTRUCTOR_DESC, false);
         m.areturn(InstructionAdapter.OBJECT_TYPE);
 
         m.visitLabel(end);
         m.visitLocalVariable("this", context.classDesc, null, start, end, 0);
         m.visitLocalVariable("args", Type.getDescriptor(Object[].class), null, start, end, 1);
-        m.visitMaxs(0, 0);
-    }
-
-    private static void genSetCacheField(Context context) {
-        String descriptor = Type.getMethodDescriptor(Type.VOID_TYPE, Type.INT_TYPE, Type.getType(IFastCacheLike.class));
-        InstructionAdapter m = new InstructionAdapter(
-                new AnalyzerAdapter(
-                        context.className,
-                        Opcodes.ACC_PUBLIC | Opcodes.ACC_FINAL,
-                        "setCacheField",
-                        descriptor,
-                        context.classWriter.visitMethod(Opcodes.ACC_PUBLIC | Opcodes.ACC_FINAL, "setCacheField", descriptor, null, null)
-                )
-        );
-        Label start = new Label();
-        Label invalidField = new Label();
-        Label end = new Label();
-        m.visitLabel(start);
-
-        List<Context.FieldRecord> cacheFields = context.args.values().stream()
-                .filter(field -> field.type() == IFastCacheLike.class)
-                .sorted(Comparator.comparingInt(Context.FieldRecord::ordinal))
-                .toList();
-        int[] keys = new int[cacheFields.size()];
-        Label[] labels = new Label[cacheFields.size()];
-        for (int i = 0; i < cacheFields.size(); i++) {
-            keys[i] = cacheFields.get(i).ordinal();
-            labels[i] = new Label();
-        }
-
-        m.load(1, Type.INT_TYPE);
-        m.visitLookupSwitchInsn(invalidField, keys, labels);
-        for (int i = 0; i < cacheFields.size(); i++) {
-            Context.FieldRecord field = cacheFields.get(i);
-            m.visitLabel(labels[i]);
-            m.load(0, InstructionAdapter.OBJECT_TYPE);
-            m.load(2, InstructionAdapter.OBJECT_TYPE);
-            m.putfield(context.className, field.name(), Type.getDescriptor(IFastCacheLike.class));
-            m.areturn(Type.VOID_TYPE);
-        }
-
-        m.visitLabel(invalidField);
-        m.anew(Type.getType(IllegalArgumentException.class));
-        m.dup();
-        m.invokespecial(Type.getInternalName(IllegalArgumentException.class), "<init>", "()V", false);
-        m.athrow();
-        m.visitLabel(end);
-        m.visitLocalVariable("this", context.classDesc, null, start, end, 0);
-        m.visitLocalVariable("fieldIndex", Type.INT_TYPE.getDescriptor(), null, start, end, 1);
-        m.visitLocalVariable("cacheLike", Type.getDescriptor(IFastCacheLike.class), null, start, end, 2);
+        m.visitLocalVariable("cacheTransformer", Type.getDescriptor(Function.class), null, start, end, 2);
         m.visitMaxs(0, 0);
     }
 
@@ -367,8 +327,8 @@ public class BytecodeGen {
     public static class Context {
         public static final String SINGLE_DESC = Type.getMethodDescriptor(Type.getType(double.class), Type.getType(int.class), Type.getType(int.class), Type.getType(int.class), Type.getType(EvalType.class), Type.getType(DfcObjectCache.class));
         public static final String MULTI_DESC = Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(double[].class), Type.getType(int[].class), Type.getType(int[].class), Type.getType(int[].class), Type.getType(EvalType.class), Type.getType(DfcObjectCache.class));
-        public static final String POSTPROCESSING_DESC = Type.getMethodDescriptor(Type.VOID_TYPE);
-        public static final String CONSTRUCTOR_DESC = Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(Object[].class));
+        public static final String POSTPROCESSING_DESC = Type.getMethodDescriptor(Type.getType(IFastCacheLike.class), Type.getType(IFastCacheLike.class), Type.getType(Function.class));
+        public static final String CONSTRUCTOR_DESC = Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(Object[].class), Type.getType(Function.class));
         public final ClassWriter classWriter;
         public final String className;
         public final String classDesc;
@@ -377,7 +337,7 @@ public class BytecodeGen {
         private final Object2ReferenceOpenHashMap<AstNode, String> multiMethods = new Object2ReferenceOpenHashMap<>();
         private final Object2ReferenceOpenHashMap<Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper>, String> splineMethods = new Object2ReferenceOpenHashMap<>();
         private final Object2ReferenceOpenHashMap<Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper>, String> splineMethodsCache1 = new Object2ReferenceOpenHashMap<>();
-        private final ObjectLinkedOpenHashSet<String> postProcessMethods = new ObjectLinkedOpenHashSet<>();
+        private final Object2ReferenceOpenHashMap<String, String> postProcessMethods = new Object2ReferenceOpenHashMap<>();
         private final Reference2ObjectOpenHashMap<Object, FieldRecord> args = new Reference2ObjectOpenHashMap<>();
 
         public Context(ClassWriter classWriter, String className) {
@@ -600,7 +560,7 @@ public class BytecodeGen {
             }
             int size = this.args.size();
             String name = String.format("field_%d", size);
-            classWriter.visitField(Opcodes.ACC_PRIVATE, name, Type.getDescriptor(type), null, null);
+            classWriter.visitField(Opcodes.ACC_PRIVATE | Opcodes.ACC_FINAL, name, Type.getDescriptor(type), null, null);
             this.args.put(data, new FieldRecord(name, size, type));
             return name;
         }
@@ -638,8 +598,8 @@ public class BytecodeGen {
             });
         }
 
-        public void genPostprocessingMethod(String name, Consumer<InstructionAdapter> generator) {
-            if (this.postProcessMethods.contains(name)) {
+        public void genPostprocessingMethod(String fieldName, String name, Consumer<InstructionAdapter> generator) {
+            if (this.postProcessMethods.containsKey(fieldName)) {
                 return;
             }
             InstructionAdapter adapter = new InstructionAdapter(
@@ -664,7 +624,9 @@ public class BytecodeGen {
             adapter.visitLabel(end);
             adapter.visitMaxs(0, 0);
             adapter.visitLocalVariable("this", this.classDesc, null, start, end, 0);
-            this.postProcessMethods.add(name);
+            adapter.visitLocalVariable("cacheLike", Type.getDescriptor(IFastCacheLike.class), null, start, end, 1);
+            adapter.visitLocalVariable("cacheTransformer", Type.getDescriptor(Function.class), null, start, end, 2);
+            this.postProcessMethods.put(fieldName, name);
         }
 
         public static interface LocalVarConsumer {

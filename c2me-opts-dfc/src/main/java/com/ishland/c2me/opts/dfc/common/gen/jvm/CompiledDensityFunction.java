@@ -30,6 +30,7 @@ import com.ishland.c2me.opts.dfc.common.ducks.IFastCacheLike;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
 
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class CompiledDensityFunction extends SubCompiledDensityFunction {
@@ -48,95 +49,52 @@ public class CompiledDensityFunction extends SubCompiledDensityFunction {
 
     @Override
     public DensityFunction applyInternal(DensityFunctionVisitor visitor) {
-        if (visitor instanceof IBlendingAwareVisitor blendingAwareVisitor && blendingAwareVisitor.c2me$isBlendingEnabled()) {
-            DensityFunction fallback1 = this.getFallback();
-            if (fallback1 == null) {
-                throw new IllegalStateException("blendingFallback is no more");
-            }
-            return visitor.apply(fallback1);
-        }
-        boolean modified = false;
-        Object[] args = this.compiledEntry.getArgs();
-        for (int i = 0; i < args.length; i ++) {
-            Object next = args[i];
-            if (next instanceof DensityFunction df) {
-                if (!(df instanceof IFastCacheLike)) {
-                    DensityFunction applied = visitor.apply(df);
-                    if (df != applied) {
-                        args[i] = applied;
-                        modified = true;
-                    }
-                }
-            }
-            if (next instanceof Noise noise) {
-                Noise applied = visitor.apply(noise);
-                if (noise != applied) {
-                    args[i] = applied;
-                    modified = true;
-                }
-            }
-        }
-
-        CompiledEntry stagingEntry = null;
-        Object[] stagingArgs = null;
-        for (int i = 0; i < args.length; i ++) {
-            Object next = args[i];
-            if (next instanceof IFastCacheLike) {
-                if (stagingEntry == null) {
-                    stagingEntry = this.compiledEntry.newInstance(args);
-                    stagingArgs = stagingEntry.getArgs();
-                }
-                IFastCacheLike cacheLike = (IFastCacheLike) stagingArgs[i];
-                DensityFunction applied = visitor.apply(cacheLike);
-                IFastCacheLike newCacheLike;
-                if (applied == cacheLike.c2me$getDelegate()) {
-                    newCacheLike = null; // cache removed
-                } else if (applied instanceof IFastCacheLike transformedCacheLike) {
-                    newCacheLike = transformedCacheLike;
-                } else {
-                    throw new UnsupportedOperationException("Unsupported transformation on Wrapping node");
-                }
-                args[i] = newCacheLike;
-                stagingEntry.setCacheField(i, newCacheLike);
-                modified = true;
-            }
-        }
-
-        Supplier<DensityFunction> fallback = this.blendingFallback != null ? Suppliers.memoize(() -> {
-            DensityFunction densityFunction = this.blendingFallback.get();
-            return densityFunction != null ? visitor.apply(densityFunction) : null;
-        }) : null;
-        if (fallback != this.blendingFallback) {
-            modified = true;
-        }
-        if (modified) {
-            CompiledEntry newEntry = stagingEntry != null ? stagingEntry : this.compiledEntry.newInstance(args);
-            return new CompiledDensityFunction(newEntry, fallback);
-        } else {
-            return this;
-        }
+        return this.applyVisitor(visitor, visitor::apply);
     }
 
     @Override
     public DensityFunction apply(DensityFunctionVisitor visitor) {
+        return this.applyVisitor(visitor, densityFunction -> densityFunction.apply(visitor));
+    }
+
+    private DensityFunction applyVisitor(DensityFunctionVisitor visitor, Function<DensityFunction, DensityFunction> densityTransformer) {
         if (visitor instanceof IBlendingAwareVisitor blendingAwareVisitor && blendingAwareVisitor.c2me$isBlendingEnabled()) {
             DensityFunction fallback1 = this.getFallback();
             if (fallback1 == null) {
                 throw new IllegalStateException("blendingFallback is no more");
             }
-            return fallback1.apply(visitor);
+            return densityTransformer.apply(fallback1);
         }
-        boolean modified = false;
+
         Object[] args = this.compiledEntry.getArgs();
+        boolean modified = transformArgs(args, visitor, densityTransformer);
+
+        Supplier<DensityFunction> fallback = this.blendingFallback != null ? Suppliers.memoize(() -> {
+            DensityFunction densityFunction = this.blendingFallback.get();
+            return densityFunction != null ? densityTransformer.apply(densityFunction) : null;
+        }) : null;
+        if (fallback != this.blendingFallback) {
+            modified = true;
+        }
+        if (!modified) {
+            return this;
+        }
+
+        CompiledEntry newEntry = this.compiledEntry.newInstance(args, cacheLike -> transformCache(visitor, cacheLike));
+        return new CompiledDensityFunction(newEntry, fallback);
+    }
+
+    private static boolean transformArgs(Object[] args, DensityFunctionVisitor visitor, Function<DensityFunction, DensityFunction> densityTransformer) {
+        boolean modified = false;
         for (int i = 0; i < args.length; i ++) {
             Object next = args[i];
-            if (next instanceof DensityFunction df) {
-                if (!(df instanceof IFastCacheLike)) {
-                    DensityFunction applied = df.apply(visitor);
-                    if (df != applied) {
-                        args[i] = applied;
-                        modified = true;
-                    }
+            if (next instanceof IFastCacheLike) {
+                modified = true;
+            } else if (next instanceof DensityFunction df) {
+                DensityFunction applied = densityTransformer.apply(df);
+                if (df != applied) {
+                    args[i] = applied;
+                    modified = true;
                 }
             }
             if (next instanceof Noise noise) {
@@ -147,44 +105,17 @@ public class CompiledDensityFunction extends SubCompiledDensityFunction {
                 }
             }
         }
+        return modified;
+    }
 
-        CompiledEntry stagingEntry = null;
-        Object[] stagingArgs = null;
-        for (int i = 0; i < args.length; i ++) {
-            Object next = args[i];
-            if (next instanceof IFastCacheLike) {
-                if (stagingEntry == null) {
-                    stagingEntry = this.compiledEntry.newInstance(args);
-                    stagingArgs = stagingEntry.getArgs();
-                }
-                IFastCacheLike cacheLike = (IFastCacheLike) stagingArgs[i];
-                DensityFunction applied = visitor.apply(cacheLike);
-                IFastCacheLike newCacheLike;
-                if (applied == cacheLike.c2me$getDelegate()) {
-                    newCacheLike = null; // cache removed
-                } else if (applied instanceof IFastCacheLike transformedCacheLike) {
-                    newCacheLike = transformedCacheLike;
-                } else {
-                    throw new UnsupportedOperationException("Unsupported transformation on Wrapping node");
-                }
-                args[i] = newCacheLike;
-                stagingEntry.setCacheField(i, newCacheLike);
-                modified = true;
-            }
-        }
-
-        Supplier<DensityFunction> fallback = this.blendingFallback != null ? Suppliers.memoize(() -> {
-            DensityFunction densityFunction = this.blendingFallback.get();
-            return densityFunction != null ? densityFunction.apply(visitor) : null;
-        }) : null;
-        if (fallback != this.blendingFallback) {
-            modified = true;
-        }
-        if (modified) {
-            CompiledEntry newEntry = stagingEntry != null ? stagingEntry : this.compiledEntry.newInstance(args);
-            return new CompiledDensityFunction(newEntry, fallback);
+    private static IFastCacheLike transformCache(DensityFunctionVisitor visitor, IFastCacheLike cacheLike) {
+        DensityFunction applied = visitor.apply(cacheLike);
+        if (applied == cacheLike.c2me$getDelegate()) {
+            return null; // cache removed
+        } else if (applied instanceof IFastCacheLike transformedCacheLike) {
+            return transformedCacheLike;
         } else {
-            return this;
+            throw new UnsupportedOperationException("Unsupported transformation on Wrapping node");
         }
     }
 
