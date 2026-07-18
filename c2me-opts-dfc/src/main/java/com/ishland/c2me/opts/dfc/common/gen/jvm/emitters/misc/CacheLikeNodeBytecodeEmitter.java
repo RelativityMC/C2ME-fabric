@@ -32,7 +32,6 @@ import com.ishland.c2me.opts.dfc.common.gen.jvm.BytecodeGen;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.IMultiMethod;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.ISingleMethod;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.SubCompiledDensityFunction;
-import com.ishland.c2me.opts.dfc.common.gen.jvm.util.DfcObjectCache;
 import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefD;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
 import org.objectweb.asm.Handle;
@@ -50,8 +49,8 @@ public class CacheLikeNodeBytecodeEmitter implements BytecodeEmitter<CacheLikeNo
     @Override
     public void doBytecodeGenSingle(CacheLikeNode node, BytecodeGen.Context context, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
         ValuesMethodDefD delegateMethod = context.newSingleMethod(node.getDelegate());
-        String cacheLikeField = context.newField(IFastCacheLike.class, node.getCacheLike());
-        genPostprocessingMethod(node, context, cacheLikeField);
+
+        String cacheLikeField = registerCache(node, context);
 
         int eval = localVarConsumer.createLocalVariable("eval", Type.DOUBLE_TYPE.getDescriptor());
 
@@ -100,9 +99,8 @@ public class CacheLikeNodeBytecodeEmitter implements BytecodeEmitter<CacheLikeNo
     @Override
     public void doBytecodeGenMulti(CacheLikeNode node, BytecodeGen.Context context, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
         ValuesMethodDefD delegateMethod = context.newMultiMethod(node.getDelegate());
-        String cacheLikeField = context.newField(IFastCacheLike.class, node.getCacheLike());
 
-        genPostprocessingMethod(node, context, cacheLikeField);
+        String cacheLikeField = registerCache(node, context);
 
         Label cacheExists = new Label();
         Label cacheMiss = new Label();
@@ -138,10 +136,14 @@ public class CacheLikeNodeBytecodeEmitter implements BytecodeEmitter<CacheLikeNo
         m.areturn(Type.VOID_TYPE);
     }
 
-    private void genPostprocessingMethod(CacheLikeNode node, BytecodeGen.Context context, String cacheLikeField) {
-        String methodName = String.format("postProcessing_%s", cacheLikeField);
+    private String registerCache(CacheLikeNode node, BytecodeGen.Context context) {
+        // put here to ensure init order
         String delegateSingle = context.newSingleMethodUnoptimized(node.getDelegate());
         String delegateMulti = context.newMultiMethodUnoptimized(node.getDelegate());
+
+        String cacheLikeField = context.newField(IFastCacheLike.class, node.getCacheLike());
+        String methodName = String.format("postProcessing_%s", cacheLikeField);
+
         context.genPostprocessingMethod(methodName, m -> {
             Label cacheExists = new Label();
 
@@ -235,5 +237,6 @@ public class CacheLikeNodeBytecodeEmitter implements BytecodeEmitter<CacheLikeNo
 
             m.areturn(Type.VOID_TYPE);
         });
+        return cacheLikeField;
     }
 }
