@@ -77,19 +77,28 @@ public class CompiledDensityFunction extends SubCompiledDensityFunction {
             }
         }
 
+        CompiledEntry stagingEntry = null;
+        Object[] stagingArgs = null;
         for (int i = 0; i < args.length; i ++) {
             Object next = args[i];
-            if (next instanceof IFastCacheLike cacheLike) {
+            if (next instanceof IFastCacheLike) {
+                if (stagingEntry == null) {
+                    stagingEntry = this.compiledEntry.newInstance(args);
+                    stagingArgs = stagingEntry.getArgs();
+                }
+                IFastCacheLike cacheLike = (IFastCacheLike) stagingArgs[i];
                 DensityFunction applied = visitor.apply(cacheLike);
+                IFastCacheLike newCacheLike;
                 if (applied == cacheLike.c2me$getDelegate()) {
-                    args[i] = null; // cache removed
-                    modified = true;
-                } else if (applied instanceof IFastCacheLike newCacheLike) {
-                    args[i] = newCacheLike;
-                    modified = true;
+                    newCacheLike = null; // cache removed
+                } else if (applied instanceof IFastCacheLike transformedCacheLike) {
+                    newCacheLike = transformedCacheLike;
                 } else {
                     throw new UnsupportedOperationException("Unsupported transformation on Wrapping node");
                 }
+                args[i] = newCacheLike;
+                stagingEntry.setCacheField(i, newCacheLike);
+                modified = true;
             }
         }
 
@@ -101,7 +110,8 @@ public class CompiledDensityFunction extends SubCompiledDensityFunction {
             modified = true;
         }
         if (modified) {
-            return new CompiledDensityFunction(this.compiledEntry.newInstance(args), fallback);
+            CompiledEntry newEntry = stagingEntry != null ? stagingEntry : this.compiledEntry.newInstance(args);
+            return new CompiledDensityFunction(newEntry, fallback);
         } else {
             return this;
         }
@@ -138,19 +148,28 @@ public class CompiledDensityFunction extends SubCompiledDensityFunction {
             }
         }
 
+        CompiledEntry stagingEntry = null;
+        Object[] stagingArgs = null;
         for (int i = 0; i < args.length; i ++) {
             Object next = args[i];
-            if (next instanceof IFastCacheLike cacheLike) {
+            if (next instanceof IFastCacheLike) {
+                if (stagingEntry == null) {
+                    stagingEntry = this.compiledEntry.newInstance(args);
+                    stagingArgs = stagingEntry.getArgs();
+                }
+                IFastCacheLike cacheLike = (IFastCacheLike) stagingArgs[i];
                 DensityFunction applied = visitor.apply(cacheLike);
+                IFastCacheLike newCacheLike;
                 if (applied == cacheLike.c2me$getDelegate()) {
-                    args[i] = null; // cache removed
-                    modified = true;
-                } else if (applied instanceof IFastCacheLike newCacheLike) {
-                    args[i] = newCacheLike;
-                    modified = true;
+                    newCacheLike = null; // cache removed
+                } else if (applied instanceof IFastCacheLike transformedCacheLike) {
+                    newCacheLike = transformedCacheLike;
                 } else {
                     throw new UnsupportedOperationException("Unsupported transformation on Wrapping node");
                 }
+                args[i] = newCacheLike;
+                stagingEntry.setCacheField(i, newCacheLike);
+                modified = true;
             }
         }
 
@@ -162,7 +181,8 @@ public class CompiledDensityFunction extends SubCompiledDensityFunction {
             modified = true;
         }
         if (modified) {
-            return new CompiledDensityFunction(this.compiledEntry.newInstance(args), fallback);
+            CompiledEntry newEntry = stagingEntry != null ? stagingEntry : this.compiledEntry.newInstance(args);
+            return new CompiledDensityFunction(newEntry, fallback);
         } else {
             return this;
         }

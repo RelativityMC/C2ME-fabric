@@ -32,6 +32,7 @@ import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.RootNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.YClampedGradientNode;
 import com.ishland.c2me.opts.dfc.common.ast.opto.OptoPasses;
+import com.ishland.c2me.opts.dfc.common.ducks.IFastCacheLike;
 import com.ishland.c2me.opts.dfc.common.gen.GenDumper;
 import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefD;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.util.DfcObjectCache;
@@ -132,6 +133,7 @@ public class BytecodeGen {
         genConstructor(genContext);
         genGetArgs(genContext);
         genNewInstance(genContext);
+        genSetCacheField(genContext);
 //        genFields(genContext);
 
 //        ListIterator<Object> iterator = args.listIterator();
@@ -275,6 +277,56 @@ public class BytecodeGen {
         m.visitLabel(end);
         m.visitLocalVariable("this", context.classDesc, null, start, end, 0);
         m.visitLocalVariable("args", Type.getDescriptor(Object[].class), null, start, end, 1);
+        m.visitMaxs(0, 0);
+    }
+
+    private static void genSetCacheField(Context context) {
+        String descriptor = Type.getMethodDescriptor(Type.VOID_TYPE, Type.INT_TYPE, Type.getType(IFastCacheLike.class));
+        InstructionAdapter m = new InstructionAdapter(
+                new AnalyzerAdapter(
+                        context.className,
+                        Opcodes.ACC_PUBLIC | Opcodes.ACC_FINAL,
+                        "setCacheField",
+                        descriptor,
+                        context.classWriter.visitMethod(Opcodes.ACC_PUBLIC | Opcodes.ACC_FINAL, "setCacheField", descriptor, null, null)
+                )
+        );
+        Label start = new Label();
+        Label invalidField = new Label();
+        Label end = new Label();
+        m.visitLabel(start);
+
+        List<Context.FieldRecord> cacheFields = context.args.values().stream()
+                .filter(field -> field.type() == IFastCacheLike.class)
+                .sorted(Comparator.comparingInt(Context.FieldRecord::ordinal))
+                .toList();
+        int[] keys = new int[cacheFields.size()];
+        Label[] labels = new Label[cacheFields.size()];
+        for (int i = 0; i < cacheFields.size(); i++) {
+            keys[i] = cacheFields.get(i).ordinal();
+            labels[i] = new Label();
+        }
+
+        m.load(1, Type.INT_TYPE);
+        m.visitLookupSwitchInsn(invalidField, keys, labels);
+        for (int i = 0; i < cacheFields.size(); i++) {
+            Context.FieldRecord field = cacheFields.get(i);
+            m.visitLabel(labels[i]);
+            m.load(0, InstructionAdapter.OBJECT_TYPE);
+            m.load(2, InstructionAdapter.OBJECT_TYPE);
+            m.putfield(context.className, field.name(), Type.getDescriptor(IFastCacheLike.class));
+            m.areturn(Type.VOID_TYPE);
+        }
+
+        m.visitLabel(invalidField);
+        m.anew(Type.getType(IllegalArgumentException.class));
+        m.dup();
+        m.invokespecial(Type.getInternalName(IllegalArgumentException.class), "<init>", "()V", false);
+        m.athrow();
+        m.visitLabel(end);
+        m.visitLocalVariable("this", context.classDesc, null, start, end, 0);
+        m.visitLocalVariable("fieldIndex", Type.INT_TYPE.getDescriptor(), null, start, end, 1);
+        m.visitLocalVariable("cacheLike", Type.getDescriptor(IFastCacheLike.class), null, start, end, 2);
         m.visitMaxs(0, 0);
     }
 

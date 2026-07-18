@@ -25,6 +25,7 @@
 package com.ishland.c2me.opts.dfc.common.gen.jvm;
 
 import com.ishland.c2me.opts.dfc.common.ast.EvalType;
+import com.ishland.c2me.opts.dfc.common.ducks.IFastCacheLike;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.util.DfcObjectCache;
 
 public interface CompiledEntry extends ISingleMethod, IMultiMethod {
@@ -34,6 +35,8 @@ public interface CompiledEntry extends ISingleMethod, IMultiMethod {
     void evalMulti(double[] res, int[] x, int[] y, int[] z, EvalType type, DfcObjectCache dfcObjectCache);
 
     CompiledEntry newInstance(Object[] args);
+
+    void setCacheField(int fieldIndex, IFastCacheLike cacheLike);
 
     Object[] getArgs();
 
