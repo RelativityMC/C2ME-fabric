@@ -24,16 +24,17 @@
 
 package com.ishland.c2me.opts.dfc.common.gen.jvm;
 
-import com.ishland.c2me.opts.dfc.common.ast.EvalType;
-import com.ishland.c2me.opts.dfc.common.gen.jvm.util.DfcObjectCache;
+import com.ishland.c2me.opts.dfc.common.gen.jvm.internalapi.ArgumentVisitor;
 
-public interface CompiledEntry extends ISingleMethod, IMultiMethod {
+public interface CompiledEntry {
 
-    double evalSingle(int x, int y, int z, EvalType type, DfcObjectCache dfcObjectCache);
+    default SubCompiledDensityFunction[] getRoots() {
+        return this.getRootsUnsafe().clone();
+    }
 
-    void evalMulti(double[] res, int[] x, int[] y, int[] z, EvalType type, DfcObjectCache dfcObjectCache);
+    SubCompiledDensityFunction[] getRootsUnsafe();
 
-    CompiledEntry newInstance(Object[] args);
+    CompiledEntry newInstance(Object[] args, ArgumentVisitor visitor);
 
     Object[] getArgs();
 

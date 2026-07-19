@@ -27,23 +27,49 @@ package com.ishland.c2me.opts.dfc.common.gen.jvm;
 import com.google.common.base.Suppliers;
 import com.ishland.c2me.opts.dfc.common.ducks.IBlendingAwareVisitor;
 import com.ishland.c2me.opts.dfc.common.ducks.IFastCacheLike;
+import com.ishland.c2me.opts.dfc.common.gen.jvm.internalapi.IMultiMethod;
+import com.ishland.c2me.opts.dfc.common.gen.jvm.internalapi.ISingleMethod;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
 
 import java.util.Objects;
 import java.util.function.Supplier;
 
-public class CompiledDensityFunction extends SubCompiledDensityFunction {
+public class CompiledDensityFunction extends AbstractCompiledDensityFunction {
 
-    private final CompiledEntry compiledEntry;
+    private final int compiledIndex;
+    private CompiledEntry compiledEntry = null;
+    private ISingleMethod singleMethod = null;
+    private IMultiMethod multiMethod = null;
 
-    public CompiledDensityFunction(CompiledEntry compiledEntry, DensityFunction blendingFallback) {
-        super(compiledEntry, compiledEntry, blendingFallback);
-        this.compiledEntry = Objects.requireNonNull(compiledEntry);
+    CompiledDensityFunction(int compiledIndex, DensityFunction blendingFallback) {
+        this(compiledIndex, unwrapFallback(blendingFallback));
     }
 
-    private CompiledDensityFunction(CompiledEntry compiledEntry, Supplier<DensityFunction> blendingFallback) {
-        super(compiledEntry, compiledEntry, blendingFallback);
-        this.compiledEntry = Objects.requireNonNull(compiledEntry);
+    private CompiledDensityFunction(int compiledIndex, Supplier<DensityFunction> blendingFallback) {
+        super(blendingFallback);
+        this.compiledIndex = compiledIndex;
+    }
+
+    @Override
+    public ISingleMethod getSingleMethod() {
+        return this.singleMethod;
+    }
+
+    @Override
+    public IMultiMethod getMultiMethod() {
+        return this.multiMethod;
+    }
+
+    public synchronized void initFrom(CompiledEntry entry) {
+        if (this.compiledEntry != null) {
+            throw new IllegalStateException("Already initialized");
+        }
+
+        Objects.requireNonNull(entry);
+        SubCompiledDensityFunction method = entry.getRootsUnsafe()[this.compiledIndex];
+        this.compiledEntry = entry;
+        this.singleMethod = Objects.requireNonNull(method.singleMethod);
+        this.multiMethod = Objects.requireNonNull(method.multiMethod);
     }
 
     @Override
@@ -55,56 +81,28 @@ public class CompiledDensityFunction extends SubCompiledDensityFunction {
             }
             return visitor.apply(fallback1);
         }
-        boolean modified = false;
-        Object[] args = this.compiledEntry.getArgs();
-        for (int i = 0; i < args.length; i ++) {
-            Object next = args[i];
-            if (next instanceof DensityFunction df) {
-                if (!(df instanceof IFastCacheLike)) {
-                    DensityFunction applied = visitor.apply(df);
-                    if (df != applied) {
-                        args[i] = applied;
-                        modified = true;
-                    }
-                }
-            }
-            if (next instanceof Noise noise) {
-                Noise applied = visitor.apply(noise);
-                if (noise != applied) {
-                    args[i] = applied;
-                    modified = true;
-                }
-            }
-        }
-
-        for (int i = 0; i < args.length; i ++) {
-            Object next = args[i];
-            if (next instanceof IFastCacheLike cacheLike) {
-                DensityFunction applied = visitor.apply(cacheLike);
-                if (applied == cacheLike.c2me$getDelegate()) {
-                    args[i] = null; // cache removed
-                    modified = true;
-                } else if (applied instanceof IFastCacheLike newCacheLike) {
-                    args[i] = newCacheLike;
-                    modified = true;
-                } else {
-                    throw new UnsupportedOperationException("Unsupported transformation on Wrapping node");
-                }
-            }
+        CompiledEntry compiledEntry = this.compiledEntry;
+        ISingleMethod singleMethod = this.singleMethod;
+        IMultiMethod multiMethod = this.multiMethod;
+        if (compiledEntry == null || singleMethod == null || multiMethod == null) {
+            throw new IllegalStateException("Attempted to apply a incomplete compiled df");
         }
 
         Supplier<DensityFunction> fallback = this.blendingFallback != null ? Suppliers.memoize(() -> {
             DensityFunction densityFunction = this.blendingFallback.get();
             return densityFunction != null ? visitor.apply(densityFunction) : null;
         }) : null;
-        if (fallback != this.blendingFallback) {
-            modified = true;
-        }
-        if (modified) {
-            return new CompiledDensityFunction(this.compiledEntry.newInstance(args), fallback);
-        } else {
-            return this;
-        }
+        CompiledDensityFunction function = new CompiledDensityFunction(this.compiledIndex, fallback);
+        function.initFrom(this.compiledEntry.newInstance(compiledEntry.getArgs(), next -> {
+            if (next instanceof DensityFunction df) {
+                return visitor.apply(df);
+            }
+            if (next instanceof Noise noise) {
+                return visitor.apply(noise);
+            }
+            return next;
+        }));
+        return function;
     }
 
     @Override
@@ -116,56 +114,31 @@ public class CompiledDensityFunction extends SubCompiledDensityFunction {
             }
             return fallback1.apply(visitor);
         }
-        boolean modified = false;
-        Object[] args = this.compiledEntry.getArgs();
-        for (int i = 0; i < args.length; i ++) {
-            Object next = args[i];
+        CompiledEntry compiledEntry = this.compiledEntry;
+        ISingleMethod singleMethod = this.singleMethod;
+        IMultiMethod multiMethod = this.multiMethod;
+        if (compiledEntry == null || singleMethod == null || multiMethod == null) {
+            throw new IllegalStateException("Attempted to apply a incomplete compiled df");
+        }
+        Supplier<DensityFunction> fallback = this.blendingFallback != null ? Suppliers.memoize(() -> {
+            DensityFunction densityFunction = this.blendingFallback.get();
+            return densityFunction != null ? visitor.apply(densityFunction) : null;
+        }) : null;
+        CompiledDensityFunction function = new CompiledDensityFunction(this.compiledIndex, fallback);
+        function.initFrom(this.compiledEntry.newInstance(compiledEntry.getArgs(), next -> {
             if (next instanceof DensityFunction df) {
-                if (!(df instanceof IFastCacheLike)) {
-                    DensityFunction applied = df.apply(visitor);
-                    if (df != applied) {
-                        args[i] = applied;
-                        modified = true;
-                    }
+                if (next instanceof IFastCacheLike cacheLike) {
+                    return visitor.apply(df);
+                } else {
+                    return df.apply(visitor);
                 }
             }
             if (next instanceof Noise noise) {
-                Noise applied = visitor.apply(noise);
-                if (noise != applied) {
-                    args[i] = applied;
-                    modified = true;
-                }
+                return visitor.apply(noise);
             }
-        }
-
-        for (int i = 0; i < args.length; i ++) {
-            Object next = args[i];
-            if (next instanceof IFastCacheLike cacheLike) {
-                DensityFunction applied = visitor.apply(cacheLike);
-                if (applied == cacheLike.c2me$getDelegate()) {
-                    args[i] = null; // cache removed
-                    modified = true;
-                } else if (applied instanceof IFastCacheLike newCacheLike) {
-                    args[i] = newCacheLike;
-                    modified = true;
-                } else {
-                    throw new UnsupportedOperationException("Unsupported transformation on Wrapping node");
-                }
-            }
-        }
-
-        Supplier<DensityFunction> fallback = this.blendingFallback != null ? Suppliers.memoize(() -> {
-            DensityFunction densityFunction = this.blendingFallback.get();
-            return densityFunction != null ? densityFunction.apply(visitor) : null;
-        }) : null;
-        if (fallback != this.blendingFallback) {
-            modified = true;
-        }
-        if (modified) {
-            return new CompiledDensityFunction(this.compiledEntry.newInstance(args), fallback);
-        } else {
-            return this;
-        }
+            return next;
+        }));
+        return function;
     }
 
 }
