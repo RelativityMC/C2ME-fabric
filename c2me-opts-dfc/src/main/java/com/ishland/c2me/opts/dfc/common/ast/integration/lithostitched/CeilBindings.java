@@ -58,7 +58,7 @@ public class CeilBindings {
                 available = true;
                 LOGGER.info("Bound to lithostitched dev.worldgen.lithostitched.impl.worldgen.densityfunction.CeilDensityFunction");
             } catch (Throwable t) {
-                LOGGER.warn("Failed to bind to lithostitched dev.worldgen.lithostitched.impl.worldgen.densityfunction.CeilDensityFunction");
+                LOGGER.warn("Failed to bind to lithostitched dev.worldgen.lithostitched.impl.worldgen.densityfunction.CeilDensityFunction", t);
             }
         }
 

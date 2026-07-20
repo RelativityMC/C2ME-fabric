@@ -73,7 +73,7 @@ public class SelectBindings {
                 available = true;
                 LOGGER.info("Bound to lithostitched dev.worldgen.lithostitched.impl.worldgen.densityfunction.SelectDensityFunction");
             } catch (Throwable t) {
-                LOGGER.warn("Failed to bind to lithostitched dev.worldgen.lithostitched.impl.worldgen.densityfunction.SelectDensityFunction");
+                LOGGER.warn("Failed to bind to lithostitched dev.worldgen.lithostitched.impl.worldgen.densityfunction.SelectDensityFunction", t);
             }
         }
 

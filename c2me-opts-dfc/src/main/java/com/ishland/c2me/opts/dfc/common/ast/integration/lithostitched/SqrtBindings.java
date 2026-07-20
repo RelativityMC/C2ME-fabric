@@ -58,7 +58,7 @@ public class SqrtBindings {
                 available = true;
                 LOGGER.info("Bound to lithostitched dev.worldgen.lithostitched.impl.worldgen.densityfunction.SqrtDensityFunction");
             } catch (Throwable t) {
-                LOGGER.warn("Failed to bind to lithostitched dev.worldgen.lithostitched.impl.worldgen.densityfunction.SqrtDensityFunction");
+                LOGGER.warn("Failed to bind to lithostitched dev.worldgen.lithostitched.impl.worldgen.densityfunction.SqrtDensityFunction", t);
             }
         }
 

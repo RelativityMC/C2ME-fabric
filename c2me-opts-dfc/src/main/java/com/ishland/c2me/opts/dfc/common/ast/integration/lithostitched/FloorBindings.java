@@ -58,7 +58,7 @@ public class FloorBindings {
                 available = true;
                 LOGGER.info("Bound to lithostitched dev.worldgen.lithostitched.impl.worldgen.densityfunction.FloorDensityFunction");
             } catch (Throwable t) {
-                LOGGER.warn("Failed to bind to lithostitched dev.worldgen.lithostitched.impl.worldgen.densityfunction.FloorDensityFunction");
+                LOGGER.warn("Failed to bind to lithostitched dev.worldgen.lithostitched.impl.worldgen.densityfunction.FloorDensityFunction", t);
             }
         }
 
