@@ -64,7 +64,7 @@ public class ConfigClampBindings {
                 available = true;
                 LOGGER.info("Bound to tectonic dev.worldgen.tectonic.worldgen.densityfunction.ConfigClamp");
             } catch (Throwable t) {
-                LOGGER.warn("Failed to bind to tectonic dev.worldgen.tectonic.worldgen.densityfunction.ConfigClamp");
+                LOGGER.warn("Failed to bind to tectonic dev.worldgen.tectonic.worldgen.densityfunction.ConfigClamp", t);
             }
         }
 

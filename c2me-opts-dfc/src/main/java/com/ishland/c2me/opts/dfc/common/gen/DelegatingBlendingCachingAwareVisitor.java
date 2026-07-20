@@ -22,37 +22,46 @@
  * THE SOFTWARE.
  */
 
-package com.ishland.c2me.opts.dfc.mixin;
+package com.ishland.c2me.opts.dfc.common.gen;
 
 import com.ishland.c2me.opts.dfc.common.ducks.IBlendingAwareVisitor;
 import com.ishland.c2me.opts.dfc.common.ducks.ICompiledCachingAwareVisitor;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.CompiledEntry;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.internalapi.ArgumentVisitor;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 
-@Mixin(targets = "net/minecraft/world/gen/densityfunction/DensityFunction$Wrapper")
-public class MixinDensityFunctionVisitorWrapper implements IBlendingAwareVisitor, ICompiledCachingAwareVisitor {
+import java.util.Map;
+import java.util.Objects;
 
-    @Shadow
-    private DensityFunction.DensityFunctionVisitor field_1_6131;
+public class DelegatingBlendingCachingAwareVisitor implements IBlendingAwareVisitor, ICompiledCachingAwareVisitor, DensityFunction.DensityFunctionVisitor {
+
+    private final DensityFunction.DensityFunctionVisitor delegate;
+    private final Map<CompiledEntry, CompiledEntry> backingCache;
+    private final boolean blendingEnabled;
+
+    public DelegatingBlendingCachingAwareVisitor(DensityFunction.DensityFunctionVisitor delegate, Map<CompiledEntry, CompiledEntry> backingCache, boolean blendingEnabled) {
+        this.delegate = Objects.requireNonNull(delegate);
+        this.backingCache = Objects.requireNonNull(backingCache);
+        this.blendingEnabled = blendingEnabled;
+    }
+
+    @Override
+    public DensityFunction apply(DensityFunction densityFunction) {
+        return this.delegate.apply(densityFunction);
+    }
+
+    @Override
+    public DensityFunction.Noise apply(DensityFunction.Noise noiseDensityFunction) {
+        return this.delegate.apply(noiseDensityFunction);
+    }
 
     @Override
     public boolean c2me$isBlendingEnabled() {
-        if (this.field_1_6131 instanceof IBlendingAwareVisitor blendingAwareVisitor) {
-            return blendingAwareVisitor.c2me$isBlendingEnabled();
-        }
-
-        return false;
+        return this.blendingEnabled;
     }
 
     @Override
     public CompiledEntry c2me$visitIfAbsent(CompiledEntry entry, ArgumentVisitor visitor) {
-        if (this.field_1_6131 instanceof ICompiledCachingAwareVisitor cachingAwareVisitor) {
-            return cachingAwareVisitor.c2me$visitIfAbsent(entry, visitor);
-        }
-
-        return entry.newInstance(entry.getArgs(), visitor);
+        return this.backingCache.computeIfAbsent(entry, compiledEntry -> compiledEntry.newInstance(compiledEntry.getArgs(), visitor));
     }
 }

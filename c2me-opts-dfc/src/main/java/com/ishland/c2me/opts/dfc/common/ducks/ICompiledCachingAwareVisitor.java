@@ -22,14 +22,26 @@
  * THE SOFTWARE.
  */
 
-package com.ishland.c2me.opts.dfc.common.gen.jvm;
+package com.ishland.c2me.opts.dfc.common.ducks;
 
-import com.ishland.c2me.opts.dfc.common.ast.EvalType;
-import com.ishland.c2me.opts.dfc.common.gen.jvm.util.DfcObjectCache;
+import com.ishland.c2me.opts.dfc.common.gen.jvm.CompiledEntry;
+import com.ishland.c2me.opts.dfc.common.gen.jvm.internalapi.ArgumentVisitor;
+import net.minecraft.world.gen.densityfunction.DensityFunction;
 
-@FunctionalInterface
-public interface IMultiMethod {
+public interface ICompiledCachingAwareVisitor {
 
-    void evalMulti(double[] res, int[] x, int[] y, int[] z, EvalType type, DfcObjectCache dfcObjectCache);
+    CompiledEntry c2me$visitIfAbsent(CompiledEntry entry, ArgumentVisitor visitor);
+
+    public static ArgumentVisitor c2me$getArgumentVisitor(DensityFunction.DensityFunctionVisitor visitor) {
+        return next -> {
+            if (next instanceof DensityFunction df) {
+                return visitor.apply(df);
+            }
+            if (next instanceof DensityFunction.Noise noise) {
+                return visitor.apply(noise);
+            }
+            return next;
+        };
+    }
 
 }

@@ -22,35 +22,12 @@
  * THE SOFTWARE.
  */
 
-package com.ishland.c2me.opts.dfc.common.gen;
+package com.ishland.c2me.opts.dfc.common.gen.jvm.internalapi;
 
-import com.ishland.c2me.opts.dfc.common.ducks.IBlendingAwareVisitor;
-import net.minecraft.world.gen.densityfunction.DensityFunction;
+public interface ArgumentVisitor {
 
-import java.util.Objects;
+    public static final ArgumentVisitor IDENTITY = o -> o;
 
-public class DelegatingBlendingAwareVisitor implements IBlendingAwareVisitor, DensityFunction.DensityFunctionVisitor {
+    Object apply(Object operand);
 
-    private final DensityFunction.DensityFunctionVisitor delegate;
-    private final boolean blendingEnabled;
-
-    public DelegatingBlendingAwareVisitor(DensityFunction.DensityFunctionVisitor delegate, boolean blendingEnabled) {
-        this.delegate = Objects.requireNonNull(delegate);
-        this.blendingEnabled = blendingEnabled;
-    }
-
-    @Override
-    public DensityFunction apply(DensityFunction densityFunction) {
-        return this.delegate.apply(densityFunction);
-    }
-
-    @Override
-    public DensityFunction.Noise apply(DensityFunction.Noise noiseDensityFunction) {
-        return this.delegate.apply(noiseDensityFunction);
-    }
-
-    @Override
-    public boolean c2me$isBlendingEnabled() {
-        return this.blendingEnabled;
-    }
 }

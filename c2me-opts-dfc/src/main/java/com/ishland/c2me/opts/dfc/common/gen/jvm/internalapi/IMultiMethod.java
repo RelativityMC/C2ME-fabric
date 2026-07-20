@@ -22,14 +22,14 @@
  * THE SOFTWARE.
  */
 
-package com.ishland.c2me.opts.dfc.common.gen.jvm;
+package com.ishland.c2me.opts.dfc.common.gen.jvm.internalapi;
 
 import com.ishland.c2me.opts.dfc.common.ast.EvalType;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.util.DfcObjectCache;
 
 @FunctionalInterface
-public interface ISingleMethod {
+public interface IMultiMethod {
 
-    double evalSingle(int x, int y, int z, EvalType type, DfcObjectCache dfcObjectCache);
+    void evalMulti(double[] res, int[] x, int[] y, int[] z, EvalType type, DfcObjectCache dfcObjectCache);
 
 }

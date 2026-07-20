@@ -29,7 +29,8 @@ import com.ishland.c2me.opts.dfc.common.ducks.IDfcObjectCacheCapable;
 import com.ishland.c2me.opts.dfc.common.ducks.ICoordinatesFilling;
 import com.ishland.c2me.opts.dfc.common.ducks.IPreloadedCoordinates;
 import com.ishland.c2me.opts.dfc.common.ducks.NoiseRouterExtension;
-import com.ishland.c2me.opts.dfc.common.gen.DelegatingBlendingAwareVisitor;
+import com.ishland.c2me.opts.dfc.common.gen.DelegatingBlendingCachingAwareVisitor;
+import com.ishland.c2me.opts.dfc.common.gen.jvm.CompiledEntry;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.util.DfcObjectCache;
 import com.llamalad7.mixinextras.expression.Definition;
 import com.llamalad7.mixinextras.expression.Expression;
@@ -37,6 +38,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Share;
 import com.llamalad7.mixinextras.sugar.ref.LocalRef;
+import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
 import net.minecraft.world.gen.chunk.Blender;
 import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
@@ -54,6 +56,7 @@ import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 @Mixin(ChunkNoiseSampler.class)
@@ -90,7 +93,9 @@ public abstract class MixinChunkNoiseSampler implements IDfcObjectCacheCapable, 
     @Shadow
     @Final
     private Blender blender;
+    @Unique
     private final DfcObjectCache c2Me$dfcObjectCache = new DfcObjectCache.Impl();
+    private final Map<CompiledEntry, CompiledEntry> c2me$compiledEntryCache = new Reference2ReferenceOpenHashMap<>();
 
     @Override
     public DfcObjectCache c2me$getDfcObjectCache() {
@@ -165,8 +170,8 @@ public abstract class MixinChunkNoiseSampler implements IDfcObjectCacheCapable, 
     }
 
     @Unique
-    private @NotNull DelegatingBlendingAwareVisitor c2me$getDelegatingBlendingAwareVisitor(DensityFunction.DensityFunctionVisitor visitor) {
-        return new DelegatingBlendingAwareVisitor(visitor, !this.blender.isEmpty());
+    private @NotNull DelegatingBlendingCachingAwareVisitor c2me$getDelegatingBlendingAwareVisitor(DensityFunction.DensityFunctionVisitor visitor) {
+        return new DelegatingBlendingCachingAwareVisitor(visitor, this.c2me$compiledEntryCache, !this.blender.isEmpty());
     }
 
     @ModifyArg(method = {"<init>", "createMultiNoiseSampler"}, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/gen/densityfunction/DensityFunction;apply(Lnet/minecraft/world/gen/densityfunction/DensityFunction$DensityFunctionVisitor;)Lnet/minecraft/world/gen/densityfunction/DensityFunction;"), require = 7, expect = 7)
