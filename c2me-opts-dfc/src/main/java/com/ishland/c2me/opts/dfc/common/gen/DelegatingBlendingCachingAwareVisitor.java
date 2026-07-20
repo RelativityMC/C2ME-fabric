@@ -25,17 +25,23 @@
 package com.ishland.c2me.opts.dfc.common.gen;
 
 import com.ishland.c2me.opts.dfc.common.ducks.IBlendingAwareVisitor;
+import com.ishland.c2me.opts.dfc.common.ducks.ICompiledCachingAwareVisitor;
+import com.ishland.c2me.opts.dfc.common.gen.jvm.CompiledEntry;
+import com.ishland.c2me.opts.dfc.common.gen.jvm.internalapi.ArgumentVisitor;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
 
+import java.util.Map;
 import java.util.Objects;
 
-public class DelegatingBlendingAwareVisitor implements IBlendingAwareVisitor, DensityFunction.DensityFunctionVisitor {
+public class DelegatingBlendingCachingAwareVisitor implements IBlendingAwareVisitor, ICompiledCachingAwareVisitor, DensityFunction.DensityFunctionVisitor {
 
     private final DensityFunction.DensityFunctionVisitor delegate;
+    private final Map<CompiledEntry, CompiledEntry> backingCache;
     private final boolean blendingEnabled;
 
-    public DelegatingBlendingAwareVisitor(DensityFunction.DensityFunctionVisitor delegate, boolean blendingEnabled) {
+    public DelegatingBlendingCachingAwareVisitor(DensityFunction.DensityFunctionVisitor delegate, Map<CompiledEntry, CompiledEntry> backingCache, boolean blendingEnabled) {
         this.delegate = Objects.requireNonNull(delegate);
+        this.backingCache = Objects.requireNonNull(backingCache);
         this.blendingEnabled = blendingEnabled;
     }
 
@@ -52,5 +58,10 @@ public class DelegatingBlendingAwareVisitor implements IBlendingAwareVisitor, De
     @Override
     public boolean c2me$isBlendingEnabled() {
         return this.blendingEnabled;
+    }
+
+    @Override
+    public CompiledEntry c2me$visitIfAbsent(CompiledEntry entry, ArgumentVisitor visitor) {
+        return this.backingCache.computeIfAbsent(entry, compiledEntry -> compiledEntry.newInstance(compiledEntry.getArgs(), visitor));
     }
 }
