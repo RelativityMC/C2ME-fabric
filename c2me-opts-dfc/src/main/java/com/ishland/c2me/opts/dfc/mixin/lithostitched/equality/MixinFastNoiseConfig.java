@@ -31,11 +31,11 @@ import org.spongepowered.asm.mixin.Shadow;
 
 import java.util.Objects;
 
+import static com.ishland.c2me.opts.natives_math.common.integration.lithostitched.FNLUnsafeBindings.fnl;
+
 @Pseudo
 @Mixin(targets = "dev.worldgen.lithostitched.api.worldgen.densityfunction.fastnoise.FastNoiseConfig", remap = false)
 public class MixinFastNoiseConfig {
-
-    @Shadow @Final protected Object fnl;
 
     @Shadow @Final private float frequency;
 
@@ -46,13 +46,13 @@ public class MixinFastNoiseConfig {
         if (this == object) return true;
         if (object == null || getClass() != object.getClass()) return false;
         MixinFastNoiseConfig that = (MixinFastNoiseConfig) object;
-        return Objects.equals(fnl, that.fnl) && Float.compare(frequency, that.frequency) == 0 && Integer.compare(salt, that.salt) == 0;
+        return Objects.equals(fnl(this), fnl(that)) && Float.compare(frequency, that.frequency) == 0 && Integer.compare(salt, that.salt) == 0;
     }
 
     @Override
     public int hashCode() {
         int result = 1;
-        result = 31 * result + Objects.hashCode(fnl);
+        result = 31 * result + Objects.hashCode(fnl(this));
         result = 31 * result + Float.hashCode(frequency);
         result = 31 * result + Integer.hashCode(salt);
         return result;

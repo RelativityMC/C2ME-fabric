@@ -39,15 +39,6 @@ public interface IFNL {
     @Accessor("mFrequency")
     float getFrequency();
 
-    @Accessor("mNoiseType")
-    Object getNoiseType();
-
-    @Accessor("mRotationType3D")
-    Object getRotationType3D();
-
-    @Accessor("mFractalType")
-    Object getFractalType();
-
     @Accessor("mOctaves")
     int getOctaves();
 
@@ -63,22 +54,13 @@ public interface IFNL {
     @Accessor("mPingPongStrength")
     float getPingPongStrength();
 
-    @Accessor("mCellularDistanceFunction")
-    Object getCellularDistanceFunction();
-
-    @Accessor("mCellularReturnType")
-    Object getCellularReturnType();
-
     @Accessor("mCellularJitterModifier")
     float getCellularJitterModifier();
-
-    @Accessor("mDomainWarpType")
-    Object getDomainWarpType();
 
     @Accessor("mDomainWarpAmp")
     float getDomainWarpAmp();
 
-    @Invoker("sample")
-    double invokeSample(double x, double y, double z);
+    @Invoker("GetNoise")
+    float invokeGetNoise(double x, double y, double z);
 
 }
