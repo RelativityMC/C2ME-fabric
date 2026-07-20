@@ -22,12 +22,26 @@
  * THE SOFTWARE.
  */
 
-package com.ishland.c2me.opts.dfc.common.gen.jvm.internalapi;
+package com.ishland.c2me.opts.dfc.common.ducks;
 
-public interface ArgumentVisitor {
+import com.ishland.c2me.opts.dfc.common.gen.jvm.CompiledEntry;
+import com.ishland.c2me.opts.dfc.common.gen.jvm.internalapi.ArgumentVisitor;
+import net.minecraft.world.gen.densityfunction.DensityFunction;
 
-    public static final ArgumentVisitor IDENTITY = o -> o;
+public interface ICompiledCachingAwareVisitor {
 
-    Object apply(Object operand);
+    CompiledEntry c2me$visitIfAbsent(CompiledEntry entry, ArgumentVisitor visitor);
+
+    public static ArgumentVisitor c2me$getArgumentVisitor(DensityFunction.DensityFunctionVisitor visitor) {
+        return next -> {
+            if (next instanceof DensityFunction df) {
+                return visitor.apply(df);
+            }
+            if (next instanceof DensityFunction.Noise noise) {
+                return visitor.apply(noise);
+            }
+            return next;
+        };
+    }
 
 }

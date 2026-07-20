@@ -26,7 +26,7 @@ package com.ishland.c2me.opts.dfc.common.gen.jvm;
 
 import com.google.common.base.Suppliers;
 import com.ishland.c2me.opts.dfc.common.ducks.IBlendingAwareVisitor;
-import com.ishland.c2me.opts.dfc.common.ducks.IFastCacheLike;
+import com.ishland.c2me.opts.dfc.common.ducks.ICompiledCachingAwareVisitor;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.internalapi.IMultiMethod;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.internalapi.ISingleMethod;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
@@ -92,19 +92,13 @@ public class CompiledDensityFunction extends AbstractCompiledDensityFunction {
             return densityFunction != null ? visitor.apply(densityFunction) : null;
         }) : null;
         CompiledDensityFunction function = new CompiledDensityFunction(this.compiledIndex, fallback);
-        function.initFrom(this.compiledEntry.newInstance(compiledEntry.getArgs(), next -> {
-            if (next instanceof DensityFunction df) {
-                if (next instanceof IFastCacheLike cacheLike) {
-                    return visitor.apply(df);
-                } else {
-                    return df.apply(visitor);
-                }
-            }
-            if (next instanceof Noise noise) {
-                return visitor.apply(noise);
-            }
-            return next;
-        }));
+        CompiledEntry initializedEntry;
+        if (visitor instanceof ICompiledCachingAwareVisitor compiledCachingAwareVisitor) {
+            initializedEntry = compiledCachingAwareVisitor.c2me$visitIfAbsent(compiledEntry, ICompiledCachingAwareVisitor.c2me$getArgumentVisitor(visitor));
+        } else {
+            initializedEntry = this.compiledEntry.newInstance(compiledEntry.getArgs(), ICompiledCachingAwareVisitor.c2me$getArgumentVisitor(visitor));
+        }
+        function.initFrom(initializedEntry);
         return function;
     }
 
