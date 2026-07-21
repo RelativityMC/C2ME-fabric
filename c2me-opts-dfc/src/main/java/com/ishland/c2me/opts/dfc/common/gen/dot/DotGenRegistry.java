@@ -258,12 +258,39 @@ public class DotGenRegistry {
                 (DotEmitter<SelectNode>) (node, context, builder) -> {
                     builder
                             .boxShape()
-                            .label("Select\\nminima=" + Arrays.toString(node.minima) + "\\nmaxima=" + Arrays.toString(node.maxima));
+                            .label("Select");
+
+                    DotGen.Context.Builder tableBuilder = context.createExtraBuilder();
+
+                    StringBuilder table = new StringBuilder();
+                    table.append('<');
+                    table.append("<TABLE>");
+                    table.append("<TR><TD>idx</TD><TD>minima</TD><TD>maxima</TD><TD>functions</TD></TR>");
+
                     AstNode[] functions = node.functions;
                     for (int i = 0, functionsLength = functions.length; i < functionsLength; i++) {
+                        table.append("<TR>")
+                                .append("<TD>").append(i).append("</TD>")
+                                .append("<TD>").append(i < node.minima.length ? node.minima[i] : "").append("</TD>")
+                                .append("<TD>").append(i < node.maxima.length ? node.maxima[i] : "").append("</TD>");
+
                         AstNode function = functions[i];
-                        builder.edge(context.generate(function)).label(String.valueOf(i)).finish();
+                        int childId = context.generate(function);
+                        tableBuilder.edge(childId).label(String.format("children[%d]", i)).finish();
+                        table.append("<TD>").append("children.id=").append(DotGen.Context.base26(childId)).append("</TD>");
+                        table.append("</TR>");
                     }
+
+                    table.append("</TABLE>");
+                    table.append(">");
+
+                    int tableId = tableBuilder
+                            .boxShape()
+                            .label(table.toString())
+                            .build();
+
+                    builder.edge(tableId).label("SelectTable").finish();
+
                     return builder.build();
                 }
         );
