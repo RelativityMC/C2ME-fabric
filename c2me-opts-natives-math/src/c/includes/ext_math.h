@@ -1146,7 +1146,7 @@ typedef const struct fnl_state {
     float domain_warp_amp;
 } fnl_state;
 
-__attribute__((aligned(16))) static const float GRADIENTS_3D[] = {
+__attribute__((aligned(64))) static const float GRADIENTS_3D[] = {
     0, 1, 1, 0,  0,-1, 1, 0,  0, 1,-1, 0,  0,-1,-1, 0,
     1, 0, 1, 0, -1, 0, 1, 0,  1, 0,-1, 0, -1, 0,-1, 0,
     1, 1, 0, 0, -1, 1, 0, 0,  1,-1, 0, 0, -1,-1, 0, 0,
@@ -1165,7 +1165,7 @@ __attribute__((aligned(16))) static const float GRADIENTS_3D[] = {
     1, 1, 0, 0,  0,-1, 1, 0, -1, 1, 0, 0,  0,-1,-1, 0
 };
 
-__attribute__((aligned(16))) static const float RAND_VECS_3D[] = {
+__attribute__((aligned(64))) static const float RAND_VECS_3D[] = {
     -0.7292736885f, -0.6618439697f, 0.1735581948f, 0, 0.790292081f, -0.5480887466f, -0.2739291014f, 0, 0.7217578935f, 0.6226212466f, -0.3023380997f, 0, 0.565683137f, -0.8208298145f, -0.0790000257f, 0, 0.760049034f, -0.5555979497f, -0.3370999617f, 0, 0.3713945616f, 0.5011264475f, 0.7816254623f, 0, -0.1277062463f, -0.4254438999f, -0.8959289049f, 0, -0.2881560924f, -0.5815838982f, 0.7607405838f, 0,
     0.5849561111f, -0.662820239f, -0.4674352136f, 0, 0.3307171178f, 0.0391653737f, 0.94291689f, 0, 0.8712121778f, -0.4113374369f, -0.2679381538f, 0, 0.580981015f, 0.7021915846f, 0.4115677815f, 0, 0.503756873f, 0.6330056931f, -0.5878203852f, 0, 0.4493712205f, 0.601390195f, 0.6606022552f, 0, -0.6878403724f, 0.09018890807f, -0.7202371714f, 0, -0.5958956522f, -0.6469350577f, 0.475797649f, 0,
     -0.5127052122f, 0.1946921978f, -0.8361987284f, 0, -0.9911507142f, -0.05410276466f, -0.1212153153f, 0, -0.2149721042f, 0.9720882117f, -0.09397607749f, 0, -0.7518650936f, -0.5428057603f, 0.3742469607f, 0, 0.5237068895f, 0.8516377189f, -0.02107817834f, 0, 0.6333504779f, 0.1926167129f, -0.7495104896f, 0, -0.06788241606f, 0.3998305789f, 0.9140719259f, 0, -0.5538628599f, -0.4729896695f, -0.6852128902f, 0,
@@ -1885,7 +1885,7 @@ static inline __attribute__((const)) float _fnlGenFractalPingPong3D(const fnl_st
     return sum;
 }
 
-static inline float fnlGetNoise3D(const fnl_state *const state, double x, double y, double z) {
+static inline __attribute__((const)) float fnlGetNoise3D(const fnl_state *const state, double x, double y, double z) {
     _fnlTransformNoiseCoordinate3D(state, &x, &y, &z);
 
     // Select a noise type
