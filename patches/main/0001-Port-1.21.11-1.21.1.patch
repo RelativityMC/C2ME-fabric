@@ -1062,7 +1062,7 @@ index 7130ef36..53b12a8b 100644
      "MixinMinecraftServer",
      "MixinPlayerManager",
 diff --git a/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/compiler/OpenCLCGen.java b/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/compiler/OpenCLCGen.java
-index 622c8bbc..938ddc69 100644
+index b1bb770b..ac91c3a1 100644
 --- a/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/compiler/OpenCLCGen.java
 +++ b/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/compiler/OpenCLCGen.java
 @@ -26,6 +26,7 @@ import com.ishland.c2me.opts.dfc.common.ast.misc.CacheLikeNode;
@@ -1082,7 +1082,7 @@ index 622c8bbc..938ddc69 100644
          dfs.put("final_density", optimizeCached(noiseRouter.finalDensity(), optoCache));
          dfs.put("vein_toggle", optimizeCached(noiseRouter.veinToggle(), optoCache));
          dfs.put("vein_ridged", optimizeCached(noiseRouter.veinRidged(), optoCache));
-@@ -141,6 +142,18 @@ public class OpenCLCGen {
+@@ -158,6 +159,18 @@ public class OpenCLCGen {
          );
      }
  
@@ -1555,18 +1555,18 @@ index fecf2967..66b60d43 100644
          checkHardLimit();
      }
 diff --git a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/ast/McToAst.java b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/ast/McToAst.java
-index c92752e0..10a8e8a3 100644
+index 271e5a23..cf74be10 100644
 --- a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/ast/McToAst.java
 +++ b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/ast/McToAst.java
-@@ -54,6 +54,7 @@ import com.ishland.c2me.opts.dfc.common.ast.unary.NegMulNode;
+@@ -53,6 +53,7 @@ import com.ishland.c2me.opts.dfc.common.ast.unary.NegMulNode;
  import com.ishland.c2me.opts.dfc.common.ast.unary.SquareNode;
  import com.ishland.c2me.opts.dfc.common.ast.unary.SqueezeNode;
  import com.ishland.c2me.opts.dfc.common.ducks.IFastCacheLike;
 +import com.ishland.c2me.opts.dfc.common.gen.backports.FindTopSurface;
- import com.ishland.c2me.opts.dfc.common.gen.jvm.BytecodeGen;
- import com.ishland.c2me.opts.dfc.common.gen.jvm.CompiledDensityFunction;
  import net.minecraft.util.math.noise.InterpolatedNoiseSampler;
-@@ -110,7 +111,7 @@ public class McToAst {
+ import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
+ import net.minecraft.world.gen.densityfunction.DensityFunction;
+@@ -113,7 +114,7 @@ public class McToAst {
                  case CUBE -> new CubeNode(toAst(f.input()));
                  case HALF_NEGATIVE -> new NegMulNode(toAst(f.input()), 0.5);
                  case QUARTER_NEGATIVE -> new NegMulNode(toAst(f.input()), 0.25);
@@ -1574,16 +1574,16 @@ index c92752e0..10a8e8a3 100644
 +//                case INVERT -> new DivNode(new ConstantNode(1.0), toAst(f.input()));
                  case SQUEEZE -> new SqueezeNode(toAst(f.input()));
              };
-             case DensityFunctionTypes.RangeChoice f -> new RangeChoiceNode(toAst(f.input()), f.minInclusive(), f.maxExclusive(), toAst(f.whenInRange()), toAst(f.whenOutOfRange()));
-@@ -164,7 +165,7 @@ public class McToAst {
-             case DensityFunctionTypes.YClampedGradient f -> new YClampedGradientNode(f.fromY(), f.toY(), f.fromValue(), f.toValue());
-             case DensityFunctionTypes.WeirdScaledSampler f -> new DFTWeirdScaledSamplerNode(toAst(f.input()), f.noise(), f.rarityValueMapper());
-             case DensityFunctionTypes.Spline f -> new SplineAstNode(f.spline());
--            case DensityFunctionTypes.FindTopSurface f -> new FindTopSurfaceNode(toAst(f.density()), toAst(f.upperBound()), new ConstantNode(f.lowerBound()), f.cellHeight());
-+            case FindTopSurface f -> new FindTopSurfaceNode(toAst(f.delegate()), toAst(f.upperBound()), new ConstantNode(f.lowerBound()), f.cellHeight());
+         });
+@@ -182,7 +183,7 @@ public class McToAst {
+         REGISTRY.registerExactMatch(DensityFunctionTypes.YClampedGradient.class, f -> new YClampedGradientNode(f.fromY(), f.toY(), f.fromValue(), f.toValue()));
+         REGISTRY.registerExactMatch(DensityFunctionTypes.WeirdScaledSampler.class, f -> new DFTWeirdScaledSamplerNode(toAst(f.input()), f.noise(), f.rarityValueMapper()));
+         REGISTRY.registerExactMatch(DensityFunctionTypes.Spline.class, f -> new SplineAstNode(f.spline()));
+-        REGISTRY.registerExactMatch(DensityFunctionTypes.FindTopSurface.class, f -> new FindTopSurfaceNode(toAst(f.density()), toAst(f.upperBound()), new ConstantNode(f.lowerBound()), f.cellHeight()));
++        REGISTRY.registerExactMatch(FindTopSurface.class, f -> new FindTopSurfaceNode(toAst(f.delegate()), toAst(f.upperBound()), new ConstantNode(f.lowerBound()), f.cellHeight()));
  
-             // delegate nodes that have specialized OpenCL gen
-             case DensityFunctionTypes.EndIslands f -> new EndIslandsNode(f);
+         // delegate nodes that have specialized OpenCL gen
+         REGISTRY.registerExactMatch(DensityFunctionTypes.EndIslands.class, EndIslandsNode::new);
 diff --git a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/backports/FindTopSurface.java b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/backports/FindTopSurface.java
 new file mode 100644
 index 00000000..ad9a6a7e
@@ -1708,18 +1708,18 @@ index e189f936..d97d3a47 100644
                  System.out.println("partial flat cache hit");
                  return false; // partial hit possible
 diff --git a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/mixin/MixinNoiseConfig.java b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/mixin/MixinNoiseConfig.java
-index f67f42b5..3c15f06d 100644
+index 1f78873d..90daa6db 100644
 --- a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/mixin/MixinNoiseConfig.java
 +++ b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/mixin/MixinNoiseConfig.java
-@@ -74,7 +74,7 @@ public class MixinNoiseConfig {
-                 BytecodeGen.compile("erosion", this.noiseRouter.erosion(), optoCache, tempCache),
-                 BytecodeGen.compile("depth", this.noiseRouter.depth(), optoCache, tempCache),
-                 BytecodeGen.compile("ridges", this.noiseRouter.ridges(), optoCache, tempCache),
--                BytecodeGen.compile("preliminary_surface_level", this.noiseRouter.preliminarySurfaceLevel(), optoCache, tempCache),
-+                BytecodeGen.compile("initial_density_without_jaggedness", this.noiseRouter.initialDensityWithoutJaggedness(), optoCache, tempCache),
-                 BytecodeGen.compile("final_density", this.noiseRouter.finalDensity(), optoCache, tempCache),
-                 BytecodeGen.compile("vein_toggle", this.noiseRouter.veinToggle(), optoCache, tempCache),
-                 BytecodeGen.compile("vein_ridged", this.noiseRouter.veinRidged(), optoCache, tempCache),
+@@ -75,7 +75,7 @@ public class MixinNoiseConfig {
+                 genContext.compileDelayed("erosion", this.noiseRouter.erosion()),
+                 genContext.compileDelayed("depth", this.noiseRouter.depth()),
+                 genContext.compileDelayed("ridges", this.noiseRouter.ridges()),
+-                genContext.compileDelayed("preliminary_surface_level", this.noiseRouter.preliminarySurfaceLevel()),
++                genContext.compileDelayed("initial_density_without_jaggedness", this.noiseRouter.initialDensityWithoutJaggedness()),
+                 genContext.compileDelayed("final_density", this.noiseRouter.finalDensity()),
+                 genContext.compileDelayed("vein_toggle", this.noiseRouter.veinToggle()),
+                 genContext.compileDelayed("vein_ridged", this.noiseRouter.veinRidged()),
 diff --git a/c2me-opts-scheduling/src/main/java/com/ishland/c2me/opts/scheduling/mixin/idle_tasks/autosave/disable_vanilla_mid_tick_autosave/MixinThreadedAnvilChunkStorage.java b/c2me-opts-scheduling/src/main/java/com/ishland/c2me/opts/scheduling/mixin/idle_tasks/autosave/disable_vanilla_mid_tick_autosave/MixinThreadedAnvilChunkStorage.java
 index 988144f8..f8f9d7aa 100644
 --- a/c2me-opts-scheduling/src/main/java/com/ishland/c2me/opts/scheduling/mixin/idle_tasks/autosave/disable_vanilla_mid_tick_autosave/MixinThreadedAnvilChunkStorage.java
