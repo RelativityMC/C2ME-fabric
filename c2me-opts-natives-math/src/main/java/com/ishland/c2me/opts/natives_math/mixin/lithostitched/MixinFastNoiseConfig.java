@@ -52,8 +52,8 @@ public class MixinFastNoiseConfig implements INativePointer, IFNLState {
     @Unique
     private long c2me$statePtr;
 
-    @Inject(method = "<init>", at = @At("RETURN"))
-    private void postInit(CallbackInfo ci) {
+    @Inject(method = "bind", at = @At("RETURN"))
+    private void postInit(long seed, CallbackInfo ci) {
         this.c2me$state = new BindingsTemplate.FNLState(
                 ((IFNL) fnl(this)).getSeed(),
                 ((IFNL) fnl(this)).getFrequency(),
@@ -70,7 +70,8 @@ public class MixinFastNoiseConfig implements INativePointer, IFNLState {
                 ((IFNL) fnl(this)).getCellularJitterModifier(),
                 ((Enum<?>) field(this, "mDomainWarpType", true)).ordinal(),
                 ((IFNL) fnl(this)).getDomainWarpAmp()
-        );        this.c2me$stateSegment = BindingsTemplate.fnl_state$create(this.c2me$arena, this.c2me$state);
+        );
+        this.c2me$stateSegment = BindingsTemplate.fnl_state$create(this.c2me$arena, this.c2me$state);
         this.c2me$statePtr = this.c2me$stateSegment.address();
     }
 
