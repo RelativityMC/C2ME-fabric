@@ -126,7 +126,24 @@ public class OpenCLCGen {
         GeneratedCLSource original = context.build();
         String name = "DfcCompiled_" + original.getOrdinal();
         Path path = GenDumper.dumpCL(name, original.getGeneratedSource().getBytes(StandardCharsets.UTF_8));
-        GenDumper.dumpDot(name, path, dfs);
+        GenDumper.dumpDot(name, path, dfs, o -> {
+            StringBuilder builder = new StringBuilder();
+
+            String method = context.methods.get(o);
+            if (method != null) builder.append(method).append(',');
+
+            String splineMethod = context.splineMethods.get(o);
+            if (splineMethod != null) builder.append(splineMethod).append(',');
+
+            String splineMethodCache1 = context.splineMethodsCache1.get(o);
+            if (splineMethodCache1 != null) builder.append(splineMethodCache1).append(',');
+
+            if (builder.isEmpty()) {
+                return null;
+            } else {
+                return builder.delete(builder.length() - 1, builder.length()).toString();
+            }
+        });
         return new GeneratedCLSource(
                 original.getOrdinal(),
                 original.getGeneratedSource(),
