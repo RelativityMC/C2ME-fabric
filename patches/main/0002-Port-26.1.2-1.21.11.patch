@@ -5,7 +5,7 @@ Subject: [PATCH] Port 26.1.2 -> 1.21.11
 
 
 diff --git a/build.gradle b/build.gradle
-index 0cc35632..9cf42b39 100644
+index 27aba1a0..515b5eee 100644
 --- a/build.gradle
 +++ b/build.gradle
 @@ -29,8 +29,8 @@ configure(allprojects) {
@@ -781,28 +781,6 @@ index 86d308b0..ec1a4c1e 100644
      private static  <K, V> HashMap<K, V> redirectNewHashMap() {
          return null; // avoid double map creation
      }
-diff --git a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/dot/DotGen.java b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/dot/DotGen.java
-index a1530ac8..69e6da1c 100644
---- a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/dot/DotGen.java
-+++ b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/gen/dot/DotGen.java
-@@ -297,7 +297,7 @@ public class DotGen {
-                 builder = new Builder.Impl(counter++);
-                 constants.add(builder);
-             } else {
--                builder = allocatedNodes.computeIfAbsent(node, _ -> new Builder.Impl(counter++));
-+                builder = allocatedNodes.computeIfAbsent(node, unused -> new Builder.Impl(counter++));
-                 if (builder.frozen) {
-                     return builder.id;
-                 }
-@@ -310,7 +310,7 @@ public class DotGen {
-          */
-         public Builder getSplineBuilder(Spline<DensityFunctionTypes.Spline.SplinePos, DensityFunctionTypes.Spline.DensityFunctionWrapper> spline) {
-             final Builder.Impl builder;
--            builder = allocatedSplines.computeIfAbsent(spline, _ -> new Builder.Impl(counter++));
-+            builder = allocatedSplines.computeIfAbsent(spline, unused -> new Builder.Impl(counter++));
-             return builder;
-         }
- 
 diff --git a/c2me-opts-natives-math/build.gradle b/c2me-opts-natives-math/build.gradle
 index 8581b449..e41e2d30 100644
 --- a/c2me-opts-natives-math/build.gradle
