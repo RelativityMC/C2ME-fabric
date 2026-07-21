@@ -31,7 +31,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.random.Random;
 import net.minecraft.util.math.random.RandomSplitter;
-import net.minecraft.world.biome.source.util.VanillaBiomeParameters;
 import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.gen.chunk.AquiferSampler;
 import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
@@ -125,7 +124,7 @@ public abstract class MixinAquiferSamplerImpl {
     @Shadow @Final private int maxY;
     @Shadow
     @Final
-    private DensityFunction field_1_9016;
+    private DensityFunction exclusion;
 
     @Shadow
     protected abstract int adjustEstimatedHighestSurfaceLevel(int estimatedHighestSurfaceLevel);
@@ -394,7 +393,7 @@ public abstract class MixinAquiferSamplerImpl {
         DensityFunction.UnblendedNoisePos unblendedNoisePos = new DensityFunction.UnblendedNoisePos(blockX, blockY, blockZ);
         double d;
         double e;
-        if (this.field_1_9016.sample(unblendedNoisePos) > (double)0.0F) {
+        if (this.exclusion.sample(unblendedNoisePos) > (double)0.0F) {
             d = -1.0;
             e = -1.0;
         } else {
