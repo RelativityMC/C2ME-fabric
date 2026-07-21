@@ -26,6 +26,7 @@ package com.ishland.c2me.opts.natives_math.mixin;
 
 import com.ishland.c2me.opts.natives_math.common.Bindings;
 import com.ishland.c2me.opts.natives_math.common.BindingsTemplate;
+import com.ishland.c2me.opts.natives_math.common.TrackingVH;
 import com.ishland.c2me.opts.natives_math.common.ducks.INativePointer;
 import net.minecraft.util.math.noise.DoublePerlinNoiseSampler;
 import net.minecraft.util.math.noise.OctavePerlinNoiseSampler;
@@ -44,16 +45,31 @@ public class MixinDoublePerlinNoiseSampler implements INativePointer {
     @Shadow @Final private OctavePerlinNoiseSampler firstSampler;
     @Shadow @Final private OctavePerlinNoiseSampler secondSampler;
     @Unique
-    private final Arena c2me$arena = Arena.ofAuto();
+    private Arena c2me$arena = null;
     @Unique
     private MemorySegment c2me$samplerData = null;
     @Unique
     private long c2me$samplerDataPtr;
 
+    // see TrackingVH
+    @Unique
+    public int c2me$sampledCount;
+
     @Inject(method = "<init>", at = @At("RETURN"))
     private void postInit(CallbackInfo ci) {
-        this.c2me$samplerData = BindingsTemplate.double_octave_sampler_data$create(this.c2me$arena, this.firstSampler, this.secondSampler, this.amplitude, false);
-        this.c2me$samplerDataPtr = this.c2me$samplerData.address();
+        this.c2me$sampledCount = 0;
+    }
+
+    @Unique
+    private void c2me$profileInitPointers() {
+        if (this.c2me$arena == null && (int) TrackingVH.VH_DoublePerlinNoiseSampler.get((DoublePerlinNoiseSampler) (Object) this) <= TrackingVH.THRESHOLD) {
+            if ((int) TrackingVH.VH_DoublePerlinNoiseSampler.getAndAdd((DoublePerlinNoiseSampler) (Object) this, 1) == TrackingVH.THRESHOLD) {
+//                new Throwable(String.format("Promoting DoublePerlinNoiseSampler %d to native", System.identityHashCode(this))).printStackTrace();
+                this.c2me$arena = Arena.ofAuto();
+                this.c2me$samplerData = BindingsTemplate.double_octave_sampler_data$create(this.c2me$arena, this.firstSampler, this.secondSampler, this.amplitude, false);
+                this.c2me$samplerDataPtr = this.c2me$samplerData.address();
+            }
+        }
     }
 
     /**
@@ -62,9 +78,11 @@ public class MixinDoublePerlinNoiseSampler implements INativePointer {
      */
     @Overwrite
     public double sample(double x, double y, double z) {
-        if (this.c2me$samplerDataPtr != 0L) {
-            return Bindings.c2me_natives_noise_perlin_double(this.c2me$samplerDataPtr, x, y, z);
+        long c2me$samplerDataPtr1 = this.c2me$samplerDataPtr;
+        if (c2me$samplerDataPtr1 != 0L) {
+            return Bindings.c2me_natives_noise_perlin_double(c2me$samplerDataPtr1, x, y, z);
         } else {
+            this.c2me$profileInitPointers();
             double d = x * 1.0181268882175227;
             double e = y * 1.0181268882175227;
             double f = z * 1.0181268882175227;
