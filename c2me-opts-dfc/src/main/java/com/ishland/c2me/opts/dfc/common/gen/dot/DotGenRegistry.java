@@ -150,13 +150,46 @@ public class DotGenRegistry {
                 (DotEmitter<IntervalSelectNode>) (node, context, builder) -> {
                     builder
                             .boxShape()
-                            .label("IntervalSelect\\nthresholds=" + Arrays.toString(node.thresholds));
+                            .label("IntervalSelect");
+
+                    DotGen.Context.Builder tableBuilder = context.createExtraBuilder();
+
+                    StringBuilder table = new StringBuilder();
+                    table.append('<');
+                    table.append("<TABLE>");
+                    table.append("<TR><TD>idx</TD><TD>thresholds</TD><TD>functions</TD></TR>");
 
                     AstNode[] functions = node.functions;
                     for (int i = 0, functionsLength = functions.length; i < functionsLength; i++) {
+                        table.append("<TR>")
+                                .append("<TD>").append(i).append("</TD>")
+                                .append("<TD>").append("</TD>");
+
                         AstNode function = functions[i];
-                        builder.edge(context.generate(function)).label(String.valueOf(i)).finish();
+                        int childId = context.generate(function);
+                        tableBuilder.edge(childId).label(String.format("children[%d]", i)).finish();
+                        table.append("<TD>").append("children.id=").append(DotGen.Context.base26(childId)).append("</TD>");
+                        table.append("</TR>");
+
+                        if (i < functionsLength - 1) {
+                            table.append("<TR>")
+                                    .append("<TD>").append(i).append("</TD>")
+                                    .append("<TD>").append(node.thresholds[i]).append("</TD>")
+                                    .append("<TD>").append("</TD>");
+                            table.append("</TR>");
+                        }
                     }
+
+                    table.append("</TABLE>");
+                    table.append(">");
+
+                    int tableId = tableBuilder
+                            .boxShape()
+                            .label(table.toString())
+                            .build();
+
+                    builder.edge(tableId).label("IntervalSelectTable").finish();
+
                     return builder.build();
                 }
         );
