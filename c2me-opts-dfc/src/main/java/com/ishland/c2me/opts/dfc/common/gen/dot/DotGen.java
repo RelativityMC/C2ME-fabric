@@ -26,6 +26,7 @@ package com.ishland.c2me.opts.dfc.common.gen.dot;
 
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantNode;
+import com.ishland.c2me.opts.dfc.common.ast.misc.CoordinateNode;
 import it.unimi.dsi.fastutil.objects.Object2ReferenceOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
 import net.minecraft.util.math.Spline;
@@ -293,7 +294,7 @@ public class DotGen {
 
         public int generate(AstNode node) {
             final Builder.Impl builder;
-            if (node instanceof ConstantNode) {
+            if (node instanceof ConstantNode || node instanceof CoordinateNode) {
                 builder = new Builder.Impl(counter++);
                 constants.add(builder);
             } else {
