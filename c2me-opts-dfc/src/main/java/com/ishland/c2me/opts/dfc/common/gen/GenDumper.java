@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.function.Function;
 
 public class GenDumper {
 
@@ -67,10 +68,10 @@ public class GenDumper {
         return outputFile.getAbsoluteFile().toPath();
     }
 
-    public static void dumpDot(String name, Path primary, Map<String, OptoPasses.AstPair> roots) {
+    public static void dumpDot(String name, Path primary, Map<String, OptoPasses.AstPair> roots, Function<Object, String> auxNameProvider) {
         // unoptimized
         {
-            DotGen.Context ctx = new DotGen.Context();
+            DotGen.Context ctx = new DotGen.Context(null);
             DotGen.Context.Builder rootNode = ctx.createExtraBuilder();
             rootNode.boxShape().label("Start");
             for (Map.Entry<String, OptoPasses.AstPair> entry : roots.entrySet()) {
@@ -92,7 +93,7 @@ public class GenDumper {
 
         // optimized
         {
-            DotGen.Context ctx = new DotGen.Context();
+            DotGen.Context ctx = new DotGen.Context(auxNameProvider);
             DotGen.Context.Builder rootNode = ctx.createExtraBuilder();
             rootNode.boxShape().label("Start");
             for (Map.Entry<String, OptoPasses.AstPair> entry : roots.entrySet()) {
