@@ -24,6 +24,7 @@
 
 package com.ishland.c2me.opts.natives_math.common;
 
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.util.math.noise.DoublePerlinNoiseSampler;
 
 import java.lang.invoke.MethodHandles;
@@ -34,12 +35,20 @@ public class TrackingVH {
     public static final int THRESHOLD = 65536;
 
     public static final VarHandle VH_DoublePerlinNoiseSampler;
+    public static final VarHandle VH_FastNoiseConfig;
 
     static {
         try {
             VH_DoublePerlinNoiseSampler = MethodHandles.lookup()
                     .findVarHandle(DoublePerlinNoiseSampler.class, "c2me$sampledCount", int.class);
-        } catch (NoSuchFieldException | IllegalAccessException e) {
+            if (FabricLoader.getInstance().isModLoaded("lithostitched")) {
+                Class<?> class_FastNoiseConfig = Class.forName("dev.worldgen.lithostitched.api.worldgen.densityfunction.fastnoise.FastNoiseConfig");
+                VH_FastNoiseConfig = MethodHandles.lookup()
+                        .findVarHandle(class_FastNoiseConfig, "c2me$sampledCount", int.class);
+            } else  {
+                VH_FastNoiseConfig = null;
+            }
+        } catch (NoSuchFieldException | IllegalAccessException | ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
     }

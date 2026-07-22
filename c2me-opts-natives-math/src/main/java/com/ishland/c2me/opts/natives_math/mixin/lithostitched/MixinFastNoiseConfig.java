@@ -27,8 +27,10 @@ package com.ishland.c2me.opts.natives_math.mixin.lithostitched;
 import com.ishland.c2me.base.mixin.access.lithostitched.IFNL;
 import com.ishland.c2me.opts.natives_math.common.Bindings;
 import com.ishland.c2me.opts.natives_math.common.BindingsTemplate;
+import com.ishland.c2me.opts.natives_math.common.TrackingVH;
 import com.ishland.c2me.opts.natives_math.common.ducks.IFNLState;
 import com.ishland.c2me.opts.natives_math.common.ducks.INativePointer;
+import net.minecraft.util.math.noise.DoublePerlinNoiseSampler;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -44,7 +46,7 @@ import static com.ishland.c2me.opts.natives_math.common.integration.lithostitche
 public class MixinFastNoiseConfig implements INativePointer, IFNLState {
 
     @Unique
-    private final Arena c2me$arena = Arena.ofAuto();
+    private Arena c2me$arena;
     @Unique
     private BindingsTemplate.FNLState c2me$state = null;
     @Unique
@@ -52,27 +54,42 @@ public class MixinFastNoiseConfig implements INativePointer, IFNLState {
     @Unique
     private long c2me$statePtr;
 
-    @Inject(method = "bind", at = @At("RETURN"))
-    private void postInit(long seed, CallbackInfo ci) {
-        this.c2me$state = new BindingsTemplate.FNLState(
-                ((IFNL) fnl(this)).getSeed(),
-                ((IFNL) fnl(this)).getFrequency(),
-                ((Enum<?>) field(this, "mNoiseType", true)).ordinal(),
-                ((Enum<?>) field(this, "mRotationType3D", true)).ordinal(),
-                ((Enum<?>) field(this, "mFractalType", true)).ordinal(),
-                ((IFNL) fnl(this)).getOctaves(),
-                ((IFNL) fnl(this)).getLacunarity(),
-                ((IFNL) fnl(this)).getGain(),
-                ((IFNL) fnl(this)).getWeightedStrength(),
-                ((IFNL) fnl(this)).getPingPongStrength(),
-                ((Enum<?>) field(this, "mCellularDistanceFunction", true)).ordinal(),
-                ((Enum<?>) field(this, "mCellularReturnType", true)).ordinal(),
-                ((IFNL) fnl(this)).getCellularJitterModifier(),
-                ((Enum<?>) field(this, "mDomainWarpType", true)).ordinal(),
-                ((IFNL) fnl(this)).getDomainWarpAmp()
-        );
-        this.c2me$stateSegment = BindingsTemplate.fnl_state$create(this.c2me$arena, this.c2me$state);
-        this.c2me$statePtr = this.c2me$stateSegment.address();
+    // see TrackingVH
+    @Unique
+    public int c2me$sampledCount;
+
+    @Inject(method = "<init>", at = @At("RETURN"))
+    private void postInit(CallbackInfo ci) {
+        this.c2me$sampledCount = 0;
+    }
+
+    @Unique
+    private void c2me$profileInitPointers() {
+        if (this.c2me$arena == null && (int) TrackingVH.VH_FastNoiseConfig.get((DoublePerlinNoiseSampler) (Object) this) <= TrackingVH.THRESHOLD) {
+            if ((int) TrackingVH.VH_FastNoiseConfig.getAndAdd((DoublePerlinNoiseSampler) (Object) this, 1) == TrackingVH.THRESHOLD) {
+//                new Throwable(String.format("Promoting DoublePerlinNoiseSampler %d to native", System.identityHashCode(this))).printStackTrace();
+                this.c2me$arena = Arena.ofAuto();
+                this.c2me$state = new BindingsTemplate.FNLState(
+                        ((IFNL) fnl(this)).getSeed(),
+                        ((IFNL) fnl(this)).getFrequency(),
+                        ((Enum<?>) field(this, "mNoiseType", true)).ordinal(),
+                        ((Enum<?>) field(this, "mRotationType3D", true)).ordinal(),
+                        ((Enum<?>) field(this, "mFractalType", true)).ordinal(),
+                        ((IFNL) fnl(this)).getOctaves(),
+                        ((IFNL) fnl(this)).getLacunarity(),
+                        ((IFNL) fnl(this)).getGain(),
+                        ((IFNL) fnl(this)).getWeightedStrength(),
+                        ((IFNL) fnl(this)).getPingPongStrength(),
+                        ((Enum<?>) field(this, "mCellularDistanceFunction", true)).ordinal(),
+                        ((Enum<?>) field(this, "mCellularReturnType", true)).ordinal(),
+                        ((IFNL) fnl(this)).getCellularJitterModifier(),
+                        ((Enum<?>) field(this, "mDomainWarpType", true)).ordinal(),
+                        ((IFNL) fnl(this)).getDomainWarpAmp()
+                );
+                this.c2me$stateSegment = BindingsTemplate.fnl_state$create(this.c2me$arena, this.c2me$state);
+                this.c2me$statePtr = this.c2me$stateSegment.address();
+            }
+        }
     }
 
     /**
@@ -81,9 +98,11 @@ public class MixinFastNoiseConfig implements INativePointer, IFNLState {
      */
     @Overwrite
     public double sample(double x, double y, double z) {
-        if (c2me$statePtr != 0L) {
-            return Bindings.c2me_natives_fnlGetNoise3D(this.c2me$statePtr, x, y, z);
+        long c2me$statePtr1 = this.c2me$statePtr;
+        if (c2me$statePtr1 != 0L) {
+            return Bindings.c2me_natives_fnlGetNoise3D(c2me$statePtr1, x, y, z);
         } else {
+            this.c2me$profileInitPointers();
             return ((IFNL) fnl(this)).invokeGetNoise(x, y, z);
         }
     }
