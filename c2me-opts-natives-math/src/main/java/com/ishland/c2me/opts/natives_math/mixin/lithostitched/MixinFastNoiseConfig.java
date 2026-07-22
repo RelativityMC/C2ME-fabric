@@ -65,8 +65,8 @@ public class MixinFastNoiseConfig implements INativePointer, IFNLState {
 
     @Unique
     private void c2me$profileInitPointers() {
-        if (this.c2me$arena == null && (int) TrackingVH.VH_FastNoiseConfig.get((DoublePerlinNoiseSampler) (Object) this) <= TrackingVH.THRESHOLD) {
-            if ((int) TrackingVH.VH_FastNoiseConfig.getAndAdd((DoublePerlinNoiseSampler) (Object) this, 1) == TrackingVH.THRESHOLD) {
+        if (this.c2me$arena == null && (int) TrackingVH.VH_FastNoiseConfig.get((Object) this) <= TrackingVH.THRESHOLD) {
+            if ((int) TrackingVH.VH_FastNoiseConfig.getAndAdd( (Object) this, 1) == TrackingVH.THRESHOLD) {
 //                new Throwable(String.format("Promoting DoublePerlinNoiseSampler %d to native", System.identityHashCode(this))).printStackTrace();
                 this.c2me$arena = Arena.ofAuto();
                 this.c2me$state = new BindingsTemplate.FNLState(
