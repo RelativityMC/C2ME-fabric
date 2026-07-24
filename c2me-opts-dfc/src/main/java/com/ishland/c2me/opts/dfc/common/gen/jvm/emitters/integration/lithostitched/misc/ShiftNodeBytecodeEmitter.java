@@ -53,25 +53,26 @@ public class ShiftNodeBytecodeEmitter implements BytecodeEmitter<ShiftNode> {
             return;
         }
 
-        int shiftX = localVarConsumer.createLocalVariable("shiftX", Type.DOUBLE_TYPE.getDescriptor());
-        int shiftY = localVarConsumer.createLocalVariable("shiftY", Type.DOUBLE_TYPE.getDescriptor());
-        int shiftZ = localVarConsumer.createLocalVariable("shiftZ", Type.DOUBLE_TYPE.getDescriptor());
+        int shiftX = localVarConsumer.createLocalVariable("shiftX", Type.INT_TYPE.getDescriptor());
+        int shiftY = localVarConsumer.createLocalVariable("shiftY", Type.INT_TYPE.getDescriptor());
+        int shiftZ = localVarConsumer.createLocalVariable("shiftZ", Type.INT_TYPE.getDescriptor());
 
         context.callDelegateSingle(m, inputX);
-        m.store(shiftX, Type.DOUBLE_TYPE);
+        m.cast(Type.DOUBLE_TYPE, Type.INT_TYPE);
+        m.store(shiftX, Type.INT_TYPE);
         context.callDelegateSingle(m, inputY);
-        m.store(shiftY, Type.DOUBLE_TYPE);
+        m.cast(Type.DOUBLE_TYPE, Type.INT_TYPE);
+        m.store(shiftY, Type.INT_TYPE);
         context.callDelegateSingle(m, inputZ);
-        m.store(shiftZ, Type.DOUBLE_TYPE);
+        m.cast(Type.DOUBLE_TYPE, Type.INT_TYPE);
+        m.store(shiftZ, Type.INT_TYPE);
 
         m.load(0, InstructionAdapter.OBJECT_TYPE);
-        m.load(shiftX, Type.DOUBLE_TYPE);
-        m.cast(Type.DOUBLE_TYPE, Type.INT_TYPE);
-        m.load(shiftY, Type.DOUBLE_TYPE);
-        m.cast(Type.DOUBLE_TYPE, Type.INT_TYPE);
-        m.load(shiftZ, Type.DOUBLE_TYPE);
-        m.cast(Type.DOUBLE_TYPE, Type.INT_TYPE);
+        m.load(shiftX, Type.INT_TYPE);
+        m.load(shiftY, Type.INT_TYPE);
+        m.load(shiftZ, Type.INT_TYPE);
         m.load(4, InstructionAdapter.OBJECT_TYPE);
+        m.load(5, InstructionAdapter.OBJECT_TYPE);
         m.invokevirtual(context.className, input.generatedMethod(), BytecodeGen.Context.SINGLE_DESC, false);
         m.areturn(Type.DOUBLE_TYPE);
     }
@@ -168,6 +169,7 @@ public class ShiftNodeBytecodeEmitter implements BytecodeEmitter<ShiftNode> {
                 m.cast(Type.DOUBLE_TYPE, Type.INT_TYPE);
 
                 m.load(5, InstructionAdapter.OBJECT_TYPE);
+                m.load(6, InstructionAdapter.OBJECT_TYPE);
                 m.invokevirtual(context.className, input.generatedMethod(), BytecodeGen.Context.SINGLE_DESC, false);
             }
 
