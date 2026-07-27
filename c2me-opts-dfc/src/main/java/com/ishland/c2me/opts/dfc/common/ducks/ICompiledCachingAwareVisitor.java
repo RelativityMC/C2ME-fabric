@@ -35,7 +35,7 @@ public interface ICompiledCachingAwareVisitor {
     public static ArgumentVisitor c2me$getArgumentVisitor(DensityFunction.DensityFunctionVisitor visitor) {
         return next -> {
             if (next instanceof DensityFunction df) {
-                return visitor.apply(df);
+                return df.apply(visitor);
             }
             if (next instanceof DensityFunction.Noise noise) {
                 return visitor.apply(noise);
