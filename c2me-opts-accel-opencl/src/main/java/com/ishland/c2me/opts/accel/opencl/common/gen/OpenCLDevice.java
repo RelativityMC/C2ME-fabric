@@ -315,18 +315,18 @@ public class OpenCLDevice implements Closeable {
                     option.append("-D AVOID_TRAP=1 ");
                 }
 
-//                if (Config.enableIntelFastCompilation && this.metadata.isIntelNeoRuntime) {
-//                    if (!this.workarounds.contains(Workarounds.Reference.INTEL_IGC_OPTS_UNAVAILABLE)) {
-////                        option.append("-igc_opts 'KernelTotalSizeThreshold=1048576,UnitSizeThreshold=1536,ExpandedUnitSizeThreshold=1048576,PartitionUnit=1,StaticProfileGuidedPartitioning=0,ControlUnitSize=1,StaticProfileGuidedTrimming=0,LoopCountAwareTrimming=0,EnableLeafCollapsing=1,EnableSizeContributionOptimization=1,ControlInlineTinySize=1,PrintControlKernelTotalSize=15,PrintControlUnitSize=15,PrintFunctionSizeAnalysis=15,PrintStaticProfileGuidedKernelSizeReduction=15,PrintPartitionUnit=15' ");
-//                        option.append("-igc_opts 'KernelTotalSizeThreshold=1048576,UnitSizeThreshold=1536,ExpandedUnitSizeThreshold=1048576,PartitionUnit=1,StaticProfileGuidedPartitioning=0,ControlUnitSize=1,StaticProfileGuidedTrimming=0,LoopCountAwareTrimming=0,EnableLeafCollapsing=1,EnableSizeContributionOptimization=1,ControlInlineTinySize=1' ");
-////                        option.append("-D FUNC_NOINLINE_MIDDF= -igc_opts 'OCLInlineThreshold=96,EnableLeafCollapsing=1,EnableSizeContributionOptimization=1,ControlInlineTinySize=1' ");
-//                    } else {
-//                        option.append("-D FUNC_NOINLINE_MIDDF= -D BLOAT_APPARENT_FUNCTION_SIZES=1 ");
-//                    }
-//                    if (!this.workarounds.contains(Workarounds.Reference.INTEL_STATIC_PROFILE_GUIDED_TRIMMING_UNAVAILABLE)) {
-//                        option.append("-cl-intel-static-profile-guided-trimming ");
-//                    }
-//                }
+                if (Config.enableIntelFastCompilation && this.metadata.isIntelNeoRuntime) {
+                    if (!this.workarounds.contains(Workarounds.Reference.INTEL_IGC_OPTS_UNAVAILABLE)) {
+//                        option.append("-igc_opts 'KernelTotalSizeThreshold=1048576,UnitSizeThreshold=1536,ExpandedUnitSizeThreshold=1048576,PartitionUnit=1,StaticProfileGuidedPartitioning=0,ControlUnitSize=1,StaticProfileGuidedTrimming=0,LoopCountAwareTrimming=0,EnableLeafCollapsing=1,EnableSizeContributionOptimization=1,ControlInlineTinySize=1,PrintControlKernelTotalSize=15,PrintControlUnitSize=15,PrintFunctionSizeAnalysis=15,PrintStaticProfileGuidedKernelSizeReduction=15,PrintPartitionUnit=15' ");
+                        option.append("-igc_opts 'KernelTotalSizeThreshold=1048576,UnitSizeThreshold=1536,ExpandedUnitSizeThreshold=1048576,PartitionUnit=1,StaticProfileGuidedPartitioning=0,ControlUnitSize=1,StaticProfileGuidedTrimming=0,LoopCountAwareTrimming=0,EnableLeafCollapsing=1,EnableSizeContributionOptimization=1,ControlInlineTinySize=1' ");
+//                        option.append("-D FUNC_NOINLINE_MIDDF= -igc_opts 'OCLInlineThreshold=96,EnableLeafCollapsing=1,EnableSizeContributionOptimization=1,ControlInlineTinySize=1' ");
+                    } else {
+                        option.append("-D FUNC_NOINLINE_MIDDF= -D BLOAT_APPARENT_FUNCTION_SIZES=1 ");
+                    }
+                    if (!this.workarounds.contains(Workarounds.Reference.INTEL_STATIC_PROFILE_GUIDED_TRIMMING_UNAVAILABLE)) {
+                        option.append("-cl-intel-static-profile-guided-trimming ");
+                    }
+                }
 
                 if (!this.workarounds.contains(Workarounds.Reference.NVIDIA_FAST_COMPILE_UNAVAILABLE) && Config.enableNvidiaFastCompilation && this.metadata.deviceCaps.cl_nv_compiler_options) {
                     option.append("-cl-nv-opt-level=1 -cl-nv-verbose -nv-use-200772613 ");
