@@ -24,11 +24,10 @@
 
 package com.ishland.c2me.opts.dfc.common.ast.integration.tectonic;
 
-import com.ishland.c2me.opts.dfc.common.ast.AstNode;
+import com.ishland.c2me.opts.dfc.common.ast.AstEmitter;
+import com.ishland.c2me.opts.dfc.common.ast.FrontendRegistry;
 import com.ishland.c2me.opts.dfc.common.ast.McToAst;
 import com.ishland.c2me.opts.dfc.common.ast.binary.AddNode;
-import com.ishland.c2me.opts.dfc.common.ast.binary.MaxNode;
-import com.ishland.c2me.opts.dfc.common.ast.binary.MinNode;
 import com.ishland.c2me.opts.dfc.common.ast.binary.MulNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.CoordinateNode;
@@ -95,10 +94,10 @@ public class ConfigNoiseBindings {
         AVAILABLE = available;
     }
 
-    public static AstNode tryParse(DensityFunction function) {
-        if (!AVAILABLE) return null;
+    public static void register(FrontendRegistry<AstEmitter<? extends DensityFunction>> registry) {
+        if (!AVAILABLE) return;
 
-        if (function.getClass() == CLASS_ConfigNoise) {
+        registry.registerExactMatch((Class<? extends DensityFunction>) CLASS_ConfigNoise, function -> {
             try {
                 if ((boolean) MH_smootherScaling.invoke(function)) {
                     return new AddNode(
@@ -130,9 +129,7 @@ public class ConfigNoiseBindings {
             } catch (Throwable e) {
                 throw new RuntimeException(e);
             }
-        }
-
-        return null;
+        });
     }
 
 }

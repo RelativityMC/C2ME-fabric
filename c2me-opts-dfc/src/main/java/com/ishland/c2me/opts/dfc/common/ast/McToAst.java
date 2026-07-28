@@ -46,7 +46,6 @@ import com.ishland.c2me.opts.dfc.common.ast.misc.IntervalSelectNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.RangeChoiceNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.YClampedGradientNode;
 import com.ishland.c2me.opts.dfc.common.ast.noise.GenericShiftedNoiseNode;
-import com.ishland.c2me.opts.dfc.common.ast.opto.OptoPasses;
 import com.ishland.c2me.opts.dfc.common.ast.spline.SplineAstNode;
 import com.ishland.c2me.opts.dfc.common.ast.unary.AbsNode;
 import com.ishland.c2me.opts.dfc.common.ast.unary.CubeNode;
@@ -54,8 +53,6 @@ import com.ishland.c2me.opts.dfc.common.ast.unary.NegMulNode;
 import com.ishland.c2me.opts.dfc.common.ast.unary.SquareNode;
 import com.ishland.c2me.opts.dfc.common.ast.unary.SqueezeNode;
 import com.ishland.c2me.opts.dfc.common.ducks.IFastCacheLike;
-import com.ishland.c2me.opts.dfc.common.gen.jvm.BytecodeGen;
-import com.ishland.c2me.opts.dfc.common.gen.jvm.CompiledDensityFunction;
 import net.minecraft.util.math.noise.InterpolatedNoiseSampler;
 import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
@@ -63,53 +60,53 @@ import net.minecraft.world.gen.densityfunction.DensityFunctionTypes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.LongAdder;
 
 public class McToAst {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(McToAst.class);
+    public static final FrontendRegistry<AstEmitter<? extends DensityFunction>> REGISTRY = new FrontendRegistry<>();
     private static final ConcurrentHashMap<Class<?>, AtomicLong> delegateStatistics = new ConcurrentHashMap<>();
 
-    public static AstNode toAst(DensityFunction df) {
-        Objects.requireNonNull(df);
-        return switch (df) {
-            case ChunkNoiseSampler.BlendAlphaDensityFunction f -> new ConstantNode(1.0);
-            case ChunkNoiseSampler.BlendOffsetDensityFunction f -> new ConstantNode(0.0);
-            case DensityFunctionTypes.BlendAlpha f -> new ConstantNode(1.0);
-            case DensityFunctionTypes.BlendOffset f -> new ConstantNode(0.0);
-            case DensityFunctionTypes.BinaryOperation f -> switch (f.type()) {
-                case ADD -> new AddNode(toAst(f.argument1()), toAst(f.argument2()));
-                case MUL -> new MulNode(toAst(f.argument1()), toAst(f.argument2()));
-                case MIN -> {
-                    double rightMin = f.min();
-                    if (f.argument1().getRange().getMin() < rightMin) {
-                        yield new MinShortNode(toAst(f.argument1()), toAst(f.argument2()), rightMin);
-                    } else {
-                        yield new MinNode(toAst(f.argument1()), toAst(f.argument2()));
+    static {
+        REGISTRY.registerExactMatch(ChunkNoiseSampler.BlendAlphaDensityFunction.class, f -> new ConstantNode(1.0));
+        REGISTRY.registerExactMatch(ChunkNoiseSampler.BlendOffsetDensityFunction.class, f -> new ConstantNode(0.0));
+        REGISTRY.registerExactMatch(DensityFunctionTypes.BlendAlpha.class, f -> new ConstantNode(1.0));
+        REGISTRY.registerExactMatch(DensityFunctionTypes.BlendOffset.class, f -> new ConstantNode(0.0));
+
+        {
+            AstEmitter<? extends DensityFunctionTypes.BinaryOperationLike> emitter = f -> {
+                return switch (f.type()) {
+                    case ADD -> new AddNode(toAst(f.argument1()), toAst(f.argument2()));
+                    case MUL -> new MulNode(toAst(f.argument1()), toAst(f.argument2()));
+                    case MIN -> {
+                        double rightMin = f.min();
+                        if (f.argument1().getRange().getMin() < rightMin) {
+                            yield new MinShortNode(toAst(f.argument1()), toAst(f.argument2()), rightMin);
+                        } else {
+                            yield new MinNode(toAst(f.argument1()), toAst(f.argument2()));
+                        }
                     }
-                }
-                case MAX -> {
-                    double rightMax = f.max();
-                    if (f.argument1().getRange().getMax() > rightMax) {
-                        yield new MaxShortNode(toAst(f.argument1()), toAst(f.argument2()), rightMax);
-                    } else {
-                        yield new MaxNode(toAst(f.argument1()), toAst(f.argument2()));
+                    case MAX -> {
+                        double rightMax = f.max();
+                        if (f.argument1().getRange().getMax() > rightMax) {
+                            yield new MaxShortNode(toAst(f.argument1()), toAst(f.argument2()), rightMax);
+                        } else {
+                            yield new MaxNode(toAst(f.argument1()), toAst(f.argument2()));
+                        }
                     }
-                }
+                };
             };
-            case DensityFunctionTypes.LinearOperation f -> switch (f.type()) {
-                case ADD -> new AddNode(toAst(f.argument1()), toAst(f.argument2()));
-                case MUL -> new MulNode(toAst(f.argument1()), toAst(f.argument2()));
-                case MIN -> throw new UnsupportedOperationException("MIN found in DensityFunctionTypes.LinearOperation");
-                case MAX -> throw new UnsupportedOperationException("MIN found in DensityFunctionTypes.LinearOperation");
-            };
-            case DensityFunctionTypes.Clamp f -> new MaxNode(new ConstantNode(f.min()), new MinNode(new ConstantNode(f.max()), toAst(f.input())));
-            case DensityFunctionTypes.Constant f -> new ConstantNode(f.value());
-            case DensityFunctionTypes.RegistryEntryHolder f -> toAst(f.function().value());
-            case DensityFunctionTypes.UnaryOperation f -> switch (f.type()) {
+            REGISTRY.registerExactMatch(DensityFunctionTypes.BinaryOperation.class, (AstEmitter<DensityFunctionTypes.BinaryOperation>) emitter);
+            REGISTRY.registerExactMatch(DensityFunctionTypes.LinearOperation.class, (AstEmitter<DensityFunctionTypes.LinearOperation>) emitter);
+        }
+
+        REGISTRY.registerExactMatch(DensityFunctionTypes.Clamp.class, f -> new MaxNode(new ConstantNode(f.min()), new MinNode(new ConstantNode(f.max()), toAst(f.input()))));
+        REGISTRY.registerExactMatch(DensityFunctionTypes.Constant.class, f -> new ConstantNode(f.value()));
+        REGISTRY.registerExactMatch(DensityFunctionTypes.RegistryEntryHolder.class, f -> toAst(f.function().value()));
+        REGISTRY.registerExactMatch(DensityFunctionTypes.UnaryOperation.class, f -> {
+            return switch (f.type()) {
                 case ABS -> new AbsNode(toAst(f.input()));
                 case SQUARE -> new SquareNode(toAst(f.input()));
                 case CUBE -> new CubeNode(toAst(f.input()));
@@ -118,26 +115,41 @@ public class McToAst {
                 case INVERT -> new DivNode(new ConstantNode(1.0), toAst(f.input()));
                 case SQUEEZE -> new SqueezeNode(toAst(f.input()));
             };
-            case DensityFunctionTypes.RangeChoice f -> new RangeChoiceNode(toAst(f.input()), f.minInclusive(), f.maxExclusive(), toAst(f.whenInRange()), toAst(f.whenOutOfRange()));
-            case IFastCacheLike f -> {
+        });
+        REGISTRY.registerExactMatch(DensityFunctionTypes.RangeChoice.class, f -> new RangeChoiceNode(toAst(f.input()), f.minInclusive(), f.maxExclusive(), toAst(f.whenInRange()), toAst(f.whenOutOfRange())));
+
+        {
+            AstEmitter<? extends IFastCacheLike> emitter = f -> {
                 if ((Object) f instanceof DensityFunctionTypes.Wrapping wrapping && wrapping.type() == DensityFunctionTypes.Wrapping.Type.BLEND_DENSITY) {
-                    yield toAst(f.c2me$getDelegate());
+                    return toAst(f.c2me$getDelegate());
                 }
-                yield new CacheLikeNode(f, toAst(f.c2me$getDelegate()));
-            }
-            case DensityFunctionTypes.ShiftedNoise f -> new GenericShiftedNoiseNode(
+                return new CacheLikeNode(f, toAst(f.c2me$getDelegate()));
+            };
+            REGISTRY.registerExactMatch(DensityFunctionTypes.Wrapping.class, (AstEmitter<DensityFunctionTypes.Wrapping>) (Object) emitter);
+            REGISTRY.registerExactMatch(ChunkNoiseSampler.Cache2D.class, (AstEmitter<ChunkNoiseSampler.Cache2D>) (Object) emitter);
+            REGISTRY.registerExactMatch(ChunkNoiseSampler.CacheOnce.class, (AstEmitter<ChunkNoiseSampler.CacheOnce>) (Object) emitter);
+            REGISTRY.registerExactMatch(ChunkNoiseSampler.DensityInterpolator.class, (AstEmitter<ChunkNoiseSampler.DensityInterpolator>) (Object) emitter);
+            REGISTRY.registerExactMatch(ChunkNoiseSampler.FlatCache.class, (AstEmitter<ChunkNoiseSampler.FlatCache>) (Object) emitter);
+        }
+
+        REGISTRY.registerExactMatch(DensityFunctionTypes.ShiftedNoise.class, f -> {
+            return new GenericShiftedNoiseNode(
                     new AddNode(new MulNode(CoordinateNode.AXIS_X, new ConstantNode(f.xzScale())), toAst(f.shiftX())),
                     new AddNode(new MulNode(CoordinateNode.AXIS_Y, new ConstantNode(f.yScale())), toAst(f.shiftY())),
                     new AddNode(new MulNode(CoordinateNode.AXIS_Z, new ConstantNode(f.xzScale())), toAst(f.shiftZ())),
                     f.noise()
             );
-            case DensityFunctionTypes.Noise f -> new GenericShiftedNoiseNode(
+        });
+        REGISTRY.registerExactMatch(DensityFunctionTypes.Noise.class, f -> {
+            return new GenericShiftedNoiseNode(
                     new MulNode(CoordinateNode.AXIS_X, new ConstantNode(f.xzScale())),
                     new MulNode(CoordinateNode.AXIS_Y, new ConstantNode(f.yScale())),
                     new MulNode(CoordinateNode.AXIS_Z, new ConstantNode(f.xzScale())),
                     f.noise()
             );
-            case DensityFunctionTypes.Shift f -> new MulNode(
+        });
+        REGISTRY.registerExactMatch(DensityFunctionTypes.Shift.class, f -> {
+            return new MulNode(
                     new GenericShiftedNoiseNode(
                             new MulNode(CoordinateNode.AXIS_X, new ConstantNode(0.25)),
                             new MulNode(CoordinateNode.AXIS_Y, new ConstantNode(0.25)),
@@ -146,7 +158,9 @@ public class McToAst {
                     ),
                     new ConstantNode(4.0)
             );
-            case DensityFunctionTypes.ShiftA f -> new MulNode(
+        });
+        REGISTRY.registerExactMatch(DensityFunctionTypes.ShiftA.class, f -> {
+            return new MulNode(
                     new GenericShiftedNoiseNode(
                             new MulNode(CoordinateNode.AXIS_X, new ConstantNode(0.25)),
                             new ConstantNode(0.0),
@@ -155,7 +169,9 @@ public class McToAst {
                     ),
                     new ConstantNode(4.0)
             );
-            case DensityFunctionTypes.ShiftB f -> new MulNode(
+        });
+        REGISTRY.registerExactMatch(DensityFunctionTypes.ShiftB.class, f -> {
+            return new MulNode(
                     new GenericShiftedNoiseNode(
                             new MulNode(CoordinateNode.AXIS_Z, new ConstantNode(0.25)),
                             new MulNode(CoordinateNode.AXIS_X, new ConstantNode(0.25)),
@@ -164,36 +180,34 @@ public class McToAst {
                     ),
                     new ConstantNode(4.0)
             );
-            case DensityFunctionTypes.YClampedGradient f -> new YClampedGradientNode(f.fromY(), f.toY(), f.fromValue(), f.toValue());
-            case DensityFunctionTypes.IntervalSelect f -> new IntervalSelectNode(toAst(f.input()), f.thresholds().toDoubleArray(), f.functions().stream().map(McToAst::toAst).toArray(AstNode[]::new));
-            case DensityFunctionTypes.Spline f -> new SplineAstNode(f.getSpline());
-            case DensityFunctionTypes.FindTopSurface f -> new FindTopSurfaceNode(toAst(f.density()), toAst(f.upperBound()), new ConstantNode(f.lowerBound()), f.cellHeight());
+        });
+        REGISTRY.registerExactMatch(DensityFunctionTypes.YClampedGradient.class, f -> new YClampedGradientNode(f.fromY(), f.toY(), f.fromValue(), f.toValue()));
+        REGISTRY.registerExactMatch(DensityFunctionTypes.IntervalSelect.class, f -> new IntervalSelectNode(toAst(f.input()), f.thresholds().toDoubleArray(), f.functions().stream().map(McToAst::toAst).toArray(AstNode[]::new)));
+        REGISTRY.registerExactMatch(DensityFunctionTypes.Spline.class, f -> new SplineAstNode(f.getSpline()));
+        REGISTRY.registerExactMatch(DensityFunctionTypes.FindTopSurface.class, f -> new FindTopSurfaceNode(toAst(f.density()), toAst(f.upperBound()), new ConstantNode(f.lowerBound()), f.cellHeight()));
 
-            // delegate nodes that have specialized OpenCL gen
-            case DensityFunctionTypes.EndIslands f -> new EndIslandsNode(f);
-            case InterpolatedNoiseSampler f -> new InterpolatedNoiseSamplerNode(f);
-            case DensityFunctionTypes.Beardifier f -> new BeardifierNode(f);
+        // delegate nodes that have specialized OpenCL gen
+        REGISTRY.registerExactMatch(DensityFunctionTypes.EndIslands.class, EndIslandsNode::new);
+        REGISTRY.registerExactMatch(InterpolatedNoiseSampler.class, InterpolatedNoiseSamplerNode::new);
+        REGISTRY.registerExactMatch(DensityFunctionTypes.Beardifier.class, BeardifierNode::new);
 
-            default -> {
-                if (Config.enableBuiltinIntegrations) {
-                    {
-                        AstNode node = ConfigClampBindings.tryParse(df);
-                        if (node != null) yield node;
-                    }
+        if (Config.enableBuiltinIntegrations) {
+            ConfigClampBindings.register(REGISTRY);
+            ConfigNoiseBindings.register(REGISTRY);
+        }
+    }
 
-                    {
-                        AstNode node = ConfigNoiseBindings.tryParse(df);
-                        if (node != null) yield node;
-                    }
-                }
-
-                long known = delegateStatistics.computeIfAbsent(df.getClass(), unused -> new AtomicLong(0L)).getAndIncrement();
-                if (known == 0) {
-                    LOGGER.warn("warn_once: Generating DelegateNode for type: {}", df.getClass().toString());
-                }
-                yield new DelegateNode(df);
+    public static <T extends DensityFunction> AstNode toAst(T df) {
+        AstEmitter<T> emitter = (AstEmitter<T>) REGISTRY.getOptional(df.getClass());
+        if (emitter != null) {
+            return emitter.toAst(df);
+        } else {
+            long known = delegateStatistics.computeIfAbsent(df.getClass(), unused -> new AtomicLong(0L)).getAndIncrement();
+            if (known == 0) {
+                LOGGER.warn("warn_once: Generating DelegateNode for type: {}", df.getClass().toString());
             }
-        };
+            return new DelegateNode(df);
+        }
     }
 
 }

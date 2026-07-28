@@ -22,20 +22,26 @@
  * THE SOFTWARE.
  */
 
-package com.ishland.c2me.opts.dfc.common.gen.jvm;
+package com.ishland.c2me.opts.natives_math.common;
 
-import com.ishland.c2me.opts.dfc.common.gen.jvm.internalapi.ArgumentVisitor;
+import net.minecraft.util.math.noise.DoublePerlinNoiseSampler;
 
-public interface CompiledEntry {
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.VarHandle;
 
-    default SubCompiledDensityFunction[] getRoots() {
-        return this.getRootsUnsafe().clone();
+public class TrackingVH {
+
+    public static final int THRESHOLD = 65536;
+
+    public static final VarHandle VH_DoublePerlinNoiseSampler;
+
+    static {
+        try {
+            VH_DoublePerlinNoiseSampler = MethodHandles.lookup()
+                    .findVarHandle(DoublePerlinNoiseSampler.class, "c2me$sampledCount", int.class);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
     }
-
-    SubCompiledDensityFunction[] getRootsUnsafe();
-
-    CompiledEntry newInstance(Object[] args, ArgumentVisitor visitor);
-
-    Object[] getArgs();
 
 }

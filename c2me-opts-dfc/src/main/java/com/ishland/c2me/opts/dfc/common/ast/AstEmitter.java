@@ -22,20 +22,12 @@
  * THE SOFTWARE.
  */
 
-package com.ishland.c2me.opts.dfc.common.gen.jvm;
+package com.ishland.c2me.opts.dfc.common.ast;
 
-import com.ishland.c2me.opts.dfc.common.gen.jvm.internalapi.ArgumentVisitor;
+import net.minecraft.world.gen.densityfunction.DensityFunction;
 
-public interface CompiledEntry {
+public interface AstEmitter<T extends DensityFunction> {
 
-    default SubCompiledDensityFunction[] getRoots() {
-        return this.getRootsUnsafe().clone();
-    }
-
-    SubCompiledDensityFunction[] getRootsUnsafe();
-
-    CompiledEntry newInstance(Object[] args, ArgumentVisitor visitor);
-
-    Object[] getArgs();
+    AstNode toAst(T f);
 
 }

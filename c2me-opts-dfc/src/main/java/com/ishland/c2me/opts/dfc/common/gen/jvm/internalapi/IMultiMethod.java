@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-package com.ishland.c2me.opts.dfc.common.gen.jvm;
+package com.ishland.c2me.opts.dfc.common.gen.jvm.internalapi;
 
 import com.ishland.c2me.opts.dfc.common.ast.EvalType;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.util.DfcObjectCache;

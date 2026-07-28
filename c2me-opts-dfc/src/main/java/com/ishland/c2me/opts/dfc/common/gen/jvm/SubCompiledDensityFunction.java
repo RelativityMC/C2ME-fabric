@@ -31,112 +31,49 @@ import com.ishland.c2me.opts.dfc.common.ducks.IDfcObjectCacheCapable;
 import com.ishland.c2me.opts.dfc.common.ducks.IBlendingAwareVisitor;
 import com.ishland.c2me.opts.dfc.common.ducks.ICoordinatesFilling;
 import com.ishland.c2me.opts.dfc.common.ducks.IPreloadedCoordinates;
+import com.ishland.c2me.opts.dfc.common.gen.jvm.internalapi.IMultiMethod;
+import com.ishland.c2me.opts.dfc.common.gen.jvm.internalapi.ISingleMethod;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.util.DfcObjectCache;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.vif.EachApplierVanillaInterface;
 import net.minecraft.util.dynamic.CodecHolder;
 import net.minecraft.util.math.Interval;
 import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
 import java.util.function.Supplier;
 
-public class SubCompiledDensityFunction implements DensityFunction {
+public class SubCompiledDensityFunction extends AbstractCompiledDensityFunction {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SubCompiledDensityFunction.class);
 
-    private final ISingleMethod singleMethod;
-    private final IMultiMethod multiMethod;
+    protected final ISingleMethod singleMethod;
+    protected final IMultiMethod multiMethod;
     protected final Supplier<DensityFunction> blendingFallback;
 
     // also called from generated code
     public SubCompiledDensityFunction(ISingleMethod singleMethod, IMultiMethod multiMethod, DensityFunction blendingFallback) {
-        this(singleMethod, multiMethod, unwrap(blendingFallback));
+        this(singleMethod, multiMethod, unwrapFallback(blendingFallback));
     }
 
     protected SubCompiledDensityFunction(ISingleMethod singleMethod, IMultiMethod multiMethod, Supplier<DensityFunction> blendingFallback) {
+        super(blendingFallback);
         this.singleMethod = Objects.requireNonNull(singleMethod);
         this.multiMethod = Objects.requireNonNull(multiMethod);
         this.blendingFallback = blendingFallback;
     }
 
-    private static Supplier<DensityFunction> unwrap(DensityFunction densityFunction) {
-        if (densityFunction instanceof SubCompiledDensityFunction scdf) {
-            return scdf.blendingFallback;
-        } else {
-            return densityFunction != null ? Suppliers.ofInstance(densityFunction) : null;
-        }
+    @Override
+    public ISingleMethod getSingleMethod() {
+        return this.singleMethod;
     }
 
     @Override
-    public double sample(NoisePos pos) {
-        if (pos instanceof ChunkNoiseSampler sampler) {
-            if (!((IChunkNoiseSampler) sampler).getBlender().isEmpty()) {
-                DensityFunction fallback = this.getFallback();
-                if (fallback == null) {
-                    throw new IllegalStateException("blendingFallback is no more");
-                }
-                return fallback.sample(pos);
-            }
-        }
-        DfcObjectCache cache = pos instanceof IDfcObjectCacheCapable cacheCapable ? cacheCapable.c2me$getDfcObjectCache() : DfcObjectCache.Noop.INSTANCE;
-        return this.singleMethod.evalSingle(pos.blockX(), pos.blockY(), pos.blockZ(), EvalType.from(pos), cache);
-    }
-
-    @Override
-    public void fill(double[] densities, EachApplier applier) {
-        if (applier instanceof ChunkNoiseSampler sampler) {
-            if (!((IChunkNoiseSampler) sampler).getBlender().isEmpty()) {
-                DensityFunction fallback = this.getFallback();
-                if (fallback == null) {
-                    throw new IllegalStateException("blendingFallback is no more");
-                }
-                fallback.fill(densities, applier);
-                return;
-            }
-        }
-        if (applier instanceof EachApplierVanillaInterface vanillaInterface) {
-            this.multiMethod.evalMulti(densities, vanillaInterface.getX(), vanillaInterface.getY(), vanillaInterface.getZ(), EvalType.from(applier), vanillaInterface.c2me$getDfcObjectCache());
-            return;
-        }
-
-        DfcObjectCache cache = applier instanceof IDfcObjectCacheCapable cacheCapable ? cacheCapable.c2me$getDfcObjectCache() : DfcObjectCache.Noop.INSTANCE;
-        int[] x;
-        int[] y;
-        int[] z;
-        boolean allocatedOnDemand;
-        if (applier instanceof IPreloadedCoordinates preloadedCoordinates) {
-            x = preloadedCoordinates.c2me$getXArray();
-            y = preloadedCoordinates.c2me$getYArray();
-            z = preloadedCoordinates.c2me$getZArray();
-            allocatedOnDemand = false;
-        } else {
-            x = cache.getIntArray(densities.length, false);
-            y = cache.getIntArray(densities.length, false);
-            z = cache.getIntArray(densities.length, false);
-            if (applier instanceof ICoordinatesFilling coordinatesFilling) {
-                coordinatesFilling.c2me$fillCoordinates(x, y, z);
-            } else {
-                for (int i = 0; i < densities.length; i ++) {
-                    NoisePos pos = applier.at(i);
-                    x[i] = pos.blockX();
-                    y[i] = pos.blockY();
-                    z[i] = pos.blockZ();
-                }
-            }
-            allocatedOnDemand = true;
-        }
-        try {
-            this.multiMethod.evalMulti(densities, x, y, z, EvalType.from(applier), cache);
-        } finally {
-            if (allocatedOnDemand) {
-                cache.recycle(x);
-                cache.recycle(y);
-                cache.recycle(z);
-            }
-        }
+    public IMultiMethod getMultiMethod() {
+        return this.multiMethod;
     }
 
     @Override
@@ -193,17 +130,4 @@ public class SubCompiledDensityFunction implements DensityFunction {
         }
     }
 
-    @Override
-    public Interval getRange() {
-        return Interval.UNBOUNDED;
-    }
-
-    @Override
-    public CodecHolder<? extends DensityFunction> getCodecHolder() {
-        throw new UnsupportedOperationException();
-    }
-
-    protected DensityFunction getFallback() {
-        return this.blendingFallback != null ? this.blendingFallback.get() : null;
-    }
 }

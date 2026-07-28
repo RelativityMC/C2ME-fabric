@@ -22,14 +22,12 @@
  * THE SOFTWARE.
  */
 
-package com.ishland.c2me.opts.dfc.common.gen.jvm;
+package com.ishland.c2me.opts.dfc.common.gen.jvm.internalapi;
 
-import com.ishland.c2me.opts.dfc.common.ast.EvalType;
-import com.ishland.c2me.opts.dfc.common.gen.jvm.util.DfcObjectCache;
+public interface ArgumentVisitor {
 
-@FunctionalInterface
-public interface ISingleMethod {
+    public static final ArgumentVisitor IDENTITY = o -> o;
 
-    double evalSingle(int x, int y, int z, EvalType type, DfcObjectCache dfcObjectCache);
+    Object apply(Object operand);
 
 }

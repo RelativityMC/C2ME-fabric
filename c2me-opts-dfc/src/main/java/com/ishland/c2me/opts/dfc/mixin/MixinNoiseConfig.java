@@ -66,39 +66,37 @@ public class MixinNoiseConfig {
         DensityFunction finalFinalDensity = DensityFunctionTypes.add(this.noiseRouter.finalDensity(), DensityFunctionTypes.Beardifier.INSTANCE);
         NoiseRouter original = this.noiseRouter;
         ((NoiseRouterExtension) (Object) original).c2me$setFinalFinalDensity(finalFinalDensity);
+        BytecodeGen.Context genContext = BytecodeGen.initContext();
         this.noiseRouter = new NoiseRouter(
-                BytecodeGen.compile("barrier", this.noiseRouter.barrierNoise(), optoCache, tempCache),
-                BytecodeGen.compile("fluid_level_floodedness", this.noiseRouter.fluidLevelFloodednessNoise(), optoCache, tempCache),
-                BytecodeGen.compile("fluid_level_spread", this.noiseRouter.fluidLevelSpreadNoise(), optoCache, tempCache),
-                BytecodeGen.compile("lava", this.noiseRouter.lavaNoise(), optoCache, tempCache),
-                BytecodeGen.compile("temperature", this.noiseRouter.temperature(), optoCache, tempCache),
-                BytecodeGen.compile("vegetation", this.noiseRouter.vegetation(), optoCache, tempCache),
-                BytecodeGen.compile("continents", this.noiseRouter.continents(), optoCache, tempCache),
-                BytecodeGen.compile("erosion", this.noiseRouter.erosion(), optoCache, tempCache),
-                BytecodeGen.compile("depth", this.noiseRouter.depth(), optoCache, tempCache),
-                BytecodeGen.compile("ridges", this.noiseRouter.ridges(), optoCache, tempCache),
-                BytecodeGen.compile("preliminary_surface_level", this.noiseRouter.preliminarySurfaceLevel(), optoCache, tempCache),
-                BytecodeGen.compile("final_density", this.noiseRouter.finalDensity(), optoCache, tempCache),
-                BytecodeGen.compile("vein_toggle", this.noiseRouter.veinToggle(), optoCache, tempCache),
-                BytecodeGen.compile("vein_ridged", this.noiseRouter.veinRidged(), optoCache, tempCache),
-                BytecodeGen.compile("vein_gap", this.noiseRouter.veinGap(), optoCache, tempCache)
+                genContext.compileDelayed("barrier", this.noiseRouter.barrierNoise()),
+                genContext.compileDelayed("fluid_level_floodedness", this.noiseRouter.fluidLevelFloodednessNoise()),
+                genContext.compileDelayed("fluid_level_spread", this.noiseRouter.fluidLevelSpreadNoise()),
+                genContext.compileDelayed("lava", this.noiseRouter.lavaNoise()),
+                genContext.compileDelayed("temperature", this.noiseRouter.temperature()),
+                genContext.compileDelayed("vegetation", this.noiseRouter.vegetation()),
+                genContext.compileDelayed("continents", this.noiseRouter.continents()),
+                genContext.compileDelayed("erosion", this.noiseRouter.erosion()),
+                genContext.compileDelayed("depth", this.noiseRouter.depth()),
+                genContext.compileDelayed("ridges", this.noiseRouter.ridges()),
+                genContext.compileDelayed("preliminary_surface_level", this.noiseRouter.preliminarySurfaceLevel()),
+                genContext.compileDelayed("final_density", this.noiseRouter.finalDensity()),
+                genContext.compileDelayed("vein_toggle", this.noiseRouter.veinToggle()),
+                genContext.compileDelayed("vein_ridged", this.noiseRouter.veinRidged()),
+                genContext.compileDelayed("vein_gap", this.noiseRouter.veinGap())
         );
         ((NoiseRouterExtension) (Object) this.noiseRouter).c2me$setFinalFinalDensity(
-                BytecodeGen.compile(
-                        "final_final_density",
-                        finalFinalDensity,
-                        optoCache,
-                        tempCache)
+                genContext.compileDelayed("final_final_density", finalFinalDensity)
         );
         ((NoiseRouterExtension) (Object) this.noiseRouter).c2me$setOriginalNoiseRouter(original);
         this.multiNoiseSampler = new MultiNoiseUtil.MultiNoiseSampler(
-                BytecodeGen.compile("multiNoiseSampler_temperature", this.multiNoiseSampler.temperature(), optoCache, tempCache),
-                BytecodeGen.compile("multiNoiseSampler_vegetation", this.multiNoiseSampler.humidity(), optoCache, tempCache),
-                BytecodeGen.compile("multiNoiseSampler_continents", this.multiNoiseSampler.continentalness(), optoCache, tempCache),
-                BytecodeGen.compile("multiNoiseSampler_erosion", this.multiNoiseSampler.erosion(), optoCache, tempCache),
-                BytecodeGen.compile("multiNoiseSampler_depth", this.multiNoiseSampler.depth(), optoCache, tempCache),
-                BytecodeGen.compile("multiNoiseSampler_ridges", this.multiNoiseSampler.weirdness(), optoCache, tempCache)
+                genContext.compileDelayed("multiNoiseSampler_temperature", this.multiNoiseSampler.temperature()),
+                genContext.compileDelayed("multiNoiseSampler_vegetation", this.multiNoiseSampler.humidity()),
+                genContext.compileDelayed("multiNoiseSampler_continents", this.multiNoiseSampler.continentalness()),
+                genContext.compileDelayed("multiNoiseSampler_erosion", this.multiNoiseSampler.erosion()),
+                genContext.compileDelayed("multiNoiseSampler_depth", this.multiNoiseSampler.depth()),
+                genContext.compileDelayed("multiNoiseSampler_ridges", this.multiNoiseSampler.weirdness())
         );
+        BytecodeGen.finalizeCompilation(genContext);
         stopwatch.stop();
         System.out.println(String.format("Density function compilation finished in %s", stopwatch));
     }

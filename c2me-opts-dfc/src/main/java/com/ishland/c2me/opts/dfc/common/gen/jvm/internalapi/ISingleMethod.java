@@ -22,20 +22,14 @@
  * THE SOFTWARE.
  */
 
-package com.ishland.c2me.opts.dfc.common.gen.jvm;
+package com.ishland.c2me.opts.dfc.common.gen.jvm.internalapi;
 
-import com.ishland.c2me.opts.dfc.common.gen.jvm.internalapi.ArgumentVisitor;
+import com.ishland.c2me.opts.dfc.common.ast.EvalType;
+import com.ishland.c2me.opts.dfc.common.gen.jvm.util.DfcObjectCache;
 
-public interface CompiledEntry {
+@FunctionalInterface
+public interface ISingleMethod {
 
-    default SubCompiledDensityFunction[] getRoots() {
-        return this.getRootsUnsafe().clone();
-    }
-
-    SubCompiledDensityFunction[] getRootsUnsafe();
-
-    CompiledEntry newInstance(Object[] args, ArgumentVisitor visitor);
-
-    Object[] getArgs();
+    double evalSingle(int x, int y, int z, EvalType type, DfcObjectCache dfcObjectCache);
 
 }

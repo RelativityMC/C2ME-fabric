@@ -26,6 +26,7 @@ package com.ishland.c2me.opts.dfc.common.gen.dot;
 
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantNode;
+import com.ishland.c2me.opts.dfc.common.ast.misc.CoordinateNode;
 import it.unimi.dsi.fastutil.objects.Object2ReferenceOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
 import net.minecraft.util.math.Spline;
@@ -34,6 +35,7 @@ import net.minecraft.world.gen.densityfunction.DensityFunctionTypes;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 public class DotGen {
@@ -59,7 +61,12 @@ public class DotGen {
         // don't merge constant nodes, otherwise the graph is going to be a mess
         private final ReferenceArrayList<Builder.Impl> constants = new ReferenceArrayList<>();
         private final ReferenceArrayList<Builder.Impl> extras = new ReferenceArrayList<>();
+        private final java.util.function.Function<Object, String> auxNameProvider;
         private int counter = 0;
+
+        public Context(Function<Object, String> auxNameProvider) {
+            this.auxNameProvider = auxNameProvider != null ? auxNameProvider : o -> null;
+        }
 
         public static String base26(int id) {
             StringBuilder builder = new StringBuilder(2);
@@ -112,9 +119,11 @@ public class DotGen {
                 private String shape, label, tooltip;
                 private boolean frozen = false;
                 private final int id;
+                private final String auxName;
 
-                Impl(int id) {
+                Impl(int id, String auxName) {
                     this.id = id;
+                    this.auxName = auxName;
                 }
 
                 @Override
@@ -265,7 +274,12 @@ public class DotGen {
                     if (label != null && label.startsWith("<") && label.endsWith(">")) {
                         sb.append("label=").append(label);
                     } else {
-                        sb.append("label=\"").append("id=").append(name).append("\\n").append(label).append("\"");
+                        sb.append("label=\"");
+                        sb.append("id=").append(name).append("\\n");
+                        if (auxName != null) {
+                            sb.append("auxName=").append(auxName).append("\\n");
+                        }
+                        sb.append(label).append("\"");
                     }
                     sb.append(", tooltip=\"");
                     if (tooltip != null) {
@@ -293,11 +307,11 @@ public class DotGen {
 
         public int generate(AstNode node) {
             final Builder.Impl builder;
-            if (node instanceof ConstantNode) {
-                builder = new Builder.Impl(counter++);
+            if (node instanceof ConstantNode || node instanceof CoordinateNode) {
+                builder = new Builder.Impl(counter++, null);
                 constants.add(builder);
             } else {
-                builder = allocatedNodes.computeIfAbsent(node, _ -> new Builder.Impl(counter++));
+                builder = allocatedNodes.computeIfAbsent(node, node1 -> new Builder.Impl(counter++, auxNameProvider.apply(node1)));
                 if (builder.frozen) {
                     return builder.id;
                 }
@@ -310,12 +324,12 @@ public class DotGen {
          */
         public Builder getSplineBuilder(Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper> spline) {
             final Builder.Impl builder;
-            builder = allocatedSplines.computeIfAbsent(spline, _ -> new Builder.Impl(counter++));
+            builder = allocatedSplines.computeIfAbsent(spline, spline1 -> new Builder.Impl(counter++, auxNameProvider.apply(spline1)));
             return builder;
         }
 
         public Builder createExtraBuilder() {
-            Builder.Impl builder = new Builder.Impl(counter++);
+            Builder.Impl builder = new Builder.Impl(counter++, null);
             this.extras.add(builder);
             return builder;
         }
