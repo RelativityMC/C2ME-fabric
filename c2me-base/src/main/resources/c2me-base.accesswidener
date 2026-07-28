@@ -27,7 +27,6 @@ accessible    class    net/minecraft/world/storage/SerializingRegionBasedStorage
 accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$Shift
 accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$ShiftA
 accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$ShiftB
-accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$YClampedGradient
 accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$Clamp
 accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$Unary
 accessible    class    net/minecraft/world/gen/densityfunction/DensityFunctionTypes$BinaryOperation
@@ -91,6 +90,5 @@ extendable    method    net/minecraft/world/chunk/AbstractChunkHolder    cannotB
 accessible    field    net/minecraft/server/world/ChunkHolder                               UNLOADED_WORLD_CHUNK_FUTURE Ljava/util/concurrent/CompletableFuture;
 accessible    field    net/minecraft/world/storage/StorageIoWorker$Result                   nbt                 Lnet/minecraft/nbt/NbtCompound;
 accessible    field    net/minecraft/world/storage/StorageIoWorker$Result                   future              Ljava/util/concurrent/CompletableFuture;
-accessible    field     net/minecraft/util/math/noise/SimplexNoiseSampler                   GRADIENTS           [[I
 accessible    field     net/minecraft/world/gen/chunk/AquiferSampler$FluidLevel             y                   I
 accessible    field     net/minecraft/world/gen/chunk/AquiferSampler$FluidLevel             state               Lnet/minecraft/block/BlockState;
