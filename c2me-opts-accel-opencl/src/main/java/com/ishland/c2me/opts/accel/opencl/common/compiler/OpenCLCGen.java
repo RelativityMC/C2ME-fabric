@@ -28,9 +28,11 @@ import com.ishland.c2me.opts.dfc.common.ast.opto.OptoPasses;
 import com.ishland.c2me.opts.dfc.common.gen.GenDumper;
 import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefD;
 import com.ishland.c2me.opts.dfc.common.gen.opencl.OpenCLCGenContext;
+import com.ishland.c2me.opts.dfc.common.gen.opencl.OpenCLCGenFunctionContext;
 import com.ishland.c2me.opts.natives_math.common.BindingsTemplate;
 import com.ishland.flowsched.util.Assertions;
 import it.unimi.dsi.fastutil.Hash;
+import it.unimi.dsi.fastutil.objects.Object2IntLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenCustomHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ReferenceLinkedOpenHashMap;
@@ -59,9 +61,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HexFormat;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Supplier;
 
 public class OpenCLCGen {
 
@@ -132,12 +134,6 @@ public class OpenCLCGen {
             String method = context.methods.get(o);
             if (method != null) builder.append(method).append(',');
 
-            String splineMethod = context.splineMethods.get(o);
-            if (splineMethod != null) builder.append(splineMethod).append(',');
-
-            String splineMethodCache1 = context.splineMethodsCache1.get(o);
-            if (splineMethodCache1 != null) builder.append(splineMethodCache1).append(',');
-
             if (builder.isEmpty()) {
                 return null;
             } else {
@@ -174,19 +170,100 @@ public class OpenCLCGen {
         ;
     }
 
+    public static class FunctionContextImpl implements OpenCLCGenFunctionContext {
+
+        private final ContextImpl parent;
+        private final StringBuilder pendingBody = new StringBuilder();
+        private final Object2ReferenceOpenHashMap<AstNode, String> vars = new Object2ReferenceOpenHashMap<>();
+        private final Object2ReferenceOpenHashMap<Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper>, String> splineVars = new Object2ReferenceOpenHashMap<>();
+        private final FunctionVariant variant;
+
+        private int varIdx = 0;
+
+        public FunctionContextImpl(ContextImpl parent, FunctionVariant variant) {
+            this.parent = Objects.requireNonNull(parent);
+            this.variant = Objects.requireNonNull(variant);
+        }
+
+        @Override
+        public OpenCLCGenContext getParent() {
+            return this.parent;
+        }
+
+        @Override
+        public FunctionVariant getVariant() {
+            return this.variant;
+        }
+
+        @Override
+        public String nextVarName() {
+            return String.format("var_%d", varIdx++);
+        }
+
+        @Override
+        public ValuesMethodDefD newVar(AstNode node) {
+            if (node instanceof ConstantNode constantNode) {
+                return new ValuesMethodDefD(constantNode.getValue());
+            } else {
+                String generated = this.newVarUnoptimized(node);
+                return new ValuesMethodDefD(generated);
+            }
+        }
+
+        @Override
+        public String newVarUnoptimized(AstNode node) {
+            return this.vars.computeIfAbsent(node, this::newVar0);
+        }
+
+        private String newVar0(AstNode node) {
+            String varName = nextVarName();
+            String generated = OpenCLCGenRegistry.doCLGen(node, this, varName);
+            this.pendingBody
+                    .append("double ").append(varName).append("; // ").append(node.getClass().getName()).append("\n")
+                    .append("{\n")
+                    .append(generated.indent(4))
+                    .append("}\n");
+            return varName;
+        }
+
+        @Override
+        public String getDelegateVar(ValuesMethodDefD target) {
+            if (target.isConst()) {
+                return OpenCLCGen.literal(target.constValue());
+            } else {
+                return target.generatedMethod();
+            }
+        }
+
+        @Override
+        public String getCachedSplineVar(Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper> spline) {
+            return this.splineVars.get(spline);
+        }
+
+        @Override
+        public void cacheSplineVar(Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper> spline, String method) {
+            this.splineVars.put(spline, method);
+        }
+
+        @Override
+        public void appendRaw(String raw) {
+            this.pendingBody.append(raw);
+        }
+
+    }
+
     public static class ContextImpl implements OpenCLCGenContext {
 
         private final StringBuilder pendingSource = new StringBuilder();
-        private final Object2ReferenceOpenHashMap<AstNode, String> methods = new Object2ReferenceOpenHashMap<>();
-        private final Object2ReferenceOpenHashMap<Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper>, String> splineMethods = new Object2ReferenceOpenHashMap<>();
-        private final Object2ReferenceOpenHashMap<Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper>, String> splineMethodsCache1 = new Object2ReferenceOpenHashMap<>();
+        private final Object2ReferenceOpenHashMap<FunctionKey, String> methods = new Object2ReferenceOpenHashMap<>();
         private final Reference2IntLinkedOpenHashMap<Object> globalDynamicDataOffsets = new Reference2IntLinkedOpenHashMap<>();
-        private final ArrayList<CacheLikeNode> flatCaches = new ArrayList<>();
-        private final ArrayList<CacheLikeNode> interpolators = new ArrayList<>();
-        private final ArrayList<CacheLikeNode> cache2ds = new ArrayList<>();
+        private final Object2IntLinkedOpenHashMap<CacheLikeNode> flatCaches = new Object2IntLinkedOpenHashMap<>();
+        private final Object2IntLinkedOpenHashMap<CacheLikeNode> interpolators = new Object2IntLinkedOpenHashMap<>();
+        private final Object2IntLinkedOpenHashMap<CacheLikeNode> cache2ds = new Object2IntLinkedOpenHashMap<>();
         private final Object2ReferenceOpenHashMap<String, String> defines = new Object2ReferenceOpenHashMap<>();
         private final Random rng = new Random(1234);
         private RegistryEntry<Biome>[] biomeMappings = null;
+        private boolean cacheFrozen = false;
 
         private final int localOffsetTableOffset = this.allocGlobalDynamicData(MARKER_localOffsetTable); // should always be zero
 
@@ -214,6 +291,10 @@ public class OpenCLCGen {
             this.allocGlobalDynamicData(MARKER_cacheLike_flatCache);
             this.allocGlobalDynamicData(MARKER_cacheLike_cache2d);
             this.allocGlobalDynamicData(MARKER_cacheLike_interpolator);
+
+            this.flatCaches.defaultReturnValue(-1);
+            this.interpolators.defaultReturnValue(-1);
+            this.cache2ds.defaultReturnValue(-1);
         }
 
         private int methodIdx = 0;
@@ -241,35 +322,58 @@ public class OpenCLCGen {
         }
 
         public void compileBinding(AstNode node, String id) {
-            ValuesMethodDefD method = this.newMethod(node);
-            this.pendingSource
-                    .append("static __attribute__((pure)) double df_binding_").append(id).append(signature).append(" {\n")
-                    .append("    ").append("return ").append(this.callDelegate(method)).append(";\n")
-                    .append("}\n");
+            newDispatcher(node, "df_binding_" + id);
         }
 
         @Override
-        public ValuesMethodDefD newMethod(AstNode node) {
+        public ValuesMethodDefD newDispatcher(AstNode node, String id) {
+            for (OpenCLCGenFunctionContext.FunctionVariant variant : OpenCLCGenFunctionContext.FunctionVariant.values()) {
+                if (!variant.inDispatcher) continue;
+                ValuesMethodDefD method = this.newMethod(node, variant);
+                this.pendingSource
+                        .append("static __attribute__((pure)) double ").append(id).append(variant.suffix).append(signature).append(" {\n")
+                        .append("    ").append("return ").append(this.callDelegate(method)).append(";\n")
+                        .append("}\n");
+            }
+
+            this.pendingSource
+                    .append("static __attribute__((pure)) double ").append(id).append(signature).append(" {\n")
+                    .append("    ").append("if (ctx.rw_data && (ctx.sample_flags & MASK_enableAllCaches) == MASK_enableAllCaches) {\n")
+                    .append("    ").append("    ").append("return ").append(id).append(OpenCLCGenFunctionContext.FunctionVariant.FULLY_CACHED.suffix).append("(ctx);\n")
+                    .append("    ").append("} else if (ctx.rw_data &&(ctx.sample_flags & MASK_enableFlatCache) == MASK_enableFlatCache) {\n")
+                    .append("    ").append("    ").append("return ").append(id).append(OpenCLCGenFunctionContext.FunctionVariant.FLATCACHE_ONLY.suffix).append("(ctx);\n")
+                    .append("    ").append("} else {\n")
+                    .append("    ").append("    ").append("return ").append(id).append(OpenCLCGenFunctionContext.FunctionVariant.UNCACHED.suffix).append("(ctx);\n")
+                    .append("    ").append("}\n")
+                    .append("}\n");
+
+            return new ValuesMethodDefD(id);
+        }
+
+        @Override
+        public ValuesMethodDefD newMethod(AstNode node, OpenCLCGenFunctionContext.FunctionVariant variant) {
             if (node instanceof ConstantNode constantNode) {
                 return new ValuesMethodDefD(constantNode.getValue());
             } else {
-                String generated = this.newMethodUnoptimized(node);
+                String generated = this.newMethodUnoptimized(node, variant);
                 return new ValuesMethodDefD(generated);
             }
         }
 
-        public String newMethodUnoptimized(AstNode node) {
-            return this.methods.computeIfAbsent(node, (AstNode node1) -> this.newMethod(() -> OpenCLCGenRegistry.doCLGen(node1, this), nextMethodName(node.getClass().getSimpleName())));
+        public String newMethodUnoptimized(AstNode node, OpenCLCGenFunctionContext.FunctionVariant variant) {
+            return this.methods.computeIfAbsent(new FunctionKey(node, variant), this::newMethod0);
         }
 
-        private String newMethod(Supplier<String> generator, String name) {
-            String functionBody = generator.get();
+        private String newMethod0(FunctionKey key) {
+            String methodName = nextMethodName();
+            FunctionContextImpl functionContext = new FunctionContextImpl(this, key.variant());
+            ValuesMethodDefD finalVar = functionContext.newVar(key.node());
             this.pendingSource
-                    .append("static __attribute__((pure)) double ").append(name).append(signature).append(" {\n")
-                    .append(getFillerOrNot().indent(4))
-                    .append(functionBody.indent(4))
+                    .append("static __attribute__((pure)) double ").append(methodName).append(signature).append(" {\n")
+                    .append(functionContext.pendingBody.toString().indent(4))
+                    .append("    ").append("return ").append(functionContext.getDelegateVar(finalVar)).append(";\n")
                     .append("}\n");
-            return name;
+            return methodName;
         }
 
         @Override
@@ -328,16 +432,6 @@ public class OpenCLCGen {
         }
 
         @Override
-        public String getCachedSplineMethod(Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper> spline, boolean cache1) {
-            return (cache1 ? this.splineMethodsCache1 : this.splineMethods).get(spline);
-        }
-
-        @Override
-        public void cacheSplineMethod(Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper> spline, String method, boolean cache1) {
-            (cache1 ? this.splineMethodsCache1 : this.splineMethods).put(spline, method);
-        }
-
-        @Override
         public int registerFlatCache(CacheLikeNode node) {
             if (!((Object) node.getCacheLike() instanceof DensityFunctionTypes.Wrapping wrapping)) {
                 throw new UnsupportedOperationException("Can only gen wrapping");
@@ -345,8 +439,15 @@ public class OpenCLCGen {
             if (wrapping.type() != DensityFunctionTypes.Wrapping.Type.FLAT_CACHE) {
                 throw new UnsupportedOperationException("Can only gen flat cache");
             }
-            int index = this.flatCaches.size();
-            this.flatCaches.add(node);
+            int index = this.flatCaches.getInt(node);
+            if (index != -1) {
+                return index;
+            }
+            if (this.cacheFrozen) {
+                throw new IllegalStateException("Cannot register more caches");
+            }
+            index = this.flatCaches.size();
+            this.flatCaches.put(node, index);
             return index;
         }
 
@@ -358,8 +459,15 @@ public class OpenCLCGen {
             if (wrapping.type() != DensityFunctionTypes.Wrapping.Type.CACHE2D) {
                 throw new UnsupportedOperationException("Can only gen cache2d");
             }
-            int index = this.cache2ds.size();
-            this.cache2ds.add(node);
+            int index = this.cache2ds.getInt(node);
+            if (index != -1) {
+                return index;
+            }
+            if (this.cacheFrozen) {
+                throw new IllegalStateException("Cannot register more caches");
+            }
+            index = this.cache2ds.size();
+            this.cache2ds.put(node, index);
             return index;
         }
 
@@ -371,26 +479,33 @@ public class OpenCLCGen {
             if (wrapping.type() != DensityFunctionTypes.Wrapping.Type.INTERPOLATED) {
                 throw new UnsupportedOperationException("Can only gen interpolator");
             }
-            int index = this.interpolators.size();
-            this.interpolators.add(node);
+            int index = this.interpolators.getInt(node);
+            if (index != -1) {
+                return index;
+            }
+            if (this.cacheFrozen) {
+                throw new IllegalStateException("Cannot register more caches");
+            }
+            index = this.interpolators.size();
+            this.interpolators.put(node, index);
             return index;
         }
 
         public void genNoiseKernels() {
+            this.cacheFrozen = true;
+
             final ArrayList<String> flatCachePrefills = new ArrayList<>();
             final ArrayList<String> interpolatorPrefills = new ArrayList<>();
             final ArrayList<String> cache2dPrefills = new ArrayList<>();
 
             {
-                ArrayList<CacheLikeNode> caches = this.flatCaches;
+                Object2IntLinkedOpenHashMap<CacheLikeNode> caches = this.flatCaches;
                 int offset = this.getGlobalDynamicDataOffset(MARKER_cacheLike_flatCache);
-                for (int i = 0, cachesSize = caches.size(); i < cachesSize; i++) {
-                    CacheLikeNode node = caches.get(i);
-                    String nodeName = this.methods.get(node);
-                    Assertions.assertTrue(nodeName != null);
-                    String delegateName = this.methods.get(node.getDelegate());
-                    Assertions.assertTrue(delegateName != null);
-                    String name = "df_flatcache_prefill_" + nodeName;
+                for (Object2IntMap.Entry<CacheLikeNode> entry : caches.object2IntEntrySet()) {
+                    CacheLikeNode node = entry.getKey();
+                    int i = entry.getIntValue();
+                    String delegateName = this.newMethodUnoptimized(node.getDelegate(), OpenCLCGenFunctionContext.FunctionVariant.UNCACHED);
+                    String name = "df_flatcache_prefill_" + i;
 
                     // this kernel assumes it is launched with the appropriate global work size
                     // workgroup sizes doesn't matter
@@ -411,15 +526,14 @@ public class OpenCLCGen {
             }
 
             {
-                ArrayList<CacheLikeNode> caches = this.cache2ds;
+                Object2IntLinkedOpenHashMap<CacheLikeNode> caches = this.cache2ds;
                 int offset = this.getGlobalDynamicDataOffset(MARKER_cacheLike_cache2d);
-                for (int i = 0, cachesSize = caches.size(); i < cachesSize; i++) {
-                    CacheLikeNode node = caches.get(i);
-                    String nodeName = this.methods.get(node);
-                    Assertions.assertTrue(nodeName != null);
-                    String delegateName = this.methods.get(node.getDelegate());
+                for (Object2IntMap.Entry<CacheLikeNode> entry : caches.object2IntEntrySet()) {
+                    CacheLikeNode node = entry.getKey();
+                    int i = entry.getIntValue();
+                    String delegateName = this.newMethodUnoptimized(node.getDelegate(), OpenCLCGenFunctionContext.FunctionVariant.FULLY_CACHED_EXCEPT_CACHE2D);
                     Assertions.assertTrue(delegateName != null);
-                    String name = "df_cache2d_prefill_" + nodeName;
+                    String name = "df_cache2d_prefill_" + i;
 
                     // this kernel assumes it is launched with the appropriate global work size
                     // workgroup sizes doesn't matter
@@ -430,7 +544,7 @@ public class OpenCLCGen {
                             .append("    ").append("int32_t offsetX = get_global_id(0);\n")
                             .append("    ").append("int32_t offsetZ = get_global_id(1);\n")
                             .append("    ").append("uint32_t index = df_address_cache2d_buffer(params, ").append(i).append(", offsetX, offsetZ);\n")
-                            .append("    ").append("const double result = ").append(delegateName).append("(make_sample_int32_ctx(const_data, rw_data, offsetX + params->cache2d_startX, 0, offsetZ + params->cache2d_startZ, MASK_isInterpolation | MASK_inInterpolationLoop));\n")
+                            .append("    ").append("const double result = ").append(delegateName).append("(make_sample_int32_ctx(const_data, rw_data, offsetX + params->cache2d_startX, 0, offsetZ + params->cache2d_startZ, MASK_enableAllCaches));\n")
                             .append("    ").append("data[index] = result;\n")
                             .append("    ").append("if (extra_out) extra_out[index] = result;\n")
                             .append("}\n");
@@ -440,17 +554,16 @@ public class OpenCLCGen {
             }
 
             {
-                ArrayList<CacheLikeNode> cacheLikeNodes = this.interpolators;
+                Object2IntLinkedOpenHashMap<CacheLikeNode> caches = this.interpolators;
                 int offset = this.getGlobalDynamicDataOffset(MARKER_cacheLike_interpolator);
-                for (int i = 0, cacheLikeNodesSize = cacheLikeNodes.size(); i < cacheLikeNodesSize; i++) {
-                    CacheLikeNode node = cacheLikeNodes.get(i);
-                    String nodeName = this.methods.get(node);
-                    Assertions.assertTrue(nodeName != null);
-                    String delegateName = this.methods.get(node.getDelegate());
+                for (Object2IntMap.Entry<CacheLikeNode> entry : caches.object2IntEntrySet()) {
+                    CacheLikeNode node = entry.getKey();
+                    int i = entry.getIntValue();
+                    String delegateName = this.newMethodUnoptimized(node.getDelegate(), OpenCLCGenFunctionContext.FunctionVariant.FLATCACHE_ONLY);
                     Assertions.assertTrue(delegateName != null);
 
                     {
-                        String name = "df_interpolator_buffer_prefill_" + nodeName;
+                        String name = "df_interpolator_buffer_prefill_" + i;
 
                         // vanilla interpolation area:
                         // cellX: [startCellX, startCellX + horizontalCellCount + 1)
@@ -471,7 +584,7 @@ public class OpenCLCGen {
                                 .append("    ").append("int32_t cellY = cellRelY + params->startCellY;\n")
                                 .append("    ").append("int32_t cellZ = cellRelZ + params->startCellZ;\n")
                                 .append("    ").append("uint32_t index = df_address_interpolator_buffer(params, ").append(i).append(", cellRelX, cellRelY, cellRelZ);\n")
-                                .append("    ").append("const double result = ").append(delegateName).append("(make_sample_int32_ctx(const_data, rw_data, cellX * genShapeCfg_horizontalCellBlockCount(), cellY * genShapeCfg_verticalCellBlockCount(), cellZ * genShapeCfg_horizontalCellBlockCount(), 0));\n")
+                                .append("    ").append("const double result = ").append(delegateName).append("(make_sample_int32_ctx(const_data, rw_data, cellX * genShapeCfg_horizontalCellBlockCount(), cellY * genShapeCfg_verticalCellBlockCount(), cellZ * genShapeCfg_horizontalCellBlockCount(), MASK_enableFlatCache));\n")
                                 .append("    ").append("data[index] = result;\n")
                                 .append("    ").append("if (extra_out) extra_out[index] = result;\n")
                                 .append("}\n");
@@ -618,6 +731,9 @@ public class OpenCLCGen {
                     this.biomeMappings,
                     null
             );
+        }
+
+        private record FunctionKey(AstNode node, OpenCLCGenFunctionContext.FunctionVariant variant) {
         }
 
     }

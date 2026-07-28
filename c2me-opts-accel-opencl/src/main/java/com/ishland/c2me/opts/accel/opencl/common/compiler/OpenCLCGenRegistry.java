@@ -48,6 +48,7 @@ import com.ishland.c2me.opts.dfc.common.ast.noise.GenericShiftedNoiseNode;
 import com.ishland.c2me.opts.dfc.common.ast.spline.SplineAstNode;
 import com.ishland.c2me.opts.dfc.common.gen.opencl.OpenCLCEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.opencl.OpenCLCGenData;
+import com.ishland.c2me.opts.dfc.common.gen.opencl.OpenCLCGenFunctionContext;
 
 public class OpenCLCGenRegistry {
 
@@ -69,14 +70,14 @@ public class OpenCLCGenRegistry {
         OpenCLCGenData.REGISTRY.registerExactMatch(SplineAstNode.class, SplineAstNodeOpenCLCEmitter.INSTANCE);
         OpenCLCGenData.REGISTRY.registerExactMatch(YClampedGradientNode.class, YClampedGradientNodeOpenCLCEmitter.INSTANCE);
 
-        OpenCLCGenData.REGISTRY.registerExactMatch(DelegateNode.class, (OpenCLCEmitter<DelegateNode>) (node, context) -> {
+        OpenCLCGenData.REGISTRY.registerExactMatch(DelegateNode.class, (OpenCLCEmitter<DelegateNode>) (node, context, storeTo) -> {
             throw new UnsupportedOperationException(String.format("Unsupported density function type: %s", node.getDelegate().getClass()));
         });
     }
 
-    public static <T extends AstNode> String doCLGen(T node, OpenCLCGen.ContextImpl context) {
+    public static <T extends AstNode> String doCLGen(T node, OpenCLCGenFunctionContext context, String storeTo) {
         OpenCLCEmitter<T> emitter = (OpenCLCEmitter<T>) OpenCLCGenData.REGISTRY.get(node.getClass());
-        return emitter.doCLGen(node, context);
+        return emitter.doCLGen(node, context, storeTo);
     }
 
 }

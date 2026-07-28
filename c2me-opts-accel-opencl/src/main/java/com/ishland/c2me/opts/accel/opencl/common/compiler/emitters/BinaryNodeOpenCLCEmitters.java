@@ -29,23 +29,22 @@ import com.ishland.c2me.opts.dfc.common.ast.binary.MulNode;
 import com.ishland.c2me.opts.dfc.common.gen.CodeGenRegistry;
 import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefD;
 import com.ishland.c2me.opts.dfc.common.gen.opencl.OpenCLCEmitter;
-import com.ishland.c2me.opts.dfc.common.gen.opencl.OpenCLCGenContext;
-import org.jetbrains.annotations.UnknownNullability;
+import com.ishland.c2me.opts.dfc.common.gen.opencl.OpenCLCGenFunctionContext;
 
 public class BinaryNodeOpenCLCEmitters {
 
     public static abstract class AbstractGenericBinaryNodeOpenCLCEmitter<T extends AbstractBinaryNode> implements OpenCLCEmitter<T> {
 
         @Override
-        public final String doCLGen(T node, @UnknownNullability OpenCLCGenContext context) {
+        public String doCLGen(T node, OpenCLCGenFunctionContext context, String storeTo) {
             StringBuilder sb = new StringBuilder();
-            ValuesMethodDefD leftMethod = context.newMethod(node.left);
-            ValuesMethodDefD rightMethod = context.newMethod(node.right);
-            genBody(node, context, sb, leftMethod, rightMethod);
+            ValuesMethodDefD leftMethod = context.newVar(node.left);
+            ValuesMethodDefD rightMethod = context.newVar(node.right);
+            genBody(node, context, storeTo, sb, leftMethod, rightMethod);
             return sb.toString();
         }
 
-        public abstract void genBody(T node, OpenCLCGenContext context, StringBuilder sb, ValuesMethodDefD left, ValuesMethodDefD right);
+        public abstract void genBody(T node, OpenCLCGenFunctionContext context, String storeTo, StringBuilder sb, ValuesMethodDefD left, ValuesMethodDefD right);
 
     }
 
@@ -56,8 +55,8 @@ public class BinaryNodeOpenCLCEmitters {
         }
 
         @Override
-        public void genBody(AddNode node, @UnknownNullability OpenCLCGenContext context, StringBuilder sb, ValuesMethodDefD left, ValuesMethodDefD right) {
-            sb.append("return ").append(context.callDelegate(left)).append(" + ").append(context.callDelegate(right)).append(";\n");
+        public void genBody(AddNode node, OpenCLCGenFunctionContext context, String storeTo, StringBuilder sb, ValuesMethodDefD left, ValuesMethodDefD right) {
+            sb.append(storeTo).append(" = ").append(context.getDelegateVar(left)).append(" + ").append(context.getDelegateVar(right)).append(";\n");
         }
     }
 
@@ -68,8 +67,8 @@ public class BinaryNodeOpenCLCEmitters {
         }
 
         @Override
-        public void genBody(DivNode node, @UnknownNullability OpenCLCGenContext context, StringBuilder sb, ValuesMethodDefD left, ValuesMethodDefD right) {
-            sb.append("return ").append(context.callDelegate(left)).append(" / ").append(context.callDelegate(right)).append(";\n");
+        public void genBody(DivNode node, OpenCLCGenFunctionContext context, String storeTo, StringBuilder sb, ValuesMethodDefD left, ValuesMethodDefD right) {
+            sb.append(storeTo).append(" = ").append(context.getDelegateVar(left)).append(" / ").append(context.getDelegateVar(right)).append(";\n");
         }
     }
 
@@ -80,8 +79,8 @@ public class BinaryNodeOpenCLCEmitters {
         }
 
         @Override
-        public void genBody(MaxNode node, @UnknownNullability OpenCLCGenContext context, StringBuilder sb, ValuesMethodDefD left, ValuesMethodDefD right) {
-            sb.append("return fmax(").append(context.callDelegate(left)).append(", ").append(context.callDelegate(right)).append(");\n");
+        public void genBody(MaxNode node, OpenCLCGenFunctionContext context, String storeTo, StringBuilder sb, ValuesMethodDefD left, ValuesMethodDefD right) {
+            sb.append(storeTo).append(" = fmax(").append(context.getDelegateVar(left)).append(", ").append(context.getDelegateVar(right)).append(");\n");
         }
     }
 
@@ -92,10 +91,10 @@ public class BinaryNodeOpenCLCEmitters {
         }
 
         @Override
-        public void genBody(MaxShortNode node, @UnknownNullability OpenCLCGenContext context, StringBuilder sb, ValuesMethodDefD left, ValuesMethodDefD right) {
-            sb.append("const double _left = ").append(context.callDelegate(left)).append(";\n");
-            sb.append("return _left >= ").append(OpenCLCGen.literal(node.rightMax))
-                    .append(" ? _left : fmax(_left, ").append(context.callDelegate(right)).append(");\n");
+        public void genBody(MaxShortNode node, OpenCLCGenFunctionContext context, String storeTo, StringBuilder sb, ValuesMethodDefD left, ValuesMethodDefD right) {
+            sb.append("const double _left = ").append(context.getDelegateVar(left)).append(";\n");
+            sb.append(storeTo).append(" = _left >= ").append(OpenCLCGen.literal(node.rightMax))
+                    .append(" ? _left : fmax(_left, ").append(context.getDelegateVar(right)).append(");\n");
         }
     }
 
@@ -106,8 +105,8 @@ public class BinaryNodeOpenCLCEmitters {
         }
 
         @Override
-        public void genBody(MinNode node, @UnknownNullability OpenCLCGenContext context, StringBuilder sb, ValuesMethodDefD left, ValuesMethodDefD right) {
-            sb.append("return fmin(").append(context.callDelegate(left)).append(", ").append(context.callDelegate(right)).append(");\n");
+        public void genBody(MinNode node, OpenCLCGenFunctionContext context, String storeTo, StringBuilder sb, ValuesMethodDefD left, ValuesMethodDefD right) {
+            sb.append(storeTo).append(" = fmin(").append(context.getDelegateVar(left)).append(", ").append(context.getDelegateVar(right)).append(");\n");
         }
     }
 
@@ -118,10 +117,10 @@ public class BinaryNodeOpenCLCEmitters {
         }
 
         @Override
-        public void genBody(MinShortNode node, @UnknownNullability OpenCLCGenContext context, StringBuilder sb, ValuesMethodDefD left, ValuesMethodDefD right) {
-            sb.append("const double _left = ").append(context.callDelegate(left)).append(";\n");
-            sb.append("return _left <= ").append(OpenCLCGen.literal(node.rightMin))
-                    .append(" ? _left : fmin(_left, ").append(context.callDelegate(right)).append(");\n");
+        public void genBody(MinShortNode node, OpenCLCGenFunctionContext context, String storeTo, StringBuilder sb, ValuesMethodDefD left, ValuesMethodDefD right) {
+            sb.append("const double _left = ").append(context.getDelegateVar(left)).append(";\n");
+            sb.append(storeTo).append(" = _left <= ").append(OpenCLCGen.literal(node.rightMin))
+                    .append(" ? _left : fmin(_left, ").append(context.getDelegateVar(right)).append(");\n");
         }
     }
 
@@ -132,12 +131,12 @@ public class BinaryNodeOpenCLCEmitters {
         }
 
         @Override
-        public void genBody(MulNode node, OpenCLCGenContext context, StringBuilder sb, ValuesMethodDefD left, ValuesMethodDefD right) {
+        public void genBody(MulNode node, OpenCLCGenFunctionContext context, String storeTo, StringBuilder sb, ValuesMethodDefD left, ValuesMethodDefD right) {
             if (left.isConst()) { // (0.0 * x) should already be optimized out
-                sb.append("return ").append(context.callDelegate(left)).append(" * ").append(context.callDelegate(right)).append(";\n");
+                sb.append(storeTo).append(" = ").append(context.getDelegateVar(left)).append(" * ").append(context.getDelegateVar(right)).append(";\n");
             } else {
-                sb.append("const double _left = ").append(context.callDelegate(left)).append(";\n");
-                sb.append("return _left == 0.0 ? 0.0 : _left * ").append(context.callDelegate(right)).append(";\n");
+                sb.append("const double _left = ").append(context.getDelegateVar(left)).append(";\n");
+                sb.append(storeTo).append(" = _left == 0.0 ? 0.0 : _left * ").append(context.getDelegateVar(right)).append(";\n");
             }
         }
     }
