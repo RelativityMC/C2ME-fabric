@@ -1,4 +1,5 @@
 #include <ext_math.h>
+#include <FastNoiseLite.h>
 #include <target_macros.h>
 
 TARGET_IMPL(c2me_natives_noise_perlin_sample, double, (const aligned_uint32_ptr permutations, const double originX,
