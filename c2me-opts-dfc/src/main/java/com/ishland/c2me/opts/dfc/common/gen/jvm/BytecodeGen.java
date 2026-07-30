@@ -131,21 +131,21 @@ public class BytecodeGen {
             StringBuilder builder = new StringBuilder();
 
             String singleMethod = genContext.singleMethods.get(o);
-            if (singleMethod != null) builder.append(singleMethod).append(',');
+            if (singleMethod != null) builder.append("\\n").append(singleMethod);
 
             String multiMethod = genContext.multiMethods.get(o);
-            if (multiMethod != null) builder.append(multiMethod).append(',');
+            if (multiMethod != null) builder.append("\\n").append(multiMethod);
 
             String splineMethod = genContext.splineMethods.get(o);
-            if (splineMethod != null) builder.append(splineMethod).append(',');
+            if (splineMethod != null) builder.append("\\n").append(splineMethod);
 
             String splineMethodCache1 = genContext.splineMethodsCache1.get(o);
-            if (splineMethodCache1 != null) builder.append(splineMethodCache1).append(',');
+            if (splineMethodCache1 != null) builder.append("\\n").append(splineMethodCache1);
 
             if (builder.isEmpty()) {
                 return null;
             } else {
-                return builder.delete(builder.length() - 1, builder.length()).toString();
+                return builder.toString();
             }
         });
         Class<?> defined = defineClass(genContext.className, bytes);

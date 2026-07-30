@@ -40,8 +40,6 @@ public interface OpenCLCGenContext {
 
     ValuesMethodDefD newMethod(AstNode node, OpenCLCGenFunctionContext.FunctionVariant variant);
 
-    String getFillerOrNot();
-
     String callDelegate(ValuesMethodDefD target);
 
     int allocGlobalDynamicData(Object data);

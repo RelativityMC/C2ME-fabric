@@ -62,7 +62,6 @@ import java.util.Arrays;
 import java.util.HexFormat;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class OpenCLCGen {
@@ -129,15 +128,12 @@ public class OpenCLCGen {
         String name = "DfcCompiled_" + original.getOrdinal();
         Path path = GenDumper.dumpCL(name, original.getGeneratedSource().getBytes(StandardCharsets.UTF_8));
         GenDumper.dumpDot(name, path, dfs, o -> {
-            StringBuilder builder = new StringBuilder();
+            StringBuilder builder = context.recordedAuxNames.get(o);
 
-            String method = context.methods.get(o);
-            if (method != null) builder.append(method).append(',');
-
-            if (builder.isEmpty()) {
+            if (builder == null || builder.isEmpty()) {
                 return null;
             } else {
-                return builder.delete(builder.length() - 1, builder.length()).toString();
+                return builder.toString();
             }
         });
         return new GeneratedCLSource(
@@ -176,12 +172,14 @@ public class OpenCLCGen {
         private final StringBuilder pendingBody = new StringBuilder();
         private final Object2ReferenceOpenHashMap<AstNode, String> vars = new Object2ReferenceOpenHashMap<>();
         private final Object2ReferenceOpenHashMap<Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper>, String> splineVars = new Object2ReferenceOpenHashMap<>();
+        private final String methodName;
         private final FunctionVariant variant;
 
         private int varIdx = 0;
 
-        public FunctionContextImpl(ContextImpl parent, FunctionVariant variant) {
+        public FunctionContextImpl(ContextImpl parent, String methodName, FunctionVariant variant) {
             this.parent = Objects.requireNonNull(parent);
+            this.methodName = Objects.requireNonNull(methodName);
             this.variant = Objects.requireNonNull(variant);
         }
 
@@ -223,6 +221,7 @@ public class OpenCLCGen {
                     .append("{\n")
                     .append(generated.indent(4))
                     .append("}\n");
+            this.parent.recordAuxName(node, this.methodName, varName);
             return varName;
         }
 
@@ -241,8 +240,9 @@ public class OpenCLCGen {
         }
 
         @Override
-        public void cacheSplineVar(Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper> spline, String method) {
-            this.splineVars.put(spline, method);
+        public void cacheSplineVar(Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper> spline, String varName) {
+            this.splineVars.put(spline, varName);
+            this.parent.recordAuxName(spline, this.methodName, varName);
         }
 
         @Override
@@ -261,7 +261,7 @@ public class OpenCLCGen {
         private final Object2IntLinkedOpenHashMap<CacheLikeNode> interpolators = new Object2IntLinkedOpenHashMap<>();
         private final Object2IntLinkedOpenHashMap<CacheLikeNode> cache2ds = new Object2IntLinkedOpenHashMap<>();
         private final Object2ReferenceOpenHashMap<String, String> defines = new Object2ReferenceOpenHashMap<>();
-        private final Random rng = new Random(1234);
+        private final Object2ReferenceOpenHashMap<Object, StringBuilder> recordedAuxNames = new Object2ReferenceOpenHashMap<>();
         private RegistryEntry<Biome>[] biomeMappings = null;
         private boolean cacheFrozen = false;
 
@@ -366,7 +366,7 @@ public class OpenCLCGen {
 
         private String newMethod0(FunctionKey key) {
             String methodName = nextMethodName();
-            FunctionContextImpl functionContext = new FunctionContextImpl(this, key.variant());
+            FunctionContextImpl functionContext = new FunctionContextImpl(this, methodName, key.variant());
             ValuesMethodDefD finalVar = functionContext.newVar(key.node());
             this.pendingSource
                     .append("static __attribute__((pure)) double ").append(methodName).append(signature).append(" {\n")
@@ -374,11 +374,6 @@ public class OpenCLCGen {
                     .append("    ").append("return ").append(functionContext.getDelegateVar(finalVar)).append(";\n")
                     .append("}\n");
             return methodName;
-        }
-
-        @Override
-        public String getFillerOrNot() {
-            return this.rng.nextInt(16) == 0 ? filler : "";
         }
 
         public void callDelegate(StringBuilder b, ValuesMethodDefD target) {
@@ -429,6 +424,10 @@ public class OpenCLCGen {
                 throw new IllegalStateException("No global dynamic data offset found");
             }
             return this.globalDynamicDataOffsets.getInt(data);
+        }
+
+        private void recordAuxName(Object node, String funcName, String varName) {
+            this.recordedAuxNames.computeIfAbsent(node, unused -> new StringBuilder()).append("\\n").append(funcName).append('.').append(varName);
         }
 
         @Override

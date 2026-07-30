@@ -44,7 +44,7 @@ public interface OpenCLCGenFunctionContext {
 
     String getCachedSplineVar(Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper> spline);
 
-    void cacheSplineVar(Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper> spline, String method);
+    void cacheSplineVar(Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper> spline, String varName);
 
     void appendRaw(String raw);
 
