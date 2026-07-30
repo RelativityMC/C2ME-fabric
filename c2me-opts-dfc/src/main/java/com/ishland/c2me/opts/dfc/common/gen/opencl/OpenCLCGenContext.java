@@ -27,8 +27,6 @@ package com.ishland.c2me.opts.dfc.common.gen.opencl;
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.CacheLikeNode;
 import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefD;
-import net.minecraft.util.math.Spline;
-import net.minecraft.world.gen.densityfunction.DensityFunctionTypes;
 
 public interface OpenCLCGenContext {
     String signature = "(const sample_int32_ctx_t ctx)";
@@ -38,9 +36,9 @@ public interface OpenCLCGenContext {
 
     String nextMethodName(String suffix);
 
-    ValuesMethodDefD newMethod(AstNode node);
+    ValuesMethodDefD newDispatcher(AstNode node, String id);
 
-    String getFillerOrNot();
+    ValuesMethodDefD newMethod(AstNode node, OpenCLCGenFunctionContext.FunctionVariant variant);
 
     String callDelegate(ValuesMethodDefD target);
 
@@ -51,10 +49,6 @@ public interface OpenCLCGenContext {
     int allocGlobalConstDataObject(Object obj);
 
     int getGlobalDynamicDataOffset(Object data);
-
-    String getCachedSplineMethod(Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper> spline, boolean cache1);
-
-    void cacheSplineMethod(Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper> spline, String method, boolean cache1);
 
     int registerFlatCache(CacheLikeNode node);
 

@@ -92,7 +92,7 @@ public class Config {
             .comment("""
                     Enables fast compilation options for intel GPUs
                     """)
-            .getBoolean(true, false);
+            .getBoolean(false, false);
 
     public static final boolean enableNvidiaFastCompilation = new ConfigSystem.ConfigAccessor()
             .key("openclAccel.enableNvidiaFastCompilation")
@@ -101,7 +101,7 @@ public class Config {
                     
                     This *will* decrease GPU-bound throughput by roughly 20%
                     """)
-            .getBoolean(true, false);
+            .getBoolean(false, false);
 
     public static final boolean useSmallerBatches = new ConfigSystem.ConfigAccessor()
             .key("openclAccel.useSmallerBatches")
