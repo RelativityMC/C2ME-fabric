@@ -24,8 +24,6 @@
 
 package com.ishland.c2me.opts.dfc.common.gen.jvm.emitters;
 
-import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.*;
-import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.unary.*;
 import com.ishland.c2me.opts.dfc.common.ast.unary.*;
 import com.ishland.c2me.opts.dfc.common.gen.CodeGenRegistry;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.BytecodeEmitter;

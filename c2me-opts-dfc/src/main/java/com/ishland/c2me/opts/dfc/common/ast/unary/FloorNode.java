@@ -22,10 +22,9 @@
  * THE SOFTWARE.
  */
 
-package com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.unary;
+package com.ishland.c2me.opts.dfc.common.ast.unary;
 
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
-import com.ishland.c2me.opts.dfc.common.ast.unary.AbstractUnaryNode;
 
 public class FloorNode extends AbstractUnaryNode {
 

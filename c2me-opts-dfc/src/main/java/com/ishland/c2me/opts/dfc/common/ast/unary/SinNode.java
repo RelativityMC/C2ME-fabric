@@ -22,20 +22,19 @@
  * THE SOFTWARE.
  */
 
-package com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.unary;
+package com.ishland.c2me.opts.dfc.common.ast.unary;
 
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
-import com.ishland.c2me.opts.dfc.common.ast.unary.AbstractUnaryNode;
 
-public class CeilNode extends AbstractUnaryNode {
+public class SinNode extends AbstractUnaryNode {
 
-    public CeilNode(AstNode operand) {
+    public SinNode(AstNode operand) {
         super(operand);
     }
 
     @Override
     protected AstNode newInstance(AstNode operand) {
-        return new CeilNode(operand);
+        return new SinNode(operand);
     }
 
 }
