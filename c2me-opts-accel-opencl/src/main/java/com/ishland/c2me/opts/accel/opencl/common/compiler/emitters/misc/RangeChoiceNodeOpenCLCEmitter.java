@@ -19,7 +19,8 @@ package com.ishland.c2me.opts.accel.opencl.common.compiler.emitters.misc;
 import com.ishland.c2me.opts.dfc.common.ast.misc.RangeChoiceNode;
 import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefD;
 import com.ishland.c2me.opts.dfc.common.gen.opencl.OpenCLCEmitter;
-import com.ishland.c2me.opts.dfc.common.gen.opencl.OpenCLCGenFunctionContext;
+import com.ishland.c2me.opts.dfc.common.gen.opencl.OpenCLCGenContext;
+import org.jetbrains.annotations.UnknownNullability;
 
 import static com.ishland.c2me.opts.accel.opencl.common.compiler.OpenCLCGen.literal;
 
@@ -30,11 +31,11 @@ public class RangeChoiceNodeOpenCLCEmitter implements OpenCLCEmitter<RangeChoice
     }
 
     @Override
-    public String doCLGen(RangeChoiceNode node, OpenCLCGenFunctionContext context, String storeTo) {
-        ValuesMethodDefD input = context.newVar(node.input);
-        ValuesMethodDefD whenInRange = context.newVar(node.whenInRange);
-        ValuesMethodDefD whenOutOfRange = context.newVar(node.whenOutOfRange);
-        return "double v = " + context.getDelegateVar(input) + ";\n" +
-                storeTo + " = (v >= " + literal(node.minInclusive) + " && v < " + literal(node.maxExclusive) + ") ? " + context.getDelegateVar(whenInRange) + " : " + context.getDelegateVar(whenOutOfRange) + ";\n";
+    public String doCLGen(RangeChoiceNode node, @UnknownNullability OpenCLCGenContext context) {
+        ValuesMethodDefD input = context.newMethod(node.input);
+        ValuesMethodDefD whenInRange = context.newMethod(node.whenInRange);
+        ValuesMethodDefD whenOutOfRange = context.newMethod(node.whenOutOfRange);
+        return "double v = " + context.callDelegate(input) + ";\n" +
+                "return (v >= " + literal(node.minInclusive) + " && v < " + literal(node.maxExclusive) + ") ? " + context.callDelegate(whenInRange) + " : " + context.callDelegate(whenOutOfRange) + ";\n";
     }
 }

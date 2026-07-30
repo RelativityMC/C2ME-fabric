@@ -20,7 +20,8 @@ import com.ishland.c2me.base.mixin.access.IDensityFunctionTypesEndIslands;
 import com.ishland.c2me.base.mixin.access.ISimplexNoiseSampler;
 import com.ishland.c2me.opts.dfc.common.ast.misc.EndIslandsNode;
 import com.ishland.c2me.opts.dfc.common.gen.opencl.OpenCLCEmitter;
-import com.ishland.c2me.opts.dfc.common.gen.opencl.OpenCLCGenFunctionContext;
+import com.ishland.c2me.opts.dfc.common.gen.opencl.OpenCLCGenContext;
+import org.jetbrains.annotations.UnknownNullability;
 
 public class EndIslandsNodeOpenCLCEmitter implements OpenCLCEmitter<EndIslandsNode> {
     public static final EndIslandsNodeOpenCLCEmitter INSTANCE = new EndIslandsNodeOpenCLCEmitter();
@@ -29,10 +30,10 @@ public class EndIslandsNodeOpenCLCEmitter implements OpenCLCEmitter<EndIslandsNo
     }
 
     @Override
-    public String doCLGen(EndIslandsNode node, OpenCLCGenFunctionContext context, String storeTo) {
+    public String doCLGen(EndIslandsNode node, @UnknownNullability OpenCLCGenContext context) {
         int[] permutation = ((ISimplexNoiseSampler) ((IDensityFunctionTypesEndIslands) (Object) node.endIslands).getSampler()).getPermutation();
-        int offset = context.getParent().allocGlobalConstDataObject(permutation);
+        int offset = context.allocGlobalConstDataObject(permutation);
         return "global const uint32_t * const permutation = ptr_shift_global(ctx.const_data, " + offset + ");\n" +
-                storeTo + " = ((double) math_end_islands_sample_global(permutation, ctx.x / 8, ctx.z / 8) - 8.0) / 128.0;\n";
+                "return ((double) math_end_islands_sample_global(permutation, ctx.x / 8, ctx.z / 8) - 8.0) / 128.0;\n";
     }
 }

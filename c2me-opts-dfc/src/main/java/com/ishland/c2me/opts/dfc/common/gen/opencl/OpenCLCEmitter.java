@@ -29,6 +29,6 @@ import com.ishland.c2me.opts.dfc.common.gen.CodeEmitter;
 
 public interface OpenCLCEmitter<T extends AstNode> extends CodeEmitter<T> {
 
-    String doCLGen(T node, OpenCLCGenFunctionContext context, String storeTo);
+    String doCLGen(T node, OpenCLCGenContext context);
 
 }

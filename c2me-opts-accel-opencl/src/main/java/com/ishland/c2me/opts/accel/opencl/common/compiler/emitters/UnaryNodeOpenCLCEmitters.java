@@ -27,21 +27,22 @@ import com.ishland.c2me.opts.dfc.common.ast.unary.SqueezeNode;
 import com.ishland.c2me.opts.dfc.common.gen.CodeGenRegistry;
 import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefD;
 import com.ishland.c2me.opts.dfc.common.gen.opencl.OpenCLCEmitter;
-import com.ishland.c2me.opts.dfc.common.gen.opencl.OpenCLCGenFunctionContext;
+import com.ishland.c2me.opts.dfc.common.gen.opencl.OpenCLCGenContext;
+import org.jetbrains.annotations.UnknownNullability;
 
 public class UnaryNodeOpenCLCEmitters {
 
     public static abstract class AbstractGenericUnaryNodeOpenCLCEmitter<T extends AbstractUnaryNode> implements OpenCLCEmitter<T> {
 
         @Override
-        public String doCLGen(T node, OpenCLCGenFunctionContext context, String storeTo) {
+        public final String doCLGen(T node, @UnknownNullability OpenCLCGenContext context) {
             StringBuilder sb = new StringBuilder();
-            ValuesMethodDefD operand = context.newVar(node.operand);
-            genBody(node, context, storeTo, sb, operand);
+            ValuesMethodDefD operand = context.newMethod(node.operand);
+            genBody(node, context, sb, operand);
             return sb.toString();
         }
 
-        protected abstract void genBody(T node, OpenCLCGenFunctionContext context, String storeTo, StringBuilder sb, ValuesMethodDefD operand);
+        protected abstract void genBody(T node, OpenCLCGenContext context, StringBuilder sb, ValuesMethodDefD operand);
 
     }
 
@@ -52,8 +53,8 @@ public class UnaryNodeOpenCLCEmitters {
         }
 
         @Override
-        protected void genBody(AbsNode node, OpenCLCGenFunctionContext context, String storeTo, StringBuilder sb, ValuesMethodDefD operand) {
-            sb.append(storeTo).append(" = fabs(").append(context.getDelegateVar(operand)).append(");\n");
+        protected void genBody(AbsNode node, @UnknownNullability OpenCLCGenContext context, StringBuilder sb, ValuesMethodDefD operand) {
+            sb.append("return fabs(").append(context.callDelegate(operand)).append(");\n");
         }
     }
 
@@ -64,10 +65,10 @@ public class UnaryNodeOpenCLCEmitters {
         }
 
         @Override
-        protected void genBody(CubeNode node, OpenCLCGenFunctionContext context, String storeTo, StringBuilder sb, ValuesMethodDefD operand) {
+        protected void genBody(CubeNode node, @UnknownNullability OpenCLCGenContext context, StringBuilder sb, ValuesMethodDefD operand) {
             sb
-                    .append("double v = ").append(context.getDelegateVar(operand)).append(";\n")
-                    .append(storeTo).append(" = v * v * v;\n");
+                    .append("double v = ").append(context.callDelegate(operand)).append(";\n")
+                    .append("return v * v * v;\n");
         }
     }
 
@@ -78,10 +79,10 @@ public class UnaryNodeOpenCLCEmitters {
         }
 
         @Override
-        protected void genBody(NegMulNode node, OpenCLCGenFunctionContext context, String storeTo, StringBuilder sb, ValuesMethodDefD operand) {
+        protected void genBody(NegMulNode node, @UnknownNullability OpenCLCGenContext context, StringBuilder sb, ValuesMethodDefD operand) {
             sb
-                    .append("double v = ").append(context.getDelegateVar(operand)).append(";\n")
-                    .append(storeTo).append(" = v > 0.0 ? v : v * ").append(OpenCLCGen.literal(node.negMul)).append(";\n");
+                    .append("double v = ").append(context.callDelegate(operand)).append(";\n")
+                    .append("return v > 0.0 ? v : v * ").append(OpenCLCGen.literal(node.negMul)).append(";\n");
         }
     }
 
@@ -92,10 +93,10 @@ public class UnaryNodeOpenCLCEmitters {
         }
 
         @Override
-        protected void genBody(SquareNode node, OpenCLCGenFunctionContext context, String storeTo, StringBuilder sb, ValuesMethodDefD operand) {
+        protected void genBody(SquareNode node, @UnknownNullability OpenCLCGenContext context, StringBuilder sb, ValuesMethodDefD operand) {
             sb
-                    .append("double v = ").append(context.getDelegateVar(operand)).append(";\n")
-                    .append(storeTo).append(" = v * v;\n");
+                    .append("double v = ").append(context.callDelegate(operand)).append(";\n")
+                    .append("return v * v;\n");
         }
     }
 
@@ -106,10 +107,10 @@ public class UnaryNodeOpenCLCEmitters {
         }
 
         @Override
-        protected void genBody(SqueezeNode node, OpenCLCGenFunctionContext context, String storeTo, StringBuilder sb, ValuesMethodDefD operand) {
+        protected void genBody(SqueezeNode node, @UnknownNullability OpenCLCGenContext context, StringBuilder sb, ValuesMethodDefD operand) {
             sb
-                    .append("double v = clamp(").append(context.getDelegateVar(operand)).append(", -1.0, 1.0);\n")
-                    .append(storeTo).append(" = v / 2.0 - v * v * v / 24.0;\n");
+                    .append("double v = clamp(").append(context.callDelegate(operand)).append(", -1.0, 1.0);\n")
+                    .append("return v / 2.0 - v * v * v / 24.0;\n");
         }
     }
 
