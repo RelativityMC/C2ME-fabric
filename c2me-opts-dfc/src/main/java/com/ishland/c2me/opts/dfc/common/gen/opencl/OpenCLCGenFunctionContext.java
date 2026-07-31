@@ -30,7 +30,7 @@ import net.minecraft.util.math.Spline;
 import net.minecraft.world.gen.densityfunction.DensityFunctionTypes;
 
 public interface OpenCLCGenFunctionContext {
-    OpenCLCGenContext getParent();
+    OpenCLCGenContext getGlobalContext();
 
     FunctionVariant getVariant();
 
@@ -45,6 +45,10 @@ public interface OpenCLCGenFunctionContext {
     String getCachedSplineVar(Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper> spline);
 
     void cacheSplineVar(Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper> spline, String varName);
+
+    OpenCLCGenFunctionContext fork();
+
+    String getBody();
 
     void appendRaw(String raw);
 

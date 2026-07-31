@@ -51,6 +51,7 @@ import net.minecraft.world.gen.chunk.GenerationShapeConfig;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
 import net.minecraft.world.gen.densityfunction.DensityFunctionTypes;
 import net.minecraft.world.gen.noise.NoiseRouter;
+import org.jspecify.annotations.Nullable;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
@@ -168,7 +169,8 @@ public class OpenCLCGen {
 
     public static class FunctionContextImpl implements OpenCLCGenFunctionContext {
 
-        private final ContextImpl parent;
+        private final ContextImpl globalContext;
+        private final @Nullable FunctionContextImpl parent;
         private final StringBuilder pendingBody = new StringBuilder();
         private final Object2ReferenceOpenHashMap<AstNode, String> vars = new Object2ReferenceOpenHashMap<>();
         private final Object2ReferenceOpenHashMap<Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper>, String> splineVars = new Object2ReferenceOpenHashMap<>();
@@ -177,15 +179,16 @@ public class OpenCLCGen {
 
         private int varIdx = 0;
 
-        public FunctionContextImpl(ContextImpl parent, String methodName, FunctionVariant variant) {
-            this.parent = Objects.requireNonNull(parent);
+        public FunctionContextImpl(ContextImpl globalContext, FunctionContextImpl parent, String methodName, FunctionVariant variant) {
+            this.globalContext = Objects.requireNonNull(globalContext);
+            this.parent = parent;
             this.methodName = Objects.requireNonNull(methodName);
             this.variant = Objects.requireNonNull(variant);
         }
 
         @Override
-        public OpenCLCGenContext getParent() {
-            return this.parent;
+        public OpenCLCGenContext getGlobalContext() {
+            return this.globalContext;
         }
 
         @Override
@@ -195,6 +198,8 @@ public class OpenCLCGen {
 
         @Override
         public String nextVarName() {
+            if (this.parent != null) return this.parent.nextVarName();
+
             return String.format("var_%d", varIdx++);
         }
 
@@ -210,7 +215,16 @@ public class OpenCLCGen {
 
         @Override
         public String newVarUnoptimized(AstNode node) {
-            return this.vars.computeIfAbsent(node, this::newVar0);
+            String v;
+            if ((v = this.getVarIfPresent(node)) == null) {
+                String newValue;
+                if ((newValue = newVar0(node)) != null) {
+                    this.vars.put(node, newValue);
+                    return newValue;
+                }
+            }
+
+            return v;
         }
 
         private String newVar0(AstNode node) {
@@ -221,8 +235,23 @@ public class OpenCLCGen {
                     .append("{\n")
                     .append(generated.indent(4))
                     .append("}\n");
-            this.parent.recordAuxName(node, this.methodName, varName);
+            this.globalContext.recordAuxName(node, this.methodName, varName);
             return varName;
+        }
+
+        private String getVarIfPresent(AstNode node) {
+            String got = this.vars.get(node);
+            if (got != null) return got;
+
+            if (this.parent != null) {
+                got = this.parent.getVarIfPresent(node);
+                if (got != null) {
+                    this.vars.put(node, got);
+                    return got;
+                }
+            }
+
+            return null;
         }
 
         @Override
@@ -236,13 +265,33 @@ public class OpenCLCGen {
 
         @Override
         public String getCachedSplineVar(Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper> spline) {
-            return this.splineVars.get(spline);
+            String got = this.splineVars.get(spline);
+
+            if (this.parent != null) {
+                got = this.parent.getCachedSplineVar(spline);
+                if (got != null) {
+                    this.splineVars.put(spline, got);
+                    return got;
+                }
+            }
+
+            return got;
         }
 
         @Override
         public void cacheSplineVar(Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper> spline, String varName) {
             this.splineVars.put(spline, varName);
-            this.parent.recordAuxName(spline, this.methodName, varName);
+            this.globalContext.recordAuxName(spline, this.methodName, varName);
+        }
+
+        @Override
+        public OpenCLCGenFunctionContext fork() {
+            return new FunctionContextImpl(this.globalContext, this, this.methodName, this.variant);
+        }
+
+        @Override
+        public String getBody() {
+            return this.pendingBody.toString();
         }
 
         @Override
@@ -326,6 +375,11 @@ public class OpenCLCGen {
         }
 
         @Override
+        public ValuesMethodDefD newDispatcher(AstNode node) {
+            return this.newDispatcher(node, nextMethodName());
+        }
+
+        @Override
         public ValuesMethodDefD newDispatcher(AstNode node, String id) {
             for (OpenCLCGenFunctionContext.FunctionVariant variant : OpenCLCGenFunctionContext.FunctionVariant.values()) {
                 if (!variant.inDispatcher) continue;
@@ -366,7 +420,7 @@ public class OpenCLCGen {
 
         private String newMethod0(FunctionKey key) {
             String methodName = nextMethodName();
-            FunctionContextImpl functionContext = new FunctionContextImpl(this, methodName, key.variant());
+            FunctionContextImpl functionContext = new FunctionContextImpl(this, null, methodName, key.variant());
             ValuesMethodDefD finalVar = functionContext.newVar(key.node());
             this.pendingSource
                     .append("static __attribute__((pure)) double ").append(methodName).append(signature).append(" {\n")

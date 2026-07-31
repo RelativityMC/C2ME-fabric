@@ -17,6 +17,7 @@
 package com.ishland.c2me.opts.accel.opencl.common.compiler.emitters.misc;
 
 import com.ishland.c2me.opts.accel.opencl.common.compiler.OpenCLCGen;
+import com.ishland.c2me.opts.dfc.common.ast.AstNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.IntervalSelectNode;
 import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefD;
 import com.ishland.c2me.opts.dfc.common.gen.opencl.OpenCLCEmitter;
@@ -33,10 +34,11 @@ public class IntervalSelectNodeOpenCLCEmitter implements OpenCLCEmitter<Interval
 
     @Override
     public String doCLGen(IntervalSelectNode node, OpenCLCGenFunctionContext context, String storeTo) {
-        ValuesMethodDefD inputMethod = context.newVar(node.input);
-        ValuesMethodDefD[] delegates = Arrays.stream(node.functions).map(context::newVar).toArray(ValuesMethodDefD[]::new);
-
         StringBuilder sb = new StringBuilder();
+
+        ValuesMethodDefD inputMethod = context.newVar(node.input);
+        AstNode[] delegates = node.functions.clone();
+
         sb.append("double v = ").append(context.getDelegateVar(inputMethod)).append(";\n");
         sb.append("double res;\n");
         sb.append(genBinarySearch(node.thresholds, delegates, context, 0, node.thresholds.length));
@@ -44,7 +46,7 @@ public class IntervalSelectNodeOpenCLCEmitter implements OpenCLCEmitter<Interval
         return sb.toString();
     }
 
-    private static String genBinarySearch(double[] thresholds, ValuesMethodDefD[] delegates, OpenCLCGenFunctionContext context, int fromIndex, int toIndex) {
+    private static String genBinarySearch(double[] thresholds, AstNode[] delegates, OpenCLCGenFunctionContext context, int fromIndex, int toIndex) {
         Assertions.assertTrue(fromIndex < toIndex);
 
         int mid = (fromIndex + toIndex - 1) >>> 1;
@@ -54,19 +56,25 @@ public class IntervalSelectNodeOpenCLCEmitter implements OpenCLCEmitter<Interval
         sb.append("if (v < ").append(OpenCLCGen.literal(midVal)).append(") {\n");
 
         if (fromIndex == mid) {
-            sb.append("  ").append("res = ").append(context.getDelegateVar(delegates[fromIndex])).append(";\n");
+            OpenCLCGenFunctionContext forked = context.fork();
+            ValuesMethodDefD newVar = forked.newVar(delegates[fromIndex]);
+            sb.append(forked.getBody().indent(4));
+            sb.append("    ").append("res = ").append(forked.getDelegateVar(newVar)).append(";\n");
             delegates[fromIndex] = null;
         } else {
-            sb.append(genBinarySearch(thresholds, delegates, context, fromIndex, mid).indent(2));
+            sb.append(genBinarySearch(thresholds, delegates, context, fromIndex, mid).indent(4));
         }
 
         sb.append("} else {\n");
 
         if (mid + 1 == toIndex) {
-            sb.append("  ").append("res = ").append(context.getDelegateVar(delegates[toIndex])).append(";\n");
+            OpenCLCGenFunctionContext forked = context.fork();
+            ValuesMethodDefD newVar = forked.newVar(delegates[toIndex]);
+            sb.append(forked.getBody().indent(4));
+            sb.append("    ").append("res = ").append(forked.getDelegateVar(newVar)).append(";\n");
             delegates[toIndex] = null;
         } else {
-            sb.append(genBinarySearch(thresholds, delegates, context, mid + 1, toIndex).indent(2));
+            sb.append(genBinarySearch(thresholds, delegates, context, mid + 1, toIndex).indent(4));
         }
 
         sb.append("}\n");

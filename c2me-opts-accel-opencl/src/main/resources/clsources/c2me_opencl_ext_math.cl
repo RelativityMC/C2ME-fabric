@@ -2170,7 +2170,7 @@ kernel void df_biome_multinoise_kernel(global const void * restrict const const_
     const uint32_t blockY = math_biome2block(startBiomeY + relY);
     const uint32_t blockZ = math_biome2block(startBiomeZ + relZ);
 
-    sample_int32_ctx_t ctx = make_sample_int32_ctx(const_data, rw_data, blockX, blockY, blockZ, 0);
+    sample_int32_ctx_t ctx = make_sample_int32_ctx(const_data, rw_data, blockX, blockY, blockZ, MASK_enableFlatCache);
 
     const double temperature = df_binding_temperature(ctx);
     const double vegetation = df_binding_vegetation(ctx);

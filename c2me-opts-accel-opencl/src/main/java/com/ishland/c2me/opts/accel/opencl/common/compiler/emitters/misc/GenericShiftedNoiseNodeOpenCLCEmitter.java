@@ -36,7 +36,7 @@ public class GenericShiftedNoiseNodeOpenCLCEmitter implements OpenCLCEmitter<Gen
         ValuesMethodDefD inputXMethod = context.newVar(node.inputX);
         ValuesMethodDefD inputYMethod = context.newVar(node.inputY);
         ValuesMethodDefD inputZMethod = context.newVar(node.inputZ);
-        int offset = context.getParent().allocGlobalConstDataObject(node.noise.noise());
+        int offset = context.getGlobalContext().allocGlobalConstDataObject(node.noise.noise());
         return "global const double_octave_sampler_data_t * restrict data = ptr_shift_global(ctx.const_data, " + offset + ");\n" +
                 storeTo + " = math_noise_perlin_double_octave_sample_global_noinline(data, " +
                 context.getDelegateVar(inputXMethod) + "," +

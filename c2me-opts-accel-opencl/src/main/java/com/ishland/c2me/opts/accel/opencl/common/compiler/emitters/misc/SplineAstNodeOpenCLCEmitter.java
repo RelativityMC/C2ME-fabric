@@ -66,8 +66,12 @@ public class SplineAstNodeOpenCLCEmitter implements OpenCLCEmitter<SplineAstNode
 
             int lastConst = impl.locations().length - 1;
 
-            ValuesMethodDefD locationFunction = context.newVar(node.children.get(impl.locationFunction()));
-            body.append("float point = (float) ").append(context.getDelegateVar(locationFunction)).append(";\n");
+            {
+                OpenCLCGenFunctionContext forked = context.fork();
+                ValuesMethodDefD locationFunction = forked.newVar(node.children.get(impl.locationFunction()));
+                body.append(forked.getBody());
+                body.append("float point = (float) ").append(forked.getDelegateVar(locationFunction)).append(";\n");
+            }
 
             int valuesMethodsLength = impl.values().size();
             if (valuesMethodsLength == 1) {

@@ -41,8 +41,8 @@ public class CacheLikeNodeOpenCLCEmitter implements OpenCLCEmitter<CacheLikeNode
             }
             case INTERPOLATED -> {
                 if (context.getVariant().enableAllCache) {
-                    int offset = context.getParent().getGlobalDynamicDataOffset(OpenCLCGen.MARKER_cacheLike_interpolator);
-                    int ordinal = context.getParent().registerInterpolator(node);
+                    int offset = context.getGlobalContext().getGlobalDynamicDataOffset(OpenCLCGen.MARKER_cacheLike_interpolator);
+                    int ordinal = context.getGlobalContext().registerInterpolator(node);
                     yield "if (ctx.rw_data && (ctx.sample_flags & MASK_enableAllCaches) == MASK_enableAllCaches) {\n" +
                             "    global const worldgen_params_t * restrict params = ctx.rw_data;\n" +
                             "    global double * restrict interpolator_buffer = df_data_offset_global(ctx.rw_data, " + offset + ");\n" +
@@ -68,8 +68,8 @@ public class CacheLikeNodeOpenCLCEmitter implements OpenCLCEmitter<CacheLikeNode
             }
             case FLAT_CACHE -> {
                 if (context.getVariant().enableFlatCache) {
-                    int offset = context.getParent().getGlobalDynamicDataOffset(OpenCLCGen.MARKER_cacheLike_flatCache);
-                    int ordinal = context.getParent().registerFlatCache(node);
+                    int offset = context.getGlobalContext().getGlobalDynamicDataOffset(OpenCLCGen.MARKER_cacheLike_flatCache);
+                    int ordinal = context.getGlobalContext().registerFlatCache(node);
                     yield "if (ctx.rw_data && (ctx.sample_flags & MASK_enableFlatCache) == MASK_enableFlatCache) {\n" +
                             "    global const worldgen_params_t * restrict params = ctx.rw_data;\n" +
                             "    global const double * restrict data = df_data_offset_global(ctx.rw_data, " + offset + ");\n" +
@@ -95,8 +95,8 @@ public class CacheLikeNodeOpenCLCEmitter implements OpenCLCEmitter<CacheLikeNode
             }
             case CACHE2D -> {
                 if (context.getVariant().useCache2D()) {
-                    int offset = context.getParent().getGlobalDynamicDataOffset(OpenCLCGen.MARKER_cacheLike_cache2d);
-                    int ordinal = context.getParent().registerCache2d(node);
+                    int offset = context.getGlobalContext().getGlobalDynamicDataOffset(OpenCLCGen.MARKER_cacheLike_cache2d);
+                    int ordinal = context.getGlobalContext().registerCache2d(node);
                     yield "if (ctx.rw_data && (ctx.sample_flags & MASK_enableAllCaches) == MASK_enableAllCaches) {\n" +
                             "    global const worldgen_params_t * restrict params = ctx.rw_data;\n" +
                             "    global const double * restrict data = df_data_offset_global(ctx.rw_data, " + offset + ");\n" +

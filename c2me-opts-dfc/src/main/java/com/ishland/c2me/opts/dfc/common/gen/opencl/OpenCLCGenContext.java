@@ -36,6 +36,8 @@ public interface OpenCLCGenContext {
 
     String nextMethodName(String suffix);
 
+    ValuesMethodDefD newDispatcher(AstNode node);
+
     ValuesMethodDefD newDispatcher(AstNode node, String id);
 
     ValuesMethodDefD newMethod(AstNode node, OpenCLCGenFunctionContext.FunctionVariant variant);

@@ -30,8 +30,8 @@ public class BeardifierNodeOpenCLCEmitter implements OpenCLCEmitter<BeardifierNo
 
     @Override
     public String doCLGen(BeardifierNode node, OpenCLCGenFunctionContext context, String storeTo) {
-        int offset = context.getParent().getGlobalDynamicDataOffset(DensityFunctionTypes.Beardifier.INSTANCE);
-        int tableOffset = context.getParent().allocGlobalConstDataObject(IStructureWeightSampler.getSTRUCTURE_WEIGHT_TABLE());
+        int offset = context.getGlobalContext().getGlobalDynamicDataOffset(DensityFunctionTypes.Beardifier.INSTANCE);
+        int tableOffset = context.getGlobalContext().allocGlobalConstDataObject(IStructureWeightSampler.getSTRUCTURE_WEIGHT_TABLE());
         return "if (ctx.rw_data) {\n" +
                 "    global const sws_index_t * restrict data = df_data_offset_global(ctx.rw_data, " + offset + ");\n" +
                 "    global const float * restrict structureWeightSamplerTable = ptr_shift_global(ctx.const_data, " + tableOffset + ");\n" +

@@ -31,10 +31,31 @@ public class RangeChoiceNodeOpenCLCEmitter implements OpenCLCEmitter<RangeChoice
 
     @Override
     public String doCLGen(RangeChoiceNode node, OpenCLCGenFunctionContext context, String storeTo) {
+        StringBuilder sb = new StringBuilder();
+
         ValuesMethodDefD input = context.newVar(node.input);
-        ValuesMethodDefD whenInRange = context.newVar(node.whenInRange);
-        ValuesMethodDefD whenOutOfRange = context.newVar(node.whenOutOfRange);
-        return "double v = " + context.getDelegateVar(input) + ";\n" +
-                storeTo + " = (v >= " + literal(node.minInclusive) + " && v < " + literal(node.maxExclusive) + ") ? " + context.getDelegateVar(whenInRange) + " : " + context.getDelegateVar(whenOutOfRange) + ";\n";
+        sb.append("double v = ").append(context.getDelegateVar(input)).append(";\n");
+
+        sb.append("if (v >= ").append(literal(node.minInclusive)).append(" && v < ").append(literal(node.maxExclusive)).append(") {\n");
+
+        {
+            OpenCLCGenFunctionContext forked = context.fork();
+            ValuesMethodDefD whenInRange = forked.newVar(node.whenInRange);
+            sb.append(forked.getBody().indent(4));
+            sb.append("    ").append(storeTo).append(" = ").append(forked.getDelegateVar(whenInRange)).append(";\n");
+        }
+
+        sb.append("} else {\n");
+
+        {
+            OpenCLCGenFunctionContext forked = context.fork();
+            ValuesMethodDefD whenOutOfRange = forked.newVar(node.whenOutOfRange);
+            sb.append(forked.getBody().indent(4));
+            sb.append("    ").append(storeTo).append(" = ").append(forked.getDelegateVar(whenOutOfRange)).append(";\n");
+        }
+
+        sb.append("}\n");
+
+        return sb.toString();
     }
 }

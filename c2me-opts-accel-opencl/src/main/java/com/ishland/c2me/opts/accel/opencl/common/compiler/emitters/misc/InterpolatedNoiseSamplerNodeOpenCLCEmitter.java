@@ -28,7 +28,7 @@ public class InterpolatedNoiseSamplerNodeOpenCLCEmitter implements OpenCLCEmitte
 
     @Override
     public String doCLGen(InterpolatedNoiseSamplerNode node, OpenCLCGenFunctionContext context, String storeTo) {
-        int offset = context.getParent().allocGlobalConstDataObject(node.sampler);
+        int offset = context.getGlobalContext().allocGlobalConstDataObject(node.sampler);
         return "global const interpolated_noise_sampler_t * restrict data = ptr_shift_global(ctx.const_data, " + offset + ");\n" +
                 storeTo + " = math_noise_perlin_interpolated_sample_global_noinline(data, ctx.x, ctx.y, ctx.z);\n";
     }
