@@ -37,7 +37,6 @@ public class InvocationShim {
         return densityFunction.sample(pos);
     }
 
-
     public static void invokeDensityFunctionFill(DensityFunction densityFunction, double[] densities, DensityFunction.EachApplier applier) {
         densityFunction.fill(densities, applier);
     }
