@@ -62,7 +62,7 @@ public class FastNoiseNodeBytecodeEmitter implements BytecodeEmitter<FastNoiseNo
 
         m.invokestatic(
                 Type.getInternalName(InvocationShim.class),
-                "invokeDensityFunctionFastNoiseSample",
+                "invokeFastNoiseConfigSample",
                 Type.getMethodDescriptor(Type.DOUBLE_TYPE, Type.getType(Object.class), Type.DOUBLE_TYPE, Type.DOUBLE_TYPE, Type.DOUBLE_TYPE),
                 false
         );
@@ -154,7 +154,7 @@ public class FastNoiseNodeBytecodeEmitter implements BytecodeEmitter<FastNoiseNo
 
                 m.invokestatic(
                         Type.getInternalName(InvocationShim.class),
-                        "invokeDensityFunctionFastNoiseSample",
+                        "invokeFastNoiseConfigSample",
                         Type.getMethodDescriptor(Type.DOUBLE_TYPE, Type.getType(Object.class), Type.DOUBLE_TYPE, Type.DOUBLE_TYPE, Type.DOUBLE_TYPE),
                         false
                 );

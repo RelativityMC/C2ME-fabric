@@ -35,6 +35,7 @@ import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.CoordinateNode;
 import com.ishland.c2me.opts.natives_math.common.BindingsTemplate;
 import com.ishland.c2me.opts.natives_math.common.ducks.IFNLState;
+import com.ishland.c2me.opts.natives_math.common.integration.lithostitched.FNLBindings;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
@@ -104,11 +105,14 @@ public class FastNoiseBindings {
 
         registry.registerExactMatch((Class<? extends DensityFunction>) CLASS_FastNoiseDensityFunction, function -> {
             try {
+                Object config = ((RegistryEntry<?>) MH_config.invoke(function)).value();
+                BindingsTemplate.FNLState state = config instanceof IFNLState nativeHolder ? nativeHolder.c2me$getState() : FNLBindings.tryParseState(config);
+                if (state == null) return null; // soft fallback to DelegateNode if FNLBinding unavailable
                 return new FastNoiseNode(
                         new AddNode(new MulNode(CoordinateNode.AXIS_X, new ConstantNode((double) MH_xzScale.invoke(function))), McToAst.toAst((DensityFunction) MH_shiftX.invoke(function))),
                         new AddNode(new MulNode(CoordinateNode.AXIS_Y, new ConstantNode((double) MH_yScale.invoke(function))), McToAst.toAst((DensityFunction) MH_shiftY.invoke(function))),
                         new AddNode(new MulNode(CoordinateNode.AXIS_Z, new ConstantNode((double) MH_xzScale.invoke(function))), McToAst.toAst((DensityFunction) MH_shiftZ.invoke(function))),
-                        ((RegistryEntry<?>) MH_config.invoke(function)).value()
+                        state, config
                 );
             } catch (Throwable e) {
                 throw new RuntimeException(e);

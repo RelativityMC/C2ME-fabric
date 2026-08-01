@@ -24,7 +24,7 @@
 
 package com.ishland.c2me.opts.dfc.common.gen.jvm;
 
-import com.ishland.c2me.base.mixin.access.lithostitched.IFastNoiseConfig;
+import com.ishland.c2me.opts.natives_math.common.integration.lithostitched.FNLBindings;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
 
@@ -49,8 +49,8 @@ public class InvocationShim {
         return noise.sample(x, y, z);
     }
 
-    public static double invokeDensityFunctionFastNoiseSample(Object config, double x, double y, double z) {
-        return ((IFastNoiseConfig) config).invokeSample(x, y, z);
+    public static double invokeFastNoiseConfigSample(Object config, double x, double y, double z) {
+        return FNLBindings.call_FastNoiseConfig$sample(config, x, y, z);
     }
 
     public static float invokeMathHelperLerp(float delta, float start, float end) {
