@@ -7,7 +7,6 @@
     "MixinBiomeAccess",
     "MixinDFTypesEndIslands",
     "MixinDoublePerlinNoiseSampler",
-    "MixinInterpolatedNoiseSampler",
-    "lithostitched.MixinFastNoiseConfig"
+    "MixinInterpolatedNoiseSampler"
   ]
 }
