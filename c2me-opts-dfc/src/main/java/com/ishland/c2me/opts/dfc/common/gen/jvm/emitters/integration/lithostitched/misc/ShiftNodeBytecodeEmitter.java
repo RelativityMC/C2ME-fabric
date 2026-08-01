@@ -24,6 +24,7 @@
 
 package com.ishland.c2me.opts.dfc.common.gen.jvm.emitters.integration.lithostitched.misc;
 
+import com.ishland.c2me.opts.dfc.common.ast.EvalType;
 import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc.ShiftNode;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.BytecodeEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.BytecodeGen;
@@ -71,7 +72,7 @@ public class ShiftNodeBytecodeEmitter implements BytecodeEmitter<ShiftNode> {
         m.load(shiftX, Type.INT_TYPE);
         m.load(shiftY, Type.INT_TYPE);
         m.load(shiftZ, Type.INT_TYPE);
-        m.load(4, InstructionAdapter.OBJECT_TYPE);
+        m.getstatic(Type.getInternalName(EvalType.class), "NORMAL", Type.getDescriptor(EvalType.class));
         m.load(5, InstructionAdapter.OBJECT_TYPE);
         m.invokevirtual(context.className, input.generatedMethod(), BytecodeGen.Context.SINGLE_DESC, false);
         m.areturn(Type.DOUBLE_TYPE);
@@ -168,7 +169,7 @@ public class ShiftNodeBytecodeEmitter implements BytecodeEmitter<ShiftNode> {
                 }
                 m.cast(Type.DOUBLE_TYPE, Type.INT_TYPE);
 
-                m.load(5, InstructionAdapter.OBJECT_TYPE);
+                m.getstatic(Type.getInternalName(EvalType.class), "NORMAL", Type.getDescriptor(EvalType.class));
                 m.load(6, InstructionAdapter.OBJECT_TYPE);
                 m.invokevirtual(context.className, input.generatedMethod(), BytecodeGen.Context.SINGLE_DESC, false);
             }
