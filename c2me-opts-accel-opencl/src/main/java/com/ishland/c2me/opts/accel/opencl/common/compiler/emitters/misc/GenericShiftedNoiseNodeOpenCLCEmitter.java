@@ -17,7 +17,7 @@
 package com.ishland.c2me.opts.accel.opencl.common.compiler.emitters.misc;
 
 import com.ishland.c2me.opts.dfc.common.ast.noise.GenericShiftedNoiseNode;
-import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefD;
+import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefF64;
 import com.ishland.c2me.opts.dfc.common.gen.opencl.OpenCLCEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.opencl.OpenCLCGenFunctionContext;
 
@@ -33,9 +33,9 @@ public class GenericShiftedNoiseNodeOpenCLCEmitter implements OpenCLCEmitter<Gen
             return storeTo + " = 0.0;\n";
         }
 
-        ValuesMethodDefD inputXMethod = context.newVar(node.inputX);
-        ValuesMethodDefD inputYMethod = context.newVar(node.inputY);
-        ValuesMethodDefD inputZMethod = context.newVar(node.inputZ);
+        ValuesMethodDefF64 inputXMethod = context.newVar(node.inputX);
+        ValuesMethodDefF64 inputYMethod = context.newVar(node.inputY);
+        ValuesMethodDefF64 inputZMethod = context.newVar(node.inputZ);
         int offset = context.getGlobalContext().allocGlobalConstDataObject(node.noise.noise());
         return "global const double_octave_sampler_data_t * restrict data = ptr_shift_global(ctx.const_data, " + offset + ");\n" +
                 storeTo + " = math_noise_perlin_double_octave_sample_global_noinline(data, " +

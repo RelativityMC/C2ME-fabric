@@ -25,8 +25,11 @@
 package com.ishland.c2me.opts.dfc.common.gen.dot;
 
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
+import com.ishland.c2me.opts.dfc.common.ast.conversion.ToF32Node;
+import com.ishland.c2me.opts.dfc.common.ast.conversion.ToF64Node;
 import com.ishland.c2me.opts.dfc.common.ast.misc.BeardifierNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.CacheLikeNode;
+import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantF32Node;
 import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.CoordinateNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.DelegateNode;
@@ -34,15 +37,18 @@ import com.ishland.c2me.opts.dfc.common.ast.misc.EndIslandsNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.FindTopSurfaceNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.InterpolatedNoiseSamplerNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.IntervalSelectNode;
+import com.ishland.c2me.opts.dfc.common.ast.misc.Multi2SingleNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.RangeChoiceNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.RootNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.YClampedGradientNode;
 import com.ishland.c2me.opts.dfc.common.ast.noise.GenericShiftedNoiseNode;
 import com.ishland.c2me.opts.dfc.common.ast.spline.SplineAstNode;
+import com.ishland.c2me.opts.dfc.common.ast.spline.SplineNormalNode;
 import com.ishland.c2me.opts.dfc.common.gen.CodeGenRegistry;
 import com.ishland.c2me.opts.dfc.common.gen.dot.emitters.BinaryNodeDotEmitters;
 import com.ishland.c2me.opts.dfc.common.gen.dot.emitters.UnaryNodeDotEmitters;
 import com.ishland.c2me.opts.dfc.common.gen.dot.emitters.misc.SplineAstNodeDotEmitter;
+import com.ishland.c2me.opts.dfc.common.gen.dot.emitters.misc.SplineNormalNodeDotEmitter;
 
 import java.util.Arrays;
 
@@ -65,6 +71,22 @@ public class DotGenRegistry {
         //        REGISTRY.registerExactMatch(DFTWeirdScaledSamplerNode.class, DFTWeirdScaledSamplerNodeBytecodeEmitter.INSTANCE);
         //        REGISTRY.registerExactMatch(SplineAstNode.class, SplineAstNodeBytecodeEmitter.INSTANCE);
 
+        REGISTRY.registerExactMatch(ToF32Node.class, (DotEmitter<ToF32Node>) (node, context, builder) ->
+                builder
+                        .triangleShape()
+                        .label("ToF32")
+                        .edge(context.generate(node.next)).label("next").finish()
+                        .build()
+        );
+
+        REGISTRY.registerExactMatch(ToF64Node.class, (DotEmitter<ToF64Node>) (node, context, builder) ->
+                builder
+                        .triangleShape()
+                        .label("ToF64")
+                        .edge(context.generate(node.next)).label("next").finish()
+                        .build()
+        );
+
         REGISTRY.registerExactMatch(
                 CacheLikeNode.class,
                 (DotEmitter<CacheLikeNode>) (node, context, builder) ->
@@ -77,6 +99,14 @@ public class DotGenRegistry {
         REGISTRY.registerExactMatch(
                 ConstantNode.class,
                 (DotEmitter<ConstantNode>) (node, context, builder) ->
+                        builder
+                                .triangleShape()
+                                .label(String.valueOf(node.getValue()))
+                                .build()
+        );
+        REGISTRY.registerExactMatch(
+                ConstantF32Node.class,
+                (DotEmitter<ConstantF32Node>) (node, context, builder) ->
                         builder
                                 .triangleShape()
                                 .label(String.valueOf(node.getValue()))
@@ -189,7 +219,15 @@ public class DotGenRegistry {
                     return builder.build();
                 }
         );
-        REGISTRY.registerExactMatch(SplineAstNode.class, SplineAstNodeDotEmitter.INSTANCE);
+        REGISTRY.registerExactMatch(Multi2SingleNode.class, (DotEmitter<Multi2SingleNode>) (node, context, builder) ->
+                builder
+                        .triangleShape()
+                        .label("Multi2Single")
+                        .edge(context.generate(node.next)).label("next").finish()
+                        .build()
+        );
+        REGISTRY.registerExactMatch(SplineNormalNode.class, SplineNormalNodeDotEmitter.INSTANCE);
+//        REGISTRY.registerExactMatch(SplineAstNode.class, SplineAstNodeDotEmitter.INSTANCE);
 
         REGISTRY.registerExactMatch(
                 DelegateNode.class,

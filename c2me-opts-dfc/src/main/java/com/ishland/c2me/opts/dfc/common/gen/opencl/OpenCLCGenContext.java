@@ -26,7 +26,7 @@ package com.ishland.c2me.opts.dfc.common.gen.opencl;
 
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.CacheLikeNode;
-import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefD;
+import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefF64;
 
 public interface OpenCLCGenContext {
     String signature = "(const sample_int32_ctx_t ctx)";
@@ -36,13 +36,13 @@ public interface OpenCLCGenContext {
 
     String nextMethodName(String suffix);
 
-    ValuesMethodDefD newDispatcher(AstNode node);
+    ValuesMethodDefF64 newDispatcher(AstNode node);
 
-    ValuesMethodDefD newDispatcher(AstNode node, String id);
+    ValuesMethodDefF64 newDispatcher(AstNode node, String id);
 
-    ValuesMethodDefD newMethod(AstNode node, OpenCLCGenFunctionContext.FunctionVariant variant);
+    ValuesMethodDefF64 newMethod(AstNode node, OpenCLCGenFunctionContext.FunctionVariant variant);
 
-    String callDelegate(ValuesMethodDefD target);
+    String callDelegate(ValuesMethodDefF64 target);
 
     int allocGlobalDynamicData(Object data);
 

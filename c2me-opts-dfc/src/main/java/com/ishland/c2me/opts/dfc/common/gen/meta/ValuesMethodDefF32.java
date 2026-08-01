@@ -22,27 +22,23 @@
  * THE SOFTWARE.
  */
 
-package com.ishland.c2me.opts.dfc.common.ast;
+package com.ishland.c2me.opts.dfc.common.gen.meta;
 
-public interface AstNode {
+import com.ishland.c2me.opts.dfc.common.ast.AstNode;
 
-    AstNode[] getChildren();
+public record ValuesMethodDefF32(boolean isConst, String generatedMethod, float constValue) implements ValuesMethodDef {
 
-    AstNode transform(AstTransformer transformer);
-
-    // data to be created as fields in generated code are only compared by class type
-    boolean relaxedEquals(AstNode o);
-
-    int relaxedHashCode();
-
-    default ReturnType getReturnType() {
-        return ReturnType.F64;
+    public ValuesMethodDefF32(String generatedMethod) {
+        this(false, generatedMethod, Float.NaN);
     }
 
-    public enum ReturnType {
-        F64,
-        F32,
-        ;
+    public ValuesMethodDefF32(float constValue) {
+        this(true, null, constValue);
+    }
+
+    @Override
+    public AstNode.ReturnType returnType() {
+        return AstNode.ReturnType.F32;
     }
 
 }

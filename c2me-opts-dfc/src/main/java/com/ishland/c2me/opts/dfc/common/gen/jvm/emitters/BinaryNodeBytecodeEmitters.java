@@ -35,7 +35,7 @@ import com.ishland.c2me.opts.dfc.common.ast.binary.MulNode;
 import com.ishland.c2me.opts.dfc.common.gen.CodeGenRegistry;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.BytecodeEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.BytecodeGen;
-import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefD;
+import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefF64;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.util.DfcObjectCache;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.Type;
@@ -45,8 +45,8 @@ public class BinaryNodeBytecodeEmitters {
     public abstract static class AbstractGenericBinaryNodeBytecodeEmitter<T extends AbstractBinaryNode> implements BytecodeEmitter<T> {
         @Override
         public final void doBytecodeGenSingle(T node, BytecodeGen.Context context, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
-            ValuesMethodDefD leftMethod = context.newSingleMethod(node.left);
-            ValuesMethodDefD rightMethod = context.newSingleMethod(node.right);
+            ValuesMethodDefF64 leftMethod = context.newSingleMethodF64(node.left);
+            ValuesMethodDefF64 rightMethod = context.newSingleMethodF64(node.right);
 
             context.callDelegateSingle(m, leftMethod);
             context.callDelegateSingle(m, rightMethod);
@@ -56,8 +56,8 @@ public class BinaryNodeBytecodeEmitters {
 
         @Override
         public final void doBytecodeGenMulti(T node, BytecodeGen.Context context, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
-            ValuesMethodDefD leftMethod = context.newMultiMethod(node.left);
-            ValuesMethodDefD rightMethod = context.newMultiMethod(node.right);
+            ValuesMethodDefF64 leftMethod = context.newMultiMethodF64(node.left);
+            ValuesMethodDefF64 rightMethod = context.newMultiMethodF64(node.right);
 
             if (leftMethod.isConst()) {
                 context.callDelegateMulti(m, rightMethod);
@@ -182,8 +182,8 @@ public class BinaryNodeBytecodeEmitters {
 
         @Override
         public void doBytecodeGenSingle(MaxShortNode node, BytecodeGen.Context context, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
-            ValuesMethodDefD leftMethod = context.newSingleMethod(node.left);
-            ValuesMethodDefD rightMethod = context.newSingleMethod(node.right);
+            ValuesMethodDefF64 leftMethod = context.newSingleMethodF64(node.left);
+            ValuesMethodDefF64 rightMethod = context.newSingleMethodF64(node.right);
 
             Label minLabel = new Label();
 
@@ -207,8 +207,8 @@ public class BinaryNodeBytecodeEmitters {
 
         @Override
         public void doBytecodeGenMulti(MaxShortNode node, BytecodeGen.Context context, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
-            ValuesMethodDefD leftMethod = context.newMultiMethod(node.left);
-            ValuesMethodDefD rightMethodSingle = context.newSingleMethod(node.right);
+            ValuesMethodDefF64 leftMethod = context.newMultiMethodF64(node.left);
+            ValuesMethodDefF64 rightMethodSingle = context.newSingleMethodF64(node.right);
             context.callDelegateMulti(m, leftMethod);
 
             context.doCountedLoop(m, localVarConsumer, idx -> {
@@ -253,8 +253,8 @@ public class BinaryNodeBytecodeEmitters {
 
         @Override
         public void doBytecodeGenSingle(MinShortNode node, BytecodeGen.Context context, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
-            ValuesMethodDefD leftMethod = context.newSingleMethod(node.left);
-            ValuesMethodDefD rightMethod = context.newSingleMethod(node.right);
+            ValuesMethodDefF64 leftMethod = context.newSingleMethodF64(node.left);
+            ValuesMethodDefF64 rightMethod = context.newSingleMethodF64(node.right);
 
             Label minLabel = new Label();
 
@@ -278,8 +278,8 @@ public class BinaryNodeBytecodeEmitters {
 
         @Override
         public void doBytecodeGenMulti(MinShortNode node, BytecodeGen.Context context, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
-            ValuesMethodDefD leftMethod = context.newMultiMethod(node.left);
-            ValuesMethodDefD rightMethodSingle = context.newSingleMethod(node.right);
+            ValuesMethodDefF64 leftMethod = context.newMultiMethodF64(node.left);
+            ValuesMethodDefF64 rightMethodSingle = context.newSingleMethodF64(node.right);
             context.callDelegateMulti(m, leftMethod);
 
             context.doCountedLoop(m, localVarConsumer, idx -> {
@@ -324,8 +324,8 @@ public class BinaryNodeBytecodeEmitters {
 
         @Override
         public void doBytecodeGenSingle(MulNode node, BytecodeGen.Context context, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
-            ValuesMethodDefD leftMethod = context.newSingleMethod(node.left);
-            ValuesMethodDefD rightMethod = context.newSingleMethod(node.right);
+            ValuesMethodDefF64 leftMethod = context.newSingleMethodF64(node.left);
+            ValuesMethodDefF64 rightMethod = context.newSingleMethodF64(node.right);
 
             if (leftMethod.isConst()) {
                 if (leftMethod.constValue() == 0.0) {
@@ -356,12 +356,12 @@ public class BinaryNodeBytecodeEmitters {
 
         @Override
         public void doBytecodeGenMulti(MulNode node, BytecodeGen.Context context, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
-            ValuesMethodDefD leftMethod = context.newMultiMethod(node.left);
+            ValuesMethodDefF64 leftMethod = context.newMultiMethodF64(node.left);
             if (leftMethod.isConst()) {
                 if (leftMethod.constValue() == 0.0) {
                     context.callDelegateMulti(m, leftMethod);
                 } else {
-                    ValuesMethodDefD rightMethod = context.newMultiMethod(node.right);
+                    ValuesMethodDefF64 rightMethod = context.newMultiMethodF64(node.right);
 
                     context.callDelegateMulti(m, rightMethod);
 
@@ -379,7 +379,7 @@ public class BinaryNodeBytecodeEmitters {
                     });
                 }
             } else {
-                ValuesMethodDefD rightMethodSingle = context.newSingleMethod(node.right);
+                ValuesMethodDefF64 rightMethodSingle = context.newSingleMethodF64(node.right);
                 context.callDelegateMulti(m, leftMethod);
 
                 context.doCountedLoop(m, localVarConsumer, idx -> {

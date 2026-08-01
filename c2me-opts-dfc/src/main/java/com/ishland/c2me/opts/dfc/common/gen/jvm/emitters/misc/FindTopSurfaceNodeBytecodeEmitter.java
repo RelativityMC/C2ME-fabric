@@ -29,7 +29,7 @@ import com.ishland.c2me.opts.dfc.common.ast.misc.FindTopSurfaceNode;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.BytecodeEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.BytecodeGen;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.InvocationShim;
-import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefD;
+import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefF64;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.InstructionAdapter;
@@ -42,9 +42,9 @@ public class FindTopSurfaceNodeBytecodeEmitter implements BytecodeEmitter<FindTo
 
     @Override
     public void doBytecodeGenSingle(FindTopSurfaceNode node, BytecodeGen.Context context, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
-        ValuesMethodDefD densityMethod = context.newSingleMethod(node.density);
-        ValuesMethodDefD upperBoundMethod = context.newSingleMethod(node.upperBound);
-        ValuesMethodDefD lowerBoundMethod = context.newSingleMethod(node.lowerBound);
+        ValuesMethodDefF64 densityMethod = context.newSingleMethodF64(node.density);
+        ValuesMethodDefF64 upperBoundMethod = context.newSingleMethodF64(node.upperBound);
+        ValuesMethodDefF64 lowerBoundMethod = context.newSingleMethodF64(node.lowerBound);
 
         int topCellBlockY = localVarConsumer.createLocalVariable("topCellBlockY", Type.INT_TYPE.getDescriptor());
         int lowerBoundEval = localVarConsumer.createLocalVariable("lowerBoundEval", Type.INT_TYPE.getDescriptor());
@@ -90,7 +90,7 @@ public class FindTopSurfaceNodeBytecodeEmitter implements BytecodeEmitter<FindTo
                     Type.getDescriptor(EvalType.class)
             );
             m.load(5, InstructionAdapter.OBJECT_TYPE);
-            m.invokevirtual(context.className, densityMethod.generatedMethod(), BytecodeGen.Context.SINGLE_DESC, false);
+            m.invokevirtual(context.className, densityMethod.generatedMethod(), BytecodeGen.Context.SINGLE_DESC_F64, false);
         }
         m.dconst(0.0);
         m.cmpl(Type.DOUBLE_TYPE);

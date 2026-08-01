@@ -22,16 +22,13 @@
  * THE SOFTWARE.
  */
 
-package com.ishland.c2me.opts.dfc.common.gen.meta;
+package com.ishland.c2me.opts.dfc.common.ast.misc;
 
-public record ValuesMethodDefD(boolean isConst, String generatedMethod, double constValue) {
+import com.ishland.c2me.opts.dfc.common.ast.AstNode;
+import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDef;
 
-    public ValuesMethodDefD(String generatedMethod) {
-        this(false, generatedMethod, Double.NaN);
-    }
+public interface ConstantNodeLike extends AstNode {
 
-    public ValuesMethodDefD(double constValue) {
-        this(true, null, constValue);
-    }
+    ValuesMethodDef getDef();
 
 }

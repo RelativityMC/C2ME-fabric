@@ -25,7 +25,7 @@ import com.ishland.c2me.opts.dfc.common.ast.unary.NegMulNode;
 import com.ishland.c2me.opts.dfc.common.ast.unary.SquareNode;
 import com.ishland.c2me.opts.dfc.common.ast.unary.SqueezeNode;
 import com.ishland.c2me.opts.dfc.common.gen.CodeGenRegistry;
-import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefD;
+import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefF64;
 import com.ishland.c2me.opts.dfc.common.gen.opencl.OpenCLCEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.opencl.OpenCLCGenFunctionContext;
 
@@ -36,12 +36,12 @@ public class UnaryNodeOpenCLCEmitters {
         @Override
         public String doCLGen(T node, OpenCLCGenFunctionContext context, String storeTo) {
             StringBuilder sb = new StringBuilder();
-            ValuesMethodDefD operand = context.newVar(node.operand);
+            ValuesMethodDefF64 operand = context.newVar(node.operand);
             genBody(node, context, storeTo, sb, operand);
             return sb.toString();
         }
 
-        protected abstract void genBody(T node, OpenCLCGenFunctionContext context, String storeTo, StringBuilder sb, ValuesMethodDefD operand);
+        protected abstract void genBody(T node, OpenCLCGenFunctionContext context, String storeTo, StringBuilder sb, ValuesMethodDefF64 operand);
 
     }
 
@@ -52,7 +52,7 @@ public class UnaryNodeOpenCLCEmitters {
         }
 
         @Override
-        protected void genBody(AbsNode node, OpenCLCGenFunctionContext context, String storeTo, StringBuilder sb, ValuesMethodDefD operand) {
+        protected void genBody(AbsNode node, OpenCLCGenFunctionContext context, String storeTo, StringBuilder sb, ValuesMethodDefF64 operand) {
             sb.append(storeTo).append(" = fabs(").append(context.getDelegateVar(operand)).append(");\n");
         }
     }
@@ -64,7 +64,7 @@ public class UnaryNodeOpenCLCEmitters {
         }
 
         @Override
-        protected void genBody(CubeNode node, OpenCLCGenFunctionContext context, String storeTo, StringBuilder sb, ValuesMethodDefD operand) {
+        protected void genBody(CubeNode node, OpenCLCGenFunctionContext context, String storeTo, StringBuilder sb, ValuesMethodDefF64 operand) {
             sb
                     .append("double v = ").append(context.getDelegateVar(operand)).append(";\n")
                     .append(storeTo).append(" = v * v * v;\n");
@@ -78,7 +78,7 @@ public class UnaryNodeOpenCLCEmitters {
         }
 
         @Override
-        protected void genBody(NegMulNode node, OpenCLCGenFunctionContext context, String storeTo, StringBuilder sb, ValuesMethodDefD operand) {
+        protected void genBody(NegMulNode node, OpenCLCGenFunctionContext context, String storeTo, StringBuilder sb, ValuesMethodDefF64 operand) {
             sb
                     .append("double v = ").append(context.getDelegateVar(operand)).append(";\n")
                     .append(storeTo).append(" = v > 0.0 ? v : v * ").append(OpenCLCGen.literal(node.negMul)).append(";\n");
@@ -92,7 +92,7 @@ public class UnaryNodeOpenCLCEmitters {
         }
 
         @Override
-        protected void genBody(SquareNode node, OpenCLCGenFunctionContext context, String storeTo, StringBuilder sb, ValuesMethodDefD operand) {
+        protected void genBody(SquareNode node, OpenCLCGenFunctionContext context, String storeTo, StringBuilder sb, ValuesMethodDefF64 operand) {
             sb
                     .append("double v = ").append(context.getDelegateVar(operand)).append(";\n")
                     .append(storeTo).append(" = v * v;\n");
@@ -106,7 +106,7 @@ public class UnaryNodeOpenCLCEmitters {
         }
 
         @Override
-        protected void genBody(SqueezeNode node, OpenCLCGenFunctionContext context, String storeTo, StringBuilder sb, ValuesMethodDefD operand) {
+        protected void genBody(SqueezeNode node, OpenCLCGenFunctionContext context, String storeTo, StringBuilder sb, ValuesMethodDefF64 operand) {
             sb
                     .append("double v = clamp(").append(context.getDelegateVar(operand)).append(", -1.0, 1.0);\n")
                     .append(storeTo).append(" = v / 2.0 - v * v * v / 24.0;\n");

@@ -18,7 +18,7 @@ package com.ishland.c2me.opts.accel.opencl.common.compiler.emitters.misc;
 
 import com.ishland.c2me.opts.accel.opencl.common.compiler.OpenCLCGen;
 import com.ishland.c2me.opts.dfc.common.ast.misc.CacheLikeNode;
-import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefD;
+import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefF64;
 import com.ishland.c2me.opts.dfc.common.gen.opencl.OpenCLCEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.opencl.OpenCLCGenFunctionContext;
 import net.minecraft.world.gen.densityfunction.DensityFunctionTypes;
@@ -36,8 +36,8 @@ public class CacheLikeNodeOpenCLCEmitter implements OpenCLCEmitter<CacheLikeNode
         }
         return switch (wrapping.type()) {
             case CACHE_ONCE, CACHE_ALL_IN_CELL -> {
-                ValuesMethodDefD valuesMethodDefD = context.newVar(node.getDelegate());
-                yield storeTo + " = " + context.getDelegateVar(valuesMethodDefD) + ";\n";
+                ValuesMethodDefF64 valuesMethodDefF64 = context.newVar(node.getDelegate());
+                yield storeTo + " = " + context.getDelegateVar(valuesMethodDefF64) + ";\n";
             }
             case INTERPOLATED -> {
                 if (context.getVariant().enableAllCache) {
@@ -62,8 +62,8 @@ public class CacheLikeNodeOpenCLCEmitter implements OpenCLCEmitter<CacheLikeNode
                             "    " + storeTo + " = nan((uint64_t) 0);\n" +
                             "}\n";
                 } else {
-                    ValuesMethodDefD valuesMethodDefD = context.newVar(node.getDelegate());
-                    yield storeTo + " = " + context.getDelegateVar(valuesMethodDefD) + ";\n";
+                    ValuesMethodDefF64 valuesMethodDefF64 = context.newVar(node.getDelegate());
+                    yield storeTo + " = " + context.getDelegateVar(valuesMethodDefF64) + ";\n";
                 }
             }
             case FLAT_CACHE -> {
@@ -89,8 +89,8 @@ public class CacheLikeNodeOpenCLCEmitter implements OpenCLCEmitter<CacheLikeNode
                             "    " + storeTo + " = nan((uint64_t) 0);\n" +
                             "}\n";
                 } else {
-                    ValuesMethodDefD valuesMethodDefD = context.newVar(node.getDelegate());
-                    yield storeTo + " = " + context.getDelegateVar(valuesMethodDefD) + ";\n";
+                    ValuesMethodDefF64 valuesMethodDefF64 = context.newVar(node.getDelegate());
+                    yield storeTo + " = " + context.getDelegateVar(valuesMethodDefF64) + ";\n";
                 }
             }
             case CACHE2D -> {
@@ -116,8 +116,8 @@ public class CacheLikeNodeOpenCLCEmitter implements OpenCLCEmitter<CacheLikeNode
                             "    " + storeTo + " = nan((uint64_t) 0);\n" +
                             "}\n";
                 } else {
-                    ValuesMethodDefD valuesMethodDefD = context.newVar(node.getDelegate());
-                    yield storeTo + " = " + context.getDelegateVar(valuesMethodDefD) + ";\n";
+                    ValuesMethodDefF64 valuesMethodDefF64 = context.newVar(node.getDelegate());
+                    yield storeTo + " = " + context.getDelegateVar(valuesMethodDefF64) + ";\n";
                 }
             }
             case BLEND_DENSITY -> throw new UnsupportedOperationException("BLEND_DENSITY should not be here");

@@ -29,15 +29,19 @@ import com.ishland.c2me.opts.dfc.common.ast.EvalType;
 import com.ishland.c2me.opts.dfc.common.ast.McToAst;
 import com.ishland.c2me.opts.dfc.common.ast.misc.CacheLikeNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantNode;
-import com.ishland.c2me.opts.dfc.common.ast.misc.RootNode;
+import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantNodeLike;
+import com.ishland.c2me.opts.dfc.common.ast.conversion.ToF64Node;
 import com.ishland.c2me.opts.dfc.common.ast.misc.YClampedGradientNode;
 import com.ishland.c2me.opts.dfc.common.ast.opto.OptoPasses;
 import com.ishland.c2me.opts.dfc.common.gen.GenDumper;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.internalapi.ArgumentVisitor;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.internalapi.IMultiMethod;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.internalapi.ISingleMethod;
-import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefD;
+import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDef;
+import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefF32;
+import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefF64;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.util.DfcObjectCache;
+import com.ishland.flowsched.util.Assertions;
 import it.unimi.dsi.fastutil.Hash;
 import it.unimi.dsi.fastutil.Pair;
 import it.unimi.dsi.fastutil.ints.IntObjectPair;
@@ -45,7 +49,6 @@ import it.unimi.dsi.fastutil.objects.Object2ReferenceMap;
 import it.unimi.dsi.fastutil.objects.Object2ReferenceMaps;
 import it.unimi.dsi.fastutil.objects.Object2ReferenceOpenCustomHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ReferenceOpenHashMap;
-import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceMap;
@@ -70,7 +73,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.IntConsumer;
 
@@ -257,15 +259,15 @@ public class BytecodeGen {
                                         false
                                 ),
                                 new Object[]{
-                                        Type.getMethodType(Context.SINGLE_DESC),
+                                        Type.getMethodType(Context.SINGLE_DESC_F64),
                                         new Handle(
                                                 Opcodes.H_INVOKEVIRTUAL,
                                                 context.className,
                                                 root.single(),
-                                                Context.SINGLE_DESC,
+                                                Context.SINGLE_DESC_F64,
                                                 false
                                         ),
-                                        Type.getMethodType(Context.SINGLE_DESC)
+                                        Type.getMethodType(Context.SINGLE_DESC_F64)
                                 }
                         );
 
@@ -281,15 +283,15 @@ public class BytecodeGen {
                                         false
                                 ),
                                 new Object[]{
-                                        Type.getMethodType(Context.MULTI_DESC),
+                                        Type.getMethodType(Context.MULTI_DESC_F64),
                                         new Handle(
                                                 Opcodes.H_INVOKEVIRTUAL,
                                                 context.className,
                                                 root.multi(),
-                                                Context.MULTI_DESC,
+                                                Context.MULTI_DESC_F64,
                                                 false
                                         ),
-                                        Type.getMethodType(Context.MULTI_DESC)
+                                        Type.getMethodType(Context.MULTI_DESC_F64)
                                 }
                         );
 
@@ -462,8 +464,10 @@ public class BytecodeGen {
     }
 
     public static class Context {
-        public static final String SINGLE_DESC = Type.getMethodDescriptor(Type.getType(double.class), Type.getType(int.class), Type.getType(int.class), Type.getType(int.class), Type.getType(EvalType.class), Type.getType(DfcObjectCache.class));
-        public static final String MULTI_DESC = Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(double[].class), Type.getType(int[].class), Type.getType(int[].class), Type.getType(int[].class), Type.getType(EvalType.class), Type.getType(DfcObjectCache.class));
+        public static final String SINGLE_DESC_F64 = Type.getMethodDescriptor(Type.getType(double.class), Type.getType(int.class), Type.getType(int.class), Type.getType(int.class), Type.getType(EvalType.class), Type.getType(DfcObjectCache.class));
+        public static final String SINGLE_DESC_F32 = Type.getMethodDescriptor(Type.getType(float.class), Type.getType(int.class), Type.getType(int.class), Type.getType(int.class), Type.getType(EvalType.class), Type.getType(DfcObjectCache.class));
+        public static final String MULTI_DESC_F64 = Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(double[].class), Type.getType(int[].class), Type.getType(int[].class), Type.getType(int[].class), Type.getType(EvalType.class), Type.getType(DfcObjectCache.class));
+        public static final String MULTI_DESC_F32 = Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(float[].class), Type.getType(int[].class), Type.getType(int[].class), Type.getType(int[].class), Type.getType(EvalType.class), Type.getType(DfcObjectCache.class));
         public static final String POSTPROCESSING_DESC = Type.getMethodDescriptor(Type.getType(Object.class), Type.getType(Object.class));
         public static final String CONSTRUCTOR_DESC = Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(Object[].class), Type.getType(ArgumentVisitor.class));
         public final ClassWriter classWriter;
@@ -486,6 +490,27 @@ public class BytecodeGen {
             this.classDesc = String.format("L%s;", this.className);
         }
 
+        private static String getSingleDesc(AstNode.ReturnType returnType) {
+            return switch (returnType) {
+                case F64 -> SINGLE_DESC_F64;
+                case F32 -> SINGLE_DESC_F32;
+            };
+        }
+
+        private static String getMultiDesc(AstNode.ReturnType returnType) {
+            return switch (returnType) {
+                case F64 -> MULTI_DESC_F64;
+                case F32 -> MULTI_DESC_F32;
+            };
+        }
+
+        private static ValuesMethodDef makeValuesMethodDef(String name, AstNode.ReturnType returnType) {
+            return switch (returnType) {
+                case F64 -> new ValuesMethodDefF64(name);
+                case F32 -> new ValuesMethodDefF32(name);
+            };
+        }
+
         public String nextMethodName() {
             return String.format("method_%d", methodIdx++);
         }
@@ -503,39 +528,50 @@ public class BytecodeGen {
             return nextMethodName(b.toString());
         }
 
-        public ValuesMethodDefD newSingleMethod(AstNode node) {
-            if (node instanceof ConstantNode constantNode) {
-                return new ValuesMethodDefD(constantNode.getValue());
-            } else {
-                String generated = this.newSingleMethodUnoptimized(node);
-                return new ValuesMethodDefD(generated);
+        private void validateNodeType(AstNode node, AstNode.ReturnType returnType) {
+            if (node.getReturnType() != returnType) {
+                throw new IllegalArgumentException("Invalid descriptor: tried to store %s into %s".formatted(node.getReturnType(), returnType));
             }
         }
 
+        public ValuesMethodDef newSingleMethod(AstNode node) {
+            if (node instanceof ConstantNodeLike constantNodeLike) {
+                return constantNodeLike.getDef();
+            } else {
+                String generated = this.newSingleMethodUnoptimized(node);
+                return makeValuesMethodDef(generated, node.getReturnType());
+            }
+        }
+
+        public ValuesMethodDefF64 newSingleMethodF64(AstNode node) {
+            validateNodeType(node, AstNode.ReturnType.F64);
+            return (ValuesMethodDefF64) this.newSingleMethod(node);
+        }
+
+        public ValuesMethodDefF32 newSingleMethodF32(AstNode node) {
+            validateNodeType(node, AstNode.ReturnType.F32);
+            return (ValuesMethodDefF32) this.newSingleMethod(node);
+        }
+
         public String newSingleMethodUnoptimized(AstNode node) {
-            return this.singleMethods.computeIfAbsent(node, (AstNode node1) -> this.newSingleMethod((adapter, localVarConsumer) -> BytecodeGenRegistry.doBytecodeGenSingle(node1, this, adapter, localVarConsumer), nextMethodName(node)));
+            return this.singleMethods.computeIfAbsent(node, (AstNode node1) -> {
+                String name = nextMethodName(node1);
+                this.newSingleMethod0(node1, name, false);
+                return name;
+            });
         }
 
-        private String newSingleMethod(BiConsumer<InstructionAdapter, LocalVarConsumer> generator) {
-            return newSingleMethod(generator, nextMethodName());
-        }
-
-        private String newSingleMethod(BiConsumer<InstructionAdapter, LocalVarConsumer> generator, String name) {
-            newSingleMethod0(generator, name, false);
-            return name;
-        }
-
-        private void newSingleMethod0(BiConsumer<InstructionAdapter, LocalVarConsumer> generator, String name, boolean isPublic) {
+        private void newSingleMethod0(AstNode node, String name, boolean isPublic) {
             InstructionAdapter adapter = new InstructionAdapter(
                     new AnalyzerAdapter(
                             this.className,
                             (isPublic ? Opcodes.ACC_PUBLIC : Opcodes.ACC_PRIVATE) | Opcodes.ACC_FINAL,
                             name,
-                            SINGLE_DESC,
+                            getSingleDesc(node.getReturnType()),
                             classWriter.visitMethod(
                                     (isPublic ? Opcodes.ACC_PUBLIC : Opcodes.ACC_PRIVATE) | Opcodes.ACC_FINAL,
                                     name,
-                                    SINGLE_DESC,
+                                    getSingleDesc(node.getReturnType()),
                                     null,
                                     null
                             )
@@ -545,11 +581,12 @@ public class BytecodeGen {
             Label start = new Label();
             Label end = new Label();
             adapter.visitLabel(start);
-            generator.accept(adapter, (localName, localDesc) -> {
+            LocalVarConsumer localVarConsumer = (localName, localDesc) -> {
                 int ordinal = extraLocals.size() + 6;
                 extraLocals.add(IntObjectPair.of(ordinal, Pair.of(localName, localDesc)));
                 return ordinal;
-            });
+            };
+            BytecodeGenRegistry.doBytecodeGenSingle(node, this, adapter, localVarConsumer);
             adapter.visitLabel(end);
             adapter.visitLocalVariable("this", this.classDesc, null, start, end, 0);
             adapter.visitLocalVariable("x", Type.INT_TYPE.getDescriptor(), null, start, end, 1);
@@ -563,39 +600,45 @@ public class BytecodeGen {
             adapter.visitMaxs(0, 0);
         }
 
-        public ValuesMethodDefD newMultiMethod(AstNode node) {
+        public ValuesMethodDef newMultiMethod(AstNode node) {
             if (node instanceof ConstantNode constantNode) {
-                return new ValuesMethodDefD(constantNode.getValue());
+                return constantNode.getDef();
             } else {
                 String generated = newMultiMethodUnoptimized(node);
-                return new ValuesMethodDefD(generated);
+                return makeValuesMethodDef(generated, node.getReturnType());
             }
         }
 
+        public ValuesMethodDefF64 newMultiMethodF64(AstNode node) {
+            validateNodeType(node, AstNode.ReturnType.F64);
+            return (ValuesMethodDefF64) this.newMultiMethod(node);
+        }
+
+        public ValuesMethodDefF32 newMultiMethodF32(AstNode node) {
+            validateNodeType(node, AstNode.ReturnType.F32);
+            return (ValuesMethodDefF32) this.newMultiMethod(node);
+        }
+
+
         public String newMultiMethodUnoptimized(AstNode node) {
-            return this.multiMethods.computeIfAbsent(node, (AstNode node1) -> this.newMultiMethod((adapter, localVarConsumer) -> BytecodeGenRegistry.doBytecodeGenMulti(node1, this, adapter, localVarConsumer), nextMethodName(node)));
+            return this.multiMethods.computeIfAbsent(node, (AstNode node1) -> {
+                String name = nextMethodName(node1);
+                this.newMultiMethod0(node1, name, false);
+                return name;
+            });
         }
 
-        private String newMultiMethod(BiConsumer<InstructionAdapter, LocalVarConsumer> generator) {
-            return newMultiMethod(generator, nextMethodName());
-        }
-
-        private String newMultiMethod(BiConsumer<InstructionAdapter, LocalVarConsumer> generator, String name) {
-            newMultiMethod0(generator, name, false);
-            return name;
-        }
-
-        private void newMultiMethod0(BiConsumer<InstructionAdapter, LocalVarConsumer> generator, String name, boolean isPublic) {
+        private void newMultiMethod0(AstNode node, String name, boolean isPublic) {
             InstructionAdapter adapter = new InstructionAdapter(
                     new AnalyzerAdapter(
                             this.className,
                             (isPublic ? Opcodes.ACC_PUBLIC : Opcodes.ACC_PRIVATE) | Opcodes.ACC_FINAL,
                             name,
-                            MULTI_DESC,
+                            getMultiDesc(node.getReturnType()),
                             classWriter.visitMethod(
                                     (isPublic ? Opcodes.ACC_PUBLIC : Opcodes.ACC_PRIVATE) | Opcodes.ACC_FINAL,
                                     name,
-                                    MULTI_DESC,
+                                    getMultiDesc(node.getReturnType()),
                                     null,
                                     null
                             )
@@ -605,11 +648,12 @@ public class BytecodeGen {
             Label start = new Label();
             Label end = new Label();
             adapter.visitLabel(start);
-            generator.accept(adapter, (localName, localDesc) -> {
+            LocalVarConsumer localVarConsumer = (localName, localDesc) -> {
                 int ordinal = extraLocals.size() + 8;
                 extraLocals.add(IntObjectPair.of(ordinal, Pair.of(localName, localDesc)));
                 return ordinal;
-            });
+            };
+            BytecodeGenRegistry.doBytecodeGenMulti(node, this, adapter, localVarConsumer);
             adapter.visitLabel(end);
             adapter.visitLocalVariable("this", this.classDesc, null, start, end, 0);
             adapter.visitLocalVariable("res", Type.getType(double[].class).getDescriptor(), null, start, end, 1);
@@ -632,9 +676,28 @@ public class BytecodeGen {
             (cache1 ? this.splineMethodsCache1 : this.splineMethods).put(spline, method);
         }
 
-        public void callDelegateSingle(InstructionAdapter m, ValuesMethodDefD target) {
+        private void emitInvokeSingle(InstructionAdapter m, ValuesMethodDef target) {
             if (target.isConst()) {
-                m.dconst(target.constValue());
+                switch (target) {
+                    case ValuesMethodDefF64 f64 -> m.dconst(f64.constValue());
+                    case ValuesMethodDefF32 f32 -> m.fconst(f32.constValue());
+                    default -> throw new IllegalStateException("Unexpected type: " + target.getClass().getName());
+                }
+            } else {
+                m.invokevirtual(this.className, target.generatedMethod(), getSingleDesc(target.returnType()), false);
+            }
+        }
+
+        private void validateTarget(ValuesMethodDef target, AstNode.ReturnType returnType) {
+            if (target.returnType() != returnType) {
+                throw new IllegalArgumentException("Invalid descriptor: tried to store %s into %s".formatted(target.returnType(), returnType));
+            }
+        }
+
+        public void callDelegateSingle(InstructionAdapter m, ValuesMethodDef target, AstNode.ReturnType returnType) {
+            validateTarget(target, returnType);
+            if (target.isConst()) {
+                emitInvokeSingle(m, target);
             } else {
                 m.load(0, InstructionAdapter.OBJECT_TYPE);
                 m.load(1, Type.INT_TYPE);
@@ -642,13 +705,22 @@ public class BytecodeGen {
                 m.load(3, Type.INT_TYPE);
                 m.load(4, InstructionAdapter.OBJECT_TYPE);
                 m.load(5, InstructionAdapter.OBJECT_TYPE);
-                m.invokevirtual(this.className, target.generatedMethod(), SINGLE_DESC, false);
+                emitInvokeSingle(m, target);
             }
         }
 
-        public void callDelegateSingleFromMulti(InstructionAdapter m, ValuesMethodDefD target, int indexLocal) {
+        public void callDelegateSingle(InstructionAdapter m, ValuesMethodDefF64 target) {
+            this.callDelegateSingle(m, target, AstNode.ReturnType.F64);
+        }
+
+        public void callDelegateSingle(InstructionAdapter m, ValuesMethodDefF32 target) {
+            this.callDelegateSingle(m, target, AstNode.ReturnType.F32);
+        }
+
+        public void callDelegateSingleFromMulti(InstructionAdapter m, ValuesMethodDef target, int indexLocal, AstNode.ReturnType returnType) {
+            validateTarget(target, returnType);
             if (target.isConst()) {
-                m.dconst(target.constValue());
+                emitInvokeSingle(m, target);
             } else {
                 m.load(0, InstructionAdapter.OBJECT_TYPE);
                 m.load(2, InstructionAdapter.OBJECT_TYPE);
@@ -663,24 +735,45 @@ public class BytecodeGen {
                 m.load(5, InstructionAdapter.OBJECT_TYPE);
                 m.load(6, InstructionAdapter.OBJECT_TYPE);
 
-                m.invokevirtual(
-                        this.className,
-                        target.generatedMethod(),
-                        BytecodeGen.Context.SINGLE_DESC,
-                        false
-                );
+                emitInvokeSingle(m, target);
             }
         }
 
-        public void callDelegateMulti(InstructionAdapter m, ValuesMethodDefD target) {
-            callDelegateMulti(m, target, 1);
+        public void callDelegateSingleFromMulti(InstructionAdapter m, ValuesMethodDefF64 target, int indexLocal) {
+            this.callDelegateSingleFromMulti(m, target, indexLocal, AstNode.ReturnType.F64);
         }
 
-        public void callDelegateMulti(InstructionAdapter m, ValuesMethodDefD target, int arrayLocalIndex) {
+        public void callDelegateSingleFromMulti(InstructionAdapter m, ValuesMethodDefF32 target, int indexLocal) {
+            this.callDelegateSingleFromMulti(m, target, indexLocal, AstNode.ReturnType.F32);
+        }
+
+        public void callDelegateMulti(InstructionAdapter m, ValuesMethodDef target, AstNode.ReturnType returnType) {
+            callDelegateMulti(m, target, 1, returnType);
+        }
+
+        public void callDelegateMulti(InstructionAdapter m, ValuesMethodDefF64 target) {
+            callDelegateMulti(m, target, AstNode.ReturnType.F64);
+        }
+
+        public void callDelegateMulti(InstructionAdapter m, ValuesMethodDefF32 target) {
+            callDelegateMulti(m, target, AstNode.ReturnType.F32);
+        }
+
+        public void callDelegateMulti(InstructionAdapter m, ValuesMethodDef target, int arrayLocalIndex, AstNode.ReturnType returnType) {
+            validateTarget(target, returnType);
             if (target.isConst()) {
                 m.load(arrayLocalIndex, InstructionAdapter.OBJECT_TYPE);
-                m.dconst(target.constValue());
-                m.invokestatic(Type.getInternalName(Arrays.class), "fill", Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(double[].class), Type.DOUBLE_TYPE), false);
+                switch (target) {
+                    case ValuesMethodDefF64 f64 -> {
+                        m.dconst(f64.constValue());
+                        m.invokestatic(Type.getInternalName(Arrays.class), "fill", Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(double[].class), Type.DOUBLE_TYPE), false);
+                    }
+                    case ValuesMethodDefF32 f32 -> {
+                        m.fconst(f32.constValue());
+                        m.invokestatic(Type.getInternalName(Arrays.class), "fill", Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(double[].class), Type.DOUBLE_TYPE), false);
+                    }
+                    default -> throw new IllegalStateException("Unexpected type: " + target.getClass().getName());
+                }
             } else {
                 m.load(0, InstructionAdapter.OBJECT_TYPE);
                 m.load(arrayLocalIndex, InstructionAdapter.OBJECT_TYPE);
@@ -689,8 +782,16 @@ public class BytecodeGen {
                 m.load(4, InstructionAdapter.OBJECT_TYPE);
                 m.load(5, InstructionAdapter.OBJECT_TYPE);
                 m.load(6, InstructionAdapter.OBJECT_TYPE);
-                m.invokevirtual(this.className, target.generatedMethod(), MULTI_DESC, false);
+                m.invokevirtual(this.className, target.generatedMethod(), getMultiDesc(target.returnType()), false);
             }
+        }
+
+        public void callDelegateMulti(InstructionAdapter m, ValuesMethodDefF64 target, int arrayLocalIndex) {
+            this.callDelegateMulti(m, target, arrayLocalIndex, AstNode.ReturnType.F64);
+        }
+
+        public void callDelegateMulti(InstructionAdapter m, ValuesMethodDefF32 target, int arrayLocalIndex) {
+            this.callDelegateMulti(m, target, arrayLocalIndex, AstNode.ReturnType.F32);
         }
 
         public <T> String newField(Class<T> type, T data) {
@@ -762,14 +863,18 @@ public class BytecodeGen {
         }
 
         public void delegateAllToSingle(InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer, AstNode current) {
-            ValuesMethodDefD singleMethod = this.newSingleMethod(current);
+            ValuesMethodDef singleMethod = this.newSingleMethod(current);
+            Assertions.assertTrue(singleMethod.returnType() == current.getReturnType());
             this.doCountedLoop(m, localVarConsumer, idx -> {
                 m.load(1, InstructionAdapter.OBJECT_TYPE);
                 m.load(idx, Type.INT_TYPE);
 
-                this.callDelegateSingleFromMulti(m, singleMethod, idx);
+                this.callDelegateSingleFromMulti(m, singleMethod, idx, singleMethod.returnType());
 
-                m.astore(Type.DOUBLE_TYPE);
+                switch (singleMethod.returnType()) {
+                    case F64 -> m.astore(Type.DOUBLE_TYPE);
+                    case F32 -> m.astore(Type.FLOAT_TYPE);
+                }
             });
         }
 
@@ -781,9 +886,9 @@ public class BytecodeGen {
             int index = this.roots.size();
             String single = String.format("evalSingle_%d_%s", index, suffix);
             String multi = String.format("evalMulti_%d_%s", index, suffix);
-            RootNode rootNode = new RootNode(node);
-            this.newSingleMethod0((adapter, localVarConsumer) -> BytecodeGenRegistry.doBytecodeGenSingle(rootNode, this, adapter, localVarConsumer), single, true);
-            this.newMultiMethod0((adapter, localVarConsumer) -> BytecodeGenRegistry.doBytecodeGenMulti(rootNode, this, adapter, localVarConsumer), multi, true);
+            ToF64Node rootNode = new ToF64Node(node);
+            this.newSingleMethod0(rootNode, single, true);
+            this.newMultiMethod0(rootNode, multi, true);
             this.roots.add(new MethodPair(single, multi));
             return index;
         }

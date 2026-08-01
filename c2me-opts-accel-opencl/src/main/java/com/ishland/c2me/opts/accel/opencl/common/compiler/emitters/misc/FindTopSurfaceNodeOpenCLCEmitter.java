@@ -18,7 +18,7 @@ package com.ishland.c2me.opts.accel.opencl.common.compiler.emitters.misc;
 
 import com.ishland.c2me.opts.accel.opencl.common.compiler.OpenCLCGen;
 import com.ishland.c2me.opts.dfc.common.ast.misc.FindTopSurfaceNode;
-import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefD;
+import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefF64;
 import com.ishland.c2me.opts.dfc.common.gen.opencl.OpenCLCEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.opencl.OpenCLCGenFunctionContext;
 
@@ -30,9 +30,9 @@ public class FindTopSurfaceNodeOpenCLCEmitter implements OpenCLCEmitter<FindTopS
 
     @Override
     public String doCLGen(FindTopSurfaceNode node, OpenCLCGenFunctionContext context, String storeTo) {
-        ValuesMethodDefD densityMethod = context.getGlobalContext().newDispatcher(node.density, context.getGlobalContext().nextMethodName());
-        ValuesMethodDefD upperBoundMethod = context.newVar(node.upperBound);
-        ValuesMethodDefD lowerBoundMethod = context.newVar(node.lowerBound);
+        ValuesMethodDefF64 densityMethod = context.getGlobalContext().newDispatcher(node.density, context.getGlobalContext().nextMethodName());
+        ValuesMethodDefF64 upperBoundMethod = context.newVar(node.upperBound);
+        ValuesMethodDefF64 lowerBoundMethod = context.newVar(node.lowerBound);
 
         StringBuilder b = new StringBuilder();
         b.append("int32_t topCellBlockY = ((int32_t) floor(").append(context.getDelegateVar(upperBoundMethod)).append(" / ").append(node.cellHeight).append(")) * ").append(node.cellHeight).append(";\n");

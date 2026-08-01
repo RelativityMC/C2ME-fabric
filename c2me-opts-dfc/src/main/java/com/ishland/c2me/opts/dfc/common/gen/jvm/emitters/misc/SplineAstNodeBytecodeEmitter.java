@@ -32,8 +32,8 @@ import com.ishland.c2me.opts.dfc.common.gen.jvm.BytecodeGen;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.InvocationShim;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.SplineSupport;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.util.DfcObjectCache;
-import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefD;
-import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefF;
+import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefF32;
+import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefF64;
 import com.ishland.flowsched.util.Assertions;
 import it.unimi.dsi.fastutil.Pair;
 import it.unimi.dsi.fastutil.ints.IntObjectPair;
@@ -59,21 +59,21 @@ public class SplineAstNodeBytecodeEmitter implements BytecodeEmitter<SplineAstNo
 
     @Override
     public void doBytecodeGenSingle(SplineAstNode node, BytecodeGen.Context context, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
-        ValuesMethodDefF splineMethod = doBytecodeGenSpline(node, context, node.spline, false);
+        ValuesMethodDefF32 splineMethod = doBytecodeGenSpline(node, context, node.spline, false);
         callSplineSingle(context, m, splineMethod, -1);
         m.cast(Type.FLOAT_TYPE, Type.DOUBLE_TYPE);
         m.areturn(Type.DOUBLE_TYPE);
     }
 
-    private static ValuesMethodDefF doBytecodeGenSpline(SplineAstNode node, BytecodeGen.Context context, Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper> spline, boolean cache1) {
+    private static ValuesMethodDefF32 doBytecodeGenSpline(SplineAstNode node, BytecodeGen.Context context, Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper> spline, boolean cache1) {
         {
             String cachedSplineMethod = context.getCachedSplineMethod(spline, cache1);
             if (cachedSplineMethod != null) {
-                return new ValuesMethodDefF(cachedSplineMethod);
+                return new ValuesMethodDefF32(cachedSplineMethod);
             }
         }
         if (spline instanceof Spline.FixedFloatFunction<DensityFunctionTypes.Spline.DensityFunctionWrapper> spline1) {
-            return new ValuesMethodDefF(spline1.value());
+            return new ValuesMethodDefF32(spline1.value());
         }
         String name = context.nextMethodName("Spline");
         InstructionAdapter m = new InstructionAdapter(
@@ -102,9 +102,9 @@ public class SplineAstNodeBytecodeEmitter implements BytecodeEmitter<SplineAstNo
         };
 
         if (spline instanceof Spline.Implementation<DensityFunctionTypes.Spline.DensityFunctionWrapper> impl) {
-//            BytecodeGen.Context.ValuesMethodDefF[] valuesMethods = impl.values().stream()
+//            BytecodeGen.Context.ValuesMethodDefF32[] valuesMethods = impl.values().stream()
 //                    .map(spline1 -> doBytecodeGenSpline(context, spline1))
-//                    .toArray(BytecodeGen.Context.ValuesMethodDefF[]::new);
+//                    .toArray(BytecodeGen.Context.ValuesMethodDefF32[]::new);
 
             String locations = context.newField(float[].class, impl.locations());
             String derivatives = context.newField(float[].class, impl.derivatives());
@@ -115,7 +115,7 @@ public class SplineAstNodeBytecodeEmitter implements BytecodeEmitter<SplineAstNo
             int lastConst = impl.locations().length - 1;
 
             if (!cache1) {
-                ValuesMethodDefD locationFunction = context.newSingleMethod(node.children.get(impl.locationFunction()));
+                ValuesMethodDefF64 locationFunction = context.newSingleMethodF64(node.children.get(impl.locationFunction()));
                 context.callDelegateSingle(m, locationFunction);
                 m.cast(Type.DOUBLE_TYPE, Type.FLOAT_TYPE);
                 m.store(point, Type.FLOAT_TYPE);
@@ -297,7 +297,7 @@ public class SplineAstNodeBytecodeEmitter implements BytecodeEmitter<SplineAstNo
                     AstNode sameLocationFunction = SplineAstNode.needOptimizeSameLocationFunction(node, impl.values().get(i), impl.values().get(i + 1));
                     boolean doCache1 = !optimizePure && sameLocationFunction != null;
                     if (doCache1) {
-                        ValuesMethodDefD locationFunction = context.newSingleMethod(sameLocationFunction);
+                        ValuesMethodDefF64 locationFunction = context.newSingleMethodF64(sameLocationFunction);
                         context.callDelegateSingle(m, locationFunction);
                         m.cast(Type.DOUBLE_TYPE, Type.FLOAT_TYPE);
                         m.store(cache1Local, Type.FLOAT_TYPE);
@@ -417,10 +417,10 @@ public class SplineAstNodeBytecodeEmitter implements BytecodeEmitter<SplineAstNo
 
         context.cacheSplineMethod(spline, name, cache1);
 
-        return new ValuesMethodDefF(name);
+        return new ValuesMethodDefF32(name);
     }
 
-    private static void callSplineSingle(BytecodeGen.Context context, InstructionAdapter m, ValuesMethodDefF target, int cache1Local) {
+    private static void callSplineSingle(BytecodeGen.Context context, InstructionAdapter m, ValuesMethodDefF32 target, int cache1Local) {
         if (target.isConst()) {
             m.fconst(target.constValue());
         } else {

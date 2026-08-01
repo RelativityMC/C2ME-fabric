@@ -17,8 +17,8 @@
 package com.ishland.c2me.opts.accel.opencl.common.compiler.emitters.misc;
 
 import com.ishland.c2me.opts.dfc.common.ast.spline.SplineAstNode;
-import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefD;
-import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefF;
+import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefF32;
+import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefF64;
 import com.ishland.c2me.opts.dfc.common.gen.opencl.OpenCLCEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.opencl.OpenCLCGenFunctionContext;
 import net.minecraft.util.math.Spline;
@@ -38,19 +38,19 @@ public class SplineAstNodeOpenCLCEmitter implements OpenCLCEmitter<SplineAstNode
 
     @Override
     public String doCLGen(SplineAstNode node, OpenCLCGenFunctionContext context, String storeTo) {
-        ValuesMethodDefF valuesMethodDefF = doCLGenSpline(node, context, node.spline);
-        return storeTo + " = (double) " + getDelegateSplineVar(valuesMethodDefF) + ";\n";
+        ValuesMethodDefF32 valuesMethodDefF32 = doCLGenSpline(node, context, node.spline);
+        return storeTo + " = (double) " + getDelegateSplineVar(valuesMethodDefF32) + ";\n";
     }
 
-    private static ValuesMethodDefF doCLGenSpline(SplineAstNode node, OpenCLCGenFunctionContext context, Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper> spline) {
+    private static ValuesMethodDefF32 doCLGenSpline(SplineAstNode node, OpenCLCGenFunctionContext context, Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper> spline) {
         {
             String cachedSplineMethod = context.getCachedSplineVar(spline);
             if (cachedSplineMethod != null) {
-                return new ValuesMethodDefF(cachedSplineMethod);
+                return new ValuesMethodDefF32(cachedSplineMethod);
             }
         }
         if (spline instanceof Spline.FixedFloatFunction<DensityFunctionTypes.Spline.DensityFunctionWrapper> spline1) {
-            return new ValuesMethodDefF(spline1.value());
+            return new ValuesMethodDefF32(spline1.value());
         }
         String storeTo = context.nextVarName();
         StringBuilder body = new StringBuilder();
@@ -68,7 +68,7 @@ public class SplineAstNodeOpenCLCEmitter implements OpenCLCEmitter<SplineAstNode
 
             {
                 OpenCLCGenFunctionContext forked = context.fork();
-                ValuesMethodDefD locationFunction = forked.newVar(node.children.get(impl.locationFunction()));
+                ValuesMethodDefF64 locationFunction = forked.newVar(node.children.get(impl.locationFunction()));
                 body.append(forked.getBody());
                 body.append("float point = (float) ").append(forked.getDelegateVar(locationFunction)).append(";\n");
             }
@@ -144,10 +144,10 @@ public class SplineAstNodeOpenCLCEmitter implements OpenCLCEmitter<SplineAstNode
 
         context.cacheSplineVar(spline, storeTo);
 
-        return new ValuesMethodDefF(storeTo);
+        return new ValuesMethodDefF32(storeTo);
     }
 
-    private static String getDelegateSplineVar(ValuesMethodDefF target) {
+    private static String getDelegateSplineVar(ValuesMethodDefF32 target) {
         if (target.isConst()) {
             return literal(target.constValue());
         } else {

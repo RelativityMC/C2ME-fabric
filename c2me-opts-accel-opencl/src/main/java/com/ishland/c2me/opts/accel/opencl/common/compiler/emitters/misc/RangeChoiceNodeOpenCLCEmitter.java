@@ -17,7 +17,7 @@
 package com.ishland.c2me.opts.accel.opencl.common.compiler.emitters.misc;
 
 import com.ishland.c2me.opts.dfc.common.ast.misc.RangeChoiceNode;
-import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefD;
+import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefF64;
 import com.ishland.c2me.opts.dfc.common.gen.opencl.OpenCLCEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.opencl.OpenCLCGenFunctionContext;
 
@@ -33,14 +33,14 @@ public class RangeChoiceNodeOpenCLCEmitter implements OpenCLCEmitter<RangeChoice
     public String doCLGen(RangeChoiceNode node, OpenCLCGenFunctionContext context, String storeTo) {
         StringBuilder sb = new StringBuilder();
 
-        ValuesMethodDefD input = context.newVar(node.input);
+        ValuesMethodDefF64 input = context.newVar(node.input);
         sb.append("double v = ").append(context.getDelegateVar(input)).append(";\n");
 
         sb.append("if (v >= ").append(literal(node.minInclusive)).append(" && v < ").append(literal(node.maxExclusive)).append(") {\n");
 
         {
             OpenCLCGenFunctionContext forked = context.fork();
-            ValuesMethodDefD whenInRange = forked.newVar(node.whenInRange);
+            ValuesMethodDefF64 whenInRange = forked.newVar(node.whenInRange);
             sb.append(forked.getBody().indent(4));
             sb.append("    ").append(storeTo).append(" = ").append(forked.getDelegateVar(whenInRange)).append(";\n");
         }
@@ -49,7 +49,7 @@ public class RangeChoiceNodeOpenCLCEmitter implements OpenCLCEmitter<RangeChoice
 
         {
             OpenCLCGenFunctionContext forked = context.fork();
-            ValuesMethodDefD whenOutOfRange = forked.newVar(node.whenOutOfRange);
+            ValuesMethodDefF64 whenOutOfRange = forked.newVar(node.whenOutOfRange);
             sb.append(forked.getBody().indent(4));
             sb.append("    ").append(storeTo).append(" = ").append(forked.getDelegateVar(whenOutOfRange)).append(";\n");
         }

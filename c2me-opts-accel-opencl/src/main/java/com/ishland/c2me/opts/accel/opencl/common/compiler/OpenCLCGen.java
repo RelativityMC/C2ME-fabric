@@ -26,7 +26,7 @@ import com.ishland.c2me.opts.dfc.common.ast.misc.CacheLikeNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantNode;
 import com.ishland.c2me.opts.dfc.common.ast.opto.OptoPasses;
 import com.ishland.c2me.opts.dfc.common.gen.GenDumper;
-import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefD;
+import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefF64;
 import com.ishland.c2me.opts.dfc.common.gen.opencl.OpenCLCGenContext;
 import com.ishland.c2me.opts.dfc.common.gen.opencl.OpenCLCGenFunctionContext;
 import com.ishland.c2me.opts.natives_math.common.BindingsTemplate;
@@ -204,12 +204,12 @@ public class OpenCLCGen {
         }
 
         @Override
-        public ValuesMethodDefD newVar(AstNode node) {
+        public ValuesMethodDefF64 newVar(AstNode node) {
             if (node instanceof ConstantNode constantNode) {
-                return new ValuesMethodDefD(constantNode.getValue());
+                return new ValuesMethodDefF64(constantNode.getValue());
             } else {
                 String generated = this.newVarUnoptimized(node);
-                return new ValuesMethodDefD(generated);
+                return new ValuesMethodDefF64(generated);
             }
         }
 
@@ -255,7 +255,7 @@ public class OpenCLCGen {
         }
 
         @Override
-        public String getDelegateVar(ValuesMethodDefD target) {
+        public String getDelegateVar(ValuesMethodDefF64 target) {
             if (target.isConst()) {
                 return OpenCLCGen.literal(target.constValue());
             } else {
@@ -375,15 +375,15 @@ public class OpenCLCGen {
         }
 
         @Override
-        public ValuesMethodDefD newDispatcher(AstNode node) {
+        public ValuesMethodDefF64 newDispatcher(AstNode node) {
             return this.newDispatcher(node, nextMethodName());
         }
 
         @Override
-        public ValuesMethodDefD newDispatcher(AstNode node, String id) {
+        public ValuesMethodDefF64 newDispatcher(AstNode node, String id) {
             for (OpenCLCGenFunctionContext.FunctionVariant variant : OpenCLCGenFunctionContext.FunctionVariant.values()) {
                 if (!variant.inDispatcher) continue;
-                ValuesMethodDefD method = this.newMethod(node, variant);
+                ValuesMethodDefF64 method = this.newMethod(node, variant);
                 this.pendingSource
                         .append("static __attribute__((pure)) double ").append(id).append(variant.suffix).append(signature).append(" {\n")
                         .append("    ").append("return ").append(this.callDelegate(method)).append(";\n")
@@ -401,16 +401,16 @@ public class OpenCLCGen {
                     .append("    ").append("}\n")
                     .append("}\n");
 
-            return new ValuesMethodDefD(id);
+            return new ValuesMethodDefF64(id);
         }
 
         @Override
-        public ValuesMethodDefD newMethod(AstNode node, OpenCLCGenFunctionContext.FunctionVariant variant) {
+        public ValuesMethodDefF64 newMethod(AstNode node, OpenCLCGenFunctionContext.FunctionVariant variant) {
             if (node instanceof ConstantNode constantNode) {
-                return new ValuesMethodDefD(constantNode.getValue());
+                return new ValuesMethodDefF64(constantNode.getValue());
             } else {
                 String generated = this.newMethodUnoptimized(node, variant);
-                return new ValuesMethodDefD(generated);
+                return new ValuesMethodDefF64(generated);
             }
         }
 
@@ -421,7 +421,7 @@ public class OpenCLCGen {
         private String newMethod0(FunctionKey key) {
             String methodName = nextMethodName();
             FunctionContextImpl functionContext = new FunctionContextImpl(this, null, methodName, key.variant());
-            ValuesMethodDefD finalVar = functionContext.newVar(key.node());
+            ValuesMethodDefF64 finalVar = functionContext.newVar(key.node());
             this.pendingSource
                     .append("static __attribute__((pure)) double ").append(methodName).append(signature).append(" {\n")
                     .append(functionContext.pendingBody.toString().indent(4))
@@ -430,7 +430,7 @@ public class OpenCLCGen {
             return methodName;
         }
 
-        public void callDelegate(StringBuilder b, ValuesMethodDefD target) {
+        public void callDelegate(StringBuilder b, ValuesMethodDefF64 target) {
             if (target.isConst()) {
                 b.append(OpenCLCGen.literal(target.constValue()));
             } else {
@@ -439,7 +439,7 @@ public class OpenCLCGen {
         }
 
         @Override
-        public String callDelegate(ValuesMethodDefD target) {
+        public String callDelegate(ValuesMethodDefF64 target) {
             StringBuilder b = new StringBuilder();
             callDelegate(b, target);
             return b.toString();

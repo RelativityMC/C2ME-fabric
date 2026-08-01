@@ -24,30 +24,33 @@
 
 package com.ishland.c2me.opts.dfc.common.gen.jvm.emitters.misc;
 
-import com.ishland.c2me.opts.dfc.common.ast.misc.RootNode;
+import com.ishland.c2me.opts.dfc.common.ast.misc.Multi2SingleNode;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.BytecodeEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.BytecodeGen;
-import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefF64;
+import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDef;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.InstructionAdapter;
 
-public class RootNodeBytecodeEmitter implements BytecodeEmitter<RootNode> {
-    public static final RootNodeBytecodeEmitter INSTANCE = new RootNodeBytecodeEmitter();
+public class Multi2SingleNodeBytecodeEmitter implements BytecodeEmitter<Multi2SingleNode> {
+    public static final Multi2SingleNodeBytecodeEmitter INSTANCE = new Multi2SingleNodeBytecodeEmitter();
 
-    private RootNodeBytecodeEmitter() {
+    private Multi2SingleNodeBytecodeEmitter() {
     }
 
     @Override
-    public void doBytecodeGenSingle(RootNode node, BytecodeGen.Context context, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
-        ValuesMethodDefF64 nextMethod = context.newSingleMethodF64(node.next);
-        context.callDelegateSingle(m, nextMethod);
-        m.areturn(Type.DOUBLE_TYPE);
+    public void doBytecodeGenSingle(Multi2SingleNode node, BytecodeGen.Context context, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
+        ValuesMethodDef nextMethod = context.newSingleMethod(node.next);
+
+        context.callDelegateSingle(m, nextMethod, nextMethod.returnType());
+        switch (nextMethod.returnType()) {
+            case F64 -> m.areturn(Type.DOUBLE_TYPE);
+            case F32 -> m.areturn(Type.FLOAT_TYPE);
+        }
     }
 
     @Override
-    public void doBytecodeGenMulti(RootNode node, BytecodeGen.Context context, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
-        ValuesMethodDefF64 nextMethod = context.newMultiMethodF64(node.next);
-        context.callDelegateMulti(m, nextMethod);
+    public void doBytecodeGenMulti(Multi2SingleNode node, BytecodeGen.Context context, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
+        context.delegateAllToSingle(m, localVarConsumer, node);
         m.areturn(Type.VOID_TYPE);
     }
 }

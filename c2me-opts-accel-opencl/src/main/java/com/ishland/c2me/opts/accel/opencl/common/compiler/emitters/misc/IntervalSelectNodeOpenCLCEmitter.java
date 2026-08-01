@@ -19,12 +19,10 @@ package com.ishland.c2me.opts.accel.opencl.common.compiler.emitters.misc;
 import com.ishland.c2me.opts.accel.opencl.common.compiler.OpenCLCGen;
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.IntervalSelectNode;
-import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefD;
+import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefF64;
 import com.ishland.c2me.opts.dfc.common.gen.opencl.OpenCLCEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.opencl.OpenCLCGenFunctionContext;
 import com.ishland.flowsched.util.Assertions;
-
-import java.util.Arrays;
 
 public class IntervalSelectNodeOpenCLCEmitter implements OpenCLCEmitter<IntervalSelectNode> {
     public static final IntervalSelectNodeOpenCLCEmitter INSTANCE = new IntervalSelectNodeOpenCLCEmitter();
@@ -36,7 +34,7 @@ public class IntervalSelectNodeOpenCLCEmitter implements OpenCLCEmitter<Interval
     public String doCLGen(IntervalSelectNode node, OpenCLCGenFunctionContext context, String storeTo) {
         StringBuilder sb = new StringBuilder();
 
-        ValuesMethodDefD inputMethod = context.newVar(node.input);
+        ValuesMethodDefF64 inputMethod = context.newVar(node.input);
         AstNode[] delegates = node.functions.clone();
 
         sb.append("double v = ").append(context.getDelegateVar(inputMethod)).append(";\n");
@@ -57,7 +55,7 @@ public class IntervalSelectNodeOpenCLCEmitter implements OpenCLCEmitter<Interval
 
         if (fromIndex == mid) {
             OpenCLCGenFunctionContext forked = context.fork();
-            ValuesMethodDefD newVar = forked.newVar(delegates[fromIndex]);
+            ValuesMethodDefF64 newVar = forked.newVar(delegates[fromIndex]);
             sb.append(forked.getBody().indent(4));
             sb.append("    ").append("res = ").append(forked.getDelegateVar(newVar)).append(";\n");
             delegates[fromIndex] = null;
@@ -69,7 +67,7 @@ public class IntervalSelectNodeOpenCLCEmitter implements OpenCLCEmitter<Interval
 
         if (mid + 1 == toIndex) {
             OpenCLCGenFunctionContext forked = context.fork();
-            ValuesMethodDefD newVar = forked.newVar(delegates[toIndex]);
+            ValuesMethodDefF64 newVar = forked.newVar(delegates[toIndex]);
             sb.append(forked.getBody().indent(4));
             sb.append("    ").append("res = ").append(forked.getDelegateVar(newVar)).append(";\n");
             delegates[toIndex] = null;
