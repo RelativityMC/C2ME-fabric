@@ -24,6 +24,7 @@
 
 package com.ishland.c2me.opts.dfc.common.gen.jvm.emitters.integration.lithostitched.misc;
 
+import com.ishland.c2me.opts.dfc.common.ast.EvalType;
 import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.FastNoiseBindings;
 import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc.FastNoiseNode;
 import com.ishland.c2me.opts.dfc.common.ast.noise.GenericShiftedNoiseNode;
@@ -59,6 +60,13 @@ public class FastNoiseNodeBytecodeEmitter implements BytecodeEmitter<FastNoiseNo
         context.callDelegateSingle(m, inputXMethod);
         context.callDelegateSingle(m, inputYMethod);
         context.callDelegateSingle(m, inputZMethod);
+
+        m.getstatic(
+                Type.getInternalName(EvalType.class),
+                "NORMAL",
+                Type.getDescriptor(EvalType.class)
+        );
+        m.store(4, InstructionAdapter.OBJECT_TYPE);
 
         m.invokestatic(
                 Type.getInternalName(InvocationShim.class),
@@ -151,6 +159,13 @@ public class FastNoiseNodeBytecodeEmitter implements BytecodeEmitter<FastNoiseNo
                 } else {
                     m.dconst(inputZMethod.constValue());
                 }
+
+                m.getstatic(
+                        Type.getInternalName(EvalType.class),
+                        "NORMAL",
+                        Type.getDescriptor(EvalType.class)
+                );
+                m.store(5, InstructionAdapter.OBJECT_TYPE);
 
                 m.invokestatic(
                         Type.getInternalName(InvocationShim.class),
