@@ -24,6 +24,8 @@
 
 package com.ishland.c2me.opts.natives_math.common;
 
+import com.ishland.c2me.opts.natives_math.common.ducks.INativePointer;
+import com.ishland.c2me.opts.natives_math.common.integration.lithostitched.FNLBindings;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.util.math.noise.DoublePerlinNoiseSampler;
 
@@ -41,14 +43,13 @@ public class TrackingVH {
         try {
             VH_DoublePerlinNoiseSampler = MethodHandles.lookup()
                     .findVarHandle(DoublePerlinNoiseSampler.class, "c2me$sampledCount", int.class);
-            if (FabricLoader.getInstance().isModLoaded("lithostitched")) {
-                Class<?> class_FastNoiseConfig = Class.forName("dev.worldgen.lithostitched.api.worldgen.densityfunction.fastnoise.FastNoiseConfig");
+            if (FNLBindings.CLASS_FastNoiseConfig != null && INativePointer.class.isAssignableFrom(FNLBindings.CLASS_FastNoiseConfig)) {
                 VH_FastNoiseConfig = MethodHandles.lookup()
-                        .findVarHandle(class_FastNoiseConfig, "c2me$sampledCount", int.class);
+                        .findVarHandle(FNLBindings.CLASS_FastNoiseConfig, "c2me$sampledCount", int.class);
             } else  {
                 VH_FastNoiseConfig = null;
             }
-        } catch (NoSuchFieldException | IllegalAccessException | ClassNotFoundException e) {
+        } catch (NoSuchFieldException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }
     }

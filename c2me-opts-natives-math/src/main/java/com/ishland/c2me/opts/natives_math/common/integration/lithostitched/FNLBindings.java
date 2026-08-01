@@ -38,6 +38,7 @@ public class FNLBindings {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FNLBindings.class);
 
+    public static final Class<?> CLASS_FastNoiseConfig;
     private static final MethodHandle MH_sample;
     private static final MethodHandle MH_fnl;
     private static final MethodHandle MH_GetNoise;
@@ -61,6 +62,7 @@ public class FNLBindings {
     private static final boolean AVAILABLE;
 
     static {
+        Class<?> class_FastNoiseConfig = null;
         MethodHandle mh_sample = null;
         MethodHandle mh_fnl = null;
         MethodHandle mh_GetNoise = null;
@@ -85,7 +87,7 @@ public class FNLBindings {
 
         if (FabricLoader.getInstance().isModLoaded("lithostitched")) {
             try {
-                Class<?> class_FastNoiseConfig = Class.forName("dev.worldgen.lithostitched.api.worldgen.densityfunction.fastnoise.FastNoiseConfig");
+                class_FastNoiseConfig = Class.forName("dev.worldgen.lithostitched.api.worldgen.densityfunction.fastnoise.FastNoiseConfig");
                 Class<?> class_FNL = Class.forName("dev.worldgen.lithostitched.api.worldgen.densityfunction.fastnoise.FNL");
                 Class<?> class_FNL$NoiseType = Class.forName("dev.worldgen.lithostitched.api.worldgen.densityfunction.fastnoise.FNL$NoiseType");
                 Class<?> class_FNL$RotationType3D = Class.forName("dev.worldgen.lithostitched.api.worldgen.densityfunction.fastnoise.FNL$RotationType3D");
@@ -121,6 +123,7 @@ public class FNLBindings {
             }
         }
 
+        CLASS_FastNoiseConfig = class_FastNoiseConfig;
         MH_sample = mh_sample;
         MH_fnl = mh_fnl;
         MH_GetNoise = mh_GetNoise;
