@@ -61,6 +61,7 @@
     "access.IVersionedChunkStorage",
     "access.IWeightedList",
     "access.IWeightedListEntry",
+    "access.IWorld",
     "access.IWorldChunk",
     "access.IXoroshiro128PlusPlusRandom",
     "access.IXoroshiro128PlusPlusRandomDeriver",
