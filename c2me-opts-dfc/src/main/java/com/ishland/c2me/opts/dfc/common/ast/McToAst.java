@@ -45,6 +45,7 @@ import com.ishland.c2me.opts.dfc.common.ast.misc.EndIslandsNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.FindTopSurfaceNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.InterpolatedNoiseSamplerNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.IntervalSelectNode;
+import com.ishland.c2me.opts.dfc.common.ast.misc.Multi2SingleNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.RangeChoiceNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.YClampedGradientNode;
 import com.ishland.c2me.opts.dfc.common.ast.noise.GenericShiftedNoiseNode;
@@ -188,7 +189,7 @@ public class McToAst {
         REGISTRY.registerExactMatch(DensityFunctionTypes.YClampedGradient.class, f -> new YClampedGradientNode(f.fromY(), f.toY(), f.fromValue(), f.toValue()));
         REGISTRY.registerExactMatch(DensityFunctionTypes.IntervalSelect.class, f -> new IntervalSelectNode(toAst(f.input()), f.thresholds().toDoubleArray(), f.functions().stream().map(McToAst::toAst).toArray(AstNode[]::new)));
 //        REGISTRY.registerExactMatch(DensityFunctionTypes.Spline.class, f -> new SplineAstNode(f.getSpline()));
-        REGISTRY.registerExactMatch(DensityFunctionTypes.Spline.class, f -> new ToF64Node(toAst(f.getSpline())));
+        REGISTRY.registerExactMatch(DensityFunctionTypes.Spline.class, f -> new Multi2SingleNode(new ToF64Node(toAst(f.getSpline()))));
         REGISTRY.registerExactMatch(DensityFunctionTypes.FindTopSurface.class, f -> new FindTopSurfaceNode(toAst(f.density()), toAst(f.upperBound()), new ConstantNode(f.lowerBound()), f.cellHeight()));
 
         // delegate nodes that have specialized OpenCL gen
