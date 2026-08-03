@@ -138,12 +138,6 @@ public class BytecodeGen {
             String multiMethod = genContext.multiMethods.get(o);
             if (multiMethod != null) builder.append("\\n").append(multiMethod);
 
-            String splineMethod = genContext.splineMethods.get(o);
-            if (splineMethod != null) builder.append("\\n").append(splineMethod);
-
-            String splineMethodCache1 = genContext.splineMethodsCache1.get(o);
-            if (splineMethodCache1 != null) builder.append("\\n").append(splineMethodCache1);
-
             if (builder.isEmpty()) {
                 return null;
             } else {
@@ -476,8 +470,6 @@ public class BytecodeGen {
         private int methodIdx = 0;
         private final Object2ReferenceOpenHashMap<AstNode, String> singleMethods = new Object2ReferenceOpenHashMap<>();
         private final Object2ReferenceOpenHashMap<AstNode, String> multiMethods = new Object2ReferenceOpenHashMap<>();
-        private final Object2ReferenceOpenHashMap<Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper>, String> splineMethods = new Object2ReferenceOpenHashMap<>();
-        private final Object2ReferenceOpenHashMap<Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper>, String> splineMethodsCache1 = new Object2ReferenceOpenHashMap<>();
         private final Reference2ObjectOpenHashMap<Object, FieldRecord> args = new Reference2ObjectOpenHashMap<>();
         private final ReferenceArrayList<MethodPair> roots = new ReferenceArrayList<>();
         private final Reference2ReferenceLinkedOpenHashMap<String, OptoPasses.AstPair> toDump = new Reference2ReferenceLinkedOpenHashMap<>();
@@ -666,14 +658,6 @@ public class BytecodeGen {
                 adapter.visitLocalVariable(local.right().left(), local.right().right(), null, start, end, local.leftInt());
             }
             adapter.visitMaxs(0, 0);
-        }
-
-        public String getCachedSplineMethod(Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper> spline, boolean cache1) {
-            return (cache1 ? this.splineMethodsCache1 : this.splineMethods).get(spline);
-        }
-
-        public void cacheSplineMethod(Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper> spline, String method, boolean cache1) {
-            (cache1 ? this.splineMethodsCache1 : this.splineMethods).put(spline, method);
         }
 
         private void emitInvokeSingle(InstructionAdapter m, ValuesMethodDef target) {
