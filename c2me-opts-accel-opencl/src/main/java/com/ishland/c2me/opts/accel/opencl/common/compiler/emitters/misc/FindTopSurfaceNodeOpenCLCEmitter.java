@@ -30,9 +30,9 @@ public class FindTopSurfaceNodeOpenCLCEmitter implements OpenCLCEmitter<FindTopS
 
     @Override
     public String doCLGen(FindTopSurfaceNode node, OpenCLCGenFunctionContext context, String storeTo) {
-        ValuesMethodDefF64 densityMethod = context.getGlobalContext().newDispatcher(node.density, context.getGlobalContext().nextMethodName());
-        ValuesMethodDefF64 upperBoundMethod = context.newVar(node.upperBound);
-        ValuesMethodDefF64 lowerBoundMethod = context.newVar(node.lowerBound);
+        ValuesMethodDefF64 densityMethod = context.getGlobalContext().newDispatcherF64(node.density, context.getGlobalContext().nextMethodName());
+        ValuesMethodDefF64 upperBoundMethod = context.newVarF64(node.upperBound);
+        ValuesMethodDefF64 lowerBoundMethod = context.newVarF64(node.lowerBound);
 
         StringBuilder b = new StringBuilder();
         b.append("int32_t topCellBlockY = ((int32_t) floor(").append(context.getDelegateVar(upperBoundMethod)).append(" / ").append(node.cellHeight).append(")) * ").append(node.cellHeight).append(";\n");

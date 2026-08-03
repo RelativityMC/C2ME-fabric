@@ -34,7 +34,7 @@ public class IntervalSelectNodeOpenCLCEmitter implements OpenCLCEmitter<Interval
     public String doCLGen(IntervalSelectNode node, OpenCLCGenFunctionContext context, String storeTo) {
         StringBuilder sb = new StringBuilder();
 
-        ValuesMethodDefF64 inputMethod = context.newVar(node.input);
+        ValuesMethodDefF64 inputMethod = context.newVarF64(node.input);
         AstNode[] delegates = node.functions.clone();
 
         sb.append("double v = ").append(context.getDelegateVar(inputMethod)).append(";\n");
@@ -55,7 +55,7 @@ public class IntervalSelectNodeOpenCLCEmitter implements OpenCLCEmitter<Interval
 
         if (fromIndex == mid) {
             OpenCLCGenFunctionContext forked = context.fork();
-            ValuesMethodDefF64 newVar = forked.newVar(delegates[fromIndex]);
+            ValuesMethodDefF64 newVar = forked.newVarF64(delegates[fromIndex]);
             sb.append(forked.getBody().indent(4));
             sb.append("    ").append("res = ").append(forked.getDelegateVar(newVar)).append(";\n");
             delegates[fromIndex] = null;
@@ -67,7 +67,7 @@ public class IntervalSelectNodeOpenCLCEmitter implements OpenCLCEmitter<Interval
 
         if (mid + 1 == toIndex) {
             OpenCLCGenFunctionContext forked = context.fork();
-            ValuesMethodDefF64 newVar = forked.newVar(delegates[toIndex]);
+            ValuesMethodDefF64 newVar = forked.newVarF64(delegates[toIndex]);
             sb.append(forked.getBody().indent(4));
             sb.append("    ").append("res = ").append(forked.getDelegateVar(newVar)).append(";\n");
             delegates[toIndex] = null;

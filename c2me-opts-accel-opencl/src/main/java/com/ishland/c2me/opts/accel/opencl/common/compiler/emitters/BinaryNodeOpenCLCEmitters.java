@@ -39,8 +39,8 @@ public class BinaryNodeOpenCLCEmitters {
         @Override
         public String doCLGen(T node, OpenCLCGenFunctionContext context, String storeTo) {
             StringBuilder sb = new StringBuilder();
-            ValuesMethodDefF64 leftMethod = context.newVar(node.left);
-            ValuesMethodDefF64 rightMethod = context.newVar(node.right);
+            ValuesMethodDefF64 leftMethod = context.newVarF64(node.left);
+            ValuesMethodDefF64 rightMethod = context.newVarF64(node.right);
             genBody(node, context, storeTo, sb, leftMethod, rightMethod);
             return sb.toString();
         }
@@ -94,7 +94,7 @@ public class BinaryNodeOpenCLCEmitters {
         @Override
         public String doCLGen(MaxShortNode node, OpenCLCGenFunctionContext context, String storeTo) {
             StringBuilder sb = new StringBuilder();
-            ValuesMethodDefF64 leftMethod = context.newVar(node.left);
+            ValuesMethodDefF64 leftMethod = context.newVarF64(node.left);
 
             sb.append("const double _left = ").append(context.getDelegateVar(leftMethod)).append(";\n");
             sb.append("if (_left >= ").append(OpenCLCGen.literal(node.rightMax)).append(") {\n");
@@ -102,7 +102,7 @@ public class BinaryNodeOpenCLCEmitters {
             sb.append("} else {\n");
 
             OpenCLCGenFunctionContext forked = context.fork();
-            ValuesMethodDefF64 rightMethod = forked.newVar(node.right);
+            ValuesMethodDefF64 rightMethod = forked.newVarF64(node.right);
             sb.append(forked.getBody().indent(4));
             sb.append("    ").append(storeTo).append(" = fmax(_left, ").append(forked.getDelegateVar(rightMethod)).append(");\n");
 
@@ -137,7 +137,7 @@ public class BinaryNodeOpenCLCEmitters {
         @Override
         public String doCLGen(MinShortNode node, OpenCLCGenFunctionContext context, String storeTo) {
             StringBuilder sb = new StringBuilder();
-            ValuesMethodDefF64 leftMethod = context.newVar(node.left);
+            ValuesMethodDefF64 leftMethod = context.newVarF64(node.left);
 
             sb.append("const double _left = ").append(context.getDelegateVar(leftMethod)).append(";\n");
             sb.append("if (_left <= ").append(OpenCLCGen.literal(node.rightMin)).append(") {\n");
@@ -145,7 +145,7 @@ public class BinaryNodeOpenCLCEmitters {
             sb.append("} else {\n");
 
             OpenCLCGenFunctionContext forked = context.fork();
-            ValuesMethodDefF64 rightMethod = forked.newVar(node.right);
+            ValuesMethodDefF64 rightMethod = forked.newVarF64(node.right);
             sb.append(forked.getBody().indent(4));
             sb.append("    ").append(storeTo).append(" = fmin(_left, ").append(forked.getDelegateVar(rightMethod)).append(");\n");
 
@@ -169,11 +169,11 @@ public class BinaryNodeOpenCLCEmitters {
         public String doCLGen(MulNode node, OpenCLCGenFunctionContext context, String storeTo) {
             StringBuilder sb = new StringBuilder();
             if (node.left instanceof ConstantNode) { // (0.0 * x) should already be optimized out
-                ValuesMethodDefF64 leftMethod = context.newVar(node.left);
-                ValuesMethodDefF64 rightMethod = context.newVar(node.right);
+                ValuesMethodDefF64 leftMethod = context.newVarF64(node.left);
+                ValuesMethodDefF64 rightMethod = context.newVarF64(node.right);
                 sb.append(storeTo).append(" = ").append(context.getDelegateVar(leftMethod)).append(" * ").append(context.getDelegateVar(rightMethod)).append(";\n");
             } else {
-                ValuesMethodDefF64 leftMethod = context.newVar(node.left);
+                ValuesMethodDefF64 leftMethod = context.newVarF64(node.left);
                 sb.append("const double _left = ").append(context.getDelegateVar(leftMethod)).append(";\n");
 
                 sb.append("if (_left == 0.0) {\n");
@@ -181,7 +181,7 @@ public class BinaryNodeOpenCLCEmitters {
                 sb.append("} else {\n");
 
                 OpenCLCGenFunctionContext forked = context.fork();
-                ValuesMethodDefF64 rightMethod = forked.newVar(node.right);
+                ValuesMethodDefF64 rightMethod = forked.newVarF64(node.right);
                 sb.append(forked.getBody().indent(4));
                 sb.append("    ").append(storeTo).append(" = _left * ").append(forked.getDelegateVar(rightMethod)).append(";\n");
 

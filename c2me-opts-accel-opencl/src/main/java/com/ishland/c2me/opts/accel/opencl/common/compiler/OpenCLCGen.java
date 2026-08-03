@@ -23,9 +23,11 @@ import com.ishland.c2me.base.mixin.access.IMultiNoiseUtilEntries;
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
 import com.ishland.c2me.opts.dfc.common.ast.McToAst;
 import com.ishland.c2me.opts.dfc.common.ast.misc.CacheLikeNode;
-import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantNode;
+import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantNodeLike;
 import com.ishland.c2me.opts.dfc.common.ast.opto.OptoPasses;
 import com.ishland.c2me.opts.dfc.common.gen.GenDumper;
+import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDef;
+import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefF32;
 import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefF64;
 import com.ishland.c2me.opts.dfc.common.gen.opencl.OpenCLCGenContext;
 import com.ishland.c2me.opts.dfc.common.gen.opencl.OpenCLCGenFunctionContext;
@@ -40,7 +42,6 @@ import it.unimi.dsi.fastutil.objects.Object2ReferenceOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Reference2IntLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceMap;
 import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.util.math.Spline;
 import net.minecraft.util.math.noise.DoublePerlinNoiseSampler;
 import net.minecraft.util.math.noise.InterpolatedNoiseSampler;
 import net.minecraft.world.biome.Biome;
@@ -167,13 +168,39 @@ public class OpenCLCGen {
         ;
     }
 
+
+    private static void validateNodeType(AstNode node, AstNode.ReturnType returnType) {
+        if (node.getReturnType() != returnType) {
+            throw new IllegalArgumentException("Invalid descriptor: tried to store %s into %s".formatted(node.getReturnType(), returnType));
+        }
+    }
+
+    private static void validateTarget(ValuesMethodDef target, AstNode.ReturnType returnType) {
+        if (target.returnType() != returnType) {
+            throw new IllegalArgumentException("Invalid descriptor: tried to store %s into %s".formatted(target.returnType(), returnType));
+        }
+    }
+
+    private static ValuesMethodDef makeValuesMethodDef(String name, AstNode.ReturnType returnType) {
+        return switch (returnType) {
+            case F64 -> new ValuesMethodDefF64(name);
+            case F32 -> new ValuesMethodDefF32(name);
+        };
+    }
+
+    private static String getDataType(AstNode.ReturnType returnType) {
+        return switch (returnType) {
+            case F64 -> "double";
+            case F32 -> "float";
+        };
+    }
+
     public static class FunctionContextImpl implements OpenCLCGenFunctionContext {
 
         private final ContextImpl globalContext;
         private final @Nullable FunctionContextImpl parent;
         private final StringBuilder pendingBody = new StringBuilder();
         private final Object2ReferenceOpenHashMap<AstNode, String> vars = new Object2ReferenceOpenHashMap<>();
-        private final Object2ReferenceOpenHashMap<Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper>, String> splineVars = new Object2ReferenceOpenHashMap<>();
         private final String methodName;
         private final FunctionVariant variant;
 
@@ -204,13 +231,25 @@ public class OpenCLCGen {
         }
 
         @Override
-        public ValuesMethodDefF64 newVar(AstNode node) {
-            if (node instanceof ConstantNode constantNode) {
-                return new ValuesMethodDefF64(constantNode.getValue());
+        public ValuesMethodDef newVar(AstNode node) {
+            if (node instanceof ConstantNodeLike constantNodeLike) {
+                return constantNodeLike.getDef();
             } else {
                 String generated = this.newVarUnoptimized(node);
-                return new ValuesMethodDefF64(generated);
+                return makeValuesMethodDef(generated, node.getReturnType());
             }
+        }
+
+        @Override
+        public ValuesMethodDefF64 newVarF64(AstNode node) {
+            validateNodeType(node, AstNode.ReturnType.F64);
+            return (ValuesMethodDefF64) this.newVar(node);
+        }
+
+        @Override
+        public ValuesMethodDefF32 newVarF32(AstNode node) {
+            validateNodeType(node, AstNode.ReturnType.F32);
+            return (ValuesMethodDefF32) this.newVar(node);
         }
 
         @Override
@@ -231,7 +270,7 @@ public class OpenCLCGen {
             String varName = nextVarName();
             String generated = OpenCLCGenRegistry.doCLGen(node, this, varName);
             this.pendingBody
-                    .append("double ").append(varName).append("; // ").append(node.getClass().getName()).append("\n")
+                    .append(getDataType(node.getReturnType())).append(" ").append(varName).append("; // ").append(node.getClass().getName()).append("\n")
                     .append("{\n")
                     .append(generated.indent(4))
                     .append("}\n");
@@ -255,33 +294,27 @@ public class OpenCLCGen {
         }
 
         @Override
-        public String getDelegateVar(ValuesMethodDefF64 target) {
+        public String getDelegateVar(ValuesMethodDef target, AstNode.ReturnType returnType) {
+            validateTarget(target, returnType);
             if (target.isConst()) {
-                return OpenCLCGen.literal(target.constValue());
+                return switch (target) {
+                    case ValuesMethodDefF32 f32 -> OpenCLCGen.literal(f32.constValue());
+                    case ValuesMethodDefF64 f64 -> OpenCLCGen.literal(f64.constValue());
+                    default -> throw new IllegalStateException("Unexpected type: " + target.getClass().getName());
+                };
             } else {
                 return target.generatedMethod();
             }
         }
 
         @Override
-        public String getCachedSplineVar(Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper> spline) {
-            String got = this.splineVars.get(spline);
-
-            if (this.parent != null) {
-                got = this.parent.getCachedSplineVar(spline);
-                if (got != null) {
-                    this.splineVars.put(spline, got);
-                    return got;
-                }
-            }
-
-            return got;
+        public String getDelegateVar(ValuesMethodDefF64 target) {
+            return this.getDelegateVar(target, AstNode.ReturnType.F64);
         }
 
         @Override
-        public void cacheSplineVar(Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper> spline, String varName) {
-            this.splineVars.put(spline, varName);
-            this.globalContext.recordAuxName(spline, this.methodName, varName);
+        public String getDelegateVar(ValuesMethodDefF32 target) {
+            return this.getDelegateVar(target, AstNode.ReturnType.F32);
         }
 
         @Override
@@ -371,27 +404,23 @@ public class OpenCLCGen {
         }
 
         public void compileBinding(AstNode node, String id) {
-            newDispatcher(node, "df_binding_" + id);
+            newDispatcherF64(node, "df_binding_" + id);
         }
 
         @Override
-        public ValuesMethodDefF64 newDispatcher(AstNode node) {
-            return this.newDispatcher(node, nextMethodName());
-        }
-
-        @Override
-        public ValuesMethodDefF64 newDispatcher(AstNode node, String id) {
+        public ValuesMethodDef newDispatcher(AstNode node, String id, AstNode.ReturnType returnType) {
+            validateNodeType(node, returnType);
             for (OpenCLCGenFunctionContext.FunctionVariant variant : OpenCLCGenFunctionContext.FunctionVariant.values()) {
                 if (!variant.inDispatcher) continue;
-                ValuesMethodDefF64 method = this.newMethod(node, variant);
+                ValuesMethodDef method = this.newMethod(node, variant, node.getReturnType());
                 this.pendingSource
-                        .append("static __attribute__((pure)) double ").append(id).append(variant.suffix).append(signature).append(" {\n")
-                        .append("    ").append("return ").append(this.callDelegate(method)).append(";\n")
+                        .append("static __attribute__((pure)) ").append(getDataType(node.getReturnType())).append(" ").append(id).append(variant.suffix).append(signature).append(" {\n")
+                        .append("    ").append("return ").append(this.callDelegate(method, node.getReturnType())).append(";\n")
                         .append("}\n");
             }
 
             this.pendingSource
-                    .append("static __attribute__((pure)) double ").append(id).append(signature).append(" {\n")
+                    .append("static __attribute__((pure)) ").append(getDataType(node.getReturnType())).append(" ").append(id).append(signature).append(" {\n")
                     .append("    ").append("if (ctx.rw_data && (ctx.sample_flags & MASK_enableAllCaches) == MASK_enableAllCaches) {\n")
                     .append("    ").append("    ").append("return ").append(id).append(OpenCLCGenFunctionContext.FunctionVariant.FULLY_CACHED.suffix).append("(ctx);\n")
                     .append("    ").append("} else if (ctx.rw_data &&(ctx.sample_flags & MASK_enableFlatCache) == MASK_enableFlatCache) {\n")
@@ -401,17 +430,48 @@ public class OpenCLCGen {
                     .append("    ").append("}\n")
                     .append("}\n");
 
-            return new ValuesMethodDefF64(id);
+            return makeValuesMethodDef(id, node.getReturnType());
         }
 
         @Override
-        public ValuesMethodDefF64 newMethod(AstNode node, OpenCLCGenFunctionContext.FunctionVariant variant) {
-            if (node instanceof ConstantNode constantNode) {
-                return new ValuesMethodDefF64(constantNode.getValue());
+        public ValuesMethodDefF64 newDispatcherF64(AstNode node) {
+            return this.newDispatcherF64(node, nextMethodName());
+        }
+
+        @Override
+        public ValuesMethodDefF64 newDispatcherF64(AstNode node, String id) {
+            return (ValuesMethodDefF64) this.newDispatcher(node, id, AstNode.ReturnType.F64);
+        }
+
+        @Override
+        public ValuesMethodDefF32 newDispatcherF32(AstNode node) {
+            return this.newDispatcherF32(node, nextMethodName());
+        }
+
+        @Override
+        public ValuesMethodDefF32 newDispatcherF32(AstNode node, String id) {
+            return (ValuesMethodDefF32) this.newDispatcher(node, id, AstNode.ReturnType.F32);
+        }
+
+        @Override
+        public ValuesMethodDef newMethod(AstNode node, OpenCLCGenFunctionContext.FunctionVariant variant, AstNode.ReturnType returnType) {
+            validateNodeType(node, returnType);
+            if (node instanceof ConstantNodeLike constantNodeLike) {
+                return constantNodeLike.getDef();
             } else {
                 String generated = this.newMethodUnoptimized(node, variant);
-                return new ValuesMethodDefF64(generated);
+                return makeValuesMethodDef(generated, returnType);
             }
+        }
+
+        @Override
+        public ValuesMethodDefF64 newMethodF64(AstNode node, OpenCLCGenFunctionContext.FunctionVariant variant) {
+            return (ValuesMethodDefF64) this.newMethod(node, variant, AstNode.ReturnType.F64);
+        }
+
+        @Override
+        public ValuesMethodDefF32 newMethodF32(AstNode node, OpenCLCGenFunctionContext.FunctionVariant variant) {
+            return (ValuesMethodDefF32) this.newMethod(node, variant, AstNode.ReturnType.F32);
         }
 
         public String newMethodUnoptimized(AstNode node, OpenCLCGenFunctionContext.FunctionVariant variant) {
@@ -421,28 +481,37 @@ public class OpenCLCGen {
         private String newMethod0(FunctionKey key) {
             String methodName = nextMethodName();
             FunctionContextImpl functionContext = new FunctionContextImpl(this, null, methodName, key.variant());
-            ValuesMethodDefF64 finalVar = functionContext.newVar(key.node());
+            ValuesMethodDef finalVar = functionContext.newVarF64(key.node());
             this.pendingSource
-                    .append("static __attribute__((pure)) double ").append(methodName).append(signature).append(" {\n")
+                    .append("static __attribute__((pure)) ").append(getDataType(key.node().getReturnType())).append(" ").append(methodName).append(signature).append(" {\n")
                     .append(functionContext.pendingBody.toString().indent(4))
-                    .append("    ").append("return ").append(functionContext.getDelegateVar(finalVar)).append(";\n")
+                    .append("    ").append("return ").append(functionContext.getDelegateVar(finalVar, key.node().getReturnType())).append(";\n")
                     .append("}\n");
             return methodName;
         }
 
-        public void callDelegate(StringBuilder b, ValuesMethodDefF64 target) {
+        @Override
+        public String callDelegate(ValuesMethodDef target, AstNode.ReturnType returnType) {
+            validateTarget(target, returnType);
             if (target.isConst()) {
-                b.append(OpenCLCGen.literal(target.constValue()));
+                return switch (target) {
+                    case ValuesMethodDefF32 f32 -> OpenCLCGen.literal(f32.constValue());
+                    case ValuesMethodDefF64 f64 -> OpenCLCGen.literal(f64.constValue());
+                    default -> throw new IllegalStateException("Unexpected type: " + target.getClass().getName());
+                };
             } else {
-                b.append(target.generatedMethod()).append("(ctx)");
+                return target.generatedMethod() + "(ctx)";
             }
         }
 
         @Override
         public String callDelegate(ValuesMethodDefF64 target) {
-            StringBuilder b = new StringBuilder();
-            callDelegate(b, target);
-            return b.toString();
+            return this.callDelegate(target, AstNode.ReturnType.F64);
+        }
+
+        @Override
+        public String callDelegate(ValuesMethodDefF32 target) {
+            return this.callDelegate(target, AstNode.ReturnType.F32);
         }
 
         @Override
@@ -557,6 +626,7 @@ public class OpenCLCGen {
                 for (Object2IntMap.Entry<CacheLikeNode> entry : caches.object2IntEntrySet()) {
                     CacheLikeNode node = entry.getKey();
                     int i = entry.getIntValue();
+                    validateNodeType(node, AstNode.ReturnType.F64);
                     String delegateName = this.newMethodUnoptimized(node.getDelegate(), OpenCLCGenFunctionContext.FunctionVariant.UNCACHED);
                     String name = "df_flatcache_prefill_" + i;
 
@@ -584,6 +654,7 @@ public class OpenCLCGen {
                 for (Object2IntMap.Entry<CacheLikeNode> entry : caches.object2IntEntrySet()) {
                     CacheLikeNode node = entry.getKey();
                     int i = entry.getIntValue();
+                    validateNodeType(node, AstNode.ReturnType.F64);
                     String delegateName = this.newMethodUnoptimized(node.getDelegate(), OpenCLCGenFunctionContext.FunctionVariant.FULLY_CACHED_EXCEPT_CACHE2D);
                     Assertions.assertTrue(delegateName != null);
                     String name = "df_cache2d_prefill_" + i;
@@ -612,6 +683,7 @@ public class OpenCLCGen {
                 for (Object2IntMap.Entry<CacheLikeNode> entry : caches.object2IntEntrySet()) {
                     CacheLikeNode node = entry.getKey();
                     int i = entry.getIntValue();
+                    validateNodeType(node, AstNode.ReturnType.F64);
                     String delegateName = this.newMethodUnoptimized(node.getDelegate(), OpenCLCGenFunctionContext.FunctionVariant.FLATCACHE_ONLY);
                     Assertions.assertTrue(delegateName != null);
 

@@ -26,6 +26,8 @@ package com.ishland.c2me.opts.dfc.common.gen.opencl;
 
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.CacheLikeNode;
+import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDef;
+import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefF32;
 import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefF64;
 
 public interface OpenCLCGenContext {
@@ -36,13 +38,27 @@ public interface OpenCLCGenContext {
 
     String nextMethodName(String suffix);
 
-    ValuesMethodDefF64 newDispatcher(AstNode node);
+    ValuesMethodDef newDispatcher(AstNode node, String id, AstNode.ReturnType returnType);
 
-    ValuesMethodDefF64 newDispatcher(AstNode node, String id);
+    ValuesMethodDefF64 newDispatcherF64(AstNode node);
 
-    ValuesMethodDefF64 newMethod(AstNode node, OpenCLCGenFunctionContext.FunctionVariant variant);
+    ValuesMethodDefF64 newDispatcherF64(AstNode node, String id);
+
+    ValuesMethodDefF32 newDispatcherF32(AstNode node);
+
+    ValuesMethodDefF32 newDispatcherF32(AstNode node, String id);
+
+    ValuesMethodDef newMethod(AstNode node, OpenCLCGenFunctionContext.FunctionVariant variant, AstNode.ReturnType returnType);
+
+    ValuesMethodDefF64 newMethodF64(AstNode node, OpenCLCGenFunctionContext.FunctionVariant variant);
+
+    ValuesMethodDefF32 newMethodF32(AstNode node, OpenCLCGenFunctionContext.FunctionVariant variant);
+
+    String callDelegate(ValuesMethodDef target, AstNode.ReturnType returnType);
 
     String callDelegate(ValuesMethodDefF64 target);
+
+    String callDelegate(ValuesMethodDefF32 target);
 
     int allocGlobalDynamicData(Object data);
 

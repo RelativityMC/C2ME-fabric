@@ -25,9 +25,9 @@
 package com.ishland.c2me.opts.dfc.common.gen.opencl;
 
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
+import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDef;
+import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefF32;
 import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefF64;
-import net.minecraft.util.math.Spline;
-import net.minecraft.world.gen.densityfunction.DensityFunctionTypes;
 
 public interface OpenCLCGenFunctionContext {
     OpenCLCGenContext getGlobalContext();
@@ -36,15 +36,19 @@ public interface OpenCLCGenFunctionContext {
 
     String nextVarName();
 
-    ValuesMethodDefF64 newVar(AstNode node);
+    ValuesMethodDef newVar(AstNode node);
+
+    ValuesMethodDefF64 newVarF64(AstNode node);
+
+    ValuesMethodDefF32 newVarF32(AstNode node);
 
     String newVarUnoptimized(AstNode node);
 
+    String getDelegateVar(ValuesMethodDef target, AstNode.ReturnType returnType);
+
     String getDelegateVar(ValuesMethodDefF64 target);
 
-    String getCachedSplineVar(Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper> spline);
-
-    void cacheSplineVar(Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper> spline, String varName);
+    String getDelegateVar(ValuesMethodDefF32 target);
 
     OpenCLCGenFunctionContext fork();
 

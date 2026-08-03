@@ -36,7 +36,7 @@ public class UnaryNodeOpenCLCEmitters {
         @Override
         public String doCLGen(T node, OpenCLCGenFunctionContext context, String storeTo) {
             StringBuilder sb = new StringBuilder();
-            ValuesMethodDefF64 operand = context.newVar(node.operand);
+            ValuesMethodDefF64 operand = context.newVarF64(node.operand);
             genBody(node, context, storeTo, sb, operand);
             return sb.toString();
         }

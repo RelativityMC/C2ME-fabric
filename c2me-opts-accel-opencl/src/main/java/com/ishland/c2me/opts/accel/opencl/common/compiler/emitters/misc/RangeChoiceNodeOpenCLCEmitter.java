@@ -33,14 +33,14 @@ public class RangeChoiceNodeOpenCLCEmitter implements OpenCLCEmitter<RangeChoice
     public String doCLGen(RangeChoiceNode node, OpenCLCGenFunctionContext context, String storeTo) {
         StringBuilder sb = new StringBuilder();
 
-        ValuesMethodDefF64 input = context.newVar(node.input);
+        ValuesMethodDefF64 input = context.newVarF64(node.input);
         sb.append("double v = ").append(context.getDelegateVar(input)).append(";\n");
 
         sb.append("if (v >= ").append(literal(node.minInclusive)).append(" && v < ").append(literal(node.maxExclusive)).append(") {\n");
 
         {
             OpenCLCGenFunctionContext forked = context.fork();
-            ValuesMethodDefF64 whenInRange = forked.newVar(node.whenInRange);
+            ValuesMethodDefF64 whenInRange = forked.newVarF64(node.whenInRange);
             sb.append(forked.getBody().indent(4));
             sb.append("    ").append(storeTo).append(" = ").append(forked.getDelegateVar(whenInRange)).append(";\n");
         }
@@ -49,7 +49,7 @@ public class RangeChoiceNodeOpenCLCEmitter implements OpenCLCEmitter<RangeChoice
 
         {
             OpenCLCGenFunctionContext forked = context.fork();
-            ValuesMethodDefF64 whenOutOfRange = forked.newVar(node.whenOutOfRange);
+            ValuesMethodDefF64 whenOutOfRange = forked.newVarF64(node.whenOutOfRange);
             sb.append(forked.getBody().indent(4));
             sb.append("    ").append(storeTo).append(" = ").append(forked.getDelegateVar(whenOutOfRange)).append(";\n");
         }

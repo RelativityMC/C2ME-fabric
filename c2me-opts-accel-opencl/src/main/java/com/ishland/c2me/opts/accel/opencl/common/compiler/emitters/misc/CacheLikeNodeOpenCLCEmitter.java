@@ -36,7 +36,7 @@ public class CacheLikeNodeOpenCLCEmitter implements OpenCLCEmitter<CacheLikeNode
         }
         return switch (wrapping.type()) {
             case CACHE_ONCE, CACHE_ALL_IN_CELL -> {
-                ValuesMethodDefF64 valuesMethodDefF64 = context.newVar(node.getDelegate());
+                ValuesMethodDefF64 valuesMethodDefF64 = context.newVarF64(node.getDelegate());
                 yield storeTo + " = " + context.getDelegateVar(valuesMethodDefF64) + ";\n";
             }
             case INTERPOLATED -> {
@@ -62,7 +62,7 @@ public class CacheLikeNodeOpenCLCEmitter implements OpenCLCEmitter<CacheLikeNode
                             "    " + storeTo + " = nan((uint64_t) 0);\n" +
                             "}\n";
                 } else {
-                    ValuesMethodDefF64 valuesMethodDefF64 = context.newVar(node.getDelegate());
+                    ValuesMethodDefF64 valuesMethodDefF64 = context.newVarF64(node.getDelegate());
                     yield storeTo + " = " + context.getDelegateVar(valuesMethodDefF64) + ";\n";
                 }
             }
@@ -89,7 +89,7 @@ public class CacheLikeNodeOpenCLCEmitter implements OpenCLCEmitter<CacheLikeNode
                             "    " + storeTo + " = nan((uint64_t) 0);\n" +
                             "}\n";
                 } else {
-                    ValuesMethodDefF64 valuesMethodDefF64 = context.newVar(node.getDelegate());
+                    ValuesMethodDefF64 valuesMethodDefF64 = context.newVarF64(node.getDelegate());
                     yield storeTo + " = " + context.getDelegateVar(valuesMethodDefF64) + ";\n";
                 }
             }
@@ -116,7 +116,7 @@ public class CacheLikeNodeOpenCLCEmitter implements OpenCLCEmitter<CacheLikeNode
                             "    " + storeTo + " = nan((uint64_t) 0);\n" +
                             "}\n";
                 } else {
-                    ValuesMethodDefF64 valuesMethodDefF64 = context.newVar(node.getDelegate());
+                    ValuesMethodDefF64 valuesMethodDefF64 = context.newVarF64(node.getDelegate());
                     yield storeTo + " = " + context.getDelegateVar(valuesMethodDefF64) + ";\n";
                 }
             }
