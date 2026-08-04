@@ -45,11 +45,17 @@ public abstract class MixinStructureWeightSampler {
     @Shadow @Final private List<JigsawJunction> junctions;
 
     @Shadow
-    private static double getStructureWeight(int x, int y, int z, int yy) {
+    private static float getStructureWeight(int x, int y, int z, int yy) {
         throw new AbstractMethodError();
     }
 
     @Shadow @Final private @Nullable BlockBox boundingBox;
+
+    @Shadow
+    private static float getMagnitudeWeight(float dx, float dy, float dz) {
+        throw new UnsupportedOperationException("Implemented via mixin");
+    }
+
     @Unique
     private StructureWeightSampler.Piece[] c2me$pieceArray;
 
@@ -67,9 +73,9 @@ public abstract class MixinStructureWeightSampler {
      * @reason optimize impl
      */
     @Overwrite
-    public double sample(DensityFunction.NoisePos pos) {
+    public float sample(DensityFunction.NoisePos pos) {
         if (this.boundingBox == null) {
-            return 0.0;
+            return 0.0f;
         }
 
         int x = pos.blockX();
@@ -77,14 +83,14 @@ public abstract class MixinStructureWeightSampler {
         int z = pos.blockZ();
 
         if (!this.boundingBox.contains(x, y, z)) {
-            return 0.0;
+            return 0.0f;
         }
 
         if (this.c2me$pieceArray == null || this.c2me$junctionArray == null) {
             this.c2me$initArrays();
         }
-        double d = 0.0;
 
+        float d = 0.0F;
 
         for (StructureWeightSampler.Piece piece : this.c2me$pieceArray) {
             BlockBox blockBox = piece.box();
@@ -94,11 +100,11 @@ public abstract class MixinStructureWeightSampler {
             int p = y - o;
 
             d += switch (piece.terrainAdjustment()) { // 2 switch statement merged
-                case NONE -> 0.0;
-                case BURY -> getMagnitudeWeight(m, (double)p / 2.0, n);
-                case BEARD_THIN -> getStructureWeight(m, p, n, p) * 0.8;
-                case BEARD_BOX -> getStructureWeight(m, Math.max(0, Math.max(o - y, y - blockBox.getMaxY())), n, p) * 0.8;
-                case ENCAPSULATE -> getMagnitudeWeight((double)m / 2.0, (double)Math.max(0, Math.max(blockBox.getMinY() - y, y - blockBox.getMaxY())) / 2.0, (double)n / 2.0) * 0.8;
+                case NONE -> 0.0F;
+                case BURY -> getMagnitudeWeight(m, p / 2.0F, n);
+                case BEARD_THIN -> getStructureWeight(m, p, n, p) * 0.8F;
+                case BEARD_BOX -> getStructureWeight(m, Math.max(0, Math.max(o - y, y - blockBox.getMaxY())), n, p) * 0.8F;
+                case ENCAPSULATE -> getMagnitudeWeight(m / 2.0F, Math.max(0, Math.max(blockBox.getMinY() - y, y - blockBox.getMaxY())) / 2.0F, n / 2.0F) * 0.8F;
             };
         }
 
@@ -106,24 +112,10 @@ public abstract class MixinStructureWeightSampler {
             int r = x - jigsawJunction.getSourceX();
             int l = y - jigsawJunction.getSourceGroundY();
             int m = z - jigsawJunction.getSourceZ();
-            d += getStructureWeight(r, l, m, l) * 0.4;
+            d += getStructureWeight(r, l, m, l) * 0.4F;
         }
 
         return d;
-    }
-
-    /**
-     * @author ishland
-     * @reason optimize impl
-     */
-    @Overwrite
-    private static double getMagnitudeWeight(double x, double y, double z) {
-        double d = Math.sqrt(x * x + y * y + z * z);
-        if (d > 6.0) {
-            return 0.0;
-        } else {
-            return 1.0 - d / 6.0;
-        }
     }
 
 }

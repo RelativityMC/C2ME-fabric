@@ -22,7 +22,6 @@
     "access.IChunkSection",
     "access.IChunkTicket",
     "access.IChunkTickScheduler",
-    "access.IDensityFunctionTypesEndIslands",
     "access.IFlowableFluid",
     "access.IInterpolatedNoiseSampler",
     "access.IMultiNoiseBiomeSource",

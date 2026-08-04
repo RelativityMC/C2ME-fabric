@@ -87,9 +87,6 @@ public interface IChunkNoiseSampler {
     int getHorizontalBiomeEnd();
 
     @Accessor
-    DensityFunctionTypes.Beardifying getBeardifying();
-
-    @Accessor
     int getStartCellX();
 
     @Accessor

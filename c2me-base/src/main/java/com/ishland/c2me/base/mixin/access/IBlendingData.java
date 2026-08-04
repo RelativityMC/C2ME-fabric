@@ -36,5 +36,5 @@ public interface IBlendingData {
     HeightLimitView getOldHeightLimit();
 
     @Accessor
-    double[] getSurfaceHeights();
+    float[] getSurfaceHeights();
 }

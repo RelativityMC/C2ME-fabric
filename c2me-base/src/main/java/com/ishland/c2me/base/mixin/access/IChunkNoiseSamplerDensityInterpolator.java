@@ -32,13 +32,13 @@ import org.spongepowered.asm.mixin.gen.Invoker;
 public interface IChunkNoiseSamplerDensityInterpolator {
 
     @Invoker
-    void invokeInterpolateX(double deltaX);
+    void invokeInterpolateX(float deltaX);
 
     @Invoker
-    void invokeInterpolateY(double deltaY);
+    void invokeInterpolateY(float deltaY);
 
     @Invoker
-    void invokeInterpolateZ(double deltaZ);
+    void invokeInterpolateZ(float deltaZ);
 
     @Invoker
     void invokeSwapBuffers();

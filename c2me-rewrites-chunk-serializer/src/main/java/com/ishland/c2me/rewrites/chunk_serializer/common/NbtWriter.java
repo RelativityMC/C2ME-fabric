@@ -356,6 +356,13 @@ public class NbtWriter {
         }
     }
 
+    public void putFloats(byte[] name, float[] value) {
+        this.startFixedList(name, value.length, NbtElement.FLOAT_TYPE);
+        for (float d : value) {
+            this.putFloatEntry(d);
+        }
+    }
+
 
     public <T> void putRegistry(byte[] name, Registry<T> registry, T value) {
         // todo: optimize

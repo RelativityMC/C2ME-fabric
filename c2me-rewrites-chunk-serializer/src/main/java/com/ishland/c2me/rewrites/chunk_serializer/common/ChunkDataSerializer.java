@@ -134,8 +134,7 @@ public final class ChunkDataSerializer {
     private static final byte[] STRING_BB = NbtWriter.getAsciiStringBytes("BB");
     private static final byte[] STRING_O = NbtWriter.getAsciiStringBytes("O");
     private static final byte[] STRING_GD = NbtWriter.getAsciiStringBytes("GD");
-    private static final byte[] STRING_NAME = NbtWriter.getAsciiStringBytes("Name");
-    private static final byte[] STRING_PROPERTIES = NbtWriter.getAsciiStringBytes("Properties");
+    private static final byte[] STRING_PROPERTIES = NbtWriter.getAsciiStringBytes("properties");
 
     private static final byte[] STRING_CHAR_BIG_Y = NbtWriter.getAsciiStringBytes("Y");
     private static final byte[] STRING_CHAR_SMALL_I = NbtWriter.getAsciiStringBytes("i");
@@ -344,7 +343,7 @@ public final class ChunkDataSerializer {
 
         for (BlockState paletteEntry : paletteEntries) {
             writer.compoundEntryStart();
-            writer.putRegistry(STRING_NAME, Registries.BLOCK, paletteEntry.getBlock());
+            writer.putRegistry(STRING_ID, Registries.BLOCK, paletteEntry.getBlock());
             if (!paletteEntry.hasNoProperties()) {
                 // TODO: optimize this
                 writer.putElement(STRING_PROPERTIES, paletteEntry.getBlock().getStateManager().getPropertiesCodec().codec()
@@ -398,9 +397,9 @@ public final class ChunkDataSerializer {
         writer.putInt(STRING_MIN_SECTION, blendingData.minSection());
         writer.putInt(STRING_MAX_SECTION, blendingData.maxSection());
 
-        double[] heights = blendingData.heights().orElse(null);
+        float[] heights = blendingData.heights().orElse(null);
         if (heights != null) {
-            writer.putDoubles(STRING_HEIGHTS, heights);
+            writer.putFloats(STRING_HEIGHTS, heights);
         }
     }
 
