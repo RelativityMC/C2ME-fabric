@@ -43,25 +43,23 @@ public class RangeChoiceNodeOpenCLCEmitter implements OpenCLCEmitter<RangeChoice
         sb.append("double v = ").append(context.getDelegateVar(input)).append(";\n");
 
         sb.append("if (v >= ").append(literal(node.minInclusive)).append(" && v < ").append(literal(node.maxExclusive)).append(") {\n");
-
-        {
-            OpenCLCGenFunctionContext forked = context.fork();
-            ValuesMethodDefF64 whenInRange = forked.newVarF64(node.whenInRange);
-            sb.append(forked.getBody().indent(4));
-            sb.append("    ").append(storeTo).append(" = ").append(forked.getDelegateVar(whenInRange)).append(";\n");
-        }
-
+        emitCall(context, node.whenInRange, sb, storeTo);
         sb.append("} else {\n");
-
-        {
-            OpenCLCGenFunctionContext forked = context.fork();
-            ValuesMethodDefF64 whenOutOfRange = forked.newVarF64(node.whenOutOfRange);
-            sb.append(forked.getBody().indent(4));
-            sb.append("    ").append(storeTo).append(" = ").append(forked.getDelegateVar(whenOutOfRange)).append(";\n");
-        }
-
+        emitCall(context, node.whenOutOfRange, sb, storeTo);
         sb.append("}\n");
 
         return sb.toString();
+    }
+
+    private static void emitCall(OpenCLCGenFunctionContext context, AstNode node, StringBuilder sb, String storeTo) {
+        if (TreeUtils.hasNonTrivialChildrenUntilBranch(node)) {
+            OpenCLCGenFunctionContext forked = context.fork();
+            ValuesMethodDefF64 whenInRange = forked.newVarF64(node);
+            sb.append(forked.getBody().indent(4));
+            sb.append("    ").append(storeTo).append(" = ").append(forked.getDelegateVar(whenInRange)).append(";\n");
+        } else {
+            ValuesMethodDefF64 whenInRange = context.newVarF64(node);
+            sb.append("    ").append(storeTo).append(" = ").append(context.getDelegateVar(whenInRange)).append(";\n");
+        }
     }
 }

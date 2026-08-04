@@ -25,6 +25,9 @@ import com.ishland.c2me.opts.dfc.common.gen.opencl.OpenCLCGenFunctionContext;
 import com.ishland.c2me.opts.dfc.common.util.TreeUtils;
 import com.ishland.flowsched.util.Assertions;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class IntervalSelectNodeOpenCLCEmitter implements OpenCLCEmitter<IntervalSelectNode> {
     public static final IntervalSelectNodeOpenCLCEmitter INSTANCE = new IntervalSelectNodeOpenCLCEmitter();
 
@@ -36,10 +39,18 @@ public class IntervalSelectNodeOpenCLCEmitter implements OpenCLCEmitter<Interval
         StringBuilder sb = new StringBuilder();
 
         ValuesMethodDefF64 inputMethod = context.newVarF64(node.input);
-        AstNode[] delegates = node.functions.clone();
+        AstNode[] functions = node.functions;
+        Object[] delegates = new Object[functions.length];
+        List<AstNode> nodesWithNonTrivialNodeUntilBranch = new ArrayList<>(functions.length);
 
-        for (AstNode subtree : TreeUtils.findLargestCommonSubtrees(delegates)) {
-            context.newVar(subtree);
+        for (int i = 0, functionsLength = functions.length; i < functionsLength; i++) {
+            AstNode function = functions[i];
+            if (TreeUtils.hasNonTrivialChildrenUntilBranch(function)) {
+                nodesWithNonTrivialNodeUntilBranch.add(function);
+                delegates[i] = function;
+            } else {
+                delegates[i] = context.newVarF64(function);
+            }
         }
 
         sb.append("double v = ").append(context.getDelegateVar(inputMethod)).append(";\n");
@@ -49,7 +60,7 @@ public class IntervalSelectNodeOpenCLCEmitter implements OpenCLCEmitter<Interval
         return sb.toString();
     }
 
-    private static String genBinarySearch(double[] thresholds, AstNode[] delegates, OpenCLCGenFunctionContext context, int fromIndex, int toIndex) {
+    private static String genBinarySearch(double[] thresholds, Object[] delegates, OpenCLCGenFunctionContext context, int fromIndex, int toIndex) {
         Assertions.assertTrue(fromIndex < toIndex);
 
         int mid = (fromIndex + toIndex - 1) >>> 1;
@@ -59,11 +70,7 @@ public class IntervalSelectNodeOpenCLCEmitter implements OpenCLCEmitter<Interval
         sb.append("if (v < ").append(OpenCLCGen.literal(midVal)).append(") {\n");
 
         if (fromIndex == mid) {
-            OpenCLCGenFunctionContext forked = context.fork();
-            ValuesMethodDefF64 newVar = forked.newVarF64(delegates[fromIndex]);
-            sb.append(forked.getBody().indent(4));
-            sb.append("    ").append("res = ").append(forked.getDelegateVar(newVar)).append(";\n");
-            delegates[fromIndex] = null;
+            emitCall(delegates, context, fromIndex, sb);
         } else {
             sb.append(genBinarySearch(thresholds, delegates, context, fromIndex, mid).indent(4));
         }
@@ -71,11 +78,7 @@ public class IntervalSelectNodeOpenCLCEmitter implements OpenCLCEmitter<Interval
         sb.append("} else {\n");
 
         if (mid + 1 == toIndex) {
-            OpenCLCGenFunctionContext forked = context.fork();
-            ValuesMethodDefF64 newVar = forked.newVarF64(delegates[toIndex]);
-            sb.append(forked.getBody().indent(4));
-            sb.append("    ").append("res = ").append(forked.getDelegateVar(newVar)).append(";\n");
-            delegates[toIndex] = null;
+            emitCall(delegates, context, toIndex, sb);
         } else {
             sb.append(genBinarySearch(thresholds, delegates, context, mid + 1, toIndex).indent(4));
         }
@@ -84,4 +87,20 @@ public class IntervalSelectNodeOpenCLCEmitter implements OpenCLCEmitter<Interval
 
         return sb.toString();
     }
+
+    private static void emitCall(Object[] delegates, OpenCLCGenFunctionContext context, int idx, StringBuilder sb) {
+        Object delegate = delegates[idx];
+        if (delegate instanceof ValuesMethodDefF64 valuesMethodDefF64) {
+            sb.append("    ").append("res = ").append(context.getDelegateVar(valuesMethodDefF64)).append(";\n");
+        } else if (delegate instanceof AstNode node) {
+            OpenCLCGenFunctionContext forked = context.fork();
+            ValuesMethodDefF64 newVar = forked.newVarF64(node);
+            sb.append(forked.getBody().indent(4));
+            sb.append("    ").append("res = ").append(forked.getDelegateVar(newVar)).append(";\n");
+            delegates[idx] = null;
+        } else {
+            throw new IllegalArgumentException("Invalid delegate type: " + delegate.getClass().getName());
+        }
+    }
+
 }

@@ -31,6 +31,7 @@ import com.ishland.c2me.opts.dfc.common.gen.CodeGenRegistry;
 import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefF64;
 import com.ishland.c2me.opts.dfc.common.gen.opencl.OpenCLCEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.opencl.OpenCLCGenFunctionContext;
+import com.ishland.c2me.opts.dfc.common.util.TreeUtils;
 
 public class BinaryNodeOpenCLCEmitters {
 
@@ -101,10 +102,15 @@ public class BinaryNodeOpenCLCEmitters {
             sb.append("    ").append(storeTo).append(" = _left;\n");
             sb.append("} else {\n");
 
-            OpenCLCGenFunctionContext forked = context.fork();
-            ValuesMethodDefF64 rightMethod = forked.newVarF64(node.right);
-            sb.append(forked.getBody().indent(4));
-            sb.append("    ").append(storeTo).append(" = fmax(_left, ").append(forked.getDelegateVar(rightMethod)).append(");\n");
+            ValuesMethodDefF64 rightMethod;
+            if (TreeUtils.hasNonTrivialChildrenUntilBranch(node.right)) {
+                OpenCLCGenFunctionContext forked = context.fork();
+                rightMethod = forked.newVarF64(node.right);
+                sb.append(forked.getBody().indent(4));
+            } else {
+                rightMethod = context.newVarF64(node.right);
+            }
+            sb.append("    ").append(storeTo).append(" = fmax(_left, ").append(context.getDelegateVar(rightMethod)).append(");\n");
 
             sb.append("}\n");
             return sb.toString();
@@ -144,10 +150,15 @@ public class BinaryNodeOpenCLCEmitters {
             sb.append("    ").append(storeTo).append(" = _left;\n");
             sb.append("} else {\n");
 
-            OpenCLCGenFunctionContext forked = context.fork();
-            ValuesMethodDefF64 rightMethod = forked.newVarF64(node.right);
-            sb.append(forked.getBody().indent(4));
-            sb.append("    ").append(storeTo).append(" = fmin(_left, ").append(forked.getDelegateVar(rightMethod)).append(");\n");
+            ValuesMethodDefF64 rightMethod;
+            if (TreeUtils.hasNonTrivialChildrenUntilBranch(node.right)) {
+                OpenCLCGenFunctionContext forked = context.fork();
+                rightMethod = forked.newVarF64(node.right);
+                sb.append(forked.getBody().indent(4));
+            } else {
+                rightMethod = context.newVarF64(node.right);
+            }
+            sb.append("    ").append(storeTo).append(" = fmin(_left, ").append(context.getDelegateVar(rightMethod)).append(");\n");
 
             sb.append("}\n");
             return sb.toString();
@@ -180,10 +191,15 @@ public class BinaryNodeOpenCLCEmitters {
                 sb.append("    ").append(storeTo).append(" = 0.0;\n");
                 sb.append("} else {\n");
 
-                OpenCLCGenFunctionContext forked = context.fork();
-                ValuesMethodDefF64 rightMethod = forked.newVarF64(node.right);
-                sb.append(forked.getBody().indent(4));
-                sb.append("    ").append(storeTo).append(" = _left * ").append(forked.getDelegateVar(rightMethod)).append(";\n");
+                ValuesMethodDefF64 rightMethod;
+                if (TreeUtils.hasNonTrivialChildrenUntilBranch(node.right)) {
+                    OpenCLCGenFunctionContext forked = context.fork();
+                    rightMethod = forked.newVarF64(node.right);
+                    sb.append(forked.getBody().indent(4));
+                } else {
+                    rightMethod = context.newVarF64(node.right);
+                }
+                sb.append("    ").append(storeTo).append(" = _left * ").append(context.getDelegateVar(rightMethod)).append(";\n");
 
                 sb.append("}\n");
             }
