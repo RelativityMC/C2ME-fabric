@@ -22,6 +22,7 @@ import com.ishland.c2me.opts.dfc.common.ast.misc.IntervalSelectNode;
 import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefF64;
 import com.ishland.c2me.opts.dfc.common.gen.opencl.OpenCLCEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.opencl.OpenCLCGenFunctionContext;
+import com.ishland.c2me.opts.dfc.common.util.TreeUtils;
 import com.ishland.flowsched.util.Assertions;
 
 public class IntervalSelectNodeOpenCLCEmitter implements OpenCLCEmitter<IntervalSelectNode> {
@@ -36,6 +37,10 @@ public class IntervalSelectNodeOpenCLCEmitter implements OpenCLCEmitter<Interval
 
         ValuesMethodDefF64 inputMethod = context.newVarF64(node.input);
         AstNode[] delegates = node.functions.clone();
+
+        for (AstNode subtree : TreeUtils.findLargestCommonSubtrees(delegates)) {
+            context.newVar(subtree);
+        }
 
         sb.append("double v = ").append(context.getDelegateVar(inputMethod)).append(";\n");
         sb.append("double res;\n");

@@ -16,12 +16,14 @@
 
 package com.ishland.c2me.opts.accel.opencl.common.compiler.emitters.misc;
 
+import com.ishland.c2me.opts.dfc.common.ast.AstNode;
 import com.ishland.c2me.opts.dfc.common.ast.spline.SplineAstNode;
 import com.ishland.c2me.opts.dfc.common.ast.spline.SplineNormalNode;
 import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefF32;
 import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefF64;
 import com.ishland.c2me.opts.dfc.common.gen.opencl.OpenCLCEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.opencl.OpenCLCGenFunctionContext;
+import com.ishland.c2me.opts.dfc.common.util.TreeUtils;
 import net.minecraft.util.math.Spline;
 import net.minecraft.world.gen.densityfunction.DensityFunctionTypes;
 
@@ -44,12 +46,8 @@ public class SplineNormalNodeOpenCLCEmitter implements OpenCLCEmitter<SplineNorm
 
         int lastConst = node.locations.length - 1;
 
-        {
-            OpenCLCGenFunctionContext forked = context.fork();
-            ValuesMethodDefF64 locationFunction = forked.newVarF64(node.locationFunction);
-            body.append(forked.getBody());
-            body.append("float point = (float) ").append(forked.getDelegateVar(locationFunction)).append(";\n");
-        }
+        ValuesMethodDefF64 locationFunction = context.newVarF64(node.locationFunction);
+        body.append("float point = (float) ").append(context.getDelegateVar(locationFunction)).append(";\n");
 
         int valuesMethodsLength = node.values.length;
         if (valuesMethodsLength == 1) {
@@ -59,12 +57,32 @@ public class SplineNormalNodeOpenCLCEmitter implements OpenCLCEmitter<SplineNorm
                     .append(context.getDelegateVar(context.newVarF32(node.values[0]))).append(", ")
                     .append(derivatives).append(", 0);\n");
         } else {
+            for (AstNode subtree : TreeUtils.findLargestCommonSubtrees(node.values)) {
+                context.newVar(subtree);
+            }
+
             body
                     .append("int32_t rangeForLocation = df_spline_findRangeForLocation(").append(locations).append(", ").append(node.locations.length).append(", ").append("point);\n")
-                    .append("if (rangeForLocation < 0) {\n")
-                    .append("    ").append(storeTo).append(" = df_spline_sampleOutsideRange(point, ").append(locations).append(", ").append(context.getDelegateVar(context.newVarF32(node.values[0]))).append(", ").append(derivatives).append(", 0);\n")
-                    .append("} else if (rangeForLocation == ").append(lastConst).append(") {\n")
-                    .append("    ").append(storeTo).append(" = df_spline_sampleOutsideRange(point, ").append(locations).append(", ").append(context.getDelegateVar(context.newVarF32(node.values[lastConst]))).append(", ").append(derivatives).append(", ").append(lastConst).append(");\n")
+                    .append("if (rangeForLocation < 0) {\n");
+
+            {
+                OpenCLCGenFunctionContext forked = context.fork();
+                ValuesMethodDefF32 valuesMethodDefF32 = forked.newVarF32(node.values[0]);
+                body.append(forked.getBody().indent(4));
+                body.append("    ").append(storeTo).append(" = df_spline_sampleOutsideRange(point, ").append(locations).append(", ").append(forked.getDelegateVar(valuesMethodDefF32)).append(", ").append(derivatives).append(", 0);\n");
+            }
+
+            body
+                    .append("} else if (rangeForLocation == ").append(lastConst).append(") {\n");
+
+            {
+                OpenCLCGenFunctionContext forked = context.fork();
+                ValuesMethodDefF32 valuesMethodDefF32 = forked.newVarF32(node.values[lastConst]);
+                body.append(forked.getBody().indent(4));
+                body.append("    ").append(storeTo).append(" = df_spline_sampleOutsideRange(point, ").append(locations).append(", ").append(forked.getDelegateVar(valuesMethodDefF32)).append(", ").append(derivatives).append(", ").append(lastConst).append(");\n");
+            }
+
+            body
                     .append("} else {\n")
                     .append("    ").append("float loc0 = ").append(locations).append("[rangeForLocation];\n")
                     .append("    ").append("float loc1 = ").append(locations).append("[rangeForLocation + 1];\n")
@@ -88,9 +106,20 @@ public class SplineNormalNodeOpenCLCEmitter implements OpenCLCEmitter<SplineNorm
                     }
                 }
 
-                body.append("    ").append("    ").append("    ").append("n = ").append(context.getDelegateVar(context.newVarF32(node.values[i]))).append(";\n");
-                body.append("    ").append("    ").append("    ").append("o = ").append(context.getDelegateVar(context.newVarF32(node.values[i + 1]))).append(";\n");
-                body.append("    ").append("    ").append("    ").append("break;\n");
+                body.append("    ").append("    ").append("    ").append("{\n");
+
+                OpenCLCGenFunctionContext forked = context.fork();
+                for (AstNode subtree : TreeUtils.findLargestCommonSubtrees(node.values[i], node.values[i + 1])) {
+                    forked.newVar(subtree);
+                }
+
+                ValuesMethodDefF32 first = forked.newVarF32(node.values[i]);
+                ValuesMethodDefF32 second = forked.newVarF32(node.values[i + 1]);
+                body.append(forked.getBody().indent(16));
+                body.append("    ").append("    ").append("    ").append("    ").append("n = ").append(forked.getDelegateVar(first)).append(";\n");
+                body.append("    ").append("    ").append("    ").append("    ").append("o = ").append(forked.getDelegateVar(second)).append(";\n");
+                body.append("    ").append("    ").append("    ").append("    ").append("break;\n");
+                body.append("    ").append("    ").append("    ").append("}\n");
             }
 
             body

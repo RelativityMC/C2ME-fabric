@@ -16,10 +16,12 @@
 
 package com.ishland.c2me.opts.accel.opencl.common.compiler.emitters.misc;
 
+import com.ishland.c2me.opts.dfc.common.ast.AstNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.RangeChoiceNode;
 import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefF64;
 import com.ishland.c2me.opts.dfc.common.gen.opencl.OpenCLCEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.opencl.OpenCLCGenFunctionContext;
+import com.ishland.c2me.opts.dfc.common.util.TreeUtils;
 
 import static com.ishland.c2me.opts.accel.opencl.common.compiler.OpenCLCGen.literal;
 
@@ -32,6 +34,10 @@ public class RangeChoiceNodeOpenCLCEmitter implements OpenCLCEmitter<RangeChoice
     @Override
     public String doCLGen(RangeChoiceNode node, OpenCLCGenFunctionContext context, String storeTo) {
         StringBuilder sb = new StringBuilder();
+
+        for (AstNode subtree : TreeUtils.findLargestCommonSubtrees(node.whenInRange, node.whenOutOfRange)) {
+            context.newVar(subtree);
+        }
 
         ValuesMethodDefF64 input = context.newVarF64(node.input);
         sb.append("double v = ").append(context.getDelegateVar(input)).append(";\n");
