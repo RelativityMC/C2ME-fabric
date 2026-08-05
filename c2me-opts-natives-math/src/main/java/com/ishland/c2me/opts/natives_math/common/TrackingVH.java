@@ -26,7 +26,6 @@ package com.ishland.c2me.opts.natives_math.common;
 
 import com.ishland.c2me.opts.natives_math.common.ducks.INativePointer;
 import com.ishland.c2me.opts.natives_math.common.integration.lithostitched.FNLBindings;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.util.math.noise.DoublePerlinNoiseSampler;
 
 import java.lang.invoke.MethodHandles;
