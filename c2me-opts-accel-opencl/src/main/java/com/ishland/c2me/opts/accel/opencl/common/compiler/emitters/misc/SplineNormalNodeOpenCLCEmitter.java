@@ -16,16 +16,12 @@
 
 package com.ishland.c2me.opts.accel.opencl.common.compiler.emitters.misc;
 
-import com.ishland.c2me.opts.dfc.common.ast.AstNode;
-import com.ishland.c2me.opts.dfc.common.ast.spline.SplineAstNode;
+import com.ishland.c2me.opts.accel.opencl.common.Config;
 import com.ishland.c2me.opts.dfc.common.ast.spline.SplineNormalNode;
 import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefF32;
 import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefF64;
 import com.ishland.c2me.opts.dfc.common.gen.opencl.OpenCLCEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.opencl.OpenCLCGenFunctionContext;
-import com.ishland.c2me.opts.dfc.common.util.TreeUtils;
-import net.minecraft.util.math.Spline;
-import net.minecraft.world.gen.densityfunction.DensityFunctionTypes;
 
 import static com.ishland.c2me.opts.accel.opencl.common.compiler.OpenCLCGen.literal;
 
@@ -66,16 +62,26 @@ public class SplineNormalNodeOpenCLCEmitter implements OpenCLCEmitter<SplineNorm
                     .append("if (rangeForLocation < 0) {\n");
 
             {
-                ValuesMethodDefF32 valuesMethodDefF32 = context.newVarF32(node.values[0]);
-                body.append("    ").append(storeTo).append(" = df_spline_sampleOutsideRange(point, ").append(locations).append(", ").append(context.getDelegateVar(valuesMethodDefF32)).append(", ").append(derivatives).append(", 0);\n");
+                String emittedDef;
+                if (!Config.preserveAllControlFlows) {
+                    emittedDef = context.getDelegateVar(context.newVarF32(node.values[0]));
+                } else {
+                    emittedDef = context.getGlobalContext().callDelegate(context.getGlobalContext().newMethodF32(node.values[0], context.getVariant()));
+                }
+                body.append("    ").append(storeTo).append(" = df_spline_sampleOutsideRange(point, ").append(locations).append(", ").append(emittedDef).append(", ").append(derivatives).append(", 0);\n");
             }
 
             body
                     .append("} else if (rangeForLocation == ").append(lastConst).append(") {\n");
 
             {
-                ValuesMethodDefF32 valuesMethodDefF32 = context.newVarF32(node.values[lastConst]);
-                body.append("    ").append(storeTo).append(" = df_spline_sampleOutsideRange(point, ").append(locations).append(", ").append(context.getDelegateVar(valuesMethodDefF32)).append(", ").append(derivatives).append(", ").append(lastConst).append(");\n");
+                String emittedDef;
+                if (!Config.preserveAllControlFlows) {
+                    emittedDef = context.getDelegateVar(context.newVarF32(node.values[lastConst]));
+                } else {
+                    emittedDef = context.getGlobalContext().callDelegate(context.getGlobalContext().newMethodF32(node.values[lastConst], context.getVariant()));
+                }
+                body.append("    ").append(storeTo).append(" = df_spline_sampleOutsideRange(point, ").append(locations).append(", ").append(emittedDef).append(", ").append(derivatives).append(", ").append(lastConst).append(");\n");
             }
 
             body
@@ -104,10 +110,21 @@ public class SplineNormalNodeOpenCLCEmitter implements OpenCLCEmitter<SplineNorm
 
                 body.append("    ").append("    ").append("    ").append("{\n");
 
-                ValuesMethodDefF32 first = context.newVarF32(node.values[i]);
-                ValuesMethodDefF32 second = context.newVarF32(node.values[i + 1]);
-                body.append("    ").append("    ").append("    ").append("    ").append("n = ").append(context.getDelegateVar(first)).append(";\n");
-                body.append("    ").append("    ").append("    ").append("    ").append("o = ").append(context.getDelegateVar(second)).append(";\n");
+                String emittedFirst;
+                String emittedSecond;
+                if (!Config.preserveAllControlFlows) {
+                    emittedFirst = context.getDelegateVar(context.newVarF32(node.values[i]));
+                    emittedSecond = context.getDelegateVar(context.newVarF32(node.values[i + 1]));
+                } else {
+                    emittedFirst = context.getGlobalContext().callDelegate(context.getGlobalContext().newMethodF32(node.values[i], context.getVariant()));
+                    emittedSecond = context.getGlobalContext().callDelegate(context.getGlobalContext().newMethodF32(node.values[i + 1], context.getVariant()));
+                }
+                if (emittedFirst.equals(emittedSecond)) {
+                    body.append("    ").append("    ").append("    ").append("    ").append("n = o = ").append(emittedFirst).append(";\n");
+                } else {
+                    body.append("    ").append("    ").append("    ").append("    ").append("n = ").append(emittedFirst).append(";\n");
+                    body.append("    ").append("    ").append("    ").append("    ").append("o = ").append(emittedSecond).append(";\n");
+                }
                 body.append("    ").append("    ").append("    ").append("    ").append("break;\n");
                 body.append("    ").append("    ").append("    ").append("}\n");
             }

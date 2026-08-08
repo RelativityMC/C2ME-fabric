@@ -481,7 +481,7 @@ public class OpenCLCGen {
         private String newMethod0(FunctionKey key) {
             String methodName = nextMethodName();
             FunctionContextImpl functionContext = new FunctionContextImpl(this, null, methodName, key.variant());
-            ValuesMethodDef finalVar = functionContext.newVarF64(key.node());
+            ValuesMethodDef finalVar = functionContext.newVar(key.node());
             this.pendingSource
                     .append("static __attribute__((pure)) ").append(getDataType(key.node().getReturnType())).append(" ").append(methodName).append(signature).append(" {\n")
                     .append(functionContext.pendingBody.toString().indent(4))

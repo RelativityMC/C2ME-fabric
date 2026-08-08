@@ -16,6 +16,7 @@
 
 package com.ishland.c2me.opts.accel.opencl.common.compiler.emitters.misc;
 
+import com.ishland.c2me.opts.accel.opencl.common.Config;
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.RangeChoiceNode;
 import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefF64;
@@ -35,8 +36,10 @@ public class RangeChoiceNodeOpenCLCEmitter implements OpenCLCEmitter<RangeChoice
     public String doCLGen(RangeChoiceNode node, OpenCLCGenFunctionContext context, String storeTo) {
         StringBuilder sb = new StringBuilder();
 
-        for (AstNode subtree : TreeUtils.findLargestCommonSubtrees(node.whenInRange, node.whenOutOfRange)) {
-            context.newVar(subtree);
+        if (!Config.preserveAllControlFlows) {
+            for (AstNode subtree : TreeUtils.findLargestCommonSubtrees(node.whenInRange, node.whenOutOfRange)) {
+                context.newVar(subtree);
+            }
         }
 
         ValuesMethodDefF64 input = context.newVarF64(node.input);
@@ -52,14 +55,19 @@ public class RangeChoiceNodeOpenCLCEmitter implements OpenCLCEmitter<RangeChoice
     }
 
     private static void emitCall(OpenCLCGenFunctionContext context, AstNode node, StringBuilder sb, String storeTo) {
-        if (TreeUtils.hasNonTrivialChildrenUntilBranch(node)) {
-            OpenCLCGenFunctionContext forked = context.fork();
-            ValuesMethodDefF64 whenInRange = forked.newVarF64(node);
-            sb.append(forked.getBody().indent(4));
-            sb.append("    ").append(storeTo).append(" = ").append(forked.getDelegateVar(whenInRange)).append(";\n");
+        if (!Config.preserveAllControlFlows) {
+            if (TreeUtils.hasNonTrivialChildrenUntilBranchIgnoringMul(node)) {
+                OpenCLCGenFunctionContext forked = context.fork();
+                ValuesMethodDefF64 whenInRange = forked.newVarF64(node);
+                sb.append(forked.getBody().indent(4));
+                sb.append("    ").append(storeTo).append(" = ").append(forked.getDelegateVar(whenInRange)).append(";\n");
+            } else {
+                ValuesMethodDefF64 whenInRange = context.newVarF64(node);
+                sb.append("    ").append(storeTo).append(" = ").append(context.getDelegateVar(whenInRange)).append(";\n");
+            }
         } else {
-            ValuesMethodDefF64 whenInRange = context.newVarF64(node);
-            sb.append("    ").append(storeTo).append(" = ").append(context.getDelegateVar(whenInRange)).append(";\n");
+            ValuesMethodDefF64 whenInRange = context.getGlobalContext().newMethodF64(node, context.getVariant());
+            sb.append("    ").append(storeTo).append(" = ").append(context.getGlobalContext().callDelegate(whenInRange)).append(";\n");
         }
     }
 }

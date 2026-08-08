@@ -87,6 +87,14 @@ public class Config {
                     """)
             .getBoolean(false, false);
 
+    public static final boolean preserveAllControlFlows = new ConfigSystem.ConfigAccessor()
+            .key("openclAccel.preserveAllControlFlows")
+            .comment("""
+                    Uses old compiler behavior of preserving all control flows in the generated OpenCL code.
+                    This will increase memory pressure and time used when compiling, but will usually produce faster code.
+                    """)
+            .getBoolean(true, false);
+
     public static final boolean enableIntelFastCompilation = new ConfigSystem.ConfigAccessor()
             .key("openclAccel.enableIntelFastCompilation")
             .comment("""

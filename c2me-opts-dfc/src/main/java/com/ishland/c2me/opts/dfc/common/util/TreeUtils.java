@@ -75,6 +75,18 @@ public class TreeUtils {
         return result[0];
     }
 
+    public static boolean hasNonTrivialChildrenUntilBranchIgnoringMul(AstNode node) {
+        boolean[] result = new boolean[1];
+        enumerate(node, node1 -> {
+            if (isBranch(node1) && !(node1 instanceof MulNode)) return AstNodeConsumer.IterationBehavior.STOP_EXPANDING;
+            if (!result[0] && isNonTrivial(node1)) {
+                result[0] = true;
+            }
+            return result[0] ? AstNodeConsumer.IterationBehavior.STOP_EXPANDING : AstNodeConsumer.IterationBehavior.CONTINUE;
+        });
+        return result[0];
+    }
+
     private static void enumerateUntilNonTrivialBranch(AstNode node, Consumer<AstNode> consumer) {
         enumerate(node, node1 -> {
             consumer.accept(node1);
