@@ -1195,6 +1195,48 @@ static sample_int32_ctx_t make_sample_int32_ctx(global const void * restrict con
     };
 }
 
+static double uninitializedF32() {
+    union {
+        float f;
+        uint32_t l;
+    } x;
+    x.l = 0x7f8abcdeU;
+    return x.f;
+}
+
+static double uninitializedF64() {
+    union {
+        double d;
+        uint64_t l;
+    } x;
+    x.l = 0x7ffddb972d486a4fUL;
+    return x.d;
+}
+
+static float assertNotUninitializedF32(float in) {
+    union {
+        float f;
+        uint32_t l;
+    } x;
+    x.f = in;
+    if (x.l == 0x7f8abcdeU) {
+        __builtin_trap();
+    }
+    return in;
+}
+
+static double assertNotUninitializedF64(double in) {
+    union {
+        double d;
+        uint64_t l;
+    } x;
+    x.d = in;
+    if (x.l == 0x7ffddb972d486a4fUL) {
+        __builtin_trap();
+    }
+    return in;
+}
+
 #ifndef DEBUG
 #define df_cachelike_trap_printf(desc, ctx)
 #else
