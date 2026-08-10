@@ -137,6 +137,18 @@ public class OpenCLDeviceLocator {
             }
         }
 
+        for (Iterator<OpenCLDeviceMetadata> iterator = devices.iterator(); iterator.hasNext(); ) {
+            OpenCLDeviceMetadata openCLDeviceMetadata = iterator.next();
+            if (!Config.deviceUUIDWhitelist.isEmpty() && !Config.deviceUUIDWhitelist.contains(openCLDeviceMetadata.deviceUUID)) {
+                LOGGER.info("Skipping OpenCL device {} since it's not in the whitelist", openCLDeviceMetadata.deviceUUID);
+                iterator.remove();
+            }
+            if (Config.deviceUUIDBlacklist.contains(openCLDeviceMetadata.deviceUUID)) {
+                LOGGER.info("Skipping OpenCL device {} since it's in the blacklist", openCLDeviceMetadata.deviceUUID);
+                iterator.remove();
+            }
+        }
+
         postprocessDeviceList(devices);
 
         return devices;
