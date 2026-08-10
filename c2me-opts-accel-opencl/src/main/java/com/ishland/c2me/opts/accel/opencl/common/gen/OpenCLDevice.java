@@ -74,7 +74,7 @@ public class OpenCLDevice implements Closeable {
     private CLContextCallback callback;
     private long context;
     private long commandQueue;
-    private final AtomicInteger permits = new AtomicInteger(Config.maxConcurrentTasksPerDevice);
+    private final AtomicInteger permits;
     private final Object contextMutex = new Object();
     private final AtomicBoolean open = new AtomicBoolean(true);
 //    private final CompletableFuture<Void> closeFuture = new CompletableFuture<>(); // TODO probably only available on CL3.0+
@@ -99,6 +99,12 @@ public class OpenCLDevice implements Closeable {
         this.executor.setName("c2me-cldev-%d-%s".formatted(DEVICE_COUNTER.getAndIncrement(), this.deviceDescription.replaceAll("[^a-zA-Z0-9]", "_")));
         this.executor.start();
         this.bufferCache = new CLBufferCache(this.executor);
+        int permitsCount = Config.maxConcurrentTasksPerDevice;
+        if (this.workarounds.contains(Workarounds.Reference.NVIDIA_LINUX_HANG_ON_TOO_MANY_BATCHES)) {
+            permitsCount /= 2;
+            LOGGER.warn("Halving maxConcurrentTasksPerDevice to {} to avoid UMD hangs on nvidia linux (16 is usually the maximum safest number)", permitsCount);
+        }
+        this.permits = new AtomicInteger(permitsCount);
         this.eventCallbackManager = new CLEventCallbackManager();
         CompletableFuture.runAsync(() -> {
             try (MemoryStack stack = MemoryStack.stackPush()) {
