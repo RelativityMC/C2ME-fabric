@@ -198,7 +198,11 @@ public class Config {
             value = 0;
         }
         if (value == 0) {
-            value = 192;
+            if (Runtime.getRuntime().maxMemory() > 10L * 1024L * 1024L * 1024L) {
+                value = 512;
+            } else {
+                value = 192;
+            }
             System.setProperty("chunky.maxWorkingCount", Integer.toString(value));
         }
         LOGGER.info("chunky.maxWorkingCount: {}", value);
