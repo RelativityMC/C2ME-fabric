@@ -28,7 +28,7 @@ import com.ishland.c2me.opts.dfc.common.ast.unary.*;
 import com.ishland.c2me.opts.dfc.common.gen.CodeGenRegistry;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.BytecodeEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.BytecodeGen;
-import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefD;
+import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefF64;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.InstructionAdapter;
@@ -37,7 +37,7 @@ public class UnaryNodeBytecodeEmitters {
     public abstract static class AbstractGenericUnaryNodeBytecodeEmitter<T extends AbstractUnaryNode> implements BytecodeEmitter<T> {
         @Override
         public final void doBytecodeGenSingle(T node, BytecodeGen.Context context, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
-            ValuesMethodDefD operandMethod = context.newSingleMethod(node.operand);
+            ValuesMethodDefF64 operandMethod = context.newSingleMethodF64(node.operand);
             context.callDelegateSingle(m, operandMethod);
             this.bytecodeGenInstruction(node, m, localVarConsumer);
             m.areturn(Type.DOUBLE_TYPE);
@@ -45,7 +45,7 @@ public class UnaryNodeBytecodeEmitters {
 
         @Override
         public final void doBytecodeGenMulti(T node, BytecodeGen.Context context, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
-            ValuesMethodDefD operandMethod = context.newMultiMethod(node.operand);
+            ValuesMethodDefF64 operandMethod = context.newMultiMethodF64(node.operand);
             context.callDelegateMulti(m, operandMethod);
             context.doCountedLoop(m, localVarConsumer, idx -> {
                 m.load(1, InstructionAdapter.OBJECT_TYPE);

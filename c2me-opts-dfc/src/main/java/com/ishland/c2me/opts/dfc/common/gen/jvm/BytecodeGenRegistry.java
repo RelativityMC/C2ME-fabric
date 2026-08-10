@@ -25,12 +25,16 @@
 package com.ishland.c2me.opts.dfc.common.gen.jvm;
 
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
+
+import com.ishland.c2me.opts.dfc.common.ast.conversion.ToF32Node;
+import com.ishland.c2me.opts.dfc.common.ast.conversion.ToF64Node;
 import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc.FastNoiseNode;
 import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc.MixNode;
 import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc.SelectNode;
 import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc.ShiftNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.BeardifierNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.CacheLikeNode;
+import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantF32Node;
 import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.CoordinateNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.DelegateNode;
@@ -38,28 +42,33 @@ import com.ishland.c2me.opts.dfc.common.ast.misc.EndIslandsNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.FindTopSurfaceNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.InterpolatedNoiseSamplerNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.IntervalSelectNode;
+import com.ishland.c2me.opts.dfc.common.ast.misc.Multi2SingleNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.RangeChoiceNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.RootNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.YClampedGradientNode;
 import com.ishland.c2me.opts.dfc.common.ast.noise.GenericShiftedNoiseNode;
-import com.ishland.c2me.opts.dfc.common.ast.spline.SplineAstNode;
+import com.ishland.c2me.opts.dfc.common.ast.spline.SplineNormalNode;
 import com.ishland.c2me.opts.dfc.common.gen.CodeGenRegistry;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.emitters.BinaryNodeBytecodeEmitters;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.emitters.UnaryNodeBytecodeEmitters;
+import com.ishland.c2me.opts.dfc.common.gen.jvm.emitters.conversion.ToF32NodeBytecodeEmitter;
+import com.ishland.c2me.opts.dfc.common.gen.jvm.emitters.conversion.ToF64NodeBytecodeEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.emitters.integration.lithostitched.misc.FastNoiseNodeBytecodeEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.emitters.integration.lithostitched.misc.MixNodeBytecodeEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.emitters.integration.lithostitched.misc.SelectNodeBytecodeEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.emitters.integration.lithostitched.misc.ShiftNodeBytecodeEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.emitters.misc.CacheLikeNodeBytecodeEmitter;
+import com.ishland.c2me.opts.dfc.common.gen.jvm.emitters.misc.ConstantF32NodeBytecodeEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.emitters.misc.ConstantNodeBytecodeEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.emitters.misc.CoordinateNodeBytecodeEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.emitters.misc.DelegateNodeBytecodeEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.emitters.misc.FindTopSurfaceNodeBytecodeEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.emitters.misc.GenericShiftedNoiseNodeBytecodeEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.emitters.misc.IntervalSelectNodeBytecodeEmitter;
+import com.ishland.c2me.opts.dfc.common.gen.jvm.emitters.misc.Multi2SingleNodeBytecodeEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.emitters.misc.RangeChoiceNodeBytecodeEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.emitters.misc.RootNodeBytecodeEmitter;
-import com.ishland.c2me.opts.dfc.common.gen.jvm.emitters.misc.SplineAstNodeBytecodeEmitter;
+import com.ishland.c2me.opts.dfc.common.gen.jvm.emitters.misc.SplineNormalNodeBytecodeEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.emitters.misc.YClampedGradientNodeBytecodeEmitter;
 import org.objectweb.asm.commons.InstructionAdapter;
 
@@ -71,8 +80,12 @@ public class BytecodeGenRegistry {
         BinaryNodeBytecodeEmitters.register(REGISTRY);
         UnaryNodeBytecodeEmitters.register(REGISTRY);
 
+        REGISTRY.registerExactMatch(ToF32Node.class, ToF32NodeBytecodeEmitter.INSTANCE);
+        REGISTRY.registerExactMatch(ToF64Node.class, ToF64NodeBytecodeEmitter.INSTANCE);
+
         REGISTRY.registerExactMatch(CacheLikeNode.class, CacheLikeNodeBytecodeEmitter.INSTANCE);
         REGISTRY.registerExactMatch(ConstantNode.class, ConstantNodeBytecodeEmitter.INSTANCE);
+        REGISTRY.registerExactMatch(ConstantF32Node.class, ConstantF32NodeBytecodeEmitter.INSTANCE);
         REGISTRY.registerExactMatch(CoordinateNode.class, CoordinateNodeBytecodeEmitter.INSTANCE);
         REGISTRY.registerExactMatch(FindTopSurfaceNode.class, FindTopSurfaceNodeBytecodeEmitter.INSTANCE);
         REGISTRY.registerExactMatch(GenericShiftedNoiseNode.class, GenericShiftedNoiseNodeBytecodeEmitter.INSTANCE);
@@ -80,7 +93,9 @@ public class BytecodeGenRegistry {
         REGISTRY.registerExactMatch(RootNode.class, RootNodeBytecodeEmitter.INSTANCE);
         REGISTRY.registerExactMatch(YClampedGradientNode.class, YClampedGradientNodeBytecodeEmitter.INSTANCE);
         REGISTRY.registerExactMatch(IntervalSelectNode.class, IntervalSelectNodeBytecodeEmitter.INSTANCE);
-        REGISTRY.registerExactMatch(SplineAstNode.class, SplineAstNodeBytecodeEmitter.INSTANCE);
+        REGISTRY.registerExactMatch(Multi2SingleNode.class, Multi2SingleNodeBytecodeEmitter.INSTANCE);
+        REGISTRY.registerExactMatch(SplineNormalNode.class, SplineNormalNodeBytecodeEmitter.INSTANCE);
+//        REGISTRY.registerExactMatch(SplineAstNode.class, SplineAstNodeBytecodeEmitter.INSTANCE);
 
         REGISTRY.registerExactMatch(DelegateNode.class, DelegateNodeBytecodeEmitter.instance());
         REGISTRY.registerExactMatch(BeardifierNode.class, DelegateNodeBytecodeEmitter.instance());

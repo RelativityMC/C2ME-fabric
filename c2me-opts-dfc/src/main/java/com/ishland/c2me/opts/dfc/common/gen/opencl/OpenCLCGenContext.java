@@ -26,9 +26,9 @@ package com.ishland.c2me.opts.dfc.common.gen.opencl;
 
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.CacheLikeNode;
-import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefD;
-import net.minecraft.util.math.Spline;
-import net.minecraft.world.gen.densityfunction.DensityFunctionTypes;
+import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDef;
+import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefF32;
+import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefF64;
 
 public interface OpenCLCGenContext {
     String signature = "(const sample_int32_ctx_t ctx)";
@@ -38,11 +38,27 @@ public interface OpenCLCGenContext {
 
     String nextMethodName(String suffix);
 
-    ValuesMethodDefD newMethod(AstNode node);
+    ValuesMethodDef newDispatcher(AstNode node, String id, AstNode.ReturnType returnType);
 
-    String getFillerOrNot();
+    ValuesMethodDefF64 newDispatcherF64(AstNode node);
 
-    String callDelegate(ValuesMethodDefD target);
+    ValuesMethodDefF64 newDispatcherF64(AstNode node, String id);
+
+    ValuesMethodDefF32 newDispatcherF32(AstNode node);
+
+    ValuesMethodDefF32 newDispatcherF32(AstNode node, String id);
+
+    ValuesMethodDef newMethod(AstNode node, OpenCLCGenFunctionContext.FunctionVariant variant, AstNode.ReturnType returnType);
+
+    ValuesMethodDefF64 newMethodF64(AstNode node, OpenCLCGenFunctionContext.FunctionVariant variant);
+
+    ValuesMethodDefF32 newMethodF32(AstNode node, OpenCLCGenFunctionContext.FunctionVariant variant);
+
+    String callDelegate(ValuesMethodDef target, AstNode.ReturnType returnType);
+
+    String callDelegate(ValuesMethodDefF64 target);
+
+    String callDelegate(ValuesMethodDefF32 target);
 
     int allocGlobalDynamicData(Object data);
 
@@ -51,10 +67,6 @@ public interface OpenCLCGenContext {
     int allocGlobalConstDataObject(Object obj);
 
     int getGlobalDynamicDataOffset(Object data);
-
-    String getCachedSplineMethod(Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper> spline, boolean cache1);
-
-    void cacheSplineMethod(Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper> spline, String method, boolean cache1);
 
     int registerFlatCache(CacheLikeNode node);
 

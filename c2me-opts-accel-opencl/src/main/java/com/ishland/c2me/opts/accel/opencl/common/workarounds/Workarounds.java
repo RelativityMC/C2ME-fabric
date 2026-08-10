@@ -20,6 +20,7 @@ import com.ishland.c2me.opts.accel.opencl.common.enumeration.OpenCLDeviceMetadat
 import com.ishland.c2me.opts.accel.opencl.common.workarounds.intel.IntelWorkarounds;
 import com.ishland.c2me.opts.accel.opencl.common.workarounds.mesa.MesaWorkarounds;
 import com.ishland.c2me.opts.accel.opencl.common.workarounds.nvidia.NvidiaWorkarounds;
+import io.netty.util.internal.PlatformDependent;
 
 import java.util.Collections;
 import java.util.EnumSet;
@@ -47,6 +48,9 @@ public class Workarounds {
             if (NvidiaWorkarounds.isOlderThanSM50(metadata)) {
                 set.add(Reference.NVIDIA_FAST_COMPILE_UNAVAILABLE);
             }
+            if (!PlatformDependent.isWindows()) {
+                set.add(Reference.NVIDIA_LINUX_HANG_ON_TOO_MANY_BATCHES);
+            }
         }
         if (MesaWorkarounds.isRusticl(metadata)) {
             set.add(Reference.REQUIRE_EXPLICIT_FLUSHES);
@@ -72,6 +76,11 @@ public class Workarounds {
          * Fast compile is unavailable on older nvidia GPUs
          */
         NVIDIA_FAST_COMPILE_UNAVAILABLE,
+
+        /**
+         * Workarounds nvidia drivers hang on Linux by halving maxConcurrentTasksPerDevice to 16 (default 32)
+         */
+        NVIDIA_LINUX_HANG_ON_TOO_MANY_BATCHES,
 
         /**
          * The Intel compute driver hangs on cleanup during exit due to JVM running onexit hook with lock
