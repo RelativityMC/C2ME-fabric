@@ -29,7 +29,7 @@ import com.ishland.c2me.opts.dfc.common.ast.noise.DFTWeirdScaledSamplerNode;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.BytecodeEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.BytecodeGen;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.InvocationShim;
-import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefD;
+import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefF64;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.InstructionAdapter;
@@ -42,7 +42,7 @@ public class DFTWeirdScaledSamplerNodeBytecodeEmitter implements BytecodeEmitter
 
     @Override
     public void doBytecodeGenSingle(DFTWeirdScaledSamplerNode node, BytecodeGen.Context context, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
-        ValuesMethodDefD inputMethod = context.newSingleMethod(node.input);
+        ValuesMethodDefF64 inputMethod = context.newSingleMethodF64(node.input);
         String noiseField = context.newField(DensityFunction.Noise.class, node.noise);
         int scale = localVarConsumer.createLocalVariable("scale", Type.DOUBLE_TYPE.getDescriptor());
 
@@ -103,7 +103,7 @@ public class DFTWeirdScaledSamplerNodeBytecodeEmitter implements BytecodeEmitter
 
     @Override
     public void doBytecodeGenMulti(DFTWeirdScaledSamplerNode node, BytecodeGen.Context context, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
-        ValuesMethodDefD inputMethod = context.newMultiMethod(node.input);
+        ValuesMethodDefF64 inputMethod = context.newMultiMethodF64(node.input);
         String noiseField = context.newField(DensityFunction.Noise.class, node.noise);
 
         context.callDelegateMulti(m, inputMethod);

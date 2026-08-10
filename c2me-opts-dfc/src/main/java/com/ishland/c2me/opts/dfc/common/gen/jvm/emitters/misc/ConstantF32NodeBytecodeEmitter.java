@@ -24,30 +24,32 @@
 
 package com.ishland.c2me.opts.dfc.common.gen.jvm.emitters.misc;
 
-import com.ishland.c2me.opts.dfc.common.ast.misc.RootNode;
+import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantF32Node;
+import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantNode;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.BytecodeEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.BytecodeGen;
-import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefF64;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.InstructionAdapter;
 
-public class RootNodeBytecodeEmitter implements BytecodeEmitter<RootNode> {
-    public static final RootNodeBytecodeEmitter INSTANCE = new RootNodeBytecodeEmitter();
+import java.util.Arrays;
 
-    private RootNodeBytecodeEmitter() {
+public class ConstantF32NodeBytecodeEmitter implements BytecodeEmitter<ConstantF32Node> {
+    public static final ConstantF32NodeBytecodeEmitter INSTANCE = new ConstantF32NodeBytecodeEmitter();
+
+    private ConstantF32NodeBytecodeEmitter() {
     }
 
     @Override
-    public void doBytecodeGenSingle(RootNode node, BytecodeGen.Context context, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
-        ValuesMethodDefF64 nextMethod = context.newSingleMethodF64(node.next);
-        context.callDelegateSingle(m, nextMethod);
-        m.areturn(Type.DOUBLE_TYPE);
+    public void doBytecodeGenSingle(ConstantF32Node node, BytecodeGen.Context context, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
+        m.fconst(node.getValue());
+        m.areturn(Type.FLOAT_TYPE);
     }
 
     @Override
-    public void doBytecodeGenMulti(RootNode node, BytecodeGen.Context context, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
-        ValuesMethodDefF64 nextMethod = context.newMultiMethodF64(node.next);
-        context.callDelegateMulti(m, nextMethod);
+    public void doBytecodeGenMulti(ConstantF32Node node, BytecodeGen.Context context, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
+        m.load(1, InstructionAdapter.OBJECT_TYPE);
+        m.fconst(node.getValue());
+        m.invokestatic(Type.getInternalName(Arrays.class), "fill", Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(float[].class), Type.FLOAT_TYPE), false);
         m.areturn(Type.VOID_TYPE);
     }
 }

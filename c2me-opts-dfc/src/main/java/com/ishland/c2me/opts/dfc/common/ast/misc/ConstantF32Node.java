@@ -27,13 +27,13 @@ package com.ishland.c2me.opts.dfc.common.ast.misc;
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
 import com.ishland.c2me.opts.dfc.common.ast.AstTransformer;
 import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDef;
-import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefF64;
+import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefF32;
 
-public class ConstantNode implements ConstantNodeLike {
+public class ConstantF32Node implements ConstantNodeLike {
 
-    private final double value;
+    private final float value;
 
-    public ConstantNode(double value) {
+    public ConstantF32Node(float value) {
         this.value = value;
     }
 
@@ -47,7 +47,7 @@ public class ConstantNode implements ConstantNodeLike {
         return transformer.transform(this);
     }
 
-    public double getValue() {
+    public float getValue() {
         return this.value;
     }
 
@@ -55,13 +55,18 @@ public class ConstantNode implements ConstantNodeLike {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        ConstantNode that = (ConstantNode) o;
-        return Double.compare(value, that.value) == 0;
+        ConstantF32Node that = (ConstantF32Node) o;
+        return Float.compare(value, that.value) == 0;
     }
 
     @Override
     public int hashCode() {
-        return Double.hashCode(this.value);
+        return Float.hashCode(this.value);
+    }
+
+    @Override
+    public ReturnType getReturnType() {
+        return ReturnType.F32;
     }
 
     @Override
@@ -76,6 +81,6 @@ public class ConstantNode implements ConstantNodeLike {
 
     @Override
     public ValuesMethodDef getDef() {
-        return new ValuesMethodDefF64(this.value);
+        return new ValuesMethodDefF32(this.value);
     }
 }

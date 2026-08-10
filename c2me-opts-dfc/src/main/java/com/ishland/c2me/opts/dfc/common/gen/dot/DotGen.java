@@ -26,6 +26,7 @@ package com.ishland.c2me.opts.dfc.common.gen.dot;
 
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantNode;
+import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantNodeLike;
 import com.ishland.c2me.opts.dfc.common.ast.misc.CoordinateNode;
 import it.unimi.dsi.fastutil.objects.Object2ReferenceOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
@@ -307,7 +308,7 @@ public class DotGen {
 
         public int generate(AstNode node) {
             final Builder.Impl builder;
-            if (node instanceof ConstantNode || node instanceof CoordinateNode) {
+            if (node instanceof ConstantNodeLike || node instanceof CoordinateNode) {
                 builder = new Builder.Impl(counter++, null);
                 constants.add(builder);
             } else {
