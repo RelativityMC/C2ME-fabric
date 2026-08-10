@@ -52,14 +52,6 @@ public class MixinMinecraftServer implements MinecraftServerExtension {
             List<OpenCLDeviceMetadata> metadataList = OpenCLDeviceLocator.enumerateAll();
             boolean openedAnyDevice = false;
             for (OpenCLDeviceMetadata openCLDeviceMetadata : metadataList) {
-                if (!Config.deviceUUIDWhitelist.isEmpty() && !Config.deviceUUIDWhitelist.contains(openCLDeviceMetadata.deviceUUID)) {
-                    LOGGER.info("Skipping OpenCL device {} since it's not in the whitelist", openCLDeviceMetadata.deviceUUID);
-                    continue;
-                }
-                if (Config.deviceUUIDBlacklist.contains(openCLDeviceMetadata.deviceUUID)) {
-                    LOGGER.info("Skipping OpenCL device {} since it's in the blacklist", openCLDeviceMetadata.deviceUUID);
-                    continue;
-                }
                 this.c2me$clContext.openDevice(openCLDeviceMetadata);
                 openedAnyDevice = true;
             }
