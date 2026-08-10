@@ -126,10 +126,7 @@ public class Config {
             .comment("""
                     Whether to use the default device prioritization strategy
                     
-                    For stability reasons:
-                    - Disable Intel GPUs if anything else is present on Windows
-                    - Disable Intel Gen9 iGPUs if anything else is present on Linux
-                    - Disable Nvidia GPUs if anything else is present on Linux
+                    Currently does nothing because most outstanding issues have been resolved.
                     """)
             .getBoolean(true, false);
 

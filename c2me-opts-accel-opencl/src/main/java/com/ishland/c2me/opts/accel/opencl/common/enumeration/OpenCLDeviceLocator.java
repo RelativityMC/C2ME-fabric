@@ -235,11 +235,11 @@ public class OpenCLDeviceLocator {
     private static void postprocessDeviceList(List<OpenCLDeviceMetadata> devices) {
         if (PlatformDependent.isWindows()) {
             // deselect all intel if anything else is present
-            deselect0(devices, IntelWorkarounds::isUsingIntelGPU, "Intel GPUs are known to crash on complex worldgen datapacks on Windows");
+//            deselect0(devices, IntelWorkarounds::isUsingIntelGPU, "Intel GPUs are known to crash on complex worldgen datapacks on Windows");
         } else {
             // deselect all nvidia if anything else is present
-            deselect0(devices, IntelWorkarounds::isUsingGen9, "Intel Gen9 iGPUs are known to crash on complex worldgen datapacks unless workarounds is applied manually");
-            deselect0(devices, NvidiaWorkarounds::isNvidia, "Nvidia GPUs are known to hang after a while on Linux");
+//            deselect0(devices, IntelWorkarounds::isUsingGen9, "Intel Gen9 iGPUs are known to crash on complex worldgen datapacks unless workarounds is applied manually");
+//            deselect0(devices, NvidiaWorkarounds::isNvidia, "Nvidia GPUs are known to hang after a while on Linux");
         }
     }
 
