@@ -40,11 +40,15 @@ public interface DfcObjectCache {
 
     double[] getDoubleArray(int size, boolean zero);
 
+    float[] getFloatArray(int size, boolean zero);
+
     int[] getIntArray(int size, boolean zero);
 
     NoisePosVanillaInterface getNoisePosVanillaInterface(int x, int y, int z, EvalType type, DfcObjectCache cache);
 
     void recycle(double[] array);
+
+    void recycle(float[] array);
 
     void recycle(int[] array);
 
@@ -53,6 +57,7 @@ public interface DfcObjectCache {
     class Impl implements DfcObjectCache {
 
         private final Int2ReferenceArrayMap<ReferenceArrayList<double[]>> doubleArrayCache = new Int2ReferenceArrayMap<>();
+        private final Int2ReferenceArrayMap<ReferenceArrayList<float[]>> floatArrayCache = new Int2ReferenceArrayMap<>();
         private final Int2ReferenceArrayMap<ReferenceArrayList<int[]>> intArrayCache = new Int2ReferenceArrayMap<>();
 //        private final ReferenceArrayList<NoisePosVanillaInterface> noisePosVanillaInterfacesCache = new ReferenceArrayList<>();
         private final NoisePosVanillaInterface noisePosVanillaInterfaceSingleton = new NoisePosVanillaInterface();
@@ -65,6 +70,20 @@ public interface DfcObjectCache {
                 double[] popped = list.pop();
                 if (zero) {
                     Arrays.fill(popped, 0.0);
+                }
+                return popped;
+            }
+        }
+
+        @Override
+        public float[] getFloatArray(int size, boolean zero) {
+            ReferenceArrayList<float[]> list = this.floatArrayCache.computeIfAbsent(size, k -> new ReferenceArrayList<>());
+            if (list.isEmpty()) {
+                return new float[size];
+            } else {
+                float[] popped = list.pop();
+                if (zero) {
+                    Arrays.fill(popped, 0.0F);
                 }
                 return popped;
             }
@@ -99,6 +118,11 @@ public interface DfcObjectCache {
             this.doubleArrayCache.computeIfAbsent(array.length, k -> new ReferenceArrayList<>()).add(array);
         }
 
+        @Override
+        public void recycle(float[] array) {
+            this.floatArrayCache.computeIfAbsent(array.length, k -> new ReferenceArrayList<>()).add(array);
+        }
+
         public void recycle(int[] array) {
             this.intArrayCache.computeIfAbsent(array.length, k -> new ReferenceArrayList<>()).add(array);
         }
@@ -124,6 +148,11 @@ public interface DfcObjectCache {
         }
 
         @Override
+        public float[] getFloatArray(int size, boolean zero) {
+            return new float[size];
+        }
+
+        @Override
         public int[] getIntArray(int size, boolean zero) {
             return new int[size];
         }
@@ -135,6 +164,10 @@ public interface DfcObjectCache {
 
         @Override
         public void recycle(double[] array) {
+        }
+
+        @Override
+        public void recycle(float[] array) {
         }
 
         @Override

@@ -760,9 +760,8 @@ math_aquifer_refreshDistPosIdx_global(global const uint16_t *restrict const pack
     res[3] = D;
 }
 
-constant const uint32_t MASK_isInterpolation = 1 << 0;
-constant const uint32_t MASK_inInterpolationLoop = 1 << 1;
-constant const uint32_t MASK_interpolationEnableCache2D = 1 << 2;
+constant const uint32_t MASK_enableFlatCache = 1 << 0;
+constant const uint32_t MASK_enableAllCaches = (1 << 1) | MASK_enableFlatCache;
 
 static __attribute__((pure)) global void *df_data_offset_global(global const void * const root, const int32_t index) {
     int32_t offset = ((global int32_t *) ptr_shift_global(root, 128))[index];
@@ -901,7 +900,7 @@ typedef struct cache_result {
 } cache_result_t;
 
 static cache_result_t df_cachelike_interpolator(global const worldgen_params_t * restrict params, global const double * restrict interpolator_buffer, const uint32_t cacheIndex, const int32_t x, const int32_t y, const int32_t z, const uint32_t interpolationState) {
-    if (!params || !(interpolationState & MASK_inInterpolationLoop) || !(interpolationState & MASK_isInterpolation)) {
+    if (!params || (interpolationState & MASK_enableAllCaches) != MASK_enableAllCaches) {
         return (cache_result_t) { .cached = false, .res = nan((uint64_t) 0) };
     }
     // if (!params_local->isSamplingForCaches) {
@@ -933,8 +932,8 @@ static cache_result_t df_cachelike_interpolator(global const worldgen_params_t *
     return (cache_result_t) { .cached = true, .res = res };
 }
 
-static cache_result_t df_cachelike_flatcache(global const worldgen_params_t * restrict params, global const double * restrict data, const uint32_t cacheIndex, const int32_t x, const int32_t y, const int32_t z) {
-    if (!params) {
+static cache_result_t df_cachelike_flatcache(global const worldgen_params_t * restrict params, global const double * restrict data, const uint32_t cacheIndex, const int32_t x, const int32_t y, const int32_t z, const uint32_t interpolationState) {
+    if (!params || (interpolationState & MASK_enableFlatCache) != MASK_enableFlatCache) {
         return (cache_result_t) { .cached = false, .res = nan((uint64_t) 0) };
     }
     const int32_t offsetX = math_block2biome(x) - params->startBiomeX;
@@ -948,7 +947,7 @@ static cache_result_t df_cachelike_flatcache(global const worldgen_params_t * re
 }
 
 static cache_result_t df_cachelike_cache2d(global const worldgen_params_t * restrict params, global const double * restrict data, const uint32_t cacheIndex, const int32_t x, const int32_t y, const int32_t z, const uint32_t interpolationState) {
-    if (!params || !(interpolationState & MASK_inInterpolationLoop) || !(interpolationState & MASK_isInterpolation) || !(interpolationState & MASK_interpolationEnableCache2D)) {
+    if (!params || (interpolationState & MASK_enableAllCaches) != MASK_enableAllCaches) {
         return (cache_result_t) { .cached = false, .res = nan((uint64_t) 0) };
     }
     const int32_t offsetX = x - params->cache2d_startX;
@@ -1196,30 +1195,79 @@ static sample_int32_ctx_t make_sample_int32_ctx(global const void * restrict con
     };
 }
 
+static double uninitializedF32() {
+    union {
+        float f;
+        uint32_t l;
+    } x;
+    x.l = 0x7f8abcdeU;
+    return x.f;
+}
+
+static double uninitializedF64() {
+    union {
+        double d;
+        uint64_t l;
+    } x;
+    x.l = 0x7ffddb972d486a4fUL;
+    return x.d;
+}
+
+static float assertNotUninitializedF32(float in) {
+    union {
+        float f;
+        uint32_t l;
+    } x;
+    x.f = in;
+    if (x.l == 0x7f8abcdeU) {
+        __builtin_trap();
+    }
+    return in;
+}
+
+static double assertNotUninitializedF64(double in) {
+    union {
+        double d;
+        uint64_t l;
+    } x;
+    x.d = in;
+    if (x.l == 0x7ffddb972d486a4fUL) {
+        __builtin_trap();
+    }
+    return in;
+}
+
 #ifndef DEBUG
 #define df_cachelike_trap_printf(desc, ctx)
 #else
 #define df_cachelike_trap_printf(desc, ctx) printf("trap: accessing cachelike \"%s\" beyond cache boundary\n ctx.xyz=(%d, %d, %d) ctx.sample_flags=%u\n", desc, ctx.x, ctx.y, ctx.z, ctx.sample_flags)
 #endif
 
-#define df_binding_def(name) static __attribute__((pure)) double df_binding_##name(const sample_int32_ctx_t ctx)
+#define df_binding_def0(name, suffix) \
+    static __attribute__((pure)) double df_binding_##name##suffix(const sample_int32_ctx_t ctx);
 
-df_binding_def(barrier);
-df_binding_def(fluid_level_floodedness);
-df_binding_def(fluid_level_spread);
-df_binding_def(lava);
-df_binding_def(temperature);
-df_binding_def(vegetation);
-df_binding_def(continents);
-df_binding_def(erosion);
-df_binding_def(depth);
-df_binding_def(ridges);
-df_binding_def(preliminary_surface_level);
-df_binding_def(final_density);
-df_binding_def(vein_toggle);
-df_binding_def(vein_ridged);
-df_binding_def(vein_gap);
-df_binding_def(final_final_density);
+#define df_binding_def(name) \
+    df_binding_def0(name, _uncached) \
+    df_binding_def0(name, _flatcache_only) \
+    df_binding_def0(name, _fully_cached) \
+    df_binding_def0(name, )
+
+df_binding_def(barrier)
+df_binding_def(fluid_level_floodedness)
+df_binding_def(fluid_level_spread)
+df_binding_def(lava)
+df_binding_def(temperature)
+df_binding_def(vegetation)
+df_binding_def(continents)
+df_binding_def(erosion)
+df_binding_def(depth)
+df_binding_def(ridges)
+df_binding_def(preliminary_surface_level)
+df_binding_def(final_density)
+df_binding_def(vein_toggle)
+df_binding_def(vein_ridged)
+df_binding_def(vein_gap)
+df_binding_def(final_final_density)
 
 #undef df_binding_def
 
@@ -1962,7 +2010,7 @@ kernel void df_noise_kernel(global const void * restrict const const_data, globa
     const int32_t blockY = genShapeCfg_minimumY + relY;
     const int32_t blockZ = (chunkZ << 4) + relZ;
 
-    sample_int32_ctx_t ctx = make_sample_int32_ctx(const_data, rw_data, blockX, blockY, blockZ, MASK_isInterpolation | MASK_inInterpolationLoop | MASK_interpolationEnableCache2D);
+    sample_int32_ctx_t ctx = make_sample_int32_ctx(const_data, rw_data, blockX, blockY, blockZ, MASK_enableAllCaches);
 
     int32_t blockState = BLOCK_NULL;
     aquifer_result_t aquifer_res = aquifer_sample(ctx, df_binding_final_final_density(ctx));
@@ -2164,7 +2212,7 @@ kernel void df_biome_multinoise_kernel(global const void * restrict const const_
     const uint32_t blockY = math_biome2block(startBiomeY + relY);
     const uint32_t blockZ = math_biome2block(startBiomeZ + relZ);
 
-    sample_int32_ctx_t ctx = make_sample_int32_ctx(const_data, rw_data, blockX, blockY, blockZ, 0);
+    sample_int32_ctx_t ctx = make_sample_int32_ctx(const_data, rw_data, blockX, blockY, blockZ, MASK_enableFlatCache);
 
     const double temperature = df_binding_temperature(ctx);
     const double vegetation = df_binding_vegetation(ctx);

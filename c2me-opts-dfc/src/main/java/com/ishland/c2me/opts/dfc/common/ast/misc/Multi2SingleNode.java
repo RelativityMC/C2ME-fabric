@@ -26,56 +26,70 @@ package com.ishland.c2me.opts.dfc.common.ast.misc;
 
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
 import com.ishland.c2me.opts.dfc.common.ast.AstTransformer;
-import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDef;
-import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefF64;
 
-public class ConstantNode implements ConstantNodeLike {
+import java.util.Objects;
 
-    private final double value;
+public class Multi2SingleNode implements AstNode {
 
-    public ConstantNode(double value) {
-        this.value = value;
+    public final AstNode next;
+
+    public Multi2SingleNode(AstNode next) {
+        this.next = Objects.requireNonNull(next);
     }
 
     @Override
     public AstNode[] getChildren() {
-        return new AstNode[0];
+        return new AstNode[] { this.next };
     }
 
     @Override
     public AstNode transform(AstTransformer transformer) {
-        return transformer.transform(this);
-    }
-
-    public double getValue() {
-        return this.value;
+        AstNode next = this.next.transform(transformer);
+        if (next == this.next) {
+            return transformer.transform(this);
+        } else {
+            return transformer.transform(new Multi2SingleNode(next));
+        }
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        ConstantNode that = (ConstantNode) o;
-        return Double.compare(value, that.value) == 0;
+        Multi2SingleNode that = (Multi2SingleNode) o;
+        return Objects.equals(next, that.next);
     }
 
     @Override
     public int hashCode() {
-        return Double.hashCode(this.value);
+        int result = 1;
+
+        result = 31 * result + this.getClass().hashCode();
+        result = 31 * result + next.hashCode();
+
+        return result;
     }
 
     @Override
     public boolean relaxedEquals(AstNode o) {
-        return this.equals(o);
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Multi2SingleNode that = (Multi2SingleNode) o;
+        return next.relaxedEquals(that.next);
     }
 
     @Override
     public int relaxedHashCode() {
-        return this.hashCode();
+        int result = 1;
+
+        result = 31 * result + this.getClass().hashCode();
+        result = 31 * result + next.relaxedHashCode();
+
+        return result;
     }
 
     @Override
-    public ValuesMethodDef getDef() {
-        return new ValuesMethodDefF64(this.value);
+    public ReturnType getReturnType() {
+        return this.next.getReturnType();
     }
 }

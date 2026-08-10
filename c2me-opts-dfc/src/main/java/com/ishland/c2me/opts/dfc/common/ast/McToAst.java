@@ -32,10 +32,12 @@ import com.ishland.c2me.opts.dfc.common.ast.binary.MaxShortNode;
 import com.ishland.c2me.opts.dfc.common.ast.binary.MinNode;
 import com.ishland.c2me.opts.dfc.common.ast.binary.MinShortNode;
 import com.ishland.c2me.opts.dfc.common.ast.binary.MulNode;
+import com.ishland.c2me.opts.dfc.common.ast.conversion.ToF64Node;
 import com.ishland.c2me.opts.dfc.common.ast.integration.tectonic.ConfigClampBindings;
 import com.ishland.c2me.opts.dfc.common.ast.integration.tectonic.ConfigNoiseBindings;
 import com.ishland.c2me.opts.dfc.common.ast.misc.BeardifierNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.CacheLikeNode;
+import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantF32Node;
 import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.CoordinateNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.DelegateNode;
@@ -43,16 +45,19 @@ import com.ishland.c2me.opts.dfc.common.ast.misc.EndIslandsNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.FindTopSurfaceNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.InterpolatedNoiseSamplerNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.IntervalSelectNode;
+import com.ishland.c2me.opts.dfc.common.ast.misc.Multi2SingleNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.RangeChoiceNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.YClampedGradientNode;
 import com.ishland.c2me.opts.dfc.common.ast.noise.GenericShiftedNoiseNode;
 import com.ishland.c2me.opts.dfc.common.ast.spline.SplineAstNode;
+import com.ishland.c2me.opts.dfc.common.ast.spline.SplineNormalNode;
 import com.ishland.c2me.opts.dfc.common.ast.unary.AbsNode;
 import com.ishland.c2me.opts.dfc.common.ast.unary.CubeNode;
 import com.ishland.c2me.opts.dfc.common.ast.unary.NegMulNode;
 import com.ishland.c2me.opts.dfc.common.ast.unary.SquareNode;
 import com.ishland.c2me.opts.dfc.common.ast.unary.SqueezeNode;
 import com.ishland.c2me.opts.dfc.common.ducks.IFastCacheLike;
+import net.minecraft.util.math.Spline;
 import net.minecraft.util.math.noise.InterpolatedNoiseSampler;
 import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
@@ -183,7 +188,8 @@ public class McToAst {
         });
         REGISTRY.registerExactMatch(DensityFunctionTypes.YClampedGradient.class, f -> new YClampedGradientNode(f.fromY(), f.toY(), f.fromValue(), f.toValue()));
         REGISTRY.registerExactMatch(DensityFunctionTypes.IntervalSelect.class, f -> new IntervalSelectNode(toAst(f.input()), f.thresholds().toDoubleArray(), f.functions().stream().map(McToAst::toAst).toArray(AstNode[]::new)));
-        REGISTRY.registerExactMatch(DensityFunctionTypes.Spline.class, f -> new SplineAstNode(f.getSpline()));
+//        REGISTRY.registerExactMatch(DensityFunctionTypes.Spline.class, f -> new SplineAstNode(f.getSpline()));
+        REGISTRY.registerExactMatch(DensityFunctionTypes.Spline.class, f -> new Multi2SingleNode(new ToF64Node(toAst(f.getSpline()))));
         REGISTRY.registerExactMatch(DensityFunctionTypes.FindTopSurface.class, f -> new FindTopSurfaceNode(toAst(f.density()), toAst(f.upperBound()), new ConstantNode(f.lowerBound()), f.cellHeight()));
 
         // delegate nodes that have specialized OpenCL gen
@@ -195,6 +201,18 @@ public class McToAst {
             ConfigClampBindings.register(REGISTRY);
             ConfigNoiseBindings.register(REGISTRY);
         }
+    }
+
+    public static AstNode toAst(Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper> spline) {
+        return switch (spline) {
+            case Spline.FixedFloatFunction<DensityFunctionTypes.Spline.DensityFunctionWrapper> f -> new ConstantF32Node(f.value());
+            case Spline.Implementation<DensityFunctionTypes.Spline.DensityFunctionWrapper> f -> new SplineNormalNode(
+                    toAst(f.locationFunction().function()),
+                    f.locations().clone(),
+                    f.values().stream().map(McToAst::toAst).toArray(AstNode[]::new),
+                    f.derivatives().clone()
+            );
+        };
     }
 
     public static <T extends DensityFunction> AstNode toAst(T df) {
