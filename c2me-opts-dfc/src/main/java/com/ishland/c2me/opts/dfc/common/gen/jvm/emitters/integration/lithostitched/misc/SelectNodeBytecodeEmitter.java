@@ -27,7 +27,7 @@ package com.ishland.c2me.opts.dfc.common.gen.jvm.emitters.integration.lithostitc
 import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc.SelectNode;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.BytecodeEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.BytecodeGen;
-import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefD;
+import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefF64;
 import com.ishland.flowsched.util.Assertions;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.Type;
@@ -46,9 +46,9 @@ public class SelectNodeBytecodeEmitter implements BytecodeEmitter<SelectNode> {
         Assertions.assertTrue(node.minima.length == node.functions.length);
         Assertions.assertTrue(node.maxima.length == node.functions.length);
 
-        ValuesMethodDefD inputMethod = context.newSingleMethod(node.input);
-        ValuesMethodDefD fallbackMethod = context.newSingleMethod(node.fallback);
-        ValuesMethodDefD[] delegates = Arrays.stream(node.functions).map(context::newSingleMethod).toArray(ValuesMethodDefD[]::new);
+        ValuesMethodDefF64 inputMethod = context.newSingleMethodF64(node.input);
+        ValuesMethodDefF64 fallbackMethod = context.newSingleMethodF64(node.fallback);
+        ValuesMethodDefF64[] delegates = Arrays.stream(node.functions).map(context::newSingleMethodF64).toArray(ValuesMethodDefF64[]::new);
 
         int inputValue = localVarConsumer.createLocalVariable("inputValue", Type.DOUBLE_TYPE.getDescriptor());
         context.callDelegateSingle(m, inputMethod);
@@ -90,10 +90,10 @@ public class SelectNodeBytecodeEmitter implements BytecodeEmitter<SelectNode> {
         Assertions.assertTrue(node.minima.length == node.functions.length);
         Assertions.assertTrue(node.maxima.length == node.functions.length);
 
-        ValuesMethodDefD inputSingle = context.newSingleMethod(node.input);
-        ValuesMethodDefD inputMulti = context.newMultiMethod(node.input);
-        ValuesMethodDefD fallbackSingle = context.newSingleMethod(node.fallback);
-        ValuesMethodDefD[] delegates = Arrays.stream(node.functions).map(context::newSingleMethod).toArray(ValuesMethodDefD[]::new);
+        ValuesMethodDefF64 inputSingle = context.newMultiMethodF64(node.input);
+        ValuesMethodDefF64 inputMulti = context.newMultiMethodF64(node.input);
+        ValuesMethodDefF64 fallbackSingle = context.newMultiMethodF64(node.fallback);
+        ValuesMethodDefF64[] delegates = Arrays.stream(node.functions).map(context::newMultiMethodF64).toArray(ValuesMethodDefF64[]::new);
 
         context.callDelegateMulti(m, inputMulti);
 

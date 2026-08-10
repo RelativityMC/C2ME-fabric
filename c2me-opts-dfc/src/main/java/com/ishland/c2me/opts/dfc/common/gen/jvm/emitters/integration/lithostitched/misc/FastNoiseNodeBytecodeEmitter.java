@@ -26,14 +26,12 @@ package com.ishland.c2me.opts.dfc.common.gen.jvm.emitters.integration.lithostitc
 
 import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.FastNoiseBindings;
 import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc.FastNoiseNode;
-import com.ishland.c2me.opts.dfc.common.ast.noise.GenericShiftedNoiseNode;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.BytecodeEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.BytecodeGen;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.InvocationShim;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.util.DfcObjectCache;
-import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefD;
+import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefF64;
 import com.ishland.flowsched.util.Assertions;
-import net.minecraft.world.gen.densityfunction.DensityFunction;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.InstructionAdapter;
 
@@ -49,9 +47,9 @@ public class FastNoiseNodeBytecodeEmitter implements BytecodeEmitter<FastNoiseNo
 
         String configField = context.newField((Class<Object>) (Class<?>) FastNoiseBindings.CLASS_FastNoiseConfig, node.config);
 
-        ValuesMethodDefD inputXMethod = context.newSingleMethod(node.inputX);
-        ValuesMethodDefD inputYMethod = context.newSingleMethod(node.inputY);
-        ValuesMethodDefD inputZMethod = context.newSingleMethod(node.inputZ);
+        ValuesMethodDefF64 inputXMethod = context.newSingleMethodF64(node.inputX);
+        ValuesMethodDefF64 inputYMethod = context.newSingleMethodF64(node.inputY);
+        ValuesMethodDefF64 inputZMethod = context.newSingleMethodF64(node.inputZ);
 
         m.load(0, InstructionAdapter.OBJECT_TYPE);
         m.getfield(context.className, configField, Type.getDescriptor(FastNoiseBindings.CLASS_FastNoiseConfig));
@@ -75,9 +73,9 @@ public class FastNoiseNodeBytecodeEmitter implements BytecodeEmitter<FastNoiseNo
 
         String configField = context.newField((Class<Object>) (Class<?>) FastNoiseBindings.CLASS_FastNoiseConfig, node.config);
 
-        ValuesMethodDefD inputXMethod = context.newMultiMethod(node.inputX);
-        ValuesMethodDefD inputYMethod = context.newMultiMethod(node.inputY);
-        ValuesMethodDefD inputZMethod = context.newMultiMethod(node.inputZ);
+        ValuesMethodDefF64 inputXMethod = context.newMultiMethodF64(node.inputX);
+        ValuesMethodDefF64 inputYMethod = context.newMultiMethodF64(node.inputY);
+        ValuesMethodDefF64 inputZMethod = context.newMultiMethodF64(node.inputZ);
         boolean eliminatedX = inputXMethod.isConst();
         boolean eliminatedY = inputYMethod.isConst();
         boolean eliminatedZ = inputZMethod.isConst();

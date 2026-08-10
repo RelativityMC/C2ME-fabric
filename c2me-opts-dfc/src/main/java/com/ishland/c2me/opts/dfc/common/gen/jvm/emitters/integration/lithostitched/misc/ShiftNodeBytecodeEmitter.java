@@ -29,7 +29,7 @@ import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc.Shift
 import com.ishland.c2me.opts.dfc.common.gen.jvm.BytecodeEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.BytecodeGen;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.util.DfcObjectCache;
-import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefD;
+import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefF64;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.InstructionAdapter;
 
@@ -43,10 +43,10 @@ public class ShiftNodeBytecodeEmitter implements BytecodeEmitter<ShiftNode> {
 
     @Override
     public void doBytecodeGenSingle(ShiftNode node, BytecodeGen.Context context, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
-        ValuesMethodDefD input = context.newSingleMethod(node.input);
-        ValuesMethodDefD inputX = context.newSingleMethod(node.inputX);
-        ValuesMethodDefD inputY = context.newSingleMethod(node.inputY);
-        ValuesMethodDefD inputZ = context.newSingleMethod(node.inputZ);
+        ValuesMethodDefF64 input = context.newSingleMethodF64(node.input);
+        ValuesMethodDefF64 inputX = context.newSingleMethodF64(node.inputX);
+        ValuesMethodDefF64 inputY = context.newSingleMethodF64(node.inputY);
+        ValuesMethodDefF64 inputZ = context.newSingleMethodF64(node.inputZ);
 
         if (input.isConst()) {
             m.dconst(input.constValue());
@@ -74,16 +74,16 @@ public class ShiftNodeBytecodeEmitter implements BytecodeEmitter<ShiftNode> {
         m.load(shiftZ, Type.INT_TYPE);
         m.getstatic(Type.getInternalName(EvalType.class), "NORMAL", Type.getDescriptor(EvalType.class));
         m.load(5, InstructionAdapter.OBJECT_TYPE);
-        m.invokevirtual(context.className, input.generatedMethod(), BytecodeGen.Context.SINGLE_DESC, false);
+        m.invokevirtual(context.className, input.generatedMethod(), BytecodeGen.Context.SINGLE_DESC_F64, false);
         m.areturn(Type.DOUBLE_TYPE);
     }
 
     @Override
     public void doBytecodeGenMulti(ShiftNode node, BytecodeGen.Context context, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
-        ValuesMethodDefD input = context.newSingleMethod(node.input);
-        ValuesMethodDefD inputX = context.newMultiMethod(node.inputX);
-        ValuesMethodDefD inputY = context.newMultiMethod(node.inputY);
-        ValuesMethodDefD inputZ = context.newMultiMethod(node.inputZ);
+        ValuesMethodDefF64 input = context.newSingleMethodF64(node.input);
+        ValuesMethodDefF64 inputX = context.newMultiMethodF64(node.inputX);
+        ValuesMethodDefF64 inputY = context.newMultiMethodF64(node.inputY);
+        ValuesMethodDefF64 inputZ = context.newMultiMethodF64(node.inputZ);
 
         if (input.isConst()) {
             m.load(1, InstructionAdapter.OBJECT_TYPE);
@@ -171,7 +171,7 @@ public class ShiftNodeBytecodeEmitter implements BytecodeEmitter<ShiftNode> {
 
                 m.getstatic(Type.getInternalName(EvalType.class), "NORMAL", Type.getDescriptor(EvalType.class));
                 m.load(6, InstructionAdapter.OBJECT_TYPE);
-                m.invokevirtual(context.className, input.generatedMethod(), BytecodeGen.Context.SINGLE_DESC, false);
+                m.invokevirtual(context.className, input.generatedMethod(), BytecodeGen.Context.SINGLE_DESC_F64, false);
             }
 
             m.astore(Type.DOUBLE_TYPE);

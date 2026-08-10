@@ -28,7 +28,7 @@ import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc.MixNo
 import com.ishland.c2me.opts.dfc.common.gen.jvm.BytecodeEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.BytecodeGen;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.util.DfcObjectCache;
-import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefD;
+import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefF64;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.InstructionAdapter;
 
@@ -40,9 +40,9 @@ public class MixNodeBytecodeEmitter implements BytecodeEmitter<MixNode> {
 
     @Override
     public void doBytecodeGenSingle(MixNode node, BytecodeGen.Context context, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
-        ValuesMethodDefD input = context.newSingleMethod(node.input);
-        ValuesMethodDefD argument1 = context.newSingleMethod(node.argument1);
-        ValuesMethodDefD argument2 = context.newSingleMethod(node.argument2);
+        ValuesMethodDefF64 input = context.newSingleMethodF64(node.input);
+        ValuesMethodDefF64 argument1 = context.newSingleMethodF64(node.argument1);
+        ValuesMethodDefF64 argument2 = context.newSingleMethodF64(node.argument2);
 
         int v = localVarConsumer.createLocalVariable("v", Type.DOUBLE_TYPE.getDescriptor());
         context.callDelegateSingle(m, input);
@@ -64,9 +64,9 @@ public class MixNodeBytecodeEmitter implements BytecodeEmitter<MixNode> {
 
     @Override
     public void doBytecodeGenMulti(MixNode node, BytecodeGen.Context context, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
-        ValuesMethodDefD input = context.newMultiMethod(node.input);
-        ValuesMethodDefD argument1 = context.newMultiMethod(node.argument1);
-        ValuesMethodDefD argument2 = context.newSingleMethod(node.argument2);
+        ValuesMethodDefF64 input = context.newMultiMethodF64(node.input);
+        ValuesMethodDefF64 argument1 = context.newMultiMethodF64(node.argument1);
+        ValuesMethodDefF64 argument2 = context.newSingleMethodF64(node.argument2);
 
         int argument1Values = localVarConsumer.createLocalVariable("argument1Values", Type.getDescriptor(double[].class));
 
