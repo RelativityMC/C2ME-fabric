@@ -24,78 +24,61 @@
 
 package com.ishland.c2me.opts.dfc.common.gen.jvm.emitters.integration.lithostitched.misc;
 
-import com.ishland.c2me.opts.dfc.common.ast.EvalType;
-import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc.ShiftNode;
+import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.FastNoiseBindings;
+import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc.GenericFastNoiseNode;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.BytecodeEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.BytecodeGen;
+import com.ishland.c2me.opts.dfc.common.gen.jvm.InvocationShim;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.util.DfcObjectCache;
 import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefF64;
+import com.ishland.flowsched.util.Assertions;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.InstructionAdapter;
 
-import java.util.Arrays;
+public class GenericFastNoiseNodeBytecodeEmitter implements BytecodeEmitter<GenericFastNoiseNode> {
+    public static final GenericFastNoiseNodeBytecodeEmitter INSTANCE = new GenericFastNoiseNodeBytecodeEmitter();
 
-public class ShiftNodeBytecodeEmitter implements BytecodeEmitter<ShiftNode> {
-    public static final ShiftNodeBytecodeEmitter INSTANCE = new ShiftNodeBytecodeEmitter();
-
-    private ShiftNodeBytecodeEmitter() {
+    private GenericFastNoiseNodeBytecodeEmitter() {
     }
 
     @Override
-    public void doBytecodeGenSingle(ShiftNode node, BytecodeGen.Context context, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
-        ValuesMethodDefF64 input = context.newSingleMethodF64(node.input);
-        ValuesMethodDefF64 inputX = context.newSingleMethodF64(node.inputX);
-        ValuesMethodDefF64 inputY = context.newSingleMethodF64(node.inputY);
-        ValuesMethodDefF64 inputZ = context.newSingleMethodF64(node.inputZ);
+    public void doBytecodeGenSingle(GenericFastNoiseNode node, BytecodeGen.Context context, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
+        Assertions.assertTrue(FastNoiseBindings.CLASS_FastNoiseConfig != null);
 
-        if (input.isConst()) {
-            m.dconst(input.constValue());
-            m.areturn(Type.DOUBLE_TYPE);
-            return;
-        }
+        String configField = context.newField((Class<Object>) FastNoiseBindings.CLASS_FastNoiseConfig, node.config);
 
-        int shiftX = localVarConsumer.createLocalVariable("shiftX", Type.INT_TYPE.getDescriptor());
-        int shiftY = localVarConsumer.createLocalVariable("shiftY", Type.INT_TYPE.getDescriptor());
-        int shiftZ = localVarConsumer.createLocalVariable("shiftZ", Type.INT_TYPE.getDescriptor());
-
-        context.callDelegateSingle(m, inputX);
-        m.cast(Type.DOUBLE_TYPE, Type.INT_TYPE);
-        m.store(shiftX, Type.INT_TYPE);
-        context.callDelegateSingle(m, inputY);
-        m.cast(Type.DOUBLE_TYPE, Type.INT_TYPE);
-        m.store(shiftY, Type.INT_TYPE);
-        context.callDelegateSingle(m, inputZ);
-        m.cast(Type.DOUBLE_TYPE, Type.INT_TYPE);
-        m.store(shiftZ, Type.INT_TYPE);
+        ValuesMethodDefF64 inputXMethod = context.newSingleMethodF64(node.inputX);
+        ValuesMethodDefF64 inputYMethod = context.newSingleMethodF64(node.inputY);
+        ValuesMethodDefF64 inputZMethod = context.newSingleMethodF64(node.inputZ);
 
         m.load(0, InstructionAdapter.OBJECT_TYPE);
-        m.load(shiftX, Type.INT_TYPE);
-        m.load(shiftY, Type.INT_TYPE);
-        m.load(shiftZ, Type.INT_TYPE);
-        m.getstatic(Type.getInternalName(EvalType.class), "NORMAL", Type.getDescriptor(EvalType.class));
-        m.load(5, InstructionAdapter.OBJECT_TYPE);
-        m.invokevirtual(context.className, input.generatedMethod(), BytecodeGen.Context.SINGLE_DESC_F64, false);
+        m.getfield(context.className, configField, Type.getDescriptor(FastNoiseBindings.CLASS_FastNoiseConfig));
+
+        context.callDelegateSingle(m, inputXMethod);
+        context.callDelegateSingle(m, inputYMethod);
+        context.callDelegateSingle(m, inputZMethod);
+
+        m.invokestatic(
+                Type.getInternalName(InvocationShim.class),
+                "invokeFastNoiseConfigSample",
+                Type.getMethodDescriptor(Type.DOUBLE_TYPE, Type.getType(Object.class), Type.DOUBLE_TYPE, Type.DOUBLE_TYPE, Type.DOUBLE_TYPE),
+                false
+        );
         m.areturn(Type.DOUBLE_TYPE);
     }
 
     @Override
-    public void doBytecodeGenMulti(ShiftNode node, BytecodeGen.Context context, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
-        ValuesMethodDefF64 input = context.newSingleMethodF64(node.input);
-        ValuesMethodDefF64 inputX = context.newMultiMethodF64(node.inputX);
-        ValuesMethodDefF64 inputY = context.newMultiMethodF64(node.inputY);
-        ValuesMethodDefF64 inputZ = context.newMultiMethodF64(node.inputZ);
+    public void doBytecodeGenMulti(GenericFastNoiseNode node, BytecodeGen.Context context, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
+        Assertions.assertTrue(FastNoiseBindings.CLASS_FastNoiseConfig != null);
 
-        if (input.isConst()) {
-            m.load(1, InstructionAdapter.OBJECT_TYPE);
-            m.dconst(input.constValue());
-            m.invokestatic(Type.getInternalName(Arrays.class), "fill", Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(double[].class), Type.DOUBLE_TYPE), false);
-            m.areturn(Type.VOID_TYPE);
-            return;
-        }
+        String configField = context.newField((Class<Object>) FastNoiseBindings.CLASS_FastNoiseConfig, node.config);
 
-        boolean eliminatedX = inputX.isConst();
-        boolean eliminatedY = inputY.isConst();
-        boolean eliminatedZ = inputZ.isConst();
+        ValuesMethodDefF64 inputXMethod = context.newMultiMethodF64(node.inputX);
+        ValuesMethodDefF64 inputYMethod = context.newMultiMethodF64(node.inputY);
+        ValuesMethodDefF64 inputZMethod = context.newMultiMethodF64(node.inputZ);
+        boolean eliminatedX = inputXMethod.isConst();
+        boolean eliminatedY = inputYMethod.isConst();
+        boolean eliminatedZ = inputZMethod.isConst();
         int arraysNeeded = (!eliminatedX ? 1 : 0) + (!eliminatedY ? 1 : 0) + (!eliminatedZ ? 1 : 0);
 
         int[] arrays = new int[arraysNeeded];
@@ -103,7 +86,7 @@ public class ShiftNodeBytecodeEmitter implements BytecodeEmitter<ShiftNode> {
             arrays[0] = 1;
         }
         if (arraysNeeded >= 2) {
-            arrays[1] = localVarConsumer.createLocalVariable("shiftArr1", Type.getDescriptor(double[].class));
+            arrays[1] = localVarConsumer.createLocalVariable("res1", Type.getDescriptor(double[].class));
             m.load(6, InstructionAdapter.OBJECT_TYPE);
             m.load(1, InstructionAdapter.OBJECT_TYPE);
             m.arraylength();
@@ -112,7 +95,7 @@ public class ShiftNodeBytecodeEmitter implements BytecodeEmitter<ShiftNode> {
             m.store(arrays[1], InstructionAdapter.OBJECT_TYPE);
         }
         if (arraysNeeded >= 3) {
-            arrays[2] = localVarConsumer.createLocalVariable("shiftArr2", Type.getDescriptor(double[].class));
+            arrays[2] = localVarConsumer.createLocalVariable("res2", Type.getDescriptor(double[].class));
             m.load(6, InstructionAdapter.OBJECT_TYPE);
             m.load(1, InstructionAdapter.OBJECT_TYPE);
             m.arraylength();
@@ -124,13 +107,13 @@ public class ShiftNodeBytecodeEmitter implements BytecodeEmitter<ShiftNode> {
         {
             int arrIdx = 0;
             if (!eliminatedX) {
-                context.callDelegateMulti(m, inputX, arrays[arrIdx ++]);
+                context.callDelegateMulti(m, inputXMethod, arrays[arrIdx ++]);
             }
             if (!eliminatedY) {
-                context.callDelegateMulti(m, inputY, arrays[arrIdx ++]);
+                context.callDelegateMulti(m, inputYMethod, arrays[arrIdx ++]);
             }
             if (!eliminatedZ) {
-                context.callDelegateMulti(m, inputZ, arrays[arrIdx ++]);
+                context.callDelegateMulti(m, inputZMethod, arrays[arrIdx ++]);
             }
         }
 
@@ -140,6 +123,7 @@ public class ShiftNodeBytecodeEmitter implements BytecodeEmitter<ShiftNode> {
 
             {
                 m.load(0, InstructionAdapter.OBJECT_TYPE);
+                m.getfield(context.className, configField, Type.getDescriptor(FastNoiseBindings.CLASS_FastNoiseConfig));
 
                 int arrIdx = 0;
                 if (!eliminatedX) {
@@ -147,34 +131,35 @@ public class ShiftNodeBytecodeEmitter implements BytecodeEmitter<ShiftNode> {
                     m.load(idx, Type.INT_TYPE);
                     m.aload(Type.DOUBLE_TYPE);
                 } else {
-                    m.dconst(inputX.constValue());
+                    m.dconst(inputXMethod.constValue());
                 }
-                m.cast(Type.DOUBLE_TYPE, Type.INT_TYPE);
 
                 if (!eliminatedY) {
                     m.load(arrays[arrIdx ++], InstructionAdapter.OBJECT_TYPE);
                     m.load(idx, Type.INT_TYPE);
                     m.aload(Type.DOUBLE_TYPE);
                 } else {
-                    m.dconst(inputY.constValue());
+                    m.dconst(inputYMethod.constValue());
                 }
-                m.cast(Type.DOUBLE_TYPE, Type.INT_TYPE);
 
                 if (!eliminatedZ) {
                     m.load(arrays[arrIdx ++], InstructionAdapter.OBJECT_TYPE);
                     m.load(idx, Type.INT_TYPE);
                     m.aload(Type.DOUBLE_TYPE);
                 } else {
-                    m.dconst(inputZ.constValue());
+                    m.dconst(inputZMethod.constValue());
                 }
-                m.cast(Type.DOUBLE_TYPE, Type.INT_TYPE);
 
-                m.getstatic(Type.getInternalName(EvalType.class), "NORMAL", Type.getDescriptor(EvalType.class));
-                m.load(6, InstructionAdapter.OBJECT_TYPE);
-                m.invokevirtual(context.className, input.generatedMethod(), BytecodeGen.Context.SINGLE_DESC_F64, false);
+                m.invokestatic(
+                        Type.getInternalName(InvocationShim.class),
+                        "invokeFastNoiseConfigSample",
+                        Type.getMethodDescriptor(Type.DOUBLE_TYPE, Type.getType(Object.class), Type.DOUBLE_TYPE, Type.DOUBLE_TYPE, Type.DOUBLE_TYPE),
+                        false
+                );
             }
 
             m.astore(Type.DOUBLE_TYPE);
+
         });
 
         for (int i = 1; i < arrays.length; i ++) {

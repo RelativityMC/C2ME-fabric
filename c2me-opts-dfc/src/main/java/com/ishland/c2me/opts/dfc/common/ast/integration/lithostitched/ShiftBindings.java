@@ -25,11 +25,10 @@
 package com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched;
 
 import com.ishland.c2me.opts.dfc.common.ast.AstEmitter;
-import com.ishland.c2me.opts.dfc.common.ast.AstNode;
 import com.ishland.c2me.opts.dfc.common.ast.FrontendRegistry;
 import com.ishland.c2me.opts.dfc.common.ast.McToAst;
 import com.ishland.c2me.opts.dfc.common.ast.binary.AddNode;
-import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc.ShiftNode;
+import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc.RepositionNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.CoordinateNode;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
@@ -86,7 +85,7 @@ public class ShiftBindings {
 
         registry.registerExactMatch((Class<? extends DensityFunction>) CLASS_ShiftDensityFunction, function -> {
             try {
-               return new ShiftNode(
+               return new RepositionNode(
                        McToAst.toAst((DensityFunction) MH_input.invoke(function)),
                        new AddNode(CoordinateNode.AXIS_X, McToAst.toAst((DensityFunction) MH_shiftX.invoke(function))),
                        new AddNode(CoordinateNode.AXIS_Y, McToAst.toAst((DensityFunction) MH_shiftY.invoke(function))),

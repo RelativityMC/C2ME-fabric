@@ -27,10 +27,10 @@ package com.ishland.c2me.opts.dfc.common.gen.dot;
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
 import com.ishland.c2me.opts.dfc.common.ast.conversion.ToF32Node;
 import com.ishland.c2me.opts.dfc.common.ast.conversion.ToF64Node;
-import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc.FastNoiseNode;
+import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc.GenericFastNoiseNode;
 import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc.MixNode;
 import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc.SelectNode;
-import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc.ShiftNode;
+import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc.RepositionNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.BeardifierNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.CacheLikeNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantF32Node;
@@ -46,15 +46,11 @@ import com.ishland.c2me.opts.dfc.common.ast.misc.RangeChoiceNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.RootNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.YClampedGradientNode;
 import com.ishland.c2me.opts.dfc.common.ast.noise.GenericShiftedNoiseNode;
-import com.ishland.c2me.opts.dfc.common.ast.spline.SplineAstNode;
 import com.ishland.c2me.opts.dfc.common.ast.spline.SplineNormalNode;
 import com.ishland.c2me.opts.dfc.common.gen.CodeGenRegistry;
 import com.ishland.c2me.opts.dfc.common.gen.dot.emitters.BinaryNodeDotEmitters;
 import com.ishland.c2me.opts.dfc.common.gen.dot.emitters.UnaryNodeDotEmitters;
-import com.ishland.c2me.opts.dfc.common.gen.dot.emitters.misc.SplineAstNodeDotEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.dot.emitters.misc.SplineNormalNodeDotEmitter;
-
-import java.util.Arrays;
 
 public class DotGenRegistry {
 
@@ -270,8 +266,8 @@ public class DotGenRegistry {
                 }
         );
         REGISTRY.registerExactMatch(
-                FastNoiseNode.class,
-                (DotEmitter<FastNoiseNode>) (node, context, builder) ->
+                GenericFastNoiseNode.class,
+                (DotEmitter<GenericFastNoiseNode>) (node, context, builder) ->
                         builder
                                 .hexagonShape()
                                 .label("FastNoise")
@@ -309,8 +305,8 @@ public class DotGenRegistry {
                     for (int i = 0, functionsLength = functions.length; i < functionsLength; i++) {
                         table.append("<TR>")
                                 .append("<TD>").append(i).append("</TD>")
-                                .append("<TD>").append(i < node.minima.length ? node.minima[i] : "").append("</TD>")
-                                .append("<TD>").append(i < node.maxima.length ? node.maxima[i] : "").append("</TD>");
+                                .append("<TD>").append(i < node.mins.length ? node.mins[i] : "").append("</TD>")
+                                .append("<TD>").append(i < node.maxs.length ? node.maxs[i] : "").append("</TD>");
 
                         AstNode function = functions[i];
                         int childId = context.generate(function);
@@ -333,8 +329,8 @@ public class DotGenRegistry {
                 }
         );
         REGISTRY.registerExactMatch(
-                ShiftNode.class,
-                (DotEmitter<ShiftNode>) (node, context, builder) ->
+                RepositionNode.class,
+                (DotEmitter<RepositionNode>) (node, context, builder) ->
                         builder
                                 .hexagonShape()
                                 .label("Shift")

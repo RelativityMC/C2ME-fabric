@@ -96,19 +96,19 @@ public class SelectBindings {
                 AstNode input = McToAst.toAst((DensityFunction) MH_input.invoke(function));
                 AstNode fallback = McToAst.toAst((DensityFunction) MH_fallback.invoke(function));
                 AstNode[] functions = new AstNode[selections.size()];
-                double[] minima = new double[selections.size()];
-                double[] maxima = new double[selections.size()];
+                double[] mins = new double[selections.size()];
+                double[] maxs = new double[selections.size()];
 
                 for (int i = 0; i < selections.size(); i++) {
                     Object selection = selections.get(i);
                     Range<Double> range = (Range<Double>) MH_range.invoke(selection);
 
-                    minima[i] = range.minInclusive();
-                    maxima[i] = range.maxInclusive();
+                    mins[i] = range.minInclusive();
+                    maxs[i] = range.maxInclusive();
                     functions[i] = McToAst.toAst((DensityFunction) MH_function.invoke(selection));
                 }
 
-                return new SelectNode(input, fallback, minima, maxima, functions);
+                return new SelectNode(input, fallback, mins, maxs, functions);
             } catch (Throwable e) {
                 throw new RuntimeException(e);
             }

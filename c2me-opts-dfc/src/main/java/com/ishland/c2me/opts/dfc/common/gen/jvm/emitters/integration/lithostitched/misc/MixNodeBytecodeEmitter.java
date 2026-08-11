@@ -29,6 +29,7 @@ import com.ishland.c2me.opts.dfc.common.gen.jvm.BytecodeEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.BytecodeGen;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.util.DfcObjectCache;
 import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefF64;
+import org.objectweb.asm.Label;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.InstructionAdapter;
 
@@ -44,69 +45,102 @@ public class MixNodeBytecodeEmitter implements BytecodeEmitter<MixNode> {
         ValuesMethodDefF64 argument1 = context.newSingleMethodF64(node.argument1);
         ValuesMethodDefF64 argument2 = context.newSingleMethodF64(node.argument2);
 
-        int v = localVarConsumer.createLocalVariable("v", Type.DOUBLE_TYPE.getDescriptor());
+        int inputVar = localVarConsumer.createLocalVariable("input", Type.DOUBLE_TYPE.getDescriptor());
         context.callDelegateSingle(m, input);
-        m.store(v, Type.DOUBLE_TYPE);
+        m.store(inputVar, Type.DOUBLE_TYPE);
 
+        Label gt = new Label();
+        Label lt = new Label();
+        Label epilogue = new Label();
+
+        m.load(inputVar, Type.DOUBLE_TYPE);
+        m.dconst(0.0);
+        m.cmpg(Type.DOUBLE_TYPE);
+        m.ifgt(gt);
+        context.callDelegateSingle(m, argument1);
+        m.goTo(epilogue);
+
+        m.visitLabel(gt);
+        m.load(inputVar, Type.DOUBLE_TYPE);
+        m.dconst(1.0);
+        m.cmpl(Type.DOUBLE_TYPE);
+        m.iflt(lt);
+        context.callDelegateSingle(m, argument2);
+        m.goTo(epilogue);
+
+        m.visitLabel(lt);
         context.callDelegateSingle(m, argument1);
         m.dconst(1.0);
-        m.load(v, Type.DOUBLE_TYPE);
+        m.load(inputVar, Type.DOUBLE_TYPE);
         m.sub(Type.DOUBLE_TYPE);
         m.mul(Type.DOUBLE_TYPE);
 
         context.callDelegateSingle(m, argument2);
-        m.load(v, Type.DOUBLE_TYPE);
+        m.load(inputVar, Type.DOUBLE_TYPE);
         m.mul(Type.DOUBLE_TYPE);
 
         m.add(Type.DOUBLE_TYPE);
+
+        m.visitLabel(epilogue);
         m.areturn(Type.DOUBLE_TYPE);
     }
 
     @Override
     public void doBytecodeGenMulti(MixNode node, BytecodeGen.Context context, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
         ValuesMethodDefF64 input = context.newMultiMethodF64(node.input);
-        ValuesMethodDefF64 argument1 = context.newMultiMethodF64(node.argument1);
+        ValuesMethodDefF64 argument1 = context.newSingleMethodF64(node.argument1);
         ValuesMethodDefF64 argument2 = context.newSingleMethodF64(node.argument2);
 
-        int argument1Values = localVarConsumer.createLocalVariable("argument1Values", Type.getDescriptor(double[].class));
-
-        m.load(6, InstructionAdapter.OBJECT_TYPE);
-        m.load(1, InstructionAdapter.OBJECT_TYPE);
-        m.arraylength();
-        m.iconst(0);
-        m.invokeinterface(Type.getInternalName(DfcObjectCache.class), "getDoubleArray", Type.getMethodDescriptor(Type.getType(double[].class), Type.INT_TYPE, Type.BOOLEAN_TYPE));
-        m.store(argument1Values, InstructionAdapter.OBJECT_TYPE);
-
         context.callDelegateMulti(m, input);
-        context.callDelegateMulti(m, argument1, argument1Values);
+
+        int inputVar = localVarConsumer.createLocalVariable("input", Type.DOUBLE_TYPE.getDescriptor());
 
         context.doCountedLoop(m, localVarConsumer, idx -> {
-            m.load(1, InstructionAdapter.OBJECT_TYPE);
-            m.load(idx, Type.INT_TYPE);
+            Label gt = new Label();
+            Label lt = new Label();
+            Label epilogue = new Label();
 
-            m.load(argument1Values, InstructionAdapter.OBJECT_TYPE);
+            m.load(1, Type.DOUBLE_TYPE);
             m.load(idx, Type.INT_TYPE);
             m.aload(Type.DOUBLE_TYPE);
-            m.dconst(1.0);
-            m.load(1, InstructionAdapter.OBJECT_TYPE);
-            m.load(idx, Type.INT_TYPE);
-            m.aload(Type.DOUBLE_TYPE);
-            m.sub(Type.DOUBLE_TYPE);
-            m.mul(Type.DOUBLE_TYPE);
+            m.store(inputVar, Type.DOUBLE_TYPE);
 
-            context.callDelegateSingleFromMulti(m, argument2, idx);
-            m.load(1, InstructionAdapter.OBJECT_TYPE);
+            m.load(1, Type.DOUBLE_TYPE);
             m.load(idx, Type.INT_TYPE);
-            m.aload(Type.DOUBLE_TYPE);
-            m.mul(Type.DOUBLE_TYPE);
 
-            m.add(Type.DOUBLE_TYPE);
+            {
+                m.load(inputVar, Type.DOUBLE_TYPE);
+                m.dconst(0.0);
+                m.cmpg(Type.DOUBLE_TYPE);
+                m.ifgt(gt);
+                context.callDelegateSingleFromMulti(m, argument1, idx);
+                m.goTo(epilogue);
+
+                m.visitLabel(gt);
+                m.load(inputVar, Type.DOUBLE_TYPE);
+                m.dconst(1.0);
+                m.cmpl(Type.DOUBLE_TYPE);
+                m.iflt(lt);
+                context.callDelegateSingleFromMulti(m, argument2, idx);
+                m.goTo(epilogue);
+
+                m.visitLabel(lt);
+                context.callDelegateSingleFromMulti(m, argument1, idx);
+                m.dconst(1.0);
+                m.load(inputVar, Type.DOUBLE_TYPE);
+                m.sub(Type.DOUBLE_TYPE);
+                m.mul(Type.DOUBLE_TYPE);
+
+                context.callDelegateSingleFromMulti(m, argument2, idx);
+                m.load(inputVar, Type.DOUBLE_TYPE);
+                m.mul(Type.DOUBLE_TYPE);
+
+                m.add(Type.DOUBLE_TYPE);
+            }
+
+            m.visitLabel(epilogue);
             m.astore(Type.DOUBLE_TYPE);
         });
-
-        m.load(6, InstructionAdapter.OBJECT_TYPE);
-        m.load(argument1Values, InstructionAdapter.OBJECT_TYPE);
-        m.invokeinterface(Type.getInternalName(DfcObjectCache.class), "recycle", Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(double[].class)));
 
         m.areturn(Type.VOID_TYPE);
     }

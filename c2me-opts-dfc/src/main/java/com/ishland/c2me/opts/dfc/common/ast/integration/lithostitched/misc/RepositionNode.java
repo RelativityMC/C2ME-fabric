@@ -26,17 +26,16 @@ package com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc;
 
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
 import com.ishland.c2me.opts.dfc.common.ast.AstTransformer;
-import net.minecraft.world.gen.densityfunction.DensityFunction;
 
 import java.util.Objects;
 
-public class ShiftNode implements AstNode {
+public class RepositionNode implements AstNode {
     public final AstNode input;
     public final AstNode inputX;
     public final AstNode inputY;
     public final AstNode inputZ;
 
-    public ShiftNode(AstNode input, AstNode inputX, AstNode inputY, AstNode inputZ) {
+    public RepositionNode(AstNode input, AstNode inputX, AstNode inputY, AstNode inputZ) {
         this.input = Objects.requireNonNull(input);
         this.inputX = Objects.requireNonNull(inputX);
         this.inputY = Objects.requireNonNull(inputY);
@@ -57,14 +56,14 @@ public class ShiftNode implements AstNode {
         if (input == this.input && inputX == this.inputX && inputY == this.inputY && inputZ == this.inputZ) {
             return transformer.transform(this);
         } else {
-            return transformer.transform(new ShiftNode(input, inputX, inputY, inputZ));
+            return transformer.transform(new RepositionNode(input, inputX, inputY, inputZ));
         }
     }
 
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
-        ShiftNode that = (ShiftNode) o;
+        RepositionNode that = (RepositionNode) o;
         return input.equals(that.input) && inputX.equals(that.inputX) && inputY.equals(that.inputY) && inputZ.equals(that.inputZ);
     }
 
@@ -81,7 +80,7 @@ public class ShiftNode implements AstNode {
     @Override
     public boolean relaxedEquals(AstNode o) {
         if (o == null || getClass() != o.getClass()) return false;
-        ShiftNode that = (ShiftNode) o;
+        RepositionNode that = (RepositionNode) o;
         return input.relaxedEquals(that.input) && inputX.relaxedEquals(that.inputX) && inputY.relaxedEquals(that.inputY) && inputZ.relaxedEquals(that.inputZ);
     }
 

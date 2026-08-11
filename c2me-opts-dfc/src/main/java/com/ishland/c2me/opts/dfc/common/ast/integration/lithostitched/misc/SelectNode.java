@@ -33,15 +33,15 @@ public class SelectNode implements AstNode {
 
     public final AstNode input;
     public final AstNode fallback;
-    public final double[] minima;
-    public final double[] maxima;
+    public final double[] mins;
+    public final double[] maxs;
     public final AstNode[] functions;
 
-    public SelectNode(AstNode input, AstNode fallback, double[] minima, double[] maxima, AstNode[] functions) {
+    public SelectNode(AstNode input, AstNode fallback, double[] mins, double[] maxs, AstNode[] functions) {
         this.input = input;
         this.fallback = fallback;
-        this.minima = minima;
-        this.maxima = maxima;
+        this.mins = mins;
+        this.maxs = maxs;
         this.functions = functions;
     }
 
@@ -74,7 +74,7 @@ public class SelectNode implements AstNode {
         if (!changed) {
             return transformer.transform(this);
         } else {
-            return transformer.transform(new SelectNode(transformedInput, transformedFallback, this.minima.clone(), this.maxima.clone(), transformedFunctions));
+            return transformer.transform(new SelectNode(transformedInput, transformedFallback, this.mins.clone(), this.maxs.clone(), transformedFunctions));
         }
     }
 
@@ -82,7 +82,7 @@ public class SelectNode implements AstNode {
     public boolean relaxedEquals(AstNode o) {
         if (o == null || getClass() != o.getClass()) return false;
         SelectNode that = (SelectNode) o;
-        if (!this.input.relaxedEquals(that.input) || !Arrays.equals(this.minima, that.minima) || !Arrays.equals(this.maxima, that.maxima)) return false;
+        if (!this.input.relaxedEquals(that.input) || !Arrays.equals(this.mins, that.mins) || !Arrays.equals(this.maxs, that.maxs)) return false;
         if (this.functions == that.functions)
             return true;
         if (this.functions == null || that.functions == null)
@@ -104,8 +104,8 @@ public class SelectNode implements AstNode {
     public int relaxedHashCode() {
         int result = 1;
         result = 31 * result + input.relaxedHashCode();
-        result = 31 * result + Arrays.hashCode(minima);
-        result = 31 * result + Arrays.hashCode(maxima);
+        result = 31 * result + Arrays.hashCode(mins);
+        result = 31 * result + Arrays.hashCode(maxs);
         for (AstNode function : functions) {
             result = 31 * result + function.relaxedHashCode();
         }
@@ -116,7 +116,7 @@ public class SelectNode implements AstNode {
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         SelectNode that = (SelectNode) o;
-        if (!this.input.equals(that.input) || !Arrays.equals(this.minima, that.minima) || !Arrays.equals(this.maxima, that.maxima)) return false;
+        if (!this.input.equals(that.input) || !Arrays.equals(this.mins, that.mins) || !Arrays.equals(this.maxs, that.maxs)) return false;
         if (this.functions == that.functions)
             return true;
         if (this.functions == null || that.functions == null)
@@ -138,8 +138,8 @@ public class SelectNode implements AstNode {
     public int hashCode() {
         int result = 1;
         result = 31 * result + input.hashCode();
-        result = 31 * result + Arrays.hashCode(minima);
-        result = 31 * result + Arrays.hashCode(maxima);
+        result = 31 * result + Arrays.hashCode(mins);
+        result = 31 * result + Arrays.hashCode(maxs);
         for (AstNode function : functions) {
             result = 31 * result + function.hashCode();
         }

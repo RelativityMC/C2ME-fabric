@@ -43,8 +43,8 @@ public class SelectNodeBytecodeEmitter implements BytecodeEmitter<SelectNode> {
 
     @Override
     public void doBytecodeGenSingle(SelectNode node, BytecodeGen.Context context, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
-        Assertions.assertTrue(node.minima.length == node.functions.length);
-        Assertions.assertTrue(node.maxima.length == node.functions.length);
+        Assertions.assertTrue(node.mins.length == node.functions.length);
+        Assertions.assertTrue(node.maxs.length == node.functions.length);
 
         ValuesMethodDefF64 inputMethod = context.newSingleMethodF64(node.input);
         ValuesMethodDefF64 fallbackMethod = context.newSingleMethodF64(node.fallback);
@@ -58,12 +58,12 @@ public class SelectNodeBytecodeEmitter implements BytecodeEmitter<SelectNode> {
             Label nextLabel = new Label();
 
             m.load(inputValue, Type.DOUBLE_TYPE);
-            m.dconst(node.minima[i]);
+            m.dconst(node.mins[i]);
             m.cmpl(Type.DOUBLE_TYPE);
             m.iflt(nextLabel);
 
             m.load(inputValue, Type.DOUBLE_TYPE);
-            m.dconst(node.maxima[i]);
+            m.dconst(node.maxs[i]);
             m.cmpg(Type.DOUBLE_TYPE);
             m.ifgt(nextLabel);
 
@@ -87,13 +87,13 @@ public class SelectNodeBytecodeEmitter implements BytecodeEmitter<SelectNode> {
 
     @Override
     public void doBytecodeGenMulti(SelectNode node, BytecodeGen.Context context, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
-        Assertions.assertTrue(node.minima.length == node.functions.length);
-        Assertions.assertTrue(node.maxima.length == node.functions.length);
+        Assertions.assertTrue(node.mins.length == node.functions.length);
+        Assertions.assertTrue(node.maxs.length == node.functions.length);
 
-        ValuesMethodDefF64 inputSingle = context.newMultiMethodF64(node.input);
+        ValuesMethodDefF64 inputSingle = context.newSingleMethodF64(node.input);
         ValuesMethodDefF64 inputMulti = context.newMultiMethodF64(node.input);
-        ValuesMethodDefF64 fallbackSingle = context.newMultiMethodF64(node.fallback);
-        ValuesMethodDefF64[] delegates = Arrays.stream(node.functions).map(context::newMultiMethodF64).toArray(ValuesMethodDefF64[]::new);
+        ValuesMethodDefF64 fallbackSingle = context.newSingleMethodF64(node.fallback);
+        ValuesMethodDefF64[] delegates = Arrays.stream(node.functions).map(context::newSingleMethodF64).toArray(ValuesMethodDefF64[]::new);
 
         context.callDelegateMulti(m, inputMulti);
 
@@ -109,14 +109,14 @@ public class SelectNodeBytecodeEmitter implements BytecodeEmitter<SelectNode> {
                 m.load(1, InstructionAdapter.OBJECT_TYPE);
                 m.load(idx, Type.INT_TYPE);
                 m.aload(Type.DOUBLE_TYPE);
-                m.dconst(node.minima[i]);
+                m.dconst(node.mins[i]);
                 m.cmpl(Type.DOUBLE_TYPE);
                 m.iflt(nextLabel);
 
                 m.load(1, InstructionAdapter.OBJECT_TYPE);
                 m.load(idx, Type.INT_TYPE);
                 m.aload(Type.DOUBLE_TYPE);
-                m.dconst(node.maxima[i]);
+                m.dconst(node.maxs[i]);
                 m.cmpg(Type.DOUBLE_TYPE);
                 m.ifgt(nextLabel);
 

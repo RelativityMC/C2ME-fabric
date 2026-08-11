@@ -30,14 +30,14 @@ import com.ishland.c2me.opts.natives_math.common.BindingsTemplate;
 
 import java.util.Objects;
 
-public class FastNoiseNode implements AstNode {
+public class GenericFastNoiseNode implements AstNode {
     public final AstNode inputX;
     public final AstNode inputY;
     public final AstNode inputZ;
     public final BindingsTemplate.FNLState state;
     public final Object config;
 
-    public FastNoiseNode(AstNode inputX, AstNode inputY, AstNode inputZ, BindingsTemplate.FNLState state, Object config) {
+    public GenericFastNoiseNode(AstNode inputX, AstNode inputY, AstNode inputZ, BindingsTemplate.FNLState state, Object config) {
         this.inputX = Objects.requireNonNull(inputX);
         this.inputY = Objects.requireNonNull(inputY);
         this.inputZ = Objects.requireNonNull(inputZ);
@@ -58,14 +58,14 @@ public class FastNoiseNode implements AstNode {
         if (inputX == this.inputX && inputY == this.inputY && inputZ == this.inputZ) {
             return transformer.transform(this);
         } else {
-            return transformer.transform(new FastNoiseNode(inputX, inputY, inputZ, this.state, this.config));
+            return transformer.transform(new GenericFastNoiseNode(inputX, inputY, inputZ, this.state, this.config));
         }
     }
 
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
-        FastNoiseNode that = (FastNoiseNode) o;
+        GenericFastNoiseNode that = (GenericFastNoiseNode) o;
         return inputX.equals(that.inputX)
                 && inputY.equals(that.inputY)
                 && inputZ.equals(that.inputZ)
@@ -113,7 +113,7 @@ public class FastNoiseNode implements AstNode {
     @Override
     public boolean relaxedEquals(AstNode o) {
         if (o == null || getClass() != o.getClass()) return false;
-        FastNoiseNode that = (FastNoiseNode) o;
+        GenericFastNoiseNode that = (GenericFastNoiseNode) o;
         return inputX.relaxedEquals(that.inputX)
                 && inputY.relaxedEquals(that.inputY)
                 && inputZ.relaxedEquals(that.inputZ)

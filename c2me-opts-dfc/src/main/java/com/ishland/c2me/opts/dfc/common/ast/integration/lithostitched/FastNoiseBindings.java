@@ -25,12 +25,11 @@
 package com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched;
 
 import com.ishland.c2me.opts.dfc.common.ast.AstEmitter;
-import com.ishland.c2me.opts.dfc.common.ast.AstNode;
 import com.ishland.c2me.opts.dfc.common.ast.FrontendRegistry;
 import com.ishland.c2me.opts.dfc.common.ast.McToAst;
 import com.ishland.c2me.opts.dfc.common.ast.binary.AddNode;
 import com.ishland.c2me.opts.dfc.common.ast.binary.MulNode;
-import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc.FastNoiseNode;
+import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc.GenericFastNoiseNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.CoordinateNode;
 import com.ishland.c2me.opts.natives_math.common.BindingsTemplate;
@@ -108,7 +107,7 @@ public class FastNoiseBindings {
                 Object config = ((RegistryEntry<?>) MH_config.invoke(function)).value();
                 BindingsTemplate.FNLState state = config instanceof IFNLState nativeHolder ? nativeHolder.c2me$getState() : FNLBindings.tryParseState(config);
                 if (state == null) return null; // soft fallback to DelegateNode if FNLBinding unavailable
-                return new FastNoiseNode(
+                return new GenericFastNoiseNode(
                         new AddNode(new MulNode(CoordinateNode.AXIS_X, new ConstantNode((double) MH_xzScale.invoke(function))), McToAst.toAst((DensityFunction) MH_shiftX.invoke(function))),
                         new AddNode(new MulNode(CoordinateNode.AXIS_Y, new ConstantNode((double) MH_yScale.invoke(function))), McToAst.toAst((DensityFunction) MH_shiftY.invoke(function))),
                         new AddNode(new MulNode(CoordinateNode.AXIS_Z, new ConstantNode((double) MH_xzScale.invoke(function))), McToAst.toAst((DensityFunction) MH_shiftZ.invoke(function))),
