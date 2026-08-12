@@ -25,6 +25,8 @@ __attribute__((aligned(64))) static const double FLAT_SIMPLEX_GRAD[] = {
 };
 
 static const double SQRT_3 = 1.7320508075688772;
+// 1 / SQRT_3
+static const double INV_SQRT_3 = 0.5773502691896258;
 // 0.5 * (SQRT_3 - 1.0)
 static const double SKEW_FACTOR_2D = 0.3660254037844386;
 // (3.0 - SQRT_3) / 6.0
@@ -72,6 +74,14 @@ static inline __attribute__((const)) int64_t labs(const int64_t x) {
 
 static inline __attribute__((const)) double floor(double x) {
     return __builtin_floor(x);
+}
+
+static inline __attribute__((const)) float floorf(float x) {
+    return __builtin_floorf(x);
+}
+
+static inline __attribute__((const)) float roundf(float x) {
+    return __builtin_roundf(x);
 }
 
 static inline __attribute__((const)) float sqrtf(float x) {
@@ -1017,4 +1027,3 @@ math_biome_search_tree_calc_args(const biome_search_tree_node_t * restrict const
 }
 
 #pragma clang attribute pop
-

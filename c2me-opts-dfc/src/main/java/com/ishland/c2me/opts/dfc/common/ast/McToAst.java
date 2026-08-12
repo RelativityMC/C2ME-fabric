@@ -33,6 +33,7 @@ import com.ishland.c2me.opts.dfc.common.ast.binary.MinNode;
 import com.ishland.c2me.opts.dfc.common.ast.binary.MinShortNode;
 import com.ishland.c2me.opts.dfc.common.ast.binary.MulNode;
 import com.ishland.c2me.opts.dfc.common.ast.conversion.ToF64Node;
+import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.*;
 import com.ishland.c2me.opts.dfc.common.ast.integration.tectonic.ConfigClampBindings;
 import com.ishland.c2me.opts.dfc.common.ast.integration.tectonic.ConfigNoiseBindings;
 import com.ishland.c2me.opts.dfc.common.ast.misc.BeardifierNode;
@@ -198,6 +199,16 @@ public class McToAst {
         REGISTRY.registerExactMatch(DensityFunctionTypes.Beardifier.class, BeardifierNode::new);
 
         if (Config.enableBuiltinIntegrations) {
+            AxisBindings.register(REGISTRY);
+            CeilBindings.register(REGISTRY);
+            CosBindings.register(REGISTRY);
+            FastNoiseBindings.register(REGISTRY);
+            FloorBindings.register(REGISTRY);
+            MixBindings.register(REGISTRY);
+            SelectBindings.register(REGISTRY);
+            ShiftBindings.register(REGISTRY);
+            SinBindings.register(REGISTRY);
+            SqrtBindings.register(REGISTRY);
             ConfigClampBindings.register(REGISTRY);
             ConfigNoiseBindings.register(REGISTRY);
         }
