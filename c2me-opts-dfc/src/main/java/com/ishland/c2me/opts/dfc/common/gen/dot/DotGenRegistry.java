@@ -27,6 +27,10 @@ package com.ishland.c2me.opts.dfc.common.gen.dot;
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
 import com.ishland.c2me.opts.dfc.common.ast.conversion.ToF32Node;
 import com.ishland.c2me.opts.dfc.common.ast.conversion.ToF64Node;
+import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc.GenericFastNoiseNode;
+import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc.MixNode;
+import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc.SelectNode;
+import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc.RepositionNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.BeardifierNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.CacheLikeNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantF32Node;
@@ -42,12 +46,10 @@ import com.ishland.c2me.opts.dfc.common.ast.misc.RootNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.YClampedGradientNode;
 import com.ishland.c2me.opts.dfc.common.ast.noise.DFTWeirdScaledSamplerNode;
 import com.ishland.c2me.opts.dfc.common.ast.noise.GenericShiftedNoiseNode;
-import com.ishland.c2me.opts.dfc.common.ast.spline.SplineAstNode;
 import com.ishland.c2me.opts.dfc.common.ast.spline.SplineNormalNode;
 import com.ishland.c2me.opts.dfc.common.gen.CodeGenRegistry;
 import com.ishland.c2me.opts.dfc.common.gen.dot.emitters.BinaryNodeDotEmitters;
 import com.ishland.c2me.opts.dfc.common.gen.dot.emitters.UnaryNodeDotEmitters;
-import com.ishland.c2me.opts.dfc.common.gen.dot.emitters.misc.SplineAstNodeDotEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.dot.emitters.misc.SplineNormalNodeDotEmitter;
 
 public class DotGenRegistry {
@@ -224,6 +226,81 @@ public class DotGenRegistry {
                             .tooltip(sb.toString())
                             .build();
                 }
+        );
+        REGISTRY.registerExactMatch(
+                GenericFastNoiseNode.class,
+                (DotEmitter<GenericFastNoiseNode>) (node, context, builder) ->
+                        builder
+                                .hexagonShape()
+                                .label("FastNoise")
+                                .edge(context.generate(node.inputX)).label("inputX").finish()
+                                .edge(context.generate(node.inputY)).label("inputY").finish()
+                                .edge(context.generate(node.inputZ)).label("inputZ").finish()
+                                .build()
+        );
+        REGISTRY.registerExactMatch(
+                MixNode.class,
+                (DotEmitter<MixNode>) (node, context, builder) ->
+                        builder
+                                .diamondShape()
+                                .label("Mix")
+                                .edge(context.generate(node.input)).label("input").color("blue").finish()
+                                .edge(context.generate(node.argument1)).label("left").finish()
+                                .edge(context.generate(node.argument2)).label("right").finish()
+                                .build()
+        );
+        REGISTRY.registerExactMatch(
+                SelectNode.class,
+                (DotEmitter<SelectNode>) (node, context, builder) -> {
+                    builder
+                            .boxShape()
+                            .label("Select");
+
+                    DotGen.Context.Builder tableBuilder = context.createExtraBuilder();
+
+                    StringBuilder table = new StringBuilder();
+                    table.append('<');
+                    table.append("<TABLE>");
+                    table.append("<TR><TD>idx</TD><TD>minima</TD><TD>maxima</TD><TD>functions</TD></TR>");
+
+                    AstNode[] functions = node.functions;
+                    for (int i = 0, functionsLength = functions.length; i < functionsLength; i++) {
+                        table.append("<TR>")
+                                .append("<TD>").append(i).append("</TD>")
+                                .append("<TD>").append(i < node.mins.length ? node.mins[i] : "").append("</TD>")
+                                .append("<TD>").append(i < node.maxs.length ? node.maxs[i] : "").append("</TD>");
+
+                        AstNode function = functions[i];
+                        int childId = context.generate(function);
+                        tableBuilder.edge(childId).label(String.format("children[%d]", i)).finish();
+                        table.append("<TD>").append("children.id=").append(DotGen.Context.base26(childId)).append("</TD>");
+                        table.append("</TR>");
+                    }
+
+                    table.append("</TABLE>");
+                    table.append(">");
+
+                    int tableId = tableBuilder
+                            .boxShape()
+                            .label(table.toString())
+                            .build();
+
+                    builder.edge(tableId).label("SelectTable").finish();
+
+                    return builder.build();
+                }
+        );
+        REGISTRY.registerExactMatch(
+                RepositionNode.class,
+                (DotEmitter<RepositionNode>) (node, context, builder) ->
+                        builder
+                                .hexagonShape()
+                                .label("Shift")
+                                .edge(context.generate(node.input)).label("input").finish()
+                                .edge(context.generate(node.inputX)).label("inputX").finish()
+                                .edge(context.generate(node.inputY)).label("inputY").finish()
+                                .edge(context.generate(node.inputZ)).label("inputZ").finish()
+                                .build()
         );
     }
 

@@ -24,6 +24,8 @@
 
 package com.ishland.c2me.opts.natives_math.common;
 
+import com.ishland.c2me.opts.natives_math.common.ducks.INativePointer;
+import com.ishland.c2me.opts.natives_math.common.integration.lithostitched.FNLBindings;
 import net.minecraft.util.math.noise.DoublePerlinNoiseSampler;
 
 import java.lang.invoke.MethodHandles;
@@ -34,11 +36,18 @@ public class TrackingVH {
     public static final int THRESHOLD = 65536;
 
     public static final VarHandle VH_DoublePerlinNoiseSampler;
+    public static final VarHandle VH_FastNoiseConfig;
 
     static {
         try {
             VH_DoublePerlinNoiseSampler = MethodHandles.lookup()
                     .findVarHandle(DoublePerlinNoiseSampler.class, "c2me$sampledCount", int.class);
+            if (FNLBindings.CLASS_FastNoiseConfig != null && INativePointer.class.isAssignableFrom(FNLBindings.CLASS_FastNoiseConfig)) {
+                VH_FastNoiseConfig = MethodHandles.lookup()
+                        .findVarHandle(FNLBindings.CLASS_FastNoiseConfig, "c2me$sampledCount", int.class);
+            } else  {
+                VH_FastNoiseConfig = null;
+            }
         } catch (NoSuchFieldException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }

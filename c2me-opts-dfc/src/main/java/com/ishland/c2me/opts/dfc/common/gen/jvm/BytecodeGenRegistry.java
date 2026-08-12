@@ -27,6 +27,10 @@ package com.ishland.c2me.opts.dfc.common.gen.jvm;
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
 import com.ishland.c2me.opts.dfc.common.ast.conversion.ToF32Node;
 import com.ishland.c2me.opts.dfc.common.ast.conversion.ToF64Node;
+import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc.GenericFastNoiseNode;
+import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc.MixNode;
+import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc.SelectNode;
+import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc.RepositionNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.BeardifierNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.CacheLikeNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantF32Node;
@@ -48,6 +52,10 @@ import com.ishland.c2me.opts.dfc.common.gen.jvm.emitters.BinaryNodeBytecodeEmitt
 import com.ishland.c2me.opts.dfc.common.gen.jvm.emitters.UnaryNodeBytecodeEmitters;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.emitters.conversion.ToF32NodeBytecodeEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.emitters.conversion.ToF64NodeBytecodeEmitter;
+import com.ishland.c2me.opts.dfc.common.gen.jvm.emitters.integration.lithostitched.misc.GenericFastNoiseNodeBytecodeEmitter;
+import com.ishland.c2me.opts.dfc.common.gen.jvm.emitters.integration.lithostitched.misc.MixNodeBytecodeEmitter;
+import com.ishland.c2me.opts.dfc.common.gen.jvm.emitters.integration.lithostitched.misc.SelectNodeBytecodeEmitter;
+import com.ishland.c2me.opts.dfc.common.gen.jvm.emitters.integration.lithostitched.misc.RepositionNodeBytecodeEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.emitters.misc.CacheLikeNodeBytecodeEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.emitters.misc.ConstantF32NodeBytecodeEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.emitters.misc.ConstantNodeBytecodeEmitter;
@@ -92,6 +100,11 @@ public class BytecodeGenRegistry {
         REGISTRY.registerExactMatch(BeardifierNode.class, DelegateNodeBytecodeEmitter.instance());
         REGISTRY.registerExactMatch(EndIslandsNode.class, DelegateNodeBytecodeEmitter.instance());
         REGISTRY.registerExactMatch(InterpolatedNoiseSamplerNode.class, DelegateNodeBytecodeEmitter.instance());
+
+        REGISTRY.registerExactMatch(GenericFastNoiseNode.class, GenericFastNoiseNodeBytecodeEmitter.INSTANCE);
+        REGISTRY.registerExactMatch(MixNode.class,  MixNodeBytecodeEmitter.INSTANCE);
+        REGISTRY.registerExactMatch(SelectNode.class, SelectNodeBytecodeEmitter.INSTANCE);
+        REGISTRY.registerExactMatch(RepositionNode.class, RepositionNodeBytecodeEmitter.INSTANCE);
     }
 
     public static <T extends AstNode> void doBytecodeGenSingle(T node, BytecodeGen.Context context, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
