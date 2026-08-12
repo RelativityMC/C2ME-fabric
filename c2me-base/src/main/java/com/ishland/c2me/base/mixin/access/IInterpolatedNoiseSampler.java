@@ -32,12 +32,6 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 public interface IInterpolatedNoiseSampler {
 
     @Accessor
-    double getScaledXzScale();
-
-    @Accessor
-    double getScaledYScale();
-
-    @Accessor
     double getXzFactor();
 
     @Accessor

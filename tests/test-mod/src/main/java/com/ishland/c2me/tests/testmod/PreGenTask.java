@@ -315,7 +315,7 @@ public class PreGenTask {
                 try {
                     for(int n : is) {
                         int o = BiomeCoords.fromBlock(n);
-                        RegistryEntry<Biome> registryEntry = source.getBiome(l, o, m, noiseSampler);
+                        RegistryEntry<Biome> registryEntry = source.method_1_9606(noiseSampler).getBiomeForNoiseGen(l, o, m);
                         locateCallback.consume(registryEntry, j, n, k);
                     }
                 } finally {

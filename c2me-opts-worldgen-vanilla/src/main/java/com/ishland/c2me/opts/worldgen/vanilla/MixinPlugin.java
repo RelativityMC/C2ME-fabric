@@ -36,9 +36,6 @@ public class MixinPlugin extends ModuleMixinPlugin {
         if (mixinClassName.startsWith("com.ishland.c2me.opts.worldgen.vanilla.mixin.aquifer."))
             return Config.optimizeAquifer;
 
-        if (mixinClassName.startsWith("com.ishland.c2me.opts.worldgen.vanilla.mixin.the_end_biome_cache."))
-            return Config.useEndBiomeCache;
-
         if (mixinClassName.startsWith("com.ishland.c2me.opts.worldgen.vanilla.mixin.structure_weight_sampler."))
             return Config.optimizeStructureWeightSampler;
 

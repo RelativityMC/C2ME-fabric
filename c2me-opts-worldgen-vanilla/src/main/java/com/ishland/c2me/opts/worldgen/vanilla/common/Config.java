@@ -35,16 +35,6 @@ public class Config {
             .incompatibleMod("cavetweaks", "*")
             .getBoolean(true, false);
 
-    public static final boolean useEndBiomeCache = new ConfigSystem.ConfigAccessor()
-            .key("vanillaWorldGenOptimizations.useEndBiomeCache")
-            .comment("""
-                    Whether to enable End Biome Cache to accelerate The End worldgen\s
-                    This is no longer included in lithium-fabric\s
-                    (may cause incompatibility with other mods)
-                    """)
-            .incompatibleMod("biolith", "*")
-            .getBoolean(true, false);
-
     public static final boolean optimizeStructureWeightSampler = new ConfigSystem.ConfigAccessor()
             .key("vanillaWorldGenOptimizations.optimizeStructureWeightSampler")
             .comment("""

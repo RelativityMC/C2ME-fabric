@@ -6,7 +6,6 @@
   "mixins": [
     "aquifer.MixinAquiferSamplerImpl",
     "structure_weight_sampler.MixinStructureWeightSampler",
-    "the_end_biome_cache.MixinTheEndBiomeSource",
     "tlcache.MixinBlock"
   ]
 }
