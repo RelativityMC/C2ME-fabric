@@ -157,22 +157,24 @@ public class Bindings {
         }
     }
 
-    private static final MethodHandle MH_c2me_natives_fnlGetNoise3D = bind(BindingsTemplate.c2me_natives_fnlGetNoise3D, "c2me_natives_fnlGetNoise3D");
-    private static final MethodHandle MH_c2me_natives_fnlGetNoise3D_ptr = bind(BindingsTemplate.c2me_natives_fnlGetNoise3D_ptr, "c2me_natives_fnlGetNoise3D");
+//    private static final MethodHandle MH_c2me_natives_fnlGetNoise3D = bind(BindingsTemplate.c2me_natives_fnlGetNoise3D, "c2me_natives_fnlGetNoise3D");
+//    private static final MethodHandle MH_c2me_natives_fnlGetNoise3D_ptr = bind(BindingsTemplate.c2me_natives_fnlGetNoise3D_ptr, "c2me_natives_fnlGetNoise3D");
 
     public static float c2me_natives_fnlGetNoise3D(MemorySegment state, double x, double y, double z) {
-        try {
-            return (float) MH_c2me_natives_fnlGetNoise3D.invokeExact(state, x, y, z);
-        } catch (Throwable e) {
-            throw new RuntimeException(e);
-        }
+        throw new AbstractMethodError();
+//        try {
+//            return (float) MH_c2me_natives_fnlGetNoise3D.invokeExact(state, x, y, z);
+//        } catch (Throwable e) {
+//            throw new RuntimeException(e);
+//        }
     }
 
     public static float c2me_natives_fnlGetNoise3D(long state_ptr, double x, double y, double z) {
-        try {
-            return (float) MH_c2me_natives_fnlGetNoise3D_ptr.invokeExact(state_ptr, x, y, z);
-        } catch (Throwable e) {
-            throw new RuntimeException(e);
-        }
+        throw new AbstractMethodError();
+//        try {
+//            return (float) MH_c2me_natives_fnlGetNoise3D_ptr.invokeExact(state_ptr, x, y, z);
+//        } catch (Throwable e) {
+//            throw new RuntimeException(e);
+//        }
     }
 }
