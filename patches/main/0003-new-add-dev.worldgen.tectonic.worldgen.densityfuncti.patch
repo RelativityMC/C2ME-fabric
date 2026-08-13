@@ -6,7 +6,7 @@ Subject: [PATCH] new: add
 
 
 diff --git a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/ast/McToAst.java b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/ast/McToAst.java
-index f5b12e19..410e098f 100644
+index ca78f6b1..ff642ae5 100644
 --- a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/ast/McToAst.java
 +++ b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/ast/McToAst.java
 @@ -26,7 +26,6 @@ package com.ishland.c2me.opts.dfc.common.ast;
@@ -25,7 +25,7 @@ index f5b12e19..410e098f 100644
  import com.ishland.c2me.opts.dfc.common.ast.misc.BeardifierNode;
  import com.ishland.c2me.opts.dfc.common.ast.misc.CacheLikeNode;
  import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantF32Node;
-@@ -207,6 +207,7 @@ public class McToAst {
+@@ -209,6 +209,7 @@ public class McToAst {
              SqrtBindings.register(REGISTRY);
              ConfigClampBindings.register(REGISTRY);
              ConfigNoiseBindings.register(REGISTRY);

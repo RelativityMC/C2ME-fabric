@@ -1555,10 +1555,18 @@ index fecf2967..66b60d43 100644
          checkHardLimit();
      }
 diff --git a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/ast/McToAst.java b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/ast/McToAst.java
-index 926b99b0..f5b12e19 100644
+index 926b99b0..ca78f6b1 100644
 --- a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/ast/McToAst.java
 +++ b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/ast/McToAst.java
-@@ -118,7 +118,7 @@ public class McToAst {
+@@ -57,6 +57,7 @@ import com.ishland.c2me.opts.dfc.common.ast.unary.NegMulNode;
+ import com.ishland.c2me.opts.dfc.common.ast.unary.SquareNode;
+ import com.ishland.c2me.opts.dfc.common.ast.unary.SqueezeNode;
+ import com.ishland.c2me.opts.dfc.common.ducks.IFastCacheLike;
++import com.ishland.c2me.opts.dfc.common.gen.backports.FindTopSurface;
+ import net.minecraft.util.math.Spline;
+ import net.minecraft.util.math.noise.InterpolatedNoiseSampler;
+ import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
+@@ -118,7 +119,7 @@ public class McToAst {
                  case CUBE -> new CubeNode(toAst(f.input()));
                  case HALF_NEGATIVE -> new NegMulNode(toAst(f.input()), 0.5);
                  case QUARTER_NEGATIVE -> new NegMulNode(toAst(f.input()), 0.25);
@@ -1567,11 +1575,12 @@ index 926b99b0..f5b12e19 100644
                  case SQUEEZE -> new SqueezeNode(toAst(f.input()));
              };
          });
-@@ -188,7 +188,6 @@ public class McToAst {
+@@ -188,7 +189,7 @@ public class McToAst {
          REGISTRY.registerExactMatch(DensityFunctionTypes.WeirdScaledSampler.class, f -> new DFTWeirdScaledSamplerNode(toAst(f.input()), f.noise(), f.rarityValueMapper()));
  //        REGISTRY.registerExactMatch(DensityFunctionTypes.Spline.class, f -> new SplineAstNode(f.spline()));
          REGISTRY.registerExactMatch(DensityFunctionTypes.Spline.class, f -> new Multi2SingleNode(new ToF64Node(toAst(f.spline()))));
 -        REGISTRY.registerExactMatch(DensityFunctionTypes.FindTopSurface.class, f -> new FindTopSurfaceNode(toAst(f.density()), toAst(f.upperBound()), new ConstantNode(f.lowerBound()), f.cellHeight()));
++        REGISTRY.registerExactMatch(FindTopSurface.class, f -> new FindTopSurfaceNode(toAst(f.delegate()), toAst(f.upperBound()), new ConstantNode(f.lowerBound()), f.cellHeight()));
  
          // delegate nodes that have specialized OpenCL gen
          REGISTRY.registerExactMatch(DensityFunctionTypes.EndIslands.class, EndIslandsNode::new);
