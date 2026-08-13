@@ -1062,18 +1062,18 @@ index 7130ef36..53b12a8b 100644
      "MixinMinecraftServer",
      "MixinPlayerManager",
 diff --git a/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/compiler/OpenCLCGen.java b/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/compiler/OpenCLCGen.java
-index b1bb770b..ac91c3a1 100644
+index d5b2ea9e..a97b1391 100644
 --- a/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/compiler/OpenCLCGen.java
 +++ b/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/compiler/OpenCLCGen.java
 @@ -26,6 +26,7 @@ import com.ishland.c2me.opts.dfc.common.ast.misc.CacheLikeNode;
- import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantNode;
+ import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantNodeLike;
  import com.ishland.c2me.opts.dfc.common.ast.opto.OptoPasses;
  import com.ishland.c2me.opts.dfc.common.gen.GenDumper;
 +import com.ishland.c2me.opts.dfc.common.gen.backports.FindTopSurface;
- import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefD;
- import com.ishland.c2me.opts.dfc.common.gen.opencl.OpenCLCGenContext;
- import com.ishland.c2me.opts.natives_math.common.BindingsTemplate;
-@@ -108,7 +109,7 @@ public class OpenCLCGen {
+ import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDef;
+ import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefF32;
+ import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefF64;
+@@ -111,7 +112,7 @@ public class OpenCLCGen {
          dfs.put("erosion", optimizeCached(noiseRouter.erosion(), optoCache));
          dfs.put("depth", optimizeCached(noiseRouter.depth(), optoCache));
          dfs.put("ridges", optimizeCached(noiseRouter.ridges(), optoCache));
@@ -1082,7 +1082,7 @@ index b1bb770b..ac91c3a1 100644
          dfs.put("final_density", optimizeCached(noiseRouter.finalDensity(), optoCache));
          dfs.put("vein_toggle", optimizeCached(noiseRouter.veinToggle(), optoCache));
          dfs.put("vein_ridged", optimizeCached(noiseRouter.veinRidged(), optoCache));
-@@ -158,6 +159,18 @@ public class OpenCLCGen {
+@@ -152,6 +153,18 @@ public class OpenCLCGen {
          );
      }
  
@@ -1555,18 +1555,10 @@ index fecf2967..66b60d43 100644
          checkHardLimit();
      }
 diff --git a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/ast/McToAst.java b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/ast/McToAst.java
-index 271e5a23..cf74be10 100644
+index 926b99b0..f5b12e19 100644
 --- a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/ast/McToAst.java
 +++ b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/ast/McToAst.java
-@@ -53,6 +53,7 @@ import com.ishland.c2me.opts.dfc.common.ast.unary.NegMulNode;
- import com.ishland.c2me.opts.dfc.common.ast.unary.SquareNode;
- import com.ishland.c2me.opts.dfc.common.ast.unary.SqueezeNode;
- import com.ishland.c2me.opts.dfc.common.ducks.IFastCacheLike;
-+import com.ishland.c2me.opts.dfc.common.gen.backports.FindTopSurface;
- import net.minecraft.util.math.noise.InterpolatedNoiseSampler;
- import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
- import net.minecraft.world.gen.densityfunction.DensityFunction;
-@@ -113,7 +114,7 @@ public class McToAst {
+@@ -118,7 +118,7 @@ public class McToAst {
                  case CUBE -> new CubeNode(toAst(f.input()));
                  case HALF_NEGATIVE -> new NegMulNode(toAst(f.input()), 0.5);
                  case QUARTER_NEGATIVE -> new NegMulNode(toAst(f.input()), 0.25);
@@ -1575,12 +1567,11 @@ index 271e5a23..cf74be10 100644
                  case SQUEEZE -> new SqueezeNode(toAst(f.input()));
              };
          });
-@@ -182,7 +183,7 @@ public class McToAst {
-         REGISTRY.registerExactMatch(DensityFunctionTypes.YClampedGradient.class, f -> new YClampedGradientNode(f.fromY(), f.toY(), f.fromValue(), f.toValue()));
+@@ -188,7 +188,6 @@ public class McToAst {
          REGISTRY.registerExactMatch(DensityFunctionTypes.WeirdScaledSampler.class, f -> new DFTWeirdScaledSamplerNode(toAst(f.input()), f.noise(), f.rarityValueMapper()));
-         REGISTRY.registerExactMatch(DensityFunctionTypes.Spline.class, f -> new SplineAstNode(f.spline()));
+ //        REGISTRY.registerExactMatch(DensityFunctionTypes.Spline.class, f -> new SplineAstNode(f.spline()));
+         REGISTRY.registerExactMatch(DensityFunctionTypes.Spline.class, f -> new Multi2SingleNode(new ToF64Node(toAst(f.spline()))));
 -        REGISTRY.registerExactMatch(DensityFunctionTypes.FindTopSurface.class, f -> new FindTopSurfaceNode(toAst(f.density()), toAst(f.upperBound()), new ConstantNode(f.lowerBound()), f.cellHeight()));
-+        REGISTRY.registerExactMatch(FindTopSurface.class, f -> new FindTopSurfaceNode(toAst(f.delegate()), toAst(f.upperBound()), new ConstantNode(f.lowerBound()), f.cellHeight()));
  
          // delegate nodes that have specialized OpenCL gen
          REGISTRY.registerExactMatch(DensityFunctionTypes.EndIslands.class, EndIslandsNode::new);
@@ -2964,7 +2955,7 @@ index 8bc3c6f8..9f11ff4d 100644
      public KeyStatusPair<ChunkPos, ChunkState, ChunkLoadingContext>[] getDependenciesToRemove(ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, ?> holder) {
          return EMPTY_DEPENDENCIES;
 diff --git a/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/common/statuses/ServerAccessible.java b/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/common/statuses/ServerAccessible.java
-index 9e7224f4..0e777f41 100644
+index b3cf64d9..a5d9cf1f 100644
 --- a/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/common/statuses/ServerAccessible.java
 +++ b/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/common/statuses/ServerAccessible.java
 @@ -25,6 +25,7 @@
@@ -3003,7 +2994,7 @@ index 9e7224f4..0e777f41 100644
          try (var ignored = ThreadInstrumentation.getCurrent().begin(new ChunkTaskWork(context, this, true))) {
              worldChunk.setLevelTypeProvider(context.holder().getUserData().get()::getLevelType);
 -            worldChunk.setUnsavedListener(((IThreadedAnvilChunkStorage) context.tacs()).getGenerationContext().unsavedListener());
-             ((WorldChunkExtension) worldChunk).c2me$setBlockTicking(false); // not necessary, but just in case
+             ((WorldChunkExtension) worldChunk).c2me$setBlockTicking(false);
              boolean wasFullChunk = protoChunk instanceof WrapperProtoChunk;
  
 @@ -129,7 +128,7 @@ public class ServerAccessible extends NewChunkStatus {

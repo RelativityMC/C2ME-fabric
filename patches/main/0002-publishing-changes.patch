@@ -5,10 +5,10 @@ Subject: [PATCH] publishing changes
 
 
 diff --git a/build.gradle b/build.gradle
-index 0b6427d5..525cb000 100644
+index 5cbbf8fd..36d1a179 100644
 --- a/build.gradle
 +++ b/build.gradle
-@@ -275,7 +275,7 @@ publishMods {
+@@ -276,7 +276,7 @@ publishMods {
      modLoaders.add("fabric")
  
      def envDisplayName = System.getenv("OVERRIDE_DISPLAY_NAME")

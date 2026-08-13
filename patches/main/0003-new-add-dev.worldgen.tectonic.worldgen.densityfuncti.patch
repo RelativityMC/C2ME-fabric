@@ -6,7 +6,7 @@ Subject: [PATCH] new: add
 
 
 diff --git a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/ast/McToAst.java b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/ast/McToAst.java
-index cf74be10..55d351f5 100644
+index f5b12e19..410e098f 100644
 --- a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/ast/McToAst.java
 +++ b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/ast/McToAst.java
 @@ -26,7 +26,6 @@ package com.ishland.c2me.opts.dfc.common.ast;
@@ -17,16 +17,16 @@ index cf74be10..55d351f5 100644
  import com.ishland.c2me.opts.dfc.common.ast.binary.MaxNode;
  import com.ishland.c2me.opts.dfc.common.ast.binary.MaxShortNode;
  import com.ishland.c2me.opts.dfc.common.ast.binary.MinNode;
-@@ -34,6 +33,7 @@ import com.ishland.c2me.opts.dfc.common.ast.binary.MinShortNode;
- import com.ishland.c2me.opts.dfc.common.ast.binary.MulNode;
+@@ -36,6 +35,7 @@ import com.ishland.c2me.opts.dfc.common.ast.conversion.ToF64Node;
+ import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.*;
  import com.ishland.c2me.opts.dfc.common.ast.integration.tectonic.ConfigClampBindings;
  import com.ishland.c2me.opts.dfc.common.ast.integration.tectonic.ConfigNoiseBindings;
 +import com.ishland.c2me.opts.dfc.common.ast.integration.tectonic.InvertBindings;
  import com.ishland.c2me.opts.dfc.common.ast.misc.BeardifierNode;
  import com.ishland.c2me.opts.dfc.common.ast.misc.CacheLikeNode;
- import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantNode;
-@@ -193,6 +193,7 @@ public class McToAst {
-         if (Config.enableBuiltinIntegrations) {
+ import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantF32Node;
+@@ -207,6 +207,7 @@ public class McToAst {
+             SqrtBindings.register(REGISTRY);
              ConfigClampBindings.register(REGISTRY);
              ConfigNoiseBindings.register(REGISTRY);
 +            InvertBindings.register(REGISTRY);
@@ -35,7 +35,7 @@ index cf74be10..55d351f5 100644
  
 diff --git a/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/ast/integration/tectonic/InvertBindings.java b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/ast/integration/tectonic/InvertBindings.java
 new file mode 100644
-index 00000000..ffb1c4a8
+index 00000000..7bbc3ed0
 --- /dev/null
 +++ b/c2me-opts-dfc/src/main/java/com/ishland/c2me/opts/dfc/common/ast/integration/tectonic/InvertBindings.java
 @@ -0,0 +1,87 @@
@@ -101,10 +101,10 @@ index 00000000..ffb1c4a8
 +                        MethodType.methodType(DensityFunction.class)
 +                );
 +
-+                LOGGER.info("Binding to tectonic dev.worldgen.tectonic.worldgen.densityfunction.Invert density function");
++                LOGGER.info("Bound to tectonic dev.worldgen.tectonic.worldgen.densityfunction.Invert");
 +                available = true;
 +            } catch (Throwable t) {
-+                LOGGER.warn("Failed to bind to tectonic dev.worldgen.tectonic.worldgen.densityfunction.Invert density function", t);
++                LOGGER.warn("Failed to bind to tectonic dev.worldgen.tectonic.worldgen.densityfunction.Invert", t);
 +            }
 +        }
 +
