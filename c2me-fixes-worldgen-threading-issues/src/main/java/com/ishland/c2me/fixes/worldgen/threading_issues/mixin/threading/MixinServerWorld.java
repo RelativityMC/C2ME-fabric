@@ -22,16 +22,22 @@
  * THE SOFTWARE.
  */
 
-package com.ishland.c2me.opts.dfc.common.gen.meta;
+package com.ishland.c2me.fixes.worldgen.threading_issues.mixin.threading;
 
-public record ValuesMethodDefF(boolean isConst, String generatedMethod, float constValue) {
+import com.ishland.c2me.base.mixin.access.IWorld;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import net.minecraft.server.world.ServerChunkManager;
+import net.minecraft.server.world.ServerWorld;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
 
-    public ValuesMethodDefF(String generatedMethod) {
-        this(false, generatedMethod, Float.NaN);
-    }
+@Mixin(ServerWorld.class)
+public class MixinServerWorld {
 
-    public ValuesMethodDefF(float constValue) {
-        this(true, null, constValue);
+    @WrapOperation(method = "getNextEntityId", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerChunkManager;isTrackingEntity(I)Z"))
+    private boolean wrapIsTrackingEntity(ServerChunkManager instance, int entityId, Operation<Boolean> original) {
+        return ((IWorld) this).getThread() == Thread.currentThread() && original.call(instance, entityId);
     }
 
 }

@@ -27,7 +27,7 @@ package com.ishland.c2me.opts.dfc.common.gen.jvm.emitters.misc;
 import com.ishland.c2me.opts.dfc.common.ast.misc.RootNode;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.BytecodeEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.BytecodeGen;
-import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefD;
+import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefF64;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.InstructionAdapter;
 
@@ -39,14 +39,14 @@ public class RootNodeBytecodeEmitter implements BytecodeEmitter<RootNode> {
 
     @Override
     public void doBytecodeGenSingle(RootNode node, BytecodeGen.Context context, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
-        ValuesMethodDefD nextMethod = context.newSingleMethod(node.next);
+        ValuesMethodDefF64 nextMethod = context.newSingleMethodF64(node.next);
         context.callDelegateSingle(m, nextMethod);
         m.areturn(Type.DOUBLE_TYPE);
     }
 
     @Override
     public void doBytecodeGenMulti(RootNode node, BytecodeGen.Context context, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
-        ValuesMethodDefD nextMethod = context.newMultiMethod(node.next);
+        ValuesMethodDefF64 nextMethod = context.newMultiMethodF64(node.next);
         context.callDelegateMulti(m, nextMethod);
         m.areturn(Type.VOID_TYPE);
     }

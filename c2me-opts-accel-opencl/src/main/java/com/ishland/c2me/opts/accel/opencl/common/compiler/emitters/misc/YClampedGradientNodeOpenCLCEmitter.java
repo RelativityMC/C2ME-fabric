@@ -18,7 +18,7 @@ package com.ishland.c2me.opts.accel.opencl.common.compiler.emitters.misc;
 
 import com.ishland.c2me.opts.dfc.common.ast.misc.YClampedGradientNode;
 import com.ishland.c2me.opts.dfc.common.gen.opencl.OpenCLCEmitter;
-import com.ishland.c2me.opts.dfc.common.gen.opencl.OpenCLCGenContext;
+import com.ishland.c2me.opts.dfc.common.gen.opencl.OpenCLCGenFunctionContext;
 
 import static com.ishland.c2me.opts.accel.opencl.common.compiler.OpenCLCGen.literal;
 
@@ -29,7 +29,7 @@ public class YClampedGradientNodeOpenCLCEmitter implements OpenCLCEmitter<YClamp
     }
 
     @Override
-    public String doCLGen(YClampedGradientNode node, OpenCLCGenContext context) {
-        return "return math_clampedMap((double) ctx.y, " + literal(node.fromY) + ", " + literal(node.toY) + ", " + literal(node.fromValue) + ", " + literal(node.toValue) + ");\n";
+    public String doCLGen(YClampedGradientNode node, OpenCLCGenFunctionContext context, String storeTo) {
+        return storeTo + " = math_clampedMap((double) ctx.y, " + literal(node.fromY) + ", " + literal(node.toY) + ", " + literal(node.fromValue) + ", " + literal(node.toValue) + ");\n";
     }
 }

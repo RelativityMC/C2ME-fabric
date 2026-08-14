@@ -27,7 +27,7 @@ package com.ishland.c2me.opts.dfc.common.gen.jvm.emitters.misc;
 import com.ishland.c2me.opts.dfc.common.ast.misc.IntervalSelectNode;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.BytecodeEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.BytecodeGen;
-import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefD;
+import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefF64;
 import com.ishland.flowsched.util.Assertions;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.Type;
@@ -43,18 +43,18 @@ public class IntervalSelectNodeBytecodeEmitter implements BytecodeEmitter<Interv
 
     @Override
     public void doBytecodeGenSingle(IntervalSelectNode node, BytecodeGen.Context context, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
-        ValuesMethodDefD inputMethod = context.newSingleMethod(node.input);
+        ValuesMethodDefF64 inputMethod = context.newSingleMethodF64(node.input);
 
         Label endLabel = new Label();
 
         context.callDelegateSingle(m, inputMethod);
-        ValuesMethodDefD[] delegates = Arrays.stream(node.functions).map(context::newSingleMethod).toArray(ValuesMethodDefD[]::new);
+        ValuesMethodDefF64[] delegates = Arrays.stream(node.functions).map(context::newSingleMethodF64).toArray(ValuesMethodDefF64[]::new);
         genBinarySearch(
                 node.thresholds, delegates,
                 context, m, endLabel, 0, node.thresholds.length
         );
 
-        for (ValuesMethodDefD delegate : delegates) {
+        for (ValuesMethodDefF64 delegate : delegates) {
             Assertions.assertTrue(delegate == null);
         }
 
@@ -62,7 +62,7 @@ public class IntervalSelectNodeBytecodeEmitter implements BytecodeEmitter<Interv
         m.areturn(Type.DOUBLE_TYPE);
     }
 
-    private static void genBinarySearch(double[] thresholds, ValuesMethodDefD[] delegates, BytecodeGen.Context context, InstructionAdapter m, Label endLabel, int fromIndex, int toIndex) {
+    private static void genBinarySearch(double[] thresholds, ValuesMethodDefF64[] delegates, BytecodeGen.Context context, InstructionAdapter m, Label endLabel, int fromIndex, int toIndex) {
         Assertions.assertTrue(fromIndex < toIndex);
 
         int mid = (fromIndex + toIndex - 1) >>> 1;

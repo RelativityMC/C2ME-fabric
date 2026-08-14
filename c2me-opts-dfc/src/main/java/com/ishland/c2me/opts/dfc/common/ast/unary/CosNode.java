@@ -22,16 +22,19 @@
  * THE SOFTWARE.
  */
 
-package com.ishland.c2me.opts.dfc.common.gen.meta;
+package com.ishland.c2me.opts.dfc.common.ast.unary;
 
-public record ValuesMethodDefD(boolean isConst, String generatedMethod, double constValue) {
+import com.ishland.c2me.opts.dfc.common.ast.AstNode;
 
-    public ValuesMethodDefD(String generatedMethod) {
-        this(false, generatedMethod, Double.NaN);
+public class CosNode extends AbstractUnaryNode {
+
+    public CosNode(AstNode operand) {
+        super(operand);
     }
 
-    public ValuesMethodDefD(double constValue) {
-        this(true, null, constValue);
+    @Override
+    protected AstNode newInstance(AstNode operand) {
+        return new CosNode(operand);
     }
 
 }

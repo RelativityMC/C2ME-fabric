@@ -27,7 +27,7 @@ package com.ishland.c2me.opts.dfc.common.gen.jvm.emitters.misc;
 import com.ishland.c2me.opts.dfc.common.ast.misc.RangeChoiceNode;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.BytecodeEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.BytecodeGen;
-import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefD;
+import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefF64;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.InstructionAdapter;
@@ -40,9 +40,9 @@ public class RangeChoiceNodeBytecodeEmitter implements BytecodeEmitter<RangeChoi
 
     @Override
     public void doBytecodeGenSingle(RangeChoiceNode node, BytecodeGen.Context context, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
-        ValuesMethodDefD inputMethod = context.newSingleMethod(node.input);
-        ValuesMethodDefD whenInRangeMethod = context.newSingleMethod(node.whenInRange);
-        ValuesMethodDefD whenOutOfRangeMethod = context.newSingleMethod(node.whenOutOfRange);
+        ValuesMethodDefF64 inputMethod = context.newSingleMethodF64(node.input);
+        ValuesMethodDefF64 whenInRangeMethod = context.newSingleMethodF64(node.whenInRange);
+        ValuesMethodDefF64 whenOutOfRangeMethod = context.newSingleMethodF64(node.whenOutOfRange);
 
         int inputValue = localVarConsumer.createLocalVariable("inputValue", Type.DOUBLE_TYPE.getDescriptor());
         context.callDelegateSingle(m, inputMethod);
@@ -80,10 +80,10 @@ public class RangeChoiceNodeBytecodeEmitter implements BytecodeEmitter<RangeChoi
 
     @Override
     public void doBytecodeGenMulti(RangeChoiceNode node, BytecodeGen.Context context, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
-        ValuesMethodDefD inputSingle = context.newSingleMethod(node.input);
-        ValuesMethodDefD whenInRangeSingle = context.newSingleMethod(node.whenInRange);
-        ValuesMethodDefD whenOutOfRangeSingle = context.newSingleMethod(node.whenOutOfRange);
-        ValuesMethodDefD inputMulti = context.newMultiMethod(node.input);
+        ValuesMethodDefF64 inputSingle = context.newSingleMethodF64(node.input);
+        ValuesMethodDefF64 whenInRangeSingle = context.newSingleMethodF64(node.whenInRange);
+        ValuesMethodDefF64 whenOutOfRangeSingle = context.newSingleMethodF64(node.whenOutOfRange);
+        ValuesMethodDefF64 inputMulti = context.newMultiMethodF64(node.input);
 //        String whenInRangeMulti = context.newMultiMethod(this.whenInRange);
 //        String whenOutOfRangeMulti = context.newMultiMethod(this.whenOutOfRange);
 

@@ -26,8 +26,10 @@ package com.ishland.c2me.opts.dfc.common.ast.misc;
 
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
 import com.ishland.c2me.opts.dfc.common.ast.AstTransformer;
+import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDef;
+import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefF64;
 
-public class ConstantNode implements AstNode {
+public class ConstantNode implements ConstantNodeLike {
 
     private final double value;
 
@@ -70,5 +72,10 @@ public class ConstantNode implements AstNode {
     @Override
     public int relaxedHashCode() {
         return this.hashCode();
+    }
+
+    @Override
+    public ValuesMethodDef getDef() {
+        return new ValuesMethodDefF64(this.value);
     }
 }

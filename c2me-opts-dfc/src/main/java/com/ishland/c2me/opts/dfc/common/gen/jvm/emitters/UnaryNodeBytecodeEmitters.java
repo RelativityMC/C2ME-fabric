@@ -26,14 +26,19 @@ package com.ishland.c2me.opts.dfc.common.gen.jvm.emitters;
 
 import com.ishland.c2me.opts.dfc.common.ast.unary.AbsNode;
 import com.ishland.c2me.opts.dfc.common.ast.unary.AbstractUnaryNode;
+import com.ishland.c2me.opts.dfc.common.ast.unary.CeilNode;
+import com.ishland.c2me.opts.dfc.common.ast.unary.CosNode;
 import com.ishland.c2me.opts.dfc.common.ast.unary.CubeNode;
+import com.ishland.c2me.opts.dfc.common.ast.unary.FloorNode;
 import com.ishland.c2me.opts.dfc.common.ast.unary.NegMulNode;
+import com.ishland.c2me.opts.dfc.common.ast.unary.SinNode;
+import com.ishland.c2me.opts.dfc.common.ast.unary.SqrtNode;
 import com.ishland.c2me.opts.dfc.common.ast.unary.SquareNode;
 import com.ishland.c2me.opts.dfc.common.ast.unary.SqueezeNode;
 import com.ishland.c2me.opts.dfc.common.gen.CodeGenRegistry;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.BytecodeEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.BytecodeGen;
-import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefD;
+import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefF64;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.InstructionAdapter;
@@ -42,7 +47,7 @@ public class UnaryNodeBytecodeEmitters {
     public abstract static class AbstractGenericUnaryNodeBytecodeEmitter<T extends AbstractUnaryNode> implements BytecodeEmitter<T> {
         @Override
         public final void doBytecodeGenSingle(T node, BytecodeGen.Context context, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
-            ValuesMethodDefD operandMethod = context.newSingleMethod(node.operand);
+            ValuesMethodDefF64 operandMethod = context.newSingleMethodF64(node.operand);
             context.callDelegateSingle(m, operandMethod);
             this.bytecodeGenInstruction(node, m, localVarConsumer);
             m.areturn(Type.DOUBLE_TYPE);
@@ -50,7 +55,7 @@ public class UnaryNodeBytecodeEmitters {
 
         @Override
         public final void doBytecodeGenMulti(T node, BytecodeGen.Context context, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
-            ValuesMethodDefD operandMethod = context.newMultiMethod(node.operand);
+            ValuesMethodDefF64 operandMethod = context.newMultiMethodF64(node.operand);
             context.callDelegateMulti(m, operandMethod);
             context.doCountedLoop(m, localVarConsumer, idx -> {
                 m.load(1, InstructionAdapter.OBJECT_TYPE);
@@ -83,6 +88,40 @@ public class UnaryNodeBytecodeEmitters {
         }
     }
 
+    public static class CeilNodeEmitter extends AbstractGenericUnaryNodeBytecodeEmitter<CeilNode> {
+        public static final CeilNodeEmitter INSTANCE = new CeilNodeEmitter();
+
+        private CeilNodeEmitter() {
+        }
+
+        @Override
+        protected void bytecodeGenInstruction(CeilNode node, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
+            m.invokestatic(
+                    Type.getInternalName(Math.class),
+                    "ceil",
+                    Type.getMethodDescriptor(Type.DOUBLE_TYPE, Type.DOUBLE_TYPE),
+                    false
+            );
+        }
+    }
+
+    public static class CosNodeEmitter extends AbstractGenericUnaryNodeBytecodeEmitter<CosNode> {
+        public static final CosNodeEmitter INSTANCE = new CosNodeEmitter();
+
+        private CosNodeEmitter() {
+        }
+
+        @Override
+        protected void bytecodeGenInstruction(CosNode node, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
+            m.invokestatic(
+                    Type.getInternalName(Math.class),
+                    "cos",
+                    Type.getMethodDescriptor(Type.DOUBLE_TYPE, Type.DOUBLE_TYPE),
+                    false
+            );
+        }
+    }
+
     public static class CubeNodeEmitter extends AbstractGenericUnaryNodeBytecodeEmitter<CubeNode> {
         public static final CubeNodeEmitter INSTANCE = new CubeNodeEmitter();
 
@@ -95,6 +134,23 @@ public class UnaryNodeBytecodeEmitters {
             m.dup2();
             m.mul(Type.DOUBLE_TYPE);
             m.mul(Type.DOUBLE_TYPE);
+        }
+    }
+
+    public static class FloorNodeEmitter extends AbstractGenericUnaryNodeBytecodeEmitter<FloorNode> {
+        public static final FloorNodeEmitter INSTANCE = new FloorNodeEmitter();
+
+        private FloorNodeEmitter() {
+        }
+
+        @Override
+        protected void bytecodeGenInstruction(FloorNode node, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
+            m.invokestatic(
+                    Type.getInternalName(Math.class),
+                    "floor",
+                    Type.getMethodDescriptor(Type.DOUBLE_TYPE, Type.DOUBLE_TYPE),
+                    false
+            );
         }
     }
 
@@ -123,6 +179,40 @@ public class UnaryNodeBytecodeEmitters {
             m.dconst(node.negMul);
             m.mul(Type.DOUBLE_TYPE);
             m.visitLabel(end);
+        }
+    }
+
+    public static class SinNodeEmitter extends AbstractGenericUnaryNodeBytecodeEmitter<SinNode> {
+        public static final SinNodeEmitter INSTANCE = new SinNodeEmitter();
+
+        private SinNodeEmitter() {
+        }
+
+        @Override
+        protected void bytecodeGenInstruction(SinNode node, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
+            m.invokestatic(
+                    Type.getInternalName(Math.class),
+                    "sin",
+                    Type.getMethodDescriptor(Type.DOUBLE_TYPE, Type.DOUBLE_TYPE),
+                    false
+            );
+        }
+    }
+
+    public static class SqrtNodeEmitter extends AbstractGenericUnaryNodeBytecodeEmitter<SqrtNode> {
+        public static final SqrtNodeEmitter INSTANCE = new SqrtNodeEmitter();
+
+        private SqrtNodeEmitter() {
+        }
+
+        @Override
+        protected void bytecodeGenInstruction(SqrtNode node, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
+            m.invokestatic(
+                    Type.getInternalName(Math.class),
+                    "sqrt",
+                    Type.getMethodDescriptor(Type.DOUBLE_TYPE, Type.DOUBLE_TYPE),
+                    false
+            );
         }
     }
 
@@ -183,8 +273,13 @@ public class UnaryNodeBytecodeEmitters {
 
     public static void register(CodeGenRegistry<BytecodeEmitter<?>> registry) {
         registry.registerExactMatch(AbsNode.class, AbsNodeEmitter.INSTANCE);
+        registry.registerExactMatch(CeilNode.class, CeilNodeEmitter.INSTANCE);
+        registry.registerExactMatch(CosNode.class, CosNodeEmitter.INSTANCE);
         registry.registerExactMatch(CubeNode.class, CubeNodeEmitter.INSTANCE);
+        registry.registerExactMatch(FloorNode.class, FloorNodeEmitter.INSTANCE);
         registry.registerExactMatch(NegMulNode.class, NegMulNodeEmitter.INSTANCE);
+        registry.registerExactMatch(SinNode.class, SinNodeEmitter.INSTANCE);
+        registry.registerExactMatch(SqrtNode.class, SqrtNodeEmitter.INSTANCE);
         registry.registerExactMatch(SquareNode.class, SquareNodeEmitter.INSTANCE);
         registry.registerExactMatch(SqueezeNode.class, SqueezeNodeEmitter.INSTANCE);
     }

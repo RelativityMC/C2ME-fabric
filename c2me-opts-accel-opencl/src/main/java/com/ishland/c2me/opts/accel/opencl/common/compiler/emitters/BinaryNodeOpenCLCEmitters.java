@@ -16,6 +16,7 @@
 
 package com.ishland.c2me.opts.accel.opencl.common.compiler.emitters;
 
+import com.ishland.c2me.opts.accel.opencl.common.Config;
 import com.ishland.c2me.opts.accel.opencl.common.compiler.OpenCLCGen;
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
 import com.ishland.c2me.opts.dfc.common.ast.binary.AbstractBinaryNode;
@@ -26,26 +27,27 @@ import com.ishland.c2me.opts.dfc.common.ast.binary.MaxShortNode;
 import com.ishland.c2me.opts.dfc.common.ast.binary.MinNode;
 import com.ishland.c2me.opts.dfc.common.ast.binary.MinShortNode;
 import com.ishland.c2me.opts.dfc.common.ast.binary.MulNode;
+import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantNode;
 import com.ishland.c2me.opts.dfc.common.gen.CodeGenRegistry;
-import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefD;
+import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefF64;
 import com.ishland.c2me.opts.dfc.common.gen.opencl.OpenCLCEmitter;
-import com.ishland.c2me.opts.dfc.common.gen.opencl.OpenCLCGenContext;
-import org.jetbrains.annotations.UnknownNullability;
+import com.ishland.c2me.opts.dfc.common.gen.opencl.OpenCLCGenFunctionContext;
+import com.ishland.c2me.opts.dfc.common.util.TreeUtils;
 
 public class BinaryNodeOpenCLCEmitters {
 
     public static abstract class AbstractGenericBinaryNodeOpenCLCEmitter<T extends AbstractBinaryNode> implements OpenCLCEmitter<T> {
 
         @Override
-        public final String doCLGen(T node, @UnknownNullability OpenCLCGenContext context) {
+        public String doCLGen(T node, OpenCLCGenFunctionContext context, String storeTo) {
             StringBuilder sb = new StringBuilder();
-            ValuesMethodDefD leftMethod = context.newMethod(node.left);
-            ValuesMethodDefD rightMethod = context.newMethod(node.right);
-            genBody(node, context, sb, leftMethod, rightMethod);
+            ValuesMethodDefF64 leftMethod = context.newVarF64(node.left);
+            ValuesMethodDefF64 rightMethod = context.newVarF64(node.right);
+            genBody(node, context, storeTo, sb, leftMethod, rightMethod);
             return sb.toString();
         }
 
-        public abstract void genBody(T node, OpenCLCGenContext context, StringBuilder sb, ValuesMethodDefD left, ValuesMethodDefD right);
+        public abstract void genBody(T node, OpenCLCGenFunctionContext context, String storeTo, StringBuilder sb, ValuesMethodDefF64 left, ValuesMethodDefF64 right);
 
     }
 
@@ -56,8 +58,8 @@ public class BinaryNodeOpenCLCEmitters {
         }
 
         @Override
-        public void genBody(AddNode node, @UnknownNullability OpenCLCGenContext context, StringBuilder sb, ValuesMethodDefD left, ValuesMethodDefD right) {
-            sb.append("return ").append(context.callDelegate(left)).append(" + ").append(context.callDelegate(right)).append(";\n");
+        public void genBody(AddNode node, OpenCLCGenFunctionContext context, String storeTo, StringBuilder sb, ValuesMethodDefF64 left, ValuesMethodDefF64 right) {
+            sb.append(storeTo).append(" = ").append(context.getDelegateVar(left)).append(" + ").append(context.getDelegateVar(right)).append(";\n");
         }
     }
 
@@ -68,8 +70,8 @@ public class BinaryNodeOpenCLCEmitters {
         }
 
         @Override
-        public void genBody(DivNode node, @UnknownNullability OpenCLCGenContext context, StringBuilder sb, ValuesMethodDefD left, ValuesMethodDefD right) {
-            sb.append("return ").append(context.callDelegate(left)).append(" / ").append(context.callDelegate(right)).append(";\n");
+        public void genBody(DivNode node, OpenCLCGenFunctionContext context, String storeTo, StringBuilder sb, ValuesMethodDefF64 left, ValuesMethodDefF64 right) {
+            sb.append(storeTo).append(" = ").append(context.getDelegateVar(left)).append(" / ").append(context.getDelegateVar(right)).append(";\n");
         }
     }
 
@@ -80,8 +82,8 @@ public class BinaryNodeOpenCLCEmitters {
         }
 
         @Override
-        public void genBody(MaxNode node, @UnknownNullability OpenCLCGenContext context, StringBuilder sb, ValuesMethodDefD left, ValuesMethodDefD right) {
-            sb.append("return fmax(").append(context.callDelegate(left)).append(", ").append(context.callDelegate(right)).append(");\n");
+        public void genBody(MaxNode node, OpenCLCGenFunctionContext context, String storeTo, StringBuilder sb, ValuesMethodDefF64 left, ValuesMethodDefF64 right) {
+            sb.append(storeTo).append(" = fmax(").append(context.getDelegateVar(left)).append(", ").append(context.getDelegateVar(right)).append(");\n");
         }
     }
 
@@ -92,10 +94,37 @@ public class BinaryNodeOpenCLCEmitters {
         }
 
         @Override
-        public void genBody(MaxShortNode node, @UnknownNullability OpenCLCGenContext context, StringBuilder sb, ValuesMethodDefD left, ValuesMethodDefD right) {
-            sb.append("const double _left = ").append(context.callDelegate(left)).append(";\n");
-            sb.append("return _left >= ").append(OpenCLCGen.literal(node.rightMax))
-                    .append(" ? _left : fmax(_left, ").append(context.callDelegate(right)).append(");\n");
+        public String doCLGen(MaxShortNode node, OpenCLCGenFunctionContext context, String storeTo) {
+            StringBuilder sb = new StringBuilder();
+            ValuesMethodDefF64 leftMethod = context.newVarF64(node.left);
+
+            sb.append("const double _left = ").append(context.getDelegateVar(leftMethod)).append(";\n");
+            sb.append("if (_left >= ").append(OpenCLCGen.literal(node.rightMax)).append(") {\n");
+            sb.append("    ").append(storeTo).append(" = _left;\n");
+            sb.append("} else {\n");
+
+            if (!Config.preserveAllControlFlows) {
+                ValuesMethodDefF64 rightMethod;
+                if (TreeUtils.hasNonTrivialChildrenUntilBranch(node.right)) {
+                    OpenCLCGenFunctionContext forked = context.fork();
+                    rightMethod = forked.newVarF64(node.right);
+                    sb.append(forked.getBody().indent(4));
+                } else {
+                    rightMethod = context.newVarF64(node.right);
+                }
+                sb.append("    ").append(storeTo).append(" = fmax(_left, ").append(context.getDelegateVar(rightMethod)).append(");\n");
+            } else {
+                ValuesMethodDefF64 rightMethod = context.getGlobalContext().newMethodF64(node.right, context.getVariant());
+                sb.append("    ").append(storeTo).append(" = fmax(_left, ").append(context.getGlobalContext().callDelegate(rightMethod)).append(");\n");
+            }
+
+            sb.append("}\n");
+            return sb.toString();
+        }
+
+        @Override
+        public void genBody(MaxShortNode node, OpenCLCGenFunctionContext context, String storeTo, StringBuilder sb, ValuesMethodDefF64 left, ValuesMethodDefF64 right) {
+            throw new UnsupportedOperationException();
         }
     }
 
@@ -106,8 +135,8 @@ public class BinaryNodeOpenCLCEmitters {
         }
 
         @Override
-        public void genBody(MinNode node, @UnknownNullability OpenCLCGenContext context, StringBuilder sb, ValuesMethodDefD left, ValuesMethodDefD right) {
-            sb.append("return fmin(").append(context.callDelegate(left)).append(", ").append(context.callDelegate(right)).append(");\n");
+        public void genBody(MinNode node, OpenCLCGenFunctionContext context, String storeTo, StringBuilder sb, ValuesMethodDefF64 left, ValuesMethodDefF64 right) {
+            sb.append(storeTo).append(" = fmin(").append(context.getDelegateVar(left)).append(", ").append(context.getDelegateVar(right)).append(");\n");
         }
     }
 
@@ -118,10 +147,37 @@ public class BinaryNodeOpenCLCEmitters {
         }
 
         @Override
-        public void genBody(MinShortNode node, @UnknownNullability OpenCLCGenContext context, StringBuilder sb, ValuesMethodDefD left, ValuesMethodDefD right) {
-            sb.append("const double _left = ").append(context.callDelegate(left)).append(";\n");
-            sb.append("return _left <= ").append(OpenCLCGen.literal(node.rightMin))
-                    .append(" ? _left : fmin(_left, ").append(context.callDelegate(right)).append(");\n");
+        public String doCLGen(MinShortNode node, OpenCLCGenFunctionContext context, String storeTo) {
+            StringBuilder sb = new StringBuilder();
+            ValuesMethodDefF64 leftMethod = context.newVarF64(node.left);
+
+            sb.append("const double _left = ").append(context.getDelegateVar(leftMethod)).append(";\n");
+            sb.append("if (_left <= ").append(OpenCLCGen.literal(node.rightMin)).append(") {\n");
+            sb.append("    ").append(storeTo).append(" = _left;\n");
+            sb.append("} else {\n");
+
+            if (!Config.preserveAllControlFlows) {
+                ValuesMethodDefF64 rightMethod;
+                if (TreeUtils.hasNonTrivialChildrenUntilBranch(node.right)) {
+                    OpenCLCGenFunctionContext forked = context.fork();
+                    rightMethod = forked.newVarF64(node.right);
+                    sb.append(forked.getBody().indent(4));
+                } else {
+                    rightMethod = context.newVarF64(node.right);
+                }
+                sb.append("    ").append(storeTo).append(" = fmin(_left, ").append(context.getDelegateVar(rightMethod)).append(");\n");
+            } else {
+                ValuesMethodDefF64 rightMethod = context.getGlobalContext().newMethodF64(node.right, context.getVariant());
+                sb.append("    ").append(storeTo).append(" = fmin(_left, ").append(context.getGlobalContext().callDelegate(rightMethod)).append(");\n");
+            }
+
+            sb.append("}\n");
+            return sb.toString();
+        }
+
+        @Override
+        public void genBody(MinShortNode node, OpenCLCGenFunctionContext context, String storeTo, StringBuilder sb, ValuesMethodDefF64 left, ValuesMethodDefF64 right) {
+            throw new UnsupportedOperationException();
         }
     }
 
@@ -132,13 +188,43 @@ public class BinaryNodeOpenCLCEmitters {
         }
 
         @Override
-        public void genBody(MulNode node, OpenCLCGenContext context, StringBuilder sb, ValuesMethodDefD left, ValuesMethodDefD right) {
-            if (left.isConst()) { // (0.0 * x) should already be optimized out
-                sb.append("return ").append(context.callDelegate(left)).append(" * ").append(context.callDelegate(right)).append(";\n");
+        public String doCLGen(MulNode node, OpenCLCGenFunctionContext context, String storeTo) {
+            StringBuilder sb = new StringBuilder();
+            if (node.left instanceof ConstantNode) { // (0.0 * x) should already be optimized out
+                ValuesMethodDefF64 leftMethod = context.newVarF64(node.left);
+                ValuesMethodDefF64 rightMethod = context.newVarF64(node.right);
+                sb.append(storeTo).append(" = ").append(context.getDelegateVar(leftMethod)).append(" * ").append(context.getDelegateVar(rightMethod)).append(";\n");
             } else {
-                sb.append("const double _left = ").append(context.callDelegate(left)).append(";\n");
-                sb.append("return _left == 0.0 ? 0.0 : _left * ").append(context.callDelegate(right)).append(";\n");
+                ValuesMethodDefF64 leftMethod = context.newVarF64(node.left);
+                sb.append("const double _left = ").append(context.getDelegateVar(leftMethod)).append(";\n");
+
+                sb.append("if (_left == 0.0) {\n");
+                sb.append("    ").append(storeTo).append(" = 0.0;\n");
+                sb.append("} else {\n");
+
+                if (!Config.preserveAllControlFlows) {
+                    ValuesMethodDefF64 rightMethod;
+                    if (TreeUtils.hasNonTrivialChildrenUntilBranch(node.right)) {
+                        OpenCLCGenFunctionContext forked = context.fork();
+                        rightMethod = forked.newVarF64(node.right);
+                        sb.append(forked.getBody().indent(4));
+                    } else {
+                        rightMethod = context.newVarF64(node.right);
+                    }
+                    sb.append("    ").append(storeTo).append(" = _left * ").append(context.getDelegateVar(rightMethod)).append(";\n");
+                } else {
+                    ValuesMethodDefF64 rightMethod = context.getGlobalContext().newMethodF64(node.right, context.getVariant());
+                    sb.append("    ").append(storeTo).append(" = _left * ").append(context.getGlobalContext().callDelegate(rightMethod)).append(";\n");
+                }
+
+                sb.append("}\n");
             }
+            return sb.toString();
+        }
+
+        @Override
+        public void genBody(MulNode node, OpenCLCGenFunctionContext context, String storeTo, StringBuilder sb, ValuesMethodDefF64 left, ValuesMethodDefF64 right) {
+            throw new UnsupportedOperationException();
         }
     }
 

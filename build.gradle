@@ -36,6 +36,7 @@ configure(allprojects) {
     license {
         include("**/*.java")
         include("**/*.cl")
+        exclude("**/FastNoiseLiteCopy.java")
 
         headerCommentManager.register(dev.yumi.gradle.licenser.api.comment.CStyleHeaderComment.INSTANCE, "cl")
     }

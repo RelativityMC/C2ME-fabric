@@ -32,7 +32,8 @@ import com.ishland.c2me.opts.dfc.common.gen.jvm.BytecodeGen;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.internalapi.IMultiMethod;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.internalapi.ISingleMethod;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.SubCompiledDensityFunction;
-import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefD;
+import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDef;
+import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefF64;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
 import org.objectweb.asm.Handle;
 import org.objectweb.asm.Label;
@@ -48,7 +49,7 @@ public class CacheLikeNodeBytecodeEmitter implements BytecodeEmitter<CacheLikeNo
 
     @Override
     public void doBytecodeGenSingle(CacheLikeNode node, BytecodeGen.Context context, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
-        ValuesMethodDefD delegateMethod = context.newSingleMethod(node.getDelegate());
+        ValuesMethodDefF64 delegateMethod = context.newSingleMethodF64(node.getDelegate());
 
         String cacheLikeField = registerCache(node, context);
 
@@ -98,7 +99,7 @@ public class CacheLikeNodeBytecodeEmitter implements BytecodeEmitter<CacheLikeNo
 
     @Override
     public void doBytecodeGenMulti(CacheLikeNode node, BytecodeGen.Context context, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
-        ValuesMethodDefD delegateMethod = context.newMultiMethod(node.getDelegate());
+        ValuesMethodDefF64 delegateMethod = context.newMultiMethodF64(node.getDelegate());
 
         String cacheLikeField = registerCache(node, context);
 
@@ -168,15 +169,15 @@ public class CacheLikeNodeBytecodeEmitter implements BytecodeEmitter<CacheLikeNo
                                 false
                         ),
                         new Object[]{
-                                Type.getMethodType(BytecodeGen.Context.SINGLE_DESC),
+                                Type.getMethodType(BytecodeGen.Context.SINGLE_DESC_F64),
                                 new Handle(
                                         Opcodes.H_INVOKEVIRTUAL,
                                         context.className,
                                         delegateSingle,
-                                        BytecodeGen.Context.SINGLE_DESC,
+                                        BytecodeGen.Context.SINGLE_DESC_F64,
                                         false
                                 ),
-                                Type.getMethodType(BytecodeGen.Context.SINGLE_DESC)
+                                Type.getMethodType(BytecodeGen.Context.SINGLE_DESC_F64)
                         }
                 );
 
@@ -192,15 +193,15 @@ public class CacheLikeNodeBytecodeEmitter implements BytecodeEmitter<CacheLikeNo
                                 false
                         ),
                         new Object[]{
-                                Type.getMethodType(BytecodeGen.Context.MULTI_DESC),
+                                Type.getMethodType(BytecodeGen.Context.MULTI_DESC_F64),
                                 new Handle(
                                         Opcodes.H_INVOKEVIRTUAL,
                                         context.className,
                                         delegateMulti,
-                                        BytecodeGen.Context.MULTI_DESC,
+                                        BytecodeGen.Context.MULTI_DESC_F64,
                                         false
                                 ),
-                                Type.getMethodType(BytecodeGen.Context.MULTI_DESC)
+                                Type.getMethodType(BytecodeGen.Context.MULTI_DESC_F64)
                         }
                 );
 

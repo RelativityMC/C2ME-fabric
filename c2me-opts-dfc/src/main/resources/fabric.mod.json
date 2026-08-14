@@ -11,8 +11,7 @@
   "depends": {
     "minecraft": "*",
     "fabricloader": "*",
-    "c2me-base": "*",
-    "c2me-opts-natives-math": "*"
+    "c2me-base": "*"
   },
 
   "authors": [

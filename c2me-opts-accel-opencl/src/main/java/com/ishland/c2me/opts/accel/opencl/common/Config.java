@@ -87,12 +87,20 @@ public class Config {
                     """)
             .getBoolean(false, false);
 
+    public static final boolean preserveAllControlFlows = new ConfigSystem.ConfigAccessor()
+            .key("openclAccel.preserveAllControlFlows")
+            .comment("""
+                    Uses old compiler behavior of preserving all control flows in the generated OpenCL code.
+                    This will increase memory pressure and time used when compiling, but will usually produce faster code.
+                    """)
+            .getBoolean(true, false);
+
     public static final boolean enableIntelFastCompilation = new ConfigSystem.ConfigAccessor()
             .key("openclAccel.enableIntelFastCompilation")
             .comment("""
                     Enables fast compilation options for intel GPUs
                     """)
-            .getBoolean(true, false);
+            .getBoolean(false, false);
 
     public static final boolean enableNvidiaFastCompilation = new ConfigSystem.ConfigAccessor()
             .key("openclAccel.enableNvidiaFastCompilation")
@@ -118,10 +126,7 @@ public class Config {
             .comment("""
                     Whether to use the default device prioritization strategy
                     
-                    For stability reasons:
-                    - Disable Intel GPUs if anything else is present on Windows
-                    - Disable Intel Gen9 iGPUs if anything else is present on Linux
-                    - Disable Nvidia GPUs if anything else is present on Linux
+                    Currently does nothing because most outstanding issues have been resolved.
                     """)
             .getBoolean(true, false);
 
@@ -190,7 +195,11 @@ public class Config {
             value = 0;
         }
         if (value == 0) {
-            value = 192;
+            if (Runtime.getRuntime().maxMemory() > 10L * 1024L * 1024L * 1024L) {
+                value = 512;
+            } else {
+                value = 192;
+            }
             System.setProperty("chunky.maxWorkingCount", Integer.toString(value));
         }
         LOGGER.info("chunky.maxWorkingCount: {}", value);

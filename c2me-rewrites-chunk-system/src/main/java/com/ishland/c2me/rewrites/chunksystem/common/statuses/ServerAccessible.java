@@ -95,7 +95,7 @@ public class ServerAccessible extends NewChunkStatus {
         try (var ignored = ThreadInstrumentation.getCurrent().begin(new ChunkTaskWork(context, this, true))) {
             worldChunk.setLevelTypeProvider(context.holder().getUserData().get()::getLevelType);
             worldChunk.setUnsavedListener(((IThreadedAnvilChunkStorage) context.tacs()).getGenerationContext().unsavedListener());
-            ((WorldChunkExtension) worldChunk).c2me$setBlockTicking(false); // not necessary, but just in case
+            ((WorldChunkExtension) worldChunk).c2me$setBlockTicking(false);
             boolean wasFullChunk = protoChunk instanceof WrapperProtoChunk;
 
             context.holder().getItem().set(new ChunkState(worldChunk, newProtoChunk, ChunkStatus.FULL, wasFullChunk));

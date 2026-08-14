@@ -17,9 +17,9 @@
 package com.ishland.c2me.opts.accel.opencl.common.compiler.emitters.misc;
 
 import com.ishland.c2me.opts.dfc.common.ast.noise.GenericShiftedNoiseNode;
-import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefD;
+import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefF64;
 import com.ishland.c2me.opts.dfc.common.gen.opencl.OpenCLCEmitter;
-import com.ishland.c2me.opts.dfc.common.gen.opencl.OpenCLCGenContext;
+import com.ishland.c2me.opts.dfc.common.gen.opencl.OpenCLCGenFunctionContext;
 
 public class GenericShiftedNoiseNodeOpenCLCEmitter implements OpenCLCEmitter<GenericShiftedNoiseNode> {
     public static final GenericShiftedNoiseNodeOpenCLCEmitter INSTANCE = new GenericShiftedNoiseNodeOpenCLCEmitter();
@@ -28,19 +28,19 @@ public class GenericShiftedNoiseNodeOpenCLCEmitter implements OpenCLCEmitter<Gen
     }
 
     @Override
-    public String doCLGen(GenericShiftedNoiseNode node, OpenCLCGenContext context) {
+    public String doCLGen(GenericShiftedNoiseNode node, OpenCLCGenFunctionContext context, String storeTo) {
         if (node.noise.noise() == null) {
-            return "return 0.0;\n";
+            return storeTo + " = 0.0;\n";
         }
 
-        ValuesMethodDefD inputXMethod = context.newMethod(node.inputX);
-        ValuesMethodDefD inputYMethod = context.newMethod(node.inputY);
-        ValuesMethodDefD inputZMethod = context.newMethod(node.inputZ);
-        int offset = context.allocGlobalConstDataObject(node.noise.noise());
+        ValuesMethodDefF64 inputXMethod = context.newVarF64(node.inputX);
+        ValuesMethodDefF64 inputYMethod = context.newVarF64(node.inputY);
+        ValuesMethodDefF64 inputZMethod = context.newVarF64(node.inputZ);
+        int offset = context.getGlobalContext().allocGlobalConstDataObject(node.noise.noise());
         return "global const double_octave_sampler_data_t * restrict data = ptr_shift_global(ctx.const_data, " + offset + ");\n" +
-                "return math_noise_perlin_double_octave_sample_global_noinline(data, " +
-                context.callDelegate(inputXMethod) + "," +
-                context.callDelegate(inputYMethod) + "," +
-                context.callDelegate(inputZMethod) + ");\n";
+                storeTo + " = math_noise_perlin_double_octave_sample_global_noinline(data, " +
+                context.getDelegateVar(inputXMethod) + "," +
+                context.getDelegateVar(inputYMethod) + "," +
+                context.getDelegateVar(inputZMethod) + ");\n";
     }
 }

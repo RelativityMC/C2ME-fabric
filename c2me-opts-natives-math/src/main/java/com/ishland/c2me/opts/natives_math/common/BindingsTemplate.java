@@ -24,6 +24,7 @@
 
 package com.ishland.c2me.opts.natives_math.common;
 
+import com.ishland.c2me.base.common.integration.lithostitched.FNLBindings;
 import com.ishland.c2me.base.mixin.access.IInterpolatedNoiseSampler;
 import com.ishland.c2me.base.mixin.access.IMultiNoiseUtilSearchTree;
 import com.ishland.c2me.base.mixin.access.IMultiNoiseUtilSearchTreeTreeBranchNode;
@@ -671,6 +672,83 @@ public class BindingsTemplate {
     }
 
     public record NativeBiomeSearchTree(MemorySegment segment, RegistryEntry<Biome>[] biomes, int node_c, int tree_depth) {
+    }
+
+    public static final MethodHandle c2me_natives_fnlGetNoise3D = NativeLoader.linker.downcallHandle(
+            FunctionDescriptor.of(
+                    ValueLayout.JAVA_FLOAT,
+                    ValueLayout.ADDRESS,
+                    ValueLayout.JAVA_DOUBLE,
+                    ValueLayout.JAVA_DOUBLE,
+                    ValueLayout.JAVA_DOUBLE
+            ),
+            Linker.Option.critical(false)
+    );
+
+    public static final MethodHandle c2me_natives_fnlGetNoise3D_ptr = NativeLoader.linker.downcallHandle(
+            FunctionDescriptor.of(
+                    ValueLayout.JAVA_FLOAT,
+                    ValueLayout.JAVA_LONG,
+                    ValueLayout.JAVA_DOUBLE,
+                    ValueLayout.JAVA_DOUBLE,
+                    ValueLayout.JAVA_DOUBLE
+            ),
+            Linker.Option.critical(false)
+    );
+
+
+    public static final StructLayout fnl_state = MemoryLayout.structLayout(
+            ValueLayout.JAVA_INT.withName("seed"),
+            ValueLayout.JAVA_FLOAT.withName("frequency"),
+            ValueLayout.JAVA_INT.withName("noise_type"),
+            ValueLayout.JAVA_INT.withName("rotation_type_3d"),
+            ValueLayout.JAVA_INT.withName("fractal_type"),
+            ValueLayout.JAVA_INT.withName("octaves"),
+            ValueLayout.JAVA_FLOAT.withName("lacunarity"),
+            ValueLayout.JAVA_FLOAT.withName("gain"),
+            ValueLayout.JAVA_FLOAT.withName("weighted_strength"),
+            ValueLayout.JAVA_FLOAT.withName("ping_pong_strength"),
+            ValueLayout.JAVA_INT.withName("cellular_distance_func"),
+            ValueLayout.JAVA_INT.withName("cellular_return_type"),
+            ValueLayout.JAVA_FLOAT.withName("cellular_jitter_mod"),
+            ValueLayout.JAVA_INT.withName("domain_warp_type"),
+            ValueLayout.JAVA_FLOAT.withName("domain_warp_amp")
+    ).withName("fnl_state");
+
+    public static final VarHandle fnl_state$seed = fnl_state.varHandle(MemoryLayout.PathElement.groupElement("seed"));
+    public static final VarHandle fnl_state$frequency = fnl_state.varHandle(MemoryLayout.PathElement.groupElement("frequency"));
+    public static final VarHandle fnl_state$noise_type = fnl_state.varHandle(MemoryLayout.PathElement.groupElement("noise_type"));
+    public static final VarHandle fnl_state$rotation_type_3d = fnl_state.varHandle(MemoryLayout.PathElement.groupElement("rotation_type_3d"));
+    public static final VarHandle fnl_state$fractal_type = fnl_state.varHandle(MemoryLayout.PathElement.groupElement("fractal_type"));
+    public static final VarHandle fnl_state$octaves = fnl_state.varHandle(MemoryLayout.PathElement.groupElement("octaves"));
+    public static final VarHandle fnl_state$lacunarity = fnl_state.varHandle(MemoryLayout.PathElement.groupElement("lacunarity"));
+    public static final VarHandle fnl_state$gain = fnl_state.varHandle(MemoryLayout.PathElement.groupElement("gain"));
+    public static final VarHandle fnl_state$weighted_strength = fnl_state.varHandle(MemoryLayout.PathElement.groupElement("weighted_strength"));
+    public static final VarHandle fnl_state$ping_pong_strength = fnl_state.varHandle(MemoryLayout.PathElement.groupElement("ping_pong_strength"));
+    public static final VarHandle fnl_state$cellular_distance_func = fnl_state.varHandle(MemoryLayout.PathElement.groupElement("cellular_distance_func"));
+    public static final VarHandle fnl_state$cellular_return_type = fnl_state.varHandle(MemoryLayout.PathElement.groupElement("cellular_return_type"));
+    public static final VarHandle fnl_state$cellular_jitter_mod = fnl_state.varHandle(MemoryLayout.PathElement.groupElement("cellular_jitter_mod"));
+    public static final VarHandle fnl_state$domain_warp_type = fnl_state.varHandle(MemoryLayout.PathElement.groupElement("domain_warp_type"));
+    public static final VarHandle fnl_state$domain_warp_amp = fnl_state.varHandle(MemoryLayout.PathElement.groupElement("domain_warp_amp"));
+
+    public static MemorySegment fnl_state$create(Arena arena, FNLBindings.FNLState state) {
+        final MemorySegment data = arena.allocate(fnl_state.byteSize());
+        fnl_state$seed.set(data, 0L, state.seed());
+        fnl_state$frequency.set(data, 0L, state.frequency());
+        fnl_state$noise_type.set(data, 0L, state.noise_type());
+        fnl_state$rotation_type_3d.set(data, 0L, state.rotation_type_3d());
+        fnl_state$fractal_type.set(data, 0L, state.fractal_type());
+        fnl_state$octaves.set(data, 0L, state.octaves());
+        fnl_state$lacunarity.set(data, 0L, state.lacunarity());
+        fnl_state$gain.set(data, 0L, state.gain());
+        fnl_state$weighted_strength.set(data, 0L, state.weighted_strength());
+        fnl_state$ping_pong_strength.set(data, 0L, state.ping_pong_strength());
+        fnl_state$cellular_distance_func.set(data, 0L, state.cellular_distance_func());
+        fnl_state$cellular_return_type.set(data, 0L, state.cellular_return_type());
+        fnl_state$cellular_jitter_mod.set(data, 0L, state.cellular_jitter_mod());
+        fnl_state$domain_warp_type.set(data, 0L, state.domain_warp_type());
+        fnl_state$domain_warp_amp.set(data, 0L, state.domain_warp_amp());
+        return data;
     }
 
 }
