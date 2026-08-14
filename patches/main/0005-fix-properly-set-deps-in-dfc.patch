@@ -1,0 +1,20 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: ishland <30385023+ishland@users.noreply.github.com>
+Date: Fri, 14 Aug 2026 19:27:32 +0800
+Subject: [PATCH] fix: properly set deps in dfc
+
+
+diff --git a/c2me-opts-dfc/src/main/resources/fabric.mod.json b/c2me-opts-dfc/src/main/resources/fabric.mod.json
+index 072b446d..a675d2c6 100644
+--- a/c2me-opts-dfc/src/main/resources/fabric.mod.json
++++ b/c2me-opts-dfc/src/main/resources/fabric.mod.json
+@@ -11,8 +11,7 @@
+   "depends": {
+     "minecraft": "*",
+     "fabricloader": "*",
+-    "c2me-base": "*",
+-    "c2me-opts-natives-math": "*"
++    "c2me-base": "*"
+   },
+ 
+   "authors": [
