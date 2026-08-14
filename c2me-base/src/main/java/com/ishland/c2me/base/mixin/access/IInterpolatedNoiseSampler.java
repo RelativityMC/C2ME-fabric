@@ -24,11 +24,11 @@
 
 package com.ishland.c2me.base.mixin.access;
 
-import net.minecraft.util.math.noise.InterpolatedNoiseSampler;
+import net.minecraft.util.math.noise.BlendedNoiseSampler;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
-@Mixin(InterpolatedNoiseSampler.class)
+@Mixin(BlendedNoiseSampler.class)
 public interface IInterpolatedNoiseSampler {
 
     @Accessor
