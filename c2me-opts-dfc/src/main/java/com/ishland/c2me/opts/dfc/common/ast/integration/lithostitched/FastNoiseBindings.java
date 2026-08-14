@@ -24,6 +24,7 @@
 
 package com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched;
 
+import com.ishland.c2me.base.common.integration.lithostitched.FNLBindings;
 import com.ishland.c2me.opts.dfc.common.ast.AstEmitter;
 import com.ishland.c2me.opts.dfc.common.ast.FrontendRegistry;
 import com.ishland.c2me.opts.dfc.common.ast.McToAst;
@@ -32,85 +33,22 @@ import com.ishland.c2me.opts.dfc.common.ast.binary.MulNode;
 import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc.GenericFastNoiseNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.CoordinateNode;
-import com.ishland.c2me.opts.natives_math.common.BindingsTemplate;
-import com.ishland.c2me.opts.natives_math.common.ducks.IFNLState;
-import com.ishland.c2me.opts.natives_math.common.integration.lithostitched.FNLBindings;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.MethodType;
 
 public class FastNoiseBindings {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(FastNoiseBindings.class);
-
-    private static final Class<?> CLASS_FastNoiseDensityFunction;
-    public static final Class<?> CLASS_FastNoiseConfig;
-    private static final MethodHandle MH_config;
-    private static final MethodHandle MH_xzScale;
-    private static final MethodHandle MH_yScale;
-    private static final MethodHandle MH_shiftX;
-    private static final MethodHandle MH_shiftY;
-    private static final MethodHandle MH_shiftZ;
-
-    public static final boolean AVAILABLE;
-
-    static {
-        Class<?> class_FastNoiseDensityFunction = null;
-        Class<?> class_FastNoiseConfig = null;
-        MethodHandle mh_config = null;
-        MethodHandle mh_xzScale = null;
-        MethodHandle mh_yScale = null;
-        MethodHandle mh_shiftX = null;
-        MethodHandle mh_shiftY = null;
-        MethodHandle mh_shiftZ = null;
-        boolean available = false;
-
-        if (FabricLoader.getInstance().isModLoaded("lithostitched")) {
-            try {
-                class_FastNoiseDensityFunction = Class.forName("dev.worldgen.lithostitched.impl.worldgen.densityfunction.FastNoiseDensityFunction");
-                class_FastNoiseConfig = Class.forName("dev.worldgen.lithostitched.api.worldgen.densityfunction.fastnoise.FastNoiseConfig");
-                mh_config = MethodHandles.lookup().findVirtual(class_FastNoiseDensityFunction, "config", MethodType.methodType(RegistryEntry.class));
-                mh_xzScale = MethodHandles.lookup().findVirtual(class_FastNoiseDensityFunction, "xzScale", MethodType.methodType(double.class));
-                mh_yScale = MethodHandles.lookup().findVirtual(class_FastNoiseDensityFunction, "yScale", MethodType.methodType(double.class));
-                mh_shiftX = MethodHandles.lookup().findVirtual(class_FastNoiseDensityFunction, "shiftX", MethodType.methodType(DensityFunction.class));
-                mh_shiftY = MethodHandles.lookup().findVirtual(class_FastNoiseDensityFunction, "shiftY", MethodType.methodType(DensityFunction.class));
-                mh_shiftZ = MethodHandles.lookup().findVirtual(class_FastNoiseDensityFunction, "shiftZ", MethodType.methodType(DensityFunction.class));
-                available = true;
-                LOGGER.info("Bound to lithostitched dev.worldgen.lithostitched.impl.worldgen.densityfunction.FastNoiseDensityFunction");
-            } catch (Throwable t) {
-                LOGGER.warn("Failed to bind to lithostitched dev.worldgen.lithostitched.impl.worldgen.densityfunction.FastNoiseDensityFunction", t);
-            }
-        }
-
-        CLASS_FastNoiseDensityFunction = class_FastNoiseDensityFunction;
-        CLASS_FastNoiseConfig = class_FastNoiseConfig;
-        MH_config = mh_config;
-        MH_xzScale = mh_xzScale;
-        MH_yScale = mh_yScale;
-        MH_shiftX = mh_shiftX;
-        MH_shiftY = mh_shiftY;
-        MH_shiftZ = mh_shiftZ;
-        AVAILABLE = available;
-    }
-
     public static void register(FrontendRegistry<AstEmitter<? extends DensityFunction>> registry) {
-        if (!AVAILABLE) return;
+        if (!com.ishland.c2me.base.common.integration.lithostitched.FastNoiseBindings.AVAILABLE) return;
 
-        registry.registerExactMatch((Class<? extends DensityFunction>) CLASS_FastNoiseDensityFunction, function -> {
+        registry.registerExactMatch((Class<? extends DensityFunction>) com.ishland.c2me.base.common.integration.lithostitched.FastNoiseBindings.CLASS_FastNoiseDensityFunction, function -> {
             try {
-                Object config = ((RegistryEntry<?>) MH_config.invoke(function)).value();
-                BindingsTemplate.FNLState state = config instanceof IFNLState nativeHolder ? nativeHolder.c2me$getState() : FNLBindings.tryParseState(config);
+                Object config = ((RegistryEntry<?>) com.ishland.c2me.base.common.integration.lithostitched.FastNoiseBindings.MH_config.invoke(function)).value();
+                FNLBindings.FNLState state = FNLBindings.tryParseState(config);
                 if (state == null) return null; // soft fallback to DelegateNode if FNLBinding unavailable
                 return new GenericFastNoiseNode(
-                        new AddNode(new MulNode(CoordinateNode.AXIS_X, new ConstantNode((double) MH_xzScale.invoke(function))), McToAst.toAst((DensityFunction) MH_shiftX.invoke(function))),
-                        new AddNode(new MulNode(CoordinateNode.AXIS_Y, new ConstantNode((double) MH_yScale.invoke(function))), McToAst.toAst((DensityFunction) MH_shiftY.invoke(function))),
-                        new AddNode(new MulNode(CoordinateNode.AXIS_Z, new ConstantNode((double) MH_xzScale.invoke(function))), McToAst.toAst((DensityFunction) MH_shiftZ.invoke(function))),
+                        new AddNode(new MulNode(CoordinateNode.AXIS_X, new ConstantNode((double) com.ishland.c2me.base.common.integration.lithostitched.FastNoiseBindings.MH_xzScale.invoke(function))), McToAst.toAst((DensityFunction) com.ishland.c2me.base.common.integration.lithostitched.FastNoiseBindings.MH_shiftX.invoke(function))),
+                        new AddNode(new MulNode(CoordinateNode.AXIS_Y, new ConstantNode((double) com.ishland.c2me.base.common.integration.lithostitched.FastNoiseBindings.MH_yScale.invoke(function))), McToAst.toAst((DensityFunction) com.ishland.c2me.base.common.integration.lithostitched.FastNoiseBindings.MH_shiftY.invoke(function))),
+                        new AddNode(new MulNode(CoordinateNode.AXIS_Z, new ConstantNode((double) com.ishland.c2me.base.common.integration.lithostitched.FastNoiseBindings.MH_xzScale.invoke(function))), McToAst.toAst((DensityFunction) com.ishland.c2me.base.common.integration.lithostitched.FastNoiseBindings.MH_shiftZ.invoke(function))),
                         state, config
                 );
             } catch (Throwable e) {
@@ -118,5 +56,4 @@ public class FastNoiseBindings {
             }
         });
     }
-
 }

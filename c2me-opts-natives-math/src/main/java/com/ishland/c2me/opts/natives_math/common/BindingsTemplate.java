@@ -24,6 +24,7 @@
 
 package com.ishland.c2me.opts.natives_math.common;
 
+import com.ishland.c2me.base.common.integration.lithostitched.FNLBindings;
 import com.ishland.c2me.base.mixin.access.IInterpolatedNoiseSampler;
 import com.ishland.c2me.base.mixin.access.IMultiNoiseUtilSearchTree;
 import com.ishland.c2me.base.mixin.access.IMultiNoiseUtilSearchTreeTreeBranchNode;
@@ -731,27 +732,24 @@ public class BindingsTemplate {
     public static final VarHandle fnl_state$domain_warp_type = fnl_state.varHandle(MemoryLayout.PathElement.groupElement("domain_warp_type"));
     public static final VarHandle fnl_state$domain_warp_amp = fnl_state.varHandle(MemoryLayout.PathElement.groupElement("domain_warp_amp"));
 
-    public static MemorySegment fnl_state$create(Arena arena, FNLState state) {
+    public static MemorySegment fnl_state$create(Arena arena, FNLBindings.FNLState state) {
         final MemorySegment data = arena.allocate(fnl_state.byteSize());
-        fnl_state$seed.set(data, 0L, state.seed);
-        fnl_state$frequency.set(data, 0L, state.frequency);
-        fnl_state$noise_type.set(data, 0L, state.noise_type);
-        fnl_state$rotation_type_3d.set(data, 0L, state.rotation_type_3d);
-        fnl_state$fractal_type.set(data, 0L, state.fractal_type);
-        fnl_state$octaves.set(data, 0L, state.octaves);
-        fnl_state$lacunarity.set(data, 0L, state.lacunarity);
-        fnl_state$gain.set(data, 0L, state.gain);
-        fnl_state$weighted_strength.set(data, 0L, state.weighted_strength);
-        fnl_state$ping_pong_strength.set(data, 0L, state.ping_pong_strength);
-        fnl_state$cellular_distance_func.set(data, 0L, state.cellular_distance_func);
-        fnl_state$cellular_return_type.set(data, 0L, state.cellular_return_type);
-        fnl_state$cellular_jitter_mod.set(data, 0L, state.cellular_jitter_mod);
-        fnl_state$domain_warp_type.set(data, 0L, state.domain_warp_type);
-        fnl_state$domain_warp_amp.set(data, 0L, state.domain_warp_amp);
+        fnl_state$seed.set(data, 0L, state.seed());
+        fnl_state$frequency.set(data, 0L, state.frequency());
+        fnl_state$noise_type.set(data, 0L, state.noise_type());
+        fnl_state$rotation_type_3d.set(data, 0L, state.rotation_type_3d());
+        fnl_state$fractal_type.set(data, 0L, state.fractal_type());
+        fnl_state$octaves.set(data, 0L, state.octaves());
+        fnl_state$lacunarity.set(data, 0L, state.lacunarity());
+        fnl_state$gain.set(data, 0L, state.gain());
+        fnl_state$weighted_strength.set(data, 0L, state.weighted_strength());
+        fnl_state$ping_pong_strength.set(data, 0L, state.ping_pong_strength());
+        fnl_state$cellular_distance_func.set(data, 0L, state.cellular_distance_func());
+        fnl_state$cellular_return_type.set(data, 0L, state.cellular_return_type());
+        fnl_state$cellular_jitter_mod.set(data, 0L, state.cellular_jitter_mod());
+        fnl_state$domain_warp_type.set(data, 0L, state.domain_warp_type());
+        fnl_state$domain_warp_amp.set(data, 0L, state.domain_warp_amp());
         return data;
     }
 
-    public record FNLState(int seed, float frequency, int noise_type, int rotation_type_3d, int fractal_type, int octaves, float lacunarity, float gain, float weighted_strength,
-                           float ping_pong_strength, int cellular_distance_func, int cellular_return_type, float cellular_jitter_mod, int domain_warp_type, float domain_warp_amp) {
-    }
 }

@@ -50,7 +50,6 @@ import com.ishland.c2me.opts.dfc.common.ast.misc.Multi2SingleNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.RangeChoiceNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.YClampedGradientNode;
 import com.ishland.c2me.opts.dfc.common.ast.noise.GenericShiftedNoiseNode;
-import com.ishland.c2me.opts.dfc.common.ast.spline.SplineAstNode;
 import com.ishland.c2me.opts.dfc.common.ast.spline.SplineNormalNode;
 import com.ishland.c2me.opts.dfc.common.ast.unary.AbsNode;
 import com.ishland.c2me.opts.dfc.common.ast.unary.CubeNode;

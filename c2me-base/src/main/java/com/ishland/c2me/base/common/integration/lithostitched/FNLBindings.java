@@ -22,10 +22,8 @@
  * THE SOFTWARE.
  */
 
-package com.ishland.c2me.opts.natives_math.common.integration.lithostitched;
+package com.ishland.c2me.base.common.integration.lithostitched;
 
-import com.ishland.c2me.opts.natives_math.common.BindingsTemplate;
-import com.ishland.flowsched.util.Assertions;
 import net.fabricmc.loader.api.FabricLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -164,12 +162,12 @@ public class FNLBindings {
         }
     }
 
-    public static BindingsTemplate.FNLState tryParseState(Object config) {
+    public static FNLState tryParseState(Object config) {
         if (!AVAILABLE) return null;
 
         try {
             Object fnl = MH_fnl.invoke(config);
-            return new BindingsTemplate.FNLState(
+            return new FNLState(
                     (int) MH_mSeed.invoke(fnl),
                     (float) MH_mFrequency.invoke(fnl),
                     ((Enum<?>) MH_mNoiseType.invoke(fnl)).ordinal(),
@@ -189,5 +187,11 @@ public class FNLBindings {
         } catch (Throwable t) {
             throw new RuntimeException(t);
         }
+    }
+
+    public static record FNLState(int seed, float frequency, int noise_type, int rotation_type_3d, int fractal_type, int octaves,
+                                  float lacunarity, float gain, float weighted_strength,
+                                  float ping_pong_strength, int cellular_distance_func, int cellular_return_type,
+                                  float cellular_jitter_mod, int domain_warp_type, float domain_warp_amp) {
     }
 }
