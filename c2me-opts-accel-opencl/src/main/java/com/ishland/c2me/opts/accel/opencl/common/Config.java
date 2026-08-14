@@ -109,7 +109,7 @@ public class Config {
                     
                     This *will* decrease GPU-bound throughput by roughly 20%
                     """)
-            .getBoolean(false, false);
+            .getBoolean(true, false);
 
     public static final boolean useSmallerBatches = new ConfigSystem.ConfigAccessor()
             .key("openclAccel.useSmallerBatches")
