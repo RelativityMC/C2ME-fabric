@@ -331,10 +331,10 @@ index fef930a8..8a8b71bd 100644
      }
  
 diff --git a/c2me-opts-accel-opencl/build.gradle b/c2me-opts-accel-opencl/build.gradle
-index 4cb9f6d1..368e98af 100644
+index cb88d250..77fbc2bf 100644
 --- a/c2me-opts-accel-opencl/build.gradle
 +++ b/c2me-opts-accel-opencl/build.gradle
-@@ -4,6 +4,11 @@ moduleDependencies(project, [
+@@ -5,6 +5,11 @@ moduleDependencies(project, [
          "c2me-rewrites-chunk-system",
  ])
  
