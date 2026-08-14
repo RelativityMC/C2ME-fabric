@@ -24,9 +24,9 @@
 
 package com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc;
 
+import com.ishland.c2me.base.common.integration.lithostitched.FNLBindings;
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
 import com.ishland.c2me.opts.dfc.common.ast.AstTransformer;
-import com.ishland.c2me.opts.natives_math.common.BindingsTemplate;
 
 import java.util.Objects;
 
@@ -34,10 +34,10 @@ public class GenericFastNoiseNode implements AstNode {
     public final AstNode inputX;
     public final AstNode inputY;
     public final AstNode inputZ;
-    public final BindingsTemplate.FNLState state;
+    public final FNLBindings.FNLState state;
     public final Object config;
 
-    public GenericFastNoiseNode(AstNode inputX, AstNode inputY, AstNode inputZ, BindingsTemplate.FNLState state, Object config) {
+    public GenericFastNoiseNode(AstNode inputX, AstNode inputY, AstNode inputZ, FNLBindings.FNLState state, Object config) {
         this.inputX = Objects.requireNonNull(inputX);
         this.inputY = Objects.requireNonNull(inputY);
         this.inputZ = Objects.requireNonNull(inputZ);

@@ -24,10 +24,10 @@
 
 package com.ishland.c2me.opts.natives_math.common.ducks;
 
-import com.ishland.c2me.opts.natives_math.common.BindingsTemplate;
+import com.ishland.c2me.base.common.integration.lithostitched.FNLBindings;
 
 public interface IFNLState {
 
-    BindingsTemplate.FNLState c2me$getState();
+    FNLBindings.FNLState c2me$getState();
 
 }

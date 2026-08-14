@@ -24,7 +24,7 @@
 
 package com.ishland.c2me.opts.dfc.common.gen.jvm.emitters.integration.lithostitched.misc;
 
-import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.FastNoiseBindings;
+import com.ishland.c2me.base.common.integration.lithostitched.FastNoiseBindings;
 import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc.GenericFastNoiseNode;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.BytecodeEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.BytecodeGen;

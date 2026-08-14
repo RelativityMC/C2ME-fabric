@@ -29,7 +29,7 @@ import com.ishland.c2me.opts.natives_math.common.BindingsTemplate;
 import com.ishland.c2me.opts.natives_math.common.TrackingVH;
 import com.ishland.c2me.opts.natives_math.common.ducks.IFNLState;
 import com.ishland.c2me.opts.natives_math.common.ducks.INativePointer;
-import com.ishland.c2me.opts.natives_math.common.integration.lithostitched.FNLBindings;
+import com.ishland.c2me.base.common.integration.lithostitched.FNLBindings;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -45,7 +45,7 @@ public class MixinFastNoiseConfig implements INativePointer, IFNLState {
     @Unique
     private Arena c2me$arena;
     @Unique
-    private BindingsTemplate.FNLState c2me$state = null;
+    private FNLBindings.FNLState c2me$state = null;
     @Unique
     private MemorySegment c2me$stateSegment = null;
     @Unique
@@ -96,7 +96,7 @@ public class MixinFastNoiseConfig implements INativePointer, IFNLState {
     }
 
     @Override
-    public BindingsTemplate.FNLState c2me$getState() {
+    public FNLBindings.FNLState c2me$getState() {
         return this.c2me$state;
     }
 
