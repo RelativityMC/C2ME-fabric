@@ -754,7 +754,7 @@ public class BytecodeGen {
                     }
                     case ValuesMethodDefF32 f32 -> {
                         m.fconst(f32.constValue());
-                        m.invokestatic(Type.getInternalName(Arrays.class), "fill", Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(double[].class), Type.DOUBLE_TYPE), false);
+                        m.invokestatic(Type.getInternalName(Arrays.class), "fill", Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(float[].class), Type.FLOAT_TYPE), false);
                     }
                     default -> throw new IllegalStateException("Unexpected type: " + target.getClass().getName());
                 }
