@@ -25,13 +25,13 @@
 package com.ishland.c2me.opts.dfc.common.util;
 
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
-import com.ishland.c2me.opts.dfc.common.ast.binary.MaxShortNode;
-import com.ishland.c2me.opts.dfc.common.ast.binary.MinShortNode;
+import com.ishland.c2me.opts.dfc.common.ast.binary.MaxShortF64Node;
+import com.ishland.c2me.opts.dfc.common.ast.binary.MinShortF64Node;
 import com.ishland.c2me.opts.dfc.common.ast.binary.MulNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.EndIslandsNode;
-import com.ishland.c2me.opts.dfc.common.ast.misc.IntervalSelectNode;
-import com.ishland.c2me.opts.dfc.common.ast.misc.RangeChoiceNode;
-import com.ishland.c2me.opts.dfc.common.ast.noise.GenericShiftedNoiseNode;
+import com.ishland.c2me.opts.dfc.common.ast.misc.IntervalSelectF32Node;
+import com.ishland.c2me.opts.dfc.common.ast.misc.RangeChoiceF32Node;
+import com.ishland.c2me.opts.dfc.common.ast.misc.GenericShiftedF64NoiseNode;
 import com.ishland.c2me.opts.dfc.common.ast.spline.SplineNormalNode;
 import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
@@ -50,16 +50,16 @@ public class TreeUtils {
     }
 
     public static boolean isNonTrivial(AstNode node) {
-        return node instanceof GenericShiftedNoiseNode ||
+        return node instanceof GenericShiftedF64NoiseNode ||
                 node instanceof EndIslandsNode;
     }
 
     public static boolean isBranch(AstNode node) {
-        return node instanceof MaxShortNode ||
-                node instanceof MinShortNode ||
+        return node instanceof MaxShortF64Node ||
+                node instanceof MinShortF64Node ||
                 node instanceof MulNode ||
-                node instanceof IntervalSelectNode ||
-                node instanceof RangeChoiceNode ||
+                node instanceof IntervalSelectF32Node ||
+                node instanceof RangeChoiceF32Node ||
                 node instanceof SplineNormalNode;
     }
 

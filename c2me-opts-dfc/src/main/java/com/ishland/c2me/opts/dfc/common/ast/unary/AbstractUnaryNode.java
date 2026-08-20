@@ -32,9 +32,11 @@ import java.util.Objects;
 public abstract class AbstractUnaryNode implements AstNode {
 
     public final AstNode operand;
+    private final ReturnType returnType;
 
     public AbstractUnaryNode(AstNode operand) {
         this.operand = Objects.requireNonNull(operand);
+        this.returnType = this.operand.getReturnType();
     }
 
     @Override
@@ -80,6 +82,16 @@ public abstract class AbstractUnaryNode implements AstNode {
 
     protected abstract AstNode newInstance(AstNode operand);
 
+    /**
+     * For constant folding purposes
+     */
+    public abstract double computeF64(double operand);
+
+    /**
+     * For constant folding purposes
+     */
+    public abstract float computeF32(float operand);
+
     @Override
     public AstNode transform(AstTransformer transformer) {
         AstNode operand = this.operand.transform(transformer);
@@ -90,4 +102,8 @@ public abstract class AbstractUnaryNode implements AstNode {
         }
     }
 
+    @Override
+    public ReturnType getReturnType() {
+        return this.returnType;
+    }
 }

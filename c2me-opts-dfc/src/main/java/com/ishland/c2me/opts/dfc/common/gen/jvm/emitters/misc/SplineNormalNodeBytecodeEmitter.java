@@ -24,13 +24,12 @@
 
 package com.ishland.c2me.opts.dfc.common.gen.jvm.emitters.misc;
 
-import com.ishland.c2me.opts.dfc.common.ast.AstNode;
-import com.ishland.c2me.opts.dfc.common.ast.spline.SplineAstNode;
 import com.ishland.c2me.opts.dfc.common.ast.spline.SplineNormalNode;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.BytecodeEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.BytecodeGen;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.InvocationShim;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.SplineSupport;
+import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefF32;
 import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefF64;
 import com.ishland.flowsched.util.Assertions;
 import org.objectweb.asm.Label;
@@ -53,9 +52,9 @@ public class SplineNormalNodeBytecodeEmitter implements BytecodeEmitter<SplineNo
 
         int lastConst = node.locations.length - 1;
 
-        ValuesMethodDefF64 locationFunction = context.newSingleMethodF64(node.locationFunction);
+        ValuesMethodDefF32 locationFunction = context.newSingleMethodF32(node.locationFunction);
         context.callDelegateSingle(m, locationFunction);
-        m.cast(Type.DOUBLE_TYPE, Type.FLOAT_TYPE);
+//        m.cast(Type.FLOAT_TYPE, Type.FLOAT_TYPE);
         m.store(point, Type.FLOAT_TYPE);
 
         int valuesMethodsLength = node.values.length;

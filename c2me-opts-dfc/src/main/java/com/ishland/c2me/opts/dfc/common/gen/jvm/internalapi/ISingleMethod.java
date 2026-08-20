@@ -30,6 +30,6 @@ import com.ishland.c2me.opts.dfc.common.gen.jvm.util.DfcObjectCache;
 @FunctionalInterface
 public interface ISingleMethod {
 
-    double evalSingle(int x, int y, int z, EvalType type, DfcObjectCache dfcObjectCache);
+    float evalSingle(int x, int y, int z, EvalType type, DfcObjectCache dfcObjectCache);
 
 }

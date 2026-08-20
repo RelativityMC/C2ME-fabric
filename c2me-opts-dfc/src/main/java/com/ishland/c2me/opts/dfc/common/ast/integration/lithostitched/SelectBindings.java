@@ -28,7 +28,7 @@ import com.ishland.c2me.opts.dfc.common.ast.AstEmitter;
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
 import com.ishland.c2me.opts.dfc.common.ast.FrontendRegistry;
 import com.ishland.c2me.opts.dfc.common.ast.McToAst;
-import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc.SelectNode;
+import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc.SelectF64Node;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.util.dynamic.Range;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
@@ -108,7 +108,7 @@ public class SelectBindings {
                     functions[i] = McToAst.toAst((DensityFunction) MH_function.invoke(selection));
                 }
 
-                return new SelectNode(input, fallback, mins, maxs, functions);
+                return new SelectF64Node(input, fallback, mins, maxs, functions);
             } catch (Throwable e) {
                 throw new RuntimeException(e);
             }

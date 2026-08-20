@@ -59,7 +59,7 @@ public class EachApplierVanillaInterface implements DensityFunction.EachApplier,
     }
 
     @Override
-    public void fill(double[] densities, DensityFunction densityFunction) {
+    public void fill(float[] densities, DensityFunction densityFunction) {
         for (int i = 0; i < x.length; i++) {
             densities[i] = densityFunction.sample(this.at(i));
         }

@@ -90,4 +90,9 @@ public class DelegateNode implements AstNode {
 
         return result;
     }
+
+    @Override
+    public final ReturnType getReturnType() {
+        return ReturnType.F32;
+    }
 }

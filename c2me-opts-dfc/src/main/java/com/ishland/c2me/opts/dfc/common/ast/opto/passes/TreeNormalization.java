@@ -27,7 +27,7 @@ package com.ishland.c2me.opts.dfc.common.ast.opto.passes;
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
 import com.ishland.c2me.opts.dfc.common.ast.AstTransformer;
 import com.ishland.c2me.opts.dfc.common.ast.binary.AbstractBinaryNode;
-import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantNode;
+import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantF64Node;
 
 public class TreeNormalization implements AstTransformer {
 
@@ -39,7 +39,7 @@ public class TreeNormalization implements AstTransformer {
     @Override
     public AstNode transform(AstNode astNode) {
         if (astNode instanceof AbstractBinaryNode binaryNode && binaryNode.canSwapOperandsSafely()) {
-            if (binaryNode.right instanceof ConstantNode && !(binaryNode.left instanceof ConstantNode)) {
+            if (binaryNode.right instanceof ConstantF64Node && !(binaryNode.left instanceof ConstantF64Node)) {
                 // fp add, mul, max, min are commutative
                 return binaryNode.swapOperands();
             }

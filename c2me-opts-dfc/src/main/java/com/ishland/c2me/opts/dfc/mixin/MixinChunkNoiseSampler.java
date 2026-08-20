@@ -43,6 +43,7 @@ import net.minecraft.world.gen.chunk.Blender;
 import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
 import net.minecraft.world.gen.densityfunction.DensityFunctionTypes;
+import net.minecraft.world.gen.densityfunction.WrappingDensityFunction;
 import net.minecraft.world.gen.noise.NoiseRouter;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Final;
@@ -159,7 +160,7 @@ public abstract class MixinChunkNoiseSampler implements IDfcObjectCacheCapable, 
 
     @Inject(method = "getActualDensityFunctionImpl", at = @At("HEAD"))
     private void protectInterpolationLoop(DensityFunction function, CallbackInfoReturnable<DensityFunction> cir) {
-        if (this.isInInterpolationLoop && function instanceof DensityFunctionTypes.Wrapping) {
+        if (this.isInInterpolationLoop && function instanceof WrappingDensityFunction) {
             throw new IllegalStateException("Cannot create more wrapping during interpolation loop");
         }
     }
@@ -179,68 +180,6 @@ public abstract class MixinChunkNoiseSampler implements IDfcObjectCacheCapable, 
         return c2me$getDelegatingBlendingAwareVisitor(visitor);
     }
 
-    @Definition(id = "cacheAllInCell", method = "Lnet/minecraft/world/gen/densityfunction/DensityFunctionTypes;cacheAllInCell(Lnet/minecraft/world/gen/densityfunction/DensityFunction;)Lnet/minecraft/world/gen/densityfunction/DensityFunction;")
-    @Definition(id = "add", method = "Lnet/minecraft/world/gen/densityfunction/DensityFunctionTypes;add(Lnet/minecraft/world/gen/densityfunction/DensityFunction;Lnet/minecraft/world/gen/densityfunction/DensityFunction;)Lnet/minecraft/world/gen/densityfunction/DensityFunction;")
-    @Definition(id = "finalDensity", method = "Lnet/minecraft/world/gen/noise/NoiseRouter;finalDensity()Lnet/minecraft/world/gen/densityfunction/DensityFunction;")
-    @Definition(id = "BeardifierINSTANCE", field = "Lnet/minecraft/world/gen/densityfunction/DensityFunctionTypes$Beardifier;INSTANCE:Lnet/minecraft/world/gen/densityfunction/DensityFunctionTypes$Beardifier;")
-    @Definition(id = "apply", method = "Lnet/minecraft/world/gen/densityfunction/DensityFunction;apply(Lnet/minecraft/world/gen/densityfunction/DensityFunction$DensityFunctionVisitor;)Lnet/minecraft/world/gen/densityfunction/DensityFunction;")
-    @Expression("cacheAllInCell(add(@(?.finalDensity()), BeardifierINSTANCE)).apply(?)")
-    @WrapOperation(method = "<init>", at = @At("MIXINEXTRAS:EXPRESSION"))
-    private DensityFunction wrapFinalFinalDensity0(NoiseRouter instance, Operation<DensityFunction> original, @Share("c2me-dfc:finalFinalDensity") LocalRef<DensityFunction> finalFinalDensity) {
-        DensityFunction densityFunction = ((NoiseRouterExtension) (Object) instance).c2me$getFinalFinalDensity();
-        if (densityFunction != null) {
-            finalFinalDensity.set(densityFunction);
-            return null;
-        } else {
-            return original.call(instance);
-        }
-    }
-
-    @Definition(id = "cacheAllInCell", method = "Lnet/minecraft/world/gen/densityfunction/DensityFunctionTypes;cacheAllInCell(Lnet/minecraft/world/gen/densityfunction/DensityFunction;)Lnet/minecraft/world/gen/densityfunction/DensityFunction;")
-    @Definition(id = "add", method = "Lnet/minecraft/world/gen/densityfunction/DensityFunctionTypes;add(Lnet/minecraft/world/gen/densityfunction/DensityFunction;Lnet/minecraft/world/gen/densityfunction/DensityFunction;)Lnet/minecraft/world/gen/densityfunction/DensityFunction;")
-    @Definition(id = "finalDensity", method = "Lnet/minecraft/world/gen/noise/NoiseRouter;finalDensity()Lnet/minecraft/world/gen/densityfunction/DensityFunction;")
-    @Definition(id = "BeardifierINSTANCE", field = "Lnet/minecraft/world/gen/densityfunction/DensityFunctionTypes$Beardifier;INSTANCE:Lnet/minecraft/world/gen/densityfunction/DensityFunctionTypes$Beardifier;")
-    @Definition(id = "apply", method = "Lnet/minecraft/world/gen/densityfunction/DensityFunction;apply(Lnet/minecraft/world/gen/densityfunction/DensityFunction$DensityFunctionVisitor;)Lnet/minecraft/world/gen/densityfunction/DensityFunction;")
-    @Expression("cacheAllInCell(@(add(?.finalDensity(), BeardifierINSTANCE))).apply(?)")
-    @WrapOperation(method = "<init>", at = @At("MIXINEXTRAS:EXPRESSION"))
-    private DensityFunction wrapFinalFinalDensity1(DensityFunction a, DensityFunction b, Operation<DensityFunction> original, @Share("c2me-dfc:finalFinalDensity") LocalRef<DensityFunction> finalFinalDensity) {
-        if (finalFinalDensity.get() != null) {
-            return null;
-        } else {
-            return original.call(a, b);
-        }
-    }
-
-    @Definition(id = "cacheAllInCell", method = "Lnet/minecraft/world/gen/densityfunction/DensityFunctionTypes;cacheAllInCell(Lnet/minecraft/world/gen/densityfunction/DensityFunction;)Lnet/minecraft/world/gen/densityfunction/DensityFunction;")
-    @Definition(id = "add", method = "Lnet/minecraft/world/gen/densityfunction/DensityFunctionTypes;add(Lnet/minecraft/world/gen/densityfunction/DensityFunction;Lnet/minecraft/world/gen/densityfunction/DensityFunction;)Lnet/minecraft/world/gen/densityfunction/DensityFunction;")
-    @Definition(id = "finalDensity", method = "Lnet/minecraft/world/gen/noise/NoiseRouter;finalDensity()Lnet/minecraft/world/gen/densityfunction/DensityFunction;")
-    @Definition(id = "BeardifierINSTANCE", field = "Lnet/minecraft/world/gen/densityfunction/DensityFunctionTypes$Beardifier;INSTANCE:Lnet/minecraft/world/gen/densityfunction/DensityFunctionTypes$Beardifier;")
-    @Definition(id = "apply", method = "Lnet/minecraft/world/gen/densityfunction/DensityFunction;apply(Lnet/minecraft/world/gen/densityfunction/DensityFunction$DensityFunctionVisitor;)Lnet/minecraft/world/gen/densityfunction/DensityFunction;")
-    @Expression("@(cacheAllInCell(add(?.finalDensity(), BeardifierINSTANCE))).apply(?)")
-    @WrapOperation(method = "<init>", at = @At("MIXINEXTRAS:EXPRESSION"))
-    private DensityFunction wrapFinalFinalDensity2(DensityFunction inputFunction, Operation<DensityFunction> original, @Share("c2me-dfc:finalFinalDensity") LocalRef<DensityFunction> finalFinalDensity) {
-        if (finalFinalDensity.get() != null) {
-            return null;
-        } else {
-            return original.call(inputFunction);
-        }
-    }
-
-    @Definition(id = "cacheAllInCell", method = "Lnet/minecraft/world/gen/densityfunction/DensityFunctionTypes;cacheAllInCell(Lnet/minecraft/world/gen/densityfunction/DensityFunction;)Lnet/minecraft/world/gen/densityfunction/DensityFunction;")
-    @Definition(id = "add", method = "Lnet/minecraft/world/gen/densityfunction/DensityFunctionTypes;add(Lnet/minecraft/world/gen/densityfunction/DensityFunction;Lnet/minecraft/world/gen/densityfunction/DensityFunction;)Lnet/minecraft/world/gen/densityfunction/DensityFunction;")
-    @Definition(id = "finalDensity", method = "Lnet/minecraft/world/gen/noise/NoiseRouter;finalDensity()Lnet/minecraft/world/gen/densityfunction/DensityFunction;")
-    @Definition(id = "BeardifierINSTANCE", field = "Lnet/minecraft/world/gen/densityfunction/DensityFunctionTypes$Beardifier;INSTANCE:Lnet/minecraft/world/gen/densityfunction/DensityFunctionTypes$Beardifier;")
-    @Definition(id = "apply", method = "Lnet/minecraft/world/gen/densityfunction/DensityFunction;apply(Lnet/minecraft/world/gen/densityfunction/DensityFunction$DensityFunctionVisitor;)Lnet/minecraft/world/gen/densityfunction/DensityFunction;")
-    @Expression("@(cacheAllInCell(add(?.finalDensity(), BeardifierINSTANCE)).apply(?))")
-    @WrapOperation(method = "<init>", at = @At("MIXINEXTRAS:EXPRESSION"))
-    private DensityFunction wrapFinalFinalDensity3(DensityFunction instance, DensityFunction.DensityFunctionVisitor densityFunctionVisitor, Operation<DensityFunction> original, @Share("c2me-dfc:finalFinalDensity") LocalRef<DensityFunction> finalFinalDensity) {
-        if (finalFinalDensity.get() != null) {
-            return finalFinalDensity.get();
-        } else {
-            return original.call(instance, densityFunctionVisitor);
-        }
-    }
-
     private ChunkNoiseSampler.DensityInterpolator[] c2me$initInterpolatorsArray() {
         ChunkNoiseSampler.DensityInterpolator[] interpolatorsArray = this.c2me$interpolatorsArray;
         if (interpolatorsArray == null) {
@@ -254,7 +193,7 @@ public abstract class MixinChunkNoiseSampler implements IDfcObjectCacheCapable, 
      * @reason array iteration
      */
     @Overwrite
-    public void interpolateY(int blockY, double deltaY) {
+    public void interpolateY(int blockY, float deltaY) {
         this.cellBlockY = blockY - this.startBlockY;
 
         for (ChunkNoiseSampler.DensityInterpolator densityInterpolator : this.c2me$initInterpolatorsArray()) {
@@ -267,7 +206,7 @@ public abstract class MixinChunkNoiseSampler implements IDfcObjectCacheCapable, 
      * @reason array iteration
      */
     @Overwrite
-    public void interpolateX(int blockX, double deltaX) {
+    public void interpolateX(int blockX, float deltaX) {
         this.cellBlockX = blockX - this.startBlockX;
 
         for (ChunkNoiseSampler.DensityInterpolator densityInterpolator : this.c2me$initInterpolatorsArray()) {
@@ -280,7 +219,7 @@ public abstract class MixinChunkNoiseSampler implements IDfcObjectCacheCapable, 
      * @reason array iteration
      */
     @Overwrite
-    public void interpolateZ(int blockZ, double deltaZ) {
+    public void interpolateZ(int blockZ, float deltaZ) {
         this.cellBlockZ = blockZ - this.startBlockZ;
         this.sampleUniqueIndex++;
 

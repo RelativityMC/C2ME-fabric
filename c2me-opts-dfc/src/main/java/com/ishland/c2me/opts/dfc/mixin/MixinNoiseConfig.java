@@ -30,13 +30,10 @@ import com.ishland.c2me.opts.dfc.common.ducks.NoiseRouterExtension;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.BytecodeGen;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceMap;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
-import net.minecraft.block.BlockState;
-import net.minecraft.registry.RegistryEntryLookup;
-import net.minecraft.util.math.noise.DoublePerlinNoiseSampler;
 import net.minecraft.world.biome.source.util.MultiNoiseUtil;
-import net.minecraft.world.gen.chunk.ChunkGeneratorSettings;
+import net.minecraft.world.gen.OreVeinSampler;
+import net.minecraft.world.gen.chunk.AquiferSampler;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
-import net.minecraft.world.gen.densityfunction.DensityFunctionTypes;
 import net.minecraft.world.gen.noise.NoiseConfig;
 import net.minecraft.world.gen.noise.NoiseRouter;
 import org.spongepowered.asm.mixin.Final;
@@ -47,7 +44,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Mixin(value = NoiseConfig.class, priority = 900)
 public class MixinNoiseConfig {
@@ -58,20 +57,24 @@ public class MixinNoiseConfig {
     @Mutable
     @Shadow @Final private MultiNoiseUtil.MultiNoiseSampler multiNoiseSampler;
 
+    @Mutable
+    @Shadow
+    @Final
+    private Optional<AquiferSampler.Config> aquifer;
+
+    @Mutable
+    @Shadow
+    @Final
+    private List<OreVeinSampler> oreVeins;
+
     @Inject(method = "<init>", at = @At("RETURN"))
     private void postCreate(CallbackInfo ci) {
         Stopwatch stopwatch = Stopwatch.createStarted();
         Reference2ReferenceMap<DensityFunction, OptoPasses.AstPair> optoCache = new Reference2ReferenceOpenHashMap<>();
         Reference2ReferenceMap<DensityFunction, DensityFunction> tempCache = new Reference2ReferenceOpenHashMap<>();
-        DensityFunction finalFinalDensity = DensityFunctionTypes.add(this.noiseRouter.finalDensity(), DensityFunctionTypes.Beardifier.INSTANCE);
         NoiseRouter original = this.noiseRouter;
-        ((NoiseRouterExtension) (Object) original).c2me$setFinalFinalDensity(finalFinalDensity);
         BytecodeGen.Context genContext = BytecodeGen.initContext();
         this.noiseRouter = new NoiseRouter(
-                genContext.compileDelayed("barrier", this.noiseRouter.barrierNoise()),
-                genContext.compileDelayed("fluid_level_floodedness", this.noiseRouter.fluidLevelFloodednessNoise()),
-                genContext.compileDelayed("fluid_level_spread", this.noiseRouter.fluidLevelSpreadNoise()),
-                genContext.compileDelayed("lava", this.noiseRouter.lavaNoise()),
                 genContext.compileDelayed("temperature", this.noiseRouter.temperature()),
                 genContext.compileDelayed("vegetation", this.noiseRouter.vegetation()),
                 genContext.compileDelayed("continents", this.noiseRouter.continents()),
@@ -79,15 +82,32 @@ public class MixinNoiseConfig {
                 genContext.compileDelayed("depth", this.noiseRouter.depth()),
                 genContext.compileDelayed("ridges", this.noiseRouter.ridges()),
                 genContext.compileDelayed("preliminary_surface_level", this.noiseRouter.preliminarySurfaceLevel()),
-                genContext.compileDelayed("final_density", this.noiseRouter.finalDensity()),
-                genContext.compileDelayed("vein_toggle", this.noiseRouter.veinToggle()),
-                genContext.compileDelayed("vein_ridged", this.noiseRouter.veinRidged()),
-                genContext.compileDelayed("vein_gap", this.noiseRouter.veinGap())
-        );
-        ((NoiseRouterExtension) (Object) this.noiseRouter).c2me$setFinalFinalDensity(
-                genContext.compileDelayed("final_final_density", finalFinalDensity)
+                genContext.compileDelayed("final_density", this.noiseRouter.finalDensity())
         );
         ((NoiseRouterExtension) (Object) this.noiseRouter).c2me$setOriginalNoiseRouter(original);
+        this.aquifer = this.aquifer.map(config -> new AquiferSampler.Config(
+                genContext.compileDelayed("aquifer_barrier", config.barrierNoise()),
+                genContext.compileDelayed("aquifer_fluidLevelFloodedness", config.fluidLevelFloodednessNoise()),
+                genContext.compileDelayed("aquifer_fluidLevelSpread", config.fluidLevelSpreadNoise()),
+                genContext.compileDelayed("aquifer_lava", config.lavaNoise()),
+                genContext.compileDelayed("aquifer_exclusion", config.exclusion()),
+                genContext.compileDelayed("aquifer_surfaceLevel", config.surfaceLevel())
+        ));
+        List<OreVeinSampler> newVeins = new ArrayList<>(this.oreVeins.size());
+        List<OreVeinSampler> originalVeins = this.oreVeins;
+        for (int i = 0, veinsSize = originalVeins.size(); i < veinsSize; i++) {
+            OreVeinSampler oreVein = originalVeins.get(i);
+            newVeins.add(new OreVeinSampler(
+                    oreVein.oreBlock(),
+                    oreVein.rawOreBlock(),
+                    oreVein.fillerBlock(),
+                    oreVein.rawOreChance(),
+                    genContext.compileDelayed("oreVein_" + i + "_density", oreVein.density()),
+                    genContext.compileDelayed("oreVein_" + i + "_richness", oreVein.richness()),
+                    genContext.compileDelayed("oreVein_" + i + "_fillerGap", oreVein.fillerGap())
+            ));
+        }
+        this.oreVeins = List.copyOf(newVeins);
         this.multiNoiseSampler = new MultiNoiseUtil.MultiNoiseSampler(
                 genContext.compileDelayed("multiNoiseSampler_temperature", this.multiNoiseSampler.temperature()),
                 genContext.compileDelayed("multiNoiseSampler_vegetation", this.multiNoiseSampler.humidity()),

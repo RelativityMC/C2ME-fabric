@@ -28,8 +28,8 @@ import com.ishland.c2me.opts.dfc.common.ast.AstEmitter;
 import com.ishland.c2me.opts.dfc.common.ast.FrontendRegistry;
 import com.ishland.c2me.opts.dfc.common.ast.McToAst;
 import com.ishland.c2me.opts.dfc.common.ast.binary.AddNode;
-import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc.RepositionNode;
-import com.ishland.c2me.opts.dfc.common.ast.misc.CoordinateNode;
+import com.ishland.c2me.opts.dfc.common.ast.misc.RepositionNode;
+import com.ishland.c2me.opts.dfc.common.ast.misc.CoordinateF64Node;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
 import org.slf4j.Logger;
@@ -87,9 +87,9 @@ public class ShiftBindings {
             try {
                return new RepositionNode(
                        McToAst.toAst((DensityFunction) MH_input.invoke(function)),
-                       new AddNode(CoordinateNode.AXIS_X, McToAst.toAst((DensityFunction) MH_shiftX.invoke(function))),
-                       new AddNode(CoordinateNode.AXIS_Y, McToAst.toAst((DensityFunction) MH_shiftY.invoke(function))),
-                       new AddNode(CoordinateNode.AXIS_Z, McToAst.toAst((DensityFunction) MH_shiftZ.invoke(function)))
+                       new AddNode(CoordinateF64Node.AXIS_X, McToAst.toAst((DensityFunction) MH_shiftX.invoke(function))),
+                       new AddNode(CoordinateF64Node.AXIS_Y, McToAst.toAst((DensityFunction) MH_shiftY.invoke(function))),
+                       new AddNode(CoordinateF64Node.AXIS_Z, McToAst.toAst((DensityFunction) MH_shiftZ.invoke(function)))
                );
             } catch (Throwable e) {
                 throw new RuntimeException(e);

@@ -25,21 +25,10 @@
 package com.ishland.c2me.opts.dfc.common.gen.jvm;
 
 import com.google.common.base.Suppliers;
-import com.ishland.c2me.base.mixin.access.IChunkNoiseSampler;
-import com.ishland.c2me.opts.dfc.common.ast.EvalType;
-import com.ishland.c2me.opts.dfc.common.ducks.IDfcObjectCacheCapable;
 import com.ishland.c2me.opts.dfc.common.ducks.IBlendingAwareVisitor;
-import com.ishland.c2me.opts.dfc.common.ducks.ICoordinatesFilling;
-import com.ishland.c2me.opts.dfc.common.ducks.IPreloadedCoordinates;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.internalapi.IMultiMethod;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.internalapi.ISingleMethod;
-import com.ishland.c2me.opts.dfc.common.gen.jvm.util.DfcObjectCache;
-import com.ishland.c2me.opts.dfc.common.gen.jvm.vif.EachApplierVanillaInterface;
-import net.minecraft.util.dynamic.CodecHolder;
-import net.minecraft.util.math.Interval;
-import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
-import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

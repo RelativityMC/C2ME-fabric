@@ -12,18 +12,10 @@
     "MixinChunkNoiseSamplerDensityInterpolator",
     "MixinChunkNoiseSamplerFlatCache",
     "MixinDensityFunctionVisitorWrapper",
-    "MixinDFTBinaryOperation",
     "MixinDFTWrapping",
     "MixinNoiseConfig",
     "MixinNoiseRouter",
-    "MixinSplineImplementation",
-    "equality.MixinDensityFunctionNoise",
-    "equality.MixinDFTEndIslands",
-    "equality.MixinDoublePerlinNoiseSampler",
-    "equality.MixinInterpolatedNoiseSampler",
-    "equality.MixinOctavePerlinNoiseSampler",
-    "equality.MixinPerlinNoiseSampler",
-    "equality.MixinSimplexNoiseSampler"
+    "MixinSplineImplementation"
   ],
   "mixinextras": {
     "minVersion": "0.5.0-beta.5"

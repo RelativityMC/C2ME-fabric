@@ -37,4 +37,14 @@ public class SquareNode extends AbstractUnaryNode {
         return new SquareNode(operand);
     }
 
+    @Override
+    public double computeF64(double operand) {
+        return operand * operand;
+    }
+
+    @Override
+    public float computeF32(float operand) {
+        return operand * operand;
+    }
+
 }

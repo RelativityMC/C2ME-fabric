@@ -26,6 +26,7 @@ package com.ishland.c2me.opts.dfc.common.ast.misc;
 
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
 import com.ishland.c2me.opts.dfc.common.ast.AstTransformer;
+import com.ishland.flowsched.util.Assertions;
 
 import java.util.Objects;
 
@@ -35,12 +36,23 @@ public class FindTopSurfaceNode implements AstNode {
     public final AstNode upperBound;
     public final AstNode lowerBound;
     public final int cellHeight;
+    private final ReturnType returnType;
 
     public FindTopSurfaceNode(AstNode density, AstNode upperBound, AstNode lowerBound, int cellHeight) {
         this.density = Objects.requireNonNull(density);
         this.upperBound = Objects.requireNonNull(upperBound);
         this.lowerBound = Objects.requireNonNull(lowerBound);
         this.cellHeight = cellHeight;
+        assertType();
+        this.returnType = this.density.getReturnType();
+    }
+
+    public void assertType() {
+        Assertions.assertTrue(
+                this.density.getReturnType() == this.upperBound.getReturnType() && this.upperBound.getReturnType() == this.lowerBound.getReturnType(),
+                "types aren't the same: density=%s, upperBound=%s, lowerBound=%s",
+                this.density.getReturnType(), this.upperBound.getReturnType(), this.lowerBound.getReturnType()
+        );
     }
 
     @Override
@@ -98,5 +110,10 @@ public class FindTopSurfaceNode implements AstNode {
         result = 31 * result + Integer.hashCode(cellHeight);
 
         return result;
+    }
+
+    @Override
+    public ReturnType getReturnType() {
+        return this.returnType;
     }
 }

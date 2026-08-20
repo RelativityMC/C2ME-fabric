@@ -25,14 +25,14 @@
 package com.ishland.c2me.opts.dfc.common.ast.misc;
 
 import com.ishland.flowsched.util.Assertions;
+import net.minecraft.world.gen.densityfunction.BlendDensityFunction;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
-import net.minecraft.world.gen.densityfunction.DensityFunctionTypes;
 
 public class BeardifierNode extends DelegateNode {
 
     public BeardifierNode(DensityFunction densityFunction) {
         super(densityFunction);
-        Assertions.assertTrue(densityFunction == DensityFunctionTypes.Beardifier.INSTANCE);
+        Assertions.assertTrue(densityFunction == BlendDensityFunction.BEARDIFIER);
     }
 
 }

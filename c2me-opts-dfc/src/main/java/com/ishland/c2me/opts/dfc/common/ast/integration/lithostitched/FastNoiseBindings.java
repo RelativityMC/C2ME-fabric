@@ -30,9 +30,9 @@ import com.ishland.c2me.opts.dfc.common.ast.FrontendRegistry;
 import com.ishland.c2me.opts.dfc.common.ast.McToAst;
 import com.ishland.c2me.opts.dfc.common.ast.binary.AddNode;
 import com.ishland.c2me.opts.dfc.common.ast.binary.MulNode;
-import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc.GenericFastNoiseNode;
-import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantNode;
-import com.ishland.c2me.opts.dfc.common.ast.misc.CoordinateNode;
+import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc.GenericFastNoiseF64Node;
+import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantF64Node;
+import com.ishland.c2me.opts.dfc.common.ast.misc.CoordinateF64Node;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
 
@@ -45,10 +45,10 @@ public class FastNoiseBindings {
                 Object config = ((RegistryEntry<?>) com.ishland.c2me.base.common.integration.lithostitched.FastNoiseBindings.MH_config.invoke(function)).value();
                 FNLBindings.FNLState state = FNLBindings.tryParseState(config);
                 if (state == null) return null; // soft fallback to DelegateNode if FNLBinding unavailable
-                return new GenericFastNoiseNode(
-                        new AddNode(new MulNode(CoordinateNode.AXIS_X, new ConstantNode((double) com.ishland.c2me.base.common.integration.lithostitched.FastNoiseBindings.MH_xzScale.invoke(function))), McToAst.toAst((DensityFunction) com.ishland.c2me.base.common.integration.lithostitched.FastNoiseBindings.MH_shiftX.invoke(function))),
-                        new AddNode(new MulNode(CoordinateNode.AXIS_Y, new ConstantNode((double) com.ishland.c2me.base.common.integration.lithostitched.FastNoiseBindings.MH_yScale.invoke(function))), McToAst.toAst((DensityFunction) com.ishland.c2me.base.common.integration.lithostitched.FastNoiseBindings.MH_shiftY.invoke(function))),
-                        new AddNode(new MulNode(CoordinateNode.AXIS_Z, new ConstantNode((double) com.ishland.c2me.base.common.integration.lithostitched.FastNoiseBindings.MH_xzScale.invoke(function))), McToAst.toAst((DensityFunction) com.ishland.c2me.base.common.integration.lithostitched.FastNoiseBindings.MH_shiftZ.invoke(function))),
+                return new GenericFastNoiseF64Node(
+                        new AddNode(new MulNode(CoordinateF64Node.AXIS_X, new ConstantF64Node((double) com.ishland.c2me.base.common.integration.lithostitched.FastNoiseBindings.MH_xzScale.invoke(function))), McToAst.toAst((DensityFunction) com.ishland.c2me.base.common.integration.lithostitched.FastNoiseBindings.MH_shiftX.invoke(function))),
+                        new AddNode(new MulNode(CoordinateF64Node.AXIS_Y, new ConstantF64Node((double) com.ishland.c2me.base.common.integration.lithostitched.FastNoiseBindings.MH_yScale.invoke(function))), McToAst.toAst((DensityFunction) com.ishland.c2me.base.common.integration.lithostitched.FastNoiseBindings.MH_shiftY.invoke(function))),
+                        new AddNode(new MulNode(CoordinateF64Node.AXIS_Z, new ConstantF64Node((double) com.ishland.c2me.base.common.integration.lithostitched.FastNoiseBindings.MH_xzScale.invoke(function))), McToAst.toAst((DensityFunction) com.ishland.c2me.base.common.integration.lithostitched.FastNoiseBindings.MH_shiftZ.invoke(function))),
                         state, config
                 );
             } catch (Throwable e) {

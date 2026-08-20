@@ -87,4 +87,9 @@ public class ToF32Node implements AstNode {
 
         return result;
     }
+
+    @Override
+    public ReturnType getReturnType() {
+        return ReturnType.F32;
+    }
 }

@@ -25,9 +25,8 @@
 package com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched;
 
 import com.ishland.c2me.opts.dfc.common.ast.AstEmitter;
-import com.ishland.c2me.opts.dfc.common.ast.AstNode;
 import com.ishland.c2me.opts.dfc.common.ast.FrontendRegistry;
-import com.ishland.c2me.opts.dfc.common.ast.misc.CoordinateNode;
+import com.ishland.c2me.opts.dfc.common.ast.misc.CoordinateF64Node;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.util.math.Direction;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
@@ -73,9 +72,9 @@ public class AxisBindings {
         registry.registerExactMatch((Class<? extends DensityFunction>) CLASS_AxisDensityFunction, function -> {
             try {
                return switch ((Direction.Axis) MH_axis.invoke(function)) {
-                   case X -> CoordinateNode.AXIS_X;
-                   case Y -> CoordinateNode.AXIS_Y;
-                   case Z -> CoordinateNode.AXIS_Z;
+                   case X -> CoordinateF64Node.AXIS_X;
+                   case Y -> CoordinateF64Node.AXIS_Y;
+                   case Z -> CoordinateF64Node.AXIS_Z;
                };
             } catch (Throwable e) {
                 throw new RuntimeException(e);

@@ -35,9 +35,7 @@ public interface AstNode {
 
     int relaxedHashCode();
 
-    default ReturnType getReturnType() {
-        return ReturnType.F64;
-    }
+    ReturnType getReturnType();
 
     public enum ReturnType {
         F64,

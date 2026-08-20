@@ -87,4 +87,9 @@ public class ToF64Node implements AstNode {
 
         return result;
     }
+
+    @Override
+    public ReturnType getReturnType() {
+        return ReturnType.F64;
+    }
 }

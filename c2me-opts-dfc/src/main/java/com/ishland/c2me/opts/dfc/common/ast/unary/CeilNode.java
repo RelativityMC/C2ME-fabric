@@ -37,4 +37,14 @@ public class CeilNode extends AbstractUnaryNode {
         return new CeilNode(operand);
     }
 
+    @Override
+    public double computeF64(double operand) {
+        return Math.ceil(operand);
+    }
+
+    @Override
+    public float computeF32(float operand) {
+        return (float) Math.ceil(operand);
+    }
+
 }

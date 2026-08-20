@@ -27,7 +27,6 @@ package com.ishland.c2me.opts.dfc.common.gen.jvm;
 import com.google.common.base.Suppliers;
 import com.ishland.c2me.base.mixin.access.IChunkNoiseSampler;
 import com.ishland.c2me.opts.dfc.common.ast.EvalType;
-import com.ishland.c2me.opts.dfc.common.ducks.IBlendingAwareVisitor;
 import com.ishland.c2me.opts.dfc.common.ducks.ICoordinatesFilling;
 import com.ishland.c2me.opts.dfc.common.ducks.IDfcObjectCacheCapable;
 import com.ishland.c2me.opts.dfc.common.ducks.IPreloadedCoordinates;
@@ -35,10 +34,10 @@ import com.ishland.c2me.opts.dfc.common.gen.jvm.internalapi.IMultiMethod;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.internalapi.ISingleMethod;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.util.DfcObjectCache;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.vif.EachApplierVanillaInterface;
-import net.minecraft.util.dynamic.CodecHolder;
+import com.mojang.serialization.MapCodec;
+import net.minecraft.util.math.Interval;
 import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
-import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,7 +70,7 @@ public abstract class AbstractCompiledDensityFunction implements DensityFunction
     public abstract IMultiMethod getMultiMethod();
 
     @Override
-    public double sample(NoisePos pos) {
+    public float sample(NoisePos pos) {
         ISingleMethod singleMethod1 = this.getSingleMethod();
         if (singleMethod1 == null || (pos instanceof ChunkNoiseSampler sampler && !((IChunkNoiseSampler) sampler).getBlender().isEmpty())) {
             DensityFunction fallback = this.getFallback();
@@ -85,7 +84,7 @@ public abstract class AbstractCompiledDensityFunction implements DensityFunction
     }
 
     @Override
-    public void fill(double[] densities, EachApplier applier) {
+    public void fill(float[] densities, EachApplier applier) {
         IMultiMethod multiMethod1 = this.getMultiMethod();
         if (multiMethod1 == null || (applier instanceof ChunkNoiseSampler sampler && !((IChunkNoiseSampler) sampler).getBlender().isEmpty())) {
             DensityFunction fallback = this.getFallback();
@@ -144,21 +143,17 @@ public abstract class AbstractCompiledDensityFunction implements DensityFunction
     public abstract DensityFunction apply(DensityFunctionVisitor visitor);
 
     @Override
-    public double minValue() {
-//        DensityFunction fallback = this.getFallback();
-//        return fallback != null ? fallback.minValue() : Double.MIN_VALUE;
-        return Double.MIN_VALUE;
+    public @Axes int getVariantAxes() {
+        return DensityFunction.AXIS_ALL;
     }
 
     @Override
-    public double maxValue() {
-//        DensityFunction fallback = this.getFallback();
-//        return fallback != null ? fallback.maxValue() : Double.MAX_VALUE;
-        return Double.MAX_VALUE;
+    public Interval getRange() {
+        return Interval.UNBOUNDED;
     }
 
     @Override
-    public CodecHolder<? extends DensityFunction> getCodecHolder() {
+    public MapCodec<? extends DensityFunction> getCodec() {
         throw new UnsupportedOperationException();
     }
 

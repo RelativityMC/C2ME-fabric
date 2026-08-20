@@ -26,13 +26,14 @@ package com.ishland.c2me.opts.dfc.mixin.equality;
 
 import net.minecraft.util.math.noise.SimplexNoiseSampler;
 import net.minecraft.world.gen.densityfunction.DensityFunctionTypes;
+import net.minecraft.world.gen.densityfunction.EndIslandsDensityFunction;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
 import java.util.Objects;
 
-@Mixin(DensityFunctionTypes.EndIslands.class)
+@Mixin(EndIslandsDensityFunction.class)
 public class MixinDFTEndIslands {
 
     @Shadow @Final private SimplexNoiseSampler sampler;

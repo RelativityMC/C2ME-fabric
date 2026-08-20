@@ -46,7 +46,7 @@ public abstract class MixinChunkNoiseSamplerCellCache implements IFastCacheLike 
 
     @Shadow
     @Final
-    private double[] cache;
+    private float[] cache;
 
     @Mutable
     @Shadow
@@ -54,7 +54,7 @@ public abstract class MixinChunkNoiseSamplerCellCache implements IFastCacheLike 
     private DensityFunction delegate;
 
     @WrapMethod(method = "sample")
-    private double wrapSample(DensityFunction.NoisePos pos, Operation<Double> original) {
+    private float wrapSample(DensityFunction.NoisePos pos, Operation<Float> original) {
         if (pos instanceof ChunkNoiseSampler) {
             return original.call(pos);
         }
@@ -84,7 +84,7 @@ public abstract class MixinChunkNoiseSamplerCellCache implements IFastCacheLike 
     }
 
     @Override
-    public double c2me$getCached(int x, int y, int z, EvalType evalType) {
+    public float c2me$getCached(int x, int y, int z, EvalType evalType) {
         if (evalType == EvalType.INTERPOLATION) {
             boolean isInInterpolationLoop = ((IChunkNoiseSampler) this.field_36602).getIsInInterpolationLoop();
             if (isInInterpolationLoop) {
@@ -109,11 +109,11 @@ public abstract class MixinChunkNoiseSamplerCellCache implements IFastCacheLike 
             }
         }
 
-        return Double.longBitsToDouble(CACHE_MISS_NAN_BITS);
+        return Float.intBitsToFloat(IFastCacheLike.CACHE_MISS_NAN_BITS_F32);
     }
 
     @Override
-    public boolean c2me$getCached(double[] res, int[] x, int[] y, int[] z, EvalType evalType) {
+    public boolean c2me$getCached(float[] res, int[] x, int[] y, int[] z, EvalType evalType) {
         if (evalType == EvalType.INTERPOLATION) {
             boolean isInInterpolationLoop = ((IChunkNoiseSampler) this.field_36602).getIsInInterpolationLoop();
             if (isInInterpolationLoop) {
@@ -145,12 +145,12 @@ public abstract class MixinChunkNoiseSamplerCellCache implements IFastCacheLike 
     }
 
     @Override
-    public void c2me$cache(int x, int y, int z, EvalType evalType, double cached) {
+    public void c2me$cache(int x, int y, int z, EvalType evalType, float cached) {
         // nop
     }
 
     @Override
-    public void c2me$cache(double[] res, int[] x, int[] y, int[] z, EvalType evalType) {
+    public void c2me$cache(float[] res, int[] x, int[] y, int[] z, EvalType evalType) {
         // nop
     }
 

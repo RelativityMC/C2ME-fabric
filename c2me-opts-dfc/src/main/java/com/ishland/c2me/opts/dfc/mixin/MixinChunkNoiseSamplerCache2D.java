@@ -39,34 +39,34 @@ public abstract class MixinChunkNoiseSamplerCache2D implements IFastCacheLike {
 
     @Shadow private long lastSamplingColumnPos;
 
-    @Shadow private double lastSamplingResult;
+    @Shadow private float lastSamplingResult;
 
     @Mutable
     @Shadow @Final private DensityFunction delegate;
 
     @Override
-    public double c2me$getCached(int x, int y, int z, EvalType evalType) {
+    public float c2me$getCached(int x, int y, int z, EvalType evalType) {
         long l = ChunkPos.toLong(x, z);
         if (this.lastSamplingColumnPos == l) {
             return this.lastSamplingResult;
         } else {
-            return Double.longBitsToDouble(CACHE_MISS_NAN_BITS);
+            return Float.intBitsToFloat(IFastCacheLike.CACHE_MISS_NAN_BITS_F32);
         }
     }
 
     @Override
-    public boolean c2me$getCached(double[] res, int[] x, int[] y, int[] z, EvalType evalType) {
+    public boolean c2me$getCached(float[] res, int[] x, int[] y, int[] z, EvalType evalType) {
         return false;
     }
 
     @Override
-    public void c2me$cache(int x, int y, int z, EvalType evalType, double cached) {
+    public void c2me$cache(int x, int y, int z, EvalType evalType, float cached) {
         this.lastSamplingColumnPos = ChunkPos.toLong(x, z);
         this.lastSamplingResult = cached;
     }
 
     @Override
-    public void c2me$cache(double[] res, int[] x, int[] y, int[] z, EvalType evalType) {
+    public void c2me$cache(float[] res, int[] x, int[] y, int[] z, EvalType evalType) {
         // nop
     }
 

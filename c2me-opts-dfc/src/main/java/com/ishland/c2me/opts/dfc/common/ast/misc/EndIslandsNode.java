@@ -26,14 +26,15 @@ package com.ishland.c2me.opts.dfc.common.ast.misc;
 
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
 import net.minecraft.world.gen.densityfunction.DensityFunctionTypes;
+import net.minecraft.world.gen.densityfunction.EndIslandsDensityFunction;
 
 import java.util.Objects;
 
 public class EndIslandsNode extends DelegateNode {
 
-    public final DensityFunctionTypes.EndIslands endIslands;
+    public final EndIslandsDensityFunction endIslands;
 
-    public EndIslandsNode(DensityFunctionTypes.EndIslands endIslands) {
+    public EndIslandsNode(EndIslandsDensityFunction endIslands) {
         super(endIslands);
         this.endIslands = endIslands;
     }

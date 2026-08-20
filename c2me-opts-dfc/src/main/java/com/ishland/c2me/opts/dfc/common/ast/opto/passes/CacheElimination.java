@@ -26,8 +26,9 @@ package com.ishland.c2me.opts.dfc.common.ast.opto.passes;
 
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
 import com.ishland.c2me.opts.dfc.common.ast.AstTransformer;
-import com.ishland.c2me.opts.dfc.common.ast.misc.CacheLikeNode;
+import com.ishland.c2me.opts.dfc.common.ast.misc.CacheLikeF32Node;
 import net.minecraft.world.gen.densityfunction.DensityFunctionTypes;
+import net.minecraft.world.gen.densityfunction.WrappingDensityFunction;
 
 public class CacheElimination implements AstTransformer {
 
@@ -38,11 +39,11 @@ public class CacheElimination implements AstTransformer {
 
     @Override
     public AstNode transform(AstNode astNode) {
-        if (astNode instanceof CacheLikeNode cacheLikeNode && (Object) cacheLikeNode.getCacheLike() instanceof DensityFunctionTypes.Wrapping wrapping) {
-            if (wrapping.type() == DensityFunctionTypes.Wrapping.Type.FLAT_CACHE) {
-                AstNode transformed = cacheLikeNode.getDelegate().transform(CacheLikeStripper.INSTANCE);
-                if (transformed != cacheLikeNode.getDelegate()) {
-                    return new CacheLikeNode(cacheLikeNode.getCacheLike(), transformed);
+        if (astNode instanceof CacheLikeF32Node cacheLikeF32Node && (Object) cacheLikeF32Node.getCacheLike() instanceof WrappingDensityFunction wrapping) {
+            if (wrapping.type() == WrappingDensityFunction.Type.FLAT_CACHE) {
+                AstNode transformed = cacheLikeF32Node.getDelegate().transform(CacheLikeStripper.INSTANCE);
+                if (transformed != cacheLikeF32Node.getDelegate()) {
+                    return new CacheLikeF32Node(cacheLikeF32Node.getCacheLike(), transformed);
                 }
             }
         }
@@ -56,8 +57,8 @@ public class CacheElimination implements AstTransformer {
 
         @Override
         public AstNode transform(AstNode astNode) {
-            if (astNode instanceof CacheLikeNode cacheLikeNode) {
-                return cacheLikeNode.getDelegate();
+            if (astNode instanceof CacheLikeF32Node cacheLikeF32Node) {
+                return cacheLikeF32Node.getDelegate();
             }
 
             return astNode;

@@ -25,7 +25,7 @@
 package com.ishland.c2me.opts.dfc.common.gen.opencl;
 
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
-import com.ishland.c2me.opts.dfc.common.ast.misc.CacheLikeNode;
+import com.ishland.c2me.opts.dfc.common.ast.misc.CacheLikeF32Node;
 import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDef;
 import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefF32;
 import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefF64;
@@ -68,11 +68,11 @@ public interface OpenCLCGenContext {
 
     int getGlobalDynamicDataOffset(Object data);
 
-    int registerFlatCache(CacheLikeNode node);
+    int registerFlatCache(CacheLikeF32Node node);
 
-    int registerCache2d(CacheLikeNode node);
+    int registerCache2d(CacheLikeF32Node node);
 
-    int registerInterpolator(CacheLikeNode node);
+    int registerInterpolator(CacheLikeF32Node node);
 
     void appendRaw(String raw);
 }

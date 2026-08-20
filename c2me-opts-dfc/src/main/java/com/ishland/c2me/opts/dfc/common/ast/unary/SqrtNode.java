@@ -37,4 +37,14 @@ public class SqrtNode extends AbstractUnaryNode {
         return new SqrtNode(operand);
     }
 
+    @Override
+    public double computeF64(double operand) {
+        return Math.sqrt(operand);
+    }
+
+    @Override
+    public float computeF32(float operand) {
+        return (float) Math.sqrt(operand);
+    }
+
 }

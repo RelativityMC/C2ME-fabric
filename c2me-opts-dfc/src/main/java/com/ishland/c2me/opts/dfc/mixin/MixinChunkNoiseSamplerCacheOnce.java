@@ -43,7 +43,7 @@ public abstract class MixinChunkNoiseSamplerCacheOnce implements IFastCacheLike 
 
     @Mutable
     @Shadow @Final private DensityFunction delegate;
-    private double c2me$lastValue = Double.NaN;
+    private float c2me$lastValue = Float.NaN;
     private int c2me$lastX = Integer.MIN_VALUE;
     private int c2me$lastY = Integer.MIN_VALUE;
     private int c2me$lastZ = Integer.MIN_VALUE;
@@ -51,10 +51,10 @@ public abstract class MixinChunkNoiseSamplerCacheOnce implements IFastCacheLike 
     private int[] c2me$lastXa;
     private int[] c2me$lastYa;
     private int[] c2me$lastZa;
-    private double[] c2me$lastValuea;
+    private float[] c2me$lastValuea;
 
     @WrapMethod(method = "sample")
-    private double wrapSample(DensityFunction.NoisePos pos, Operation<Double> original) {
+    private float wrapSample(DensityFunction.NoisePos pos, Operation<Float> original) {
         if (pos instanceof ChunkNoiseSampler) {
             return original.call(pos);
         }
@@ -68,10 +68,10 @@ public abstract class MixinChunkNoiseSamplerCacheOnce implements IFastCacheLike 
                 }
             }
         }
-        if (!Double.isNaN(c2me$lastValue) && c2me$lastX == blockX && c2me$lastY == blockY && c2me$lastZ == blockZ) {
+        if (!Float.isNaN(c2me$lastValue) && c2me$lastX == blockX && c2me$lastY == blockY && c2me$lastZ == blockZ) {
             return c2me$lastValue;
         }
-        double sample = this.delegate.sample(pos);
+        float sample = this.delegate.sample(pos);
         c2me$lastValue = sample;
         c2me$lastX = blockX;
         c2me$lastY = blockY;
@@ -80,7 +80,7 @@ public abstract class MixinChunkNoiseSamplerCacheOnce implements IFastCacheLike 
     }
 
     @WrapMethod(method = "fill")
-    private void wrapFill(double[] densities, DensityFunction.EachApplier applier, Operation<Void> original) {
+    private void wrapFill(float[] densities, DensityFunction.EachApplier applier, Operation<Void> original) {
         if (applier instanceof ChunkNoiseSampler) {
             original.call(densities, applier);
             return;
@@ -101,7 +101,7 @@ public abstract class MixinChunkNoiseSamplerCacheOnce implements IFastCacheLike 
     }
 
     @Override
-    public double c2me$getCached(int x, int y, int z, EvalType evalType) {
+    public float c2me$getCached(int x, int y, int z, EvalType evalType) {
         if (c2me$lastValuea != null) {
             for (int i = 0; i < this.c2me$lastValuea.length; i ++) {
                 if (c2me$lastXa[i] == x && c2me$lastYa[i] == y && c2me$lastZa[i] == z) {
@@ -109,15 +109,15 @@ public abstract class MixinChunkNoiseSamplerCacheOnce implements IFastCacheLike 
                 }
             }
         }
-        if (!Double.isNaN(c2me$lastValue) && c2me$lastX == x && c2me$lastY == y && c2me$lastZ == z) {
+        if (!Float.isNaN(c2me$lastValue) && c2me$lastX == x && c2me$lastY == y && c2me$lastZ == z) {
             return c2me$lastValue;
         }
 
-        return Double.longBitsToDouble(CACHE_MISS_NAN_BITS);
+        return Float.intBitsToFloat(IFastCacheLike.CACHE_MISS_NAN_BITS_F32);
     }
 
     @Override
-    public boolean c2me$getCached(double[] res, int[] x, int[] y, int[] z, EvalType evalType) {
+    public boolean c2me$getCached(float[] res, int[] x, int[] y, int[] z, EvalType evalType) {
         if (c2me$lastValuea != null && Arrays.equals(y, c2me$lastYa) && Arrays.equals(x, c2me$lastXa) && Arrays.equals(z, c2me$lastZa)) {
             System.arraycopy(c2me$lastValuea, 0, res, 0, c2me$lastValuea.length);
             return true;
@@ -127,7 +127,7 @@ public abstract class MixinChunkNoiseSamplerCacheOnce implements IFastCacheLike 
     }
 
     @Override
-    public void c2me$cache(int x, int y, int z, EvalType evalType, double cached) {
+    public void c2me$cache(int x, int y, int z, EvalType evalType, float cached) {
         c2me$lastValue = cached;
         c2me$lastX = x;
         c2me$lastY = y;
@@ -135,7 +135,7 @@ public abstract class MixinChunkNoiseSamplerCacheOnce implements IFastCacheLike 
     }
 
     @Override
-    public void c2me$cache(double[] res, int[] x, int[] y, int[] z, EvalType evalType) {
+    public void c2me$cache(float[] res, int[] x, int[] y, int[] z, EvalType evalType) {
         if (c2me$lastValuea != null && this.c2me$lastValuea.length == res.length) {
             System.arraycopy(res, 0, this.c2me$lastValuea, 0, this.c2me$lastValuea.length);
             System.arraycopy(x, 0, this.c2me$lastXa, 0, this.c2me$lastValuea.length);

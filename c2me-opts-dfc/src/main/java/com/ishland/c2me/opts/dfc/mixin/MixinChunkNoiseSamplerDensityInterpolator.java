@@ -43,29 +43,29 @@ public abstract class MixinChunkNoiseSamplerDensityInterpolator implements IFast
 
     @Shadow @Final private ChunkNoiseSampler field_34622;
 
-    @Shadow private double x0y0z0;
+    @Shadow private float x0y0z0;
 
-    @Shadow private double x1y0z0;
+    @Shadow private float x1y0z0;
 
-    @Shadow private double x0y1z0;
+    @Shadow private float x0y1z0;
 
-    @Shadow private double x1y1z0;
+    @Shadow private float x1y1z0;
 
-    @Shadow private double x0y0z1;
+    @Shadow private float x0y0z1;
 
-    @Shadow private double x1y0z1;
+    @Shadow private float x1y0z1;
 
-    @Shadow private double x0y1z1;
+    @Shadow private float x0y1z1;
 
-    @Shadow private double x1y1z1;
+    @Shadow private float x1y1z1;
 
-    @Shadow private double result;
+    @Shadow private float result;
 
     @Mutable
     @Shadow @Final private DensityFunction delegate;
 
     @WrapMethod(method = "sample")
-    private double wrapSample(DensityFunction.NoisePos pos, Operation<Double> original) {
+    private float wrapSample(DensityFunction.NoisePos pos, Operation<Float> original) {
         if (pos instanceof ChunkNoiseSampler) {
             return original.call(pos);
         }
@@ -85,9 +85,9 @@ public abstract class MixinChunkNoiseSamplerDensityInterpolator implements IFast
             int cellBlockZ = pos.blockZ() - startBlockZ;
             return isSamplingForCaches
                     ? MathHelper.lerp3(
-                    (double)cellBlockX / (double)horizontalCellBlockCount,
-                    (double)cellBlockY / (double)verticalCellBlockCount,
-                    (double)cellBlockZ / (double)horizontalCellBlockCount,
+                    (float)cellBlockX / (float)horizontalCellBlockCount,
+                    (float)cellBlockY / (float)verticalCellBlockCount,
+                    (float)cellBlockZ / (float)horizontalCellBlockCount,
                     this.x0y0z0,
                     this.x1y0z0,
                     this.x0y1z0,
@@ -102,7 +102,7 @@ public abstract class MixinChunkNoiseSamplerDensityInterpolator implements IFast
     }
 
     @Override
-    public double c2me$getCached(int x, int y, int z, EvalType evalType) {
+    public float c2me$getCached(int x, int y, int z, EvalType evalType) {
         if (evalType == EvalType.INTERPOLATION) {
             boolean isInInterpolationLoop = ((IChunkNoiseSampler) this.field_34622).getIsInInterpolationLoop();
             if (isInInterpolationLoop) {
@@ -116,9 +116,9 @@ public abstract class MixinChunkNoiseSamplerDensityInterpolator implements IFast
                     int cellBlockY = y - startBlockY;
                     int cellBlockZ = z - startBlockZ;
                     return MathHelper.lerp3(
-                            (double) cellBlockX / (double) horizontalCellBlockCount,
-                            (double) cellBlockY / (double) verticalCellBlockCount,
-                            (double) cellBlockZ / (double) horizontalCellBlockCount,
+                            (float) cellBlockX / (float) horizontalCellBlockCount,
+                            (float) cellBlockY / (float) verticalCellBlockCount,
+                            (float) cellBlockZ / (float) horizontalCellBlockCount,
                             this.x0y0z0,
                             this.x1y0z0,
                             this.x0y1z0,
@@ -136,11 +136,11 @@ public abstract class MixinChunkNoiseSamplerDensityInterpolator implements IFast
             }
         }
 
-        return Double.longBitsToDouble(CACHE_MISS_NAN_BITS);
+        return Float.intBitsToFloat(IFastCacheLike.CACHE_MISS_NAN_BITS_F32);
     }
 
     @Override
-    public boolean c2me$getCached(double[] res, int[] x, int[] y, int[] z, EvalType evalType) {
+    public boolean c2me$getCached(float[] res, int[] x, int[] y, int[] z, EvalType evalType) {
         if (evalType == EvalType.INTERPOLATION) {
             boolean isInInterpolationLoop = ((IChunkNoiseSampler) this.field_34622).getIsInInterpolationLoop();
             if (isInInterpolationLoop) {
@@ -148,16 +148,16 @@ public abstract class MixinChunkNoiseSamplerDensityInterpolator implements IFast
                     int startBlockX = ((IChunkNoiseSampler) this.field_34622).getStartBlockX();
                     int startBlockY = ((IChunkNoiseSampler) this.field_34622).getStartBlockY();
                     int startBlockZ = ((IChunkNoiseSampler) this.field_34622).getStartBlockZ();
-                    double horizontalCellBlockCount = ((IChunkNoiseSampler) this.field_34622).getHorizontalCellBlockCount();
-                    double verticalCellBlockCount = ((IChunkNoiseSampler) this.field_34622).getVerticalCellBlockCount();
+                    float horizontalCellBlockCount = ((IChunkNoiseSampler) this.field_34622).getHorizontalCellBlockCount();
+                    float verticalCellBlockCount = ((IChunkNoiseSampler) this.field_34622).getVerticalCellBlockCount();
                     for (int i = 0; i < res.length; i ++) {
                         int cellBlockX = x[i] - startBlockX;
                         int cellBlockY = y[i] - startBlockY;
                         int cellBlockZ = z[i] - startBlockZ;
                         res[i] = MathHelper.lerp3(
-                                (double)cellBlockX / horizontalCellBlockCount,
-                                (double)cellBlockY / verticalCellBlockCount,
-                                (double)cellBlockZ / horizontalCellBlockCount,
+                                (float)cellBlockX / horizontalCellBlockCount,
+                                (float)cellBlockY / verticalCellBlockCount,
+                                (float)cellBlockZ / horizontalCellBlockCount,
                                 this.x0y0z0,
                                 this.x1y0z0,
                                 this.x0y1z0,
@@ -179,12 +179,12 @@ public abstract class MixinChunkNoiseSamplerDensityInterpolator implements IFast
     }
 
     @Override
-    public void c2me$cache(int x, int y, int z, EvalType evalType, double cached) {
+    public void c2me$cache(int x, int y, int z, EvalType evalType, float cached) {
         // nop
     }
 
     @Override
-    public void c2me$cache(double[] res, int[] x, int[] y, int[] z, EvalType evalType) {
+    public void c2me$cache(float[] res, int[] x, int[] y, int[] z, EvalType evalType) {
         // nop
     }
 

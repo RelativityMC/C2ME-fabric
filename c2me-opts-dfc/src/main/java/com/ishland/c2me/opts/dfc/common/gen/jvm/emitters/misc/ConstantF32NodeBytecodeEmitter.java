@@ -25,7 +25,6 @@
 package com.ishland.c2me.opts.dfc.common.gen.jvm.emitters.misc;
 
 import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantF32Node;
-import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantNode;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.BytecodeEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.BytecodeGen;
 import org.objectweb.asm.Type;

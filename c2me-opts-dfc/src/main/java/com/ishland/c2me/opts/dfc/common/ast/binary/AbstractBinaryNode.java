@@ -26,6 +26,7 @@ package com.ishland.c2me.opts.dfc.common.ast.binary;
 
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
 import com.ishland.c2me.opts.dfc.common.ast.AstTransformer;
+import com.ishland.flowsched.util.Assertions;
 
 import java.util.Objects;
 
@@ -33,10 +34,17 @@ public abstract class AbstractBinaryNode implements AstNode {
 
     public final AstNode left;
     public final AstNode right;
+    private final ReturnType returnType;
 
     public AbstractBinaryNode(AstNode left, AstNode right) {
         this.left = Objects.requireNonNull(left);
         this.right = Objects.requireNonNull(right);
+        this.assertSameReturnType();
+        this.returnType = this.left.getReturnType();
+    }
+
+    public void assertSameReturnType() {
+        Assertions.assertTrue(this.left.getReturnType() == this.right.getReturnType(), "Operand type do not match: %s != %s", this.left.getReturnType(), this.right.getReturnType());
     }
 
     @Override
@@ -84,6 +92,16 @@ public abstract class AbstractBinaryNode implements AstNode {
 
     protected abstract AstNode newInstance(AstNode left, AstNode right);
 
+    /**
+     * For constant folding purposes
+     */
+    public abstract double computeF64(double left, double right);
+
+    /**
+     * For constant folding purposes
+     */
+    public abstract float computeF32(float left, float right);
+
     @Override
     public AstNode transform(AstTransformer transformer) {
         AstNode left = this.left.transform(transformer);
@@ -93,6 +111,11 @@ public abstract class AbstractBinaryNode implements AstNode {
         } else {
             return transformer.transform(newInstance(left, right));
         }
+    }
+
+    @Override
+    public final ReturnType getReturnType() {
+        return this.returnType;
     }
 
     public AstNode swapOperands() {

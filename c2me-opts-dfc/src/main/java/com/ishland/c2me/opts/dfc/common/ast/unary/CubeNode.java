@@ -37,4 +37,14 @@ public class CubeNode extends AbstractUnaryNode {
         return new CubeNode(operand);
     }
 
+    @Override
+    public double computeF64(double operand) {
+        return operand * operand * operand;
+    }
+
+    @Override
+    public float computeF32(float operand) {
+        return operand * operand * operand;
+    }
+
 }

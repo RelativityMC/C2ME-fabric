@@ -33,11 +33,11 @@ import net.minecraft.world.gen.densityfunction.DensityFunction;
  */
 public class InvocationShim {
 
-    public static double invokeDensityFunctionSample(DensityFunction densityFunction, DensityFunction.NoisePos pos) {
+    public static float invokeDensityFunctionSample(DensityFunction densityFunction, DensityFunction.NoisePos pos) {
         return densityFunction.sample(pos);
     }
 
-    public static void invokeDensityFunctionFill(DensityFunction densityFunction, double[] densities, DensityFunction.EachApplier applier) {
+    public static void invokeDensityFunctionFill(DensityFunction densityFunction, float[] densities, DensityFunction.EachApplier applier) {
         densityFunction.fill(densities, applier);
     }
 
@@ -57,7 +57,23 @@ public class InvocationShim {
         return MathHelper.lerp(delta, start, end);
     }
 
+    public static double invokeMathHelperLerp(double delta, double start, double end) {
+        return MathHelper.lerp(delta, start, end);
+    }
+
+    public static double invokeMathHelperClampedLerp(final double delta, final double start, final double end) {
+        return MathHelper.clampedLerp(delta, start, end);
+    }
+
+    public static float invokeMathHelperClampedLerp(final float delta, final float start, final float end) {
+        return MathHelper.clampedLerp(delta, start, end);
+    }
+
     public static int invokeFloor(double value) {
+        return MathHelper.floor(value);
+    }
+
+    public static int invokeFloor(float value) {
         return MathHelper.floor(value);
     }
 

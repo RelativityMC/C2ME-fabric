@@ -37,4 +37,14 @@ public class AddNode extends AbstractBinaryNode {
         return new AddNode(left, right);
     }
 
+    @Override
+    public double computeF64(double left, double right) {
+        return left + right;
+    }
+
+    @Override
+    public float computeF32(float left, float right) {
+        return left + right;
+    }
+
 }

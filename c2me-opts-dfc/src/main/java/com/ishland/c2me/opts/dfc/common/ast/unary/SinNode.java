@@ -37,4 +37,14 @@ public class SinNode extends AbstractUnaryNode {
         return new SinNode(operand);
     }
 
+    @Override
+    public double computeF64(double operand) {
+        return Math.sin(operand);
+    }
+
+    @Override
+    public float computeF32(float operand) {
+        return (float) Math.sin(operand);
+    }
+
 }

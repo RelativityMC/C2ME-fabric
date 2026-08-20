@@ -1200,7 +1200,7 @@ static double uninitializedF32() {
         float f;
         uint32_t l;
     } x;
-    x.l = 0x7f8abcdeU;
+    x.l = 0x7fd1a97fU;
     return x.f;
 }
 
@@ -1219,7 +1219,7 @@ static float assertNotUninitializedF32(float in) {
         uint32_t l;
     } x;
     x.f = in;
-    if (x.l == 0x7f8abcdeU) {
+    if (x.l == 0x7fd1a97fU) {
         __builtin_trap();
     }
     return in;

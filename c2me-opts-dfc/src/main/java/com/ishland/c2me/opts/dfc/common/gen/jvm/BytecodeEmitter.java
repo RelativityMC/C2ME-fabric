@@ -26,9 +26,17 @@ package com.ishland.c2me.opts.dfc.common.gen.jvm;
 
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
 import com.ishland.c2me.opts.dfc.common.gen.CodeEmitter;
+import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.InstructionAdapter;
 
 public interface BytecodeEmitter<T extends AstNode> extends CodeEmitter<T> {
+
+    public static Type toASMType(AstNode.ReturnType returnType) {
+        return switch (returnType) {
+            case F64 -> Type.DOUBLE_TYPE;
+            case F32 -> Type.FLOAT_TYPE;
+        };
+    }
 
     void doBytecodeGenSingle(T node, BytecodeGen.Context context, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer);
 

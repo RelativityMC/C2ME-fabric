@@ -25,7 +25,7 @@
 package com.ishland.c2me.opts.dfc.common.gen.jvm.emitters.integration.lithostitched.misc;
 
 import com.ishland.c2me.base.common.integration.lithostitched.FastNoiseBindings;
-import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc.GenericFastNoiseNode;
+import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc.GenericFastNoiseF64Node;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.BytecodeEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.BytecodeGen;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.InvocationShim;
@@ -35,14 +35,14 @@ import com.ishland.flowsched.util.Assertions;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.InstructionAdapter;
 
-public class GenericFastNoiseNodeBytecodeEmitter implements BytecodeEmitter<GenericFastNoiseNode> {
+public class GenericFastNoiseNodeBytecodeEmitter implements BytecodeEmitter<GenericFastNoiseF64Node> {
     public static final GenericFastNoiseNodeBytecodeEmitter INSTANCE = new GenericFastNoiseNodeBytecodeEmitter();
 
     private GenericFastNoiseNodeBytecodeEmitter() {
     }
 
     @Override
-    public void doBytecodeGenSingle(GenericFastNoiseNode node, BytecodeGen.Context context, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
+    public void doBytecodeGenSingle(GenericFastNoiseF64Node node, BytecodeGen.Context context, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
         Assertions.assertTrue(FastNoiseBindings.CLASS_FastNoiseConfig != null);
 
         String configField = context.newField((Class<Object>) FastNoiseBindings.CLASS_FastNoiseConfig, node.config);
@@ -68,7 +68,7 @@ public class GenericFastNoiseNodeBytecodeEmitter implements BytecodeEmitter<Gene
     }
 
     @Override
-    public void doBytecodeGenMulti(GenericFastNoiseNode node, BytecodeGen.Context context, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
+    public void doBytecodeGenMulti(GenericFastNoiseF64Node node, BytecodeGen.Context context, InstructionAdapter m, BytecodeGen.Context.LocalVarConsumer localVarConsumer) {
         Assertions.assertTrue(FastNoiseBindings.CLASS_FastNoiseConfig != null);
 
         String configField = context.newField((Class<Object>) FastNoiseBindings.CLASS_FastNoiseConfig, node.config);

@@ -68,7 +68,7 @@ public class DelegateNodeBytecodeEmitter<E extends DelegateNode> implements Byte
         m.invokestatic(
                 Type.getInternalName(InvocationShim.class),
                 "invokeDensityFunctionSample",
-                Type.getMethodDescriptor(Type.DOUBLE_TYPE, Type.getType(DensityFunction.class), Type.getType(DensityFunction.NoisePos.class)),
+                Type.getMethodDescriptor(Type.FLOAT_TYPE, Type.getType(DensityFunction.class), Type.getType(DensityFunction.NoisePos.class)),
                 false
         );
 
@@ -76,7 +76,7 @@ public class DelegateNodeBytecodeEmitter<E extends DelegateNode> implements Byte
         m.load(borrowedNoisePos, InstructionAdapter.OBJECT_TYPE);
         m.invokeinterface(Type.getInternalName(DfcObjectCache.class), "recycle", Type.getMethodDescriptor(Type.getType(void.class), Type.getType(NoisePosVanillaInterface.class)));
 
-        m.areturn(Type.DOUBLE_TYPE);
+        m.areturn(Type.FLOAT_TYPE);
     }
 
     @Override
@@ -116,7 +116,7 @@ public class DelegateNodeBytecodeEmitter<E extends DelegateNode> implements Byte
         m.invokestatic(
                 Type.getInternalName(InvocationShim.class),
                 "invokeDensityFunctionSample",
-                Type.getMethodDescriptor(Type.DOUBLE_TYPE, Type.getType(DensityFunction.class), Type.getType(DensityFunction.NoisePos.class)),
+                Type.getMethodDescriptor(Type.FLOAT_TYPE, Type.getType(DensityFunction.class), Type.getType(DensityFunction.NoisePos.class)),
                 false
         );
 
@@ -124,7 +124,7 @@ public class DelegateNodeBytecodeEmitter<E extends DelegateNode> implements Byte
         m.load(borrowedNoisePos, InstructionAdapter.OBJECT_TYPE);
         m.invokeinterface(Type.getInternalName(DfcObjectCache.class), "recycle", Type.getMethodDescriptor(Type.getType(void.class), Type.getType(NoisePosVanillaInterface.class)));
 
-        m.astore(Type.DOUBLE_TYPE);
+        m.astore(Type.FLOAT_TYPE);
         m.areturn(Type.VOID_TYPE);
 
         m.visitLabel(moreThanTwoLabel);
@@ -143,7 +143,7 @@ public class DelegateNodeBytecodeEmitter<E extends DelegateNode> implements Byte
         m.invokestatic(
                 Type.getInternalName(InvocationShim.class),
                 "invokeDensityFunctionFill",
-                Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(DensityFunction.class), Type.getType(double[].class), Type.getType(DensityFunction.EachApplier.class)),
+                Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(DensityFunction.class), Type.getType(float[].class), Type.getType(DensityFunction.EachApplier.class)),
                 false
         );
         m.areturn(Type.VOID_TYPE);

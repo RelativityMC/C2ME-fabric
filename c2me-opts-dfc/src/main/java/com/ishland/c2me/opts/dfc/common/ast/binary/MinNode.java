@@ -38,8 +38,13 @@ public class MinNode extends AbstractBinaryNode {
     }
 
     @Override
-    public boolean canSwapOperandsSafely() {
-        return false;
+    public double computeF64(double left, double right) {
+        return Math.min(left, right);
+    }
+
+    @Override
+    public float computeF32(float left, float right) {
+        return Math.min(left, right);
     }
 
 }

@@ -27,11 +27,11 @@ package com.ishland.c2me.opts.dfc.common.gen.jvm;
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
 import com.ishland.c2me.opts.dfc.common.ast.EvalType;
 import com.ishland.c2me.opts.dfc.common.ast.McToAst;
-import com.ishland.c2me.opts.dfc.common.ast.misc.CacheLikeNode;
-import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantNode;
+import com.ishland.c2me.opts.dfc.common.ast.conversion.ToF32Node;
+import com.ishland.c2me.opts.dfc.common.ast.misc.CacheLikeF32Node;
+import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantF32Node;
+import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantF64Node;
 import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantNodeLike;
-import com.ishland.c2me.opts.dfc.common.ast.conversion.ToF64Node;
-import com.ishland.c2me.opts.dfc.common.ast.misc.YClampedGradientNode;
 import com.ishland.c2me.opts.dfc.common.ast.opto.OptoPasses;
 import com.ishland.c2me.opts.dfc.common.gen.GenDumper;
 import com.ishland.c2me.opts.dfc.common.gen.jvm.internalapi.ArgumentVisitor;
@@ -53,9 +53,9 @@ import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceMap;
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
-import net.minecraft.util.math.Spline;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
 import net.minecraft.world.gen.densityfunction.DensityFunctionTypes;
+import net.minecraft.world.gen.densityfunction.WrappingDensityFunction;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Handle;
 import org.objectweb.asm.Label;
@@ -99,7 +99,7 @@ public class BytecodeGen {
 //            return cached;
 //        }
 //        OptoPasses.AstPair pair = optoCache.computeIfAbsent(densityFunction, (DensityFunction df) -> OptoPasses.optimize(McToAst.toAst(df)));
-//        if (pair.optimized() instanceof ConstantNode constantNode) {
+//        if (pair.optimized() instanceof ConstantF64Node constantNode) {
 //            return DensityFunctionTypes.constant(constantNode.getValue());
 //        } else if (pair.optimized() instanceof YClampedGradientNode) {
 //            return densityFunction;
@@ -253,15 +253,15 @@ public class BytecodeGen {
                                         false
                                 ),
                                 new Object[]{
-                                        Type.getMethodType(Context.SINGLE_DESC_F64),
+                                        Type.getMethodType(Context.SINGLE_DESC_F32),
                                         new Handle(
                                                 Opcodes.H_INVOKEVIRTUAL,
                                                 context.className,
                                                 root.single(),
-                                                Context.SINGLE_DESC_F64,
+                                                Context.SINGLE_DESC_F32,
                                                 false
                                         ),
-                                        Type.getMethodType(Context.SINGLE_DESC_F64)
+                                        Type.getMethodType(Context.SINGLE_DESC_F32)
                                 }
                         );
 
@@ -277,15 +277,15 @@ public class BytecodeGen {
                                         false
                                 ),
                                 new Object[]{
-                                        Type.getMethodType(Context.MULTI_DESC_F64),
+                                        Type.getMethodType(Context.MULTI_DESC_F32),
                                         new Handle(
                                                 Opcodes.H_INVOKEVIRTUAL,
                                                 context.className,
                                                 root.multi(),
-                                                Context.MULTI_DESC_F64,
+                                                Context.MULTI_DESC_F32,
                                                 false
                                         ),
-                                        Type.getMethodType(Context.MULTI_DESC_F64)
+                                        Type.getMethodType(Context.MULTI_DESC_F32)
                                 }
                         );
 
@@ -514,7 +514,7 @@ public class BytecodeGen {
         public String nextMethodName(AstNode node) {
             StringBuilder b = new StringBuilder();
             b.append(node.getClass().getSimpleName());
-            if (node instanceof CacheLikeNode cacheLikeNode && (Object) cacheLikeNode.getCacheLike() instanceof DensityFunctionTypes.Wrapping wrapping) {
+            if (node instanceof CacheLikeF32Node cacheLikeF32Node && (Object) cacheLikeF32Node.getCacheLike() instanceof WrappingDensityFunction wrapping) {
                 b.append('_').append(wrapping.type().asString());
             }
             return nextMethodName(b.toString());
@@ -593,8 +593,8 @@ public class BytecodeGen {
         }
 
         public ValuesMethodDef newMultiMethod(AstNode node) {
-            if (node instanceof ConstantNode constantNode) {
-                return constantNode.getDef();
+            if (node instanceof ConstantF64Node constantF64Node) {
+                return constantF64Node.getDef();
             } else {
                 String generated = newMultiMethodUnoptimized(node);
                 return makeValuesMethodDef(generated, node.getReturnType());
@@ -621,16 +621,17 @@ public class BytecodeGen {
         }
 
         private void newMultiMethod0(AstNode node, String name, boolean isPublic) {
+            AstNode.ReturnType returnType = node.getReturnType();
             InstructionAdapter adapter = new InstructionAdapter(
                     new AnalyzerAdapter(
                             this.className,
                             (isPublic ? Opcodes.ACC_PUBLIC : Opcodes.ACC_PRIVATE) | Opcodes.ACC_FINAL,
                             name,
-                            getMultiDesc(node.getReturnType()),
+                            getMultiDesc(returnType),
                             classWriter.visitMethod(
                                     (isPublic ? Opcodes.ACC_PUBLIC : Opcodes.ACC_PRIVATE) | Opcodes.ACC_FINAL,
                                     name,
-                                    getMultiDesc(node.getReturnType()),
+                                    getMultiDesc(returnType),
                                     null,
                                     null
                             )
@@ -647,11 +648,15 @@ public class BytecodeGen {
             };
             BytecodeGenRegistry.doBytecodeGenMulti(node, this, adapter, localVarConsumer);
             adapter.visitLabel(end);
+            String arrayDesc = switch (returnType) {
+                case F64 -> Type.getType(double[].class).getDescriptor();
+                case F32 -> Type.getType(float[].class).getDescriptor();
+            };
             adapter.visitLocalVariable("this", this.classDesc, null, start, end, 0);
-            adapter.visitLocalVariable("res", Type.getType(double[].class).getDescriptor(), null, start, end, 1);
-            adapter.visitLocalVariable("x", Type.getType(double[].class).getDescriptor(), null, start, end, 2);
-            adapter.visitLocalVariable("y", Type.getType(double[].class).getDescriptor(), null, start, end, 3);
-            adapter.visitLocalVariable("z", Type.getType(double[].class).getDescriptor(), null, start, end, 4);
+            adapter.visitLocalVariable("res", arrayDesc, null, start, end, 1);
+            adapter.visitLocalVariable("x", Type.getType(int[].class).getDescriptor(), null, start, end, 2);
+            adapter.visitLocalVariable("y", Type.getType(int[].class).getDescriptor(), null, start, end, 3);
+            adapter.visitLocalVariable("z", Type.getType(int[].class).getDescriptor(), null, start, end, 4);
             adapter.visitLocalVariable("evalType", Type.getType(EvalType.class).getDescriptor(), null, start, end, 5);
             adapter.visitLocalVariable("dfcObjectCache", Type.getType(DfcObjectCache.class).getDescriptor(), null, start, end, 6);
             for (IntObjectPair<Pair<String, String>> local : extraLocals) {
@@ -870,7 +875,7 @@ public class BytecodeGen {
             int index = this.roots.size();
             String single = String.format("evalSingle_%d_%s", index, suffix);
             String multi = String.format("evalMulti_%d_%s", index, suffix);
-            ToF64Node rootNode = new ToF64Node(node);
+            ToF32Node rootNode = new ToF32Node(node);
             this.newSingleMethod0(rootNode, single, true);
             this.newMultiMethod0(rootNode, multi, true);
             this.roots.add(new MethodPair(single, multi));
@@ -879,11 +884,10 @@ public class BytecodeGen {
 
         public DensityFunction compileDelayed(String suffix, DensityFunction df) {
             OptoPasses.AstPair pair = optimizeCached(df);
-            if (pair.optimized() instanceof ConstantNode constantNode) {
-                return DensityFunctionTypes.constant(constantNode.getValue());
-            } else if (pair.optimized() instanceof YClampedGradientNode) {
-                return df;
+            if (pair.optimized() instanceof ConstantF32Node constantF32Node) {
+                return DensityFunctionTypes.constant(constantF32Node.getValue());
             }
+            Assertions.assertTrue(pair.optimized().getReturnType() == AstNode.ReturnType.F32, "Node isn't F32: %s", pair.optimized().getReturnType());
             int index = this.registerRoot(suffix, pair.optimized());
             CompiledDensityFunction compiled = new CompiledDensityFunction(index, df);
             this.delayedInits.add(compiled);
@@ -900,16 +904,6 @@ public class BytecodeGen {
 
         private static record MethodPair(String single, String multi) {
         }
-    }
-
-    @FunctionalInterface
-    public interface EvalSingleInterface {
-        double evalSingle(int x, int y, int z, EvalType type);
-    }
-
-    @FunctionalInterface
-    public interface EvalMultiInterface {
-        void evalMulti(double[] res, int[] x, int[] y, int[] z, EvalType type);
     }
 
 }

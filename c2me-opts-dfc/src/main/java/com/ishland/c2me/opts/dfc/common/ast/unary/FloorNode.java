@@ -37,4 +37,14 @@ public class FloorNode extends AbstractUnaryNode {
         return new FloorNode(operand);
     }
 
+    @Override
+    public double computeF64(double operand) {
+        return Math.floor(operand);
+    }
+
+    @Override
+    public float computeF32(float operand) {
+        return (float) Math.floor(operand);
+    }
+
 }

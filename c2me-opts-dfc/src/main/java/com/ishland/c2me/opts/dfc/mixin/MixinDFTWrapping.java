@@ -27,37 +27,37 @@ package com.ishland.c2me.opts.dfc.mixin;
 import com.ishland.c2me.opts.dfc.common.ast.EvalType;
 import com.ishland.c2me.opts.dfc.common.ducks.IFastCacheLike;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
-import net.minecraft.world.gen.densityfunction.DensityFunctionTypes;
+import net.minecraft.world.gen.densityfunction.WrappingDensityFunction;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Shadow;
 
-@Mixin(DensityFunctionTypes.Wrapping.class)
-public abstract class MixinDFTWrapping implements IFastCacheLike, DensityFunctionTypes.Wrapper {
+@Mixin(WrappingDensityFunction.class)
+public abstract class MixinDFTWrapping implements IFastCacheLike {
 
     @Mutable
     @Shadow @Final private DensityFunction wrapped;
 
-    @Shadow public abstract DensityFunctionTypes.Wrapping.Type type();
+    @Shadow public abstract WrappingDensityFunction.Type type();
 
     @Override
-    public double c2me$getCached(int x, int y, int z, EvalType evalType) {
-        return Double.longBitsToDouble(CACHE_MISS_NAN_BITS);
+    public float c2me$getCached(int x, int y, int z, EvalType evalType) {
+        return Float.intBitsToFloat(IFastCacheLike.CACHE_MISS_NAN_BITS_F32);
     }
 
     @Override
-    public boolean c2me$getCached(double[] res, int[] x, int[] y, int[] z, EvalType evalType) {
+    public boolean c2me$getCached(float[] res, int[] x, int[] y, int[] z, EvalType evalType) {
         return false;
     }
 
     @Override
-    public void c2me$cache(int x, int y, int z, EvalType evalType, double cached) {
+    public void c2me$cache(int x, int y, int z, EvalType evalType, float cached) {
         // nop
     }
 
     @Override
-    public void c2me$cache(double[] res, int[] x, int[] y, int[] z, EvalType evalType) {
+    public void c2me$cache(float[] res, int[] x, int[] y, int[] z, EvalType evalType) {
         // nop
     }
 
@@ -81,12 +81,12 @@ public abstract class MixinDFTWrapping implements IFastCacheLike, DensityFunctio
 
     @Override
     public DensityFunction c2me$withDelegate(DensityFunction delegate) {
-        DensityFunctionTypes.Wrapping wrapping = new DensityFunctionTypes.Wrapping(this.type(), delegate);
+        WrappingDensityFunction wrapping = new WrappingDensityFunction(this.type(), delegate);
         return wrapping;
     }
 
     @Override
     public DensityFunction apply(DensityFunctionVisitor visitor) {
-        return visitor.apply(this.c2me$withDelegate(this.wrapped().apply(visitor)));
+        return visitor.apply(this.c2me$withDelegate(this.wrapped.apply(visitor)));
     }
 }

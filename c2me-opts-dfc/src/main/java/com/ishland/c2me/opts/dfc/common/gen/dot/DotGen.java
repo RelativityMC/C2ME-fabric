@@ -25,13 +25,10 @@
 package com.ishland.c2me.opts.dfc.common.gen.dot;
 
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
-import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantNodeLike;
-import com.ishland.c2me.opts.dfc.common.ast.misc.CoordinateNode;
+import com.ishland.c2me.opts.dfc.common.ast.misc.CoordinateF64Node;
 import it.unimi.dsi.fastutil.objects.Object2ReferenceOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
-import net.minecraft.util.math.Spline;
-import net.minecraft.world.gen.densityfunction.DensityFunctionTypes;
 
 import java.util.Comparator;
 import java.util.Iterator;
@@ -58,7 +55,6 @@ public class DotGen {
 
     public static class Context {
         private final Object2ReferenceOpenHashMap<AstNode, Builder.Impl> allocatedNodes = new Object2ReferenceOpenHashMap<>();
-        private final Object2ReferenceOpenHashMap<Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper>, Builder.Impl> allocatedSplines = new Object2ReferenceOpenHashMap<>();
         // don't merge constant nodes, otherwise the graph is going to be a mess
         private final ReferenceArrayList<Builder.Impl> constants = new ReferenceArrayList<>();
         private final ReferenceArrayList<Builder.Impl> extras = new ReferenceArrayList<>();
@@ -308,7 +304,7 @@ public class DotGen {
 
         public int generate(AstNode node) {
             final Builder.Impl builder;
-            if (node instanceof ConstantNodeLike || node instanceof CoordinateNode) {
+            if (node instanceof ConstantNodeLike || node instanceof CoordinateF64Node) {
                 builder = new Builder.Impl(counter++, null);
                 constants.add(builder);
             } else {
@@ -318,15 +314,6 @@ public class DotGen {
                 }
             }
             return DotGenRegistry.doDotGen(node, this, builder);
-        }
-
-        /**
-         * Callers should check {@code builder.frozen}
-         */
-        public Builder getSplineBuilder(Spline<DensityFunctionTypes.Spline.DensityFunctionWrapper> spline) {
-            final Builder.Impl builder;
-            builder = allocatedSplines.computeIfAbsent(spline, spline1 -> new Builder.Impl(counter++, auxNameProvider.apply(spline1)));
-            return builder;
         }
 
         public Builder createExtraBuilder() {
@@ -341,10 +328,7 @@ public class DotGen {
                             this.constants.stream(),
                             this.allocatedNodes.values().stream()
                     ),
-                    Stream.concat(
-                            this.allocatedSplines.values().stream(),
-                            this.extras.stream()
-                    )
+                    this.extras.stream()
             ).sorted(Comparator.comparing(Builder.Impl::getId)).iterator();
             StringBuilder sb = new StringBuilder();
             sb.append("strict digraph ").append(name).append(" {");

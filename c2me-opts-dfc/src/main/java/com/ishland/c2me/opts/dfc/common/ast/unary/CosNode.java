@@ -37,4 +37,14 @@ public class CosNode extends AbstractUnaryNode {
         return new CosNode(operand);
     }
 
+    @Override
+    public double computeF64(double operand) {
+        return Math.cos(operand);
+    }
+
+    @Override
+    public float computeF32(float operand) {
+        return (float) Math.cos(operand);
+    }
+
 }

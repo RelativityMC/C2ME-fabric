@@ -26,6 +26,7 @@ package com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc;
 
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
 import com.ishland.c2me.opts.dfc.common.ast.AstTransformer;
+import com.ishland.flowsched.util.Assertions;
 
 import java.util.Objects;
 
@@ -34,11 +35,22 @@ public class MixNode implements AstNode {
     public final AstNode input;
     public final AstNode argument1;
     public final AstNode argument2;
+    private final ReturnType returnType;
 
     public MixNode(AstNode input, AstNode argument1, AstNode argument2) {
         this.input = Objects.requireNonNull(input);
         this.argument1 = Objects.requireNonNull(argument1);
         this.argument2 = Objects.requireNonNull(argument2);
+        this.assertType();
+        this.returnType = this.input.getReturnType();
+    }
+
+    public void assertType() {
+        Assertions.assertTrue(
+                this.input.getReturnType() == this.argument1.getReturnType() && this.argument1.getReturnType() == this.argument2.getReturnType(),
+                "types aren't the same: input=%s, argument1=%s, argument2=%s",
+                this.input.getReturnType(), this.argument1.getReturnType(), this.argument2.getReturnType()
+        );
     }
 
     @Override
@@ -96,5 +108,10 @@ public class MixNode implements AstNode {
         result = 31 * result + this.argument2.relaxedHashCode();
 
         return result;
+    }
+
+    @Override
+    public ReturnType getReturnType() {
+        return this.returnType;
     }
 }

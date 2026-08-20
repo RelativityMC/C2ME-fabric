@@ -33,6 +33,13 @@ public class ZeroUtils {
         return 1.0 / x > 0.0;
     }
 
+    public static boolean isPositiveZero(float x) {
+        if (x != 0.0) {
+            throw new IllegalArgumentException("x isn't zero");
+        }
+        return 1.0 / x > 0.0;
+    }
+
     private ZeroUtils() {
     }
 

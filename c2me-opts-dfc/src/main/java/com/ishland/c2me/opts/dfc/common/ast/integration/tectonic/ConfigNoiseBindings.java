@@ -29,9 +29,9 @@ import com.ishland.c2me.opts.dfc.common.ast.FrontendRegistry;
 import com.ishland.c2me.opts.dfc.common.ast.McToAst;
 import com.ishland.c2me.opts.dfc.common.ast.binary.AddNode;
 import com.ishland.c2me.opts.dfc.common.ast.binary.MulNode;
-import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantNode;
-import com.ishland.c2me.opts.dfc.common.ast.misc.CoordinateNode;
-import com.ishland.c2me.opts.dfc.common.ast.noise.GenericShiftedNoiseNode;
+import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantF64Node;
+import com.ishland.c2me.opts.dfc.common.ast.misc.CoordinateF64Node;
+import com.ishland.c2me.opts.dfc.common.ast.misc.GenericShiftedF64NoiseNode;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
 import org.slf4j.Logger;
@@ -102,28 +102,28 @@ public class ConfigNoiseBindings {
                 if ((boolean) MH_smootherScaling.invoke(function)) {
                     return new AddNode(
                             new MulNode(
-                                    new GenericShiftedNoiseNode(
-                                            new MulNode(new AddNode(CoordinateNode.AXIS_X, McToAst.toAst((DensityFunction) MH_shiftX.invoke(function))), new ConstantNode((double) MH_scale.invoke(function))),
-                                            new ConstantNode(0.0),
-                                            new MulNode(new AddNode(CoordinateNode.AXIS_Z, McToAst.toAst((DensityFunction) MH_shiftZ.invoke(function))), new ConstantNode((double) MH_scale.invoke(function))),
+                                    new GenericShiftedF64NoiseNode(
+                                            new MulNode(new AddNode(CoordinateF64Node.AXIS_X, McToAst.toAst((DensityFunction) MH_shiftX.invoke(function))), new ConstantF64Node((double) MH_scale.invoke(function))),
+                                            new ConstantF64Node(0.0),
+                                            new MulNode(new AddNode(CoordinateF64Node.AXIS_Z, McToAst.toAst((DensityFunction) MH_shiftZ.invoke(function))), new ConstantF64Node((double) MH_scale.invoke(function))),
                                             (DensityFunction.Noise) MH_noise.invoke(function)
                                     ),
-                                    new ConstantNode((double) MH_multiplier.invoke(function))
+                                    new ConstantF64Node((double) MH_multiplier.invoke(function))
                             ),
-                            new ConstantNode((double) MH_offset.invoke(function))
+                            new ConstantF64Node((double) MH_offset.invoke(function))
                     );
                 } else {
                     return new AddNode(
                             new MulNode(
-                                    new GenericShiftedNoiseNode(
-                                            new AddNode(new MulNode(CoordinateNode.AXIS_X, new ConstantNode((double) MH_scale.invoke(function))), McToAst.toAst((DensityFunction) MH_shiftX.invoke(function))),
-                                            new ConstantNode(0.0),
-                                            new AddNode(new MulNode(CoordinateNode.AXIS_Z, new ConstantNode((double) MH_scale.invoke(function))), McToAst.toAst((DensityFunction) MH_shiftZ.invoke(function))),
+                                    new GenericShiftedF64NoiseNode(
+                                            new AddNode(new MulNode(CoordinateF64Node.AXIS_X, new ConstantF64Node((double) MH_scale.invoke(function))), McToAst.toAst((DensityFunction) MH_shiftX.invoke(function))),
+                                            new ConstantF64Node(0.0),
+                                            new AddNode(new MulNode(CoordinateF64Node.AXIS_Z, new ConstantF64Node((double) MH_scale.invoke(function))), McToAst.toAst((DensityFunction) MH_shiftZ.invoke(function))),
                                             (DensityFunction.Noise) MH_noise.invoke(function)
                                     ),
-                                    new ConstantNode((double) MH_multiplier.invoke(function))
+                                    new ConstantF64Node((double) MH_multiplier.invoke(function))
                             ),
-                            new ConstantNode((double) MH_offset.invoke(function))
+                            new ConstantF64Node((double) MH_offset.invoke(function))
                     );
                 }
             } catch (Throwable e) {

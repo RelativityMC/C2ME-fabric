@@ -29,15 +29,16 @@ import net.minecraft.world.gen.densityfunction.DensityFunction;
 
 public interface IFastCacheLike extends DensityFunction {
 
-    public static final long CACHE_MISS_NAN_BITS = 0x7ffddb972d486a4fL;
+    public static final long CACHE_MISS_NAN_BITS_F64 = 0x7ffddb972d486a4fL;
+    public static final int CACHE_MISS_NAN_BITS_F32 = 0x7fd1a97f;
 
-    double c2me$getCached(int x, int y, int z, EvalType evalType);
+    float c2me$getCached(int x, int y, int z, EvalType evalType);
 
-    boolean c2me$getCached(double[] res, int[] x, int[] y, int[] z, EvalType evalType);
+    boolean c2me$getCached(float[] res, int[] x, int[] y, int[] z, EvalType evalType);
 
-    void c2me$cache(int x, int y, int z, EvalType evalType, double cached);
+    void c2me$cache(int x, int y, int z, EvalType evalType, float cached);
 
-    void c2me$cache(double[] res, int[] x, int[] y, int[] z, EvalType evalType);
+    void c2me$cache(float[] res, int[] x, int[] y, int[] z, EvalType evalType);
 
     boolean c2me$isActualCache();
 

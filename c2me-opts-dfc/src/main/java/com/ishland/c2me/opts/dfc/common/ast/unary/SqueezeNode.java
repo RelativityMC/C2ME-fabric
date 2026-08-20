@@ -25,6 +25,7 @@
 package com.ishland.c2me.opts.dfc.common.ast.unary;
 
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
+import net.minecraft.util.math.MathHelper;
 
 public class SqueezeNode extends AbstractUnaryNode {
 
@@ -35,6 +36,18 @@ public class SqueezeNode extends AbstractUnaryNode {
     @Override
     protected AstNode newInstance(AstNode operand) {
         return new SqueezeNode(operand);
+    }
+
+    @Override
+    public double computeF64(double operand) {
+        double v = MathHelper.clamp(operand, -1.0, 1.0);
+        return v / 2.0 - v * v * v / 24.0;
+    }
+
+    @Override
+    public float computeF32(float operand) {
+        float v = MathHelper.clamp(operand, -1.0F, 1.0F);
+        return v / 2.0F - v * v * v / 24.0F;
     }
 
 }

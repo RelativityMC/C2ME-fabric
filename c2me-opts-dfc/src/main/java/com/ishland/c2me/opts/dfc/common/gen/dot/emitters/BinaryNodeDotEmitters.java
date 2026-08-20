@@ -29,10 +29,13 @@ import com.ishland.c2me.opts.dfc.common.ast.binary.AbstractBinaryNode;
 import com.ishland.c2me.opts.dfc.common.ast.binary.AddNode;
 import com.ishland.c2me.opts.dfc.common.ast.binary.DivNode;
 import com.ishland.c2me.opts.dfc.common.ast.binary.MaxNode;
-import com.ishland.c2me.opts.dfc.common.ast.binary.MaxShortNode;
+import com.ishland.c2me.opts.dfc.common.ast.binary.MaxShortF32Node;
+import com.ishland.c2me.opts.dfc.common.ast.binary.MaxShortF64Node;
 import com.ishland.c2me.opts.dfc.common.ast.binary.MinNode;
-import com.ishland.c2me.opts.dfc.common.ast.binary.MinShortNode;
+import com.ishland.c2me.opts.dfc.common.ast.binary.MinShortF32Node;
+import com.ishland.c2me.opts.dfc.common.ast.binary.MinShortF64Node;
 import com.ishland.c2me.opts.dfc.common.ast.binary.MulNode;
+import com.ishland.c2me.opts.dfc.common.ast.binary.PowNode;
 import com.ishland.c2me.opts.dfc.common.gen.CodeGenRegistry;
 import com.ishland.c2me.opts.dfc.common.gen.dot.DotEmitter;
 import com.ishland.c2me.opts.dfc.common.gen.dot.DotGen;
@@ -64,10 +67,13 @@ public class BinaryNodeDotEmitters {
         registry.registerExactMatch(AddNode.class, new BinaryNodeEmitter<>(node -> "add"));
         registry.registerExactMatch(DivNode.class, new BinaryNodeEmitter<>(node -> "div"));
         registry.registerExactMatch(MaxNode.class, new BinaryNodeEmitter<>(node -> "max"));
-        registry.registerExactMatch(MaxShortNode.class, new BinaryNodeEmitter<>(node -> "max, shortcut rightMax=" + node.rightMax));
+        registry.registerExactMatch(MaxShortF64Node.class, new BinaryNodeEmitter<>(node -> "maxF64, shortcut rightMax=" + node.rightMax));
+        registry.registerExactMatch(MaxShortF32Node.class, new BinaryNodeEmitter<>(node -> "maxF32, shortcut rightMax=" + node.rightMax));
         registry.registerExactMatch(MinNode.class, new BinaryNodeEmitter<>(node -> "min"));
-        registry.registerExactMatch(MinShortNode.class, new BinaryNodeEmitter<>(node -> "min, shortcut rightMin=" + node.rightMin));
+        registry.registerExactMatch(MinShortF64Node.class, new BinaryNodeEmitter<>(node -> "minF64, shortcut rightMin=" + node.rightMin));
+        registry.registerExactMatch(MinShortF32Node.class, new BinaryNodeEmitter<>(node -> "minF32, shortcut rightMin=" + node.rightMin));
         registry.registerExactMatch(MulNode.class, new BinaryNodeEmitter<>(node -> "mul"));
+        registry.registerExactMatch(PowNode.class, new BinaryNodeEmitter<>(node -> "pow"));
     }
 
 }

@@ -40,7 +40,7 @@ public abstract class MixinChunkNoiseSamplerFlatCache implements IFastCacheLike 
 
     @Shadow @Final private ChunkNoiseSampler field_36611;
 
-    @Shadow @Final private double[] cache;
+    @Shadow @Final private float[] cache;
 
     @Mutable
     @Shadow @Final private DensityFunction delegate;
@@ -48,7 +48,7 @@ public abstract class MixinChunkNoiseSamplerFlatCache implements IFastCacheLike 
     @Shadow @Final private int horizontalCacheSize;
 
     @Override
-    public double c2me$getCached(int x, int y, int z, EvalType evalType) {
+    public float c2me$getCached(int x, int y, int z, EvalType evalType) {
         int i = BiomeCoords.fromBlock(x);
         int j = BiomeCoords.fromBlock(z);
         int k = i - ((IChunkNoiseSampler) this.field_36611).getStartBiomeX();
@@ -57,12 +57,12 @@ public abstract class MixinChunkNoiseSamplerFlatCache implements IFastCacheLike 
         if (k >= 0 && l >= 0 && k < m && l < m) {
             return this.cache[k + l * this.horizontalCacheSize];
         } else {
-            return Double.longBitsToDouble(CACHE_MISS_NAN_BITS);
+            return Float.intBitsToFloat(IFastCacheLike.CACHE_MISS_NAN_BITS_F32);
         }
     }
 
     @Override
-    public boolean c2me$getCached(double[] res, int[] x, int[] y, int[] z, EvalType evalType) {
+    public boolean c2me$getCached(float[] res, int[] x, int[] y, int[] z, EvalType evalType) {
         for (int i = 0; i < res.length; i ++) {
             int i1 = BiomeCoords.fromBlock(x[i]);
             int j1 = BiomeCoords.fromBlock(z[i]);
@@ -80,12 +80,12 @@ public abstract class MixinChunkNoiseSamplerFlatCache implements IFastCacheLike 
     }
 
     @Override
-    public void c2me$cache(int x, int y, int z, EvalType evalType, double cached) {
+    public void c2me$cache(int x, int y, int z, EvalType evalType, float cached) {
         // nop
     }
 
     @Override
-    public void c2me$cache(double[] res, int[] x, int[] y, int[] z, EvalType evalType) {
+    public void c2me$cache(float[] res, int[] x, int[] y, int[] z, EvalType evalType) {
         // nop
     }
 
