@@ -17,8 +17,6 @@
     "access.IChunkLevelManager",
     "access.IChunkLevelManagerDistanceFromNearestPlayerTracker",
     "access.IChunkLevelManagerNearbyChunkTicketUpdater",
-    "access.IChunkNoiseSampler",
-    "access.IChunkNoiseSamplerDensityInterpolator",
     "access.IChunkSection",
     "access.IChunkTicket",
     "access.IChunkTickScheduler",

@@ -73,19 +73,7 @@ public abstract class MixinStructureWeightSampler {
      * @reason optimize impl
      */
     @Overwrite
-    public float sample(DensityFunction.NoisePos pos) {
-        if (this.boundingBox == null) {
-            return 0.0f;
-        }
-
-        int x = pos.blockX();
-        int y = pos.blockY();
-        int z = pos.blockZ();
-
-        if (!this.boundingBox.contains(x, y, z)) {
-            return 0.0f;
-        }
-
+    public float method_1_9944(final int blockX, final int blockY, final int blockZ) {
         if (this.c2me$pieceArray == null || this.c2me$junctionArray == null) {
             this.c2me$initArrays();
         }
@@ -94,24 +82,24 @@ public abstract class MixinStructureWeightSampler {
 
         for (StructureWeightSampler.Piece piece : this.c2me$pieceArray) {
             BlockBox blockBox = piece.box();
-            int m = Math.max(0, Math.max(blockBox.getMinX() - x, x - blockBox.getMaxX()));
-            int n = Math.max(0, Math.max(blockBox.getMinZ() - z, z - blockBox.getMaxZ()));
+            int m = Math.max(0, Math.max(blockBox.getMinX() - blockX, blockX - blockBox.getMaxX()));
+            int n = Math.max(0, Math.max(blockBox.getMinZ() - blockZ, blockZ - blockBox.getMaxZ()));
             int o = blockBox.getMinY() + piece.groundLevelDelta();
-            int p = y - o;
+            int p = blockY - o;
 
             d += switch (piece.terrainAdjustment()) { // 2 switch statement merged
                 case NONE -> 0.0F;
                 case BURY -> getMagnitudeWeight(m, p / 2.0F, n);
                 case BEARD_THIN -> getStructureWeight(m, p, n, p) * 0.8F;
-                case BEARD_BOX -> getStructureWeight(m, Math.max(0, Math.max(o - y, y - blockBox.getMaxY())), n, p) * 0.8F;
-                case ENCAPSULATE -> getMagnitudeWeight(m / 2.0F, Math.max(0, Math.max(blockBox.getMinY() - y, y - blockBox.getMaxY())) / 2.0F, n / 2.0F) * 0.8F;
+                case BEARD_BOX -> getStructureWeight(m, Math.max(0, Math.max(o - blockY, blockY - blockBox.getMaxY())), n, p) * 0.8F;
+                case ENCAPSULATE -> getMagnitudeWeight(m / 2.0F, Math.max(0, Math.max(blockBox.getMinY() - blockY, blockY - blockBox.getMaxY())) / 2.0F, n / 2.0F) * 0.8F;
             };
         }
 
         for (JigsawJunction jigsawJunction : this.c2me$junctionArray) {
-            int r = x - jigsawJunction.getSourceX();
-            int l = y - jigsawJunction.getSourceGroundY();
-            int m = z - jigsawJunction.getSourceZ();
+            int r = blockX - jigsawJunction.getSourceX();
+            int l = blockY - jigsawJunction.getSourceGroundY();
+            int m = blockZ - jigsawJunction.getSourceZ();
             d += getStructureWeight(r, l, m, l) * 0.4F;
         }
 

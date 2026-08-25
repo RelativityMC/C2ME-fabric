@@ -52,6 +52,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
+import java.util.Objects;
 import java.util.Queue;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
@@ -362,7 +363,11 @@ public class C2MEStorageThread extends Thread {
     private void scheduleChunkRead(long pos, CompletableFuture<NbtCompound> future, NbtScanner scanner) {
         try {
             final ChunkPos pos1 = ChunkPos.fromLong(pos);
-            final RegionFile regionFile = ((IRegionBasedStorage) this.storage).invokeGetRegionFile(pos1);
+            final RegionFile regionFile = ((IRegionBasedStorage) this.storage).invokeGetRegionFile(pos1, false);
+            if (regionFile == null) {
+                future.complete(null);
+                return;
+            }
             final DataInputStream chunkInputStream = regionFile.getChunkInputStream(pos1);
             if (chunkInputStream == null) {
                 future.complete(null);
@@ -398,7 +403,7 @@ public class C2MEStorageThread extends Thread {
                 if (this.cache.get(pos) == nbtFuture) {
                     try {
                         final ChunkPos pos1 = ChunkPos.fromLong(pos);
-                        final RegionFile regionFile = ((IRegionBasedStorage) this.storage).invokeGetRegionFile(pos1);
+                        final RegionFile regionFile = Objects.requireNonNull(((IRegionBasedStorage) this.storage).invokeGetRegionFile(pos1, true));
                         regionFile.delete(pos1);
                     } catch (Throwable t) {
                         LOGGER.error("Error writing chunk %s".formatted(ChunkPos.fromLong(pos)), t);
@@ -410,7 +415,7 @@ public class C2MEStorageThread extends Thread {
                 {
                     final ChunkPos pos1 = ChunkPos.fromLong(pos);
                     try {
-                        final RegionFile regionFile = ((IRegionBasedStorage) this.storage).invokeGetRegionFile(pos1);
+                        final RegionFile regionFile = Objects.requireNonNull(((IRegionBasedStorage) this.storage).invokeGetRegionFile(pos1, true));
                         compressionFormat = ((IRegionFile) regionFile).getCompressionFormat();
                     } catch (Throwable t) {
                         LOGGER.warn("Failed to get compression format for chunk %s".formatted(pos1), t);
@@ -443,7 +448,7 @@ public class C2MEStorageThread extends Thread {
                     if (this.cache.remove(pos, nbtFuture)) { // only write if match to avoid overwrites
                         try {
                             final ChunkPos pos1 = ChunkPos.fromLong(pos);
-                            final RegionFile regionFile = ((IRegionBasedStorage) this.storage).invokeGetRegionFile(pos1);
+                            final RegionFile regionFile = Objects.requireNonNull(((IRegionBasedStorage) this.storage).invokeGetRegionFile(pos1, true));
                             ByteBuffer byteBuffer = bytes.asByteBuffer();
                             // TODO [VanillaCopy] RegionFile.ChunkBuffer
                             byteBuffer.putInt(0, bytes.size() - 5 + 1);

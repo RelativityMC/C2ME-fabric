@@ -36,6 +36,6 @@ import java.io.IOException;
 public interface IRegionBasedStorage {
 
     @Invoker
-    RegionFile invokeGetRegionFile(ChunkPos pos) throws IOException;
+    RegionFile invokeGetRegionFile(ChunkPos pos, boolean create) throws IOException;
 
 }

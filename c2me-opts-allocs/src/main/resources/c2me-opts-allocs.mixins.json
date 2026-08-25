@@ -13,8 +13,6 @@
     "predicates.MixinAllOfBlockPredicate",
     "predicates.MixinAnyOfBlockPredicate",
     "predicates.MixinCombinedBlockPredicate",
-    "predicates.MixinOffsetPredicate",
-    "surfacebuilder.MixinMaterialRulesSequenceBlockStateRule",
-    "surfacebuilder.MixinMaterialRulesSequenceMaterialRule"
+    "predicates.MixinOffsetPredicate"
   ]
 }

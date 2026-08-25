@@ -40,6 +40,7 @@ import org.spongepowered.asm.mixin.Unique;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.Map;
+import java.util.Objects;
 import java.util.SequencedMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -64,7 +65,7 @@ public abstract class MixinStorageIoWorker implements IDirectStorage {
     private @NotNull CompletableFuture<Void> c2me$setRawChunkData0(ChunkPos pos, byte[] data) {
         StorageIoWorker.Result result = this.results.get(pos);
         try {
-            final RegionFile regionFile = ((IRegionBasedStorage) (Object) this.storage).invokeGetRegionFile(pos);
+            final RegionFile regionFile = Objects.requireNonNull(((IRegionBasedStorage) (Object) this.storage).invokeGetRegionFile(pos, true));
             try (final DataOutputStream out = regionFile.getChunkOutputStream(pos)) {
                 out.write(data);
             }

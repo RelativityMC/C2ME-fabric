@@ -43,7 +43,6 @@ import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ChunkTicketType;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.Unit;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.ChunkSectionPos;
@@ -53,7 +52,8 @@ import net.minecraft.world.WorldView;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.source.BiomeCoords;
 import net.minecraft.world.biome.source.BiomeSource;
-import net.minecraft.world.biome.source.util.MultiNoiseUtil;
+import net.minecraft.world.biome.source.BiomeSupplier;
+import net.minecraft.world.gen.noise.NoiseConfig;
 import net.minecraft.world.gen.structure.Structure;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -151,7 +151,7 @@ public class PreGenTask {
                 public boolean shouldStop() {
                     return biomesToLocate.isEmpty();
                 }
-            }, world.getChunkManager().getNoiseConfig().getMultiNoiseSampler(), world, EXECUTOR);
+            }, world.getChunkManager().getNoiseConfig(), world, EXECUTOR);
         }, new ThreadPerTaskExecutor(Thread::new));
         final CompletableFuture<Void> structureFuture = CompletableFuture.allOf(structureFeatures.stream()
                 .map(structureFeature -> CompletableFuture.runAsync(() -> {
@@ -294,7 +294,7 @@ public class PreGenTask {
             int horizontalBlockCheckInterval,
             int verticalBlockCheckInterval,
             LocateCallback locateCallback,
-            MultiNoiseUtil.MultiNoiseSampler noiseSampler,
+            NoiseConfig noiseConfig,
             WorldView world,
             Executor executor
     ) {
@@ -303,6 +303,8 @@ public class PreGenTask {
 
         final int permits = Runtime.getRuntime().availableProcessors() * 4;
         Semaphore semaphore = new Semaphore(permits);
+
+        BiomeSupplier biomeSupplier = source.method_1_9909(noiseConfig);
 
         for(BlockPos.Mutable mutable : BlockPos.iterateInSquare(BlockPos.ORIGIN, i, Direction.EAST, Direction.SOUTH)) {
             int j = origin.getX() + mutable.getX() * horizontalBlockCheckInterval;
@@ -315,7 +317,7 @@ public class PreGenTask {
                 try {
                     for(int n : is) {
                         int o = BiomeCoords.fromBlock(n);
-                        RegistryEntry<Biome> registryEntry = source.getBiomeSupplier(noiseSampler).getBiomeForNoiseGen(l, o, m);
+                        RegistryEntry<Biome> registryEntry = biomeSupplier.getBiomeForNoiseGen(l, o, m);
                         locateCallback.consume(registryEntry, j, n, k);
                     }
                 } finally {
