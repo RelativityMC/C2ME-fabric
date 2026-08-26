@@ -34,7 +34,7 @@ import java.util.concurrent.Executor;
 @Mixin(NoiseChunkGenerator.class)
 public class MixinNoiseChunkGenerator {
 
-    @ModifyArg(method = "method_1_9949", at = @At(value = "INVOKE", target = "Ljava/util/concurrent/CompletableFuture;supplyAsync(Ljava/util/function/Supplier;Ljava/util/concurrent/Executor;)Ljava/util/concurrent/CompletableFuture;"))
+    @ModifyArg(method = "buildTerrain", at = @At(value = "INVOKE", target = "Ljava/util/concurrent/CompletableFuture;supplyAsync(Ljava/util/function/Supplier;Ljava/util/concurrent/Executor;)Ljava/util/concurrent/CompletableFuture;"))
     private Executor redirectTerrainExecutor(Executor executor) {
         return Runnable::run;
     }

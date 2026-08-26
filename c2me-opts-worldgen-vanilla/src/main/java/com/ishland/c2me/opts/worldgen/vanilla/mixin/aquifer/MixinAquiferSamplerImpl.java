@@ -27,7 +27,6 @@ package com.ishland.c2me.opts.worldgen.vanilla.mixin.aquifer;
 import com.ishland.c2me.opts.worldgen.general.common.random_instances.RandomUtils;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
-import net.minecraft.class_1_1519;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.random.Random;
@@ -35,6 +34,7 @@ import net.minecraft.util.math.random.RandomSplitter;
 import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.gen.chunk.AquiferSampler;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
+import net.minecraft.world.gen.sampler.Sampler;
 import org.apache.commons.lang3.mutable.MutableDouble;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
@@ -81,15 +81,15 @@ public abstract class MixinAquiferSamplerImpl {
 
     @Shadow
     @Final
-    private class_1_1519.class_1_1520 barrierNoise;
+    private Sampler.Contextual barrierNoise;
 
     @Shadow
     @Final
-    private class_1_1519.class_1_1520 fluidLevelFloodednessNoise;
+    private Sampler.Contextual fluidLevelFloodednessNoise;
 
     @Shadow
     @Final
-    private class_1_1519.class_1_1520 fluidTypeNoise;
+    private Sampler.Contextual fluidTypeNoise;
 
     @Shadow
     @Final
@@ -116,7 +116,7 @@ public abstract class MixinAquiferSamplerImpl {
     @Shadow @Final private int maxY;
     @Shadow
     @Final
-    private class_1_1519.class_1_1520 exclusion;
+    private Sampler.Contextual exclusion;
 
     @Shadow
     protected abstract int adjustEstimatedHighestSurfaceLevel(int estimatedHighestSurfaceLevel);
@@ -381,13 +381,13 @@ public abstract class MixinAquiferSamplerImpl {
     private int getFluidBlockY(int blockX, int blockY, int blockZ, AquiferSampler.FluidLevel defaultFluidLevel, int surfaceHeightEstimate, boolean bl) {
         double d;
         double e;
-        if (this.exclusion.method_1_10145(blockX, blockY, blockZ) > (double)0.0F) {
+        if (this.exclusion.sample(blockX, blockY, blockZ) > (double)0.0F) {
             d = -1.0;
             e = -1.0;
         } else {
             int i = this.adjustEstimatedHighestSurfaceLevel(surfaceHeightEstimate) - blockY;
             double f = bl ? MathHelper.clampedLerp((double) i / 64.0, 1.0, 0.0) : 0.0; // inline
-            double g = MathHelper.clamp(this.fluidLevelFloodednessNoise.method_1_10145(blockX, blockY, blockZ), -1.0, 1.0);
+            double g = MathHelper.clamp(this.fluidLevelFloodednessNoise.sample(blockX, blockY, blockZ), -1.0, 1.0);
             d = g + 0.8 + (f - 1.0) * 1.2; // inline
             e = g + 0.3 + (f - 1.0) * 1.1; // inline
         }
@@ -455,7 +455,7 @@ public abstract class MixinAquiferSamplerImpl {
         if (!(q < -2.0) && !(q > 2.0)) {
             double s = mutableDouble.doubleValue();
             if (Double.isNaN(s)) {
-                double t = this.barrierNoise.method_1_10145(blockX, blockY, blockZ);
+                double t = this.barrierNoise.sample(blockX, blockY, blockZ);
                 mutableDouble.setValue(t);
                 r = t;
             } else {
@@ -474,7 +474,7 @@ public abstract class MixinAquiferSamplerImpl {
         if (!(q < -2.0) && !(q > 2.0)) {
             double s = this.c2me$mutableDoubleThingy;
             if (Double.isNaN(s)) {
-                double t = this.barrierNoise.method_1_10145(blockX, blockY, blockZ);
+                double t = this.barrierNoise.sample(blockX, blockY, blockZ);
                 this.c2me$mutableDoubleThingy = t;
                 r = t;
             } else {
@@ -521,7 +521,7 @@ public abstract class MixinAquiferSamplerImpl {
             int k = blockX >> 6; // floorDiv(blockX, 64)
             int l = Math.floorDiv(blockY, 40);
             int m = blockZ >> 6; // floorDiv(blockZ, 64)
-            double d = this.fluidTypeNoise.method_1_10145(k, l, m);
+            double d = this.fluidTypeNoise.sample(k, l, m);
             if (Math.abs(d) > 0.3) {
                 blockState = Blocks.LAVA.getDefaultState();
             }

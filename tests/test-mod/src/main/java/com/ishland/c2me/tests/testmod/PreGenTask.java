@@ -304,7 +304,7 @@ public class PreGenTask {
         final int permits = Runtime.getRuntime().availableProcessors() * 4;
         Semaphore semaphore = new Semaphore(permits);
 
-        BiomeSupplier biomeSupplier = source.method_1_9909(noiseConfig);
+        BiomeSupplier biomeSupplier = source.getCachedBiomeSupplier(noiseConfig);
 
         for(BlockPos.Mutable mutable : BlockPos.iterateInSquare(BlockPos.ORIGIN, i, Direction.EAST, Direction.SOUTH)) {
             int j = origin.getX() + mutable.getX() * horizontalBlockCheckInterval;

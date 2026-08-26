@@ -73,7 +73,7 @@ public abstract class MixinStructureWeightSampler {
      * @reason optimize impl
      */
     @Overwrite
-    public float method_1_9944(final int blockX, final int blockY, final int blockZ) {
+    public float sample(final int blockX, final int blockY, final int blockZ) {
         if (this.c2me$pieceArray == null || this.c2me$junctionArray == null) {
             this.c2me$initArrays();
         }
