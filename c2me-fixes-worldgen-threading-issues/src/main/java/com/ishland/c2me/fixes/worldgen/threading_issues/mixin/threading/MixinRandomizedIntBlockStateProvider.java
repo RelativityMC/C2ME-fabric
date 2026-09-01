@@ -25,6 +25,7 @@
 package com.ishland.c2me.fixes.worldgen.threading_issues.mixin.threading;
 
 import net.minecraft.block.BlockState;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.state.property.IntProperty;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.intprovider.IntProvider;
@@ -44,7 +45,7 @@ public abstract class MixinRandomizedIntBlockStateProvider {
 
     @Shadow @Nullable private IntProperty property;
 
-    @Shadow @Final private BlockStateProvider source;
+    @Shadow @Final private RegistryEntry<BlockStateProvider> source;
 
     @Shadow
     @Nullable
@@ -62,7 +63,7 @@ public abstract class MixinRandomizedIntBlockStateProvider {
      */
     @Overwrite
     public BlockState get(final WorldAccess worldAccess, final Random random, final BlockPos pos) {
-        BlockState unmodifiedState = this.source.get(worldAccess, random, pos);
+        BlockState unmodifiedState = this.source.value().get(worldAccess, random, pos);
         IntProperty propertyLocal = this.property;
         if (propertyLocal == null || !unmodifiedState.contains(propertyLocal)) {
             IntProperty property = getIntPropertyByName(unmodifiedState, this.propertyName);
