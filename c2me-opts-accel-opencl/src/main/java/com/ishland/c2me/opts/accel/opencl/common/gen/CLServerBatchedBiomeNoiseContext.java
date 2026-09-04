@@ -455,6 +455,16 @@ public class CLServerBatchedBiomeNoiseContext {
     }
 
     private void writeBiomes(BoundedRegionArray<ProtoChunk> chunks, GeneratedCLSource generatedCLSource, int biomeHeight, IntBuffer biomeOutBufferData) {
+        if (ZFastNoiseBindings.MH_FastCopyBufferDataIntoChunks$copyData_biomes != null) {
+            ZFastNoiseBindings.call_FastCopyBufferDataIntoChunks$copyData_biomes(
+                    chunks,
+                    generatedCLSource.getBiomeMappings(),
+                    biomeOutBufferData,
+                    this.startingPos,
+                    BATCH_SIZE
+            );
+            return;
+        }
         RegistryEntry<Biome>[] biomeMappings = generatedCLSource.getBiomeMappings();
         ProtoChunk startingChunk = chunks.get(this.startingPos.x(), this.startingPos.z());
 
@@ -518,8 +528,8 @@ public class CLServerBatchedBiomeNoiseContext {
     }
 
     private void writeBlocks(BoundedRegionArray<ProtoChunk> chunks, CLBlockStateMappings clBlockStateMappings, int verticalSize, ChunkGeneratorSettings settings, int horizontalSize, ByteBuffer blockOutBufferData) {
-        if (ZFastNoiseBindings.MH_FastCopyBufferDataIntoChunks$copyData != null) {
-            ZFastNoiseBindings.call_FastCopyBufferDataIntoChunks$copyData(
+        if (ZFastNoiseBindings.MH_FastCopyBufferDataIntoChunks$copyData_blocks != null) {
+            ZFastNoiseBindings.call_FastCopyBufferDataIntoChunks$copyData_blocks(
                     chunks,
                     clBlockStateMappings.getIdToBlockState(),
                     verticalSize,
