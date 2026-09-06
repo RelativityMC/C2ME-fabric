@@ -23,6 +23,15 @@ if (System.getenv("GITHUB_WORKFLOW") != null) {
     }
 }
 
+def vulkanRunVMArgs = runVMArgs.findAll { !it.startsWith("-Dc2me.base.config.override.openclAccel.enabled") } + [
+        "-Dc2me.base.config.override.openclAccel.enabled=false",
+        "-Dc2me.base.config.override.vulkanAccel.enabled=true",
+        // Validation layers cost real time on every Vulkan call, so a benchmarking run turns
+        // them off with -PvulkanValidation=false. On by default: correctness runs want them.
+        "-Dc2me.vulkan.debug.validation=" + (project.findProperty("vulkanValidation") ?: "true"),
+]
+
+
 loom {
     runs {
         testC2MEServer {
@@ -35,6 +44,12 @@ loom {
 
 def productionMods = project.files(project(":").remapJar.archiveFile, project(":tests:test-mod").remapJar.archiveFile)
 
+// The Vulkan backend ships as its own addon jar rather than nested in the main jar, so a run
+// exercising it has to load that jar alongside.
+def vulkanMods = productionMods + project.files(project(":c2me-opts-accel-vulkan").remapJar.archiveFile)
+
+
+
 tasks.register("runProductionTestC2MEServer", net.fabricmc.loom.task.prod.ServerProductionRunTask) {
     mods.setFrom productionMods
     runDir = project.getProjectDir().toPath().relativize(project.getBuildDir().toPath()).resolve("testProductionServer").toFile()
@@ -42,6 +57,19 @@ tasks.register("runProductionTestC2MEServer", net.fabricmc.loom.task.prod.Server
 
     dependsOn project(":").remapJar
     dependsOn project(":tests:test-mod").remapJar
+}
+
+// The dev run cannot be used for Vulkan: loom substitutes Minecraft's LWJGL set on the run
+// classpath, which has no lwjgl-vulkan. The production run loads the remapped jar with its
+// nested `include` jars, which is where the bindings actually live.
+tasks.register("runProductionTestC2MEVulkanServer", net.fabricmc.loom.task.prod.ServerProductionRunTask) {
+    mods.setFrom vulkanMods
+    runDir = project.getProjectDir().toPath().relativize(project.getBuildDir().toPath()).resolve("testProductionVulkanServer").toFile()
+    jvmArgs.addAll(vulkanRunVMArgs)
+
+    dependsOn project(":").remapJar
+    dependsOn project(":tests:test-mod").remapJar
+    dependsOn project(":c2me-opts-accel-vulkan").remapJar
 }
 
 afterEvaluate {

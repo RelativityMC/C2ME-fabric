@@ -1,0 +1,84 @@
+moduleDependencies(project, [
+        "c2me-base",
+        "c2me-opts-dfc",
+        "c2me-opts-natives-math",
+        "c2me-rewrites-chunk-system",
+])
+
+dependencies {
+    include implementation(platform("org.lwjgl:lwjgl-bom:${lwjgl_version}"))
+    include implementation("org.lwjgl:lwjgl:${lwjgl_version}:unsafe")
+    include implementation("org.lwjgl:lwjgl-vulkan")
+    include implementation("org.lwjgl:lwjgl-vma")
+    include implementation("org.lwjgl:lwjgl-shaderc")
+    include implementation("org.lwjgl:lwjgl-zstd")
+    include implementation("org.apache.commons:commons-compress:${apache_commons_compress_version}") {
+        transitive = false
+    }
+
+    include runtimeOnly("org.lwjgl:lwjgl::natives-linux")
+    include runtimeOnly("org.lwjgl:lwjgl::natives-linux-arm64")
+    include runtimeOnly("org.lwjgl:lwjgl::natives-windows")
+    include runtimeOnly("org.lwjgl:lwjgl::natives-macos")
+    include runtimeOnly("org.lwjgl:lwjgl::natives-macos-arm64")
+    include runtimeOnly("org.lwjgl:lwjgl-vma::natives-linux")
+    include runtimeOnly("org.lwjgl:lwjgl-shaderc::natives-linux")
+    include runtimeOnly("org.lwjgl:lwjgl-vma::natives-linux-arm64")
+    include runtimeOnly("org.lwjgl:lwjgl-shaderc::natives-linux-arm64")
+    include runtimeOnly("org.lwjgl:lwjgl-vma::natives-windows")
+    include runtimeOnly("org.lwjgl:lwjgl-shaderc::natives-windows")
+    include runtimeOnly("org.lwjgl:lwjgl-vma::natives-macos")
+    include runtimeOnly("org.lwjgl:lwjgl-shaderc::natives-macos")
+    include runtimeOnly("org.lwjgl:lwjgl-vma::natives-macos-arm64")
+    include runtimeOnly("org.lwjgl:lwjgl-shaderc::natives-macos-arm64")
+    include runtimeOnly("org.lwjgl:lwjgl-zstd::natives-linux")
+    include runtimeOnly("org.lwjgl:lwjgl-zstd::natives-windows")
+}
+
+def glslangExecutable = providers.gradleProperty("c2me.glslangValidator")
+        .orElse(providers.environmentVariable("VULKAN_SDK").map { "${it}/bin/glslangValidator".toString() })
+        .orElse("glslangValidator")
+
+def preludeSource = layout.projectDirectory.file("src/main/resources/shaders/c2me_vulkan_ext_math.glsl")
+
+def preludeVariants = [
+        "ESTIMATE_SURFACE_HEIGHT",
+        "AQUIFER_PREFILL",
+        "NOISE_KERNEL",
+        "FLAT_CACHE_PREFILL",
+        "CACHE2D_PREFILL",
+        "INTERPOLATOR_PREFILL",
+        "BIOME_MULTINOISE_KERNEL",
+]
+
+def preludeTasks = preludeVariants.collect { variant ->
+    def output = layout.buildDirectory.file("generated/resources/shaders/c2me_vulkan_ext_math_${variant.toLowerCase()}.spv")
+    tasks.register("compilePreludeSpirV${variant.split('_').collect { it.substring(0, 1) + it.substring(1).toLowerCase() }.join()}", Exec) {
+        group = "build"
+        description = "Compiles ${variant} density function to SPIR-V"
+
+        inputs.file(preludeSource).withPropertyName("prelude")
+        outputs.file(output).withPropertyName("spirv")
+
+        executable = glslangExecutable.get()
+        args "-S", "comp",
+                "--target-env", "vulkan1.2",
+                "-DDF_COMPILE_${variant}=1",
+                "-o", output.get().asFile.absolutePath,
+                preludeSource.asFile.absolutePath
+
+        doFirst { output.get().asFile.parentFile.mkdirs() }
+    }
+}
+
+tasks.register("compilePreludeSpirV") {
+    group = "build"
+    description = "Compiles every density function to SPIR-V"
+    dependsOn preludeTasks
+}
+
+processResources {
+    dependsOn tasks.named("compilePreludeSpirV")
+    from(layout.buildDirectory.dir("generated/resources"))
+    exclude "shaders/*.glsl"
+}

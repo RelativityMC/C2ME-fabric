@@ -357,7 +357,7 @@ dependencies {
 
             def projectName = it.name
             api project(path: ":${projectName}", configuration: "namedElements")
-            if (projectName != "c2me-opts-accel-opencl" && projectName != "tests") {
+            if (projectName != "c2me-opts-accel-opencl" && projectName != "c2me-opts-accel-vulkan" && projectName != "tests") {
                 include project(":${projectName}")
             }
         }
