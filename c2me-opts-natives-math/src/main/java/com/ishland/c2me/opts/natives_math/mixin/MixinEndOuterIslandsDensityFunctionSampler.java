@@ -24,12 +24,12 @@
 
 package com.ishland.c2me.opts.natives_math.mixin;
 
-import com.ishland.c2me.base.mixin.access.ISimplexNoiseSampler;
+import com.ishland.c2me.base.common.util.MemoryUtil;
+import com.ishland.c2me.base.mixin.access.IEndOuterIslandsDensityFunction;
+import com.ishland.c2me.base.mixin.access.ILatticedNoiseSampler;
 import com.ishland.c2me.opts.natives_math.common.Bindings;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.noise.SimplexNoiseSampler;
-import net.minecraft.world.gen.densityfunction.DensityFunction;
-import net.minecraft.world.gen.densityfunction.DensityFunctionTypes;
+import net.minecraft.world.gen.sampler.SamplingContext;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -39,15 +39,10 @@ import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.invoke.VarHandle;
 
-@Mixin(DensityFunctionTypes.EndIslands.class)
-public abstract class MixinDFTypesEndIslands {
+@Mixin(targets = "net.minecraft.world.gen.densityfunction.EndOuterIslandsDensityFunction$Sampler")
+public abstract class MixinEndOuterIslandsDensityFunctionSampler {
 
-    @Shadow @Final private SimplexNoiseSampler sampler;
-
-    @Shadow
-    protected static float sample(SimplexNoiseSampler sampler, int x, int z) {
-        return 0;
-    }
+    @Shadow @Final private SimplexNoiseSampler islandNoise;
 
     @Unique
     private final Arena c2me$arena = Arena.ofAuto();
@@ -58,9 +53,9 @@ public abstract class MixinDFTypesEndIslands {
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void postInit(CallbackInfo ci) {
-        int[] permutation = ((ISimplexNoiseSampler) this.sampler).getPermutation();
+        byte[] permutation = ((ILatticedNoiseSampler) this.islandNoise).getPermutation();
         MemorySegment segment = this.c2me$arena.allocate(permutation.length * 4L, 64);
-        MemorySegment.copy(MemorySegment.ofArray(permutation), 0L, segment, 0L, permutation.length * 4L);
+        MemorySegment.copy(MemorySegment.ofArray(MemoryUtil.byte2int(permutation)), 0L, segment, 0L, permutation.length * 4L);
         VarHandle.fullFence();
         this.c2me$samplerData = segment;
         this.c2me$samplerDataPtr = segment.address();
@@ -71,11 +66,11 @@ public abstract class MixinDFTypesEndIslands {
      * @reason replace impl
      */
     @Overwrite
-    public double sample(DensityFunction.NoisePos pos) {
+    public float sample(final SamplingContext context, final int x, final int y, final int z) {
         if (this.c2me$samplerDataPtr != 0L) {
-            return ((double) Bindings.c2me_natives_end_islands_sample(this.c2me$samplerDataPtr, pos.blockX() / 8, pos.blockZ() / 8) - 8.0) / 128.0;
+            return (Bindings.c2me_natives_end_islands_sample(this.c2me$samplerDataPtr, x / 8, z / 8) - 8.0F) / 128.0F;
         } else {
-            return ((double)sample(this.sampler, pos.blockX() / 8, pos.blockZ() / 8) - 8.0) / 128.0;
+            return (IEndOuterIslandsDensityFunction.invokeSample(this.islandNoise, x / 8, z / 8) - 8.0F) / 128.0F;
         }
     }
 

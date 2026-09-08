@@ -668,12 +668,7 @@ math_end_islands_sample(const aligned_uint32_ptr simplex_permutations, const int
     const int32_t j = z / 2;
     const int32_t k = x % 2;
     const int32_t l = z % 2;
-    volatile int32_t muld = x * x + z * z; // int32_t intentionally
-    if (muld & 0x80000000) {
-        return __builtin_nanf("");
-    }
-    float f = 100.0F - sqrtf((float) (muld & 0xffffffff)) * 8.0F;
-    f = clampf(f, -100.0F, 80.0F);
+    float f = -100.0F;
 
     int8_t ms[25 * 25], ns[25 * 25], hit[25 * 25];
     const int64_t omin = labs(i) - 12LL;

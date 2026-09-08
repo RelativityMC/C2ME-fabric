@@ -61,11 +61,11 @@ public class MixinAquiferSamplerImpl {
     @Shadow
     private short[] c2me$packedBlockPositions;
 
-    @Shadow @Final private int startX;
-    @Shadow @Final private int startY;
-    @Shadow @Final private int startZ;
-    @Shadow @Final private int sizeX;
-    @Shadow @Final private int sizeZ;
+    @Shadow @Final private int startCellX;
+    @Shadow @Final private int startCellY;
+    @Shadow @Final private int startCellZ;
+    @Shadow @Final private int cellCountX;
+    @Shadow @Final private int cellCountZ;
 
     @Unique
     private MemorySegment c2me$dataSegment;
@@ -90,7 +90,7 @@ public class MixinAquiferSamplerImpl {
 
         c2me$aquiferData = allocator.allocate(5 * 4);
         c2me$aquiferDataAddress = c2me$aquiferData.address();
-        MemorySegment.copy(new int[] {startX, startY, startZ, sizeX, sizeZ}, 0, c2me$aquiferData, ValueLayout.JAVA_INT, 0, 5);
+        MemorySegment.copy(new int[] {startCellX, startCellY, startCellZ, cellCountX, cellCountZ}, 0, c2me$aquiferData, ValueLayout.JAVA_INT, 0, 5);
 
         c2me$packedArraySegment = allocator.allocate(4 * 4);
         c2me$packedArraySegmentAddress = c2me$packedArraySegment.address();

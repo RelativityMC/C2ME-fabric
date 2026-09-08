@@ -22,39 +22,16 @@
  * THE SOFTWARE.
  */
 
-package com.ishland.c2me.opts.natives_math.mixin;
+package com.ishland.c2me.base.mixin.access;
 
-import com.ishland.c2me.opts.natives_math.common.Bindings;
-import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.biome.Biome;
-import net.minecraft.world.biome.source.BiomeAccess;
-import net.minecraft.world.biome.source.BiomeSupplier;
-import org.spongepowered.asm.mixin.Final;
+import net.minecraft.util.math.noise.LatticedNoiseSampler;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
-import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.gen.Accessor;
 
-@Mixin(BiomeAccess.class)
-public class MixinBiomeAccess {
+@Mixin(LatticedNoiseSampler.class)
+public interface ILatticedNoiseSampler {
 
-    @Shadow @Final private long seed;
-
-    @Shadow @Final private BiomeSupplier storage;
-
-    /**
-     * @author ishland
-     * @reason replace impl
-     */
-    @Overwrite
-    public RegistryEntry<Biome> getBiome(final int x, final int y, final int z) {
-        int mask = Bindings.c2me_natives_biome_access_sample(this.seed, x, y, z);
-
-        return this.storage.getBiomeForNoiseGen(
-                ((x - 2) >> 2) + ((mask & 4) != 0 ? 1 : 0),
-                ((y - 2) >> 2) + ((mask & 2) != 0 ? 1 : 0),
-                ((z - 2) >> 2) + ((mask & 1) != 0 ? 1 : 0)
-        );
-    }
+    @Accessor
+    byte[] getPermutation();
 
 }
