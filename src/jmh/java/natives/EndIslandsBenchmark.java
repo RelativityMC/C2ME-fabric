@@ -24,9 +24,11 @@
 
 package natives;
 
+import com.ishland.c2me.base.common.util.MemoryUtil;
 import com.ishland.c2me.opts.natives_math.common.BindingsTemplate;
 import natives.support.ReflectUtils;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.noise.LatticedNoiseSampler;
 import net.minecraft.util.math.noise.SimplexNoiseSampler;
 import net.minecraft.util.math.random.LocalRandom;
 import org.openjdk.jmh.annotations.*;
@@ -53,8 +55,7 @@ public class EndIslandsBenchmark extends Base_x86_64 {
         int j = z / 2;
         int k = x % 2;
         int l = z % 2;
-        float f = 100.0F - MathHelper.sqrt((float)(x * x + z * z)) * 8.0F;
-        f = MathHelper.clamp(f, -100.0F, 80.0F);
+        float f = -100.0F;
 
         for (int m = -12; m <= 12; m++) {
             for (int n = -12; n <= 12; n++) {
@@ -93,7 +94,7 @@ public class EndIslandsBenchmark extends Base_x86_64 {
         }
         LocalRandom random1 = new LocalRandom(random.nextLong());
         this.vanillaSampler = new SimplexNoiseSampler(random1);
-        int[] permutation = (int[]) ReflectUtils.getField(SimplexNoiseSampler.class, this.vanillaSampler, "permutation");
+        int[] permutation = (int[]) MemoryUtil.byte2int((byte[]) ReflectUtils.getField(LatticedNoiseSampler.class, this.vanillaSampler, "permutation"));
         this.nativeSamplerData = Arena.ofAuto().allocate(permutation.length * 4L, 64);
         MemorySegment.copy(MemorySegment.ofArray(permutation), 0L, this.nativeSamplerData, 0L, permutation.length * 4L);
         this.nativeSamplerDataPtr = this.nativeSamplerData.address();

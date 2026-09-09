@@ -37,7 +37,7 @@ import java.util.concurrent.TimeUnit;
 
 @State(Scope.Benchmark)
 @BenchmarkMode({Mode.AverageTime})
-@OperationsPerInvocation(PerlinNoiseBenchmark.invocations)
+@OperationsPerInvocation(FastNoiseLiteBenchmark.invocations)
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
 public class FastNoiseLiteBenchmark extends Base_x86_64 {
 

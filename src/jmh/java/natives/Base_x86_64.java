@@ -49,10 +49,10 @@ public abstract class Base_x86_64 {
         sse4_2 = base.bindTo(NativeLoader.lookup.find(prefix + ISA_x86_64.SSE4_2.getSuffix()).get());
         avx = base.bindTo(NativeLoader.lookup.find(prefix + ISA_x86_64.AVX.getSuffix()).get());
         avx2 = base.bindTo(NativeLoader.lookup.find(prefix + ISA_x86_64.AVX2.getSuffix()).get());
-        avx2adl = base.bindTo(NativeLoader.lookup.find(prefix + ISA_x86_64.AVX2ADL.getSuffix()).get());
-        avx512skx = base.bindTo(NativeLoader.lookup.find(prefix + ISA_x86_64.AVX512SKX.getSuffix()).get());
-        avx512icl = base.bindTo(NativeLoader.lookup.find(prefix + ISA_x86_64.AVX512ICL.getSuffix()).get());
-        avx512spr = base.bindTo(NativeLoader.lookup.find(prefix + ISA_x86_64.AVX512SPR.getSuffix()).get());
+        avx2adl = base.bindTo(NativeLoader.lookup.find(prefix + ISA_x86_64.AVX2VNNI.getSuffix()).get());
+        avx512skx = base.bindTo(NativeLoader.lookup.find(prefix + ISA_x86_64.SKX_AVX512.getSuffix()).get());
+        avx512icl = base.bindTo(NativeLoader.lookup.find(prefix + ISA_x86_64.ICL_AVX512.getSuffix()).get());
+        avx512spr = base.bindTo(NativeLoader.lookup.find(prefix + ISA_x86_64.SPR_AVX512.getSuffix()).get());
     }
 
     @CompilerControl(CompilerControl.Mode.INLINE)

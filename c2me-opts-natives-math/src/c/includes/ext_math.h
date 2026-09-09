@@ -692,6 +692,7 @@ math_end_islands_sample(const aligned_uint32_ptr simplex_permutations, const int
     }
 
     if (omin * omin + pmin * pmin > 4096LL) {
+#pragma clang loop vectorize(enable) interleave_count(2)
         for (uint32_t idx = 0; idx < 25 * 25; idx++) {
             const int64_t o = (int64_t) i + (int64_t) ms[idx];
             const int64_t p = (int64_t) j + (int64_t) ns[idx];

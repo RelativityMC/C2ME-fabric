@@ -26,13 +26,9 @@ package natives.accuracy;
 
 import com.ishland.c2me.opts.natives_math.common.BindingsTemplate;
 import com.ishland.c2me.opts.natives_math.common.ISATarget;
-import natives.DoublePerlinNoiseBenchmark;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.noise.DoublePerlinNoiseSampler;
 import net.minecraft.world.biome.source.SeedMixer;
-import org.openjdk.jmh.infra.Blackhole;
 
-import java.lang.foreign.MemorySegment;
 import java.lang.invoke.MethodHandle;
 import java.util.Arrays;
 import java.util.Random;

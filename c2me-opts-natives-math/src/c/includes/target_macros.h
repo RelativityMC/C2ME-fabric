@@ -15,8 +15,10 @@
   __attribute__((pure, target("arch=x86-64"))) TARGET_IMPL_ARCH(sse2, func_prefix, func_ret, func_call) \
   __attribute__((pure, target("arch=x86-64-v2"))) TARGET_IMPL_ARCH(sse4_2, func_prefix, func_ret, func_call) \
   __attribute__((pure, target("arch=sandybridge"))) TARGET_IMPL_ARCH(avx, func_prefix, func_ret, func_call) \
-  __attribute__((pure, target("arch=alderlake"))) TARGET_IMPL_ARCH(avx2adl, func_prefix, func_ret, func_call) \
-  __attribute__((pure, target("arch=sapphirerapids"))) TARGET_IMPL_ARCH(avx512spr, func_prefix, func_ret, func_call)
+  __attribute__((pure, target("arch=alderlake"))) TARGET_IMPL_ARCH(avx2vnni, func_prefix, func_ret, func_call) \
+  __attribute__((pure, target("arch=sapphirerapids"))) TARGET_IMPL_ARCH(avx512spr, func_prefix, func_ret, func_call) \
+  __attribute__((pure, target("arch=diamondrapids"))) TARGET_IMPL_ARCH(avx10_2dmr, func_prefix, func_ret, func_call) \
+  __attribute__((pure, target("arch=novalake"))) TARGET_IMPL_ARCH(avx10_2nvl, func_prefix, func_ret, func_call)
 #endif
 
 #else
