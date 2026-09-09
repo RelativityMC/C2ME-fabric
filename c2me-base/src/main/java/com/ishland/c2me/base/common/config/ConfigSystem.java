@@ -310,7 +310,7 @@ public class ConfigSystem {
             if (!CONFIG.contains(this.key)) {
                 CONFIG.set(this.key, "default");
             }
-            final String comment = String.format(" (Default: %s) %s", def, this.comment.replace("\n", "\n "));
+            final String comment = String.format(" %s\n (Default: %s) %s", "=".repeat(64), def, this.comment.replace("\n", "\n "));
             if (this.incompatibilityDetected) {
                 CONFIG.setComment(this.key, String.format("%s\n Set to %s for the following reasons: %s ", comment, incompatibleDef, this.incompatibilityReason));
             } else {
