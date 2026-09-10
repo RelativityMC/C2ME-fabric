@@ -75,9 +75,11 @@ public interface LinuxLibc extends Library {
         try {
             if (INSTANCE.setpriority(PRIO_PROCESS, 0, priority) != 0) {
                 ThreadPriorityPresets.LOGGER.warn("setpriority(PRIO_PROCESS, 0, {}) failed: {}", priority, Native.getLastError());
+                return;
             }
         } catch (UnsatisfiedLinkError e) {
             ThreadPriorityPresets.LOGGER.error("Unable to link to setpriority: {}", e.toString());
+            return;
         }
     }
 

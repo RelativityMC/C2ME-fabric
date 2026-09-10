@@ -72,19 +72,27 @@ public class ModuleEntryPoint {
                     Sets the thread priority preset for worker threads
                     
                     Available presets:
-                    - UNSET: do not touch any thread priority settings
+                    - UNSET: do not touch any thread priority settings, restores legacy behavior
                     - BELOW_NORMAL:
-                      Linux: Use SCHED_BATCH
-                      Windows: Use Below Normal priority
+                      Linux: SCHED_BATCH
+                      Windows: Below Normal priority
+                      MacOS: priority=30
+                      FreeBSD: priority=12
                     - LOW:
-                      Linux: Use SCHED_BATCH, nice value to 5
-                      Windows: Use Below Normal priority, enable power throttling
+                      Linux: SCHED_BATCH, nice=3
+                      Windows: Below Normal priority, enable power throttling
+                      MacOS: priority=28
+                      FreeBSD: priority=6
                     - LOWER
-                      Linux: Use SCHED_BATCH, nice value to 10
-                      Windows: Use Lowest priority, enable power throttling
-                    - IDLE
-                      Linux: Use SCHED_IDLE
-                      Windows: Use Idle priority, enable power throttling
+                      Linux: SCHED_BATCH, nice=8
+                      Windows: Lowest priority, enable power throttling
+                      MacOS: priority=23
+                      FreeBSD: priority=3
+                    - LOWEST
+                      Linux: SCHED_BATCH, nice=16
+                      Windows: Idle priority, enable power throttling
+                      MacOS: priority=15
+                      FreeBSD: priority=0
                     
                     Defaults to LOW on clients and BELOW_NORMAL for dedicated servers
                     
