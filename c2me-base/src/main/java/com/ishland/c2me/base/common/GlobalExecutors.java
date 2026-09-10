@@ -36,11 +36,15 @@ public class GlobalExecutors {
 //    private static final C2MEForkJoinWorkerThreadFactory factory = new C2MEForkJoinWorkerThreadFactory("c2me", "C2ME worker #%d", Thread.NORM_PRIORITY - 1);
     public static final int GLOBAL_EXECUTOR_PARALLELISM = (int) ModuleEntryPoint.globalExecutorParallelism;
     private static final AtomicInteger prioritizedSchedulerCounter = new AtomicInteger(0);
-    public static final ExecutorManager prioritizedScheduler = new ExecutorManager(GlobalExecutors.GLOBAL_EXECUTOR_PARALLELISM, thread -> {
-        thread.setDaemon(true);
-        thread.setPriority(Math.max(Thread.MIN_PRIORITY, Math.min(Thread.MAX_PRIORITY, (int) ModuleEntryPoint.threadPoolPriority)));
-        thread.setName("c2me-worker-%d".formatted(prioritizedSchedulerCounter.getAndIncrement()));
-    });
+    public static final ExecutorManager prioritizedScheduler = new ExecutorManager(
+            GlobalExecutors.GLOBAL_EXECUTOR_PARALLELISM,
+            thread -> {
+                thread.setDaemon(true);
+                thread.setName("c2me-worker-%d".formatted(prioritizedSchedulerCounter.getAndIncrement()));
+            },
+            () -> ModuleEntryPoint.threadPoolPriorityPreset.applyToCurrentThread(),
+            64
+    );
 
     public static final Executor asyncScheduler;
 
