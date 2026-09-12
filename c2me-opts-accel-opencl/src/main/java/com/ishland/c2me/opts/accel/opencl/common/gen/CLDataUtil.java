@@ -219,9 +219,9 @@ public class CLDataUtil {
                         int startY = IAquiferSamplerImpl.invokeGetLocalY(generationShapeConfig.minimumY() + 1) - 1;
                         int startZ = IAquiferSamplerImpl.invokeGetLocalZ(basePos.getStartZ() - 5) + 0;
                         ChunkPos endChunkPos = new ChunkPos(basePos.x() + horizontalChunkSize - 1, basePos.z() + horizontalChunkSize - 1);
-                        int endX = IAquiferSamplerImpl.invokeGetLocalX(endChunkPos.getEndX() + 5 - 1) + 1;
-                        int endY = IAquiferSamplerImpl.invokeGetLocalY(generationShapeConfig.minimumY() + generationShapeConfig.height() - 1) + 1;
-                        int endZ = IAquiferSamplerImpl.invokeGetLocalZ(endChunkPos.getEndZ() + 5 - 1) + 1;
+                        int endX = IAquiferSamplerImpl.invokeGetLocalX(endChunkPos.getEndX() - 5) + 1;
+                        int endY = IAquiferSamplerImpl.invokeGetLocalY(generationShapeConfig.minimumY() + generationShapeConfig.height() + 1) + 1;
+                        int endZ = IAquiferSamplerImpl.invokeGetLocalZ(endChunkPos.getEndZ() - 5) + 1;
 
                         int samplingYLowPassCutoff = generationShapeConfig.minimumY();
 

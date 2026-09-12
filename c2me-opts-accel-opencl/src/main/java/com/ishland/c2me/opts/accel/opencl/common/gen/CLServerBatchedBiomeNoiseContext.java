@@ -269,9 +269,9 @@ public class CLServerBatchedBiomeNoiseContext {
                     int startY = IAquiferSamplerImpl.invokeGetLocalY(settings.generationShapeConfig().minimumY() + 1) - 1;
                     int startZ = IAquiferSamplerImpl.invokeGetLocalZ(this.startingPos.getStartZ() - 5) + 0;
                     ChunkPos endChunkPos = new ChunkPos(this.startingPos.x() + BATCH_SIZE - 1, this.startingPos.z() + BATCH_SIZE - 1);
-                    int endX = IAquiferSamplerImpl.invokeGetLocalX(endChunkPos.getEndX() + 5 - 1) + 1;
-                    int endY = IAquiferSamplerImpl.invokeGetLocalY(settings.generationShapeConfig().minimumY() + settings.generationShapeConfig().height() - 1) + 1;
-                    int endZ = IAquiferSamplerImpl.invokeGetLocalZ(endChunkPos.getEndZ() + 5 - 1) + 1;
+                    int endX = IAquiferSamplerImpl.invokeGetLocalX(endChunkPos.getEndX() - 5) + 1;
+                    int endY = IAquiferSamplerImpl.invokeGetLocalY(settings.generationShapeConfig().minimumY() + settings.generationShapeConfig().height() + 1) + 1;
+                    int endZ = IAquiferSamplerImpl.invokeGetLocalZ(endChunkPos.getEndZ() - 5) + 1;
 
 
                     PointerBuffer globalWorkSize = stack.callocPointer(3);
