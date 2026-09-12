@@ -27,6 +27,7 @@ package com.ishland.c2me.rewrites.chunksystem.mixin;
 import com.ishland.c2me.base.mixin.access.IThreadedAnvilChunkStorage;
 import com.ishland.c2me.rewrites.chunksystem.common.ducks.IChunkSystemAccess;
 import com.ishland.c2me.rewrites.chunksystem.common.structs.ChunkSystemExecutors;
+import com.ishland.flowsched.structs.SimpleObjectPool;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.server.world.ChunkHolder;
@@ -51,6 +52,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.ArrayDeque;
+import java.util.ConcurrentModificationException;
 import java.util.concurrent.CompletableFuture;
 
 @Mixin(ServerChunkManager.class)
@@ -67,6 +69,13 @@ public abstract class MixinServerChunkManager {
     protected abstract @Nullable ChunkHolder getChunkHolder(long pos);
 
     @Shadow public abstract int getLoadedChunkCount();
+
+    private final SimpleObjectPool<ArrayDeque<Runnable>> c2me$mainThreadConsolidatorPool = new SimpleObjectPool<>(
+            pool -> new ArrayDeque<>(),
+            ArrayDeque::clear,
+            ArrayDeque::clear,
+            4
+    );
 
     @Inject(method = "getChunk(IILnet/minecraft/world/chunk/ChunkStatus;Z)Lnet/minecraft/world/chunk/Chunk;", at = @At("HEAD"), cancellable = true)
     private void shortcutGetChunk(int x, int z, ChunkStatus leastStatus, boolean create, CallbackInfoReturnable<Chunk> cir) {
@@ -114,15 +123,24 @@ public abstract class MixinServerChunkManager {
 
     @WrapOperation(method = "updateChunks", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ChunkLevelManager;update(Lnet/minecraft/server/world/ServerChunkLoadingManager;)Z"))
     private boolean consolidateSchedules(ChunkLevelManager instance, ServerChunkLoadingManager chunkLoadingManager, Operation<Boolean> original) {
+        if (Thread.currentThread() != this.serverThread) {
+            ConcurrentModificationException e = new ConcurrentModificationException("Async update chunks");
+            e.printStackTrace();
+            throw e;
+        }
+
         ArrayDeque<Runnable> runnables;
         return ScopedValue
-                .where(ChunkSystemExecutors.CONSOLIDATING_QUEUE, runnables = new ArrayDeque<>())
+                .where(ChunkSystemExecutors.CONSOLIDATING_QUEUE, runnables = this.c2me$mainThreadConsolidatorPool.alloc())
                 .call(() -> {
                     try {
                         return original.call(instance, chunkLoadingManager);
                     } finally {
                         if (!runnables.isEmpty()) {
                             ChunkSystemExecutors.consolidatingRoot0(runnables);
+                            this.c2me$mainThreadConsolidatorPool.release(new ArrayDeque<>());
+                        } else {
+                            this.c2me$mainThreadConsolidatorPool.release(runnables);
                         }
                     }
                 });
