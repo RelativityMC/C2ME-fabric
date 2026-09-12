@@ -54,21 +54,21 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
 
     /**
      * @author ishland
-     * @reason skip datafixer if possible
+     * @reason skip datafixer if possible, also remove one layer of scheduling
      */
     @Overwrite
     private CompletableFuture<Optional<NbtCompound>> getUpdatedChunkNbt(ChunkPos chunkPos) {
 //        return this.getNbt(chunkPos).thenApplyAsync(nbt -> nbt.map(this::updateChunkNbt), Util.getMainWorkerExecutor());
-        return this.getNbt(chunkPos).thenCompose(nbt -> {
+        return this.getNbt(chunkPos).thenApply(nbt -> {
             if (nbt.isPresent()) {
                 final NbtCompound compound = nbt.get();
                 if (NbtHelper.getDataVersion(compound, -1) != SharedConstants.getGameVersion().dataVersion().id()) {
-                    return CompletableFuture.supplyAsync(() -> Optional.of(updateChunkNbt(compound)), Util.getMainWorkerExecutor());
+                    return Optional.of(updateChunkNbt(compound));
                 } else {
-                    return CompletableFuture.completedFuture(nbt);
+                    return Optional.of(compound);
                 }
             } else {
-                return CompletableFuture.completedFuture(Optional.empty());
+                return Optional.empty();
             }
         });
     }
