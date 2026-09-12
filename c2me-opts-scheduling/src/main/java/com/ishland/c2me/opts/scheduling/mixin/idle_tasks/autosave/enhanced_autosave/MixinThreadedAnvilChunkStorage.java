@@ -33,6 +33,7 @@ import net.minecraft.server.world.ServerChunkLoadingManager;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Util;
 import net.minecraft.util.thread.ThreadExecutor;
+import net.minecraft.world.chunk.Chunk;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -83,8 +84,11 @@ public abstract class MixinThreadedAnvilChunkStorage implements IThreadedAnvilCh
         while (iterator.hasNext() && (i ++) < c2me$maxSearchPerCall && this.chunksBeingSavedCount.get() < c2me$maxConcurrentSaving) {
             final long pos = iterator.nextLong();
             final ChunkHolder chunkHolder = this.currentChunkHolders.get(pos);
-            if (chunkHolder == null) continue;
-            if (this.save(chunkHolder, measuringTimeMs)) {
+            Chunk latestChunk = chunkHolder != null ? chunkHolder.getLatest() : null;
+            if (latestChunk == null || !latestChunk.needsSaving()) {
+                iterator.remove();
+            } else if (this.save(chunkHolder, measuringTimeMs)) {
+                iterator.remove();
                 return true;
             }
         }
