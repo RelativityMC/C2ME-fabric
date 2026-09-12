@@ -43,7 +43,7 @@ public class Config {
                     Incompatible with Dimensional Threading (dimthread)
                     """)
             .incompatibleMod("dimthread", "*")
-            .getLong(100_000, -1);
+            .getLong(-1, -1);
 
     public static final AutoSaveMode autoSaveMode = new ConfigSystem.ConfigAccessor()
             .key("generalOptimizations.autoSave.mode")
