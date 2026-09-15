@@ -5,7 +5,26 @@
 #include <stddef.h>
 #include <float.h>
 
-__attribute__((aligned(64))) static const double FLAT_SIMPLEX_GRAD[] = {
+__attribute__((aligned(64))) static const double FLAT_SIMPLEX_GRAD_F64[] = {
+        1, 1, 0, 0,
+        -1, 1, 0, 0,
+        1, -1, 0, 0,
+        -1, -1, 0, 0,
+        1, 0, 1, 0,
+        -1, 0, 1, 0,
+        1, 0, -1, 0,
+        -1, 0, -1, 0,
+        0, 1, 1, 0,
+        0, -1, 1, 0,
+        0, 1, -1, 0,
+        0, -1, -1, 0,
+        1, 1, 0, 0,
+        0, -1, 1, 0,
+        -1, 1, 0, 0,
+        0, -1, -1, 0,
+};
+
+__attribute__((aligned(32))) static const float FLAT_SIMPLEX_GRAD_F32[] = {
         1, 1, 0, 0,
         -1, 1, 0, 0,
         1, -1, 0, 0,
@@ -116,9 +135,9 @@ static inline __attribute__((const)) double math_simplex_grad(const int32_t hash
         return 0.0;
     } else {
         int32_t i = hash << 2;
-        double var0 = FLAT_SIMPLEX_GRAD[i | 0] * x;
-        double var1 = FLAT_SIMPLEX_GRAD[i | 1] * y;
-        double var2 = FLAT_SIMPLEX_GRAD[i | 2] * z;
+        double var0 = FLAT_SIMPLEX_GRAD_F64[i | 0] * x;
+        double var1 = FLAT_SIMPLEX_GRAD_F64[i | 1] * y;
+        double var2 = FLAT_SIMPLEX_GRAD_F64[i | 2] * z;
         return d * d * d * d * (var0 + var1 + var2);
     }
 }
@@ -148,6 +167,11 @@ static inline __attribute__((const)) double math_lerp2(const double deltaX, cons
     return math_lerp(deltaY, math_lerp(deltaX, x0y0, x1y0), math_lerp(deltaX, x0y1, x1y1));
 }
 
+static inline __attribute__((const)) float math_lerp2f(const float deltaX, const float deltaY, const float x0y0,
+                                                        const float x1y0, const float x0y1, const float x1y1) {
+    return math_lerpf(deltaY, math_lerpf(deltaX, x0y0, x1y0), math_lerpf(deltaX, x0y1, x1y1));
+}
+
 static inline __attribute__((const)) double math_lerp3(
         const double deltaX,
         const double deltaY,
@@ -163,6 +187,23 @@ static inline __attribute__((const)) double math_lerp3(
 ) {
     return math_lerp(deltaZ, math_lerp2(deltaX, deltaY, x0y0z0, x1y0z0, x0y1z0, x1y1z0),
                      math_lerp2(deltaX, deltaY, x0y0z1, x1y0z1, x0y1z1, x1y1z1));
+}
+
+static inline __attribute__((const)) float math_lerp3f(
+        const float deltaX,
+        const float deltaY,
+        const float deltaZ,
+        const float x0y0z0,
+        const float x1y0z0,
+        const float x0y1z0,
+        const float x1y1z0,
+        const float x0y0z1,
+        const float x1y0z1,
+        const float x0y1z1,
+        const float x1y1z1
+) {
+    return math_lerpf(deltaZ, math_lerp2f(deltaX, deltaY, x0y0z0, x1y0z0, x0y1z0, x1y1z0),
+                     math_lerp2f(deltaX, deltaY, x0y0z1, x1y0z1, x0y1z1, x1y1z1));
 }
 
 static inline __attribute__((const)) double math_getLerpProgress(const double value, const double start,
@@ -195,13 +236,14 @@ static inline __attribute__((const)) int32_t math_block2biome(const int32_t bloc
 
 static inline __attribute__((const)) uint32_t
 __math_simplex_map(const aligned_uint32_ptr permutations, const int32_t input) {
-    return permutations[input & 0xFF];
+    int32_t point = input & 0xFF;
+    return (permutations[point >> 2] >> ((input & 3) << 3)) & 0xFF;
 }
 
 static inline __attribute__((const)) double math_simplex_dot(const int32_t hash, const double x, const double y,
                                                              const double z) {
     const int32_t loc = hash << 2;
-    return FLAT_SIMPLEX_GRAD[loc + 0] * x + FLAT_SIMPLEX_GRAD[loc + 1] * y + FLAT_SIMPLEX_GRAD[loc + 2] * z;
+    return FLAT_SIMPLEX_GRAD_F64[loc + 0] * x + FLAT_SIMPLEX_GRAD_F64[loc + 1] * y + FLAT_SIMPLEX_GRAD_F64[loc + 2] * z;
 }
 
 static inline __attribute__((const)) double __math_simplex_grad(const int32_t hash, const double x, const double y,
@@ -261,65 +303,81 @@ math_noise_simplex_sample2d(const aligned_uint32_ptr permutations, const double 
     return 70.0 * (w + z + aa);
 }
 
-static inline __attribute__((const)) double math_perlinFade(const double value) {
-    return value * value * value * (value * (value * 6.0 - 15.0) + 10.0);
+static inline __attribute__((const)) float math_perlinFade(const float value) {
+    return value * value * value * (value * (value * 6.0f - 15.0f) + 10.0f);
 }
 
-static inline __attribute__((const)) double __math_perlin_grad(const aligned_uint32_ptr permutations, const int32_t px,
-                                                               const int32_t py, const int32_t pz, const double fx,
-                                                               const double fy, const double fz) {
-    const double f[3] = {fx, fy, fz};
+static inline __attribute__((const)) float __math_perlin_grad(const aligned_uint32_ptr permutations, const int32_t px,
+                                                               const int32_t py, const int32_t pz, const float fx,
+                                                               const float fy, const float fz) {
+    const float f[3] = {fx, fy, fz};
     const int32_t p[3] = {px, py, pz};
     const uint32_t q[3] = {p[0] & 0xFF, p[1] & 0xFF, p[2] & 0xFF};
     const uint32_t hash = permutations[(permutations[(permutations[q[0]] + q[1]) & 0xFF] + q[2]) & 0xFF] & 0xF;
-    const double *const grad = FLAT_SIMPLEX_GRAD + (hash << 2);
+    const float *const grad = FLAT_SIMPLEX_GRAD_F32 + (hash << 2);
     return grad[0] * f[0] + grad[1] * f[1] + grad[2] * f[2];
 }
 
-static inline __attribute__((const)) double
-math_noise_perlin_sampleScalar(const aligned_uint32_ptr permutations,
-                               const int32_t px0, const int32_t py0, const int32_t pz0,
-                               const double fx0, const double fy0, const double fz0, const double fadeLocalY) {
+static inline __attribute__((const)) float
+math_noise_perlin_sample0(const aligned_uint32_ptr permutations,
+                          const int32_t px0, const int32_t py0, const int32_t pz0,
+                          const float fx0, const float fy0, const float fz0, const float fadeLocalY) {
     const int32_t px1 = px0 + 1;
     const int32_t py1 = py0 + 1;
     const int32_t pz1 = pz0 + 1;
-    const double fx1 = fx0 - 1;
-    const double fy1 = fy0 - 1;
-    const double fz1 = fz0 - 1;
+    const float fx1 = fx0 - 1.0f;
+    const float fy1 = fy0 - 1.0f;
+    const float fz1 = fz0 - 1.0f;
 
-    const double f000 = __math_perlin_grad(permutations, px0, py0, pz0, fx0, fy0, fz0);
-    const double f100 = __math_perlin_grad(permutations, px1, py0, pz0, fx1, fy0, fz0);
-    const double f010 = __math_perlin_grad(permutations, px0, py1, pz0, fx0, fy1, fz0);
-    const double f110 = __math_perlin_grad(permutations, px1, py1, pz0, fx1, fy1, fz0);
-    const double f001 = __math_perlin_grad(permutations, px0, py0, pz1, fx0, fy0, fz1);
-    const double f101 = __math_perlin_grad(permutations, px1, py0, pz1, fx1, fy0, fz1);
-    const double f011 = __math_perlin_grad(permutations, px0, py1, pz1, fx0, fy1, fz1);
-    const double f111 = __math_perlin_grad(permutations, px1, py1, pz1, fx1, fy1, fz1);
+    const float f000 = __math_perlin_grad(permutations, px0, py0, pz0, fx0, fy0, fz0);
+    const float f100 = __math_perlin_grad(permutations, px1, py0, pz0, fx1, fy0, fz0);
+    const float f010 = __math_perlin_grad(permutations, px0, py1, pz0, fx0, fy1, fz0);
+    const float f110 = __math_perlin_grad(permutations, px1, py1, pz0, fx1, fy1, fz0);
+    const float f001 = __math_perlin_grad(permutations, px0, py0, pz1, fx0, fy0, fz1);
+    const float f101 = __math_perlin_grad(permutations, px1, py0, pz1, fx1, fy0, fz1);
+    const float f011 = __math_perlin_grad(permutations, px0, py1, pz1, fx0, fy1, fz1);
+    const float f111 = __math_perlin_grad(permutations, px1, py1, pz1, fx1, fy1, fz1);
 
-    const double dx = math_perlinFade(fx0);
-    const double dy = math_perlinFade(fadeLocalY);
-    const double dz = math_perlinFade(fz0);
-    return math_lerp3(dx, dy, dz, f000, f100, f010, f110, f001, f101, f011, f111);
+    const float dx = math_perlinFade(fx0);
+    const float dy = math_perlinFade(fadeLocalY);
+    const float dz = math_perlinFade(fz0);
+    return math_lerp3f(dx, dy, dz, f000, f100, f010, f110, f001, f101, f011, f111);
 }
 
-
-static inline __attribute__((const)) double
-math_noise_perlin_sample(const aligned_uint32_ptr permutations,
-                         const double originX, const double originY, const double originZ,
-                         const double x, const double y, const double z,
-                         const double yScale, const double yMax) {
-    const double d = x + originX;
-    const double e = y + originY;
-    const double f = z + originZ;
+static inline __attribute__((const)) float
+math_noise_perlin_sample_legacy(const aligned_uint32_ptr permutations,
+                                const double originX, const double originY, const double originZ,
+                                const double x, const double y, const double z,
+                                const double yScale) {
+    const double d = math_octave_maintainPrecision(x) + originX;
+    const double e = math_octave_maintainPrecision(y) + originY;
+    const double f = math_octave_maintainPrecision(z) + originZ;
     const double i = floor(d);
     const double j = floor(e);
     const double k = floor(f);
     const double g = d - i;
     const double h = e - j;
     const double l = f - k;
-    const double o = yScale != 0 ? floor(((yMax >= 0.0 && yMax < h) ? yMax : h) / yScale + 1.0E-7) * yScale : 0;
+    const double o = floor(((y >= 0.0 && y < h) ? y : h) / yScale + 1.0E-7) * yScale;
 
-    return math_noise_perlin_sampleScalar(permutations, (int32_t) i, (int32_t) j, (int32_t) k, g, h - o, l, h);
+    return math_noise_perlin_sample0(permutations, (int32_t) i, (int32_t) j, (int32_t) k, (float) g, (float) (h - o), (float) l, (float) h);
+}
+
+static inline __attribute__((const)) float
+math_noise_perlin_sample_base(const aligned_uint32_ptr permutations,
+                              const double originX, const double originY, const double originZ,
+                              const double x, const double y, const double z) {
+    const double d = math_octave_maintainPrecision(x) + originX;
+    const double e = math_octave_maintainPrecision(y) + originY;
+    const double f = math_octave_maintainPrecision(z) + originZ;
+    const double i = floor(d);
+    const double j = floor(e);
+    const double k = floor(f);
+    const float g = (float) (d - i);
+    const float h = (float) (e - j);
+    const float l = (float) (f - k);
+
+    return math_noise_perlin_sample0(permutations, (int32_t) i, (int32_t) j, (int32_t) k, g, h,l, h);
 }
 
 static inline __attribute__((const)) float

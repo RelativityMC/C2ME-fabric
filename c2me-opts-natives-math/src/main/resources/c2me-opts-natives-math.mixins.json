@@ -6,6 +6,7 @@
   "mixins": [
     "MixinBiomeAccess",
     "MixinCompositeNoiseSamplerBuilder",
-    "MixinEndOuterIslandsDensityFunctionSampler"
+    "MixinEndOuterIslandsDensityFunctionSampler",
+    "MixinSampleBuffer"
   ]
 }
