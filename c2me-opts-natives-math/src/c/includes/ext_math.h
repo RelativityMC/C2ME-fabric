@@ -367,7 +367,6 @@ math_end_islands_sample(const aligned_uint32_ptr simplex_permutations, const int
         }
     }
 
-#pragma clang loop vectorize(enable) interleave(enable)
     for (uint32_t idx = 0; idx < 25 * 25; idx++) {
         if (hit[idx]) {
             const int32_t m = ms[idx];
@@ -404,7 +403,7 @@ math_biome_access_sample(const int64_t theSeed, const int32_t x, const int32_t y
 
     double var28s[8];
 
-#pragma clang loop interleave_count(2)
+#pragma clang loop vectorize_width(4) interleave_count(2)
     for (uint32_t var11 = 0; var11 < 8; ++var11) {
         uint32_t var12 = var11 & 4;
         uint32_t var13 = var11 & 2;

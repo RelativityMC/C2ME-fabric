@@ -18,7 +18,7 @@ typedef float float_t;
 typedef double double_t;
 #endif
 
-#ifdef WIN32
+#ifdef _WIN32
 
 // ld.lld: error: <root>: undefined symbol: DllMainCRTStartup
 int __stdcall DllMainCRTStartup(void* instance, unsigned reason, void* reserved)
