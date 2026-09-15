@@ -20,6 +20,7 @@
     "access.IChunkSection",
     "access.IChunkTicket",
     "access.IChunkTickScheduler",
+    "access.ICompositeNoiseSampler",
     "access.IEndOuterIslandsDensityFunction",
     "access.IFlowableFluid",
     "access.IInterpolatedNoiseSampler",

@@ -27,6 +27,31 @@ accessible    class    net/minecraft/world/biome/source/util/MultiNoiseUtil$Sear
 accessible    class    net/minecraft/world/biome/source/util/MultiNoiseUtil$NodeDistanceFunction
 accessible    class    net/minecraft/world/chunk/PalettedContainer$Data
 accessible    class    net/minecraft/world/gen/chunk/AquiferSampler$Config
+accessible    class    net/minecraft/util/math/noise/FractalNoiseParameters$Octave
+accessible    class    net/minecraft/util/math/noise/FractalNoiseParameters$Parameters
+accessible    class    net/minecraft/util/math/noise/CompositeNoiseSampler
+accessible    class    net/minecraft/util/math/noise/CompositeNoiseSampler$Component
+accessible    class    net/minecraft/util/math/noise/CompositeNoiseSampler$MultiPerlin
+accessible    class    net/minecraft/util/math/noise/LatticedNoiseSampler$LatticePointDirection
+accessible    class    net/minecraft/world/gen/densityfunction/BlendDensityDensityFunction$Sampler
+accessible    class    net/minecraft/world/gen/densityfunction/DistanceToPointDensityFunction$Sampler
+accessible    class    net/minecraft/world/gen/densityfunction/EndOuterIslandsDensityFunction$Sampler
+accessible    class    net/minecraft/world/gen/densityfunction/FindTopSurfaceDensityFunction$Sampler
+accessible    class    net/minecraft/world/gen/densityfunction/GradientDensityFunction$AxisSampler
+accessible    class    net/minecraft/world/gen/densityfunction/GradientDensityFunction$ClampToEdgeSampler
+accessible    class    net/minecraft/world/gen/densityfunction/GradientDensityFunction$MirroredRepeatSampler
+accessible    class    net/minecraft/world/gen/densityfunction/GradientDensityFunction$RepeatSampler
+accessible    class    net/minecraft/world/gen/densityfunction/InterpolatedDensityFunction$Sampler
+accessible    class    net/minecraft/world/gen/densityfunction/IntervalSelectDensityFunction$MultiThresholdSampler
+accessible    class    net/minecraft/world/gen/densityfunction/IntervalSelectDensityFunction$SingleThresholdSampler
+accessible    class    net/minecraft/world/gen/densityfunction/PowerDensityFunction$SamplerCV
+accessible    class    net/minecraft/world/gen/densityfunction/PowerDensityFunction$SamplerVC
+accessible    class    net/minecraft/world/gen/densityfunction/PowerDensityFunction$SamplerVV
+accessible    class    net/minecraft/world/gen/densityfunction/RangeChoiceDensityFunction$ConstantSampler
+accessible    class    net/minecraft/world/gen/densityfunction/RangeChoiceDensityFunction$VariableSampler
+accessible    class    net/minecraft/world/gen/densityfunction/RoundingDensityFunction$ScaledSampler
+accessible    class    net/minecraft/world/gen/densityfunction/RoundingDensityFunction$UnitSampler
+accessible    class    net/minecraft/world/gen/densityfunction/SplineDensityFunction$Sampler
 
 extendable    class    net/minecraft/client/option/SimpleOption
 extendable    class    net/minecraft/world/storage/RegionBasedStorage
@@ -38,6 +63,29 @@ accessible    method    net/minecraft/nbt/NbtList                               
 accessible    method    net/minecraft/world/storage/RegionBasedStorage                                 <init>              (Lnet/minecraft/world/storage/StorageKey;Ljava/nio/file/Path;Z)V
 accessible    method    net/minecraft/util/collection/BoundedRegionArray                               <init>              (IIIILnet/minecraft/util/collection/BoundedRegionArray$Getter;)V
 accessible    method    net/minecraft/world/gen/chunk/AquiferSampler$Config                            <init>              (Lnet/minecraft/world/gen/densityfunction/DensityFunction;Lnet/minecraft/world/gen/densityfunction/DensityFunction;Lnet/minecraft/world/gen/densityfunction/DensityFunction;Lnet/minecraft/world/gen/densityfunction/DensityFunction;Lnet/minecraft/world/gen/densityfunction/DensityFunction;Lnet/minecraft/world/gen/densityfunction/DensityFunction;)V
+accessible    method    net/minecraft/util/math/noise/FractalNoiseParameters$Octave                    <init>              (IDD)V
+accessible    method    net/minecraft/util/math/noise/FractalNoiseParameters$Parameters                <init>              (DIILnet/minecraft/util/math/noise/FractalNoiseParameters$Normalize;Lit/unimi/dsi/fastutil/doubles/DoubleList;)V
+accessible    method    net/minecraft/util/math/noise/CompositeNoiseSampler$Component                  <init>              (Lnet/minecraft/util/math/noise/NoiseSampler;DF)V
+accessible    method    net/minecraft/util/math/noise/CompositeNoiseSampler$MultiLegacyPerlin          <init>              ([Lnet/minecraft/util/math/noise/CompositeNoiseSampler$Component;)V
+accessible    method    net/minecraft/util/math/noise/CompositeNoiseSampler$MultiPerlin                <init>              ([Lnet/minecraft/util/math/noise/CompositeNoiseSampler$Component;)V
+accessible    method    net/minecraft/util/math/noise/LatticedNoiseSampler$LatticePointDirection       <init>              (III)V
+accessible    method    net/minecraft/world/gen/densityfunction/BlendDensityDensityFunction$Sampler    <init>              (Lnet/minecraft/world/gen/sampler/Sampler;)V
+accessible    method    net/minecraft/world/gen/densityfunction/DistanceToPointDensityFunction$Sampler <init>              (IIILnet/minecraft/util/math/DistanceMetric;)V
+accessible    method    net/minecraft/world/gen/densityfunction/EndOuterIslandsDensityFunction$Sampler <init>              (Lnet/minecraft/util/math/noise/SimplexNoiseSampler;)V
+accessible    method    net/minecraft/world/gen/densityfunction/FindTopSurfaceDensityFunction$Sampler  <init>              (Lnet/minecraft/world/gen/sampler/Sampler;Lnet/minecraft/world/gen/sampler/Sampler;II)V
+accessible    method    net/minecraft/world/gen/densityfunction/GradientDensityFunction$ClampToEdgeSampler <init>          (Lnet/minecraft/util/math/Direction$Axis;IIIFF)V
+accessible    method    net/minecraft/world/gen/densityfunction/GradientDensityFunction$MirroredRepeatSampler <init>       (Lnet/minecraft/util/math/Direction$Axis;IIFF)V
+accessible    method    net/minecraft/world/gen/densityfunction/GradientDensityFunction$RepeatSampler  <init>              (Lnet/minecraft/util/math/Direction$Axis;IIFF)V
+accessible    method    net/minecraft/world/gen/densityfunction/InterpolatedDensityFunction$Sampler    <init>              (Lnet/minecraft/world/gen/sampler/Sampler;IIFF)V
+accessible    method    net/minecraft/world/gen/densityfunction/IntervalSelectDensityFunction$MultiThresholdSampler <init> (Lnet/minecraft/world/gen/sampler/Sampler;[F[Lnet/minecraft/world/gen/sampler/Sampler;)V
+accessible    method    net/minecraft/world/gen/densityfunction/IntervalSelectDensityFunction$SingleThresholdSampler <init> (Lnet/minecraft/world/gen/sampler/Sampler;FLnet/minecraft/world/gen/sampler/Sampler;Lnet/minecraft/world/gen/sampler/Sampler;)V
+accessible    method    net/minecraft/world/gen/densityfunction/PowerDensityFunction$SamplerCV         <init>              (Lnet/minecraft/world/gen/sampler/Sampler;D)V
+accessible    method    net/minecraft/world/gen/densityfunction/PowerDensityFunction$SamplerVC         <init>              (DLnet/minecraft/world/gen/sampler/Sampler;)V
+accessible    method    net/minecraft/world/gen/densityfunction/PowerDensityFunction$SamplerVV         <init>              (Lnet/minecraft/world/gen/sampler/Sampler;Lnet/minecraft/world/gen/sampler/Sampler;)V
+accessible    method    net/minecraft/world/gen/densityfunction/RangeChoiceDensityFunction$ConstantSampler <init>          (Lnet/minecraft/world/gen/sampler/Sampler;FFFF)V
+accessible    method    net/minecraft/world/gen/densityfunction/RangeChoiceDensityFunction$VariableSampler <init>          (Lnet/minecraft/world/gen/sampler/Sampler;FFLnet/minecraft/world/gen/sampler/Sampler;Lnet/minecraft/world/gen/sampler/Sampler;)V
+accessible    method    net/minecraft/world/gen/densityfunction/RoundingDensityFunction$ScaledSampler  <init>              (Lnet/minecraft/world/gen/densityfunction/RoundingDensityFunction$Mode;Lnet/minecraft/world/gen/sampler/Sampler;Lnet/minecraft/world/gen/sampler/Sampler;)V
+accessible    method    net/minecraft/world/gen/densityfunction/RoundingDensityFunction$UnitSampler    <init>              (Lnet/minecraft/world/gen/densityfunction/RoundingDensityFunction$Mode;Lnet/minecraft/world/gen/sampler/Sampler;)V
 
 extendable    method    net/minecraft/server/world/ChunkHolder           setCompletedLevel      (I)V
 extendable    method    net/minecraft/world/chunk/AbstractChunkHolder    generate               (Lnet/minecraft/world/chunk/ChunkGenerationStep;Lnet/minecraft/world/ChunkLoadingManager;Lnet/minecraft/util/collection/BoundedRegionArray;)Ljava/util/concurrent/CompletableFuture;
