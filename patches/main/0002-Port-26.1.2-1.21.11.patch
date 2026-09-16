@@ -448,7 +448,7 @@ index fb93418e..95707248 100644
              }
          }
 diff --git a/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/gen/CLDataUtil.java b/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/gen/CLDataUtil.java
-index c22f8972..b027664d 100644
+index b66fa70e..f6c41472 100644
 --- a/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/gen/CLDataUtil.java
 +++ b/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/gen/CLDataUtil.java
 @@ -111,8 +111,8 @@ public class CLDataUtil {
@@ -477,9 +477,9 @@ index c22f8972..b027664d 100644
                          int startZ = IAquiferSamplerImpl.invokeGetLocalZ(basePos.getStartZ() - 5) + 0;
 -                        ChunkPos endChunkPos = new ChunkPos(basePos.x() + horizontalChunkSize - 1, basePos.z() + horizontalChunkSize - 1);
 +                        ChunkPos endChunkPos = new ChunkPos(basePos.x + horizontalChunkSize - 1, basePos.z + horizontalChunkSize - 1);
-                         int endX = IAquiferSamplerImpl.invokeGetLocalX(endChunkPos.getEndX() + 5 - 1) + 1;
-                         int endY = IAquiferSamplerImpl.invokeGetLocalY(generationShapeConfig.minimumY() + generationShapeConfig.height() - 1) + 1;
-                         int endZ = IAquiferSamplerImpl.invokeGetLocalZ(endChunkPos.getEndZ() + 5 - 1) + 1;
+                         int endX = IAquiferSamplerImpl.invokeGetLocalX(endChunkPos.getEndX() - 5) + 1;
+                         int endY = IAquiferSamplerImpl.invokeGetLocalY(generationShapeConfig.minimumY() + generationShapeConfig.height() + 1) + 1;
+                         int endZ = IAquiferSamplerImpl.invokeGetLocalZ(endChunkPos.getEndZ() - 5) + 1;
 @@ -227,8 +227,8 @@ public class CLDataUtil {
  
                          for (int dx = 0; dx < horizontalChunkSize; dx++) {
@@ -514,7 +514,7 @@ index c22f8972..b027664d 100644
          OpenCLStructs.worldgen_params$estimateSurfaceHeight_sizeBiomeZ.set(segment, 0L, 32 + (4 * horizontalChunkSize));
          OpenCLStructs.worldgen_params$cache2d_startX.set(segment, 0L, basePos.getStartX());
 diff --git a/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/gen/CLServerBatchedBiomeNoiseContext.java b/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/gen/CLServerBatchedBiomeNoiseContext.java
-index 1ea635af..8b6dc7dc 100644
+index f0a9a3a2..93657b11 100644
 --- a/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/gen/CLServerBatchedBiomeNoiseContext.java
 +++ b/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/gen/CLServerBatchedBiomeNoiseContext.java
 @@ -98,7 +98,7 @@ public class CLServerBatchedBiomeNoiseContext {
@@ -541,9 +541,9 @@ index 1ea635af..8b6dc7dc 100644
                      int startZ = IAquiferSamplerImpl.invokeGetLocalZ(this.startingPos.getStartZ() - 5) + 0;
 -                    ChunkPos endChunkPos = new ChunkPos(this.startingPos.x() + BATCH_SIZE - 1, this.startingPos.z() + BATCH_SIZE - 1);
 +                    ChunkPos endChunkPos = new ChunkPos(this.startingPos.x + BATCH_SIZE - 1, this.startingPos.z + BATCH_SIZE - 1);
-                     int endX = IAquiferSamplerImpl.invokeGetLocalX(endChunkPos.getEndX() + 5 - 1) + 1;
-                     int endY = IAquiferSamplerImpl.invokeGetLocalY(settings.generationShapeConfig().minimumY() + settings.generationShapeConfig().height() - 1) + 1;
-                     int endZ = IAquiferSamplerImpl.invokeGetLocalZ(endChunkPos.getEndZ() + 5 - 1) + 1;
+                     int endX = IAquiferSamplerImpl.invokeGetLocalX(endChunkPos.getEndX() - 5) + 1;
+                     int endY = IAquiferSamplerImpl.invokeGetLocalY(settings.generationShapeConfig().minimumY() + settings.generationShapeConfig().height() + 1) + 1;
+                     int endZ = IAquiferSamplerImpl.invokeGetLocalZ(endChunkPos.getEndZ() - 5) + 1;
 @@ -330,8 +330,8 @@ public class CLServerBatchedBiomeNoiseContext {
                  CLUtil.checkCLError(CL12.clSetKernelArg1p(kernel, 0, deviceWithProgram.programConstDataBuffer()));
                  CLUtil.checkCLError(CL12.clSetKernelArg1p(kernel, 1, rwBuffer.buffer()));
@@ -810,7 +810,7 @@ index 0fa5e026..d9b7c11d 100644
    },
  
 diff --git a/c2me-opts-scheduling/src/main/java/com/ishland/c2me/opts/scheduling/mixin/idle_tasks/autosave/enhanced_autosave/MixinMinecraftServer.java b/c2me-opts-scheduling/src/main/java/com/ishland/c2me/opts/scheduling/mixin/idle_tasks/autosave/enhanced_autosave/MixinMinecraftServer.java
-index 063e15ec..749c1c75 100644
+index 149a8e6a..8acc1eed 100644
 --- a/c2me-opts-scheduling/src/main/java/com/ishland/c2me/opts/scheduling/mixin/idle_tasks/autosave/enhanced_autosave/MixinMinecraftServer.java
 +++ b/c2me-opts-scheduling/src/main/java/com/ishland/c2me/opts/scheduling/mixin/idle_tasks/autosave/enhanced_autosave/MixinMinecraftServer.java
 @@ -49,8 +49,8 @@ public abstract class MixinMinecraftServer extends ReentrantThreadExecutor<Serve

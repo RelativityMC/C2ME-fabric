@@ -491,7 +491,7 @@ index 3e646243..c80597fd 100644
                      .run(() -> {
                          while (!runnables.isEmpty()) {
 diff --git a/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/mixin/MixinServerChunkManager.java b/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/mixin/MixinServerChunkManager.java
-index 85ce2fd2..56e77de8 100644
+index f1ed8dc7..004db45f 100644
 --- a/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/mixin/MixinServerChunkManager.java
 +++ b/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/mixin/MixinServerChunkManager.java
 @@ -24,6 +24,7 @@
@@ -502,12 +502,12 @@ index 85ce2fd2..56e77de8 100644
  import com.ishland.c2me.base.mixin.access.IThreadedAnvilChunkStorage;
  import com.ishland.c2me.rewrites.chunksystem.common.ducks.IChunkSystemAccess;
  import com.ishland.c2me.rewrites.chunksystem.common.structs.ChunkSystemExecutors;
-@@ -115,7 +116,7 @@ public abstract class MixinServerChunkManager {
-     @WrapOperation(method = "updateChunks", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ChunkLevelManager;update(Lnet/minecraft/server/world/ServerChunkLoadingManager;)Z"))
-     private boolean consolidateSchedules(ChunkLevelManager instance, ServerChunkLoadingManager chunkLoadingManager, Operation<Boolean> original) {
+@@ -130,7 +131,7 @@ public abstract class MixinServerChunkManager {
+         }
+ 
          ArrayDeque<Runnable> runnables;
 -        return ScopedValue
 +        return ScopedValueEmulation
-                 .where(ChunkSystemExecutors.CONSOLIDATING_QUEUE, runnables = new ArrayDeque<>())
+                 .where(ChunkSystemExecutors.CONSOLIDATING_QUEUE, runnables = this.c2me$mainThreadConsolidatorPool.alloc())
                  .call(() -> {
                      try {
