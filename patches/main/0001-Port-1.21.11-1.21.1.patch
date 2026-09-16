@@ -1755,7 +1755,7 @@ index 988144f8..f8f9d7aa 100644
  
  }
 diff --git a/c2me-opts-scheduling/src/main/java/com/ishland/c2me/opts/scheduling/mixin/idle_tasks/autosave/enhanced_autosave/MixinThreadedAnvilChunkStorage.java b/c2me-opts-scheduling/src/main/java/com/ishland/c2me/opts/scheduling/mixin/idle_tasks/autosave/enhanced_autosave/MixinThreadedAnvilChunkStorage.java
-index 63e7e204..0744b239 100644
+index 63e7e204..b81ee340 100644
 --- a/c2me-opts-scheduling/src/main/java/com/ishland/c2me/opts/scheduling/mixin/idle_tasks/autosave/enhanced_autosave/MixinThreadedAnvilChunkStorage.java
 +++ b/c2me-opts-scheduling/src/main/java/com/ishland/c2me/opts/scheduling/mixin/idle_tasks/autosave/enhanced_autosave/MixinThreadedAnvilChunkStorage.java
 @@ -26,12 +26,11 @@ package com.ishland.c2me.opts.scheduling.mixin.idle_tasks.autosave.enhanced_auto
@@ -1823,7 +1823,7 @@ index 63e7e204..0744b239 100644
  
      @Unique
      @Override
-@@ -78,16 +82,21 @@ public abstract class MixinThreadedAnvilChunkStorage implements IThreadedAnvilCh
+@@ -78,21 +82,32 @@ public abstract class MixinThreadedAnvilChunkStorage implements IThreadedAnvilCh
              return false;
          }
  
@@ -1843,15 +1843,16 @@ index 63e7e204..0744b239 100644
 +            final long pos = entry.getLongKey();
 +            final ChunkHolder chunkHolder = entry.getValue();
              Chunk latestChunk = chunkHolder != null ? chunkHolder.getLatest() : null;
-             if (latestChunk == null || !latestChunk.needsSaving()) {
-                 iterator.remove();
+-            if (latestChunk == null || !latestChunk.needsSaving()) {
+-                iterator.remove();
 -            } else if (this.save(chunkHolder, measuringTimeMs)) {
-+            } else if (!this.currentChunkHolders.containsKey(pos)) continue;
+-                iterator.remove();
++            if (latestChunk == null || !latestChunk.needsSaving()) continue;
++            if (!this.currentChunkHolders.containsKey(pos)) continue;
 +            if (this.save(chunkHolder)) {
-                 iterator.remove();
                  return true;
              }
-@@ -95,4 +104,12 @@ public abstract class MixinThreadedAnvilChunkStorage implements IThreadedAnvilCh
+         }
  
          return false;
      }
