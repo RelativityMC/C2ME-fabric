@@ -7,6 +7,9 @@
     "MixinBiomeAccess",
     "MixinCompositeNoiseSamplerBuilder",
     "MixinEndOuterIslandsDensityFunctionSampler",
+    "MixinLatticedNoiseSampler",
+    "MixinLegacyPerlinNoiseSampler",
+    "MixinPerlinNoiseSampler",
     "MixinSampleBuffer"
   ]
 }

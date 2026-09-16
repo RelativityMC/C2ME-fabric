@@ -52,8 +52,10 @@ static const double SKEW_FACTOR_2D = 0.3660254037844386;
 static const double UNSKEW_FACTOR_2D = 0.21132486540518713;
 
 typedef const double *aligned_double_ptr __attribute__((align_value(64)));
+typedef const double *restrict aligned_restrict_double_ptr __attribute__((align_value(64)));
 typedef const uint8_t *aligned_uint8_ptr __attribute__((align_value(64)));
 typedef const uint32_t *aligned_uint32_ptr __attribute__((align_value(64)));
+typedef const uint32_t *restrict aligned_restrict_uint32_ptr __attribute__((align_value(64)));
 
 #define max(a, b) \
    ({ __typeof__ (a) _a = (a); \
@@ -235,8 +237,8 @@ static inline __attribute__((const)) int32_t math_block2biome(const int32_t bloc
 }
 
 static inline __attribute__((const)) uint32_t
-__math_simplex_map(const aligned_uint32_ptr permutations, const int32_t input) {
-    int32_t point = input & 0xFF;
+__math_simplex_map(const uint32_t *restrict const permutations, const uint32_t input) {
+    uint32_t point = input & 0xFF;
     return (permutations[point >> 2] >> ((input & 3) << 3)) & 0xFF;
 }
 
@@ -263,7 +265,7 @@ static inline __attribute__((const)) double __math_simplex_grad(const int32_t ha
 }
 
 static inline double __attribute__((const))
-math_noise_simplex_sample2d(const aligned_uint32_ptr permutations, const double x, const double y) {
+math_noise_simplex_sample2d(const uint32_t *restrict const permutations, const double x, const double y) {
     const double d = (x + y) * SKEW_FACTOR_2D;
     const double i = floor(x + d);
     const double j = floor(y + d);
@@ -307,19 +309,31 @@ static inline __attribute__((const)) float math_perlinFade(const float value) {
     return value * value * value * (value * (value * 6.0f - 15.0f) + 10.0f);
 }
 
-static inline __attribute__((const)) float __math_perlin_grad(const aligned_uint32_ptr permutations, const int32_t px,
-                                                               const int32_t py, const int32_t pz, const float fx,
-                                                               const float fy, const float fz) {
+static inline __attribute__((pure)) uint32_t __math_perlin_perm_index(const uint32_t *restrict const permutations,
+                                                                      uint32_t index) {
+    uint32_t point = index & 0xFF;
+    return (permutations[point >> 2] >> ((index & 3) << 3)) & 0xFF;
+}
+
+static inline __attribute__((const)) float __math_perlin_grad(const uint32_t *restrict const permutations,
+                                                              const int32_t px, const int32_t py, const int32_t pz,
+                                                              const float fx, const float fy, const float fz) {
     const float f[3] = {fx, fy, fz};
     const int32_t p[3] = {px, py, pz};
     const uint32_t q[3] = {p[0] & 0xFF, p[1] & 0xFF, p[2] & 0xFF};
-    const uint32_t hash = permutations[(permutations[(permutations[q[0]] + q[1]) & 0xFF] + q[2]) & 0xFF] & 0xF;
+    const uint32_t hash = __math_perlin_perm_index(
+                              permutations,
+                              (__math_perlin_perm_index(
+                                   permutations,
+                                   (__math_perlin_perm_index(permutations, q[0]) + q[1]) & 0xFF
+                               ) + q[2]) & 0xFF
+                          ) & 0xF;
     const float *const grad = FLAT_SIMPLEX_GRAD_F32 + (hash << 2);
     return grad[0] * f[0] + grad[1] * f[1] + grad[2] * f[2];
 }
 
 static inline __attribute__((const)) float
-math_noise_perlin_sample0(const aligned_uint32_ptr permutations,
+math_noise_perlin_sample0(const uint32_t *restrict const permutations,
                           const int32_t px0, const int32_t py0, const int32_t pz0,
                           const float fx0, const float fy0, const float fz0, const float fadeLocalY) {
     const int32_t px1 = px0 + 1;
@@ -345,7 +359,7 @@ math_noise_perlin_sample0(const aligned_uint32_ptr permutations,
 }
 
 static inline __attribute__((const)) float
-math_noise_perlin_sample_legacy(const aligned_uint32_ptr permutations,
+math_noise_perlin_sample_legacy(const uint32_t *restrict const permutations,
                                 const double originX, const double originY, const double originZ,
                                 const double x, const double y, const double z,
                                 const double yScale) {
@@ -364,7 +378,7 @@ math_noise_perlin_sample_legacy(const aligned_uint32_ptr permutations,
 }
 
 static inline __attribute__((const)) float
-math_noise_perlin_sample_base(const aligned_uint32_ptr permutations,
+math_noise_perlin_sample_base(const uint32_t *restrict const permutations,
                               const double originX, const double originY, const double originZ,
                               const double x, const double y, const double z) {
     const double d = math_octave_maintainPrecision(x) + originX;
@@ -377,11 +391,173 @@ math_noise_perlin_sample_base(const aligned_uint32_ptr permutations,
     const float h = (float) (e - j);
     const float l = (float) (f - k);
 
-    return math_noise_perlin_sample0(permutations, (int32_t) i, (int32_t) j, (int32_t) k, g, h,l, h);
+    return math_noise_perlin_sample0(permutations, (int32_t) i, (int32_t) j, (int32_t) k, g, h, l, h);
+}
+
+
+typedef struct sampling_region {
+    const uint32_t sizeX;
+    const uint32_t sizeY;
+    const uint32_t sizeZ;
+    const int32_t minBlockX;
+    const int32_t minBlockY;
+    const int32_t minBlockZ;
+    const uint32_t stepBlockX;
+    const uint32_t stepBlockY;
+    const uint32_t stepBlockZ;
+} sampling_region_t;
+
+typedef struct pos_i32 {
+    const int32_t x;
+    const int32_t y;
+    const int32_t z;
+} pos_i32_t;
+
+static inline __attribute__((const)) pos_i32_t
+math_sampling_region_index(const sampling_region_t region, const uint32_t index) {
+    // order: z, x, y
+
+    if (index >= (region.sizeX * region.sizeY * region.sizeZ)) {
+        __builtin_trap();
+        __builtin_unreachable();
+    }
+
+    uint32_t i = index;
+
+    const uint32_t y = i % region.sizeY;
+    i /= region.sizeY;
+
+    const uint32_t x = i % region.sizeX;
+    const uint32_t z = i / region.sizeX;
+
+    return (pos_i32_t){
+        .x = region.minBlockX + (int32_t) x * (int32_t) region.stepBlockX,
+        .y = region.minBlockY + (int32_t) y * (int32_t) region.stepBlockY,
+        .z = region.minBlockZ + (int32_t) z * (int32_t) region.stepBlockZ
+    };
+}
+
+static inline void
+math_noise_perlin_sample_legacy_area0(const uint32_t *restrict const permutations,
+                                      const double originX, const double originY, const double originZ,
+                                      const double yScale,
+                                      float *restrict const output, const sampling_region_t region,
+                                      const double *restrict const shiftX, const double *restrict const shiftY,
+                                      const double *restrict const shiftZ,
+                                      const double scaleXz, const double scaleY, const float outputScale) {
+    const uint32_t size = region.sizeX * region.sizeY * region.sizeZ;
+    if (shiftX && shiftY && shiftZ) {
+#pragma clang loop vectorize(enable)
+        for (uint32_t i = 0; i < size; i++) {
+            const pos_i32_t pos_i32 = math_sampling_region_index(region, i);
+            const double x = (double) pos_i32.x * scaleXz + shiftX[i];
+            const double y = (double) pos_i32.y * scaleY + shiftY[i];
+            const double z = (double) pos_i32.z * scaleXz + shiftZ[i];
+            output[i] += math_noise_perlin_sample_legacy(permutations, originX, originY, originZ, x, y, z, yScale) *
+                    outputScale;
+        }
+    } else if (!shiftX && !shiftY && !shiftZ) {
+#pragma clang loop vectorize(enable)
+        for (uint32_t i = 0; i < size; i++) {
+            const pos_i32_t pos_i32 = math_sampling_region_index(region, i);
+            const double x = (double) pos_i32.x * scaleXz;
+            const double y = (double) pos_i32.y * scaleY;
+            const double z = (double) pos_i32.z * scaleXz;
+            output[i] += math_noise_perlin_sample_legacy(permutations, originX, originY, originZ, x, y, z, yScale) *
+                    outputScale;
+        }
+    } else {
+        __builtin_trap();
+        __builtin_unreachable();
+    }
+}
+
+static inline void
+math_noise_perlin_sample_legacy_area(const uint32_t *restrict const permutations,
+                                     const double originX, const double originY, const double originZ,
+                                     const double yScale, float *restrict const output,
+                                     const int32_t sizeX, const int32_t sizeY, const int32_t sizeZ,
+                                     const int32_t minBlockX, const int32_t minBlockY, const int32_t minBlockZ,
+                                     const int32_t stepBlockX, const int32_t stepBlockY, const int32_t stepBlockZ,
+                                     const double *restrict const shiftX, const double *restrict const shiftY,
+                                     const double *restrict const shiftZ,
+                                     const double scaleXz, const double scaleY, const float outputScale) {
+    sampling_region_t region = {
+        .sizeX = sizeX,
+        .sizeY = sizeY,
+        .sizeZ = sizeZ,
+        .minBlockX = minBlockX,
+        .minBlockY = minBlockY,
+        .minBlockZ = minBlockZ,
+        .stepBlockX = stepBlockX,
+        .stepBlockY = stepBlockY,
+        .stepBlockZ = stepBlockZ,
+    };
+    math_noise_perlin_sample_legacy_area0(permutations, originX, originY, originZ, yScale, output, region, shiftX,
+                                          shiftY, shiftZ, scaleXz, scaleY, outputScale);;
+}
+
+static inline void
+math_noise_perlin_sample_base_area0(const uint32_t *restrict const permutations,
+                                    const double originX, const double originY, const double originZ,
+                                    float *restrict const output, const sampling_region_t region,
+                                    const double *restrict const shiftX, const double *restrict const shiftY,
+                                    const double *restrict const shiftZ,
+                                    const double scaleXz, const double scaleY, const float outputScale) {
+    const uint32_t size = region.sizeX * region.sizeY * region.sizeZ;
+    if (shiftX && shiftY && shiftZ) {
+#pragma clang loop vectorize(enable)
+        for (uint32_t i = 0; i < size; i++) {
+            const pos_i32_t pos_i32 = math_sampling_region_index(region, i);
+            const double x = (double) pos_i32.x * scaleXz + shiftX[i];
+            const double y = (double) pos_i32.y * scaleY + shiftY[i];
+            const double z = (double) pos_i32.z * scaleXz + shiftZ[i];
+            output[i] += math_noise_perlin_sample_base(permutations, originX, originY, originZ, x, y, z) *
+                    outputScale;
+        }
+    } else if (!shiftX && !shiftY && !shiftZ) {
+#pragma clang loop vectorize(enable)
+        for (uint32_t i = 0; i < size; i++) {
+            const pos_i32_t pos_i32 = math_sampling_region_index(region, i);
+            const double x = (double) pos_i32.x * scaleXz;
+            const double y = (double) pos_i32.y * scaleY;
+            const double z = (double) pos_i32.z * scaleXz;
+            output[i] += math_noise_perlin_sample_base(permutations, originX, originY, originZ, x, y, z) *
+                    outputScale;
+        }
+    } else {
+        __builtin_trap();
+        __builtin_unreachable();
+    }
+}
+
+static inline void
+math_noise_perlin_sample_base_area(const uint32_t *restrict const permutations,
+                                   const double originX, const double originY, const double originZ,
+                                   float *restrict const output,
+                                   const int32_t sizeX, const int32_t sizeY, const int32_t sizeZ,
+                                   const int32_t minBlockX, const int32_t minBlockY, const int32_t minBlockZ,
+                                   const int32_t stepBlockX, const int32_t stepBlockY, const int32_t stepBlockZ,
+                                   const double *restrict const shiftX, const double *restrict const shiftY,
+                                   const double *restrict const shiftZ,
+                                   const double scaleXz, const double scaleY, const float outputScale) {
+    sampling_region_t region = {
+        .sizeX = sizeX,
+        .sizeY = sizeY,
+        .sizeZ = sizeZ,
+        .minBlockX = minBlockX,
+        .minBlockY = minBlockY,
+        .minBlockZ = minBlockZ,
+        .stepBlockX = stepBlockX,
+        .stepBlockY = stepBlockY,
+        .stepBlockZ = stepBlockZ,
+    };
+    math_noise_perlin_sample_base_area0(permutations, originX, originY, originZ, output, region, shiftX,
+                                        shiftY, shiftZ, scaleXz, scaleY, outputScale);;
 }
 
 static inline __attribute__((const)) float
-math_end_islands_sample(const aligned_uint32_ptr simplex_permutations, const int32_t x, const int32_t z) {
+math_end_islands_sample(const uint32_t *restrict const simplex_permutations, const int32_t x, const int32_t z) {
     const int32_t i = x / 2;
     const int32_t j = z / 2;
     const int32_t k = x % 2;

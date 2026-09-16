@@ -33,6 +33,46 @@ public class Bindings {
         return template.bindTo(NativeLoader.lookup.find(prefix + NativeLoader.currentMachineTarget.getSuffix()).get());
     }
 
+    private static final MethodHandle MH_c2me_natives_noise_perlin_sample_legacy_area = bind(BindingsTemplate.c2me_natives_noise_perlin_sample_legacy_area, "c2me_natives_noise_perlin_sample_legacy_area");
+
+    public static void c2me_natives_noise_perlin_sample_legacy_area(final MemorySegment permutations,
+                                                                    final double originX, final double originY, final double originZ,
+                                                                    final double yScale, final MemorySegment output,
+                                                                    final int sizeX, final int sizeY, final int sizeZ,
+                                                                    final int minBlockX, final int minBlockY, final int minBlockZ,
+                                                                    final int stepBlockX, final int stepBlockY, final int stepBlockZ,
+                                                                    final MemorySegment shiftX, final MemorySegment shiftY,
+                                                                    final MemorySegment shiftZ,
+                                                                    final double scaleXz, final double scaleY, final float outputScale) {
+        try {
+            MH_c2me_natives_noise_perlin_sample_legacy_area.invokeExact(permutations, originX, originY, originZ, yScale, output, sizeX,
+                    sizeY, sizeZ, minBlockX, minBlockY, minBlockZ, stepBlockX, stepBlockY, stepBlockZ, shiftX, shiftY,
+                    shiftZ, scaleXz, scaleY, outputScale);
+        } catch (Throwable t) {
+            throw new RuntimeException(t);
+        }
+    }
+
+    private static final MethodHandle MH_c2me_natives_noise_perlin_sample_base_area = bind(BindingsTemplate.c2me_natives_noise_perlin_sample_base_area, "c2me_natives_noise_perlin_sample_base_area");
+
+    public static void c2me_natives_noise_perlin_sample_base_area(final MemorySegment permutations,
+                                                                  final double originX, final double originY, final double originZ,
+                                                                  final MemorySegment output,
+                                                                  final int sizeX, final int sizeY, final int sizeZ,
+                                                                  final int minBlockX, final int minBlockY, final int minBlockZ,
+                                                                  final int stepBlockX, final int stepBlockY, final int stepBlockZ,
+                                                                  final MemorySegment shiftX, final MemorySegment shiftY,
+                                                                  final MemorySegment shiftZ,
+                                                                  final double scaleXz, final double scaleY, final float outputScale) {
+        try {
+            MH_c2me_natives_noise_perlin_sample_base_area.invokeExact(permutations, originX, originY, originZ, output, sizeX,
+                    sizeY, sizeZ, minBlockX, minBlockY, minBlockZ, stepBlockX, stepBlockY, stepBlockZ, shiftX, shiftY,
+                    shiftZ, scaleXz, scaleY, outputScale);
+        } catch (Throwable t) {
+            throw new RuntimeException(t);
+        }
+    }
+
     private static final MethodHandle MH_c2me_natives_end_islands_sample = bind(BindingsTemplate.c2me_natives_end_islands_sample, "c2me_natives_end_islands_sample");
     private static final MethodHandle MH_c2me_natives_end_islands_sample_ptr = bind(BindingsTemplate.c2me_natives_end_islands_sample_ptr, "c2me_natives_end_islands_sample");
 
