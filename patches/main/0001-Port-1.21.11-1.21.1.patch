@@ -1102,7 +1102,7 @@ index d5b2ea9e..a97b1391 100644
          return optoCache.computeIfAbsent(densityFunction, (DensityFunction df) -> OptoPasses.optimizeOCL(McToAst.toAst(df)));
      }
 diff --git a/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/gen/CLDataUtil.java b/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/gen/CLDataUtil.java
-index b027664d..d3dc8bd7 100644
+index f6c41472..04ad26e6 100644
 --- a/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/gen/CLDataUtil.java
 +++ b/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/gen/CLDataUtil.java
 @@ -16,7 +16,6 @@
@@ -1120,16 +1120,16 @@ index b027664d..d3dc8bd7 100644
 -                        int startX = IAquiferSamplerImpl.invokeGetLocalX(basePos.getStartX() - 5) + 0;
 -                        int startY = IAquiferSamplerImpl.invokeGetLocalY(generationShapeConfig.minimumY() + 1) - 1;
 -                        int startZ = IAquiferSamplerImpl.invokeGetLocalZ(basePos.getStartZ() - 5) + 0;
-+                        int startX = Math.floorDiv(basePos.getStartX() - 5, 16) + 0;
-+                        int startY = Math.floorDiv(generationShapeConfig.minimumY() + 1, 12) - 1;
-+                        int startZ = Math.floorDiv(basePos.getStartZ() - 5, 16) + 0;
++                        int startX = Math.floorDiv(basePos.getStartX(), 16) - 1;
++                        int startY = Math.floorDiv(generationShapeConfig.minimumY(), 12) - 1;
++                        int startZ = Math.floorDiv(basePos.getStartZ(), 16) - 1;
                          ChunkPos endChunkPos = new ChunkPos(basePos.x + horizontalChunkSize - 1, basePos.z + horizontalChunkSize - 1);
--                        int endX = IAquiferSamplerImpl.invokeGetLocalX(endChunkPos.getEndX() + 5 - 1) + 1;
--                        int endY = IAquiferSamplerImpl.invokeGetLocalY(generationShapeConfig.minimumY() + generationShapeConfig.height() - 1) + 1;
--                        int endZ = IAquiferSamplerImpl.invokeGetLocalZ(endChunkPos.getEndZ() + 5 - 1) + 1;
-+                        int endX = Math.floorDiv(endChunkPos.getEndX() + 5 - 1, 16) + 1;
-+                        int endY = Math.floorDiv(generationShapeConfig.minimumY() + generationShapeConfig.height() - 1, 12) + 1;
-+                        int endZ = Math.floorDiv(endChunkPos.getEndZ() + 5 - 1, 16) + 1;
+-                        int endX = IAquiferSamplerImpl.invokeGetLocalX(endChunkPos.getEndX() - 5) + 1;
+-                        int endY = IAquiferSamplerImpl.invokeGetLocalY(generationShapeConfig.minimumY() + generationShapeConfig.height() + 1) + 1;
+-                        int endZ = IAquiferSamplerImpl.invokeGetLocalZ(endChunkPos.getEndZ() - 5) + 1;
++                        int endX = Math.floorDiv(endChunkPos.getEndX(), 16) + 1;
++                        int endY = Math.floorDiv(generationShapeConfig.minimumY() + generationShapeConfig.height(), 12) + 1;
++                        int endZ = Math.floorDiv(endChunkPos.getEndZ(), 16) + 1;
  
 -                        int samplingYLowPassCutoff = generationShapeConfig.minimumY();
 +                        int samplingYLowPassCutoff = generationShapeConfig.minimumY() + generationShapeConfig.height();
@@ -1158,7 +1158,7 @@ index b027664d..d3dc8bd7 100644
                          MemorySegment segment = OpenCLStructs.aquifer_data$create(
                                  arena1,
 diff --git a/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/gen/CLServerBatchedBiomeNoiseContext.java b/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/gen/CLServerBatchedBiomeNoiseContext.java
-index 8b6dc7dc..d33f8026 100644
+index 93657b11..cf9f9023 100644
 --- a/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/gen/CLServerBatchedBiomeNoiseContext.java
 +++ b/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/gen/CLServerBatchedBiomeNoiseContext.java
 @@ -18,7 +18,6 @@ package com.ishland.c2me.opts.accel.opencl.common.gen;
@@ -1185,16 +1185,16 @@ index 8b6dc7dc..d33f8026 100644
 -                    int startX = IAquiferSamplerImpl.invokeGetLocalX(this.startingPos.getStartX() - 5) + 0;
 -                    int startY = IAquiferSamplerImpl.invokeGetLocalY(settings.generationShapeConfig().minimumY() + 1) - 1;
 -                    int startZ = IAquiferSamplerImpl.invokeGetLocalZ(this.startingPos.getStartZ() - 5) + 0;
-+                    int startX = Math.floorDiv(this.startingPos.getStartX() - 5, 16) + 0;
-+                    int startY = Math.floorDiv(settings.generationShapeConfig().minimumY() + 1, 12) - 1;
-+                    int startZ = Math.floorDiv(this.startingPos.getStartZ() - 5, 16) + 0;
++                    int startX = Math.floorDiv(this.startingPos.getStartX(), 16) - 1;
++                    int startY = Math.floorDiv(settings.generationShapeConfig().minimumY(), 12) - 1;
++                    int startZ = Math.floorDiv(this.startingPos.getStartZ(), 16) - 1;
                      ChunkPos endChunkPos = new ChunkPos(this.startingPos.x + BATCH_SIZE - 1, this.startingPos.z + BATCH_SIZE - 1);
--                    int endX = IAquiferSamplerImpl.invokeGetLocalX(endChunkPos.getEndX() + 5 - 1) + 1;
--                    int endY = IAquiferSamplerImpl.invokeGetLocalY(settings.generationShapeConfig().minimumY() + settings.generationShapeConfig().height() - 1) + 1;
--                    int endZ = IAquiferSamplerImpl.invokeGetLocalZ(endChunkPos.getEndZ() + 5 - 1) + 1;
-+                    int endX = Math.floorDiv(endChunkPos.getEndX() + 5 - 1, 16) + 1;
-+                    int endY = Math.floorDiv(settings.generationShapeConfig().minimumY() + settings.generationShapeConfig().height() - 1, 12) + 1;
-+                    int endZ = Math.floorDiv(endChunkPos.getEndZ() + 5 - 1, 16) + 1;
+-                    int endX = IAquiferSamplerImpl.invokeGetLocalX(endChunkPos.getEndX() - 5) + 1;
+-                    int endY = IAquiferSamplerImpl.invokeGetLocalY(settings.generationShapeConfig().minimumY() + settings.generationShapeConfig().height() + 1) + 1;
+-                    int endZ = IAquiferSamplerImpl.invokeGetLocalZ(endChunkPos.getEndZ() - 5) + 1;
++                    int endX = Math.floorDiv(endChunkPos.getEndX(), 16) + 1;
++                    int endY = Math.floorDiv(settings.generationShapeConfig().minimumY() + settings.generationShapeConfig().height(), 12) + 1;
++                    int endZ = Math.floorDiv(endChunkPos.getEndZ(), 16) + 1;
  
  
                      PointerBuffer globalWorkSize = stack.callocPointer(3);
@@ -1755,10 +1755,10 @@ index 988144f8..f8f9d7aa 100644
  
  }
 diff --git a/c2me-opts-scheduling/src/main/java/com/ishland/c2me/opts/scheduling/mixin/idle_tasks/autosave/enhanced_autosave/MixinThreadedAnvilChunkStorage.java b/c2me-opts-scheduling/src/main/java/com/ishland/c2me/opts/scheduling/mixin/idle_tasks/autosave/enhanced_autosave/MixinThreadedAnvilChunkStorage.java
-index 7be1d113..3aaba8df 100644
+index 63e7e204..0744b239 100644
 --- a/c2me-opts-scheduling/src/main/java/com/ishland/c2me/opts/scheduling/mixin/idle_tasks/autosave/enhanced_autosave/MixinThreadedAnvilChunkStorage.java
 +++ b/c2me-opts-scheduling/src/main/java/com/ishland/c2me/opts/scheduling/mixin/idle_tasks/autosave/enhanced_autosave/MixinThreadedAnvilChunkStorage.java
-@@ -26,45 +26,48 @@ package com.ishland.c2me.opts.scheduling.mixin.idle_tasks.autosave.enhanced_auto
+@@ -26,12 +26,11 @@ package com.ishland.c2me.opts.scheduling.mixin.idle_tasks.autosave.enhanced_auto
  
  import com.ishland.c2me.opts.scheduling.common.idle_tasks.IThreadedAnvilChunkStorage;
  import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
@@ -1771,8 +1771,9 @@ index 7be1d113..3aaba8df 100644
  import net.minecraft.server.world.ServerWorld;
 -import net.minecraft.util.Util;
  import net.minecraft.util.thread.ThreadExecutor;
--import org.jetbrains.annotations.Nullable;
- import org.spongepowered.asm.mixin.Final;
+ import net.minecraft.world.chunk.Chunk;
+ import org.jetbrains.annotations.Nullable;
+@@ -39,33 +38,38 @@ import org.spongepowered.asm.mixin.Final;
  import org.spongepowered.asm.mixin.Mixin;
  import org.spongepowered.asm.mixin.Shadow;
  import org.spongepowered.asm.mixin.Unique;
@@ -1822,7 +1823,7 @@ index 7be1d113..3aaba8df 100644
  
      @Unique
      @Override
-@@ -77,18 +80,31 @@ public abstract class MixinThreadedAnvilChunkStorage implements IThreadedAnvilCh
+@@ -78,16 +82,21 @@ public abstract class MixinThreadedAnvilChunkStorage implements IThreadedAnvilCh
              return false;
          }
  
@@ -1841,13 +1842,16 @@ index 7be1d113..3aaba8df 100644
 +            final Long2ObjectMap.Entry<ChunkHolder> entry = iterator.next();
 +            final long pos = entry.getLongKey();
 +            final ChunkHolder chunkHolder = entry.getValue();
-             if (chunkHolder == null) continue;
--            if (this.save(chunkHolder, measuringTimeMs)) {
-+            if (!this.currentChunkHolders.containsKey(pos)) continue;
+             Chunk latestChunk = chunkHolder != null ? chunkHolder.getLatest() : null;
+             if (latestChunk == null || !latestChunk.needsSaving()) {
+                 iterator.remove();
+-            } else if (this.save(chunkHolder, measuringTimeMs)) {
++            } else if (!this.currentChunkHolders.containsKey(pos)) continue;
 +            if (this.save(chunkHolder)) {
+                 iterator.remove();
                  return true;
              }
-         }
+@@ -95,4 +104,12 @@ public abstract class MixinThreadedAnvilChunkStorage implements IThreadedAnvilCh
  
          return false;
      }
@@ -3280,10 +3284,10 @@ index c2fedd91..e4d74877 100644
  
  }
 diff --git a/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/mixin/MixinServerChunkManager.java b/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/mixin/MixinServerChunkManager.java
-index 56e77de8..37f81a2b 100644
+index 004db45f..986b9c69 100644
 --- a/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/mixin/MixinServerChunkManager.java
 +++ b/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/mixin/MixinServerChunkManager.java
-@@ -31,7 +31,7 @@ import com.ishland.c2me.rewrites.chunksystem.common.structs.ChunkSystemExecutors
+@@ -32,7 +32,7 @@ import com.ishland.flowsched.structs.SimpleObjectPool;
  import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
  import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
  import net.minecraft.server.world.ChunkHolder;
@@ -3292,7 +3296,7 @@ index 56e77de8..37f81a2b 100644
  import net.minecraft.server.world.OptionalChunk;
  import net.minecraft.server.world.ServerChunkLoadingManager;
  import net.minecraft.server.world.ServerChunkManager;
-@@ -113,8 +113,8 @@ public abstract class MixinServerChunkManager {
+@@ -122,14 +122,13 @@ public abstract class MixinServerChunkManager {
          return Integer.toString(((IChunkSystemAccess) this.chunkLoadingManager).c2me$getTheChunkSystem().itemCount()) + ", " + Integer.toString(this.getLoadedChunkCount());
      }
  
@@ -3300,9 +3304,15 @@ index 56e77de8..37f81a2b 100644
 -    private boolean consolidateSchedules(ChunkLevelManager instance, ServerChunkLoadingManager chunkLoadingManager, Operation<Boolean> original) {
 +    @WrapOperation(method = "updateChunks", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ChunkTicketManager;update(Lnet/minecraft/server/world/ServerChunkLoadingManager;)Z"))
 +    private boolean consolidateSchedules(ChunkTicketManager instance, ServerChunkLoadingManager completablefuture, Operation<Boolean> original) {
+         if (Thread.currentThread() != this.serverThread) {
+             ConcurrentModificationException e = new ConcurrentModificationException("Async update chunks");
+             e.printStackTrace();
+             throw e;
+         }
+-
          ArrayDeque<Runnable> runnables;
          return ScopedValueEmulation
-                 .where(ChunkSystemExecutors.CONSOLIDATING_QUEUE, runnables = new ArrayDeque<>())
+                 .where(ChunkSystemExecutors.CONSOLIDATING_QUEUE, runnables = this.c2me$mainThreadConsolidatorPool.alloc())
 diff --git a/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/mixin/MixinThreadedAnvilChunkStorage.java b/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/mixin/MixinThreadedAnvilChunkStorage.java
 index 91946c63..1a34787d 100644
 --- a/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/mixin/MixinThreadedAnvilChunkStorage.java
