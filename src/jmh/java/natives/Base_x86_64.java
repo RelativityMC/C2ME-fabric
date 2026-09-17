@@ -39,7 +39,7 @@ public abstract class Base_x86_64 {
     private final MethodHandle sse4_2;
     private final MethodHandle avx;
     private final MethodHandle avx2;
-    private final MethodHandle avx2adl;
+    private final MethodHandle avx2vnni;
     private final MethodHandle avx512skx;
     private final MethodHandle avx512icl;
     private final MethodHandle avx512spr;
@@ -49,7 +49,7 @@ public abstract class Base_x86_64 {
         sse4_2 = base.bindTo(NativeLoader.lookup.find(prefix + ISA_x86_64.SSE4_2.getSuffix()).get());
         avx = base.bindTo(NativeLoader.lookup.find(prefix + ISA_x86_64.AVX.getSuffix()).get());
         avx2 = base.bindTo(NativeLoader.lookup.find(prefix + ISA_x86_64.AVX2.getSuffix()).get());
-        avx2adl = base.bindTo(NativeLoader.lookup.find(prefix + ISA_x86_64.AVX2VNNI.getSuffix()).get());
+        avx2vnni = base.bindTo(NativeLoader.lookup.find(prefix + ISA_x86_64.AVX2VNNI.getSuffix()).get());
         avx512skx = base.bindTo(NativeLoader.lookup.find(prefix + ISA_x86_64.SKX_AVX512.getSuffix()).get());
         avx512icl = base.bindTo(NativeLoader.lookup.find(prefix + ISA_x86_64.ICL_AVX512.getSuffix()).get());
         avx512spr = base.bindTo(NativeLoader.lookup.find(prefix + ISA_x86_64.SPR_AVX512.getSuffix()).get());
@@ -84,8 +84,8 @@ public abstract class Base_x86_64 {
     }
 
     @Benchmark
-    public void avx2adl(Blackhole bh) {
-        doInvocation(avx2adl, bh);
+    public void avx2vnni(Blackhole bh) {
+        doInvocation(avx2vnni, bh);
     }
 
     @Benchmark

@@ -94,9 +94,9 @@ public class EndIslandsBenchmark extends Base_x86_64 {
         }
         LocalRandom random1 = new LocalRandom(random.nextLong());
         this.vanillaSampler = new SimplexNoiseSampler(random1);
-        int[] permutation = (int[]) MemoryUtil.byte2int((byte[]) ReflectUtils.getField(LatticedNoiseSampler.class, this.vanillaSampler, "permutation"));
-        this.nativeSamplerData = Arena.ofAuto().allocate(permutation.length * 4L, 64);
-        MemorySegment.copy(MemorySegment.ofArray(permutation), 0L, this.nativeSamplerData, 0L, permutation.length * 4L);
+        int[] permutation = (int[]) MemoryUtil.packByte2int((byte[]) ReflectUtils.getField(LatticedNoiseSampler.class, this.vanillaSampler, "permutation"));
+        this.nativeSamplerData = Arena.ofAuto().allocate(permutation.length, 64);
+        MemorySegment.copy(MemorySegment.ofArray(permutation), 0L, this.nativeSamplerData, 0L, permutation.length);
         this.nativeSamplerDataPtr = this.nativeSamplerData.address();
         VarHandle.fullFence();
     }
