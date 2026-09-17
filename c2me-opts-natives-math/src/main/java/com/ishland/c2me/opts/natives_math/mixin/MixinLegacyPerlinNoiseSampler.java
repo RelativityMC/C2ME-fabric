@@ -59,6 +59,19 @@ public abstract class MixinLegacyPerlinNoiseSampler extends PerlinNoiseSampler i
     @Overwrite
     public void fill(final SampleBuffer buf, final SamplingRegion region, final double scaleXz, final double scaleY, final float outputScale) {
         Assertions.assertTrue(buf.count() == region.sizeX() * region.sizeY() * region.sizeZ(), "Invalid buf for region");
+
+        if (buf.count() == 1) {
+            buf.add(
+                    0,
+                    this.sample(
+                            region.translateX(0) * scaleXz,
+                            region.translateY(0) * scaleY,
+                            region.translateZ(0) * scaleXz
+                    ) * outputScale
+            );
+            return;
+        }
+
         Bindings.c2me_natives_noise_perlin_sample_legacy_area(
                 this.c2me$getPackedPermutationsMemorySegment(),
                 this.originX,
