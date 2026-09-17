@@ -437,6 +437,64 @@ math_sampling_region_index(const sampling_region_t region, const uint32_t index)
     };
 }
 
+typedef struct {
+    uint32_t x, y, z;
+    uint32_t sizeX, sizeY, sizeZ;
+    int32_t minX, minY, minZ;
+    uint32_t stepX, stepY, stepZ;
+} coord_iter_t;
+
+static inline coord_iter_t math_coord_iter_begin(const sampling_region_t region) {
+    return (coord_iter_t){
+        .x = 0, .y = 0, .z = 0,
+        .sizeX = region.sizeX, .sizeY = region.sizeY, .sizeZ = region.sizeZ,
+        .minX = region.minBlockX, .minY = region.minBlockY, .minZ = region.minBlockZ,
+        .stepX = region.stepBlockX, .stepY = region.stepBlockY, .stepZ = region.stepBlockZ,
+    };
+}
+
+static inline uint32_t
+math_coord_iter_next16(coord_iter_t *restrict it,
+                       int32_t *restrict xs, int32_t *restrict ys, int32_t *restrict zs,
+                       uint32_t remaining) {
+    const uint32_t n = remaining < 16u ? remaining : 16u;
+    if (n == 0) return 0;
+
+    const uint32_t sizeX = it->sizeX;
+    const uint32_t sizeY = it->sizeY;
+
+    if (it->y + n < sizeY) {
+        const int32_t baseX = it->minX + (int32_t) it->x * (int32_t) it->stepX;
+        const int32_t baseZ = it->minZ + (int32_t) it->z * (int32_t) it->stepZ;
+        const int32_t baseY = it->minY + (int32_t) it->y * (int32_t) it->stepY;
+        for (uint32_t j = 0; j < n; j++) {
+            xs[j] = baseX;
+            ys[j] = baseY + (int32_t) j * (int32_t) it->stepY;
+            zs[j] = baseZ;
+        }
+        it->y += n;
+        return n;
+    }
+
+    uint32_t cx = it->x, cy = it->y, cz = it->z;
+    for (uint32_t j = 0; j < n; j++) {
+        xs[j] = it->minX + (int32_t) cx * (int32_t) it->stepX;
+        ys[j] = it->minY + (int32_t) cy * (int32_t) it->stepY;
+        zs[j] = it->minZ + (int32_t) cz * (int32_t) it->stepZ;
+        if (++cy == sizeY) {
+            cy = 0;
+            if (++cx == sizeX) {
+                cx = 0;
+                ++cz;
+            }
+        }
+    }
+    it->x = cx;
+    it->y = cy;
+    it->z = cz;
+    return n;
+}
+
 static inline void
 math_noise_perlin_sample_legacy_area0(const uint32_t *restrict const permutations,
                                       const double originX, const double originY, const double originZ,
@@ -446,25 +504,42 @@ math_noise_perlin_sample_legacy_area0(const uint32_t *restrict const permutation
                                       const double *restrict const shiftZ,
                                       const double scaleXz, const double scaleY, const float outputScale) {
     const uint32_t size = region.sizeX * region.sizeY * region.sizeZ;
+
+    coord_iter_t it = math_coord_iter_begin(region);
+    uint32_t i = 0;
+    int32_t xs[16], ys[16], zs[16];
+
     if (shiftX && shiftY && shiftZ) {
+        while (i < size) {
+            const uint32_t n = math_coord_iter_next16(&it, xs, ys, zs, size - i);
+            __builtin_assume(n >= 1 && n <= 16);
+
 #pragma clang loop vectorize(enable)
-        for (uint32_t i = 0; i < size; i++) {
-            const pos_i32_t pos_i32 = math_sampling_region_index(region, i);
-            const double x = (double) pos_i32.x * scaleXz + shiftX[i];
-            const double y = (double) pos_i32.y * scaleY + shiftY[i];
-            const double z = (double) pos_i32.z * scaleXz + shiftZ[i];
-            output[i] += math_noise_perlin_sample_legacy(permutations, originX, originY, originZ, x, y, z, yScale) *
-                    outputScale;
+            for (uint32_t j = 0; j < n; j++) {
+                const double x = (double) xs[j] * scaleXz + shiftX[i + j];
+                const double y = (double) ys[j] * scaleY + shiftY[i + j];
+                const double z = (double) zs[j] * scaleXz + shiftZ[i + j];
+                output[i + j] += math_noise_perlin_sample_legacy(permutations, originX, originY, originZ, x, y, z, yScale) *
+                        outputScale;
+            }
+
+            i += n;
         }
     } else if (!shiftX && !shiftY && !shiftZ) {
+        while (i < size) {
+            const uint32_t n = math_coord_iter_next16(&it, xs, ys, zs, size - i);
+            __builtin_assume(n >= 1 && n <= 16);
+
 #pragma clang loop vectorize(enable)
-        for (uint32_t i = 0; i < size; i++) {
-            const pos_i32_t pos_i32 = math_sampling_region_index(region, i);
-            const double x = (double) pos_i32.x * scaleXz;
-            const double y = (double) pos_i32.y * scaleY;
-            const double z = (double) pos_i32.z * scaleXz;
-            output[i] += math_noise_perlin_sample_legacy(permutations, originX, originY, originZ, x, y, z, yScale) *
-                    outputScale;
+            for (uint32_t j = 0; j < n; j++) {
+                const double x = (double) xs[j] * scaleXz;
+                const double y = (double) ys[j] * scaleY;
+                const double z = (double) zs[j] * scaleXz;
+                output[i + j] += math_noise_perlin_sample_legacy(permutations, originX, originY, originZ, x, y, z, yScale) *
+                        outputScale;
+            }
+
+            i += n;
         }
     } else {
         __builtin_trap();
@@ -505,25 +580,42 @@ math_noise_perlin_sample_base_area0(const uint32_t *restrict const permutations,
                                     const double *restrict const shiftZ,
                                     const double scaleXz, const double scaleY, const float outputScale) {
     const uint32_t size = region.sizeX * region.sizeY * region.sizeZ;
+
+    coord_iter_t it = math_coord_iter_begin(region);
+    uint32_t i = 0;
+    int32_t xs[16], ys[16], zs[16];
+
     if (shiftX && shiftY && shiftZ) {
+        while (i < size) {
+            const uint32_t n = math_coord_iter_next16(&it, xs, ys, zs, size - i);
+            __builtin_assume(n >= 1 && n <= 16);
+
 #pragma clang loop vectorize(enable)
-        for (uint32_t i = 0; i < size; i++) {
-            const pos_i32_t pos_i32 = math_sampling_region_index(region, i);
-            const double x = (double) pos_i32.x * scaleXz + shiftX[i];
-            const double y = (double) pos_i32.y * scaleY + shiftY[i];
-            const double z = (double) pos_i32.z * scaleXz + shiftZ[i];
-            output[i] += math_noise_perlin_sample_base(permutations, originX, originY, originZ, x, y, z) *
-                    outputScale;
+            for (uint32_t j = 0; j < n; j++) {
+                const double x = (double) xs[j] * scaleXz + shiftX[i + j];
+                const double y = (double) ys[j] * scaleY + shiftY[i + j];
+                const double z = (double) zs[j] * scaleXz + shiftZ[i + j];
+                output[i + j] += math_noise_perlin_sample_base(permutations, originX, originY, originZ, x, y, z) *
+                        outputScale;
+            }
+
+            i += n;
         }
     } else if (!shiftX && !shiftY && !shiftZ) {
+        while (i < size) {
+            const uint32_t n = math_coord_iter_next16(&it, xs, ys, zs, size - i);
+            __builtin_assume(n >= 1 && n <= 16);
+
 #pragma clang loop vectorize(enable)
-        for (uint32_t i = 0; i < size; i++) {
-            const pos_i32_t pos_i32 = math_sampling_region_index(region, i);
-            const double x = (double) pos_i32.x * scaleXz;
-            const double y = (double) pos_i32.y * scaleY;
-            const double z = (double) pos_i32.z * scaleXz;
-            output[i] += math_noise_perlin_sample_base(permutations, originX, originY, originZ, x, y, z) *
-                    outputScale;
+            for (uint32_t j = 0; j < n; j++) {
+                const double x = (double) xs[j] * scaleXz;
+                const double y = (double) ys[j] * scaleY;
+                const double z = (double) zs[j] * scaleXz;
+                output[i + j] += math_noise_perlin_sample_base(permutations, originX, originY, originZ, x, y, z) *
+                        outputScale;
+            }
+
+            i += n;
         }
     } else {
         __builtin_trap();
