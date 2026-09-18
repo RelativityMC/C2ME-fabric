@@ -29,17 +29,21 @@ import com.ishland.c2me.opts.natives_math.common.ducks.LatticedNoiseSamplerExten
 import com.ishland.c2me.opts.natives_math.common.ducks.SampleBufferExtension;
 import com.ishland.flowsched.util.Assertions;
 import net.minecraft.util.math.noise.LatticedNoiseSampler;
+import net.minecraft.util.math.noise.NoiseSampler;
 import net.minecraft.util.math.noise.PerlinNoiseSampler;
 import net.minecraft.util.math.noise.SamplingRegion;
 import net.minecraft.util.math.random.Random;
 import net.minecraft.world.gen.sampler.SampleBuffer;
+import org.spongepowered.asm.mixin.Implements;
+import org.spongepowered.asm.mixin.Interface;
+import org.spongepowered.asm.mixin.Intrinsic;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
 import java.lang.foreign.MemorySegment;
 
 @Mixin(PerlinNoiseSampler.class)
+@Implements({@Interface(iface = NoiseSampler.class, prefix = "c2me$i$")})
 public abstract class MixinPerlinNoiseSampler extends LatticedNoiseSampler implements LatticedNoiseSamplerExtension {
 
     @Shadow
@@ -49,12 +53,8 @@ public abstract class MixinPerlinNoiseSampler extends LatticedNoiseSampler imple
         super(random);
     }
 
-    /**
-     * @author ishland
-     * @reason route to natives
-     */
-    @Overwrite
-    public void fill(final SampleBuffer buf, final SamplingRegion region, final double scaleXz, final double scaleY, final float outputScale) {
+    @Intrinsic(displace = true)
+    public void c2me$i$fill(final SampleBuffer buf, final SamplingRegion region, final double scaleXz, final double scaleY, final float outputScale) {
         Assertions.assertTrue(buf.count() == region.sizeX() * region.sizeY() * region.sizeZ(), "Invalid buf for region");
 
         if (buf.count() == 1) {
@@ -66,6 +66,10 @@ public abstract class MixinPerlinNoiseSampler extends LatticedNoiseSampler imple
                             region.translateZ(0) * scaleXz
                     ) * outputScale
             );
+            return;
+        }
+        if (buf.count() < 8) {
+            this.fill(buf, region, scaleXz, scaleY, outputScale);
             return;
         }
 
