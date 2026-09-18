@@ -454,10 +454,10 @@ static inline coord_iter_t math_coord_iter_begin(const sampling_region_t region)
 }
 
 static inline uint32_t
-math_coord_iter_next16(coord_iter_t *restrict it,
+math_coord_iter_next64(coord_iter_t *restrict it,
                        int32_t *restrict xs, int32_t *restrict ys, int32_t *restrict zs,
                        uint32_t remaining) {
-    const uint32_t n = remaining < 16u ? remaining : 16u;
+    const uint32_t n = remaining < 64u ? remaining : 64u;
     if (n == 0) return 0;
 
     const uint32_t sizeX = it->sizeX;
@@ -477,11 +477,15 @@ math_coord_iter_next16(coord_iter_t *restrict it,
     }
 
     uint32_t cx = it->x, cy = it->y, cz = it->z;
-    for (uint32_t j = 0; j < n; j++) {
-        xs[j] = it->minX + (int32_t) cx * (int32_t) it->stepX;
-        ys[j] = it->minY + (int32_t) cy * (int32_t) it->stepY;
-        zs[j] = it->minZ + (int32_t) cz * (int32_t) it->stepZ;
-        if (++cy == sizeY) {
+    for (uint32_t j = 0; j < n;) {
+        while (cy < sizeY && j < n) {
+            xs[j] = it->minX + (int32_t) cx * (int32_t) it->stepX;
+            ys[j] = it->minY + (int32_t) cy * (int32_t) it->stepY;
+            zs[j] = it->minZ + (int32_t) cz * (int32_t) it->stepZ;
+            cy ++;
+            j ++;
+        }
+        if (cy == sizeY) {
             cy = 0;
             if (++cx == sizeX) {
                 cx = 0;
@@ -507,12 +511,11 @@ math_noise_perlin_sample_legacy_area0(const uint32_t *restrict const permutation
 
     coord_iter_t it = math_coord_iter_begin(region);
     uint32_t i = 0;
-    int32_t xs[16], ys[16], zs[16];
+    int32_t xs[64], ys[64], zs[64];
 
     if (shiftX && shiftY && shiftZ) {
         while (i < size) {
-            const uint32_t n = math_coord_iter_next16(&it, xs, ys, zs, size - i);
-            __builtin_assume(n >= 1 && n <= 16);
+            const uint32_t n = math_coord_iter_next64(&it, xs, ys, zs, size - i);
 
 #pragma clang loop vectorize(enable)
             for (uint32_t j = 0; j < n; j++) {
@@ -527,8 +530,7 @@ math_noise_perlin_sample_legacy_area0(const uint32_t *restrict const permutation
         }
     } else if (!shiftX && !shiftY && !shiftZ) {
         while (i < size) {
-            const uint32_t n = math_coord_iter_next16(&it, xs, ys, zs, size - i);
-            __builtin_assume(n >= 1 && n <= 16);
+            const uint32_t n = math_coord_iter_next64(&it, xs, ys, zs, size - i);
 
 #pragma clang loop vectorize(enable)
             for (uint32_t j = 0; j < n; j++) {
@@ -583,12 +585,11 @@ math_noise_perlin_sample_base_area0(const uint32_t *restrict const permutations,
 
     coord_iter_t it = math_coord_iter_begin(region);
     uint32_t i = 0;
-    int32_t xs[16], ys[16], zs[16];
+    int32_t xs[64], ys[64], zs[64];
 
     if (shiftX && shiftY && shiftZ) {
         while (i < size) {
-            const uint32_t n = math_coord_iter_next16(&it, xs, ys, zs, size - i);
-            __builtin_assume(n >= 1 && n <= 16);
+            const uint32_t n = math_coord_iter_next64(&it, xs, ys, zs, size - i);
 
 #pragma clang loop vectorize(enable)
             for (uint32_t j = 0; j < n; j++) {
@@ -603,8 +604,7 @@ math_noise_perlin_sample_base_area0(const uint32_t *restrict const permutations,
         }
     } else if (!shiftX && !shiftY && !shiftZ) {
         while (i < size) {
-            const uint32_t n = math_coord_iter_next16(&it, xs, ys, zs, size - i);
-            __builtin_assume(n >= 1 && n <= 16);
+            const uint32_t n = math_coord_iter_next64(&it, xs, ys, zs, size - i);
 
 #pragma clang loop vectorize(enable)
             for (uint32_t j = 0; j < n; j++) {
