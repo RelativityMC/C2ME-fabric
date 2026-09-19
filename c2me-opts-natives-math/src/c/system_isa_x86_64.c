@@ -244,9 +244,10 @@ int32_t c2me_natives_get_system_isa() {
             return ICL_AVX512;
         }
 #endif // !MACOS
-        if (skx) {
-            return SKX_AVX512;
-        }
+        // removed skx avx512 because slow
+        // if (skx) {
+        //     return SKX_AVX512;
+        // }
         // removed KNL
         // If it's unknown AVX512 target, fall through and use AVX2
         // or whatever is available in the machine.
