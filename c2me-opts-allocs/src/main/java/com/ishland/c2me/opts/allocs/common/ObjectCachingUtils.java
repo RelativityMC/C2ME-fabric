@@ -25,7 +25,10 @@
 package com.ishland.c2me.opts.allocs.common;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import net.minecraft.world.gen.sampler.SampleBuffer;
+import net.minecraft.world.gen.sampler.SampleBufferPool;
 
+import java.lang.ref.WeakReference;
 import java.util.BitSet;
 import java.util.function.IntFunction;
 
@@ -33,7 +36,10 @@ public class ObjectCachingUtils {
 
     private static final IntFunction<BitSet> bitSetConstructor = BitSet::new;
 
-    public static ThreadLocal<Int2ObjectOpenHashMap<BitSet>> BITSETS = ThreadLocal.withInitial(Int2ObjectOpenHashMap::new);
+    public static final ThreadLocal<Int2ObjectOpenHashMap<BitSet>> BITSETS = ThreadLocal.withInitial(Int2ObjectOpenHashMap::new);
+    public static final ThreadLocal<WeakReference<SampleBufferPool>> SAMPLE_POOL = ThreadLocal.withInitial(() -> null);
+
+    public static final ScopedValue<IntFunction<SampleBuffer>> POOLED_SAMPLE_BUFFER_ALLOCATOR = ScopedValue.newInstance();
 
     private ObjectCachingUtils() {
     }
@@ -42,6 +48,24 @@ public class ObjectCachingUtils {
         final BitSet bitSet = BITSETS.get().computeIfAbsent(bits, bitSetConstructor);
         bitSet.clear();
         return bitSet;
+    }
+
+    private static SampleBufferPool createSampleBufferPool() {
+        return new SampleBufferPool(32);
+    }
+
+    public static SampleBufferPool borrowCachedOrNewSampleBufferPool() {
+        WeakReference<SampleBufferPool> weakReference = SAMPLE_POOL.get();
+        SampleBufferPool pool = weakReference != null ? weakReference.get() : null;
+        SAMPLE_POOL.remove();
+        if (pool != null) {
+            return pool;
+        }
+        return createSampleBufferPool();
+    }
+
+    public static void returnCachedSampleBufferPool(SampleBufferPool pool) {
+        SAMPLE_POOL.set(new WeakReference<>(pool));
     }
 
 }
