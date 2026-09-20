@@ -5,6 +5,21 @@
 #include <stddef.h>
 #include <float.h>
 
+// Define UNUSED_ATTR macro based on language standard and compiler support
+#if defined(__cplusplus) && __cplusplus >= 201703L
+// C++17 or newer
+#define UNUSED_ATTR [[maybe_unused]]
+#elif defined(__STDC_VERSION__) && __STDC_VERSION__ >= 202311L
+// C23 or newer
+#define UNUSED_ATTR [[maybe_unused]]
+#elif defined(__clang__) || defined(__GNUC__)
+// Clang/GCC specific attribute
+#define UNUSED_ATTR __attribute__((unused))
+#else
+// No attribute support - define to nothing
+#define UNUSED_ATTR
+#endif
+
 __attribute__((aligned(64))) static const double FLAT_SIMPLEX_GRAD_F64[] = {
         1, 1, 0, 0,
         -1, 1, 0, 0,
@@ -113,7 +128,11 @@ static inline __attribute__((const)) float fabsf(const float x) {
 }
 
 static inline __attribute__((const)) int64_t labs(const int64_t x) {
+#ifdef _WIN32
+    return __builtin_llabs(x);
+#else
     return __builtin_labs(x);
+#endif
 }
 
 static inline __attribute__((const)) double floor(double x) {
@@ -976,8 +995,8 @@ math_end_islands_sample(const uint32_t *restrict const simplex_permutations, con
     int8_t ms[25 * 25], ns[25 * 25], hit[25 * 25];
     const int64_t omin = labs(i) - 12LL;
     const int64_t pmin = labs(j) - 12LL;
-    const int64_t omax = labs(i) + 12LL;
-    const int64_t pmax = labs(j) + 12LL;
+    UNUSED_ATTR const int64_t omax = labs(i) + 12LL;
+    UNUSED_ATTR const int64_t pmax = labs(j) + 12LL;
 
     {
         uint32_t idx = 0;
@@ -1259,7 +1278,7 @@ typedef struct __biome_search_stack_element {
 static inline uint32_t __attribute__((pure))
 math_biome_search_tree_calc(const biome_search_tree_node_t * restrict const nodes,
                             const int16_t * restrict const target,
-                            const uint32_t nodes_c, const uint32_t tree_depth) {
+                            UNUSED_ATTR const uint32_t nodes_c, const uint32_t tree_depth) {
     // no recursion allowed, because this needs to be eventually ported to GPU
 
     if (!__math_biome_search_tree_is_branch(nodes + 1)) {
@@ -1274,7 +1293,7 @@ math_biome_search_tree_calc(const biome_search_tree_node_t * restrict const node
     working[top ++] = (__biome_search_stack_element_t) { .node = 1, .iter_i = 0 };
     __math_biome_search_tree_validate_node(nodes + 1);
 
-    loop_start:
+    // loop_start:
     while (top) {
         uint32_t cur_node = working[top - 1].node;
         uint32_t iter_i = working[top - 1].iter_i;

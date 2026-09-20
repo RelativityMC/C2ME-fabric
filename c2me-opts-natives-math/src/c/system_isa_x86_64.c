@@ -38,22 +38,6 @@ enum ISA {
 #define UNUSED_ATTR
 #endif
 
-
-// Define UNUSED_ATTR macro based on language standard and compiler support
-#if defined(__cplusplus) && __cplusplus >= 201703L
-// C++17 or newer
-#define UNUSED_ATTR [[maybe_unused]]
-#elif defined(__STDC_VERSION__) && __STDC_VERSION__ >= 202311L
-// C23 or newer
-#define UNUSED_ATTR [[maybe_unused]]
-#elif defined(__clang__) || defined(__GNUC__)
-// Clang/GCC specific attribute
-#define UNUSED_ATTR __attribute__((unused))
-#else
-// No attribute support - define to nothing
-#define UNUSED_ATTR
-#endif
-
 #ifndef MACOS
 // MACOS macro can be defined when we are compiling dispatch.c for macOS.
 // In other cases, we need to define it manually if we are compiling for macOS.
@@ -195,7 +179,7 @@ int32_t c2me_natives_get_system_isa() {
         // Tiger Lake:               TGL = ICL + VP2INTERSECT
         // Sapphire Rapids:          SPR = ICL + BF16 + AMX_BF16 + AMX_TILE + AMX_INT8 + AVX_VNNI + FP16
         // Granite Rapids:           GNR = SPR + AMX_FP16 + PREFETCHI
-        int knl = avx512_pf && avx512_er && avx512_cd;
+        UNUSED_ATTR int knl = avx512_pf && avx512_er && avx512_cd;
         int skx = avx512_dq && avx512_cd && avx512_bw && avx512_vl;
 #if !defined(MACOS)
         int clx = skx && avx512_vnni;

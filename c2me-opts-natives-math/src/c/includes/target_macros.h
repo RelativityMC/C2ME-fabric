@@ -1,30 +1,28 @@
 #pragma once
 
-#define TARGET_IMPL_ARCH(suffix, func_prefix, func_ret, func_call) \
+#define TARGET_IMPL_ARCH_(suffix, func_prefix, func_ret, func_call) \
   func_ret func_prefix##_##suffix func_call
+
+#define TARGET_IMPL_ARCH(suffix, func_prefix, func_ret, func_call) \
+  TARGET_IMPL_ARCH_(suffix, func_prefix, func_ret, func_call)
 
 #ifdef __x86_64__
 
-#ifdef GATHER_DISABLED
-#define TARGET_IMPL(func_prefix, func_ret, func_call) \
-  __attribute__((target("arch=haswell"))) TARGET_IMPL_ARCH(avx2, func_prefix, func_ret, func_call) \
-  __attribute__((target("arch=skylake-avx512"))) TARGET_IMPL_ARCH(avx512skx, func_prefix, func_ret, func_call)
-#else
-#define TARGET_IMPL(func_prefix, func_ret, func_call) \
-  __attribute__((target("arch=x86-64"))) TARGET_IMPL_ARCH(sse2, func_prefix, func_ret, func_call) \
-  __attribute__((target("arch=x86-64-v2"))) TARGET_IMPL_ARCH(sse4_2, func_prefix, func_ret, func_call) \
-  __attribute__((target("arch=sandybridge"))) TARGET_IMPL_ARCH(avx, func_prefix, func_ret, func_call) \
-  __attribute__((target("arch=icelake-server"))) TARGET_IMPL_ARCH(avx512icl, func_prefix, func_ret, func_call) \
-  __attribute__((target("arch=alderlake"))) TARGET_IMPL_ARCH(avx2vnni, func_prefix, func_ret, func_call) \
-  __attribute__((target("arch=sapphirerapids"))) TARGET_IMPL_ARCH(avx512spr, func_prefix, func_ret, func_call) \
-  __attribute__((target("arch=diamondrapids"))) TARGET_IMPL_ARCH(avx10_2dmr, func_prefix, func_ret, func_call) \
-  __attribute__((target("arch=novalake"))) TARGET_IMPL_ARCH(avx10_2nvl, func_prefix, func_ret, func_call)
+#define MACRO_VALUE_OF(x) x
+#define STRINGIZE(x) #x
+#define STRINGIZE_VALUE_OF(x) STRINGIZE(x)
+
+#ifndef UARCH_SUFFIX
+#define UARCH_SUFFIX sse2
 #endif
 
+#define TARGET_IMPL(func_prefix, func_ret, func_call) \
+  TARGET_IMPL_ARCH(UARCH_SUFFIX, func_prefix, func_ret, func_call)
+
 #else
 
 #define TARGET_IMPL(func_prefix, func_ret, func_call) \
-  __attribute__((pure)) TARGET_IMPL_ARCH(generic, func_prefix, func_ret, func_call)
+  __attribute__((pure)) TARGET_IMPL_ARCH(generic, func_prefix, func_ret)
 
 #endif
 
