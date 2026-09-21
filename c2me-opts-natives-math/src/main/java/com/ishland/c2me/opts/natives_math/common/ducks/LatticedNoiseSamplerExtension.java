@@ -22,44 +22,14 @@
  * THE SOFTWARE.
  */
 
-package com.ishland.c2me.base.common.util;
+package com.ishland.c2me.opts.natives_math.common.ducks;
 
-public class MemoryUtil {
+import java.lang.foreign.MemorySegment;
 
-    public static int[] byte2int(byte[] data) {
-        if (data == null) return null;
-        int[] ints = new int[data.length];
-        for (int i = 0; i < data.length; i++) {
-            ints[i] = data[i] & 0xff;
-        }
-        return ints;
-    }
+public interface LatticedNoiseSamplerExtension {
 
-    public static int[] packByte2int(byte[] data) {
-        if (data == null) return null;
-        int[] ints = new int[Math.ceilDiv(data.length, 4)];
-        for (int i = 0; i < data.length; i++) {
-            ints[i >> 2] |= (data[i] & 0xff) << ((i & 3) << 3);
-        }
-        return ints;
-    }
+    int[] c2me$getPackedPermutations();
 
-    public static int roundUp(int num, int base) {
-        int temp = num % base;
-        if (temp < 0)
-            temp = base + temp;
-        if (temp == 0)
-            return num;
-        return num + base - temp;
-    }
-
-    public static long roundUp(long num, long base) {
-        long temp = num % base;
-        if (temp < 0)
-            temp = base + temp;
-        if (temp == 0)
-            return num;
-        return num + base - temp;
-    }
+    MemorySegment c2me$getPackedPermutationsMemorySegment();
 
 }

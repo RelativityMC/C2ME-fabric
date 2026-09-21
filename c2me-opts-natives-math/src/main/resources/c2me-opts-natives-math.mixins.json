@@ -5,6 +5,11 @@
   "plugin": "com.ishland.c2me.base.common.ModuleMixinPlugin",
   "mixins": [
     "MixinBiomeAccess",
-    "MixinEndOuterIslandsDensityFunctionSampler"
+    "MixinCompositeNoiseSamplerBuilder",
+    "MixinEndOuterIslandsDensityFunctionSampler",
+    "MixinLatticedNoiseSampler",
+    "MixinLegacyPerlinNoiseSampler",
+    "MixinPerlinNoiseSampler",
+    "MixinSampleBuffer"
   ]
 }

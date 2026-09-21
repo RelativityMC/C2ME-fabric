@@ -28,6 +28,7 @@ import com.ishland.c2me.base.common.util.MemoryUtil;
 import com.ishland.c2me.base.mixin.access.IEndOuterIslandsDensityFunction;
 import com.ishland.c2me.base.mixin.access.ILatticedNoiseSampler;
 import com.ishland.c2me.opts.natives_math.common.Bindings;
+import com.ishland.flowsched.util.Assertions;
 import net.minecraft.util.math.noise.SimplexNoiseSampler;
 import net.minecraft.world.gen.sampler.SamplingContext;
 import org.spongepowered.asm.mixin.*;
@@ -54,8 +55,9 @@ public abstract class MixinEndOuterIslandsDensityFunctionSampler {
     @Inject(method = "<init>", at = @At("RETURN"))
     private void postInit(CallbackInfo ci) {
         byte[] permutation = ((ILatticedNoiseSampler) this.islandNoise).getPermutation();
-        MemorySegment segment = this.c2me$arena.allocate(permutation.length * 4L, 64);
-        MemorySegment.copy(MemorySegment.ofArray(MemoryUtil.byte2int(permutation)), 0L, segment, 0L, permutation.length * 4L);
+        Assertions.assertTrue(permutation.length == 256);
+        MemorySegment segment = this.c2me$arena.allocate(permutation.length, 64);
+        MemorySegment.copy(MemorySegment.ofArray(MemoryUtil.packByte2int(permutation)), 0L, segment, 0L, permutation.length);
         VarHandle.fullFence();
         this.c2me$samplerData = segment;
         this.c2me$samplerDataPtr = segment.address();

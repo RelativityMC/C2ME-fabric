@@ -45,20 +45,7 @@ public abstract class AbstractAccuracy {
     }
 
     protected static long ulpDistance(double original, double that) {
-        long dist = 0;
-        if (original > that) {
-            double tmp = that;
-            that = original;
-            original = tmp;
-        }
-        while (that > original) {
-            that = Math.nextAfter(that, original);
-            dist ++;
-        }
-        if (dist == 0 && !equals(original, that)) {
-            return Long.MAX_VALUE;
-        }
-        return dist;
+        return Math.abs(Double.doubleToRawLongBits(original) - Double.doubleToRawLongBits(that));
     }
 
     private static boolean equals(double original, double that) {
@@ -66,20 +53,7 @@ public abstract class AbstractAccuracy {
     }
 
     protected static long ulpDistance(float original, float that) {
-        long dist = 0;
-        if (original > that) {
-            float tmp = that;
-            that = original;
-            original = tmp;
-        }
-        while (that > original) {
-            that = Math.nextAfter(that, original);
-            dist ++;
-        }
-        if (dist == 0 && !equals(original, that)) {
-            return Long.MAX_VALUE;
-        }
-        return dist;
+        return Math.abs(Float.floatToRawIntBits(original) - Float.floatToRawIntBits(that));
     }
 
     private static boolean equals(float original, float that) {

@@ -4,6 +4,21 @@
 
 typedef int make_iso_compilers_happy;
 
+// Define UNUSED_ATTR macro based on language standard and compiler support
+#if defined(__cplusplus) && __cplusplus >= 201703L
+// C++17 or newer
+#define UNUSED_ATTR [[maybe_unused]]
+#elif defined(__STDC_VERSION__) && __STDC_VERSION__ >= 202311L
+// C23 or newer
+#define UNUSED_ATTR [[maybe_unused]]
+#elif defined(__clang__) || defined(__GNUC__)
+// Clang/GCC specific attribute
+#define UNUSED_ATTR __attribute__((unused))
+#else
+// No attribute support - define to nothing
+#define UNUSED_ATTR
+#endif
+
 #if FLT_EVAL_METHOD == 0
 typedef float float_t;
 typedef double double_t;
@@ -18,7 +33,7 @@ typedef float float_t;
 typedef double double_t;
 #endif
 
-#ifdef WIN32
+#ifdef _WIN32
 
 // ld.lld: error: <root>: undefined symbol: DllMainCRTStartup
 int __stdcall DllMainCRTStartup(void* instance, unsigned reason, void* reserved)
@@ -169,7 +184,7 @@ static inline float eval_as_float(float x) {
     return y;
 }
 
-static inline double eval_as_double(double x) {
+UNUSED_ATTR static inline double eval_as_double(double x) {
     double y = x;
     return y;
 }
@@ -181,7 +196,7 @@ static inline double eval_as_double(double x) {
 #ifndef fp_barrierf
 #define fp_barrierf fp_barrierf
 
-static inline float fp_barrierf(float x) {
+UNUSED_ATTR static inline float fp_barrierf(float x) {
     volatile float y = x;
     return y;
 }
@@ -191,7 +206,7 @@ static inline float fp_barrierf(float x) {
 #ifndef fp_barrier
 #define fp_barrier fp_barrier
 
-static inline double fp_barrier(double x) {
+UNUSED_ATTR static inline double fp_barrier(double x) {
     volatile double y = x;
     return y;
 }
@@ -201,7 +216,7 @@ static inline double fp_barrier(double x) {
 #ifndef fp_barrierl
 #define fp_barrierl fp_barrierl
 
-static inline long double fp_barrierl(long double x) {
+UNUSED_ATTR static inline long double fp_barrierl(long double x) {
     volatile long double y = x;
     return y;
 }
@@ -218,7 +233,7 @@ static inline long double fp_barrierl(long double x) {
 #define fp_force_evalf fp_force_evalf
 
 static inline void fp_force_evalf(float x) {
-    volatile float y;
+    UNUSED_ATTR volatile float y;
     y = x;
 }
 
@@ -228,7 +243,7 @@ static inline void fp_force_evalf(float x) {
 #define fp_force_eval fp_force_eval
 
 static inline void fp_force_eval(double x) {
-    volatile double y;
+    UNUSED_ATTR volatile double y;
     y = x;
 }
 
@@ -238,7 +253,7 @@ static inline void fp_force_eval(double x) {
 #define fp_force_evall fp_force_evall
 
 static inline void fp_force_evall(long double x) {
-    volatile long double y;
+    UNUSED_ATTR volatile long double y;
     y = x;
 }
 
@@ -297,69 +312,69 @@ do {                                              \
   (d) = asfloat(w);                               \
 } while (0)
 
-static int __rem_pio2_large(double *, double *, int, int, int);
+UNUSED_ATTR static int __rem_pio2_large(double *, double *, int, int, int);
 
-static int __rem_pio2(double, double *);
+UNUSED_ATTR static int __rem_pio2(double, double *);
 
-static double __sin(double, double, int);
+UNUSED_ATTR static double __sin(double, double, int);
 
-static double __cos(double, double);
+UNUSED_ATTR static double __cos(double, double);
 
-static double __tan(double, double, int);
+UNUSED_ATTR static double __tan(double, double, int);
 
-static double __expo2(double, double);
+UNUSED_ATTR static double __expo2(double, double);
 
-static int __rem_pio2f(float, double *);
+UNUSED_ATTR static int __rem_pio2f(float, double *);
 
-static float __sindf(double);
+UNUSED_ATTR static float __sindf(double);
 
-static float __cosdf(double);
+UNUSED_ATTR static float __cosdf(double);
 
-static float __tandf(double, int);
+UNUSED_ATTR static float __tandf(double, int);
 
-static float __expo2f(float, float);
+UNUSED_ATTR static float __expo2f(float, float);
 
-static int __rem_pio2l(long double, long double *);
+UNUSED_ATTR static int __rem_pio2l(long double, long double *);
 
-static long double __sinl(long double, long double, int);
+UNUSED_ATTR static long double __sinl(long double, long double, int);
 
-static long double __cosl(long double, long double);
+UNUSED_ATTR static long double __cosl(long double, long double);
 
-static long double __tanl(long double, long double, int);
+UNUSED_ATTR static long double __tanl(long double, long double, int);
 
-static long double __polevll(long double, const long double *, int);
+UNUSED_ATTR static long double __polevll(long double, const long double *, int);
 
-static long double __p1evll(long double, const long double *, int);
+UNUSED_ATTR static long double __p1evll(long double, const long double *, int);
 
 //extern int __signgam;
-static double __lgamma_r(double, int *);
+UNUSED_ATTR static double __lgamma_r(double, int *);
 
-static float __lgammaf_r(float, int *);
+UNUSED_ATTR static float __lgammaf_r(float, int *);
 
 /* error handling functions */
-static float __math_xflowf(uint32_t, float);
+UNUSED_ATTR static float __math_xflowf(uint32_t, float);
 
-static float __math_uflowf(uint32_t);
+UNUSED_ATTR static float __math_uflowf(uint32_t);
 
-static float __math_oflowf(uint32_t);
+UNUSED_ATTR static float __math_oflowf(uint32_t);
 
-static float __math_divzerof(uint32_t);
+UNUSED_ATTR static float __math_divzerof(uint32_t);
 
-static float __math_invalidf(float);
+UNUSED_ATTR static float __math_invalidf(float);
 
-static double __math_xflow(uint32_t, double);
+UNUSED_ATTR static double __math_xflow(uint32_t, double);
 
-static double __math_uflow(uint32_t);
+UNUSED_ATTR static double __math_uflow(uint32_t);
 
-static double __math_oflow(uint32_t);
+UNUSED_ATTR static double __math_oflow(uint32_t);
 
-static double __math_divzero(uint32_t);
+UNUSED_ATTR static double __math_divzero(uint32_t);
 
-static double __math_invalid(double);
+UNUSED_ATTR static double __math_invalid(double);
 
 #if LDBL_MANT_DIG != DBL_MANT_DIG
 
-static long double __math_invalidl(long double);
+UNUSED_ATTR static long double __math_invalidl(long double);
 
 #endif
 
@@ -457,13 +472,6 @@ float floorf(float x) {
 
 // src/math/roundf.c
 
-#if FLT_EVAL_METHOD==0
-#define EPS FLT_EPSILON
-#elif FLT_EVAL_METHOD==1
-#define EPS DBL_EPSILON
-#elif FLT_EVAL_METHOD==2
-#define EPS LDBL_EPSILON
-#endif
 static const float_t tointf = 1/EPS;
 
 float roundf(float x) {
@@ -656,7 +664,7 @@ void *memset(void *dest, int c, size_t n) {
    if x in [2,4): i = (int)(32*x-64);
    __rsqrt_tab[i]*2^-16 is estimating 1/sqrt(x) with small relative error:
    |__rsqrt_tab[i]*0x1p-16*sqrt(x) - 1| < -0x1.fdp-9 < 2^-8 */
-extern const uint16_t __rsqrt_tab[128] = {
+static const uint16_t __rsqrt_tab[128] = {
         0xb451, 0xb2f0, 0xb196, 0xb044, 0xaef9, 0xadb6, 0xac79, 0xab43,
         0xaa14, 0xa8eb, 0xa7c8, 0xa6aa, 0xa592, 0xa480, 0xa373, 0xa26b,
         0xa168, 0xa06a, 0x9f70, 0x9e7b, 0x9d8a, 0x9c9d, 0x9bb5, 0x9ad1,

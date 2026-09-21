@@ -22,44 +22,25 @@
  * THE SOFTWARE.
  */
 
-package com.ishland.c2me.base.common.util;
+package com.ishland.c2me.opts.allocs.mixin.object_pooling_caching;
 
-public class MemoryUtil {
+import com.ishland.c2me.opts.allocs.common.ObjectCachingUtils;
+import net.minecraft.world.gen.sampler.SampleBuffer;
+import net.minecraft.world.gen.surfacebuilder.MaterialRuleContext;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Redirect;
 
-    public static int[] byte2int(byte[] data) {
-        if (data == null) return null;
-        int[] ints = new int[data.length];
-        for (int i = 0; i < data.length; i++) {
-            ints[i] = data[i] & 0xff;
+@Mixin(MaterialRuleContext.class)
+public class MixinMaterialRuleContext {
+
+    @Redirect(method = "getDensityProvider", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/gen/sampler/SampleBuffer;withCount(I)Lnet/minecraft/world/gen/sampler/SampleBuffer;"))
+    private SampleBuffer redirectPooledBuffer(int count) {
+        if (ObjectCachingUtils.POOLED_SAMPLE_BUFFER_ALLOCATOR.isBound()) {
+            return ObjectCachingUtils.POOLED_SAMPLE_BUFFER_ALLOCATOR.get().apply(count);
+        } else {
+            return SampleBuffer.withCount(count);
         }
-        return ints;
-    }
-
-    public static int[] packByte2int(byte[] data) {
-        if (data == null) return null;
-        int[] ints = new int[Math.ceilDiv(data.length, 4)];
-        for (int i = 0; i < data.length; i++) {
-            ints[i >> 2] |= (data[i] & 0xff) << ((i & 3) << 3);
-        }
-        return ints;
-    }
-
-    public static int roundUp(int num, int base) {
-        int temp = num % base;
-        if (temp < 0)
-            temp = base + temp;
-        if (temp == 0)
-            return num;
-        return num + base - temp;
-    }
-
-    public static long roundUp(long num, long base) {
-        long temp = num % base;
-        if (temp < 0)
-            temp = base + temp;
-        if (temp == 0)
-            return num;
-        return num + base - temp;
     }
 
 }
