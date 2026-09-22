@@ -42,19 +42,19 @@ public class MixinBiomeAccess {
 
     @Shadow @Final private BiomeSupplier storage;
 
-    /**
-     * @author ishland
-     * @reason replace impl
-     */
-    @Overwrite
-    public RegistryEntry<Biome> getBiome(final int x, final int y, final int z) {
-        int mask = Bindings.c2me_natives_biome_access_sample(this.seed, x, y, z);
-
-        return this.storage.getBiomeForNoiseGen(
-                ((x - 2) >> 2) + ((mask & 4) != 0 ? 1 : 0),
-                ((y - 2) >> 2) + ((mask & 2) != 0 ? 1 : 0),
-                ((z - 2) >> 2) + ((mask & 1) != 0 ? 1 : 0)
-        );
-    }
+//    /**
+//     * @author ishland
+//     * @reason replace impl
+//     */
+//    @Overwrite
+//    public RegistryEntry<Biome> method_16359(final int x, final int y, final int z) {
+//        int mask = Bindings.c2me_natives_biome_access_sample(this.seed, x, y, z);
+//
+//        return this.storage.getBiomeForNoiseGen(
+//                ((x - 2) >> 2) + ((mask & 4) != 0 ? 1 : 0),
+//                ((y - 2) >> 2) + ((mask & 2) != 0 ? 1 : 0),
+//                ((z - 2) >> 2) + ((mask & 1) != 0 ? 1 : 0)
+//        );
+//    }
 
 }

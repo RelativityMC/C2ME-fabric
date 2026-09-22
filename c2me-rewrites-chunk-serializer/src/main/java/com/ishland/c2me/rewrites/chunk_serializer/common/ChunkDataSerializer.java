@@ -25,17 +25,16 @@
 package com.ishland.c2me.rewrites.chunk_serializer.common;
 
 import com.ishland.c2me.base.mixin.access.IBelowZeroRetrogen;
-import com.ishland.c2me.base.mixin.access.IState;
 import com.ishland.c2me.base.mixin.access.IStructurePiece;
 import com.ishland.c2me.base.mixin.access.IStructureStart;
 import com.mojang.serialization.Codec;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.shorts.ShortList;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.SharedConstants;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.class_1_1691;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
@@ -77,6 +76,7 @@ import net.minecraft.world.tick.TickPriority;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Contract;
+import org.jspecify.annotations.Nullable;
 
 import java.util.BitSet;
 import java.util.List;
@@ -94,9 +94,9 @@ public final class ChunkDataSerializer {
     private static final byte[] STRING_Z_POS = NbtWriter.getAsciiStringBytes("zPos");
     private static final byte[] STRING_LAST_UPDATE = NbtWriter.getAsciiStringBytes("LastUpdate");
     private static final byte[] STRING_INHABITED_TIME = NbtWriter.getAsciiStringBytes("InhabitedTime");
-    private static final byte[] STRING_STATUS = NbtWriter.getAsciiStringBytes("Status");
+    private static final byte[] STRING_STATUS = NbtWriter.getAsciiStringBytes("status");
     private static final byte[] STRING_BLENDING_DATA = NbtWriter.getAsciiStringBytes("blending_data");
-    private static final byte[] STRING_BELOW_ZERO_RETROGEN = NbtWriter.getAsciiStringBytes("below_zero_retrogen");
+    private static final byte[] STRING_RETROGEN = NbtWriter.getAsciiStringBytes("retrogen");
     private static final byte[] STRING_UPGRADE_DATA = NbtWriter.getAsciiStringBytes("UpgradeData");
     private static final byte[] STRING_IS_LIGHT_ON = NbtWriter.getAsciiStringBytes("isLightOn");
     private static final byte[] STRING_BLOCK_ENTITIES = NbtWriter.getAsciiStringBytes("block_entities");
@@ -105,6 +105,7 @@ public final class ChunkDataSerializer {
     private static final byte[] STRING_SECTIONS = NbtWriter.getAsciiStringBytes("sections");
     private static final byte[] STRING_BLOCK_STATES = NbtWriter.getAsciiStringBytes("block_states");
     private static final byte[] STRING_BIOMES = NbtWriter.getAsciiStringBytes("biomes");
+    private static final byte[] STRING_NOISE_BIOMES = NbtWriter.getAsciiStringBytes("noise_biomes");
     private static final byte[] STRING_BLOCK_LIGHT = NbtWriter.getAsciiStringBytes("BlockLight");
     private static final byte[] STRING_SKY_LIGHT = NbtWriter.getAsciiStringBytes("SkyLight");
     private static final byte[] STRING_OLD_NOISE = NbtWriter.getAsciiStringBytes("old_noise");
@@ -177,10 +178,10 @@ public final class ChunkDataSerializer {
             writer.finishCompound();
         }
 
-        BelowZeroRetrogen belowZeroRetrogen = serializable.belowZeroRetrogen();
+        BelowZeroRetrogen belowZeroRetrogen = serializable.retroGen();
         if (belowZeroRetrogen != null) {
             // Inline codec
-            writer.startCompound(STRING_BELOW_ZERO_RETROGEN);
+            writer.startCompound(STRING_RETROGEN);
             writeBelowZeroRetrogen(writer, (IBelowZeroRetrogen) (Object) belowZeroRetrogen);
             writer.finishCompound();
         }
@@ -201,7 +202,7 @@ public final class ChunkDataSerializer {
 
         checkLightFlag(serializable.lightCorrect(), writer);
 
-        writeSectionData(writer, chunkPos, sectionData, containerFactory);
+        writeSectionData(writer, chunkPos, sectionData, serializable.noiseBiomeChunk(), containerFactory);
 
 
         writer.startFixedList(STRING_BLOCK_ENTITIES, serializable.blockEntities().size(), NbtElement.COMPOUND_TYPE);
@@ -265,9 +266,10 @@ public final class ChunkDataSerializer {
             NbtWriter writer,
             ChunkPos chunkPos,
             List<SerializedChunk.SectionData> sectionData,
+            @Nullable class_1_1691 noiseBiomeChunk,
             PalettesFactory containerFactory
     ) {
-        writeSectionDataVanilla(writer, chunkPos, sectionData, containerFactory);
+        writeSectionDataVanilla(writer, chunkPos, sectionData, noiseBiomeChunk, containerFactory);
     }
 
     /**
@@ -277,6 +279,7 @@ public final class ChunkDataSerializer {
             NbtWriter writer,
             ChunkPos chunkPos,
             List<SerializedChunk.SectionData> sectionData,
+            @Nullable class_1_1691 noiseBiomeChunk,
             PalettesFactory containerFactory
     ) {
         long sectionsStart = writer.startList(STRING_SECTIONS, NbtElement.COMPOUND_TYPE);
@@ -294,7 +297,16 @@ public final class ChunkDataSerializer {
                 writeBlockStates(writer, sectionDatum.chunkSection().getBlockStateContainer(), containerFactory);
                 writeBiomes(writer, sectionDatum.chunkSection().getBiomeContainer(), containerFactory);
             }
-            
+
+            if (noiseBiomeChunk != null) {
+                if (!hasInner) {
+                    hasInner = true;
+                    writer.compoundEntryStart();
+                }
+
+                writeNoiseBiomes(writer, noiseBiomeChunk.method_1_10675(sectionDatum.y()), containerFactory);
+            }
+
             if (sectionDatum.blockLight() != null) {
                 if (!hasInner) {
                     hasInner = true;
@@ -374,6 +386,27 @@ public final class ChunkDataSerializer {
         // todo can this be optimized?
         // todo: does this conflict with lithium by any chance?
         var data = biomeContainer.serialize(containerFactory.biomeStrategy());
+
+        List<RegistryEntry<Biome>> paletteEntries = data.paletteEntries();
+        writer.startFixedList(STRING_PALETTE, paletteEntries.size(), NbtElement.STRING_TYPE);
+
+        for (RegistryEntry<Biome> paletteEntry : paletteEntries) {
+            writer.putRegistryEntry(paletteEntry);
+        }
+
+        Optional<LongStream> storage = data.storage();
+        //noinspection OptionalIsPresent
+        if (storage.isPresent()) {
+            writer.putLongArray(STRING_DATA, storage.get());
+        }
+        writer.finishCompound();
+    }
+
+    private static void writeNoiseBiomes(NbtWriter writer, ReadableContainer<RegistryEntry<Biome>> noiseBiomeContainer, PalettesFactory containerFactory) {
+        writer.startCompound(STRING_NOISE_BIOMES);
+        // todo can this be optimized?
+        // todo: does this conflict with lithium by any chance?
+        var data = noiseBiomeContainer.serialize(containerFactory.noiseBiomeStrategy());
 
         List<RegistryEntry<Biome>> paletteEntries = data.paletteEntries();
         writer.startFixedList(STRING_PALETTE, paletteEntries.size(), NbtElement.STRING_TYPE);

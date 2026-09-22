@@ -34,13 +34,13 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(MaterialRuleContext.class)
 public class MixinMaterialRuleContext {
 
-    @Redirect(method = "getDensityProvider", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/gen/sampler/SampleBuffer;withCount(I)Lnet/minecraft/world/gen/sampler/SampleBuffer;"))
-    private SampleBuffer redirectPooledBuffer(int count) {
-        if (ObjectCachingUtils.POOLED_SAMPLE_BUFFER_ALLOCATOR.isBound()) {
-            return ObjectCachingUtils.POOLED_SAMPLE_BUFFER_ALLOCATOR.get().apply(count);
-        } else {
-            return SampleBuffer.withCount(count);
-        }
-    }
+//    @Redirect(method = "getDensityProvider", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/gen/sampler/SampleBuffer;withCount(I)Lnet/minecraft/world/gen/sampler/SampleBuffer;"))
+//    private SampleBuffer redirectPooledBuffer(int count) {
+//        if (ObjectCachingUtils.POOLED_SAMPLE_BUFFER_ALLOCATOR.isBound()) {
+//            return ObjectCachingUtils.POOLED_SAMPLE_BUFFER_ALLOCATOR.get().apply(count);
+//        } else {
+//            return SampleBuffer.withCount(count);
+//        }
+//    }
 
 }

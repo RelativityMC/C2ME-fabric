@@ -41,7 +41,7 @@ public interface MixinWorldView {
      * @reason async biome locate
      */
     @Overwrite
-    default RegistryEntry<Biome> getBiomeForNoiseGen(int biomeX, int biomeY, int biomeZ) {
+    default RegistryEntry<Biome> method_16359(int biomeX, int biomeY, int biomeZ) {
         return this.getGeneratorStoredBiome(biomeX, biomeY, biomeZ);
     }
 

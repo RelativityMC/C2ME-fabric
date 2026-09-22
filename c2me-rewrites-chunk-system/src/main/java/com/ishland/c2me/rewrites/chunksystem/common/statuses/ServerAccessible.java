@@ -73,7 +73,7 @@ public class ServerAccessible extends NewChunkStatus {
         if (Config.asyncSerialization) {
             ServerWorld serverWorld = ((IThreadedAnvilChunkStorage) context.tacs()).getWorld();
             final WorldChunk worldChunk = toFullChunk(protoChunk, serverWorld);
-            final WrapperProtoChunk wrapperProtoChunk = new WrapperProtoChunk(worldChunk, false);
+            final WrapperProtoChunk wrapperProtoChunk = new WrapperProtoChunk(worldChunk);
             return Completable
                     .fromRunnable(() -> upgrade0(context, protoChunk, worldChunk, wrapperProtoChunk))
                     .subscribeOn(Schedulers.from(((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor()));
@@ -82,7 +82,7 @@ public class ServerAccessible extends NewChunkStatus {
                     .fromRunnable(() -> {
                         ServerWorld serverWorld = ((IThreadedAnvilChunkStorage) context.tacs()).getWorld();
                         final WorldChunk worldChunk = toFullChunk(protoChunk, serverWorld);
-                        final WrapperProtoChunk wrapperProtoChunk = new WrapperProtoChunk(worldChunk, false);
+                        final WrapperProtoChunk wrapperProtoChunk = new WrapperProtoChunk(worldChunk);
                         upgrade0(context, protoChunk, worldChunk, wrapperProtoChunk);
                     })
                     .subscribeOn(Schedulers.from(((IThreadedAnvilChunkStorage) context.tacs()).getMainThreadExecutor()));
