@@ -583,7 +583,8 @@ math_noise_perlin_sample_legacy_area0(const uint32_t *restrict const permutation
             uint32_t px1_perm = 0;
 
             for (uint32_t offX = 0; offX < region.sizeX; offX++) {
-                const double x = (region.minBlockX + offX * region.stepBlockX) * scaleXz;
+                int32_t blockX = region.minBlockX + (int32_t) offX * (int32_t) region.stepBlockX;
+                const double x = (double) blockX * scaleXz;
                 const double x1 = math_octave_maintainPrecision(x) + originX;
                 const double floorX = floor(x1);
                 const double relX = x1 - floorX;
@@ -604,7 +605,8 @@ math_noise_perlin_sample_legacy_area0(const uint32_t *restrict const permutation
                 uint32_t px1_py1_perm = 0;
 
                 for (uint32_t offY = 0; offY < region.sizeY; offY++) {
-                    const double y = (region.minBlockY + offY * region.stepBlockY) * scaleY;
+                    int32_t blockY = region.minBlockY + (int32_t) offY * (int32_t) region.stepBlockY;
+                    const double y = (double) blockY * scaleY;
                     const double y1 = math_octave_maintainPrecision(y) + originY;
                     const double floorY = floor(y1);
                     const double relY = y1 - floorY;
@@ -645,7 +647,8 @@ math_noise_perlin_sample_legacy_area0(const uint32_t *restrict const permutation
                     float arr111[4] = {};
 
                     for (uint32_t offZ = 0; offZ < region.sizeZ; offZ++) {
-                        const double z = (region.minBlockZ + offZ * region.stepBlockZ) * scaleXz;
+                        int32_t blockZ = region.minBlockZ + (int32_t) offZ * (int32_t) region.stepBlockZ;
+                        const double z = (double) blockZ * scaleXz;
                         const uint32_t idx = offY + (offX + offZ * region.sizeX) * region.sizeY;
                         const double z1 = math_octave_maintainPrecision(z) + originZ;
                         const double floorZ = floor(z1);
@@ -811,7 +814,8 @@ math_noise_perlin_sample_base_area0(const uint32_t *restrict const permutations,
             uint32_t px1_perm = 0;
 
             for (uint32_t offX = 0; offX < region.sizeX; offX++) {
-                const double x = (region.minBlockX + offX * region.stepBlockX) * scaleXz;
+                int32_t blockX = region.minBlockX + (int32_t) offX * (int32_t) region.stepBlockX;
+                const double x = (double) blockX * scaleXz;
                 const double x1 = math_octave_maintainPrecision(x) + originX;
                 const double floorX = floor(x1);
                 const double relX = x1 - floorX;
@@ -832,7 +836,8 @@ math_noise_perlin_sample_base_area0(const uint32_t *restrict const permutations,
                 uint32_t px1_py1_perm = 0;
 
                 for (uint32_t offY = 0; offY < region.sizeY; offY++) {
-                    const double y = (region.minBlockY + offY * region.stepBlockY) * scaleY;
+                    int32_t blockY = region.minBlockY + (int32_t) offY * (int32_t) region.stepBlockY;
+                    const double y = (double) blockY * scaleY;
                     const double y1 = math_octave_maintainPrecision(y) + originY;
                     const double floorY = floor(y1);
                     const double relY = y1 - floorY;
@@ -872,7 +877,8 @@ math_noise_perlin_sample_base_area0(const uint32_t *restrict const permutations,
                     float arr111[4] = {};
 
                     for (uint32_t offZ = 0; offZ < region.sizeZ; offZ++) {
-                        const double z = (region.minBlockZ + offZ * region.stepBlockZ) * scaleXz;
+                        int32_t blockZ = region.minBlockZ + (int32_t) offZ * (int32_t) region.stepBlockZ;
+                        const double z = (double) blockZ * scaleXz;
                         const uint32_t idx = offY + (offX + offZ * region.sizeX) * region.sizeY;
                         const double z1 = math_octave_maintainPrecision(z) + originZ;
                         const double floorZ = floor(z1);
