@@ -34,7 +34,6 @@ import net.minecraft.SharedConstants;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
-import net.minecraft.class_1_1691;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
@@ -58,6 +57,7 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.world.Heightmap;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeKeys;
+import net.minecraft.world.biome.source.ChunkBiomeSupplier;
 import net.minecraft.world.chunk.BelowZeroRetrogen;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkType;
@@ -266,7 +266,7 @@ public final class ChunkDataSerializer {
             NbtWriter writer,
             ChunkPos chunkPos,
             List<SerializedChunk.SectionData> sectionData,
-            @Nullable class_1_1691 noiseBiomeChunk,
+            @Nullable ChunkBiomeSupplier noiseBiomeChunk,
             PalettesFactory containerFactory
     ) {
         writeSectionDataVanilla(writer, chunkPos, sectionData, noiseBiomeChunk, containerFactory);
@@ -279,7 +279,7 @@ public final class ChunkDataSerializer {
             NbtWriter writer,
             ChunkPos chunkPos,
             List<SerializedChunk.SectionData> sectionData,
-            @Nullable class_1_1691 noiseBiomeChunk,
+            @Nullable ChunkBiomeSupplier noiseBiomeChunk,
             PalettesFactory containerFactory
     ) {
         long sectionsStart = writer.startList(STRING_SECTIONS, NbtElement.COMPOUND_TYPE);
@@ -304,7 +304,7 @@ public final class ChunkDataSerializer {
                     writer.compoundEntryStart();
                 }
 
-                writeNoiseBiomes(writer, noiseBiomeChunk.method_1_10675(sectionDatum.y()), containerFactory);
+                writeNoiseBiomes(writer, noiseBiomeChunk.getBiomePalette(sectionDatum.y()), containerFactory);
             }
 
             if (sectionDatum.blockLight() != null) {

@@ -34,13 +34,18 @@ import java.util.concurrent.Executor;
 @Mixin(ChunkGenerator.class)
 public class MixinChunkGenerator {
 
-    @ModifyArg(method = "populateBiomes", at = @At(value = "INVOKE", target = "Ljava/util/concurrent/CompletableFuture;supplyAsync(Ljava/util/function/Supplier;Ljava/util/concurrent/Executor;)Ljava/util/concurrent/CompletableFuture;"))
+    @ModifyArg(method = "createNoiseBiomes", at = @At(value = "INVOKE", target = "Ljava/util/concurrent/CompletableFuture;supplyAsync(Ljava/util/function/Supplier;Ljava/util/concurrent/Executor;)Ljava/util/concurrent/CompletableFuture;"))
     private Executor redirectNoiseBiomeExecutor(Executor executor) {
         return Runnable::run;
     }
 
-    @ModifyArg(method = "method_1_10652", at = @At(value = "INVOKE", target = "Ljava/util/concurrent/CompletableFuture;supplyAsync(Ljava/util/function/Supplier;Ljava/util/concurrent/Executor;)Ljava/util/concurrent/CompletableFuture;"))
+    @ModifyArg(method = "createBiomes", at = @At(value = "INVOKE", target = "Ljava/util/concurrent/CompletableFuture;supplyAsync(Ljava/util/function/Supplier;Ljava/util/concurrent/Executor;)Ljava/util/concurrent/CompletableFuture;"))
     private Executor redirectBiomeExecutor(Executor executor) {
+        return Runnable::run;
+    }
+
+    @ModifyArg(method = "setStructureStarts", at = @At(value = "INVOKE", target = "Ljava/util/concurrent/CompletableFuture;supplyAsync(Ljava/util/function/Supplier;Ljava/util/concurrent/Executor;)Ljava/util/concurrent/CompletableFuture;"))
+    private Executor redirectStructuresExecutor(Executor executor) {
         return Runnable::run;
     }
 

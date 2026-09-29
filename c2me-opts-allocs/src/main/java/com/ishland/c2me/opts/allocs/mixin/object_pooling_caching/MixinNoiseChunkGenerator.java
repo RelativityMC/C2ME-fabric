@@ -24,29 +24,8 @@
 
 package com.ishland.c2me.opts.allocs.mixin.object_pooling_caching;
 
-import com.ishland.c2me.base.mixin.access.IChunkNoiseSampler;
-import com.ishland.c2me.opts.allocs.common.ObjectCachingUtils;
-import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
-import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import com.llamalad7.mixinextras.sugar.Local;
-import net.minecraft.class_1_1690;
-import net.minecraft.class_1_1703;
-import net.minecraft.util.math.noise.SamplingRegion;
-import net.minecraft.world.gen.YOffset;
-import net.minecraft.world.gen.chunk.ChunkNoiseSampler;
 import net.minecraft.world.gen.chunk.NoiseChunkGenerator;
-import net.minecraft.world.gen.noise.NoiseConfig;
-import net.minecraft.world.gen.sampler.ContextualSamplerProvider;
-import net.minecraft.world.gen.sampler.PooledSampleBuffer;
-import net.minecraft.world.gen.sampler.SampleBuffer;
-import net.minecraft.world.gen.sampler.SampleBufferPool;
-import net.minecraft.world.gen.surfacebuilder.MaterialRule;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.At;
-
-import java.util.ArrayList;
-import java.util.Set;
-import java.util.function.IntFunction;
 
 @Mixin(NoiseChunkGenerator.class)
 public class MixinNoiseChunkGenerator {

@@ -35,9 +35,9 @@ import java.util.BitSet;
 @Mixin(OreFeature.class)
 public class MixinOreFeature {
 
-    @Redirect(method = "generateVeinPart", at = @At(value = "NEW", target = "java/util/BitSet"))
-    private BitSet redirectNewBitSet(int nbits) {
-        return ObjectCachingUtils.getCachedOrNewBitSet(nbits);
-    }
+//    @Redirect(method = "generateVeinPart", at = @At(value = "NEW", target = "java/util/BitSet"))
+//    private BitSet redirectNewBitSet(int nbits) {
+//        return ObjectCachingUtils.getCachedOrNewBitSet(nbits);
+//    }
 
 }
