@@ -80,6 +80,16 @@ public class Config {
                     """)
             .getBoolean(false, false);
 
+    public static final boolean enableBiomesAcceleration = new ConfigSystem.ConfigAccessor()
+            .key("openclAccel.enableBiomesAcceleration")
+            .comment("""
+                    Whether to offload biome placements
+                    """)
+            .incompatibleMod("biolith", "*")
+            .incompatibleMod("terrablender", "*")
+            .incompatibleMod("biomesoplenty", "*")
+            .getBoolean(true, false);
+
     public static final boolean disableBuiltinDeviceBlocklist = new ConfigSystem.ConfigAccessor()
             .key("openclAccel.disableBuiltinDeviceBlocklist")
             .comment("""

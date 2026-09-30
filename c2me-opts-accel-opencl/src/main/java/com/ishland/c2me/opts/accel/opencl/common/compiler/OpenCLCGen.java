@@ -20,6 +20,7 @@ import com.ishland.c2me.base.common.util.MemoryUtil;
 import com.ishland.c2me.base.mixin.access.IDoublePerlinNoiseSampler;
 import com.ishland.c2me.base.mixin.access.IMultiNoiseBiomeSource;
 import com.ishland.c2me.base.mixin.access.IMultiNoiseUtilEntries;
+import com.ishland.c2me.opts.accel.opencl.common.Config;
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
 import com.ishland.c2me.opts.dfc.common.ast.McToAst;
 import com.ishland.c2me.opts.dfc.common.ast.misc.CacheLikeNode;
@@ -795,7 +796,7 @@ public class OpenCLCGen {
         }
 
         public void genBiomeTree(BiomeSource biomeSource) {
-            if (biomeSource instanceof MultiNoiseBiomeSource multiNoiseBiomeSource) {
+            if (Config.enableBiomesAcceleration && biomeSource instanceof MultiNoiseBiomeSource multiNoiseBiomeSource) {
                 MultiNoiseUtil.Entries<RegistryEntry<Biome>> entries = ((IMultiNoiseBiomeSource) multiNoiseBiomeSource).invokeGetBiomeEntries();
                 if (entries != null) {
                     MultiNoiseUtil.SearchTree<RegistryEntry<Biome>> tree = ((IMultiNoiseUtilEntries<RegistryEntry<Biome>>) entries).getTree();
