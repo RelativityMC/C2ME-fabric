@@ -299,12 +299,15 @@ public final class ChunkDataSerializer {
             }
 
             if (noiseBiomeChunk != null) {
-                if (!hasInner) {
-                    hasInner = true;
-                    writer.compoundEntryStart();
-                }
+                ReadableContainer<RegistryEntry<Biome>> noiseBiomeSection = noiseBiomeChunk.getBiomePalette(sectionDatum.y());
+                if (noiseBiomeSection != null) {
+                    if (!hasInner) {
+                        hasInner = true;
+                        writer.compoundEntryStart();
+                    }
 
-                writeNoiseBiomes(writer, noiseBiomeChunk.getBiomePalette(sectionDatum.y()), containerFactory);
+                    writeNoiseBiomes(writer, noiseBiomeSection, containerFactory);
+                }
             }
 
             if (sectionDatum.blockLight() != null) {
