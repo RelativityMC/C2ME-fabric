@@ -28,7 +28,6 @@ import com.ishland.c2me.base.common.theinterface.IFastChunkHolder;
 import com.ishland.c2me.base.common.util.SneakyThrow;
 import com.ishland.flowsched.scheduler.ItemHolder;
 import com.ishland.flowsched.scheduler.ItemTicket;
-import com.ishland.flowsched.scheduler.StatusAdvancingScheduler;
 import com.ishland.flowsched.util.Assertions;
 import com.mojang.datafixers.util.Pair;
 import net.minecraft.server.world.ChunkHolder;
@@ -408,18 +407,28 @@ public class NewChunkHolderVanillaInterface extends ChunkHolder implements IFast
         super.decrementRefCount(); // use vanilla impl
     }
 
+    private Chunk getChunkAtStatus0(ChunkStatus requestedStatus) {
+        ChunkState chunkState = this.newHolder.getItem().get();
+        return requestedStatus == ChunkStatus.FULL ? chunkState.chunk() : chunkState.protoChunk();
+    }
+
     @Nullable
     @Override
     public Chunk getUncheckedOrNull(ChunkStatus requestedStatus) {
-        return this.newHolder.getStatus().ordinal() >= NewChunkStatus.fromVanillaStatus(requestedStatus).ordinal()
-                ? this.newHolder.getItem().get().chunk() : null;
+        if (this.newHolder.getStatus().ordinal() >= NewChunkStatus.fromVanillaStatus(requestedStatus).ordinal()) {
+            return getChunkAtStatus0(requestedStatus);
+        }
+        return null;
     }
 
     @Nullable
     @Override
     public Chunk getOrNull(ChunkStatus requestedStatus) {
-        return this.newHolder.getTargetStatus().ordinal() >= NewChunkStatus.fromVanillaStatus(requestedStatus).ordinal()
-                ? this.getUncheckedOrNull(requestedStatus) : null;
+        int requestedStatusOrdinal = NewChunkStatus.fromVanillaStatus(requestedStatus).ordinal();
+        if (this.newHolder.getTargetStatus().ordinal() >= requestedStatusOrdinal && this.newHolder.getStatus().ordinal() >= requestedStatusOrdinal) {
+            return getChunkAtStatus0(requestedStatus);
+        }
+        return null;
     }
 
     @Nullable
