@@ -49,15 +49,7 @@ import java.util.concurrent.CompletableFuture;
 @Mixin(ServerChunkLoadingManager.class)
 public abstract class MixinThreadedAnvilChunkStorage {
 
-    @Shadow public abstract List<ServerPlayerEntity> getPlayersWatchingChunk(ChunkPos chunkPos, boolean onlyOnWatchDistanceEdge);
-
-    @Shadow @Final private ThreadExecutor<Runnable> mainThreadExecutor;
-
-    @Shadow @Final private PlayerChunkWatchingManager playerChunkWatchingManager;
-
-    @Shadow protected abstract void sendToPlayers(ChunkHolder holder, WorldChunk chunk);
-
-    @ModifyArg(method = "setViewDistance", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/MathHelper;clamp(III)I"), index = 2)
+    @ModifyArg(method = "setViewDistance", at = @At(value = "INVOKE", target = "Ljava/lang/Math;clamp(JII)I"), index = 2)
     private int modifyMaxVD(int max) {
         return Config.maxViewDistance;
     }

@@ -81,7 +81,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
     private native boolean isLevelChunk(ChunkPos chunkPos);
 
     @Shadow
-    private native byte mark(ChunkPos chunkPos, ChunkType chunkType);
+    private native void mark(ChunkPos chunkPos, ChunkType chunkType);
 
 
     @Shadow protected abstract @Nullable ChunkHolder getCurrentChunkHolder(long pos);
@@ -109,7 +109,7 @@ public abstract class MixinThreadedAnvilChunkStorage extends VersionedChunkStora
                     return false;
                 }
 
-                if (chunkStatus == ChunkStatus.EMPTY && chunk.getStructureStarts().values().stream().noneMatch(StructureStart::hasChildren)) {
+                if (chunkStatus == ChunkStatus.EMPTY && chunk.getStructureStarts().isEmpty()) {
                     return false;
                 }
             }

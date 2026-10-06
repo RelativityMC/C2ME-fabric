@@ -604,10 +604,6 @@ public final class ChunkDataSerializer {
      */
     private static void writeStructureStart(NbtWriter writer, IStructureStart structureStart, StructureContext context, ChunkPos pos) {
         final StructurePiecesList children = structureStart.getChildren();
-        if (children.isEmpty()) {
-            writer.putString(STRING_ID, STRING_INVALID);
-            return;
-        }
 
         writer.putRegistry(STRING_ID, context.registryManager().getOrThrow(RegistryKeys.STRUCTURE), structureStart.getStructure());
         writer.putInt(STRING_CHUNK_X, pos.x());

@@ -37,7 +37,6 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(value = {
         NoiseChunkGenerator.class,
         GeodeFeature.class,
-        ChunkGenerator.class,
         RandomSpreadStructurePlacement.class,
 })
 public class MixinRedirectAtomicSimpleRandom {

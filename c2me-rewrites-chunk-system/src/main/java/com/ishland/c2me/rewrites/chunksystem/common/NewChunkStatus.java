@@ -41,7 +41,6 @@ import io.reactivex.rxjava3.core.Completable;
 import net.minecraft.server.world.ChunkLevelType;
 import net.minecraft.server.world.ChunkLevels;
 import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.chunk.ChunkStatus;
 
 import java.util.ArrayList;
@@ -157,7 +156,7 @@ public abstract class NewChunkStatus implements ItemStatus<ChunkPos, ChunkState,
         if (vanillaLevelToStatus == null) { // special case for static initialization
             return fromVanillaStatus0(level);
         }
-        return vanillaLevelToStatus[MathHelper.clamp(level, 0, vanillaLevelToStatus.length - 1)];
+        return vanillaLevelToStatus[Math.clamp(level, 0, vanillaLevelToStatus.length - 1)];
     }
 
     public static NewChunkStatus fromVanillaStatus(ChunkStatus status) {
