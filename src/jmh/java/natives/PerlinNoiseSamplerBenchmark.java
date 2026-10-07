@@ -64,11 +64,11 @@ public class PerlinNoiseSamplerBenchmark extends Base_x86_64 {
     private static final double xzScale = 0.25;
     private static final double yScale = 1.125;
     private static final float outputScale = 0.125f;
-    private static final int sizeX = 4;
-    private static final int sizeY = 4;
-    private static final int sizeZ = 1;
+    private static final int sizeX = 5;
+    private static final int sizeY = 49;
+    private static final int sizeZ = 5;
     private static final int stepX = 4;
-    private static final int stepY = 4;
+    private static final int stepY = 8;
     private static final int stepZ = 4;
 
     private final SamplingRegion[] regions = new SamplingRegion[invocations];
