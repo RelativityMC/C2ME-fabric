@@ -25,6 +25,7 @@
 package com.ishland.c2me.opts.natives_math.mixin;
 
 import com.ishland.c2me.base.common.util.MemoryUtil;
+import com.ishland.c2me.opts.natives_math.common.NoisePacking;
 import com.ishland.c2me.opts.natives_math.common.ducks.LatticedNoiseSamplerExtension;
 import net.minecraft.util.math.noise.LatticedNoiseSampler;
 import org.spongepowered.asm.mixin.Final;
@@ -51,7 +52,7 @@ public class MixinLatticedNoiseSampler implements LatticedNoiseSamplerExtension 
     public int[] c2me$getPackedPermutations() {
         int[] packedPermutations = this.c2me$packedPermutations;
         if (packedPermutations == null) {
-            packedPermutations = this.c2me$packedPermutations = MemoryUtil.packByte2int(this.permutation);
+            packedPermutations = this.c2me$packedPermutations = NoisePacking.packPermutation0(this.permutation);
         }
         return packedPermutations;
     }

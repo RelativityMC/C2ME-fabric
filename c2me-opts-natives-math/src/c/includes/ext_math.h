@@ -58,6 +58,25 @@ __attribute__((aligned(32))) static const float FLAT_SIMPLEX_GRAD_F32[] = {
         0, -1, -1, 0,
 };
 
+__attribute__((aligned(32))) static const int8_t FLAT_SIMPLEX_GRAD_I8[] = {
+    1, 1, 0, 0,
+    -1, 1, 0, 0,
+    1, -1, 0, 0,
+    -1, -1, 0, 0,
+    1, 0, 1, 0,
+    -1, 0, 1, 0,
+    1, 0, -1, 0,
+    -1, 0, -1, 0,
+    0, 1, 1, 0,
+    0, -1, 1, 0,
+    0, 1, -1, 0,
+    0, -1, -1, 0,
+    1, 1, 0, 0,
+    0, -1, 1, 0,
+    -1, 1, 0, 0,
+    0, -1, -1, 0,
+};
+
 static const double SQRT_3 = 1.7320508075688772;
 // 1 / SQRT_3
 static const double INV_SQRT_3 = 0.5773502691896258;
@@ -328,25 +347,42 @@ static inline __attribute__((const)) float math_perlinFade(const float value) {
     return value * value * value * (value * (value * 6.0f - 15.0f) + 10.0f);
 }
 
-static inline __attribute__((pure)) uint32_t __math_perlin_perm_index(const uint32_t *restrict const permutations,
-                                                                      uint32_t index) {
-    uint32_t point = index & 0xFF;
-    return (permutations[point >> 2] >> ((index & 3) << 3)) & 0xFF;
+// static inline __attribute__((pure)) uint32_t __math_perlin_perm_index(const uint32_t *restrict const permutations,
+//                                                                       uint32_t index) {
+//     uint32_t point = index & 0xFF;
+//     return (permutations[point >> 2] >> ((index & 3) << 3)) & 0xFF;
+// }
+
+typedef struct perm_packed2 {
+    const uint8_t _0, _1;
+} perm_packed2_t;
+
+static inline __attribute__((pure)) perm_packed2_t __math_perlin_perm_index2(
+    const uint32_t *restrict const permutations,
+    const uint32_t index) {
+    const uint32_t point = index & 0xFF;
+    const uint32_t k = point >> 1;
+    const uint32_t perm_read = permutations[k];
+    const uint32_t shift = (point & 1) << 4;
+    return (perm_packed2_t){
+        ._0 = (perm_read >> shift) & 0xff,
+        ._1 = (perm_read >> (shift + 8)) & 0xFF,
+    };
 }
 
-static inline __attribute__((const)) float __math_perlin_grad(const uint32_t *restrict const permutations,
-                                                              const int32_t px, const int32_t py, const int32_t pz,
-                                                              const float fx, const float fy, const float fz) {
-    const uint32_t hash = __math_perlin_perm_index(
-                              permutations,
-                              (__math_perlin_perm_index(
-                                   permutations,
-                                   (__math_perlin_perm_index(permutations, px & 0xFF) + (py & 0xFF)) & 0xFF
-                               ) + (pz & 0xFF)) & 0xFF
-                          ) & 0xF;
-    const float *const grad = FLAT_SIMPLEX_GRAD_F32 + (hash << 2);
-    return grad[0] * fx + grad[1] * fy + grad[2] * fz;
-}
+// static inline __attribute__((const)) float __math_perlin_grad(const uint32_t *restrict const permutations,
+//                                                               const int32_t px, const int32_t py, const int32_t pz,
+//                                                               const float fx, const float fy, const float fz) {
+//     const uint32_t hash = __math_perlin_perm_index(
+//                               permutations,
+//                               (__math_perlin_perm_index(
+//                                    permutations,
+//                                    (__math_perlin_perm_index(permutations, px & 0xFF) + (py & 0xFF)) & 0xFF
+//                                ) + (pz & 0xFF)) & 0xFF
+//                           ) & 0xF;
+//     const float *const grad = FLAT_SIMPLEX_GRAD_F32 + (hash << 2);
+//     return grad[0] * fx + grad[1] * fy + grad[2] * fz;
+// }
 
 static inline __attribute__((const)) float
 math_noise_perlin_sample0(const uint32_t *restrict const permutations,
@@ -359,14 +395,52 @@ math_noise_perlin_sample0(const uint32_t *restrict const permutations,
     const float fy1 = fy0 - 1.0f;
     const float fz1 = fz0 - 1.0f;
 
-    const float f000 = __math_perlin_grad(permutations, px0, py0, pz0, fx0, fy0, fz0);
-    const float f100 = __math_perlin_grad(permutations, px1, py0, pz0, fx1, fy0, fz0);
-    const float f010 = __math_perlin_grad(permutations, px0, py1, pz0, fx0, fy1, fz0);
-    const float f110 = __math_perlin_grad(permutations, px1, py1, pz0, fx1, fy1, fz0);
-    const float f001 = __math_perlin_grad(permutations, px0, py0, pz1, fx0, fy0, fz1);
-    const float f101 = __math_perlin_grad(permutations, px1, py0, pz1, fx1, fy0, fz1);
-    const float f011 = __math_perlin_grad(permutations, px0, py1, pz1, fx0, fy1, fz1);
-    const float f111 = __math_perlin_grad(permutations, px1, py1, pz1, fx1, fy1, fz1);
+    const perm_packed2_t hashr__ = __math_perlin_perm_index2(permutations, px0);
+    const uint32_t hash0__ = hashr__._0;
+    const uint32_t hash1__ = hashr__._1;
+    const perm_packed2_t hash0r_ = __math_perlin_perm_index2(permutations, hash0__ + py0);
+    const perm_packed2_t hash1r_ = __math_perlin_perm_index2(permutations, hash1__ + py0);
+    const uint32_t hash00_ = hash0r_._0;
+    const uint32_t hash01_ = hash0r_._1;
+    const uint32_t hash10_ = hash1r_._0;
+    const uint32_t hash11_ = hash1r_._1;
+    const perm_packed2_t hash00r = __math_perlin_perm_index2(permutations, hash00_ + pz0);
+    const perm_packed2_t hash10r = __math_perlin_perm_index2(permutations, hash10_ + pz0);
+    const perm_packed2_t hash01r = __math_perlin_perm_index2(permutations, hash01_ + pz0);
+    const perm_packed2_t hash11r = __math_perlin_perm_index2(permutations, hash11_ + pz0);
+    const uint32_t hash000 = hash00r._0 & 0xf;
+    const uint32_t hash100 = hash10r._0 & 0xf;
+    const uint32_t hash010 = hash01r._0 & 0xf;
+    const uint32_t hash110 = hash11r._0 & 0xf;
+    const uint32_t hash001 = hash00r._1 & 0xf;
+    const uint32_t hash101 = hash10r._1 & 0xf;
+    const uint32_t hash011 = hash01r._1 & 0xf;
+    const uint32_t hash111 = hash11r._1 & 0xf;
+    const uint32_t *restrict flat_simplex_grad_ptr = (uint32_t *) FLAT_SIMPLEX_GRAD_I8; // assumes LE
+    uint32_t res000 = flat_simplex_grad_ptr[hash000];
+    uint32_t res100 = flat_simplex_grad_ptr[hash100];
+    uint32_t res010 = flat_simplex_grad_ptr[hash010];
+    uint32_t res110 = flat_simplex_grad_ptr[hash110];
+    uint32_t res001 = flat_simplex_grad_ptr[hash001];
+    uint32_t res101 = flat_simplex_grad_ptr[hash101];
+    uint32_t res011 = flat_simplex_grad_ptr[hash011];
+    uint32_t res111 = flat_simplex_grad_ptr[hash111];
+    int8_t arr000[4] = {(int8_t) res000, (int8_t) (res000 >> 8), (int8_t) (res000 >> 16)};
+    int8_t arr100[4] = {(int8_t) res100, (int8_t) (res100 >> 8), (int8_t) (res100 >> 16)};
+    int8_t arr010[4] = {(int8_t) res010, (int8_t) (res010 >> 8), (int8_t) (res010 >> 16)};
+    int8_t arr110[4] = {(int8_t) res110, (int8_t) (res110 >> 8), (int8_t) (res110 >> 16)};
+    int8_t arr001[4] = {(int8_t) res001, (int8_t) (res001 >> 8), (int8_t) (res001 >> 16)};
+    int8_t arr101[4] = {(int8_t) res101, (int8_t) (res101 >> 8), (int8_t) (res101 >> 16)};
+    int8_t arr011[4] = {(int8_t) res011, (int8_t) (res011 >> 8), (int8_t) (res011 >> 16)};
+    int8_t arr111[4] = {(int8_t) res111, (int8_t) (res111 >> 8), (int8_t) (res111 >> 16)};
+    const float f000 = arr000[0] * fx0 + arr000[1] * fy0 + arr000[2] * fz0;
+    const float f100 = arr100[0] * fx1 + arr100[1] * fy0 + arr100[2] * fz0;
+    const float f010 = arr010[0] * fx0 + arr010[1] * fy1 + arr010[2] * fz0;
+    const float f110 = arr110[0] * fx1 + arr110[1] * fy1 + arr110[2] * fz0;
+    const float f001 = arr001[0] * fx0 + arr001[1] * fy0 + arr001[2] * fz1;
+    const float f101 = arr101[0] * fx1 + arr101[1] * fy0 + arr101[2] * fz1;
+    const float f011 = arr011[0] * fx0 + arr011[1] * fy1 + arr011[2] * fz1;
+    const float f111 = arr111[0] * fx1 + arr111[1] * fy1 + arr111[2] * fz1;
 
     const float dx = math_perlinFade(fx0);
     const float dy = math_perlinFade(fadeLocalY);
@@ -546,16 +620,120 @@ math_noise_perlin_sample_legacy_area0(const uint32_t *restrict const permutation
             i += n;
         }
     } else if (!shiftX && !shiftY && !shiftZ) {
-        if (( {
-#if __AVX512F__
-            true;
-#elif __AVX__
-            double xzFactor = max(1.0, 1.0 / scaleXz);
-            double yFactor = region.sizeY > 2 ? max(1.0, 1.0 / scaleY) : 1;
-            (region.sizeY > 2 && yFactor < 3.0) || xzFactor * xzFactor * yFactor < 64.0;
-#else
-            false;
-#endif
+        const double minFloorX = floor(math_octave_maintainPrecision(region.minBlockX * scaleXz) + originX);
+        const double minFloorY = floor(math_octave_maintainPrecision(region.minBlockY * scaleY) + originY);
+        const double minFloorZ = floor(math_octave_maintainPrecision(region.minBlockZ * scaleXz) + originZ);
+        const double maxFloorX = floor(
+            math_octave_maintainPrecision((region.minBlockX + ((int32_t) region.sizeX - 1) * (int32_t) region.stepBlockX) * scaleXz) +
+            originX);
+        const double maxFloorY = floor(
+            math_octave_maintainPrecision((region.minBlockY + ((int32_t) region.sizeY - 1) * (int32_t) region.stepBlockY) * scaleY) +
+            originY);
+        const double maxFloorZ = floor(
+            math_octave_maintainPrecision((region.minBlockZ + ((int32_t) region.sizeZ - 1) * (int32_t) region.stepBlockZ) * scaleXz) +
+            originZ);
+
+        if (minFloorX == maxFloorX && minFloorY == maxFloorY && minFloorZ == maxFloorZ) {
+            const int32_t px0 = (int32_t) minFloorX;
+            const int32_t py0 = (int32_t) minFloorY;
+            const int32_t pz0 = (int32_t) minFloorZ;
+            const perm_packed2_t hashr__ = __math_perlin_perm_index2(permutations, px0);
+            const uint32_t hash0__ = hashr__._0;
+            const uint32_t hash1__ = hashr__._1;
+            const perm_packed2_t hash0r_ = __math_perlin_perm_index2(permutations, hash0__ + py0);
+            const perm_packed2_t hash1r_ = __math_perlin_perm_index2(permutations, hash1__ + py0);
+            const uint32_t hash00_ = hash0r_._0;
+            const uint32_t hash01_ = hash0r_._1;
+            const uint32_t hash10_ = hash1r_._0;
+            const uint32_t hash11_ = hash1r_._1;
+            const perm_packed2_t hash00r = __math_perlin_perm_index2(permutations, hash00_ + pz0);
+            const perm_packed2_t hash10r = __math_perlin_perm_index2(permutations, hash10_ + pz0);
+            const perm_packed2_t hash01r = __math_perlin_perm_index2(permutations, hash01_ + pz0);
+            const perm_packed2_t hash11r = __math_perlin_perm_index2(permutations, hash11_ + pz0);
+            const uint32_t hash000 = hash00r._0 & 0xf;
+            const uint32_t hash100 = hash10r._0 & 0xf;
+            const uint32_t hash010 = hash01r._0 & 0xf;
+            const uint32_t hash110 = hash11r._0 & 0xf;
+            const uint32_t hash001 = hash00r._1 & 0xf;
+            const uint32_t hash101 = hash10r._1 & 0xf;
+            const uint32_t hash011 = hash01r._1 & 0xf;
+            const uint32_t hash111 = hash11r._1 & 0xf;
+            float arr000[4] = {};
+            float arr100[4] = {};
+            float arr010[4] = {};
+            float arr110[4] = {};
+            float arr001[4] = {};
+            float arr101[4] = {};
+            float arr011[4] = {};
+            float arr111[4] = {};
+            __builtin_memcpy_inline(arr000, FLAT_SIMPLEX_GRAD_F32 + (hash000 << 2), 4 * sizeof(float));
+            __builtin_memcpy_inline(arr100, FLAT_SIMPLEX_GRAD_F32 + (hash100 << 2), 4 * sizeof(float));
+            __builtin_memcpy_inline(arr010, FLAT_SIMPLEX_GRAD_F32 + (hash010 << 2), 4 * sizeof(float));
+            __builtin_memcpy_inline(arr110, FLAT_SIMPLEX_GRAD_F32 + (hash110 << 2), 4 * sizeof(float));
+            __builtin_memcpy_inline(arr001, FLAT_SIMPLEX_GRAD_F32 + (hash001 << 2), 4 * sizeof(float));
+            __builtin_memcpy_inline(arr101, FLAT_SIMPLEX_GRAD_F32 + (hash101 << 2), 4 * sizeof(float));
+            __builtin_memcpy_inline(arr011, FLAT_SIMPLEX_GRAD_F32 + (hash011 << 2), 4 * sizeof(float));
+            __builtin_memcpy_inline(arr111, FLAT_SIMPLEX_GRAD_F32 + (hash111 << 2), 4 * sizeof(float));
+
+            const uint32_t size = region.sizeX * region.sizeY * region.sizeZ;
+            coord_iter_t it = math_coord_iter_begin(region);
+            uint32_t i = 0;
+            int32_t xs[64], ys[64], zs[64];
+
+            while (i < size) {
+                const uint32_t n = math_coord_iter_next64(&it, xs, ys, zs, size - i);
+
+#pragma clang loop vectorize(enable)
+                for (uint32_t j = 0; j < n; j++) {
+                    const double x = (double) xs[j] * scaleXz;
+                    const double y = (double) ys[j] * scaleY;
+                    const double z = (double) zs[j] * scaleXz;
+
+                    const double x1 = math_octave_maintainPrecision(x) + originX;
+                    const double y1 = math_octave_maintainPrecision(y) + originY;
+                    const double z1 = math_octave_maintainPrecision(z) + originZ;
+                    const double relX = x1 - minFloorX;
+                    const double relY = y1 - minFloorY;
+                    const double relZ = z1 - minFloorZ;
+                    const double fy = floor(((y >= 0.0 && y < relY) ? y : relY) / yScale + 1.0E-7) * yScale;
+
+                    const float fx0 = (float) relX;
+                    const float fy0 = (float) (relY - fy);
+                    const float fz0 = (float) relZ;
+                    const float fadeLocalY = (float) relY;
+                    const float fx1 = fx0 - 1.0f;
+                    const float fy1 = fy0 - 1.0f;
+                    const float fz1 = fz0 - 1.0f;
+
+                    const float f000 = arr000[0] * fx0 + arr000[1] * fy0 + arr000[2] * fz0;
+                    const float f100 = arr100[0] * fx1 + arr100[1] * fy0 + arr100[2] * fz0;
+                    const float f010 = arr010[0] * fx0 + arr010[1] * fy1 + arr010[2] * fz0;
+                    const float f110 = arr110[0] * fx1 + arr110[1] * fy1 + arr110[2] * fz0;
+                    const float f001 = arr001[0] * fx0 + arr001[1] * fy0 + arr001[2] * fz1;
+                    const float f101 = arr101[0] * fx1 + arr101[1] * fy0 + arr101[2] * fz1;
+                    const float f011 = arr011[0] * fx0 + arr011[1] * fy1 + arr011[2] * fz1;
+                    const float f111 = arr111[0] * fx1 + arr111[1] * fy1 + arr111[2] * fz1;
+                    const float dx = math_perlinFade(fx0);
+                    const float dy = math_perlinFade(fadeLocalY);
+                    const float dz = math_perlinFade(fz0);;
+
+                    output[i + j] += math_lerp3f(dx, dy, dz, f000, f100, f010, f110, f001, f101, f011, f111) *
+                            outputScale;
+                }
+
+                i += n;
+            }
+        } else if (( {
+// #if __AVX512F__
+//             true;
+// #elif __AVX__
+//             double xzFactor = max(1.0, 1.0 / scaleXz);
+//             double yFactor = region.sizeY > 2 ? max(1.0, 1.0 / scaleY) : 1;
+//             (region.sizeY > 2 && yFactor < 3.0) || xzFactor * xzFactor * yFactor < 64.0;
+// #else
+//             false;
+// #endif
+true;
         })) {
             const uint32_t size = region.sizeX * region.sizeY * region.sizeZ;
             coord_iter_t it = math_coord_iter_begin(region);
@@ -593,8 +771,9 @@ math_noise_perlin_sample_legacy_area0(const uint32_t *restrict const permutation
                 const float fx1 = fx0 - 1.0f;
 
                 if (offX == 0 || px0_prev != px0) {
-                    px0_perm = __math_perlin_perm_index(permutations, px0 & 0xFF);
-                    px1_perm = __math_perlin_perm_index(permutations, (px0 + 1) & 0xFF);
+                    const perm_packed2_t pxr = __math_perlin_perm_index2(permutations, px0);
+                    px0_perm = pxr._0;
+                    px1_perm = pxr._1;
                     px0_prev = px0;
                 }
 
@@ -617,22 +796,12 @@ math_noise_perlin_sample_legacy_area0(const uint32_t *restrict const permutation
                     const float fy1 = fy0 - 1.0f;
 
                     if (offY == 0 || py0_prev != py0) {
-                        px0_py0_perm = __math_perlin_perm_index(
-                            permutations,
-                            (px0_perm + (py0 & 0xFF)) & 0xFF
-                        );
-                        px1_py0_perm = __math_perlin_perm_index(
-                            permutations,
-                            (px1_perm + (py0 & 0xFF)) & 0xFF
-                        );
-                        px0_py1_perm = __math_perlin_perm_index(
-                            permutations,
-                            (px0_perm + ((py0 + 1) & 0xFF)) & 0xFF
-                        );
-                        px1_py1_perm = __math_perlin_perm_index(
-                            permutations,
-                            (px1_perm + ((py0 + 1) & 0xFF)) & 0xFF
-                        );
+                        const perm_packed2_t px0r = __math_perlin_perm_index2(permutations, px0_perm + py0);
+                        const perm_packed2_t px1r = __math_perlin_perm_index2(permutations, px1_perm + py0);
+                        px0_py0_perm = px0r._0;
+                        px1_py0_perm = px1r._0;
+                        px0_py1_perm = px0r._1;
+                        px1_py1_perm = px1r._1;
                         py0_prev = py0;
                     }
 
@@ -658,45 +827,25 @@ math_noise_perlin_sample_legacy_area0(const uint32_t *restrict const permutation
                         const float fz1 = fz0 - 1.0f;
 
                         if (offZ == 0 || pz0_prev != pz0) {
-                            const uint32_t hash000 = __math_perlin_perm_index(
-                                                         permutations,
-                                                         (px0_py0_perm + (pz0 & 0xFF)) & 0xFF
-                                                     ) & 0xF;
+                            const perm_packed2_t px00r = __math_perlin_perm_index2(permutations, px0_py0_perm + pz0);
+                            const perm_packed2_t px10r = __math_perlin_perm_index2(permutations, px1_py0_perm + pz0);
+                            const perm_packed2_t px01r = __math_perlin_perm_index2(permutations, px0_py1_perm + pz0);
+                            const perm_packed2_t px11r = __math_perlin_perm_index2(permutations, px1_py1_perm + pz0);
+                            const uint32_t hash000 = px00r._0 & 0xF;
                             __builtin_memcpy_inline(arr000, FLAT_SIMPLEX_GRAD_F32 + (hash000 << 2), 4 * sizeof(float));
-                            const uint32_t hash100 = __math_perlin_perm_index(
-                                                         permutations,
-                                                         (px1_py0_perm + (pz0 & 0xFF)) & 0xFF
-                                                     ) & 0xF;
+                            const uint32_t hash100 = px10r._0 & 0xF;
                             __builtin_memcpy_inline(arr100, FLAT_SIMPLEX_GRAD_F32 + (hash100 << 2), 4 * sizeof(float));
-                            const uint32_t hash010 = __math_perlin_perm_index(
-                                                         permutations,
-                                                         (px0_py1_perm + (pz0 & 0xFF)) & 0xFF
-                                                     ) & 0xF;
+                            const uint32_t hash010 = px01r._0 & 0xF;
                             __builtin_memcpy_inline(arr010, FLAT_SIMPLEX_GRAD_F32 + (hash010 << 2), 4 * sizeof(float));
-                            const uint32_t hash110 = __math_perlin_perm_index(
-                                                         permutations,
-                                                         (px1_py1_perm + (pz0 & 0xFF)) & 0xFF
-                                                     ) & 0xF;
+                            const uint32_t hash110 = px11r._0 & 0xF;
                             __builtin_memcpy_inline(arr110, FLAT_SIMPLEX_GRAD_F32 + (hash110 << 2), 4 * sizeof(float));
-                            const uint32_t hash001 = __math_perlin_perm_index(
-                                                         permutations,
-                                                         (px0_py0_perm + ((pz0 + 1) & 0xFF)) & 0xFF
-                                                     ) & 0xF;
+                            const uint32_t hash001 = px00r._1 & 0xF;
                             __builtin_memcpy_inline(arr001, FLAT_SIMPLEX_GRAD_F32 + (hash001 << 2), 4 * sizeof(float));
-                            const uint32_t hash101 = __math_perlin_perm_index(
-                                                         permutations,
-                                                         (px1_py0_perm + ((pz0 + 1) & 0xFF)) & 0xFF
-                                                     ) & 0xF;
+                            const uint32_t hash101 = px10r._1 & 0xF;
                             __builtin_memcpy_inline(arr101, FLAT_SIMPLEX_GRAD_F32 + (hash101 << 2), 4 * sizeof(float));
-                            const uint32_t hash011 = __math_perlin_perm_index(
-                                                         permutations,
-                                                         (px0_py1_perm + ((pz0 + 1) & 0xFF)) & 0xFF
-                                                     ) & 0xF;
+                            const uint32_t hash011 = px01r._1 & 0xF;
                             __builtin_memcpy_inline(arr011, FLAT_SIMPLEX_GRAD_F32 + (hash011 << 2), 4 * sizeof(float));
-                            const uint32_t hash111 = __math_perlin_perm_index(
-                                                         permutations,
-                                                         (px1_py1_perm + ((pz0 + 1) & 0xFF)) & 0xFF
-                                                     ) & 0xF;
+                            const uint32_t hash111 = px11r._1 & 0xF;
                             __builtin_memcpy_inline(arr111, FLAT_SIMPLEX_GRAD_F32 + (hash111 << 2), 4 * sizeof(float));
                             pz0_prev = pz0;
                         }
@@ -778,16 +927,119 @@ math_noise_perlin_sample_base_area0(const uint32_t *restrict const permutations,
             i += n;
         }
     } else if (!shiftX && !shiftY && !shiftZ) {
-        if (( {
-#if __AVX512F__
-            true;
-#elif __AVX__
-            double xzFactor = max(1.0, 1.0 / scaleXz);
-            double yFactor = region.sizeY > 2 ? max(1.0, 1.0 / scaleY) : 1;
-            (region.sizeY > 2 && yFactor < 3.0) || xzFactor * xzFactor * yFactor < 64.0;
-#else
-            false;
-#endif
+        const double minFloorX = floor(math_octave_maintainPrecision(region.minBlockX * scaleXz) + originX);
+        const double minFloorY = floor(math_octave_maintainPrecision(region.minBlockY * scaleY) + originY);
+        const double minFloorZ = floor(math_octave_maintainPrecision(region.minBlockZ * scaleXz) + originZ);
+        const double maxFloorX = floor(
+            math_octave_maintainPrecision((region.minBlockX + ((int32_t) region.sizeX - 1) * (int32_t) region.stepBlockX) * scaleXz) +
+            originX);
+        const double maxFloorY = floor(
+            math_octave_maintainPrecision((region.minBlockY + ((int32_t) region.sizeY - 1) * (int32_t) region.stepBlockY) * scaleY) +
+            originY);
+        const double maxFloorZ = floor(
+            math_octave_maintainPrecision((region.minBlockZ + ((int32_t) region.sizeZ - 1) * (int32_t) region.stepBlockZ) * scaleXz) +
+            originZ);
+
+        if (minFloorX == maxFloorX && minFloorY == maxFloorY && minFloorZ == maxFloorZ) {
+            const int32_t px0 = (int32_t) minFloorX;
+            const int32_t py0 = (int32_t) minFloorY;
+            const int32_t pz0 = (int32_t) minFloorZ;
+            const perm_packed2_t hashr__ = __math_perlin_perm_index2(permutations, px0);
+            const uint32_t hash0__ = hashr__._0;
+            const uint32_t hash1__ = hashr__._1;
+            const perm_packed2_t hash0r_ = __math_perlin_perm_index2(permutations, hash0__ + py0);
+            const perm_packed2_t hash1r_ = __math_perlin_perm_index2(permutations, hash1__ + py0);
+            const uint32_t hash00_ = hash0r_._0;
+            const uint32_t hash01_ = hash0r_._1;
+            const uint32_t hash10_ = hash1r_._0;
+            const uint32_t hash11_ = hash1r_._1;
+            const perm_packed2_t hash00r = __math_perlin_perm_index2(permutations, hash00_ + pz0);
+            const perm_packed2_t hash10r = __math_perlin_perm_index2(permutations, hash10_ + pz0);
+            const perm_packed2_t hash01r = __math_perlin_perm_index2(permutations, hash01_ + pz0);
+            const perm_packed2_t hash11r = __math_perlin_perm_index2(permutations, hash11_ + pz0);
+            const uint32_t hash000 = hash00r._0 & 0xf;
+            const uint32_t hash100 = hash10r._0 & 0xf;
+            const uint32_t hash010 = hash01r._0 & 0xf;
+            const uint32_t hash110 = hash11r._0 & 0xf;
+            const uint32_t hash001 = hash00r._1 & 0xf;
+            const uint32_t hash101 = hash10r._1 & 0xf;
+            const uint32_t hash011 = hash01r._1 & 0xf;
+            const uint32_t hash111 = hash11r._1 & 0xf;
+            float arr000[4] = {};
+            float arr100[4] = {};
+            float arr010[4] = {};
+            float arr110[4] = {};
+            float arr001[4] = {};
+            float arr101[4] = {};
+            float arr011[4] = {};
+            float arr111[4] = {};
+            __builtin_memcpy_inline(arr000, FLAT_SIMPLEX_GRAD_F32 + (hash000 << 2), 4 * sizeof(float));
+            __builtin_memcpy_inline(arr100, FLAT_SIMPLEX_GRAD_F32 + (hash100 << 2), 4 * sizeof(float));
+            __builtin_memcpy_inline(arr010, FLAT_SIMPLEX_GRAD_F32 + (hash010 << 2), 4 * sizeof(float));
+            __builtin_memcpy_inline(arr110, FLAT_SIMPLEX_GRAD_F32 + (hash110 << 2), 4 * sizeof(float));
+            __builtin_memcpy_inline(arr001, FLAT_SIMPLEX_GRAD_F32 + (hash001 << 2), 4 * sizeof(float));
+            __builtin_memcpy_inline(arr101, FLAT_SIMPLEX_GRAD_F32 + (hash101 << 2), 4 * sizeof(float));
+            __builtin_memcpy_inline(arr011, FLAT_SIMPLEX_GRAD_F32 + (hash011 << 2), 4 * sizeof(float));
+            __builtin_memcpy_inline(arr111, FLAT_SIMPLEX_GRAD_F32 + (hash111 << 2), 4 * sizeof(float));
+
+            const uint32_t size = region.sizeX * region.sizeY * region.sizeZ;
+            coord_iter_t it = math_coord_iter_begin(region);
+            uint32_t i = 0;
+            int32_t xs[64], ys[64], zs[64];
+
+            while (i < size) {
+                const uint32_t n = math_coord_iter_next64(&it, xs, ys, zs, size - i);
+
+#pragma clang loop vectorize(enable)
+                for (uint32_t j = 0; j < n; j++) {
+                    const double x = (double) xs[j] * scaleXz;
+                    const double y = (double) ys[j] * scaleY;
+                    const double z = (double) zs[j] * scaleXz;
+
+                    const double x1 = math_octave_maintainPrecision(x) + originX;
+                    const double y1 = math_octave_maintainPrecision(y) + originY;
+                    const double z1 = math_octave_maintainPrecision(z) + originZ;
+                    const float relX = (float) (x1 - minFloorX);
+                    const float relY = (float) (y1 - minFloorY);
+                    const float relZ = (float) (z1 - minFloorZ);
+
+                    const float fx0 = (float) relX;
+                    const float fy0 = (float) (relY);
+                    const float fz0 = (float) relZ;
+                    const float fadeLocalY = (float) relY;
+                    const float fx1 = fx0 - 1.0f;
+                    const float fy1 = fy0 - 1.0f;
+                    const float fz1 = fz0 - 1.0f;
+
+                    const float f000 = arr000[0] * fx0 + arr000[1] * fy0 + arr000[2] * fz0;
+                    const float f100 = arr100[0] * fx1 + arr100[1] * fy0 + arr100[2] * fz0;
+                    const float f010 = arr010[0] * fx0 + arr010[1] * fy1 + arr010[2] * fz0;
+                    const float f110 = arr110[0] * fx1 + arr110[1] * fy1 + arr110[2] * fz0;
+                    const float f001 = arr001[0] * fx0 + arr001[1] * fy0 + arr001[2] * fz1;
+                    const float f101 = arr101[0] * fx1 + arr101[1] * fy0 + arr101[2] * fz1;
+                    const float f011 = arr011[0] * fx0 + arr011[1] * fy1 + arr011[2] * fz1;
+                    const float f111 = arr111[0] * fx1 + arr111[1] * fy1 + arr111[2] * fz1;
+                    const float dx = math_perlinFade(fx0);
+                    const float dy = math_perlinFade(fadeLocalY);
+                    const float dz = math_perlinFade(fz0);;
+
+                    output[i + j] += math_lerp3f(dx, dy, dz, f000, f100, f010, f110, f001, f101, f011, f111) *
+                            outputScale;
+                }
+
+                i += n;
+            }
+        } else if (( {
+// #if __AVX512F__
+//             true;
+// #elif __AVX__
+//             double xzFactor = max(1.0, 1.0 / scaleXz);
+//             double yFactor = region.sizeY > 2 ? max(1.0, 1.0 / scaleY) : 1;
+//             (region.sizeY > 2 && yFactor < 3.0) || xzFactor * xzFactor * yFactor < 64.0;
+// #else
+//             false;
+// #endif
+true;
         })) {
             const uint32_t size = region.sizeX * region.sizeY * region.sizeZ;
             coord_iter_t it = math_coord_iter_begin(region);
@@ -824,8 +1076,9 @@ math_noise_perlin_sample_base_area0(const uint32_t *restrict const permutations,
                 const float fx1 = fx0 - 1.0f;
 
                 if (offX == 0 || px0_prev != px0) {
-                    px0_perm = __math_perlin_perm_index(permutations, px0 & 0xFF);
-                    px1_perm = __math_perlin_perm_index(permutations, (px0 + 1) & 0xFF);
+                    const perm_packed2_t pxr = __math_perlin_perm_index2(permutations, px0);
+                    px0_perm = pxr._0;
+                    px1_perm = pxr._1;
                     px0_prev = px0;
                 }
 
@@ -847,22 +1100,12 @@ math_noise_perlin_sample_base_area0(const uint32_t *restrict const permutations,
                     const float fy1 = fy0 - 1.0f;
 
                     if (offY == 0 || py0_prev != py0) {
-                        px0_py0_perm = __math_perlin_perm_index(
-                            permutations,
-                            (px0_perm + (py0 & 0xFF)) & 0xFF
-                        );
-                        px1_py0_perm = __math_perlin_perm_index(
-                            permutations,
-                            (px1_perm + (py0 & 0xFF)) & 0xFF
-                        );
-                        px0_py1_perm = __math_perlin_perm_index(
-                            permutations,
-                            (px0_perm + ((py0 + 1) & 0xFF)) & 0xFF
-                        );
-                        px1_py1_perm = __math_perlin_perm_index(
-                            permutations,
-                            (px1_perm + ((py0 + 1) & 0xFF)) & 0xFF
-                        );
+                        const perm_packed2_t px0r = __math_perlin_perm_index2(permutations, px0_perm + py0);
+                        const perm_packed2_t px1r = __math_perlin_perm_index2(permutations, px1_perm + py0);
+                        px0_py0_perm = px0r._0;
+                        px1_py0_perm = px1r._0;
+                        px0_py1_perm = px0r._1;
+                        px1_py1_perm = px1r._1;
                         py0_prev = py0;
                     }
 
@@ -888,45 +1131,25 @@ math_noise_perlin_sample_base_area0(const uint32_t *restrict const permutations,
                         const float fz1 = fz0 - 1.0f;
 
                         if (offZ == 0 || pz0_prev != pz0) {
-                            const uint32_t hash000 = __math_perlin_perm_index(
-                                                         permutations,
-                                                         (px0_py0_perm + (pz0 & 0xFF)) & 0xFF
-                                                     ) & 0xF;
+                            const perm_packed2_t px00r = __math_perlin_perm_index2(permutations, px0_py0_perm + pz0);
+                            const perm_packed2_t px10r = __math_perlin_perm_index2(permutations, px1_py0_perm + pz0);
+                            const perm_packed2_t px01r = __math_perlin_perm_index2(permutations, px0_py1_perm + pz0);
+                            const perm_packed2_t px11r = __math_perlin_perm_index2(permutations, px1_py1_perm + pz0);
+                            const uint32_t hash000 = px00r._0 & 0xF;
                             __builtin_memcpy_inline(arr000, FLAT_SIMPLEX_GRAD_F32 + (hash000 << 2), 4 * sizeof(float));
-                            const uint32_t hash100 = __math_perlin_perm_index(
-                                                         permutations,
-                                                         (px1_py0_perm + (pz0 & 0xFF)) & 0xFF
-                                                     ) & 0xF;
+                            const uint32_t hash100 = px10r._0 & 0xF;
                             __builtin_memcpy_inline(arr100, FLAT_SIMPLEX_GRAD_F32 + (hash100 << 2), 4 * sizeof(float));
-                            const uint32_t hash010 = __math_perlin_perm_index(
-                                                         permutations,
-                                                         (px0_py1_perm + (pz0 & 0xFF)) & 0xFF
-                                                     ) & 0xF;
+                            const uint32_t hash010 = px01r._0 & 0xF;
                             __builtin_memcpy_inline(arr010, FLAT_SIMPLEX_GRAD_F32 + (hash010 << 2), 4 * sizeof(float));
-                            const uint32_t hash110 = __math_perlin_perm_index(
-                                                         permutations,
-                                                         (px1_py1_perm + (pz0 & 0xFF)) & 0xFF
-                                                     ) & 0xF;
+                            const uint32_t hash110 = px11r._0 & 0xF;
                             __builtin_memcpy_inline(arr110, FLAT_SIMPLEX_GRAD_F32 + (hash110 << 2), 4 * sizeof(float));
-                            const uint32_t hash001 = __math_perlin_perm_index(
-                                                         permutations,
-                                                         (px0_py0_perm + ((pz0 + 1) & 0xFF)) & 0xFF
-                                                     ) & 0xF;
+                            const uint32_t hash001 = px00r._1 & 0xF;
                             __builtin_memcpy_inline(arr001, FLAT_SIMPLEX_GRAD_F32 + (hash001 << 2), 4 * sizeof(float));
-                            const uint32_t hash101 = __math_perlin_perm_index(
-                                                         permutations,
-                                                         (px1_py0_perm + ((pz0 + 1) & 0xFF)) & 0xFF
-                                                     ) & 0xF;
+                            const uint32_t hash101 = px10r._1 & 0xF;
                             __builtin_memcpy_inline(arr101, FLAT_SIMPLEX_GRAD_F32 + (hash101 << 2), 4 * sizeof(float));
-                            const uint32_t hash011 = __math_perlin_perm_index(
-                                                         permutations,
-                                                         (px0_py1_perm + ((pz0 + 1) & 0xFF)) & 0xFF
-                                                     ) & 0xF;
+                            const uint32_t hash011 = px01r._1 & 0xF;
                             __builtin_memcpy_inline(arr011, FLAT_SIMPLEX_GRAD_F32 + (hash011 << 2), 4 * sizeof(float));
-                            const uint32_t hash111 = __math_perlin_perm_index(
-                                                         permutations,
-                                                         (px1_py1_perm + ((pz0 + 1) & 0xFF)) & 0xFF
-                                                     ) & 0xF;
+                            const uint32_t hash111 = px11r._1 & 0xF;
                             __builtin_memcpy_inline(arr111, FLAT_SIMPLEX_GRAD_F32 + (hash111 << 2), 4 * sizeof(float));
                             pz0_prev = pz0;
                         }

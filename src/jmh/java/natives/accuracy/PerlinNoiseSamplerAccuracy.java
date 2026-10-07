@@ -27,6 +27,7 @@ package natives.accuracy;
 import com.ishland.c2me.base.common.util.MemoryUtil;
 import com.ishland.c2me.opts.natives_math.common.BindingsTemplate;
 import com.ishland.c2me.opts.natives_math.common.ISATarget;
+import com.ishland.c2me.opts.natives_math.common.NoisePacking;
 import natives.support.ReflectUtils;
 import net.minecraft.util.math.noise.LatticedNoiseSampler;
 import net.minecraft.util.math.noise.LegacyPerlinNoiseSampler;
@@ -66,7 +67,7 @@ public class PerlinNoiseSamplerAccuracy extends AbstractAccuracy {
         super(Arrays.stream(ISATarget.getInstance().getEnumConstants()).limit(12).toArray(ISATarget[]::new), BindingsTemplate.c2me_natives_noise_perlin_sample_base_area, "c2me_natives_noise_perlin_sample_base_area");
         LocalRandom random1 = new LocalRandom(random.nextLong());
         this.vanillaSampler = new PerlinNoiseSampler(random1);
-        int[] permutation = (int[]) MemoryUtil.packByte2int((byte[]) ReflectUtils.getField(LatticedNoiseSampler.class, this.vanillaSampler, "permutation"));
+        int[] permutation = (int[]) NoisePacking.packPermutation0((byte[]) ReflectUtils.getField(LatticedNoiseSampler.class, this.vanillaSampler, "permutation"));
         this.originX = (double) ReflectUtils.getField(LatticedNoiseSampler.class, this.vanillaSampler, "originX");
         this.originY = (double) ReflectUtils.getField(LatticedNoiseSampler.class, this.vanillaSampler, "originY");
         this.originZ = (double) ReflectUtils.getField(LatticedNoiseSampler.class, this.vanillaSampler, "originZ");
