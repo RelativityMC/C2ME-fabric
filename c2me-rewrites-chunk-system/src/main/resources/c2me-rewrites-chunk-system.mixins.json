@@ -27,6 +27,7 @@
     "scalablelux.MixinChunkSystemHooks"
   ],
   "client": [
+    "client.MixinChunkSourceStatsDebugHudEntry",
     "client.MixinDebugHudProfile"
   ]
 }
