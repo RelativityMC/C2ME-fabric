@@ -25,5 +25,8 @@
     "fixes.MixinServerEntityManager",
     "fluid_postprocessing.MixinWorldChunk",
     "scalablelux.MixinChunkSystemHooks"
+  ],
+  "client": [
+    "client.MixinDebugHudProfile"
   ]
 }
