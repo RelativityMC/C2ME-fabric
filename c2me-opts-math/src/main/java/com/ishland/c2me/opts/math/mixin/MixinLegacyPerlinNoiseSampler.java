@@ -22,148 +22,42 @@
  * THE SOFTWARE.
  */
 
-package natives.accuracy;
+package com.ishland.c2me.opts.math.mixin;
 
-import com.ishland.c2me.opts.natives_math.common.BindingsTemplate;
-import com.ishland.c2me.opts.natives_math.common.ISATarget;
 import com.ishland.c2me.base.common.util.NoisePacking;
-import natives.support.ReflectUtils;
+import com.ishland.c2me.opts.math.common.ducks.PerlinNoiseSamplerExtension;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.noise.LatticedNoiseSampler;
 import net.minecraft.util.math.noise.LegacyPerlinNoiseSampler;
+import net.minecraft.util.math.noise.PerlinNoiseSampler;
 import net.minecraft.util.math.noise.SamplingRegion;
-import net.minecraft.util.math.random.LocalRandom;
+import net.minecraft.util.math.random.Random;
 import net.minecraft.world.gen.sampler.SampleBuffer;
+import org.spongepowered.asm.mixin.Final;
+import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
-
-import java.lang.foreign.MemorySegment;
-import java.lang.invoke.MethodHandle;
-import java.util.Arrays;
-import java.util.Random;
+import org.spongepowered.asm.mixin.Shadow;
 
 import static com.ishland.c2me.base.common.util.NoisePacking.FLAT_SIMPLEX_GRAD_F32;
 
-public class LegacyPerlinNoiseSamplerAccuracy extends AbstractAccuracy {
+@Mixin(LegacyPerlinNoiseSampler.class)
+public abstract class MixinLegacyPerlinNoiseSampler extends PerlinNoiseSampler implements PerlinNoiseSamplerExtension {
 
-    private static final double xzScale = 0.25;
-    private static final double yScale = 1.125;
-    private static final double fudgedYScale = 4.2;
-    private static final float outputScale = 0.125f;
-    private static final int sizeX = 4;
-    private static final int sizeY = 4;
-    private static final int sizeZ = 1;
-    private static final int stepX = 4;
-    private static final int stepY = 4;
-    private static final int stepZ = 4;
+    @Shadow
+    @Final
+    private double offsetScale;
 
-    private final Random random = new Random();
-    private final LegacyPerlinNoiseSampler vanillaSampler;
-    private final double originX;
-    private final double originY;
-    private final double originZ;
-    private final int[] nativeSamplerDataRaw;
-    private final MemorySegment nativeSamplerData;
-    private final SampleBuffer output;
-    private final MemorySegment outputBuffer;
-    private final SampleBuffer outputVanilla;
-
-    protected LegacyPerlinNoiseSamplerAccuracy() {
-        super(Arrays.stream(ISATarget.getInstance().getEnumConstants()).limit(12).toArray(ISATarget[]::new), BindingsTemplate.c2me_natives_noise_perlin_sample_legacy_area, "c2me_natives_noise_perlin_sample_legacy_area");
-        LocalRandom random1 = new LocalRandom(random.nextLong());
-        this.vanillaSampler = new LegacyPerlinNoiseSampler(random1, fudgedYScale);
-        int[] permutation = (int[]) NoisePacking.packPermutation0((byte[]) ReflectUtils.getField(LatticedNoiseSampler.class, this.vanillaSampler, "permutation"));
-        this.originX = (double) ReflectUtils.getField(LatticedNoiseSampler.class, this.vanillaSampler, "originX");
-        this.originY = (double) ReflectUtils.getField(LatticedNoiseSampler.class, this.vanillaSampler, "originY");
-        this.originZ = (double) ReflectUtils.getField(LatticedNoiseSampler.class, this.vanillaSampler, "originZ");
-        this.nativeSamplerDataRaw = permutation;
-        this.nativeSamplerData = MemorySegment.ofArray(permutation);
-        this.output = SampleBuffer.withCount(sizeX * sizeY * sizeZ);
-        this.outputBuffer = MemorySegment.ofArray((float[]) ReflectUtils.getField(SampleBuffer.class, this.output, "elems"));
-        this.outputVanilla = SampleBuffer.withCount(sizeX * sizeY * sizeZ);
+    public MixinLegacyPerlinNoiseSampler(Random random) {
+        super(random);
     }
 
-    private void invokeNative(MethodHandle handle, SamplingRegion region) {
-        try {
-            handle.invokeExact(
-                    this.nativeSamplerData,
-                    originX, originY, originZ, fudgedYScale,
-                    outputBuffer,
-                    region.sizeX(), region.sizeY(), region.sizeZ(),
-                    region.minBlockX(), region.minBlockY(), region.minBlockZ(),
-                    region.stepBlockX(), region.stepBlockY(), region.stepBlockZ(),
-                    MemorySegment.NULL, MemorySegment.NULL, MemorySegment.NULL,
-                    xzScale, yScale, outputScale
-            );
-        } catch (Throwable e) {
-            throw new RuntimeException(e);
-        }
-    }
+    /**
+     * @author ishland
+     * @reason optimize
+     */
+    @Overwrite
+    public void fill(final SampleBuffer buf, final SamplingRegion region, final double scaleXz, final double scaleY, final float outputScale) {
+        final int[] permutations = this.c2me$initPackedPermutations();
 
-    private void invokeVanilla(SamplingRegion region) {
-        vanillaSampler.fill(outputVanilla, region, xzScale, yScale, outputScale);
-    }
-
-    private void invokeOptimized(SamplingRegion region) {
-        fill(nativeSamplerDataRaw, fudgedYScale, outputVanilla, region, xzScale, yScale, outputScale);
-    }
-
-    private void loopBody() {
-        int x = random.nextInt(-30000000, 30000000);
-        int y = random.nextInt(-30000000, 30000000);
-        int z = random.nextInt(-30000000, 30000000);
-
-        SamplingRegion region = new SamplingRegion(
-                sizeX, sizeY, sizeZ,
-                x, y, z,
-                stepX, stepY, stepZ
-        );
-
-        outputVanilla.fill(0.0f);
-        invokeVanilla(region);
-        for (int i = 0; i < this.MHs.length; i ++) {
-            output.fill(0.0f);
-            invokeNative(this.MHs[i], region);
-
-            for (int j = 0; j < outputVanilla.count(); j ++) {
-                float original = outputVanilla.get(j);
-                float actual = output.get(j);
-                long ulpDiff = ulpDistance(original, actual);
-                if (ulpDiff > this.maxUlp[i]) {
-                    this.maxUlp[i] = ulpDiff;
-                    System.out.println(String.format("%s: new max error %d ulps at x=%d, z=%d (expected %.10g but got %.10g)", this.targets[i], ulpDiff, x, z, original, actual));
-                }
-            }
-        }
-    }
-
-    public static void main(String[] args) {
-        final long printInterval = 10_000_000_000L;
-        LegacyPerlinNoiseSamplerAccuracy instance = new LegacyPerlinNoiseSamplerAccuracy();
-        long lastPrint = System.nanoTime();
-        for (long iter = 0; ; iter ++) {
-            instance.loopBody();
-            if ((iter & (1L << 16L - 1L)) == 0) {
-                long nanoTime = System.nanoTime();
-                if (nanoTime > (lastPrint + printInterval)) {
-                    lastPrint += printInterval;
-                    System.out.println("=".repeat(30));
-                    System.out.println(String.format("Iterations: %d", iter));
-                    instance.printUlps();
-                    System.out.println("=".repeat(30));
-                }
-            }
-        }
-    }
-
-    private static final double MAX_SAFE_ABS_COORDINATE = Math.nextDown(1.6777216E7);
-
-    protected static double wrapCoord(final double coordinate) {
-        return coordinate >= -MAX_SAFE_ABS_COORDINATE && coordinate < MAX_SAFE_ABS_COORDINATE
-                ? coordinate
-                : coordinate - Math.floor(coordinate / 3.3554432E7 + 0.5) * 3.3554432E7;
-    }
-
-    public void fill(final int[] permutations, final double offsetScale, final SampleBuffer buf, final SamplingRegion region, final double scaleXz, final double scaleY, final float outputScale) {
         int px0_prev = Integer.MAX_VALUE;
         int px0_perm = 0;
         int px1_perm = 0;
@@ -217,7 +111,7 @@ public class LegacyPerlinNoiseSamplerAccuracy extends AbstractAccuracy {
                 final double y1 = wrapCoord(y) + originY;
                 final double floorY = Math.floor(y1);
                 final double relY = y1 - floorY;
-                final double fy = Math.floor(((y >= 0.0 && y < relY) ? y : relY) / offsetScale + 1.0E-7) * offsetScale;
+                final double fy = Math.floor(((y >= 0.0 && y < relY) ? y : relY) / this.offsetScale + 1.0E-7) * this.offsetScale;
                 final int py0 = (int) floorY;
                 final float fy0 = (float) relY;
                 final float fadeLocalY = (float) relY;
@@ -341,5 +235,6 @@ public class LegacyPerlinNoiseSamplerAccuracy extends AbstractAccuracy {
             }
         }
     }
+
 
 }

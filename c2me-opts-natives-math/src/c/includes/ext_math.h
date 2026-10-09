@@ -756,9 +756,25 @@ true;
                 i += n;
             }
         } else {
-            int32_t px0_prev = 0;
+            int32_t px0_prev = INT32_MAX;
             uint32_t px0_perm = 0;
             uint32_t px1_perm = 0;
+
+            int32_t py0_prev = INT32_MAX;
+            uint32_t px0_py0_perm = 0;
+            uint32_t px1_py0_perm = 0;
+            uint32_t px0_py1_perm = 0;
+            uint32_t px1_py1_perm = 0;
+
+            int32_t pz0_prev = INT32_MAX;
+            float arr000[4] = {};
+            float arr100[4] = {};
+            float arr010[4] = {};
+            float arr110[4] = {};
+            float arr001[4] = {};
+            float arr101[4] = {};
+            float arr011[4] = {};
+            float arr111[4] = {};
 
             for (uint32_t offX = 0; offX < region.sizeX; offX++) {
                 int32_t blockX = region.minBlockX + (int32_t) offX * (int32_t) region.stepBlockX;
@@ -770,18 +786,14 @@ true;
                 const int32_t px0 = (int32_t) floorX;
                 const float fx1 = fx0 - 1.0f;
 
-                if (offX == 0 || px0_prev != px0) {
+                if (px0_prev != px0 || px0_prev == INT32_MAX) {
                     const perm_packed2_t pxr = __math_perlin_perm_index2(permutations, px0);
                     px0_perm = pxr._0;
                     px1_perm = pxr._1;
                     px0_prev = px0;
+                    py0_prev = INT32_MAX;
+                    pz0_prev = INT32_MAX;
                 }
-
-                int32_t py0_prev = 0;
-                uint32_t px0_py0_perm = 0;
-                uint32_t px1_py0_perm = 0;
-                uint32_t px0_py1_perm = 0;
-                uint32_t px1_py1_perm = 0;
 
                 for (uint32_t offY = 0; offY < region.sizeY; offY++) {
                     int32_t blockY = region.minBlockY + (int32_t) offY * (int32_t) region.stepBlockY;
@@ -805,16 +817,6 @@ true;
                         py0_prev = py0;
                     }
 
-                    int32_t pz0_prev = 0;
-                    float arr000[4] = {};
-                    float arr100[4] = {};
-                    float arr010[4] = {};
-                    float arr110[4] = {};
-                    float arr001[4] = {};
-                    float arr101[4] = {};
-                    float arr011[4] = {};
-                    float arr111[4] = {};
-
                     for (uint32_t offZ = 0; offZ < region.sizeZ; offZ++) {
                         int32_t blockZ = region.minBlockZ + (int32_t) offZ * (int32_t) region.stepBlockZ;
                         const double z = (double) blockZ * scaleXz;
@@ -826,7 +828,7 @@ true;
                         const float fz0 = (float) relZ;
                         const float fz1 = fz0 - 1.0f;
 
-                        if (offZ == 0 || pz0_prev != pz0) {
+                         if (pz0_prev != pz0 || pz0_prev == INT32_MAX) {
                             const perm_packed2_t px00r = __math_perlin_perm_index2(permutations, px0_py0_perm + pz0);
                             const perm_packed2_t px10r = __math_perlin_perm_index2(permutations, px1_py0_perm + pz0);
                             const perm_packed2_t px01r = __math_perlin_perm_index2(permutations, px0_py1_perm + pz0);
@@ -1061,9 +1063,25 @@ false;
                 i += n;
             }
         } else {
-            int32_t px0_prev = 0;
+            int32_t px0_prev = INT32_MAX;
             uint32_t px0_perm = 0;
             uint32_t px1_perm = 0;
+
+            int32_t py0_prev = INT32_MAX;
+            uint32_t px0_py0_perm = 0;
+            uint32_t px1_py0_perm = 0;
+            uint32_t px0_py1_perm = 0;
+            uint32_t px1_py1_perm = 0;
+
+            int32_t pz0_prev = INT32_MAX;
+            float arr000[4] = {};
+            float arr100[4] = {};
+            float arr010[4] = {};
+            float arr110[4] = {};
+            float arr001[4] = {};
+            float arr101[4] = {};
+            float arr011[4] = {};
+            float arr111[4] = {};
 
             for (uint32_t offX = 0; offX < region.sizeX; offX++) {
                 int32_t blockX = region.minBlockX + (int32_t) offX * (int32_t) region.stepBlockX;
@@ -1075,18 +1093,14 @@ false;
                 const int32_t px0 = (int32_t) floorX;
                 const float fx1 = fx0 - 1.0f;
 
-                if (offX == 0 || px0_prev != px0) {
+                if (px0_prev != px0 || px0_prev == INT32_MAX) {
                     const perm_packed2_t pxr = __math_perlin_perm_index2(permutations, px0);
                     px0_perm = pxr._0;
                     px1_perm = pxr._1;
                     px0_prev = px0;
+                    py0_prev = INT32_MAX;
+                    pz0_prev = INT32_MAX;
                 }
-
-                int32_t py0_prev = 0;
-                uint32_t px0_py0_perm = 0;
-                uint32_t px1_py0_perm = 0;
-                uint32_t px0_py1_perm = 0;
-                uint32_t px1_py1_perm = 0;
 
                 for (uint32_t offY = 0; offY < region.sizeY; offY++) {
                     int32_t blockY = region.minBlockY + (int32_t) offY * (int32_t) region.stepBlockY;
@@ -1099,7 +1113,7 @@ false;
                     const float fadeLocalY = (float) relY;
                     const float fy1 = fy0 - 1.0f;
 
-                    if (offY == 0 || py0_prev != py0) {
+                    if (py0_prev != py0 || py0_prev == INT32_MAX) {
                         const perm_packed2_t px0r = __math_perlin_perm_index2(permutations, px0_perm + py0);
                         const perm_packed2_t px1r = __math_perlin_perm_index2(permutations, px1_perm + py0);
                         px0_py0_perm = px0r._0;
@@ -1107,17 +1121,8 @@ false;
                         px0_py1_perm = px0r._1;
                         px1_py1_perm = px1r._1;
                         py0_prev = py0;
+                        pz0_prev = INT32_MAX;
                     }
-
-                    int32_t pz0_prev = 0;
-                    float arr000[4] = {};
-                    float arr100[4] = {};
-                    float arr010[4] = {};
-                    float arr110[4] = {};
-                    float arr001[4] = {};
-                    float arr101[4] = {};
-                    float arr011[4] = {};
-                    float arr111[4] = {};
 
                     for (uint32_t offZ = 0; offZ < region.sizeZ; offZ++) {
                         int32_t blockZ = region.minBlockZ + (int32_t) offZ * (int32_t) region.stepBlockZ;
@@ -1130,7 +1135,7 @@ false;
                         const float fz0 = (float) relZ;
                         const float fz1 = fz0 - 1.0f;
 
-                        if (offZ == 0 || pz0_prev != pz0) {
+                        if (pz0_prev != pz0 || pz0_prev == INT32_MAX) {
                             const perm_packed2_t px00r = __math_perlin_perm_index2(permutations, px0_py0_perm + pz0);
                             const perm_packed2_t px10r = __math_perlin_perm_index2(permutations, px1_py0_perm + pz0);
                             const perm_packed2_t px01r = __math_perlin_perm_index2(permutations, px0_py1_perm + pz0);

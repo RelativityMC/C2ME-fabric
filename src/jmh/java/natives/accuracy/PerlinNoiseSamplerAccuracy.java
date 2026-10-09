@@ -42,7 +42,7 @@ import java.util.Random;
 public class PerlinNoiseSamplerAccuracy extends AbstractAccuracy {
 
     private static final double xzScale = 0.25;
-    private static final double yScale = 1.125;
+    private static final double yScale = 0.125;
     private static final float outputScale = 0.125f;
     private static final int sizeX = 4;
     private static final int sizeY = 4;

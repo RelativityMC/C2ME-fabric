@@ -58,8 +58,8 @@ public class PerlinNoiseSamplerBenchmark extends Base_x86_64 {
     protected static final int seed = 0xcafe;
     protected static final int invocations = 1 << 16;
 
-    private static final double xzScale = 0.25;
-    private static final double yScale = 0.25;
+    private static final double xzScale = 0.25e-6;
+    private static final double yScale = 0.125e-6;
     private static final float outputScale = 0.125f;
     private static final int sizeX = 5;
     private static final int sizeY = 49;
