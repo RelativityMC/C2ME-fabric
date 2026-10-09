@@ -56,7 +56,7 @@ public abstract class MixinLegacyPerlinNoiseSampler extends PerlinNoiseSampler i
      */
     @Overwrite
     public void fill(final SampleBuffer buf, final SamplingRegion region, final double scaleXz, final double scaleY, final float outputScale) {
-        final int[] permutations = this.c2me$initPackedPermutations();
+        final int[] permutations = this.c2me$initPackedPermutationsForJava();
 
         int px0_prev = Integer.MAX_VALUE;
         int px0_perm = 0;

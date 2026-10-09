@@ -49,21 +49,21 @@ public abstract class MixinPerlinNoiseSampler extends LatticedNoiseSampler imple
     }
 
     @Unique
-    private int[] c2me$packedPermutations;
+    private int[] c2me$packedPermutationsForJava;
 
     @Unique
     @Override
-    public int[] c2me$initPackedPermutations() {
-        int[] packedPermutations = this.c2me$packedPermutations;
+    public int[] c2me$initPackedPermutationsForJava() {
+        int[] packedPermutations = this.c2me$packedPermutationsForJava;
         if (packedPermutations == null) {
-            this.c2me$packedPermutations = packedPermutations = NoisePacking.packPermutation512b(this.permutation);
+            this.c2me$packedPermutationsForJava = packedPermutations = NoisePacking.packPermutation512b(this.permutation);
         }
         return packedPermutations;
     }
 
     @Inject(method = "<init>*", at = @At("RETURN"))
     private void onInit(CallbackInfo ci) {
-        this.c2me$initPackedPermutations();
+        this.c2me$initPackedPermutationsForJava();
     }
 
 //    /**
@@ -137,7 +137,7 @@ public abstract class MixinPerlinNoiseSampler extends LatticedNoiseSampler imple
      */
     @Overwrite
     public void fill(final SampleBuffer buf, final SamplingRegion region, final double scaleXz, final double scaleY, final float outputScale) {
-        final int[] permutations = this.c2me$initPackedPermutations();
+        final int[] permutations = this.c2me$initPackedPermutationsForJava();
 
         int px0_prev = Integer.MAX_VALUE;
         int px0_perm = 0;

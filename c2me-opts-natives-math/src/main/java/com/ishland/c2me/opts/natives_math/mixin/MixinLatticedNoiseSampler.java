@@ -48,7 +48,7 @@ public class MixinLatticedNoiseSampler implements LatticedNoiseSamplerExtension 
     private MemorySegment c2me$packedPermutationsMemorySegment;
 
     @Override
-    public int[] c2me$getPackedPermutations() {
+    public int[] c2me$getPackedPermutationsForNative() {
         int[] packedPermutations = this.c2me$packedPermutations;
         if (packedPermutations == null) {
             packedPermutations = this.c2me$packedPermutations = NoisePacking.packPermutation512b(this.permutation);
@@ -57,10 +57,10 @@ public class MixinLatticedNoiseSampler implements LatticedNoiseSamplerExtension 
     }
 
     @Override
-    public MemorySegment c2me$getPackedPermutationsMemorySegment() {
+    public MemorySegment c2me$getPackedPermutationsMemorySegmentForNative() {
         MemorySegment segment = this.c2me$packedPermutationsMemorySegment;
         if (segment == null) {
-            segment = this.c2me$packedPermutationsMemorySegment = MemorySegment.ofArray(this.c2me$getPackedPermutations());
+            segment = this.c2me$packedPermutationsMemorySegment = MemorySegment.ofArray(this.c2me$getPackedPermutationsForNative());
         }
         return segment;
     }

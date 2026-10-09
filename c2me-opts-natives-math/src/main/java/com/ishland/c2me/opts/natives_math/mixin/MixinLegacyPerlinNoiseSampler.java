@@ -77,7 +77,7 @@ public abstract class MixinLegacyPerlinNoiseSampler extends PerlinNoiseSampler i
         }
 
         Bindings.c2me_natives_noise_perlin_sample_legacy_area(
-                this.c2me$getPackedPermutationsMemorySegment(),
+                this.c2me$getPackedPermutationsMemorySegmentForNative(),
                 this.originX,
                 this.originY,
                 this.originZ,
