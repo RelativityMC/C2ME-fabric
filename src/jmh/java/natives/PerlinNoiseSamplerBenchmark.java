@@ -24,15 +24,12 @@
 
 package natives;
 
-import com.ishland.c2me.base.common.util.MemoryUtil;
 import com.ishland.c2me.opts.natives_math.common.BindingsTemplate;
-import com.ishland.c2me.opts.natives_math.common.NoisePacking;
+import com.ishland.c2me.base.common.util.NoisePacking;
 import natives.support.ReflectUtils;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.noise.LatticedNoiseSampler;
 import net.minecraft.util.math.noise.PerlinNoiseSampler;
 import net.minecraft.util.math.noise.SamplingRegion;
-import net.minecraft.util.math.noise.SimplexNoiseSampler;
 import net.minecraft.util.math.random.LocalRandom;
 import net.minecraft.world.gen.sampler.SampleBuffer;
 import org.openjdk.jmh.annotations.Benchmark;
@@ -46,7 +43,6 @@ import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.infra.Blackhole;
 
-import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
@@ -63,7 +59,7 @@ public class PerlinNoiseSamplerBenchmark extends Base_x86_64 {
     protected static final int invocations = 1 << 16;
 
     private static final double xzScale = 0.25;
-    private static final double yScale = 1.125;
+    private static final double yScale = 0.25;
     private static final float outputScale = 0.125f;
     private static final int sizeX = 5;
     private static final int sizeY = 49;

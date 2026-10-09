@@ -24,8 +24,7 @@
 
 package com.ishland.c2me.opts.natives_math.mixin;
 
-import com.ishland.c2me.base.common.util.MemoryUtil;
-import com.ishland.c2me.opts.natives_math.common.NoisePacking;
+import com.ishland.c2me.base.common.util.NoisePacking;
 import com.ishland.c2me.opts.natives_math.common.ducks.LatticedNoiseSamplerExtension;
 import net.minecraft.util.math.noise.LatticedNoiseSampler;
 import org.spongepowered.asm.mixin.Final;

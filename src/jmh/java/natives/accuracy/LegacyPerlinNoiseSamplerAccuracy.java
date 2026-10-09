@@ -24,21 +24,16 @@
 
 package natives.accuracy;
 
-import com.ishland.c2me.base.common.util.MemoryUtil;
 import com.ishland.c2me.opts.natives_math.common.BindingsTemplate;
 import com.ishland.c2me.opts.natives_math.common.ISATarget;
-import com.ishland.c2me.opts.natives_math.common.NoisePacking;
-import natives.EndIslandsBenchmark;
+import com.ishland.c2me.base.common.util.NoisePacking;
 import natives.support.ReflectUtils;
 import net.minecraft.util.math.noise.LatticedNoiseSampler;
 import net.minecraft.util.math.noise.LegacyPerlinNoiseSampler;
-import net.minecraft.util.math.noise.PerlinNoiseSampler;
 import net.minecraft.util.math.noise.SamplingRegion;
-import net.minecraft.util.math.noise.SimplexNoiseSampler;
 import net.minecraft.util.math.random.LocalRandom;
 import net.minecraft.world.gen.sampler.SampleBuffer;
 
-import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.invoke.MethodHandle;
 import java.util.Arrays;

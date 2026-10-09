@@ -1039,7 +1039,7 @@ math_noise_perlin_sample_base_area0(const uint32_t *restrict const permutations,
 // #else
 //             false;
 // #endif
-true;
+false;
         })) {
             const uint32_t size = region.sizeX * region.sizeY * region.sizeZ;
             coord_iter_t it = math_coord_iter_begin(region);

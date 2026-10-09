@@ -24,9 +24,8 @@
 
 package natives;
 
-import com.ishland.c2me.base.common.util.MemoryUtil;
 import com.ishland.c2me.opts.natives_math.common.BindingsTemplate;
-import com.ishland.c2me.opts.natives_math.common.NoisePacking;
+import com.ishland.c2me.base.common.util.NoisePacking;
 import natives.support.ReflectUtils;
 import net.minecraft.util.math.noise.LatticedNoiseSampler;
 import net.minecraft.util.math.noise.LegacyPerlinNoiseSampler;
