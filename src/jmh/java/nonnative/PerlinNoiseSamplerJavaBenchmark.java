@@ -175,7 +175,7 @@ public class PerlinNoiseSamplerJavaBenchmark {
         private int[] c2me$initPackedPermutations() {
             int[] packed = this.c2me$packedPermutations;
             if (packed != null) return packed;
-            packed = NoisePacking.packPermutation0(this.permutation);
+            packed = NoisePacking.packPermutation512b(this.permutation);
             this.c2me$packedPermutations = packed;
             return packed;
         }
@@ -208,19 +208,19 @@ public class PerlinNoiseSamplerJavaBenchmark {
             final float fy1 = fy0 - 1.0f;
             final float fz1 = fz0 - 1.0f;
 
-            final int hashr__ = NoisePacking.indexPackedPermutation(permutations, px0);
+            final int hashr__ = NoisePacking.indexPacked512bPermutation(permutations, px0);
             final int hash0__ = hashr__ & 0xff;
             final int hash1__ = (hashr__ >>> 8) & 0xff;
-            final int hash0r_ = NoisePacking.indexPackedPermutation(permutations, hash0__ + py0);
-            final int hash1r_ = NoisePacking.indexPackedPermutation(permutations, hash1__ + py0);
+            final int hash0r_ = NoisePacking.indexPacked512bPermutation(permutations, hash0__ + py0);
+            final int hash1r_ = NoisePacking.indexPacked512bPermutation(permutations, hash1__ + py0);
             final int hash00_ = hash0r_ & 0xff;
             final int hash01_ = (hash0r_ >>> 8) & 0xff;
             final int hash10_ = hash1r_ & 0xff;
             final int hash11_ = (hash1r_ >>> 8) & 0xff;
-            final int hash00r = NoisePacking.indexPackedPermutation(permutations, hash00_ + pz0);
-            final int hash10r = NoisePacking.indexPackedPermutation(permutations, hash10_ + pz0);
-            final int hash01r = NoisePacking.indexPackedPermutation(permutations, hash01_ + pz0);
-            final int hash11r = NoisePacking.indexPackedPermutation(permutations, hash11_ + pz0);
+            final int hash00r = NoisePacking.indexPacked512bPermutation(permutations, hash00_ + pz0);
+            final int hash10r = NoisePacking.indexPacked512bPermutation(permutations, hash10_ + pz0);
+            final int hash01r = NoisePacking.indexPacked512bPermutation(permutations, hash01_ + pz0);
+            final int hash11r = NoisePacking.indexPacked512bPermutation(permutations, hash11_ + pz0);
             final int hash000 = hash00r & 0xf;
             final int hash100 = hash10r & 0xf;
             final int hash010 = hash01r & 0xf;

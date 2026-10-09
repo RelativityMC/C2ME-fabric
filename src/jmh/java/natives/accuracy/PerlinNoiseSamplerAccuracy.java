@@ -27,6 +27,7 @@ package natives.accuracy;
 import com.ishland.c2me.opts.natives_math.common.BindingsTemplate;
 import com.ishland.c2me.opts.natives_math.common.ISATarget;
 import com.ishland.c2me.base.common.util.NoisePacking;
+import natives.support.OptimizedPerlinNoise;
 import natives.support.ReflectUtils;
 import net.minecraft.util.math.noise.LatticedNoiseSampler;
 import net.minecraft.util.math.noise.PerlinNoiseSampler;
@@ -44,9 +45,9 @@ public class PerlinNoiseSamplerAccuracy extends AbstractAccuracy {
     private static final double xzScale = 0.25;
     private static final double yScale = 0.125;
     private static final float outputScale = 0.125f;
-    private static final int sizeX = 4;
-    private static final int sizeY = 4;
-    private static final int sizeZ = 1;
+    private static final int sizeX = 5;
+    private static final int sizeY = 5;
+    private static final int sizeZ = 5;
     private static final int stepX = 4;
     private static final int stepY = 4;
     private static final int stepZ = 4;
@@ -56,6 +57,8 @@ public class PerlinNoiseSamplerAccuracy extends AbstractAccuracy {
     private final double originX;
     private final double originY;
     private final double originZ;
+    private final int[] permutations;
+    private final int[] nativeSamplerDataRaw;
     private final MemorySegment nativeSamplerData;
     private final SampleBuffer output;
     private final MemorySegment outputBuffer;
@@ -65,11 +68,14 @@ public class PerlinNoiseSamplerAccuracy extends AbstractAccuracy {
         super(Arrays.stream(ISATarget.getInstance().getEnumConstants()).limit(12).toArray(ISATarget[]::new), BindingsTemplate.c2me_natives_noise_perlin_sample_base_area, "c2me_natives_noise_perlin_sample_base_area");
         LocalRandom random1 = new LocalRandom(random.nextLong());
         this.vanillaSampler = new PerlinNoiseSampler(random1);
-        int[] permutation = (int[]) NoisePacking.packPermutation0((byte[]) ReflectUtils.getField(LatticedNoiseSampler.class, this.vanillaSampler, "permutation"));
+        byte[] permutations = (byte[]) ReflectUtils.getField(LatticedNoiseSampler.class, this.vanillaSampler, "permutation");
+        this.permutations = NoisePacking.packPermutation256b(permutations);
+        int[] permutation512b = (int[]) NoisePacking.packPermutation512b(permutations);
         this.originX = (double) ReflectUtils.getField(LatticedNoiseSampler.class, this.vanillaSampler, "originX");
         this.originY = (double) ReflectUtils.getField(LatticedNoiseSampler.class, this.vanillaSampler, "originY");
         this.originZ = (double) ReflectUtils.getField(LatticedNoiseSampler.class, this.vanillaSampler, "originZ");
-        this.nativeSamplerData = MemorySegment.ofArray(permutation);
+        this.nativeSamplerDataRaw = permutation512b;
+        this.nativeSamplerData = MemorySegment.ofArray(permutation512b);
         this.output = SampleBuffer.withCount(sizeX * sizeY * sizeZ);
         this.outputBuffer = MemorySegment.ofArray((float[]) ReflectUtils.getField(SampleBuffer.class, this.output, "elems"));
         this.outputVanilla = SampleBuffer.withCount(sizeX * sizeY * sizeZ);
@@ -94,6 +100,10 @@ public class PerlinNoiseSamplerAccuracy extends AbstractAccuracy {
 
     private void invokeVanilla(SamplingRegion region) {
         vanillaSampler.fill(outputVanilla, region, xzScale, yScale, outputScale);
+    }
+
+    private void invokeOptimized(SamplingRegion region) {
+        OptimizedPerlinNoise.fillBase(nativeSamplerDataRaw, originX, originY, originZ, outputVanilla, region, xzScale, yScale, outputScale);
     }
 
     private void loopBody() {

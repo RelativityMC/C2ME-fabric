@@ -66,7 +66,7 @@ public class NoisePacking {
             0x00FFFF00  // { 0,-1,-1}
     };
 
-    public static int[] packPermutation0(byte[] data) {
+    public static int[] packPermutation512b(byte[] data) {
         Objects.requireNonNull(data);
         if (data.length != 256) {
             throw new IllegalArgumentException();
@@ -81,12 +81,29 @@ public class NoisePacking {
         return ints;
     }
 
-    public static int indexPackedPermutation(int[] permutations, int index) {
+    public static int[] packPermutation256b(byte[] data) {
+        Objects.requireNonNull(data);
+        if (data.length != 256) {
+            throw new IllegalArgumentException();
+        }
+        int[] ints = new int[256 / 4];
+        for (int i = 0; i < data.length; i++) {
+            ints[i >> 2] |= (data[i] & 0xff) << ((i & 3) << 3);
+        }
+        return ints;
+    }
+
+    public static int indexPacked512bPermutation(int[] permutations, int index) {
         final int point = index & 0xFF;
         final int k = (point >> 1);
         final int perm_read = permutations[k];
         final int shift = (point & 1) << 4;
         return (perm_read >>> shift) & 0xffff;
+    }
+
+    public static int indexPacked256bPermutation(int[] permutations, int index) {
+        final int point = index & 0xFF;
+        return (permutations[point >>> 2] >> ((index & 3) << 3)) & 0xFF;
     }
 
     public static int gradX(int packed) {

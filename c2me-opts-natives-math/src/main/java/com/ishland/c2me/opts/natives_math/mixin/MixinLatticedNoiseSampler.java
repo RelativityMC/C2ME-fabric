@@ -51,7 +51,7 @@ public class MixinLatticedNoiseSampler implements LatticedNoiseSamplerExtension 
     public int[] c2me$getPackedPermutations() {
         int[] packedPermutations = this.c2me$packedPermutations;
         if (packedPermutations == null) {
-            packedPermutations = this.c2me$packedPermutations = NoisePacking.packPermutation0(this.permutation);
+            packedPermutations = this.c2me$packedPermutations = NoisePacking.packPermutation512b(this.permutation);
         }
         return packedPermutations;
     }

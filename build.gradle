@@ -394,7 +394,7 @@ jmhJar {
 }
 
 jmh {
-    includes = ['natives.PerlinNoiseSamplerBenchmark'] // include pattern (regular expression) for benchmarks to be executed
+    includes = ['natives.PerlinNoiseSamplerBenchmark.(optimizedJava|vanilla)'] // include pattern (regular expression) for benchmarks to be executed
 //    excludes = ['some regular expression'] // exclude pattern (regular expression) for benchmarks to be executed
     iterations = 5 // Number of measurement iterations to do.
     benchmarkMode = ['avgt'] // Benchmark mode. Available modes are: [Throughput/thrpt, AverageTime/avgt, SampleTime/sample, SingleShotTime/ss, All/all]
