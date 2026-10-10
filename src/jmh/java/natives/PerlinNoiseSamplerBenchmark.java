@@ -74,6 +74,7 @@ public class PerlinNoiseSamplerBenchmark extends Base_x86_64 {
     private double originX;
     private double originY;
     private double originZ;
+    private int[] packed512b;
     private int[] nativeSamplerDataRaw;
     private MemorySegment nativeSamplerData;
     private int[] permutations;
@@ -100,12 +101,13 @@ public class PerlinNoiseSamplerBenchmark extends Base_x86_64 {
         this.vanillaSampler = new PerlinNoiseSampler(random1);
         byte[] permutations = (byte[]) ReflectUtils.getField(LatticedNoiseSampler.class, this.vanillaSampler, "permutation");
         this.permutations = NoisePacking.packPermutation256b(permutations);
-        int[] packed512b = (int[]) NoisePacking.packPermutation512b(permutations);
+        this.packed512b = NoisePacking.packPermutation512b(permutations);
+        int[] packedNative = (int[]) NoisePacking.packPermutation256b(permutations);
         this.originX = (double) ReflectUtils.getField(LatticedNoiseSampler.class, this.vanillaSampler, "originX");
         this.originY = (double) ReflectUtils.getField(LatticedNoiseSampler.class, this.vanillaSampler, "originY");
         this.originZ = (double) ReflectUtils.getField(LatticedNoiseSampler.class, this.vanillaSampler, "originZ");
-        this.nativeSamplerDataRaw = packed512b;
-        this.nativeSamplerData = MemorySegment.ofArray(packed512b);
+        this.nativeSamplerDataRaw = packedNative;
+        this.nativeSamplerData = MemorySegment.ofArray(packedNative);
         this.output = SampleBuffer.withCount(sizeX * sizeY * sizeZ);
         this.outputBuffer = MemorySegment.ofArray((float[]) ReflectUtils.getField(SampleBuffer.class, this.output, "elems"));
         VarHandle.fullFence();
@@ -158,7 +160,7 @@ public class PerlinNoiseSamplerBenchmark extends Base_x86_64 {
     public void optimizedJava(Blackhole bh) {
         this.output.fill(0.0f);
         for (int i = 0; i < invocations; i++) {
-            OptimizedPerlinNoise.fillBase(this.nativeSamplerDataRaw, this.originX, this.originY, this.originZ, this.output, this.regions[i], xzScale, yScale, outputScale);
+            OptimizedPerlinNoise.fillBase(this.packed512b, this.originX, this.originY, this.originZ, this.output, this.regions[i], xzScale, yScale, outputScale);
             bh.consume(this.output);
         }
     }

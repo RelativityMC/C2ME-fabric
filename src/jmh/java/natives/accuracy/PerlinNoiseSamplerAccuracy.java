@@ -57,7 +57,7 @@ public class PerlinNoiseSamplerAccuracy extends AbstractAccuracy {
     private final double originX;
     private final double originY;
     private final double originZ;
-    private final int[] permutations;
+    private final int[] packed512b;
     private final int[] nativeSamplerDataRaw;
     private final MemorySegment nativeSamplerData;
     private final SampleBuffer output;
@@ -69,13 +69,13 @@ public class PerlinNoiseSamplerAccuracy extends AbstractAccuracy {
         LocalRandom random1 = new LocalRandom(random.nextLong());
         this.vanillaSampler = new PerlinNoiseSampler(random1);
         byte[] permutations = (byte[]) ReflectUtils.getField(LatticedNoiseSampler.class, this.vanillaSampler, "permutation");
-        this.permutations = NoisePacking.packPermutation256b(permutations);
-        int[] permutation512b = (int[]) NoisePacking.packPermutation512b(permutations);
+        this.packed512b = NoisePacking.packPermutation512b(permutations);
+        int[] packedNative = (int[]) NoisePacking.packPermutation256b(permutations);
         this.originX = (double) ReflectUtils.getField(LatticedNoiseSampler.class, this.vanillaSampler, "originX");
         this.originY = (double) ReflectUtils.getField(LatticedNoiseSampler.class, this.vanillaSampler, "originY");
         this.originZ = (double) ReflectUtils.getField(LatticedNoiseSampler.class, this.vanillaSampler, "originZ");
-        this.nativeSamplerDataRaw = permutation512b;
-        this.nativeSamplerData = MemorySegment.ofArray(permutation512b);
+        this.nativeSamplerDataRaw = packedNative;
+        this.nativeSamplerData = MemorySegment.ofArray(packedNative);
         this.output = SampleBuffer.withCount(sizeX * sizeY * sizeZ);
         this.outputBuffer = MemorySegment.ofArray((float[]) ReflectUtils.getField(SampleBuffer.class, this.output, "elems"));
         this.outputVanilla = SampleBuffer.withCount(sizeX * sizeY * sizeZ);
@@ -103,7 +103,7 @@ public class PerlinNoiseSamplerAccuracy extends AbstractAccuracy {
     }
 
     private void invokeOptimized(SamplingRegion region) {
-        OptimizedPerlinNoise.fillBase(nativeSamplerDataRaw, originX, originY, originZ, outputVanilla, region, xzScale, yScale, outputScale);
+        OptimizedPerlinNoise.fillBase(packed512b, originX, originY, originZ, outputVanilla, region, xzScale, yScale, outputScale);
     }
 
     private void loopBody() {

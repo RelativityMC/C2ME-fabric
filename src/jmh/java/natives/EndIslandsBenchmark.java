@@ -93,7 +93,7 @@ public class EndIslandsBenchmark extends Base_x86_64 {
             sampleZ[i] = random.nextInt(-30000000, 30000000);
         }
         LocalRandom random1 = new LocalRandom(random.nextLong());
-        this.vanillaSampler = new SimplexNoiseSampler(random1);
+        this.vanillaSampler = new SimplexNoiseSampler(random1, true);
         int[] permutation = (int[]) MemoryUtil.packByte2int((byte[]) ReflectUtils.getField(LatticedNoiseSampler.class, this.vanillaSampler, "permutation"));
         this.nativeSamplerData = Arena.ofAuto().allocate(permutation.length, 64);
         MemorySegment.copy(MemorySegment.ofArray(permutation), 0L, this.nativeSamplerData, 0L, permutation.length);

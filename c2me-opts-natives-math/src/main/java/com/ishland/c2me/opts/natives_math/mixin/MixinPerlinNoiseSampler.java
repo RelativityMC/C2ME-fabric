@@ -42,7 +42,7 @@ import org.spongepowered.asm.mixin.Shadow;
 
 import java.lang.foreign.MemorySegment;
 
-@Mixin(PerlinNoiseSampler.class)
+@Mixin(value = PerlinNoiseSampler.class, priority = 1100)
 @Implements({@Interface(iface = NoiseSampler.class, prefix = "c2me$i$")})
 public abstract class MixinPerlinNoiseSampler extends LatticedNoiseSampler implements LatticedNoiseSamplerExtension {
 

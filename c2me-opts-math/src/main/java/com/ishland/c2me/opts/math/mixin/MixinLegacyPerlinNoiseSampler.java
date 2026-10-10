@@ -39,7 +39,7 @@ import org.spongepowered.asm.mixin.Shadow;
 
 import static com.ishland.c2me.base.common.util.NoisePacking.FLAT_SIMPLEX_GRAD_F32;
 
-@Mixin(LegacyPerlinNoiseSampler.class)
+@Mixin(value = LegacyPerlinNoiseSampler.class, priority = 1090)
 public abstract class MixinLegacyPerlinNoiseSampler extends PerlinNoiseSampler implements PerlinNoiseSamplerExtension {
 
     @Shadow

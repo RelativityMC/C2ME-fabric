@@ -58,6 +58,7 @@ public class LegacyPerlinNoiseSamplerAccuracy extends AbstractAccuracy {
     private final double originX;
     private final double originY;
     private final double originZ;
+    private final int[] packed512b;
     private final int[] nativeSamplerDataRaw;
     private final MemorySegment nativeSamplerData;
     private final SampleBuffer output;
@@ -68,12 +69,14 @@ public class LegacyPerlinNoiseSamplerAccuracy extends AbstractAccuracy {
         super(Arrays.stream(ISATarget.getInstance().getEnumConstants()).limit(12).toArray(ISATarget[]::new), BindingsTemplate.c2me_natives_noise_perlin_sample_legacy_area, "c2me_natives_noise_perlin_sample_legacy_area");
         LocalRandom random1 = new LocalRandom(random.nextLong());
         this.vanillaSampler = new LegacyPerlinNoiseSampler(random1, fudgedYScale);
-        int[] permutation = (int[]) NoisePacking.packPermutation512b((byte[]) ReflectUtils.getField(LatticedNoiseSampler.class, this.vanillaSampler, "permutation"));
+        byte[] permutations = (byte[]) ReflectUtils.getField(LatticedNoiseSampler.class, this.vanillaSampler, "permutation");
+        int[] permutationNative = (int[]) NoisePacking.packPermutation256b(permutations);
+        this.packed512b = NoisePacking.packPermutation512b(permutations);
         this.originX = (double) ReflectUtils.getField(LatticedNoiseSampler.class, this.vanillaSampler, "originX");
         this.originY = (double) ReflectUtils.getField(LatticedNoiseSampler.class, this.vanillaSampler, "originY");
         this.originZ = (double) ReflectUtils.getField(LatticedNoiseSampler.class, this.vanillaSampler, "originZ");
-        this.nativeSamplerDataRaw = permutation;
-        this.nativeSamplerData = MemorySegment.ofArray(permutation);
+        this.nativeSamplerDataRaw = permutationNative;
+        this.nativeSamplerData = MemorySegment.ofArray(permutationNative);
         this.output = SampleBuffer.withCount(sizeX * sizeY * sizeZ);
         this.outputBuffer = MemorySegment.ofArray((float[]) ReflectUtils.getField(SampleBuffer.class, this.output, "elems"));
         this.outputVanilla = SampleBuffer.withCount(sizeX * sizeY * sizeZ);
@@ -101,7 +104,7 @@ public class LegacyPerlinNoiseSamplerAccuracy extends AbstractAccuracy {
     }
 
     private void invokeOptimized(SamplingRegion region) {
-        OptimizedPerlinNoise.fillLegacy(nativeSamplerDataRaw, fudgedYScale, originX, originY, originZ, outputVanilla, region, xzScale, yScale, outputScale);
+        OptimizedPerlinNoise.fillLegacy(packed512b, fudgedYScale, originX, originY, originZ, outputVanilla, region, xzScale, yScale, outputScale);
     }
 
     private void loopBody() {
