@@ -1062,10 +1062,10 @@ index 7130ef36..53b12a8b 100644
      "MixinMinecraftServer",
      "MixinPlayerManager",
 diff --git a/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/compiler/OpenCLCGen.java b/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/compiler/OpenCLCGen.java
-index d5b2ea9e..a97b1391 100644
+index a994d2ea..271e4c75 100644
 --- a/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/compiler/OpenCLCGen.java
 +++ b/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/compiler/OpenCLCGen.java
-@@ -26,6 +26,7 @@ import com.ishland.c2me.opts.dfc.common.ast.misc.CacheLikeNode;
+@@ -27,6 +27,7 @@ import com.ishland.c2me.opts.dfc.common.ast.misc.CacheLikeNode;
  import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantNodeLike;
  import com.ishland.c2me.opts.dfc.common.ast.opto.OptoPasses;
  import com.ishland.c2me.opts.dfc.common.gen.GenDumper;
@@ -1073,7 +1073,7 @@ index d5b2ea9e..a97b1391 100644
  import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDef;
  import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefF32;
  import com.ishland.c2me.opts.dfc.common.gen.meta.ValuesMethodDefF64;
-@@ -111,7 +112,7 @@ public class OpenCLCGen {
+@@ -112,7 +113,7 @@ public class OpenCLCGen {
          dfs.put("erosion", optimizeCached(noiseRouter.erosion(), optoCache));
          dfs.put("depth", optimizeCached(noiseRouter.depth(), optoCache));
          dfs.put("ridges", optimizeCached(noiseRouter.ridges(), optoCache));
@@ -1082,7 +1082,7 @@ index d5b2ea9e..a97b1391 100644
          dfs.put("final_density", optimizeCached(noiseRouter.finalDensity(), optoCache));
          dfs.put("vein_toggle", optimizeCached(noiseRouter.veinToggle(), optoCache));
          dfs.put("vein_ridged", optimizeCached(noiseRouter.veinRidged(), optoCache));
-@@ -152,6 +153,18 @@ public class OpenCLCGen {
+@@ -153,6 +154,18 @@ public class OpenCLCGen {
          );
      }
  
@@ -1158,7 +1158,7 @@ index f6c41472..04ad26e6 100644
                          MemorySegment segment = OpenCLStructs.aquifer_data$create(
                                  arena1,
 diff --git a/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/gen/CLServerBatchedBiomeNoiseContext.java b/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/gen/CLServerBatchedBiomeNoiseContext.java
-index 93657b11..cf9f9023 100644
+index 1cb83383..0ba477c7 100644
 --- a/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/gen/CLServerBatchedBiomeNoiseContext.java
 +++ b/c2me-opts-accel-opencl/src/main/java/com/ishland/c2me/opts/accel/opencl/common/gen/CLServerBatchedBiomeNoiseContext.java
 @@ -18,7 +18,6 @@ package com.ishland.c2me.opts.accel.opencl.common.gen;
@@ -2050,18 +2050,10 @@ index 8e4aea33..bef58c3b 100644
              this.c2me$initArrays();
          }
 diff --git a/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/common/NewChunkHolderVanillaInterface.java b/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/common/NewChunkHolderVanillaInterface.java
-index bca35f02..139755ae 100644
+index 5dcbaf61..dd3d1247 100644
 --- a/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/common/NewChunkHolderVanillaInterface.java
 +++ b/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/common/NewChunkHolderVanillaInterface.java
-@@ -28,7 +28,6 @@ import com.ishland.c2me.base.common.theinterface.IFastChunkHolder;
- import com.ishland.c2me.base.common.util.SneakyThrow;
- import com.ishland.flowsched.scheduler.ItemHolder;
- import com.ishland.flowsched.scheduler.ItemTicket;
--import com.ishland.flowsched.scheduler.StatusAdvancingScheduler;
- import com.ishland.flowsched.util.Assertions;
- import com.mojang.datafixers.util.Pair;
- import net.minecraft.server.world.ChunkHolder;
-@@ -307,13 +306,13 @@ public class NewChunkHolderVanillaInterface extends ChunkHolder implements IFast
+@@ -306,13 +306,13 @@ public class NewChunkHolderVanillaInterface extends ChunkHolder implements IFast
      }
  
      @Override
@@ -2079,7 +2071,7 @@ index bca35f02..139755ae 100644
      }
  
      @Override
-@@ -321,11 +320,6 @@ public class NewChunkHolderVanillaInterface extends ChunkHolder implements IFast
+@@ -320,11 +320,6 @@ public class NewChunkHolderVanillaInterface extends ChunkHolder implements IFast
          super.flushUpdates(chunk); // use vanilla impl
      }
  
@@ -2091,7 +2083,7 @@ index bca35f02..139755ae 100644
      @Override
      public void combinePostProcessingFuture(CompletableFuture<?> postProcessingFuture) {
          super.combinePostProcessingFuture(postProcessingFuture); // use vanilla impl
-@@ -368,7 +362,7 @@ public class NewChunkHolderVanillaInterface extends ChunkHolder implements IFast
+@@ -367,7 +362,7 @@ public class NewChunkHolderVanillaInterface extends ChunkHolder implements IFast
  
      @Override
      public boolean isSavable() {
@@ -2100,7 +2092,7 @@ index bca35f02..139755ae 100644
      }
  
      @Override
-@@ -408,6 +402,11 @@ public class NewChunkHolderVanillaInterface extends ChunkHolder implements IFast
+@@ -407,6 +402,11 @@ public class NewChunkHolderVanillaInterface extends ChunkHolder implements IFast
          super.decrementRefCount(); // use vanilla impl
      }
  
@@ -2109,9 +2101,9 @@ index bca35f02..139755ae 100644
 +        return super.getRefCount(); // use vanilla impl
 +    }
 +
-     @Nullable
-     @Override
-     public Chunk getUncheckedOrNull(ChunkStatus requestedStatus) {
+     private Chunk getChunkAtStatus0(ChunkStatus requestedStatus) {
+         ChunkState chunkState = this.newHolder.getItem().get();
+         return requestedStatus == ChunkStatus.FULL ? chunkState.chunk() : chunkState.protoChunk();
 diff --git a/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/common/TheChunkSystem.java b/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/common/TheChunkSystem.java
 index c4731425..90307d7e 100644
 --- a/c2me-rewrites-chunk-system/src/main/java/com/ishland/c2me/rewrites/chunksystem/common/TheChunkSystem.java
