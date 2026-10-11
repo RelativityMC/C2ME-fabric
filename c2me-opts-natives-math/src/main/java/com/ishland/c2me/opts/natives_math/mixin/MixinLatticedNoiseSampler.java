@@ -42,26 +42,14 @@ public class MixinLatticedNoiseSampler implements LatticedNoiseSamplerExtension 
     protected byte[] permutation;
 
     @Unique
-    private int[] c2me$packedPermutations;
-
-    @Unique
-    private MemorySegment c2me$packedPermutationsMemorySegment;
+    private MemorySegment c2me$fusedPermutationTable;
 
     @Override
-    public int[] c2me$getPackedPermutationsForNative() {
-        int[] packedPermutations = this.c2me$packedPermutations;
-        if (packedPermutations == null) {
-            packedPermutations = this.c2me$packedPermutations = NoisePacking.packPermutation256b(this.permutation);
+    public MemorySegment c2me$getFusedPermutationTableForNative() {
+        MemorySegment table = this.c2me$fusedPermutationTable;
+        if (table == null) {
+            table = this.c2me$fusedPermutationTable = MemorySegment.ofArray(NoisePacking.buildFusedPermutationTable(this.permutation));
         }
-        return packedPermutations;
-    }
-
-    @Override
-    public MemorySegment c2me$getPackedPermutationsMemorySegmentForNative() {
-        MemorySegment segment = this.c2me$packedPermutationsMemorySegment;
-        if (segment == null) {
-            segment = this.c2me$packedPermutationsMemorySegment = MemorySegment.ofArray(this.c2me$getPackedPermutationsForNative());
-        }
-        return segment;
+        return table;
     }
 }

@@ -421,6 +421,13 @@ __math_perlin_perm_index(const uint32_t *restrict const permutations,
     return (permutations[point >> 2] >> ((index & 3) << 3)) & 0xFF;
 }
 
+// 5-bit dot code of a 4-bit gradient hash
+static inline __attribute__((const, always_inline)) uint32_t
+__math_perlin_code(const uint32_t h) {
+    return (uint32_t) (h < 8u) | ((uint32_t) (h < 4u) << 1) |
+           ((uint32_t) (h == 12u || h == 14u) << 2) | ((h & 3u) << 3);
+}
+
 static inline __attribute__((const)) float
 noise_perlin_dot(uint32_t code, float x, float y, float z) {
     __builtin_assume(code < 32u);
@@ -636,66 +643,67 @@ math_coord_iter_next64(coord_iter_t *restrict it,
     return n;
 }
 
-// p2c[i] is the 5-bit dot code of perm value i
-static inline void noise_perlin_build_p2c(const uint32_t *restrict packed,
-                                          uint8_t *restrict p2c) {
-    __builtin_assume_dereferenceable(packed, 64 * sizeof(uint32_t));
-#pragma clang loop vectorize(enable)
-    for (uint32_t n = 0; n < 256; ++n) {
-        const uint32_t h = __math_perlin_perm_index(packed, n) & 15u;
-        p2c[n] =
-                (uint8_t) ((uint32_t) (h < 8u) | ((uint32_t) (h < 4u) << 1) |
-                           ((uint32_t) (h == 12u || h == 14u) << 2) | ((h & 3u) << 3));
-    }
-    // adds 8 additional value for unaligned loads instead of multiple loads
-    for (uint32_t j = 0; j < 8; ++j)
-        p2c[256 + j] = p2c[j];
+// The whole noise computation process goes like this:
+// We first need to x0 = permute(x); x1 = permute(x+1).
+// After that, we do
+// xy00 = permute(y + x0); xy01 = permute(y + x0 + 1);
+// xy10 = permute(y + x1); xy11 = permute(y + x1 + 1);
+// After that, we do
+// xyz000 = permute(z + xy00); xyz001 = permute(z + xy00 + 1);
+// xyz010 = permute(z + xy01); xyz011 = permute(z + xy01 + 1);
+// xyz100 = permute(z + xy10); xyz101 = permute(z + xy10 + 1);
+// xyz110 = permute(z + xy11); xyz101 = permute(z + xy11 + 1);
+// Finally, we do
+// dijk = LATTICE_DIRS[xyzijk].dot(x - i, y - j, z - k);
+// Then, we do
+// perlinFade(x); perlinFade(y); perlinFade(z);
+// the final value is
+// lerp3(fadeX, fadeY, fadeZ, d000, d100, d010, d110, d001, d101, d011, d111)
+// Difference between legacy and base: perlinFade(y) is replaced with perlinFade(adjust(y))
+
+// Reference: Ken Perlin's Improved Perlin Noise
+// LATTICE_DIRS[i].dot(x, y, z) can be expressed as:
+
+/* java
+public static double grad(int hash, double x, double y, double z) {
+    int h = hash & 15; // 0..15
+
+    double u = h < 8 ? x : y;
+    double v = h < 4 ? y : (h == 12 || h == 14 ? x : z);
+
+    return ((h & 1) == 0 ? u : -u) + ((h & 2) == 0 ? v : -v);
+}
+*/
+
+// Pattern:
+// (1) we always do permute(t) and permute(t+1)
+// Since permute is just reading from the table, we fuse table[i] and table[(i+1) & 255u]
+// which reduces load count by half.
+// (2) we always do LATTICE_DIRS[table[i]]
+// This is two dependent memory load. We fuse {t0 = table[i]} and LATTICE_DIRS[t0]
+// so loading from the table again already provides everything we need.
+
+// Both steps are fused into a single table entry per index:
+// table[i] = perm[i] | (perm[(i+1) & 255u] << 8) | (p2c[i] << 16) | (p2c[(i+1) & 255u] << 24)
+// Low 16 bits: perm[i] and perm[(i+1) & 255u], so the pair is consumed with
+// shifts only (q = w, q + 1 = w >> 8).
+// High 16 bits: dot code of perm[i] and perm[(i+1) & 255u].
+// A single aligned 32-bit load yields both permutations and both dot codes,
+// with no unaligned loads and no wrap elements.
+// The table is built once per sampler on the Java side
+// (NativeTables.allocateFusedPermutationTable)
+
+// Fused load of table[i & 255]: {perm pair, p2c pair} as described above.
+// Index arithmetic only ever consumes the low 8 bits of the word, so callers
+// pass it around (and sum it) unmasked and mask or shift at the point of use.
+static inline __attribute__((pure, always_inline)) uint32_t
+noise_perlin_fused(const uint32_t *restrict table, uint32_t i) {
+    __builtin_assume_dereferenceable(table, 256 * sizeof(uint32_t));
+    return table[i & 255u];
 }
 
-static inline __attribute__((pure, flatten)) float
-noise_perlin_corners(const uint8_t *restrict p2c, uint32_t q00, uint32_t q10,
-                     uint32_t q01, uint32_t q11, uint32_t pz, float fx0,
-                     float fx1, float dx, float fy0, float fy1, float dy,
-                     float fz0, float fz1, float dz, bool legacy) {
-    __builtin_assume_dereferenceable(p2c, 264);
-    uint32_t w00, w10, w01, w11;
-    __builtin_memcpy_inline(&w00, p2c + ((q00 + pz) & 255u), 4);
-    __builtin_memcpy_inline(&w10, p2c + ((q10 + pz) & 255u), 4);
-    __builtin_memcpy_inline(&w01, p2c + ((q01 + pz) & 255u), 4);
-    __builtin_memcpy_inline(&w11, p2c + ((q11 + pz) & 255u), 4);
-    const float f000 = noise_perlin_dot(w00 & 0xFFu, fx0, fy0, fz0);
-    const float f100 = noise_perlin_dot(w10 & 0xFFu, fx1, fy0, fz0);
-    const float f010 = noise_perlin_dot(w01 & 0xFFu, fx0, fy1, fz0);
-    const float f110 = noise_perlin_dot(w11 & 0xFFu, fx1, fy1, fz0);
-    const float f001 = noise_perlin_dot((w00 >> 8) & 0xFFu, fx0, fy0, fz1);
-    const float f101 = noise_perlin_dot((w10 >> 8) & 0xFFu, fx1, fy0, fz1);
-    const float f011 = noise_perlin_dot((w01 >> 8) & 0xFFu, fx0, fy1, fz1);
-    const float f111 = noise_perlin_dot((w11 >> 8) & 0xFFu, fx1, fy1, fz1);
-    /* A zero gradient component still propagates a nonfinite legacy Y offset. */
-    const float result = math_lerp3f(dx, dy, dz, f000, f100, f010, f110, f001, f101, f011, f111);
-    return legacy ? result + 0.0f * fy0 : result;
-}
-
-static inline void noise_perlin_prepare(const uint32_t *restrict packed,
-                                        uint32_t *restrict perm) {
-    __builtin_assume_dereferenceable(packed, 64 * sizeof(uint32_t));
-    perm = __builtin_assume_aligned(perm, 64);
-    __builtin_assume_dereferenceable(perm, 257 * sizeof(uint32_t));
-#pragma clang loop vectorize(enable)
-    for (uint32_t n = 0; n < 256; ++n)
-        perm[n] = __math_perlin_perm_index(packed, n);
-    // allow adjacent unaligned loads for the last element, see below
-    perm[256] = perm[0];
-}
-
-static inline __attribute__((pure, always_inline)) uint64_t
-noise_perlin_perm2(const uint32_t *restrict perm, uint32_t i) {
-    __builtin_assume_dereferenceable(perm, 257 * sizeof(uint32_t));
-    uint64_t w;
-    __builtin_memcpy_inline(&w, perm + (i & 255u), 8);
-    return w;
-}
-
+// Additive (x + 1) | ((y + 1) << 2) | ((z + 1) << 4) form of the gradient
+// direction of a 4-bit hash, used by the run-cached cell path
 static const uint32_t
 __attribute__((aligned(64))) noise_perlin_gradient_codes[16] = {
     /* ( 1,  1,  0) */ ( 1 + 1) | (( 1 + 1) << 2) | (( 0 + 1) << 4),
@@ -716,19 +724,59 @@ __attribute__((aligned(64))) noise_perlin_gradient_codes[16] = {
     /* ( 0, -1, -1) */ ( 0 + 1) | ((-1 + 1) << 2) | ((-1 + 1) << 4),
 };
 
-static inline void noise_perlin_build_pairs(const uint32_t *restrict perm,
+// Build pairs[n] = {additive code of perm[n], additive code of perm[(n+1) & 255]}
+// by decoding the permutation bytes of the fused table; done once per fill and
+// only when the run-cached cell path is used
+static inline void noise_perlin_build_pairs(const uint32_t *restrict table,
                                             uint32_t *restrict pairs) {
-    perm = __builtin_assume_aligned(perm, 64);
     pairs = __builtin_assume_aligned(pairs, 64);
-    __builtin_assume_separate_storage(perm, pairs);
+    __builtin_assume_separate_storage(table, pairs);
 #pragma clang loop vectorize(enable)
-    for (uint32_t n = 0; n < 256; ++n)
-        pairs[n] = noise_perlin_gradient_codes[perm[n] & 15u];
-    const uint32_t first = pairs[0];
+    for (uint32_t n = 0; n < 256; ++n) {
+        const uint32_t e = table[n];
+        pairs[n] = noise_perlin_gradient_codes[e & 15u] |
+                   (noise_perlin_gradient_codes[(e >> 8) & 15u] << 8);
+    }
+}
+
+static inline __attribute__((pure, flatten)) float
+noise_perlin_corners(const uint32_t *restrict table, uint32_t q00, uint32_t q10,
+                     uint32_t q01, uint32_t q11, uint32_t pz, float fx0,
+                     float fx1, float dx, float fy0, float fy1, float dy,
+                     float fz0, float fz1, float dz, bool legacy) {
+    __builtin_assume_dereferenceable(table, 256 * sizeof(uint32_t));
+    const uint32_t w00 = noise_perlin_fused(table, q00 + pz);
+    const uint32_t w10 = noise_perlin_fused(table, q10 + pz);
+    const uint32_t w01 = noise_perlin_fused(table, q01 + pz);
+    const uint32_t w11 = noise_perlin_fused(table, q11 + pz);
+    const float f000 = noise_perlin_dot((w00 >> 16) & 0xFFu, fx0, fy0, fz0);
+    const float f100 = noise_perlin_dot((w10 >> 16) & 0xFFu, fx1, fy0, fz0);
+    const float f010 = noise_perlin_dot((w01 >> 16) & 0xFFu, fx0, fy1, fz0);
+    const float f110 = noise_perlin_dot((w11 >> 16) & 0xFFu, fx1, fy1, fz0);
+    const float f001 = noise_perlin_dot(w00 >> 24, fx0, fy0, fz1);
+    const float f101 = noise_perlin_dot(w10 >> 24, fx1, fy0, fz1);
+    const float f011 = noise_perlin_dot(w01 >> 24, fx0, fy1, fz1);
+    const float f111 = noise_perlin_dot(w11 >> 24, fx1, fy1, fz1);
+    const float result = math_lerp3f(dx, dy, dz, f000, f100, f010, f110, f001, f101, f011, f111);
+    return legacy ? result + 0.0f * fy0 : result;
+}
+
+// Reference implementation of the table built by
+// NoisePacking.buildFusedPermutationTable on the Java side; unused here
+static inline void noise_perlin_prepare(const uint32_t *restrict packed,
+                                        uint32_t *restrict table) {
+    __builtin_assume_dereferenceable(packed, 64 * sizeof(uint32_t));
+    // table = __builtin_assume_aligned(table, 64);
+    __builtin_assume_dereferenceable(table, 256 * sizeof(uint32_t));
 #pragma clang loop vectorize(enable)
-    for (uint32_t n = 0; n < 255; ++n)
-        pairs[n] |= pairs[n + 1] << 8;
-    pairs[255] |= first << 8;
+    for (uint32_t n = 0; n < 256; ++n) {
+        // __math_perlin_perm_index masks its index, so n + 1 wraps to perm[0]
+        const uint32_t v0 = __math_perlin_perm_index(packed, n);
+        const uint32_t v1 = __math_perlin_perm_index(packed, n + 1u);
+        table[n] = v0 | (v1 << 8) |
+                   (__math_perlin_code(v0 & 15u) << 16) |
+                   (__math_perlin_code(v1 & 15u) << 24);
+    }
 }
 
 static inline void noise_perlin_cell_prepare(
@@ -779,7 +827,7 @@ noise_perlin_cell_corners(const float *restrict ca, const float *restrict cb,
 
 static inline __attribute__((flatten, hot, noinline,
     min_vector_width(NOISEOPT_FLOAT_LANES * 32))) void
-noise_perlin_area_unshifted_direct(const uint32_t *restrict permutations,
+noise_perlin_area_unshifted_direct(const uint32_t *restrict table,
                                    double originX, double originY,
                                    double originZ, double yScale, bool legacy,
                                    float *restrict output,
@@ -789,15 +837,11 @@ noise_perlin_area_unshifted_direct(const uint32_t *restrict permutations,
     __builtin_assume(region.sizeX != 0);
     __builtin_assume(region.sizeY != 0);
     __builtin_assume(region.sizeZ != 0);
-    __builtin_assume(permutations != NULL && output != NULL);
-    __builtin_assume_dereferenceable(permutations, 64 * sizeof(uint32_t));
+    __builtin_assume(table != NULL && output != NULL);
+    __builtin_assume_dereferenceable(table, 256 * sizeof(uint32_t));
+    // table = __builtin_assume_aligned(table, 64);
     __builtin_assume_dereferenceable(output, sizeof(float));
-    __attribute__((aligned(64))) uint32_t perm[257];
-    __attribute__((aligned(64))) uint8_t p2c[264];
-    __builtin_assume_separate_storage(perm, p2c);
-    __builtin_assume_separate_storage(p2c, output);
-    noise_perlin_prepare(permutations, perm);
-    noise_perlin_build_p2c(permutations, p2c);
+    __builtin_assume_separate_storage(table, output);
     __attribute__((aligned(64))) uint32_t py[__MATH_PERLIN_MAX_Y],
             q00[__MATH_PERLIN_MAX_Y], q01[__MATH_PERLIN_MAX_Y],
             q10[__MATH_PERLIN_MAX_Y], q11[__MATH_PERLIN_MAX_Y];
@@ -850,16 +894,16 @@ noise_perlin_area_unshifted_direct(const uint32_t *restrict permutations,
                 const uint32_t px = (uint32_t) (int32_t) fl;
                 const float fx0 = (float) (xx - fl), fx1 = fx0 - 1.0f,
                         dx = math_perlinFade(fx0);
-                const uint64_t aa = noise_perlin_perm2(perm, px);
-                const uint32_t a0 = (uint32_t) aa, a1 = (uint32_t) (aa >> 32);
+                const uint32_t aa = noise_perlin_fused(table, px);
+                const uint32_t a0 = aa, a1 = aa >> 8;
 #pragma clang loop vectorize(enable)
                 for (uint32_t j = 0; j < count; ++j) {
-                    const uint64_t w0 = noise_perlin_perm2(perm, a0 + py[j]);
-                    const uint64_t w1 = noise_perlin_perm2(perm, a1 + py[j]);
-                    q00[j] = (uint32_t) w0;
-                    q10[j] = (uint32_t) w1;
-                    q01[j] = (uint32_t) (w0 >> 32);
-                    q11[j] = (uint32_t) (w1 >> 32);
+                    const uint32_t w0 = noise_perlin_fused(table, a0 + py[j]);
+                    const uint32_t w1 = noise_perlin_fused(table, a1 + py[j]);
+                    q00[j] = w0;
+                    q10[j] = w1;
+                    q01[j] = w0 >> 8;
+                    q11[j] = w1 >> 8;
                 }
                 for (uint32_t iz = 0; iz < zCount; ++iz) {
                     const uint32_t pz = zp[iz];
@@ -870,7 +914,7 @@ noise_perlin_area_unshifted_direct(const uint32_t *restrict permutations,
 #pragma clang loop vectorize_width(NOISEOPT_FLOAT_LANES) interleave_count(1)
                     for (uint32_t j = 0; j < count; ++j) {
                         const float v = noise_perlin_corners(
-                            p2c, q00[j], q10[j], q01[j], q11[j], pz, fx0, fx1, dx, yf0[j],
+                            table, q00[j], q10[j], q01[j], q11[j], pz, fx0, fx1, dx, yf0[j],
                             yf0[j] - 1.0f, yd[j], fz0, fz1, dz, legacy);
                         out[j] += v * outputScale;
                     }
@@ -884,23 +928,20 @@ noise_perlin_area_unshifted_direct(const uint32_t *restrict permutations,
 
 static inline __attribute__((flatten, hot, always_inline,
     min_vector_width(NOISEOPT_FLOAT_LANES * 32))) void
-noise_perlin_area_paired_core(const uint32_t *restrict permutations,
+noise_perlin_area_paired_core(const uint32_t *restrict table,
                               double originX, double originY, double originZ,
                               double yScale, bool legacy,
                               float *restrict output, sampling_region_t region,
                               double scaleXz, double scaleY,
                               float outputScale) {
     __builtin_assume(region.sizeX != 0 && region.sizeY != 0 && region.sizeZ != 0);
-    __builtin_assume(permutations != NULL && output != NULL);
-    __builtin_assume_dereferenceable(permutations, 64 * sizeof(uint32_t));
+    __builtin_assume(table != NULL && output != NULL);
+    __builtin_assume_dereferenceable(table, 256 * sizeof(uint32_t));
+    // table = __builtin_assume_aligned(table, 64);
     __builtin_assume_dereferenceable(output, sizeof(float));
-    __attribute__((aligned(64))) uint32_t perm[257], pairs[256];
-    __attribute__((aligned(64))) uint8_t p2c[264];
-    __builtin_assume_separate_storage(perm, pairs);
-    __builtin_assume_separate_storage(pairs, p2c);
-    __builtin_assume_separate_storage(p2c, output);
-    noise_perlin_prepare(permutations, perm);
-    noise_perlin_build_p2c(permutations, p2c);
+    __attribute__((aligned(64))) uint32_t pairs[256];
+    __builtin_assume_separate_storage(table, pairs);
+    __builtin_assume_separate_storage(pairs, output);
     __attribute__((aligned(64))) uint32_t py[__MATH_PERLIN_MAX_Y],
             q00[__MATH_PERLIN_MAX_Y], q10[__MATH_PERLIN_MAX_Y],
             q01[__MATH_PERLIN_MAX_Y], q11[__MATH_PERLIN_MAX_Y];
@@ -941,7 +982,7 @@ noise_perlin_area_paired_core(const uint32_t *restrict permutations,
         }
         const bool cached = longest >= 16u && runs * 8u <= count;
         if (cached) {
-            noise_perlin_build_pairs(perm, pairs);
+            noise_perlin_build_pairs(table, pairs);
         }
         for (uint32_t zBase = 0; zBase < region.sizeZ;) {
             const uint32_t zCount =
@@ -968,18 +1009,18 @@ noise_perlin_area_paired_core(const uint32_t *restrict permutations,
                 const uint32_t px = (uint32_t) (int32_t) fl;
                 const float fx0 = (float) (xx - fl), fx1 = fx0 - 1.0f,
                         dx = math_perlinFade(fx0);
-                const uint64_t aa = noise_perlin_perm2(perm, px);
-                const uint32_t a0 = (uint32_t) aa, a1 = (uint32_t) (aa >> 32);
+                const uint32_t aa = noise_perlin_fused(table, px);
+                const uint32_t a0 = aa, a1 = aa >> 8;
                 const uint32_t qCount = cached ? runs : count;
 #pragma clang loop vectorize(enable)
                 for (uint32_t j = 0; j < qCount; ++j) {
                     const uint32_t y = py[cached ? run_begin[j] : j];
-                    const uint64_t w0 = noise_perlin_perm2(perm, a0 + y);
-                    const uint64_t w1 = noise_perlin_perm2(perm, a1 + y);
-                    q00[j] = (uint32_t) w0;
-                    q10[j] = (uint32_t) w1;
-                    q01[j] = (uint32_t) (w0 >> 32);
-                    q11[j] = (uint32_t) (w1 >> 32);
+                    const uint32_t w0 = noise_perlin_fused(table, a0 + y);
+                    const uint32_t w1 = noise_perlin_fused(table, a1 + y);
+                    q00[j] = w0;
+                    q10[j] = w1;
+                    q01[j] = w0 >> 8;
+                    q11[j] = w1 >> 8;
                 }
                 for (uint32_t iz = 0; iz < zCount; ++iz) {
                     const uint32_t pz = zp[iz];
@@ -1004,7 +1045,7 @@ noise_perlin_area_paired_core(const uint32_t *restrict permutations,
 #pragma clang loop vectorize_width(NOISEOPT_FLOAT_LANES) interleave_count(1)
                         for (uint32_t j = 0; j < count; ++j) {
                             out[j] +=
-                                    noise_perlin_corners(p2c, q00[j], q10[j], q01[j], q11[j], pz,
+                                    noise_perlin_corners(table, q00[j], q10[j], q01[j], q11[j], pz,
                                                          fx0, fx1, dx, yf0[j], yf0[j] - 1.0f,
                                                          yd[j], fz0, fz1, dz, legacy) *
                                     outputScale;
@@ -1020,50 +1061,50 @@ noise_perlin_area_paired_core(const uint32_t *restrict permutations,
 
 static __attribute__((noinline, hot,
     min_vector_width(NOISEOPT_FLOAT_LANES * 32))) void
-noise_perlin_area_paired_base(const uint32_t *restrict permutations,
+noise_perlin_area_paired_base(const uint32_t *restrict table,
                               double originX, double originY, double originZ,
                               float *restrict output, sampling_region_t region,
                               double scaleXz, double scaleY,
                               float outputScale) {
-    noise_perlin_area_paired_core(permutations, originX, originY, originZ, 1.0,
+    noise_perlin_area_paired_core(table, originX, originY, originZ, 1.0,
                                   false, output, region, scaleXz, scaleY,
                                   outputScale);
 }
 
 static __attribute__((noinline, hot,
     min_vector_width(NOISEOPT_FLOAT_LANES * 32))) void
-noise_perlin_area_paired_legacy(const uint32_t *restrict permutations,
+noise_perlin_area_paired_legacy(const uint32_t *restrict table,
                                 double originX, double originY, double originZ,
                                 double yScale, float *restrict output,
                                 sampling_region_t region, double scaleXz,
                                 double scaleY, float outputScale) {
-    noise_perlin_area_paired_core(permutations, originX, originY, originZ, yScale,
+    noise_perlin_area_paired_core(table, originX, originY, originZ, yScale,
                                   true, output, region, scaleXz, scaleY,
                                   outputScale);
 }
 
 static inline __attribute__((always_inline)) void
-noise_perlin_area_unshifted(const uint32_t *restrict permutations,
+noise_perlin_area_unshifted(const uint32_t *restrict table,
                             double originX, double originY, double originZ,
                             double yScale, bool legacy, float *restrict output,
                             sampling_region_t region, double scaleXz,
                             double scaleY, float outputScale) {
     if (region.sizeY < 16u)
-        noise_perlin_area_unshifted_direct(permutations, originX, originY, originZ,
+        noise_perlin_area_unshifted_direct(table, originX, originY, originZ,
                                            yScale, legacy, output, region, scaleXz,
                                            scaleY, outputScale);
     else if (legacy)
-        noise_perlin_area_paired_legacy(permutations, originX, originY, originZ,
+        noise_perlin_area_paired_legacy(table, originX, originY, originZ,
                                         yScale, output, region, scaleXz, scaleY,
                                         outputScale);
     else
-        noise_perlin_area_paired_base(permutations, originX, originY, originZ,
+        noise_perlin_area_paired_base(table, originX, originY, originZ,
                                       output, region, scaleXz, scaleY, outputScale);
 }
 
 static inline __attribute__((flatten, hot, noinline,
     min_vector_width(NOISEOPT_FLOAT_LANES * 32))) void
-noise_perlin_area_shifted_xyz(const uint32_t *restrict permutations, double originX,
+noise_perlin_area_shifted_xyz(const uint32_t *restrict table, double originX,
                               double originY, double originZ, double yScale,
                               bool legacy, float *restrict output,
                               sampling_region_t region,
@@ -1074,17 +1115,14 @@ noise_perlin_area_shifted_xyz(const uint32_t *restrict permutations, double orig
     __builtin_assume(region.sizeX != 0);
     __builtin_assume(region.sizeY != 0);
     __builtin_assume(region.sizeZ != 0);
-    __builtin_assume(permutations != NULL && output != NULL);
+    __builtin_assume(table != NULL && output != NULL);
     __builtin_assume(shiftX != NULL && shiftY != NULL && shiftZ != NULL);
-    __builtin_assume_dereferenceable(permutations, 64 * sizeof(uint32_t));
+    __builtin_assume_dereferenceable(table, 256 * sizeof(uint32_t));
+    // table = __builtin_assume_aligned(table, 64);
     __builtin_assume_dereferenceable(output, sizeof(float));
     __builtin_assume_dereferenceable(shiftX, sizeof(double));
     __builtin_assume_dereferenceable(shiftY, sizeof(double));
     __builtin_assume_dereferenceable(shiftZ, sizeof(double));
-    __attribute__((aligned(64))) uint32_t perm[257];
-    __attribute__((aligned(64))) uint8_t p2c[264];
-    noise_perlin_prepare(permutations, perm);
-    noise_perlin_build_p2c(permutations, p2c);
 
     const uint32_t size = region.sizeX * region.sizeY * region.sizeZ;
     coord_iter_t it = math_coord_iter_begin(region);
@@ -1122,14 +1160,14 @@ noise_perlin_area_shifted_xyz(const uint32_t *restrict permutations, double orig
             const uint32_t px = (uint32_t) pxa[j], py = (uint32_t) pya[j],
                     pz = (uint32_t) pza[j];
             const float fx0 = fx0a[j], fy0 = fy0a[j], fz0 = fz0a[j];
-            const uint64_t aa = noise_perlin_perm2(perm, px);
-            const uint32_t a0 = (uint32_t) aa, a1 = (uint32_t) (aa >> 32);
-            const uint64_t w0 = noise_perlin_perm2(perm, a0 + (py & 255u));
-            const uint64_t w1 = noise_perlin_perm2(perm, a1 + (py & 255u));
-            const uint32_t q00 = (uint32_t) w0, q01 = (uint32_t) (w0 >> 32);
-            const uint32_t q10 = (uint32_t) w1, q11 = (uint32_t) (w1 >> 32);
+            const uint32_t aa = noise_perlin_fused(table, px);
+            const uint32_t a0 = aa, a1 = aa >> 8;
+            const uint32_t w0 = noise_perlin_fused(table, a0 + (py & 255u));
+            const uint32_t w1 = noise_perlin_fused(table, a1 + (py & 255u));
+            const uint32_t q00 = w0, q01 = w0 >> 8;
+            const uint32_t q10 = w1, q11 = w1 >> 8;
             const float v =
-                    noise_perlin_corners(p2c, q00, q10, q01, q11, pz, fx0, fx0 - 1.0f,
+                    noise_perlin_corners(table, q00, q10, q01, q11, pz, fx0, fx0 - 1.0f,
                                          math_perlinFade(fx0), fy0, fy0 - 1.0f, dya[j],
                                          fz0, fz0 - 1.0f, math_perlinFade(fz0), legacy); {
                 output[i + j] += v * outputScale;
@@ -1141,7 +1179,7 @@ noise_perlin_area_shifted_xyz(const uint32_t *restrict permutations, double orig
 
 static inline __attribute__((flatten, hot, noinline,
     min_vector_width(NOISEOPT_FLOAT_LANES * 32))) void
-noise_perlin_area_shifted_xz(const uint32_t *restrict permutations, double originX,
+noise_perlin_area_shifted_xz(const uint32_t *restrict table, double originX,
                              double originY, double originZ, double yScale,
                              bool legacy, float *restrict output,
                              sampling_region_t region,
@@ -1151,16 +1189,13 @@ noise_perlin_area_shifted_xz(const uint32_t *restrict permutations, double origi
     __builtin_assume(region.sizeX != 0);
     __builtin_assume(region.sizeY != 0);
     __builtin_assume(region.sizeZ != 0);
-    __builtin_assume(permutations != NULL && output != NULL);
+    __builtin_assume(table != NULL && output != NULL);
     __builtin_assume(shiftX != NULL && shiftZ != NULL);
-    __builtin_assume_dereferenceable(permutations, 64 * sizeof(uint32_t));
+    __builtin_assume_dereferenceable(table, 256 * sizeof(uint32_t));
+    // table = __builtin_assume_aligned(table, 64);
     __builtin_assume_dereferenceable(output, sizeof(float));
     __builtin_assume_dereferenceable(shiftX, sizeof(double));
     __builtin_assume_dereferenceable(shiftZ, sizeof(double));
-    __attribute__((aligned(64))) uint32_t perm[257];
-    __attribute__((aligned(64))) uint8_t p2c[264];
-    noise_perlin_prepare(permutations, perm);
-    noise_perlin_build_p2c(permutations, p2c);
 
     const uint32_t size = region.sizeX * region.sizeY * region.sizeZ;
     coord_iter_t it = math_coord_iter_begin(region);
@@ -1198,14 +1233,14 @@ noise_perlin_area_shifted_xz(const uint32_t *restrict permutations, double origi
             const uint32_t px = (uint32_t) pxa[j], py = (uint32_t) pya[j],
                     pz = (uint32_t) pza[j];
             const float fx0 = fx0a[j], fy0 = fy0a[j], fz0 = fz0a[j];
-            const uint64_t aa = noise_perlin_perm2(perm, px);
-            const uint32_t a0 = (uint32_t) aa, a1 = (uint32_t) (aa >> 32);
-            const uint64_t w0 = noise_perlin_perm2(perm, a0 + (py & 255u));
-            const uint64_t w1 = noise_perlin_perm2(perm, a1 + (py & 255u));
-            const uint32_t q00 = (uint32_t) w0, q01 = (uint32_t) (w0 >> 32);
-            const uint32_t q10 = (uint32_t) w1, q11 = (uint32_t) (w1 >> 32);
+            const uint32_t aa = noise_perlin_fused(table, px);
+            const uint32_t a0 = aa, a1 = aa >> 8;
+            const uint32_t w0 = noise_perlin_fused(table, a0 + (py & 255u));
+            const uint32_t w1 = noise_perlin_fused(table, a1 + (py & 255u));
+            const uint32_t q00 = w0, q01 = w0 >> 8;
+            const uint32_t q10 = w1, q11 = w1 >> 8;
             const float v =
-                    noise_perlin_corners(p2c, q00, q10, q01, q11, pz, fx0, fx0 - 1.0f,
+                    noise_perlin_corners(table, q00, q10, q01, q11, pz, fx0, fx0 - 1.0f,
                                          math_perlinFade(fx0), fy0, fy0 - 1.0f, dya[j],
                                          fz0, fz0 - 1.0f, math_perlinFade(fz0), legacy); {
                 output[i + j] += v * outputScale;
@@ -1216,22 +1251,22 @@ noise_perlin_area_shifted_xz(const uint32_t *restrict permutations, double origi
 }
 
 static inline __attribute__((always_inline)) void
-noise_perlin_area(const uint32_t *restrict permutations, double originX,
+noise_perlin_area(const uint32_t *restrict table, double originX,
                   double originY, double originZ, double yScale, bool legacy,
                   float *restrict output, sampling_region_t region,
                   const double *restrict shiftX, const double *restrict shiftY,
                   const double *restrict shiftZ, double scaleXz, double scaleY,
                   float outputScale) {
     if (shiftX && shiftY && shiftZ)
-        noise_perlin_area_shifted_xyz(permutations, originX, originY, originZ, yScale,
+        noise_perlin_area_shifted_xyz(table, originX, originY, originZ, yScale,
                                   legacy, output, region, shiftX, shiftY, shiftZ,
                                   scaleXz, scaleY, outputScale);
     else if (shiftX && !shiftY && shiftZ)
-        noise_perlin_area_shifted_xz(permutations, originX, originY, originZ, yScale,
+        noise_perlin_area_shifted_xz(table, originX, originY, originZ, yScale,
                                   legacy, output, region, shiftX, shiftZ,
                                   scaleXz, scaleY, outputScale);
     else if (!shiftX && !shiftY && !shiftZ)
-        noise_perlin_area_unshifted(permutations, originX, originY, originZ, yScale,
+        noise_perlin_area_unshifted(table, originX, originY, originZ, yScale,
                                     legacy, output, region, scaleXz, scaleY,
                                     outputScale);
     else {
@@ -1242,31 +1277,31 @@ noise_perlin_area(const uint32_t *restrict permutations, double originX,
 
 static inline __attribute__((always_inline)) void
 math_noise_perlin_sample_legacy_area0(
-    const uint32_t *restrict permutations, double originX, double originY,
+    const uint32_t *restrict table, double originX, double originY,
     double originZ, double yScale, float *restrict output,
     sampling_region_t region, const double *restrict shiftX,
     const double *restrict shiftY, const double *restrict shiftZ,
     double scaleXz, double scaleY, float outputScale) {
-    noise_perlin_area(permutations, originX, originY, originZ, yScale, true,
+    noise_perlin_area(table, originX, originY, originZ, yScale, true,
                       output, region, shiftX, shiftY, shiftZ, scaleXz, scaleY,
                       outputScale);
 }
 
 static inline __attribute__((always_inline)) void
 math_noise_perlin_sample_base_area0(
-    const uint32_t *restrict permutations, double originX, double originY,
+    const uint32_t *restrict table, double originX, double originY,
     double originZ, float *restrict output, sampling_region_t region,
     const double *restrict shiftX, const double *restrict shiftY,
     const double *restrict shiftZ, double scaleXz, double scaleY,
     float outputScale) {
-    noise_perlin_area(permutations, originX, originY, originZ, 1.0, false, output,
+    noise_perlin_area(table, originX, originY, originZ, 1.0, false, output,
                       region, shiftX, shiftY, shiftZ, scaleXz, scaleY,
                       outputScale);
 }
 
 static inline __attribute__((always_inline)) void
 math_noise_perlin_sample_legacy_area(
-    const uint32_t *restrict permutations, double originX, double originY,
+    const uint32_t *restrict table, double originX, double originY,
     double originZ, double yScale, float *restrict output, int32_t sizeX,
     int32_t sizeY, int32_t sizeZ, int32_t minBlockX, int32_t minBlockY,
     int32_t minBlockZ, int32_t stepBlockX, int32_t stepBlockY,
@@ -1281,13 +1316,13 @@ math_noise_perlin_sample_legacy_area(
         minBlockX, minBlockY, minBlockZ,
         stepBlockX, stepBlockY, stepBlockZ
     };
-    math_noise_perlin_sample_legacy_area0(permutations, originX, originY, originZ,
+    math_noise_perlin_sample_legacy_area0(table, originX, originY, originZ,
                                           yScale, output, region, shiftX, shiftY,
                                           shiftZ, scaleXz, scaleY, outputScale);
 }
 
 static __attribute__((always_inline)) void math_noise_perlin_sample_base_area(
-    const uint32_t *restrict permutations, double originX, double originY,
+    const uint32_t *restrict table, double originX, double originY,
     double originZ, float *restrict output, int32_t sizeX, int32_t sizeY,
     int32_t sizeZ, int32_t minBlockX, int32_t minBlockY, int32_t minBlockZ,
     int32_t stepBlockX, int32_t stepBlockY, int32_t stepBlockZ,
@@ -1302,7 +1337,7 @@ static __attribute__((always_inline)) void math_noise_perlin_sample_base_area(
         minBlockX, minBlockY, minBlockZ,
         stepBlockX, stepBlockY, stepBlockZ
     };
-    math_noise_perlin_sample_base_area0(permutations, originX, originY, originZ,
+    math_noise_perlin_sample_base_area0(table, originX, originY, originZ,
                                         output, region, shiftX, shiftY, shiftZ,
                                         scaleXz, scaleY, outputScale);
 }

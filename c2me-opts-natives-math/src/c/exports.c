@@ -2,7 +2,7 @@
 #include <FastNoiseLite.h>
 #include <target_macros.h>
 
-TARGET_IMPL(c2me_natives_noise_perlin_sample_legacy_area, void, (const uint32_t *restrict const permutations,
+TARGET_IMPL(c2me_natives_noise_perlin_sample_legacy_area, void, (const uint32_t *restrict const table,
                 const double originX, const double originY, const double originZ,
                 const double yScale, float *restrict const output,
                 const int32_t sizeX, const int32_t sizeY, const int32_t sizeZ,
@@ -11,12 +11,12 @@ TARGET_IMPL(c2me_natives_noise_perlin_sample_legacy_area, void, (const uint32_t 
                 const double *restrict const shiftX, const double *restrict const shiftY,
                 const double *restrict const shiftZ,
                 const double scaleXz, const double scaleY, const float outputScale) {
-    math_noise_perlin_sample_legacy_area(permutations, originX, originY, originZ, yScale, output, sizeX,
+    math_noise_perlin_sample_legacy_area(table, originX, originY, originZ, yScale, output, sizeX,
                 sizeY, sizeZ, minBlockX, minBlockY, minBlockZ, stepBlockX, stepBlockY, stepBlockZ, shiftX, shiftY,
                 shiftZ, scaleXz, scaleY, outputScale);
 })
 
-TARGET_IMPL(c2me_natives_noise_perlin_sample_base_area, void, (const uint32_t *restrict const permutations,
+TARGET_IMPL(c2me_natives_noise_perlin_sample_base_area, void, (const uint32_t *restrict const table,
                 const double originX, const double originY, const double originZ,
                 float *restrict const output,
                 const int32_t sizeX, const int32_t sizeY, const int32_t sizeZ,
@@ -25,7 +25,7 @@ TARGET_IMPL(c2me_natives_noise_perlin_sample_base_area, void, (const uint32_t *r
                 const double *restrict const shiftX, const double *restrict const shiftY,
                 const double *restrict const shiftZ,
                 const double scaleXz, const double scaleY, const float outputScale) {
-    math_noise_perlin_sample_base_area(permutations, originX, originY, originZ, output, sizeX,
+    math_noise_perlin_sample_base_area(table, originX, originY, originZ, output, sizeX,
                 sizeY, sizeZ, minBlockX, minBlockY, minBlockZ, stepBlockX, stepBlockY, stepBlockZ, shiftX, shiftY,
                 shiftZ, scaleXz, scaleY, outputScale);
 })

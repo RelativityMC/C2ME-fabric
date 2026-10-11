@@ -35,7 +35,7 @@ public class Bindings {
 
     private static final MethodHandle MH_c2me_natives_noise_perlin_sample_legacy_area = bind(BindingsTemplate.c2me_natives_noise_perlin_sample_legacy_area, "c2me_natives_noise_perlin_sample_legacy_area");
 
-    public static void c2me_natives_noise_perlin_sample_legacy_area(final MemorySegment permutations,
+    public static void c2me_natives_noise_perlin_sample_legacy_area(final MemorySegment fusedPermutationTable,
                                                                     final double originX, final double originY, final double originZ,
                                                                     final double yScale, final MemorySegment output,
                                                                     final int sizeX, final int sizeY, final int sizeZ,
@@ -45,7 +45,7 @@ public class Bindings {
                                                                     final MemorySegment shiftZ,
                                                                     final double scaleXz, final double scaleY, final float outputScale) {
         try {
-            MH_c2me_natives_noise_perlin_sample_legacy_area.invokeExact(permutations, originX, originY, originZ, yScale, output, sizeX,
+            MH_c2me_natives_noise_perlin_sample_legacy_area.invokeExact(fusedPermutationTable, originX, originY, originZ, yScale, output, sizeX,
                     sizeY, sizeZ, minBlockX, minBlockY, minBlockZ, stepBlockX, stepBlockY, stepBlockZ, shiftX, shiftY,
                     shiftZ, scaleXz, scaleY, outputScale);
         } catch (Throwable t) {
@@ -55,7 +55,7 @@ public class Bindings {
 
     private static final MethodHandle MH_c2me_natives_noise_perlin_sample_base_area = bind(BindingsTemplate.c2me_natives_noise_perlin_sample_base_area, "c2me_natives_noise_perlin_sample_base_area");
 
-    public static void c2me_natives_noise_perlin_sample_base_area(final MemorySegment permutations,
+    public static void c2me_natives_noise_perlin_sample_base_area(final MemorySegment fusedPermutationTable,
                                                                   final double originX, final double originY, final double originZ,
                                                                   final MemorySegment output,
                                                                   final int sizeX, final int sizeY, final int sizeZ,
@@ -65,7 +65,7 @@ public class Bindings {
                                                                   final MemorySegment shiftZ,
                                                                   final double scaleXz, final double scaleY, final float outputScale) {
         try {
-            MH_c2me_natives_noise_perlin_sample_base_area.invokeExact(permutations, originX, originY, originZ, output, sizeX,
+            MH_c2me_natives_noise_perlin_sample_base_area.invokeExact(fusedPermutationTable, originX, originY, originZ, output, sizeX,
                     sizeY, sizeZ, minBlockX, minBlockY, minBlockZ, stepBlockX, stepBlockY, stepBlockZ, shiftX, shiftY,
                     shiftZ, scaleXz, scaleY, outputScale);
         } catch (Throwable t) {

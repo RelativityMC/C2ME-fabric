@@ -101,6 +101,36 @@ public class NoisePacking {
         return (perm_read >>> shift) & 0xffff;
     }
 
+    /**
+     * Builds the fused perlin table: one entry per index holding both permutation
+     * values and both 5-bit dot codes needed by the scalar kernels.
+     * <p>
+     * table[i] = perm[i] | (perm[(i + 1) & 255] << 8) | (dotCode(perm[i] & 15) << 16) | (dotCode(perm[(i + 1) & 255] & 15) << 24)
+     */
+    public static int[] buildFusedPermutationTable(byte[] data) {
+        Objects.requireNonNull(data);
+        if (data.length != 256) {
+            throw new IllegalArgumentException();
+        }
+        int[] table = new int[256];
+        for (int i = 0; i < 256; i++) {
+            int v0 = data[i] & 0xFF;
+            int v1 = data[(i + 1) & 0xFF] & 0xFF;
+            table[i] = v0 | (v1 << 8)
+                    | (dotCode(v0) << 16)
+                    | (dotCode(v1) << 24);
+        }
+        return table;
+    }
+
+    private static int dotCode(int permValue) {
+        int h = permValue & 15;
+        return (h < 8 ? 1 : 0)
+                | (h < 4 ? 2 : 0)
+                | (h == 12 || h == 14 ? 4 : 0)
+                | ((h & 3) << 3);
+    }
+
     public static int indexPacked256bPermutation(int[] permutations, int index) {
         final int point = index & 0xFF;
         return (permutations[point >>> 2] >> ((index & 3) << 3)) & 0xFF;

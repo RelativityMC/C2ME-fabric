@@ -70,13 +70,12 @@ public class LegacyPerlinNoiseSamplerAccuracy extends AbstractAccuracy {
         LocalRandom random1 = new LocalRandom(random.nextLong());
         this.vanillaSampler = new LegacyPerlinNoiseSampler(random1, fudgedYScale);
         byte[] permutations = (byte[]) ReflectUtils.getField(LatticedNoiseSampler.class, this.vanillaSampler, "permutation");
-        int[] permutationNative = (int[]) NoisePacking.packPermutation256b(permutations);
         this.packed512b = NoisePacking.packPermutation512b(permutations);
         this.originX = (double) ReflectUtils.getField(LatticedNoiseSampler.class, this.vanillaSampler, "originX");
         this.originY = (double) ReflectUtils.getField(LatticedNoiseSampler.class, this.vanillaSampler, "originY");
         this.originZ = (double) ReflectUtils.getField(LatticedNoiseSampler.class, this.vanillaSampler, "originZ");
-        this.nativeSamplerDataRaw = permutationNative;
-        this.nativeSamplerData = MemorySegment.ofArray(permutationNative);
+        this.nativeSamplerDataRaw = NoisePacking.buildFusedPermutationTable(permutations);
+        this.nativeSamplerData = MemorySegment.ofArray(NoisePacking.buildFusedPermutationTable(permutations));
         this.output = SampleBuffer.withCount(sizeX * sizeY * sizeZ);
         this.outputBuffer = MemorySegment.ofArray((float[]) ReflectUtils.getField(SampleBuffer.class, this.output, "elems"));
         this.outputVanilla = SampleBuffer.withCount(sizeX * sizeY * sizeZ);
