@@ -53,6 +53,11 @@ public class ToF32Node implements AstNode {
     }
 
     @Override
+    public ReturnType getReturnType() {
+        return ReturnType.F32;
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
