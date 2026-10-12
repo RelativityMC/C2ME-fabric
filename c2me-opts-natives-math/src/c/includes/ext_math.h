@@ -141,6 +141,10 @@ static inline __attribute__((const)) void *ptr_shift(const void * const ptr, con
     return (void *) (((uint8_t *) ptr) + shift);
 }
 
+static inline __attribute((const, always_inline)) double fmin_fast(double a, double b) {
+    return a > b ? b : a;
+}
+
 static inline __attribute__((const)) float fminf(const float x, const float y) {
     return __builtin_fminf(x, y);
 }
@@ -1494,6 +1498,14 @@ math_end_islands_sample(const uint32_t *restrict const simplex_permutations,
     return f;
 }
 
+static inline __attribute((const, always_inline)) double math_biome_access_collapse(const uint64_t hash) {
+    union {
+        double d;
+        uint64_t i;
+    } u = { .i = 0x3FF0000000000000ULL | ((hash << 18) & 0x000FFC0000000000ULL) };
+    return  (u.d - 1.5) * 0.9;
+}
+
 static inline __attribute__((const)) uint32_t
 math_biome_access_sample(const int64_t theSeed, const int32_t x, const int32_t y, const int32_t z) {
     const int32_t var0 = x - 2;
@@ -1527,26 +1539,38 @@ math_biome_access_sample(const int64_t theSeed, const int32_t x, const int32_t y
         var21 = var21 * (var21 * 6364136223846793005L + 1442695040888963407L) + var15;
         var21 = var21 * (var21 * 6364136223846793005L + 1442695040888963407L) + var16;
         var21 = var21 * (var21 * 6364136223846793005L + 1442695040888963407L) + var17;
-        double var22 = (double) ((var21 >> 24) & 1023) / 1024.0;
-        double var23 = (var22 - 0.5) * 0.9;
+        // double var22 = (double) ((var21 >> 24) & 1023) / 1024.0;
+        // double var23 = (var22 - 0.5) * 0.9;
+        double var23 = math_biome_access_collapse(var21);
         var21 = var21 * (var21 * 6364136223846793005L + 1442695040888963407L) + theSeed;
-        double var24 = (double) ((var21 >> 24) & 1023) / 1024.0;
-        double var25 = (var24 - 0.5) * 0.9;
+        // double var24 = (double) ((var21 >> 24) & 1023) / 1024.0;
+        // double var25 = (var24 - 0.5) * 0.9;
+        double var25 = math_biome_access_collapse(var21);
         var21 = var21 * (var21 * 6364136223846793005L + 1442695040888963407L) + theSeed;
-        double var26 = (double) ((var21 >> 24) & 1023) / 1024.0;
-        double var27 = (var26 - 0.5) * 0.9;
+        // double var26 = (double) ((var21 >> 24) & 1023) / 1024.0;
+        // double var27 = (var26 - 0.5) * 0.9;
+        double var27 = math_biome_access_collapse(var21);
         double var28 = math_square(var20 + var27) + math_square(var19 + var25) + math_square(var18 + var23);
         var28s[var11] = var28;
     }
+    double m04 = fmin_fast(var28s[0], var28s[4]);
+    double m15 = fmin_fast(var28s[1], var28s[5]);
+    double m26 = fmin_fast(var28s[2], var28s[6]);
+    double m37 = fmin_fast(var28s[3], var28s[7]);
+    double m0426 = fmin_fast(m04, m26);
+    double m1537 = fmin_fast(m15, m37);
+    double minimum = fmin_fast(m0426, m1537);
 
-    for (int i = 0; i < 8; ++i) {
-        if (var10 > var28s[i]) {
-            var9 = i;
-            var10 = var28s[i];
-        }
-    }
+    uint8_t bitmap = (uint8_t)(var28s[0] == minimum)
+               | (uint8_t)((var28s[1] == minimum) << 1)
+               | (uint8_t)((var28s[2] == minimum) << 2)
+               | (uint8_t)((var28s[3] == minimum) << 3)
+               | (uint8_t)((var28s[4] == minimum) << 4)
+               | (uint8_t)((var28s[5] == minimum) << 5)
+               | (uint8_t)((var28s[6] == minimum) << 6)
+               | (uint8_t)((var28s[7] == minimum) << 7);
 
-    return var9;
+    return __builtin_ctz(bitmap);
 }
 
 typedef const struct aquifer_data {
