@@ -840,9 +840,9 @@ static interpolation_pos_t df_get_interpolation_pos(global const worldgen_params
     int32_t cellBlockX = math_floorMod(x, genShapeCfg_horizontalCellBlockCount());
     int32_t cellBlockY = math_floorMod(y, genShapeCfg_verticalCellBlockCount());
     int32_t cellBlockZ = math_floorMod(z, genShapeCfg_horizontalCellBlockCount());
-    if (cellRelX < 0 || cellRelY < 0 || cellRelZ < 0 || cellRelX >= params->sizeCellX || cellRelY >= params->sizeCellY || cellRelZ >= params->sizeCellY || cellBlockX < 0 || cellBlockY < 0 || cellBlockZ < 0) {
+    if (cellRelX < 0 || cellRelY < 0 || cellRelZ < 0 || cellRelX >= params->sizeCellX || cellRelY >= params->sizeCellY || cellRelZ >= params->sizeCellZ || cellBlockX < 0 || cellBlockY < 0 || cellBlockZ < 0) {
         #ifdef DEBUG
-        printf("trap: cellRelX < 0 || cellRelY < 0 || cellRelZ < 0 || cellRelX >= params->sizeCellX || cellRelY >= params->sizeCellY || cellRelZ >= params->sizeCellY || cellBlockX < 0 || cellBlockY < 0 || cellBlockZ < 0\n x=%d y=%d z=%d params->sizeCellX=%d params->sizeCellY=%d params->sizeCellZ=%d genShapeCfg_horizontalCellBlockCount()=%d genShapeCfg_verticalCellBlockCount()=%d params->startCellX=%d params->startCellY=%d params->startCellZ=%d\n", x, y, z, params->sizeCellX, params->sizeCellY, params->sizeCellZ, genShapeCfg_horizontalCellBlockCount(), genShapeCfg_verticalCellBlockCount(), params->startCellX, params->startCellY, params->startCellZ);
+        printf("trap: cellRelX < 0 || cellRelY < 0 || cellRelZ < 0 || cellRelX >= params->sizeCellX || cellRelY >= params->sizeCellY || cellRelZ >= params->sizeCellZ || cellBlockX < 0 || cellBlockY < 0 || cellBlockZ < 0\n x=%d y=%d z=%d params->sizeCellX=%d params->sizeCellY=%d params->sizeCellZ=%d genShapeCfg_horizontalCellBlockCount()=%d genShapeCfg_verticalCellBlockCount()=%d params->startCellX=%d params->startCellY=%d params->startCellZ=%d\n", x, y, z, params->sizeCellX, params->sizeCellY, params->sizeCellZ, genShapeCfg_horizontalCellBlockCount(), genShapeCfg_verticalCellBlockCount(), params->startCellX, params->startCellY, params->startCellZ);
         #endif
         __builtin_trap();
         __builtin_unreachable();
