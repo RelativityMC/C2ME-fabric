@@ -40,4 +40,36 @@ public class NegMulNode extends AbstractUnaryNode {
         return new NegMulNode(operand, this.negMul);
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+        NegMulNode that = (NegMulNode) o;
+        return Double.compare(this.negMul, that.negMul) == 0;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + Double.hashCode(this.negMul);
+        return result;
+    }
+
+    @Override
+    public boolean relaxedEquals(AstNode o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.relaxedEquals(o)) return false;
+        NegMulNode that = (NegMulNode) o;
+        return Double.compare(this.negMul, that.negMul) == 0;
+    }
+
+    @Override
+    public int relaxedHashCode() {
+        int result = super.relaxedHashCode();
+        result = 31 * result + Double.hashCode(this.negMul);
+        return result;
+    }
+
 }

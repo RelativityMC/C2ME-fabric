@@ -82,7 +82,7 @@ public class SelectNode implements AstNode {
     public boolean relaxedEquals(AstNode o) {
         if (o == null || getClass() != o.getClass()) return false;
         SelectNode that = (SelectNode) o;
-        if (!this.input.relaxedEquals(that.input) || !Arrays.equals(this.mins, that.mins) || !Arrays.equals(this.maxs, that.maxs)) return false;
+        if (!this.input.relaxedEquals(that.input) || !this.fallback.relaxedEquals(that.fallback) || !Arrays.equals(this.mins, that.mins) || !Arrays.equals(this.maxs, that.maxs)) return false;
         if (this.functions == that.functions)
             return true;
         if (this.functions == null || that.functions == null)
@@ -104,6 +104,7 @@ public class SelectNode implements AstNode {
     public int relaxedHashCode() {
         int result = 1;
         result = 31 * result + input.relaxedHashCode();
+        result = 31 * result + fallback.relaxedHashCode();
         result = 31 * result + Arrays.hashCode(mins);
         result = 31 * result + Arrays.hashCode(maxs);
         for (AstNode function : functions) {
@@ -116,7 +117,7 @@ public class SelectNode implements AstNode {
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         SelectNode that = (SelectNode) o;
-        if (!this.input.equals(that.input) || !Arrays.equals(this.mins, that.mins) || !Arrays.equals(this.maxs, that.maxs)) return false;
+        if (!this.input.equals(that.input) || !this.fallback.equals(that.fallback) || !Arrays.equals(this.mins, that.mins) || !Arrays.equals(this.maxs, that.maxs)) return false;
         if (this.functions == that.functions)
             return true;
         if (this.functions == null || that.functions == null)
@@ -138,6 +139,7 @@ public class SelectNode implements AstNode {
     public int hashCode() {
         int result = 1;
         result = 31 * result + input.hashCode();
+        result = 31 * result + fallback.hashCode();
         result = 31 * result + Arrays.hashCode(mins);
         result = 31 * result + Arrays.hashCode(maxs);
         for (AstNode function : functions) {

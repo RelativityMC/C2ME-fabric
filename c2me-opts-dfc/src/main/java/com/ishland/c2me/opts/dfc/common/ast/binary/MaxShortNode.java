@@ -45,4 +45,36 @@ public class MaxShortNode extends AbstractBinaryNode {
         return false;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+        MaxShortNode that = (MaxShortNode) o;
+        return Double.compare(this.rightMax, that.rightMax) == 0;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + Double.hashCode(this.rightMax);
+        return result;
+    }
+
+    @Override
+    public boolean relaxedEquals(AstNode o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.relaxedEquals(o)) return false;
+        MaxShortNode that = (MaxShortNode) o;
+        return Double.compare(this.rightMax, that.rightMax) == 0;
+    }
+
+    @Override
+    public int relaxedHashCode() {
+        int result = super.relaxedHashCode();
+        result = 31 * result + Double.hashCode(this.rightMax);
+        return result;
+    }
+
 }
