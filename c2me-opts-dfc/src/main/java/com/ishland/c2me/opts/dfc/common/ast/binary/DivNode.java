@@ -37,4 +37,9 @@ public class DivNode extends AbstractBinaryNode {
         return new DivNode(left, right);
     }
 
+    @Override
+    public boolean canSwapOperandsSafely() {
+        return false;
+    }
+
 }

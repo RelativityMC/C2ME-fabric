@@ -33,6 +33,7 @@ import com.ishland.c2me.opts.dfc.common.ast.binary.MulNode;
 import com.ishland.c2me.opts.dfc.common.ast.integration.lithostitched.misc.GenericFastNoiseNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.ConstantNode;
 import com.ishland.c2me.opts.dfc.common.ast.misc.CoordinateNode;
+import com.ishland.c2me.opts.dfc.common.ast.misc.DelegateNode;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.world.gen.densityfunction.DensityFunction;
 
@@ -44,7 +45,7 @@ public class FastNoiseBindings {
             try {
                 Object config = ((RegistryEntry<?>) com.ishland.c2me.base.common.integration.lithostitched.FastNoiseBindings.MH_config.invoke(function)).value();
                 FNLBindings.FNLState state = FNLBindings.tryParseState(config);
-                if (state == null) return null; // soft fallback to DelegateNode if FNLBinding unavailable
+                if (state == null) return new DelegateNode(function); // soft fallback to DelegateNode if FNLBinding unavailable
                 return new GenericFastNoiseNode(
                         new AddNode(new MulNode(CoordinateNode.AXIS_X, new ConstantNode((double) com.ishland.c2me.base.common.integration.lithostitched.FastNoiseBindings.MH_xzScale.invoke(function))), McToAst.toAst((DensityFunction) com.ishland.c2me.base.common.integration.lithostitched.FastNoiseBindings.MH_shiftX.invoke(function))),
                         new AddNode(new MulNode(CoordinateNode.AXIS_Y, new ConstantNode((double) com.ishland.c2me.base.common.integration.lithostitched.FastNoiseBindings.MH_yScale.invoke(function))), McToAst.toAst((DensityFunction) com.ishland.c2me.base.common.integration.lithostitched.FastNoiseBindings.MH_shiftY.invoke(function))),

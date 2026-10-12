@@ -100,12 +100,12 @@ public class MixNodeBytecodeEmitter implements BytecodeEmitter<MixNode> {
             Label lt = new Label();
             Label epilogue = new Label();
 
-            m.load(1, Type.DOUBLE_TYPE);
+            m.load(1, InstructionAdapter.OBJECT_TYPE);
             m.load(idx, Type.INT_TYPE);
             m.aload(Type.DOUBLE_TYPE);
             m.store(inputVar, Type.DOUBLE_TYPE);
 
-            m.load(1, Type.DOUBLE_TYPE);
+            m.load(1, InstructionAdapter.OBJECT_TYPE);
             m.load(idx, Type.INT_TYPE);
 
             {
