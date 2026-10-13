@@ -48,7 +48,7 @@ public interface IFlowableFluid {
     boolean invokeCanFlowDownTo(BlockView world, BlockPos pos, BlockState state, BlockPos fromPos, BlockState fromState);
 
     @Invoker
-    public static boolean invokeCanFillWithFluid(BlockView world, BlockPos pos, BlockState state, Fluid fluid) {
+    public static boolean invokeCanFillWithFluid(BlockView world, BlockPos pos, BlockState state, FluidState fluid) {
         throw new AbstractMethodError();
     }
 

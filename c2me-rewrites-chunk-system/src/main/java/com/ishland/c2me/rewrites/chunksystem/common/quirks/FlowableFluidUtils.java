@@ -73,8 +73,7 @@ public class FlowableFluidUtils {
             if (fluidState3 == null) {
                 return true; // shortcut
             }
-            Fluid fluid = fluidState3.getFluid();
-            if (belowFluidState.canBeReplacedWith(world, belowPos, fluid, Direction.DOWN) && IFlowableFluid.invokeCanFillWithFluid(world, belowPos, belowBlockState, fluid)) {
+            if (belowFluidState.canBeReplacedWith(world, belowPos, fluidState3, Direction.DOWN) && IFlowableFluid.invokeCanFillWithFluid(world, belowPos, belowBlockState, fluidState3)) {
                 return true;
             }
         }
@@ -106,7 +105,7 @@ public class FlowableFluidUtils {
                     if (fluidState2 == null) {
                         return true; // shortcut
                     }
-                    if (IFlowableFluid.invokeCanFillWithFluid(world, offsetPos, offsetBlockState, fluidState2.getFluid())) {
+                    if (IFlowableFluid.invokeCanFillWithFluid(world, offsetPos, offsetBlockState, fluidState2)) {
                         return true; // shortcut
                     }
                 }
@@ -125,7 +124,7 @@ public class FlowableFluidUtils {
             BlockPos blockPos = mutable.set(pos, direction);
             BlockState blockState = world.getBlockState(blockPos);
             FluidState fluidState = blockState.getFluidState();
-            if (fluidState.getFluid().matchesType(receiver) && IFlowableFluid.invokeReceivesFlow(direction, world, pos, state, blockPos, blockState)) {
+            if (fluidState.is(receiver) && IFlowableFluid.invokeReceivesFlow(direction, world, pos, state, blockPos, blockState)) {
                 if (fluidState.isStill()) {
                     j++;
                 }
@@ -148,11 +147,11 @@ public class FlowableFluidUtils {
         BlockPos blockPos2 = mutable.set(pos, Direction.UP);
         BlockState blockState3 = world.getBlockState(blockPos2);
         FluidState fluidState3 = blockState3.getFluidState();
-        if (!fluidState3.isEmpty() && fluidState3.getFluid().matchesType(receiver) && IFlowableFluid.invokeReceivesFlow(Direction.UP, world, pos, state, blockPos2, blockState3)) {
-            return receiver.getFlowing(8, true);
+        if (!fluidState3.isEmpty() && fluidState3.is(receiver) && IFlowableFluid.invokeReceivesFlow(Direction.UP, world, pos, state, blockPos2, blockState3)) {
+            return receiver.getFlowing(8);
         } else {
             int k = i - ((IFlowableFluid) receiver).invokeGetLevelDecreasePerBlock(world);
-            return k <= 0 ? Fluids.EMPTY.getDefaultState() : receiver.getFlowing(k, false);
+            return k <= 0 ? Fluids.EMPTY.getDefaultState() : receiver.getFlowing(k);
         }
     }
 

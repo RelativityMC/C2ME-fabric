@@ -47,7 +47,7 @@ public class MixinDebugHudProfile {
 
     @Inject(method = "setProfileType", at = @At("RETURN"))
     private void injectProfiles(DebugProfileType type, CallbackInfo ci) {
-        this.visibilityMap.put(DebugHudEntries.CHUNK_SOURCE_STATS, DebugHudEntryVisibility.IN_OVERLAY);
+//        this.visibilityMap.put(DebugHudEntries.CHUNK_SOURCE_STATS, DebugHudEntryVisibility.IN_OVERLAY);
     }
 
 }
