@@ -86,6 +86,7 @@ accessible    method    net/minecraft/world/gen/densityfunction/RangeChoiceDensi
 accessible    method    net/minecraft/world/gen/densityfunction/RangeChoiceDensityFunction$VariableSampler <init>          (Lnet/minecraft/world/gen/sampler/Sampler;FFLnet/minecraft/world/gen/sampler/Sampler;Lnet/minecraft/world/gen/sampler/Sampler;)V
 accessible    method    net/minecraft/world/gen/densityfunction/RoundingDensityFunction$ScaledSampler  <init>              (Lnet/minecraft/world/gen/densityfunction/RoundingDensityFunction$Mode;Lnet/minecraft/world/gen/sampler/Sampler;Lnet/minecraft/world/gen/sampler/Sampler;)V
 accessible    method    net/minecraft/world/gen/densityfunction/RoundingDensityFunction$UnitSampler    <init>              (Lnet/minecraft/world/gen/densityfunction/RoundingDensityFunction$Mode;Lnet/minecraft/world/gen/sampler/Sampler;)V
+accessible    method    net/minecraft/util/math/noise/CompositeNoiseSampler                            <init>              ([Lnet/minecraft/util/math/noise/CompositeNoiseSampler$Component;)V
 
 extendable    method    net/minecraft/server/world/ChunkHolder           setCompletedLevel      (I)V
 extendable    method    net/minecraft/world/chunk/AbstractChunkHolder    generate               (Lnet/minecraft/world/chunk/ChunkGenerationStep;Lnet/minecraft/world/ChunkLoadingManager;Lnet/minecraft/util/collection/BoundedRegionArray;)Ljava/util/concurrent/CompletableFuture;
