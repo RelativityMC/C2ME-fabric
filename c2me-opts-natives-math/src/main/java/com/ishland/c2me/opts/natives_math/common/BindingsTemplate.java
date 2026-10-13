@@ -55,7 +55,7 @@ import java.util.stream.IntStream;
 public class BindingsTemplate {
 
     //static inline void
-    //math_noise_perlin_sample_legacy_area(const uint32_t *restrict const permutations,
+    //math_noise_perlin_sample_legacy_area(const uint32_t *restrict const table,
     //                                     const double originX, const double originY, const double originZ,
     //                                     const double yScale, float *restrict const output,
     //                                     const int32_t sizeX, const int32_t sizeY, const int32_t sizeZ,
@@ -67,7 +67,7 @@ public class BindingsTemplate {
 
     public static final MethodHandle c2me_natives_noise_perlin_sample_legacy_area = NativeLoader.linker.downcallHandle(
             FunctionDescriptor.ofVoid(
-                    ValueLayout.ADDRESS,     // const uint32_t *restrict const permutations
+                    ValueLayout.ADDRESS,     // const uint32_t *restrict const table
                     ValueLayout.JAVA_DOUBLE, // const double originX
                     ValueLayout.JAVA_DOUBLE, // const double originY
                     ValueLayout.JAVA_DOUBLE, // const double originZ
@@ -93,7 +93,7 @@ public class BindingsTemplate {
     );
 
     //static inline void
-    //math_noise_perlin_sample_base_area(const uint32_t *restrict const permutations,
+    //math_noise_perlin_sample_base_area(const uint32_t *restrict const table,
     //                                   const double originX, const double originY, const double originZ,
     //                                   float *restrict const output,
     //                                   const int32_t sizeX, const int32_t sizeY, const int32_t sizeZ,
@@ -105,7 +105,7 @@ public class BindingsTemplate {
 
     public static final MethodHandle c2me_natives_noise_perlin_sample_base_area = NativeLoader.linker.downcallHandle(
             FunctionDescriptor.ofVoid(
-                    ValueLayout.ADDRESS,     // const uint32_t *restrict const permutations
+                    ValueLayout.ADDRESS,     // const uint32_t *restrict const table
                     ValueLayout.JAVA_DOUBLE, // const double originX
                     ValueLayout.JAVA_DOUBLE, // const double originY
                     ValueLayout.JAVA_DOUBLE, // const double originZ

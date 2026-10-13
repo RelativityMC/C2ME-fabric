@@ -42,7 +42,7 @@ import org.spongepowered.asm.mixin.Shadow;
 
 import java.lang.foreign.MemorySegment;
 
-@Mixin(PerlinNoiseSampler.class)
+@Mixin(value = PerlinNoiseSampler.class, priority = 1100)
 @Implements({@Interface(iface = NoiseSampler.class, prefix = "c2me$i$")})
 public abstract class MixinPerlinNoiseSampler extends LatticedNoiseSampler implements LatticedNoiseSamplerExtension {
 
@@ -74,7 +74,7 @@ public abstract class MixinPerlinNoiseSampler extends LatticedNoiseSampler imple
         }
 
         Bindings.c2me_natives_noise_perlin_sample_base_area(
-                this.c2me$getPackedPermutationsMemorySegment(),
+                this.c2me$getFusedPermutationTableForNative(),
                 this.originX,
                 this.originY,
                 this.originZ,
