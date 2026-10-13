@@ -28,8 +28,6 @@ import java.lang.foreign.MemorySegment;
 
 public interface LatticedNoiseSamplerExtension {
 
-    int[] c2me$getPackedPermutations();
-
-    MemorySegment c2me$getPackedPermutationsMemorySegment();
+    MemorySegment c2me$getFusedPermutationTableForNative();
 
 }

@@ -44,7 +44,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import java.lang.foreign.MemorySegment;
 
 @SuppressWarnings("deprecation")
-@Mixin(LegacyPerlinNoiseSampler.class)
+@Mixin(value = LegacyPerlinNoiseSampler.class, priority = 1100)
 @Implements({@Interface(iface = NoiseSampler.class, prefix = "c2me$i$")})
 public abstract class MixinLegacyPerlinNoiseSampler extends PerlinNoiseSampler implements LatticedNoiseSamplerExtension {
 
@@ -77,7 +77,7 @@ public abstract class MixinLegacyPerlinNoiseSampler extends PerlinNoiseSampler i
         }
 
         Bindings.c2me_natives_noise_perlin_sample_legacy_area(
-                this.c2me$getPackedPermutationsMemorySegment(),
+                this.c2me$getFusedPermutationTableForNative(),
                 this.originX,
                 this.originY,
                 this.originZ,

@@ -24,14 +24,13 @@
 
 package natives;
 
-import com.ishland.c2me.base.common.util.MemoryUtil;
 import com.ishland.c2me.opts.natives_math.common.BindingsTemplate;
+import com.ishland.c2me.base.common.util.NoisePacking;
+import natives.support.OptimizedPerlinNoise;
 import natives.support.ReflectUtils;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.noise.LatticedNoiseSampler;
 import net.minecraft.util.math.noise.PerlinNoiseSampler;
 import net.minecraft.util.math.noise.SamplingRegion;
-import net.minecraft.util.math.noise.SimplexNoiseSampler;
 import net.minecraft.util.math.random.LocalRandom;
 import net.minecraft.world.gen.sampler.SampleBuffer;
 import org.openjdk.jmh.annotations.Benchmark;
@@ -45,7 +44,6 @@ import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.infra.Blackhole;
 
-import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
@@ -64,11 +62,11 @@ public class PerlinNoiseSamplerBenchmark extends Base_x86_64 {
     private static final double xzScale = 0.25;
     private static final double yScale = 1.125;
     private static final float outputScale = 0.125f;
-    private static final int sizeX = 4;
-    private static final int sizeY = 4;
-    private static final int sizeZ = 1;
+    private static final int sizeX = 5;
+    private static final int sizeY = 49;
+    private static final int sizeZ = 5;
     private static final int stepX = 4;
-    private static final int stepY = 4;
+    private static final int stepY = 8;
     private static final int stepZ = 4;
 
     private final SamplingRegion[] regions = new SamplingRegion[invocations];
@@ -76,7 +74,10 @@ public class PerlinNoiseSamplerBenchmark extends Base_x86_64 {
     private double originX;
     private double originY;
     private double originZ;
+    private int[] packed512b;
+    private int[] nativeSamplerDataRaw;
     private MemorySegment nativeSamplerData;
+    private int[] permutations;
     private SampleBuffer output;
     private MemorySegment outputBuffer;
 
@@ -98,11 +99,14 @@ public class PerlinNoiseSamplerBenchmark extends Base_x86_64 {
         }
         LocalRandom random1 = new LocalRandom(random.nextLong());
         this.vanillaSampler = new PerlinNoiseSampler(random1);
-        int[] permutation = (int[]) MemoryUtil.packByte2int((byte[]) ReflectUtils.getField(LatticedNoiseSampler.class, this.vanillaSampler, "permutation"));
+        byte[] permutations = (byte[]) ReflectUtils.getField(LatticedNoiseSampler.class, this.vanillaSampler, "permutation");
+        this.permutations = NoisePacking.packPermutation256b(permutations);
+        this.packed512b = NoisePacking.packPermutation512b(permutations);
         this.originX = (double) ReflectUtils.getField(LatticedNoiseSampler.class, this.vanillaSampler, "originX");
         this.originY = (double) ReflectUtils.getField(LatticedNoiseSampler.class, this.vanillaSampler, "originY");
         this.originZ = (double) ReflectUtils.getField(LatticedNoiseSampler.class, this.vanillaSampler, "originZ");
-        this.nativeSamplerData = MemorySegment.ofArray(permutation);
+        this.nativeSamplerDataRaw = NoisePacking.buildFusedPermutationTable(permutations);
+        this.nativeSamplerData = MemorySegment.ofArray(NoisePacking.buildFusedPermutationTable(permutations));
         this.output = SampleBuffer.withCount(sizeX * sizeY * sizeZ);
         this.outputBuffer = MemorySegment.ofArray((float[]) ReflectUtils.getField(SampleBuffer.class, this.output, "elems"));
         VarHandle.fullFence();
@@ -150,4 +154,14 @@ public class PerlinNoiseSamplerBenchmark extends Base_x86_64 {
             bh.consume(this.output);
         }
     }
+
+    @Benchmark
+    public void optimizedJava(Blackhole bh) {
+        this.output.fill(0.0f);
+        for (int i = 0; i < invocations; i++) {
+            OptimizedPerlinNoise.fillBase(this.packed512b, this.originX, this.originY, this.originZ, this.output, this.regions[i], xzScale, yScale, outputScale);
+            bh.consume(this.output);
+        }
+    }
+
 }

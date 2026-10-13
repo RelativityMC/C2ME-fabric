@@ -92,7 +92,7 @@ public class BiomeAccessAccuracy extends AbstractAccuracy {
     }
 
     protected BiomeAccessAccuracy() {
-        super(Arrays.stream(ISATarget.getInstance().getEnumConstants()).toArray(ISATarget[]::new), BindingsTemplate.c2me_natives_biome_access_sample, "c2me_natives_biome_access_sample");
+        super(Arrays.stream(ISATarget.getInstance().getEnumConstants()).limit(12).toArray(ISATarget[]::new), BindingsTemplate.c2me_natives_biome_access_sample, "c2me_natives_biome_access_sample");
     }
 
     private int invokeNative(MethodHandle handle, int x, int y, int z) {

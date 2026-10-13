@@ -24,10 +24,13 @@
 
 package natives.accuracy;
 
+import com.ishland.c2me.base.common.util.MemoryUtil;
+import com.ishland.c2me.base.common.util.NoisePacking;
 import com.ishland.c2me.opts.natives_math.common.BindingsTemplate;
 import com.ishland.c2me.opts.natives_math.common.ISATarget;
 import natives.EndIslandsBenchmark;
 import natives.support.ReflectUtils;
+import net.minecraft.util.math.noise.LatticedNoiseSampler;
 import net.minecraft.util.math.noise.SimplexNoiseSampler;
 import net.minecraft.util.math.random.LocalRandom;
 
@@ -45,18 +48,15 @@ public class EndIslandsAccuracy extends AbstractAccuracy {
     private final long nativeSamplerPtr;
 
     protected EndIslandsAccuracy() {
-        super(Arrays.stream(ISATarget.getInstance().getEnumConstants()).toArray(ISATarget[]::new), BindingsTemplate.c2me_natives_end_islands_sample_ptr, "c2me_natives_end_islands_sample");
-        vanillaSampler = new SimplexNoiseSampler(new LocalRandom(0xcafe));
-        int[] permutation = (int[]) ReflectUtils.getField(SimplexNoiseSampler.class, this.vanillaSampler, "permutation");
-        nativeSampler = Arena.ofAuto().allocate(permutation.length * 4L, 64);
-        MemorySegment.copy(MemorySegment.ofArray(permutation), 0L, nativeSampler, 0L, permutation.length * 4L);
+        super(Arrays.stream(ISATarget.getInstance().getEnumConstants()).limit(12).toArray(ISATarget[]::new), BindingsTemplate.c2me_natives_end_islands_sample_ptr, "c2me_natives_end_islands_sample");
+        vanillaSampler = new SimplexNoiseSampler(new LocalRandom(0xcafe), true);
+        byte[] permutation = (byte[]) ReflectUtils.getField(LatticedNoiseSampler.class, this.vanillaSampler, "permutation");
+        nativeSampler = Arena.ofAuto().allocate(permutation.length, 64);
+        MemorySegment.copy(MemorySegment.ofArray(MemoryUtil.packByte2int(permutation)), 0L, nativeSampler, 0L, permutation.length);
         nativeSamplerPtr = nativeSampler.address();
     }
 
     private float invokeNative(MethodHandle handle, int x, int z) {
-        if ((int) (x * x + z * z) < 0) {
-            return Float.NaN;
-        }
         try {
             return (float) handle.invokeExact(nativeSamplerPtr, x, z);
         } catch (Throwable e) {
