@@ -158,6 +158,25 @@ public abstract class MixinLegacyPerlinNoiseSampler extends PerlinNoiseSampler i
      * @reason optimize
      */
     @Overwrite
+    public float sample(final double x, final double y, final double z) {
+        double xx = wrapCoord(x) + this.originX;
+        double yx = wrapCoord(y) + this.originY;
+        double zx = wrapCoord(z) + this.originZ;
+        double floorX = Math.floor(xx);
+        double floorY = Math.floor(yx);
+        double floorZ = Math.floor(zx);
+        float relativeX = (float)(xx - floorX);
+        double relativeY = yx - floorY;
+        float relativeZ = (float)(zx - floorZ);
+        float fudgedRelativeY = (float)(relativeY - this.adjustY(y, relativeY));
+        return this.sample((int) floorX, (int) floorY, (int) floorZ, relativeX, fudgedRelativeY, relativeZ, (float)relativeY);
+    }
+
+    /**
+     * @author ishland
+     * @reason optimize
+     */
+    @Overwrite
     public void fill(final SampleBuffer buf, final SamplingRegion region, final double scaleXz, final double scaleY, final float outputScale) {
         final short[] permutations = this.c2me$initPackedPermutationsForJava();
 

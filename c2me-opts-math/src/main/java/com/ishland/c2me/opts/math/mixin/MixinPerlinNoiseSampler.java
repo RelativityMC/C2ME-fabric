@@ -98,61 +98,76 @@ public abstract class MixinPerlinNoiseSampler extends LatticedNoiseSampler imple
      * @reason optimize
      */
     @Overwrite
+    public float sample(final double x, final double y, final double z) {
+        double xx = wrapCoord(x) + this.originX;
+        double yx = wrapCoord(y) + this.originY;
+        double zx = wrapCoord(z) + this.originZ;
+        double floorX = Math.floor(xx);
+        double floorY = Math.floor(yx);
+        double floorZ = Math.floor(zx);
+        float relativeX = (float) (xx - floorX);
+        float relativeY = (float) (yx - floorY);
+        float relativeZ = (float) (zx - floorZ);
+        return this.sample((int) floorX, (int) floorY, (int) floorZ, relativeX, relativeY, relativeZ, relativeY);
+    }
+
+    /**
+     * @author ishland
+     * @reason optimize
+     */
+    @Overwrite
     protected float sample(
             final int px0, final int py0, final int pz0, final float fx0, final float fy0, final float fz0, final float fadeLocalY
     ) {
-        final short[] permutations = this.c2me$initPackedPermutationsForJava();
+        // using 256b perm is more stable in memory bound cases
+
+        final byte[] permutations = this.permutation;
 
         if (permutations.length != 256) throw new AssertionError("permutations.length != 256");
 
+        final int hash0__ = permutations[px0 & 0xff];
+        final int hash1__ = permutations[(px0 + 1) & 0xff];
+        final int hash00_ = permutations[(hash0__ + py0) & 0xff];
+        final int hash01_ = permutations[(hash0__ + py0 + 1) & 0xff];
+        final int hash10_ = permutations[(hash1__ + py0) & 0xff];
+        final int hash11_ = permutations[(hash1__ + py0 + 1) & 0xff];
         final float fx1 = fx0 - 1.0f;
         final float fy1 = fy0 - 1.0f;
         final float fz1 = fz0 - 1.0f;
-
-        final int hashr__ = permutations[px0 & 0xff];
-        final int hash0__ = hashr__ & 0xff;
-        final int hash1__ = (hashr__ >>> 8) & 0xff;
-        final int hash0r_ = permutations[(hash0__ + py0) & 0xff];
-        final int hash1r_ = permutations[(hash1__ + py0) & 0xff];
-        final int hash00_ = hash0r_ & 0xff;
-        final int hash01_ = (hash0r_ >>> 8) & 0xff;
-        final int hash10_ = hash1r_ & 0xff;
-        final int hash11_ = (hash1r_ >>> 8) & 0xff;
-        final int hash00r = permutations[(hash00_ + pz0) & 0xff];
-        final int hash10r = permutations[(hash10_ + pz0) & 0xff];
-        final int hash01r = permutations[(hash01_ + pz0) & 0xff];
-        final int hash11r = permutations[(hash11_ + pz0) & 0xff];
-        final int hash000 = hash00r & 0xf;
-        final int hash100 = hash10r & 0xf;
-        final int hash010 = hash01r & 0xf;
-        final int hash110 = hash11r & 0xf;
-        final int hash001 = (hash00r >>> 8) & 0xf;
-        final int hash101 = (hash10r >>> 8) & 0xf;
-        final int hash011 = (hash01r >>> 8) & 0xf;
-        final int hash111 = (hash11r >>> 8) & 0xf;
-
-        final float f000 = NoisePacking.FLAT_SIMPLEX_GRAD_F32[(hash000 << 2) | 0] * fx0 + NoisePacking.FLAT_SIMPLEX_GRAD_F32[(hash000 << 2) | 1] * fy0 + NoisePacking.FLAT_SIMPLEX_GRAD_F32[(hash000 << 2) | 2] * fz0;
-        final float f100 = NoisePacking.FLAT_SIMPLEX_GRAD_F32[(hash100 << 2) | 0] * fx1 + NoisePacking.FLAT_SIMPLEX_GRAD_F32[(hash100 << 2) | 1] * fy0 + NoisePacking.FLAT_SIMPLEX_GRAD_F32[(hash100 << 2) | 2] * fz0;
-        final float f010 = NoisePacking.FLAT_SIMPLEX_GRAD_F32[(hash010 << 2) | 0] * fx0 + NoisePacking.FLAT_SIMPLEX_GRAD_F32[(hash010 << 2) | 1] * fy1 + NoisePacking.FLAT_SIMPLEX_GRAD_F32[(hash010 << 2) | 2] * fz0;
-        final float f110 = NoisePacking.FLAT_SIMPLEX_GRAD_F32[(hash110 << 2) | 0] * fx1 + NoisePacking.FLAT_SIMPLEX_GRAD_F32[(hash110 << 2) | 1] * fy1 + NoisePacking.FLAT_SIMPLEX_GRAD_F32[(hash110 << 2) | 2] * fz0;
-        final float f001 = NoisePacking.FLAT_SIMPLEX_GRAD_F32[(hash001 << 2) | 0] * fx0 + NoisePacking.FLAT_SIMPLEX_GRAD_F32[(hash001 << 2) | 1] * fy0 + NoisePacking.FLAT_SIMPLEX_GRAD_F32[(hash001 << 2) | 2] * fz1;
-        final float f101 = NoisePacking.FLAT_SIMPLEX_GRAD_F32[(hash101 << 2) | 0] * fx1 + NoisePacking.FLAT_SIMPLEX_GRAD_F32[(hash101 << 2) | 1] * fy0 + NoisePacking.FLAT_SIMPLEX_GRAD_F32[(hash101 << 2) | 2] * fz1;
-        final float f011 = NoisePacking.FLAT_SIMPLEX_GRAD_F32[(hash011 << 2) | 0] * fx0 + NoisePacking.FLAT_SIMPLEX_GRAD_F32[(hash011 << 2) | 1] * fy1 + NoisePacking.FLAT_SIMPLEX_GRAD_F32[(hash011 << 2) | 2] * fz1;
-        final float f111 = NoisePacking.FLAT_SIMPLEX_GRAD_F32[(hash111 << 2) | 0] * fx1 + NoisePacking.FLAT_SIMPLEX_GRAD_F32[(hash111 << 2) | 1] * fy1 + NoisePacking.FLAT_SIMPLEX_GRAD_F32[(hash111 << 2) | 2] * fz1;
+        final int hash000 = permutations[(hash00_ + pz0) & 0xff] & 0xf;
+        final float f000 = NoisePacking.FLAT_SIMPLEX_GRAD_F32[(hash000 << 2) + 0] * fx0 + NoisePacking.FLAT_SIMPLEX_GRAD_F32[(hash000 << 2) + 1] * fy0 + NoisePacking.FLAT_SIMPLEX_GRAD_F32[(hash000 << 2) + 2] * fz0;
+        final int hash001 = permutations[(hash00_ + pz0 + 1) & 0xff] & 0xf;
+        final float f001 = NoisePacking.FLAT_SIMPLEX_GRAD_F32[(hash001 << 2) + 0] * fx0 + NoisePacking.FLAT_SIMPLEX_GRAD_F32[(hash001 << 2) + 1] * fy0 + NoisePacking.FLAT_SIMPLEX_GRAD_F32[(hash001 << 2) + 2] * fz1;
+        final int hash010 = permutations[(hash01_ + pz0) & 0xff] & 0xf;
+        final float f010 = NoisePacking.FLAT_SIMPLEX_GRAD_F32[(hash010 << 2) + 0] * fx0 + NoisePacking.FLAT_SIMPLEX_GRAD_F32[(hash010 << 2) + 1] * fy1 + NoisePacking.FLAT_SIMPLEX_GRAD_F32[(hash010 << 2) + 2] * fz0;
+        final int hash011 = permutations[(hash01_ + pz0 + 1) & 0xff] & 0xf;
+        final float f011 = NoisePacking.FLAT_SIMPLEX_GRAD_F32[(hash011 << 2) + 0] * fx0 + NoisePacking.FLAT_SIMPLEX_GRAD_F32[(hash011 << 2) + 1] * fy1 + NoisePacking.FLAT_SIMPLEX_GRAD_F32[(hash011 << 2) + 2] * fz1;
+        final int hash100 = permutations[(hash10_ + pz0) & 0xff] & 0xf;
+        final float f100 = NoisePacking.FLAT_SIMPLEX_GRAD_F32[(hash100 << 2) + 0] * fx1 + NoisePacking.FLAT_SIMPLEX_GRAD_F32[(hash100 << 2) + 1] * fy0 + NoisePacking.FLAT_SIMPLEX_GRAD_F32[(hash100 << 2) + 2] * fz0;
+        final int hash101 = permutations[(hash10_ + pz0 + 1) & 0xff] & 0xf;
+        final float f101 = NoisePacking.FLAT_SIMPLEX_GRAD_F32[(hash101 << 2) + 0] * fx1 + NoisePacking.FLAT_SIMPLEX_GRAD_F32[(hash101 << 2) + 1] * fy0 + NoisePacking.FLAT_SIMPLEX_GRAD_F32[(hash101 << 2) + 2] * fz1;
+        final int hash110 = permutations[(hash11_ + pz0) & 0xff] & 0xf;
+        final float f110 = NoisePacking.FLAT_SIMPLEX_GRAD_F32[(hash110 << 2) + 0] * fx1 + NoisePacking.FLAT_SIMPLEX_GRAD_F32[(hash110 << 2) + 1] * fy1 + NoisePacking.FLAT_SIMPLEX_GRAD_F32[(hash110 << 2) + 2] * fz0;
+        final int hash111 = permutations[(hash11_ + pz0 + 1) & 0xff] & 0xf;
+        final float f111 = NoisePacking.FLAT_SIMPLEX_GRAD_F32[(hash111 << 2) + 0] * fx1 + NoisePacking.FLAT_SIMPLEX_GRAD_F32[(hash111 << 2) + 1] * fy1 + NoisePacking.FLAT_SIMPLEX_GRAD_F32[(hash111 << 2) + 2] * fz1;
 
         final float dx = MathHelper.perlinFade(fx0);
         final float dy = MathHelper.perlinFade(fadeLocalY);
         final float dz = MathHelper.perlinFade(fz0);
 
-        float res = MathHelper.lerp3(dx, dy, dz,
-                f000, f100, f010, f110,
-                f001, f101, f011, f111);
+        float lerpx00 = MathHelper.lerp(dx, f000, f100);
+        float lerpx10 = MathHelper.lerp(dx, f010, f110);
+        float lerpx01 = MathHelper.lerp(dx, f001, f101);
+        float lerpx11 = MathHelper.lerp(dx, f011, f111);
+        float lerpxx0 = MathHelper.lerp(dy, lerpx00, lerpx10);
+        float lerpxx1 = MathHelper.lerp(dy, lerpx01, lerpx11);
+        float lerpxxx = MathHelper.lerp(dz, lerpxx0, lerpxx1);
 
-//        if (res != this.c2me$sampleVanillaSingle(px0, py0, pz0, fx0, fy0, fz0, fadeLocalY)) {
+//        if (lerpxxx != this.c2me$sampleVanillaSingle(px0, py0, pz0, fx0, fy0, fz0, fadeLocalY)) {
 //            throw new AssertionError();
 //        }
 
-        return res;
+        return lerpxxx;
     }
 
 //    public void c2me$fillVanilla(final SampleBuffer buf, final SamplingRegion region, final double scaleXz, final double scaleY, final float outputScale) {

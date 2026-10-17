@@ -394,7 +394,7 @@ jmhJar {
 }
 
 jmh {
-    includes = ['natives.PerlinNoiseSamplerBenchmark.optimizedJava'] // include pattern (regular expression) for benchmarks to be executed
+    includes = ['nonnative.PerlinNoiseSamplerJavaBenchmark.*'] // include pattern (regular expression) for benchmarks to be executed
 //    includes = ['natives.EndIslandsBenchmark'] // include pattern (regular expression) for benchmarks to be executed
 //    excludes = ['some regular expression'] // exclude pattern (regular expression) for benchmarks to be executed
     iterations = 5 // Number of measurement iterations to do.
