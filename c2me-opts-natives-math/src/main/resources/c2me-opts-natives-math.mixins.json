@@ -6,9 +6,13 @@
   "mixins": [
     "MixinBiomeAccess",
     "MixinCompositeNoiseSamplerBuilder",
+    "MixinCompositeNoiseSamplerMultiLegacyPerlin",
+    "MixinCompositeNoiseSamplerMultiPerlin",
     "MixinEndOuterIslandsDensityFunctionSampler",
     "MixinLatticedNoiseSampler",
     "MixinLegacyPerlinNoiseSampler",
+    "MixinNoiseDensityFunctionXyzShiftedSampler",
+    "MixinNoiseDensityFunctionXzShiftedSampler",
     "MixinPerlinNoiseSampler",
     "MixinSampleBuffer"
   ]

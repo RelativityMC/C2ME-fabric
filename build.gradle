@@ -394,8 +394,8 @@ jmhJar {
 }
 
 jmh {
-//    includes = ['natives.PerlinNoiseSamplerBenchmark.(optimizedJava|vanilla)'] // include pattern (regular expression) for benchmarks to be executed
-    includes = ['natives.EndIslandsBenchmark'] // include pattern (regular expression) for benchmarks to be executed
+    includes = ['natives.PerlinNoiseSamplerBenchmark.optimizedJava'] // include pattern (regular expression) for benchmarks to be executed
+//    includes = ['natives.EndIslandsBenchmark'] // include pattern (regular expression) for benchmarks to be executed
 //    excludes = ['some regular expression'] // exclude pattern (regular expression) for benchmarks to be executed
     iterations = 5 // Number of measurement iterations to do.
     benchmarkMode = ['avgt'] // Benchmark mode. Available modes are: [Throughput/thrpt, AverageTime/avgt, SampleTime/sample, SingleShotTime/ss, All/all]
@@ -411,7 +411,7 @@ jmh {
     resultsFile = project.file("${project.buildDir}/reports/jmh/results.txt") // results file
 //    operationsPerInvocation = 10 // Operations per invocation.
 //    benchmarkParameters =  [:] // Benchmark parameters.
-    profilers = ['perf'] // Use profilers to collect additional data. Supported profilers: [cl, comp, gc, stack, perf, perfnorm, perfasm, xperf, xperfasm, hs_cl, hs_comp, hs_gc, hs_rt, hs_thr, async]
+    profilers = ['perf', 'perfasm'] // Use profilers to collect additional data. Supported profilers: [cl, comp, gc, stack, perf, perfnorm, perfasm, xperf, xperfasm, hs_cl, hs_comp, hs_gc, hs_rt, hs_thr, async]
     timeOnIteration = '2s' // Time to spend at each measurement iteration.
     resultFormat = 'CSV' // Result format type (one of CSV, JSON, NONE, SCSV, TEXT)
 //    synchronizeIterations = true // Synchronize iterations?

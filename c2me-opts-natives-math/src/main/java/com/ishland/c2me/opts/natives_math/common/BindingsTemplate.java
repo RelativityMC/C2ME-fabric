@@ -61,8 +61,6 @@ public class BindingsTemplate {
     //                                     const int32_t sizeX, const int32_t sizeY, const int32_t sizeZ,
     //                                     const int32_t minBlockX, const int32_t minBlockY, const int32_t minBlockZ,
     //                                     const int32_t stepBlockX, const int32_t stepBlockY, const int32_t stepBlockZ,
-    //                                     const double *restrict const shiftX, const double *restrict const shiftY,
-    //                                     const double *restrict const shiftZ,
     //                                     const double scaleXz, const double scaleY, const float outputScale)
 
     public static final MethodHandle c2me_natives_noise_perlin_sample_legacy_area = NativeLoader.linker.downcallHandle(
@@ -82,9 +80,6 @@ public class BindingsTemplate {
                     ValueLayout.JAVA_INT,    // const int32_t stepBlockX
                     ValueLayout.JAVA_INT,    // const int32_t stepBlockY
                     ValueLayout.JAVA_INT,    // const int32_t stepBlockZ
-                    ValueLayout.ADDRESS,     // const double *restrict const shiftX
-                    ValueLayout.ADDRESS,     // const double *restrict const shiftY
-                    ValueLayout.ADDRESS,     // const double *restrict const shiftZ
                     ValueLayout.JAVA_DOUBLE, // const double scaleXz
                     ValueLayout.JAVA_DOUBLE, // const double scaleY
                     ValueLayout.JAVA_FLOAT   // const float outputScale
@@ -99,8 +94,6 @@ public class BindingsTemplate {
     //                                   const int32_t sizeX, const int32_t sizeY, const int32_t sizeZ,
     //                                   const int32_t minBlockX, const int32_t minBlockY, const int32_t minBlockZ,
     //                                   const int32_t stepBlockX, const int32_t stepBlockY, const int32_t stepBlockZ,
-    //                                   const double *restrict const shiftX, const double *restrict const shiftY,
-    //                                   const double *restrict const shiftZ,
     //                                   const double scaleXz, const double scaleY, const float outputScale)
 
     public static final MethodHandle c2me_natives_noise_perlin_sample_base_area = NativeLoader.linker.downcallHandle(
@@ -119,9 +112,85 @@ public class BindingsTemplate {
                     ValueLayout.JAVA_INT,    // const int32_t stepBlockX
                     ValueLayout.JAVA_INT,    // const int32_t stepBlockY
                     ValueLayout.JAVA_INT,    // const int32_t stepBlockZ
-                    ValueLayout.ADDRESS,     // const double *restrict const shiftX
-                    ValueLayout.ADDRESS,     // const double *restrict const shiftY
-                    ValueLayout.ADDRESS,     // const double *restrict const shiftZ
+                    ValueLayout.JAVA_DOUBLE, // const double scaleXz
+                    ValueLayout.JAVA_DOUBLE, // const double scaleY
+                    ValueLayout.JAVA_FLOAT   // const float outputScale
+            ),
+            Linker.Option.critical(true)
+    );
+
+    //static inline __attribute__((always_inline)) void
+    //math_noise_perlin_sample_shifted_legacy_area(
+    //    const uint32_t *restrict table, double originX, double originY,
+    //    double originZ, double yScale, float *restrict output, int32_t sizeX,
+    //    int32_t sizeY, int32_t sizeZ, int32_t minBlockX, int32_t minBlockY,
+    //    int32_t minBlockZ, int32_t stepBlockX, int32_t stepBlockY,
+    //    int32_t stepBlockZ,
+    //    const double preScaleXz, const double preScaleY,
+    //    const float *restrict shiftX, const float *restrict shiftY,
+    //    const float *restrict shiftZ,
+    //    double scaleXz, double scaleY, float outputScale)
+
+    public static final MethodHandle c2me_natives_noise_perlin_sample_shifted_legacy_area = NativeLoader.linker.downcallHandle(
+            FunctionDescriptor.ofVoid(
+                    ValueLayout.ADDRESS,     // const uint32_t *restrict const table
+                    ValueLayout.JAVA_DOUBLE, // const double originX
+                    ValueLayout.JAVA_DOUBLE, // const double originY
+                    ValueLayout.JAVA_DOUBLE, // const double originZ
+                    ValueLayout.JAVA_DOUBLE, // const double yScale
+                    ValueLayout.ADDRESS,     // float *restrict const output
+                    ValueLayout.JAVA_INT,    // const int32_t sizeX
+                    ValueLayout.JAVA_INT,    // const int32_t sizeY
+                    ValueLayout.JAVA_INT,    // const int32_t sizeZ
+                    ValueLayout.JAVA_INT,    // const int32_t minBlockX
+                    ValueLayout.JAVA_INT,    // const int32_t minBlockY
+                    ValueLayout.JAVA_INT,    // const int32_t minBlockZ
+                    ValueLayout.JAVA_INT,    // const int32_t stepBlockX
+                    ValueLayout.JAVA_INT,    // const int32_t stepBlockY
+                    ValueLayout.JAVA_INT,    // const int32_t stepBlockZ
+                    ValueLayout.JAVA_DOUBLE, // const double preScaleXz
+                    ValueLayout.JAVA_DOUBLE, // const double preScaleY
+                    ValueLayout.ADDRESS,     // const float *restrict shiftX
+                    ValueLayout.ADDRESS,     // const float *restrict shiftY
+                    ValueLayout.ADDRESS,     // const float *restrict shiftZ
+                    ValueLayout.JAVA_DOUBLE, // const double scaleXz
+                    ValueLayout.JAVA_DOUBLE, // const double scaleY
+                    ValueLayout.JAVA_FLOAT   // const float outputScale
+            ),
+            Linker.Option.critical(true)
+    );
+
+    //static __attribute__((always_inline)) void math_noise_perlin_sample_shifted_base_area(
+    //    const uint32_t *restrict table, double originX, double originY,
+    //    double originZ, float *restrict output, int32_t sizeX, int32_t sizeY,
+    //    int32_t sizeZ, int32_t minBlockX, int32_t minBlockY, int32_t minBlockZ,
+    //    int32_t stepBlockX, int32_t stepBlockY, int32_t stepBlockZ,
+    //    const double preScaleXz, const double preScaleY,
+    //    const float *restrict shiftX, const float *restrict shiftY,
+    //    const float *restrict shiftZ,
+    //    double scaleXz, double scaleY, float outputScale)
+
+    public static final MethodHandle c2me_natives_noise_perlin_sample_shifted_base_area = NativeLoader.linker.downcallHandle(
+            FunctionDescriptor.ofVoid(
+                    ValueLayout.ADDRESS,     // const uint32_t *restrict const table
+                    ValueLayout.JAVA_DOUBLE, // const double originX
+                    ValueLayout.JAVA_DOUBLE, // const double originY
+                    ValueLayout.JAVA_DOUBLE, // const double originZ
+                    ValueLayout.ADDRESS,     // float *restrict const output
+                    ValueLayout.JAVA_INT,    // const int32_t sizeX
+                    ValueLayout.JAVA_INT,    // const int32_t sizeY
+                    ValueLayout.JAVA_INT,    // const int32_t sizeZ
+                    ValueLayout.JAVA_INT,    // const int32_t minBlockX
+                    ValueLayout.JAVA_INT,    // const int32_t minBlockY
+                    ValueLayout.JAVA_INT,    // const int32_t minBlockZ
+                    ValueLayout.JAVA_INT,    // const int32_t stepBlockX
+                    ValueLayout.JAVA_INT,    // const int32_t stepBlockY
+                    ValueLayout.JAVA_INT,    // const int32_t stepBlockZ
+                    ValueLayout.JAVA_DOUBLE, // const double preScaleXz
+                    ValueLayout.JAVA_DOUBLE, // const double preScaleY
+                    ValueLayout.ADDRESS,     // const float *restrict shiftX
+                    ValueLayout.ADDRESS,     // const float *restrict shiftY
+                    ValueLayout.ADDRESS,     // const float *restrict shiftZ
                     ValueLayout.JAVA_DOUBLE, // const double scaleXz
                     ValueLayout.JAVA_DOUBLE, // const double scaleY
                     ValueLayout.JAVA_FLOAT   // const float outputScale
