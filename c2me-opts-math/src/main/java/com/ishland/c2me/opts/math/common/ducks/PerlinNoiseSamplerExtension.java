@@ -29,6 +29,6 @@ import org.spongepowered.asm.mixin.Unique;
 public interface PerlinNoiseSamplerExtension {
 
     @Unique
-    int[] c2me$initPackedPermutationsForJava();
+    short[] c2me$initPackedPermutationsForJava();
 
 }

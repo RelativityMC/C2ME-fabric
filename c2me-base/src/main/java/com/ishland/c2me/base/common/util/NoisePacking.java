@@ -81,6 +81,30 @@ public class NoisePacking {
         return ints;
     }
 
+    public static short[] packPermutation512bShort(byte[] data) {
+        Objects.requireNonNull(data);
+        if (data.length != 256) {
+            throw new IllegalArgumentException();
+        }
+        short[] shorts = new short[256];
+        for (int i = 0; i < 256; ++i) {
+            shorts[i] = (short)((data[i] & 0xff) | ((data[(i + 1) & 0xff] & 0xff) << 8));
+        }
+        return shorts;
+    }
+
+    public static char[] packPermutation512bChar(byte[] data) {
+        Objects.requireNonNull(data);
+        if (data.length != 256) {
+            throw new IllegalArgumentException();
+        }
+        char[] shorts = new char[256];
+        for (int i = 0; i < 256; ++i) {
+            shorts[i] = (char)((data[i] & 0xff) | ((data[(i + 1) & 0xff] & 0xff) << 8));
+        }
+        return shorts;
+    }
+
     public static int[] packPermutation256b(byte[] data) {
         Objects.requireNonNull(data);
         if (data.length != 256) {
@@ -99,6 +123,10 @@ public class NoisePacking {
         final int perm_read = permutations[k];
         final int shift = (point & 1) << 4;
         return (perm_read >>> shift) & 0xffff;
+    }
+
+    public static int indexPacked512bPermutation(short[] permutations, int index) {
+        return permutations[index & 0xff];
     }
 
     /**
@@ -137,15 +165,15 @@ public class NoisePacking {
     }
 
     public static int gradX(int packed) {
-        return (byte) packed;               // low byte
+        return (byte) packed;
     }
 
     public static int gradY(int packed) {
-        return (byte) (packed >>> 8);       // second byte
+        return (byte) (packed >>> 8);
     }
 
     public static int gradZ(int packed) {
-        return (byte) (packed >>> 16);      // third byte
+        return (byte) (packed >>> 16);
     }
 
 }

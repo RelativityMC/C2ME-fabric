@@ -75,6 +75,8 @@ public class PerlinNoiseSamplerBenchmark extends Base_x86_64 {
     private double originY;
     private double originZ;
     private int[] packed512b;
+    private short[] packed512bShort;
+    private char[] packed512bChar;
     private int[] nativeSamplerDataRaw;
     private MemorySegment nativeSamplerData;
     private int[] permutations;
@@ -102,6 +104,8 @@ public class PerlinNoiseSamplerBenchmark extends Base_x86_64 {
         byte[] permutations = (byte[]) ReflectUtils.getField(LatticedNoiseSampler.class, this.vanillaSampler, "permutation");
         this.permutations = NoisePacking.packPermutation256b(permutations);
         this.packed512b = NoisePacking.packPermutation512b(permutations);
+        this.packed512bShort = NoisePacking.packPermutation512bShort(permutations);
+        this.packed512bChar = NoisePacking.packPermutation512bChar(permutations);
         this.originX = (double) ReflectUtils.getField(LatticedNoiseSampler.class, this.vanillaSampler, "originX");
         this.originY = (double) ReflectUtils.getField(LatticedNoiseSampler.class, this.vanillaSampler, "originY");
         this.originZ = (double) ReflectUtils.getField(LatticedNoiseSampler.class, this.vanillaSampler, "originZ");
@@ -159,9 +163,18 @@ public class PerlinNoiseSamplerBenchmark extends Base_x86_64 {
     public void optimizedJava(Blackhole bh) {
         this.output.fill(0.0f);
         for (int i = 0; i < invocations; i++) {
-            OptimizedPerlinNoise.fillBase(this.packed512b, this.originX, this.originY, this.originZ, this.output, this.regions[i], xzScale, yScale, outputScale);
+            OptimizedPerlinNoise.fillBase(this.packed512bShort, this.originX, this.originY, this.originZ, this.output, this.regions[i], xzScale, yScale, outputScale);
             bh.consume(this.output);
         }
     }
+
+//    @Benchmark
+//    public void optimizedJava2(Blackhole bh) {
+//        this.output.fill(0.0f);
+//        for (int i = 0; i < invocations; i++) {
+//            OptimizedPerlinNoise2.fillBase(this.packed512bShort, this.originX, this.originY, this.originZ, this.output, this.regions[i], xzScale, yScale, outputScale);
+//            bh.consume(this.output);
+//        }
+//    }
 
 }

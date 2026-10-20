@@ -27,6 +27,7 @@ package com.ishland.c2me.opts.natives_math.mixin;
 import com.ishland.c2me.opts.natives_math.common.Bindings;
 import com.ishland.c2me.opts.natives_math.common.ducks.LatticedNoiseSamplerExtension;
 import com.ishland.c2me.opts.natives_math.common.ducks.SampleBufferExtension;
+import com.ishland.c2me.opts.natives_math.common.ducks.ShiftedBatchingCapableNoise;
 import com.ishland.flowsched.util.Assertions;
 import net.minecraft.util.math.noise.LegacyPerlinNoiseSampler;
 import net.minecraft.util.math.noise.NoiseSampler;
@@ -46,7 +47,7 @@ import java.lang.foreign.MemorySegment;
 @SuppressWarnings("deprecation")
 @Mixin(value = LegacyPerlinNoiseSampler.class, priority = 1100)
 @Implements({@Interface(iface = NoiseSampler.class, prefix = "c2me$i$")})
-public abstract class MixinLegacyPerlinNoiseSampler extends PerlinNoiseSampler implements LatticedNoiseSamplerExtension {
+public abstract class MixinLegacyPerlinNoiseSampler extends PerlinNoiseSampler implements LatticedNoiseSamplerExtension, ShiftedBatchingCapableNoise {
 
     @Shadow
     @Final
@@ -92,13 +93,53 @@ public abstract class MixinLegacyPerlinNoiseSampler extends PerlinNoiseSampler i
                 region.stepBlockX(),
                 region.stepBlockY(),
                 region.stepBlockZ(),
-                MemorySegment.NULL,
-                MemorySegment.NULL,
-                MemorySegment.NULL,
                 scaleXz,
                 scaleY,
                 outputScale
         );
+    }
+
+
+    @Override
+    public void c2me$fillShifted(SampleBuffer buf, SamplingRegion region, double preScaleXz, double preScaleY, SampleBuffer shiftX, SampleBuffer shiftY, SampleBuffer shiftZ, double scaleXz, double scaleY, float outputScale) {
+        int volume = region.getVolume();
+        Assertions.assertTrue(buf.count() == volume, "Invalid buf for region");
+        Assertions.assertTrue(shiftX.count() == volume, "Invalid buf for shiftX");
+        if (shiftY != null) {
+            Assertions.assertTrue(shiftY.count() == volume, "Invalid buf for shiftY");
+        }
+        Assertions.assertTrue(shiftZ.count() == volume, "Invalid buf for shiftZ");
+
+        if (buf.count() < 1) {
+            return;
+        }
+
+        Bindings.c2me_natives_noise_perlin_sample_shifted_legacy_area(
+                this.c2me$getFusedPermutationTableForNative(),
+                this.originX,
+                this.originY,
+                this.originZ,
+                this.offsetScale,
+                ((SampleBufferExtension) buf).c2me$getHeapBackedMemorySegment(),
+                region.sizeX(),
+                region.sizeY(),
+                region.sizeZ(),
+                region.minBlockX(),
+                region.minBlockY(),
+                region.minBlockZ(),
+                region.stepBlockX(),
+                region.stepBlockY(),
+                region.stepBlockZ(),
+                preScaleXz,
+                preScaleY,
+                ((SampleBufferExtension) shiftX).c2me$getHeapBackedMemorySegment(),
+                shiftY != null ? ((SampleBufferExtension) shiftY).c2me$getHeapBackedMemorySegment() : MemorySegment.NULL,
+                ((SampleBufferExtension) shiftZ).c2me$getHeapBackedMemorySegment(),
+                scaleXz,
+                scaleY,
+                outputScale
+        );
+
     }
 
 }

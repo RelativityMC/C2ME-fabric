@@ -39,6 +39,7 @@
     "access.IPlayerEntity",
     "access.IRegionBasedStorage",
     "access.IRegionFile",
+    "access.ISampleBuffer",
     "access.ISerializingRegionBasedStorage",
     "access.IServerChunkManager",
     "access.IServerEntityManager",

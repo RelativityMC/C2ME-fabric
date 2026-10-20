@@ -46,9 +46,9 @@ public class LegacyPerlinNoiseSamplerAccuracy extends AbstractAccuracy {
     private static final double yScale = 0.125e-1;
     private static final double fudgedYScale = 1e-2;
     private static final float outputScale = 0.125f;
-    private static final int sizeX = 5;
-    private static final int sizeY = 5;
-    private static final int sizeZ = 5;
+    private static final int sizeX = 65;
+    private static final int sizeY = 129;
+    private static final int sizeZ = 65;
     private static final int stepX = 4;
     private static final int stepY = 4;
     private static final int stepZ = 4;
@@ -59,6 +59,8 @@ public class LegacyPerlinNoiseSamplerAccuracy extends AbstractAccuracy {
     private final double originY;
     private final double originZ;
     private final int[] packed512b;
+    private final short[] packed512bShort;
+    private final char[] packed512bChar;
     private final int[] nativeSamplerDataRaw;
     private final MemorySegment nativeSamplerData;
     private final SampleBuffer output;
@@ -71,6 +73,8 @@ public class LegacyPerlinNoiseSamplerAccuracy extends AbstractAccuracy {
         this.vanillaSampler = new LegacyPerlinNoiseSampler(random1, fudgedYScale);
         byte[] permutations = (byte[]) ReflectUtils.getField(LatticedNoiseSampler.class, this.vanillaSampler, "permutation");
         this.packed512b = NoisePacking.packPermutation512b(permutations);
+        this.packed512bShort = NoisePacking.packPermutation512bShort(permutations);
+        this.packed512bChar = NoisePacking.packPermutation512bChar(permutations);
         this.originX = (double) ReflectUtils.getField(LatticedNoiseSampler.class, this.vanillaSampler, "originX");
         this.originY = (double) ReflectUtils.getField(LatticedNoiseSampler.class, this.vanillaSampler, "originY");
         this.originZ = (double) ReflectUtils.getField(LatticedNoiseSampler.class, this.vanillaSampler, "originZ");
@@ -90,7 +94,6 @@ public class LegacyPerlinNoiseSamplerAccuracy extends AbstractAccuracy {
                     region.sizeX(), region.sizeY(), region.sizeZ(),
                     region.minBlockX(), region.minBlockY(), region.minBlockZ(),
                     region.stepBlockX(), region.stepBlockY(), region.stepBlockZ(),
-                    MemorySegment.NULL, MemorySegment.NULL, MemorySegment.NULL,
                     xzScale, yScale, outputScale
             );
         } catch (Throwable e) {
@@ -103,7 +106,7 @@ public class LegacyPerlinNoiseSamplerAccuracy extends AbstractAccuracy {
     }
 
     private void invokeOptimized(SamplingRegion region) {
-        OptimizedPerlinNoise.fillLegacy(packed512b, fudgedYScale, originX, originY, originZ, outputVanilla, region, xzScale, yScale, outputScale);
+        OptimizedPerlinNoise.fillLegacy(packed512bShort, fudgedYScale, originX, originY, originZ, outputVanilla, region, xzScale, yScale, outputScale);
     }
 
     private void loopBody() {
