@@ -87,7 +87,7 @@ public class FlowableFluidUtils {
 
     private static boolean canSpreadToSidesNormally(WorldView world, BlockPos pos, BlockState blockState, FluidState fluidState) {
         int nextFluidLevel = fluidState.getLevel() - ((IFlowableFluid) fluidState.getFluid()).invokeGetLevelDecreasePerBlock(world);
-        if (fluidState.get(FlowableFluid.FALLING)) {
+        if (fluidState.isFalling()) {
             nextFluidLevel = 7;
         }
         if (nextFluidLevel > 0) {

@@ -54,14 +54,6 @@ public class MixinNbtCompound {
         return new NbtCompound(map);
     }
 
-    /**
-     * copy using fastutil map
-     */
-    @ModifyArg(method = "<init>()V", at = @At(value = "INVOKE", target = "Lnet/minecraft/nbt/NbtCompound;<init>(Ljava/util/Map;)V"), index = 0)
-    private static Map<String, NbtElement> modifyMap(Map<String, NbtElement> map) {
-        return new Object2ObjectOpenHashMap<>();
-    }
-
 //    @Redirect(method = "<init>()V", at = @At(value = "INVOKE", target = "Lcom/google/common/collect/Maps;newHashMap()Ljava/util/HashMap;", remap = false))
 //    private static <K, V> HashMap<K, V> redirectNewHashMap() {
 //        return null; // avoid double map creation

@@ -38,17 +38,4 @@ import java.util.Map;
 
 @Mixin(targets = "net.minecraft.nbt.NbtCompound$1")
 public abstract class MixinNbtCompound1 implements NbtType<NbtCompound> {
-
-    @SuppressWarnings("UnnecessaryQualifiedMemberReference")
-    @ModifyVariable(method = "readCompound(Ljava/io/DataInput;Lnet/minecraft/nbt/NbtSizeTracker;)Lnet/minecraft/nbt/NbtCompound;", at = @At(value = "INVOKE_ASSIGN", target = "Lcom/google/common/collect/Maps;newHashMap()Ljava/util/HashMap;", remap = false))
-    private static Map<String, NbtElement> modifyMap(Map<String, NbtElement> map) {
-        return new Object2ObjectOpenHashMap<>();
-    }
-
-    @SuppressWarnings("UnnecessaryQualifiedMemberReference")
-    @Redirect(method = "readCompound(Ljava/io/DataInput;Lnet/minecraft/nbt/NbtSizeTracker;)Lnet/minecraft/nbt/NbtCompound;", at = @At(value = "INVOKE", target = "Lcom/google/common/collect/Maps;newHashMap()Ljava/util/HashMap;", remap = false))
-    private static  <K, V> HashMap<K, V> redirectNewHashMap() {
-        return null; // avoid double map creation
-    }
-
 }

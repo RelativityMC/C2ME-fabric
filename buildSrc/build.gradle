@@ -18,7 +18,8 @@ dependencies {
     // https://mvnrepository.com/artifact/com.google.code.gson/gson
     implementation 'com.google.code.gson:gson:2.13.2'
 
-    implementation 'net.fabricmc.fabric-loom-remap:net.fabricmc.fabric-loom-remap.gradle.plugin:1.17-SNAPSHOT'
+    implementation 'net.fabricmc.fabric-loom-remap:net.fabricmc.fabric-loom-remap.gradle.plugin:1.19-SNAPSHOT'
+    implementation 'net.fabricmc:fabric-loom:1.19-SNAPSHOT'
 }
 
 gradlePlugin {

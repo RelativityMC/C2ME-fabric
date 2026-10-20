@@ -41,7 +41,6 @@ accessible    class    net/minecraft/world/gen/densityfunction/GradientDensityFu
 accessible    class    net/minecraft/world/gen/densityfunction/GradientDensityFunction$ClampToEdgeSampler
 accessible    class    net/minecraft/world/gen/densityfunction/GradientDensityFunction$MirroredRepeatSampler
 accessible    class    net/minecraft/world/gen/densityfunction/GradientDensityFunction$RepeatSampler
-accessible    class    net/minecraft/world/gen/densityfunction/InterpolatedDensityFunction$Sampler
 accessible    class    net/minecraft/world/gen/densityfunction/IntervalSelectDensityFunction$MultiThresholdSampler
 accessible    class    net/minecraft/world/gen/densityfunction/IntervalSelectDensityFunction$SingleThresholdSampler
 accessible    class    net/minecraft/world/gen/densityfunction/PowerDensityFunction$SamplerCV
@@ -76,7 +75,6 @@ accessible    method    net/minecraft/world/gen/densityfunction/FindTopSurfaceDe
 accessible    method    net/minecraft/world/gen/densityfunction/GradientDensityFunction$ClampToEdgeSampler <init>          (Lnet/minecraft/util/math/Direction$Axis;IIIFF)V
 accessible    method    net/minecraft/world/gen/densityfunction/GradientDensityFunction$MirroredRepeatSampler <init>       (Lnet/minecraft/util/math/Direction$Axis;IIFF)V
 accessible    method    net/minecraft/world/gen/densityfunction/GradientDensityFunction$RepeatSampler  <init>              (Lnet/minecraft/util/math/Direction$Axis;IIFF)V
-accessible    method    net/minecraft/world/gen/densityfunction/InterpolatedDensityFunction$Sampler    <init>              (Lnet/minecraft/world/gen/sampler/Sampler;IIFF)V
 accessible    method    net/minecraft/world/gen/densityfunction/IntervalSelectDensityFunction$MultiThresholdSampler <init> (Lnet/minecraft/world/gen/sampler/Sampler;[F[Lnet/minecraft/world/gen/sampler/Sampler;)V
 accessible    method    net/minecraft/world/gen/densityfunction/IntervalSelectDensityFunction$SingleThresholdSampler <init> (Lnet/minecraft/world/gen/sampler/Sampler;FLnet/minecraft/world/gen/sampler/Sampler;Lnet/minecraft/world/gen/sampler/Sampler;)V
 accessible    method    net/minecraft/world/gen/densityfunction/PowerDensityFunction$SamplerCV         <init>              (Lnet/minecraft/world/gen/sampler/Sampler;D)V

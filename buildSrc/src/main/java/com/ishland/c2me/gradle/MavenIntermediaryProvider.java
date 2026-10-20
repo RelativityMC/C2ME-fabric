@@ -1,7 +1,7 @@
 package com.ishland.c2me.gradle;
 
 import net.fabricmc.loom.configuration.providers.mappings.IntermediaryMappingsProvider;
-import net.fabricmc.loom.configuration.providers.mappings.MappingConfiguration;
+import net.fabricmc.loom.configuration.providers.mappings.tiny.TinyJarInfo;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ModuleDependency;
@@ -42,7 +42,7 @@ public abstract class MavenIntermediaryProvider extends IntermediaryMappingsProv
         );
         Files.deleteIfExists(tinyMappings);
 
-        MappingConfiguration.extractMappings(intermediaryJarPath, tinyMappings);
+        TinyJarInfo.extractMappings(intermediaryJarPath, tinyMappings);
     }
 
 }
