@@ -26,9 +26,11 @@ package com.ishland.c2me.rewrites.chunksystem.common.fapi;
 
 import com.ishland.c2me.base.mixin.access.fapi.IArrayBackedEvent;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerChunkEvents;
+import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ChunkLevelType;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.world.chunk.WorldChunk;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -85,6 +87,10 @@ public class LifecycleEventInvoker {
         } catch (Throwable t) {
             LOGGER.error("Failed to invoke chunk level type change event (world={}, pos={}, oldLevelType={}, newLevelType={})", world, chunk.getPos(), oldLevelType, newLevelType, t);
         }
+    }
+
+    public static void invokeChunkTicketLevelUpdated(ServerWorld world, long pos, int oldTicketLevel, int newTicketLevel, @Nullable ChunkHolder chunkHolder) {
+        // stub for neoforge
     }
 
 }

@@ -28,6 +28,7 @@ import com.ishland.c2me.base.common.scheduler.IVanillaChunkManager;
 import com.ishland.c2me.base.common.scheduler.SchedulingManager;
 import com.ishland.c2me.base.mixin.access.IThreadedAnvilChunkStorage;
 import com.ishland.c2me.base.mixin.access.IVersionedChunkStorage;
+import com.ishland.c2me.rewrites.chunksystem.common.fapi.LifecycleEventInvoker;
 import com.ishland.c2me.rewrites.chunksystem.common.structs.ChunkSystemExecutors;
 import com.ishland.flowsched.scheduler.ExceptionHandlingAction;
 import com.ishland.flowsched.scheduler.ItemHolder;
@@ -142,8 +143,11 @@ public class TheChunkSystem extends StatusAdvancingScheduler<ChunkPos, ChunkStat
 
     public ChunkHolder vanillaIf$setLevel(long pos, int level) {
         assert !Thread.holdsLock(this.managedTickets);
+        final int oldLevel;
+        final ChunkHolder ret;
+
         synchronized (this.managedTickets) {
-            final int oldLevel = this.managedTickets.put(pos, level);
+            oldLevel = this.managedTickets.put(pos, level);
             NewChunkStatus oldStatus = c2me$getDeferredStatusFromVanillaLevel(oldLevel);
             NewChunkStatus newStatus = c2me$getDeferredStatusFromVanillaLevel(level);
             final ChunkPos key = ChunkPos.fromLong(pos);
@@ -169,7 +173,7 @@ public class TheChunkSystem extends StatusAdvancingScheduler<ChunkPos, ChunkStat
                 if (oldStatus != this.getUnloadedStatus()) {
                     this.removeTicket(key, TicketTypeExtension.VANILLA_LEVEL, key, oldStatus);
                 }
-                return shouldReturnVanillaHolder ? vanillaHolder : null;
+                ret = shouldReturnVanillaHolder ? vanillaHolder : null;
             } else {
                 final ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> holder = this.getHolder(key);
                 NewChunkHolderVanillaInterface vanillaHolder;
@@ -183,11 +187,16 @@ public class TheChunkSystem extends StatusAdvancingScheduler<ChunkPos, ChunkStat
                     vanillaHolder.updateDeferredStatus(NewChunkStatus.fromVanillaLevel(level));
                 }
                 if (newStatus != this.getUnloadedStatus() && vanillaHolder != null) {
-                    return vanillaHolder;
+                    ret = vanillaHolder;
+                } else {
+                    ret = null;
                 }
-                return null;
             }
         }
+
+        LifecycleEventInvoker.invokeChunkTicketLevelUpdated(((IThreadedAnvilChunkStorage) this.tacs).getWorld(), pos, oldLevel, level, ret);
+
+        return ret;
     }
 
     private static NewChunkStatus c2me$getDeferredStatusFromVanillaLevel(int level) {
