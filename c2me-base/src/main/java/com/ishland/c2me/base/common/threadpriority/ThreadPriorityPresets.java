@@ -31,7 +31,7 @@ import com.ishland.c2me.base.common.threadpriority.bindings.WindowsKernel32Extra
 import com.sun.jna.platform.win32.Kernel32;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import oshi.SystemInfo;
+import oshi.util.PlatformEnum;
 
 public enum ThreadPriorityPresets {
 
@@ -52,7 +52,7 @@ public enum ThreadPriorityPresets {
         @Override
         public void applyToCurrentThread() {
             Thread.currentThread().setPriority(Thread.NORM_PRIORITY - 1);
-            switch (SystemInfo.getCurrentPlatform()) {
+            switch (PlatformEnum.getCurrentPlatform()) {
                 case LINUX, ANDROID -> {
                     LinuxLibc.setCurrentThreadScheduler(LinuxLibc.SCHED_BATCH);
                 }
@@ -74,7 +74,7 @@ public enum ThreadPriorityPresets {
         @Override
         public void applyToCurrentThread() {
             Thread.currentThread().setPriority(Thread.NORM_PRIORITY - 2);
-            switch (SystemInfo.getCurrentPlatform()) {
+            switch (PlatformEnum.getCurrentPlatform()) {
                 case LINUX, ANDROID -> {
                     LinuxLibc.setCurrentThreadScheduler(LinuxLibc.SCHED_BATCH);
                     LinuxLibc.setCurrentThreadPriority(3);
@@ -98,7 +98,7 @@ public enum ThreadPriorityPresets {
         @Override
         public void applyToCurrentThread() {
             Thread.currentThread().setPriority(Thread.NORM_PRIORITY - 3);
-            switch (SystemInfo.getCurrentPlatform()) {
+            switch (PlatformEnum.getCurrentPlatform()) {
                 case LINUX, ANDROID -> {
                     LinuxLibc.setCurrentThreadScheduler(LinuxLibc.SCHED_BATCH);
                     LinuxLibc.setCurrentThreadPriority(8);
@@ -122,7 +122,7 @@ public enum ThreadPriorityPresets {
         @Override
         public void applyToCurrentThread() {
             Thread.currentThread().setPriority(Thread.NORM_PRIORITY - 4);
-            switch (SystemInfo.getCurrentPlatform()) {
+            switch (PlatformEnum.getCurrentPlatform()) {
                 case LINUX, ANDROID -> {
                     LinuxLibc.setCurrentThreadScheduler(LinuxLibc.SCHED_BATCH);
                     LinuxLibc.setCurrentThreadPriority(16);

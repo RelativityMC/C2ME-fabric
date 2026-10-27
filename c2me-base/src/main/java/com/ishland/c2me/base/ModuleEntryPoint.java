@@ -33,8 +33,9 @@ import net.objecthunter.exp4j.ExpressionBuilder;
 import net.objecthunter.exp4j.function.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import oshi.PlatformEnum;
-import oshi.SystemInfo;
+import oshi.spi.SystemInfoFactory;
+import oshi.spi.SystemInfoProvider;
+import oshi.util.PlatformEnum;
 
 public class ModuleEntryPoint {
 
@@ -131,10 +132,10 @@ public class ModuleEntryPoint {
     private static int tryFetchCoreCount0() {
         int logicalProcessorsCount = Runtime.getRuntime().availableProcessors();
         try {
-            SystemInfo systemInfo = new SystemInfo();
+            SystemInfoProvider systemInfo = SystemInfoFactory.create();
             LOGGER.info("CPU name: {}", systemInfo.getHardware().getProcessor().getProcessorIdentifier().getName());
             int coreCount = systemInfo.getHardware().getProcessor().getPhysicalProcessorCount();
-            PlatformEnum currentPlatform = SystemInfo.getCurrentPlatform();
+            PlatformEnum currentPlatform = PlatformEnum.getCurrentPlatform();
             switch (currentPlatform) {
                 case MACOS, LINUX, WINDOWS, ANDROID -> {
                 }
