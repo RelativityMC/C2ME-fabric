@@ -44,6 +44,9 @@ public final class TheMixinPlugin extends ModuleMixinPlugin {
         if (mixinClassName.startsWith("com.ishland.c2me.base.mixin.exp_warning."))
             return C2MEConstants.ENABLE_EXPERIMENTAL_WARNINGS;
 
+        if (mixinClassName.startsWith("com.ishland.c2me.base.mixin.client.priority."))
+            return ModuleEntryPoint.applyBoostingForRenderThread;
+
         return true;
     }
 }

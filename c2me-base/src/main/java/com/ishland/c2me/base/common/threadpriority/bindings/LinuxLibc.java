@@ -202,7 +202,7 @@ public class LinuxLibc {
         LinuxSchedAttr schedAttr = getCurrentLinuxSchedAttr(sys_sched_getattr);
         if (schedAttr == null) return;
         NativeLong ret;
-        schedAttr.sched_flags |= SCHED_FLAG_UTIL_CLAMP_MAX;
+        schedAttr.sched_flags |= SCHED_FLAG_UTIL_CLAMP_MAX | SCHED_FLAG_UTIL_CLAMP_MIN;
         schedAttr.sched_util_min = 0;
         schedAttr.sched_util_max = efficiencyCoreCapacity;
         ret = oshi.jna.platform.linux.LinuxLibc.INSTANCE.syscall(new NativeLong(sys_sched_setattr), 0, schedAttr, 0);
@@ -215,7 +215,6 @@ public class LinuxLibc {
 
     public static void unsetCurrentThreadUclamp() {
         if (SCHED_ATTR_FAILS.getOpaque()) return;
-        if (efficiencyCoreCapacity <= 0) return;
         int sys_sched_getattr = SYS_sched_getattr();
         int sys_sched_setattr = SYS_sched_setattr();
         if (sys_sched_getattr == -1 || sys_sched_setattr == -1) return;
@@ -223,12 +222,32 @@ public class LinuxLibc {
         LinuxSchedAttr schedAttr = getCurrentLinuxSchedAttr(sys_sched_getattr);
         if (schedAttr == null) return;
         NativeLong ret;
-        schedAttr.sched_flags |= SCHED_FLAG_UTIL_CLAMP_MAX;
+        schedAttr.sched_flags |= SCHED_FLAG_UTIL_CLAMP_MAX | SCHED_FLAG_UTIL_CLAMP_MIN;
         schedAttr.sched_util_min = -1;
         schedAttr.sched_util_max = -1;
         ret = oshi.jna.platform.linux.LinuxLibc.INSTANCE.syscall(new NativeLong(sys_sched_setattr), 0, schedAttr, 0);
         if (ret.intValue() != 0) {
             ThreadPriorityPresets.LOGGER.warn("unsetCurrentThreadUclamp: syscall sys_sched_setattr(0, schedAttr, 0) failed: {}", stringifyLastError());
+            return;
+        }
+    }
+
+    public static void setCurrentThreadPreferMaximumPerformance() {
+        if (SCHED_ATTR_FAILS.getOpaque()) return;
+        int sys_sched_getattr = SYS_sched_getattr();
+        int sys_sched_setattr = SYS_sched_setattr();
+        if (sys_sched_getattr == -1 || sys_sched_setattr == -1) return;
+
+        LinuxSchedAttr schedAttr = getCurrentLinuxSchedAttr(sys_sched_getattr);
+        if (schedAttr == null) return;
+        NativeLong ret;
+        schedAttr.sched_flags |= SCHED_FLAG_UTIL_CLAMP_MAX | SCHED_FLAG_UTIL_CLAMP_MIN;
+        schedAttr.sched_util_min = 1024;
+        schedAttr.sched_util_max = 1024;
+        ret = oshi.jna.platform.linux.LinuxLibc.INSTANCE.syscall(new NativeLong(sys_sched_setattr), 0, schedAttr, 0);
+        if (ret.intValue() != 0) {
+            ThreadPriorityPresets.LOGGER.warn("setCurrentThreadPreferMaximumPerformance: syscall sys_sched_setattr(0, schedAttr, 0) failed: {}", stringifyLastError());
+            SCHED_ATTR_FAILS.set(true);
             return;
         }
     }

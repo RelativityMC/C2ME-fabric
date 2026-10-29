@@ -85,15 +85,18 @@ public class ModuleEntryPoint {
                       MacOS: priority=28
                       FreeBSD: priority=6
                     - LOWER
-                      Linux: SCHED_BATCH, nice=5, prefers efficiency cores
+                      Linux: SCHED_BATCH, nice=5, prefers efficiency cores if available
                       Windows: Lowest priority, enable power throttling
                       MacOS: priority=23
                       FreeBSD: priority=3
                     - LOWEST
-                      Linux: SCHED_BATCH, nice=12, prefers efficiency cores
+                      Linux: SCHED_BATCH, nice=12, prefers efficiency cores if available
                       Windows: Idle priority, enable power throttling
                       MacOS: priority=15
                       FreeBSD: priority=0
+                    
+                    "prefer efficiency cores" on Linux requires Linux 5.3+ on x86, x86_64, arm, arm64
+                    "enable power throttling" on Windows requires Windows 8 or newer, ideally Windows 11 or newer
                     
                     Defaults to LOWER on clients and BELOW_NORMAL for dedicated servers
                     
@@ -104,6 +107,17 @@ public class ModuleEntryPoint {
                     FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT ? ThreadPriorityPresets.LOWER : ThreadPriorityPresets.BELOW_NORMAL,
                     ThreadPriorityPresets.LOWER
             );
+
+    public static final boolean applyBoostingForRenderThread = new ConfigSystem.ConfigAccessor()
+            .key("applyBoostingForRenderThread")
+            .comment("""
+                    Whether to attempt to apply boosting for the render thread on the client
+                    
+                    Currently works on:
+                    - Linux 5.3+ on x86, x86_64, arm, arm64
+                    - Windows 8 or newer
+                    """)
+            .getBoolean(true, false);
 
     public static final boolean disableLoggingShutdownHook = new ConfigSystem.ConfigAccessor()
             .key("fixes.disableLoggingShutdownHook")
