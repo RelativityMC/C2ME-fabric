@@ -77,11 +77,10 @@ public enum ThreadPriorityPresets {
             switch (SystemInfo.getCurrentPlatform()) {
                 case LINUX, ANDROID -> {
                     LinuxLibc.setCurrentThreadScheduler(LinuxLibc.SCHED_BATCH);
-                    LinuxLibc.setCurrentThreadPriority(3);
+                    LinuxLibc.setCurrentThreadPriority(2);
                 }
                 case WINDOWS -> {
-                    WindowsKernel32Extras.setCurrentThreadPriority(Kernel32.THREAD_PRIORITY_BELOW_NORMAL);
-                    WindowsKernel32Extras.enableCurrentThreadPowerThrottling();
+                    WindowsKernel32Extras.setCurrentThreadPriority(Kernel32.THREAD_PRIORITY_LOWEST);
                 }
                 case MACOS -> {
                     MacOsPthread.setCurrentThreadPriority(28);
@@ -101,7 +100,8 @@ public enum ThreadPriorityPresets {
             switch (SystemInfo.getCurrentPlatform()) {
                 case LINUX, ANDROID -> {
                     LinuxLibc.setCurrentThreadScheduler(LinuxLibc.SCHED_BATCH);
-                    LinuxLibc.setCurrentThreadPriority(8);
+                    LinuxLibc.setCurrentThreadPriority(5);
+                    LinuxLibc.setCurrentThreadPreferEfficiencyCores();
                 }
                 case WINDOWS -> {
                     WindowsKernel32Extras.setCurrentThreadPriority(Kernel32.THREAD_PRIORITY_LOWEST);
@@ -125,7 +125,8 @@ public enum ThreadPriorityPresets {
             switch (SystemInfo.getCurrentPlatform()) {
                 case LINUX, ANDROID -> {
                     LinuxLibc.setCurrentThreadScheduler(LinuxLibc.SCHED_BATCH);
-                    LinuxLibc.setCurrentThreadPriority(16);
+                    LinuxLibc.setCurrentThreadPriority(12);
+                    LinuxLibc.setCurrentThreadPreferEfficiencyCores();
                 }
                 case WINDOWS -> {
                     WindowsKernel32Extras.setCurrentThreadPriority(Kernel32.THREAD_PRIORITY_IDLE);
