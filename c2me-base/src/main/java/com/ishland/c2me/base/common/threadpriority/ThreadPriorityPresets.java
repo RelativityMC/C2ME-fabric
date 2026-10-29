@@ -101,6 +101,7 @@ public enum ThreadPriorityPresets {
                 case LINUX, ANDROID -> {
                     LinuxLibc.setCurrentThreadScheduler(LinuxLibc.SCHED_BATCH);
                     LinuxLibc.setCurrentThreadPriority(5);
+                    LinuxLibc.setCurrentThreadPreferEfficiencyCores();
                 }
                 case WINDOWS -> {
                     WindowsKernel32Extras.setCurrentThreadPriority(Kernel32.THREAD_PRIORITY_LOWEST);
@@ -125,6 +126,7 @@ public enum ThreadPriorityPresets {
                 case LINUX, ANDROID -> {
                     LinuxLibc.setCurrentThreadScheduler(LinuxLibc.SCHED_BATCH);
                     LinuxLibc.setCurrentThreadPriority(12);
+                    LinuxLibc.setCurrentThreadPreferEfficiencyCores();
                 }
                 case WINDOWS -> {
                     WindowsKernel32Extras.setCurrentThreadPriority(Kernel32.THREAD_PRIORITY_IDLE);

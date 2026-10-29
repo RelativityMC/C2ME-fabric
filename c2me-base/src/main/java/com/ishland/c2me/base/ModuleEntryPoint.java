@@ -85,12 +85,12 @@ public class ModuleEntryPoint {
                       MacOS: priority=28
                       FreeBSD: priority=6
                     - LOWER
-                      Linux: SCHED_BATCH, nice=5
+                      Linux: SCHED_BATCH, nice=5, prefers efficiency cores
                       Windows: Lowest priority, enable power throttling
                       MacOS: priority=23
                       FreeBSD: priority=3
                     - LOWEST
-                      Linux: SCHED_BATCH, nice=12
+                      Linux: SCHED_BATCH, nice=12, prefers efficiency cores
                       Windows: Idle priority, enable power throttling
                       MacOS: priority=15
                       FreeBSD: priority=0
