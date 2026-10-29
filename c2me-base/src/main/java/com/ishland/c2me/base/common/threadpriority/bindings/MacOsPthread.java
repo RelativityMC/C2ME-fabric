@@ -30,11 +30,7 @@ import com.sun.jna.Native;
 import com.sun.jna.Structure;
 import com.sun.jna.ptr.IntByReference;
 
-public interface MacOsPthread extends Library {
-
-    public static final MacOsPthread INSTANCE = Native.load("pthread", MacOsPthread.class);
-
-    public long pthread_self();
+public class MacOsPthread {
 
     @Structure.FieldOrder({"sched_priority", "quantum"})
     public static class sched_param extends Structure {
@@ -42,14 +38,10 @@ public interface MacOsPthread extends Library {
         public int quantum;
     }
 
-    public int pthread_getschedparam(long thread, IntByReference policy, sched_param param);
-
-    public int pthread_setschedparam(long thread, int policy, sched_param param);
-
     public static void setCurrentThreadPriority(int priority) {
         long pthread_self;
         try {
-            pthread_self = INSTANCE.pthread_self();
+            pthread_self = Bindings.INSTANCE.pthread_self();
         } catch (UnsatisfiedLinkError e) {
             ThreadPriorityPresets.LOGGER.error("Unable to link to pthread_self: {}", e.toString());
             return;
@@ -59,7 +51,7 @@ public interface MacOsPthread extends Library {
         sched_param param = new sched_param();
 
         try {
-            int ret = INSTANCE.pthread_getschedparam(pthread_self, policy, param);
+            int ret = Bindings.INSTANCE.pthread_getschedparam(pthread_self, policy, param);
             if (ret != 0) {
                 ThreadPriorityPresets.LOGGER.warn("pthread_getschedparam(pthread_self, policy, param) failed: {}", ret);
                 return;
@@ -72,7 +64,7 @@ public interface MacOsPthread extends Library {
         param.sched_priority = priority;
 
         try {
-            int ret = INSTANCE.pthread_setschedparam(pthread_self, policy.getValue(), param);
+            int ret = Bindings.INSTANCE.pthread_setschedparam(pthread_self, policy.getValue(), param);
             if (ret != 0) {
                 ThreadPriorityPresets.LOGGER.warn("pthread_setschedparam(pthread_self, policy, param) with priority {} failed: {}", priority, ret);
                 return;
@@ -82,4 +74,17 @@ public interface MacOsPthread extends Library {
             return;
         }
     }
+
+    public interface Bindings extends Library {
+
+        public static final Bindings INSTANCE = Native.load("pthread", Bindings.class);
+
+        public long pthread_self();
+
+        public int pthread_getschedparam(long thread, IntByReference policy, sched_param param);
+
+        public int pthread_setschedparam(long thread, int policy, sched_param param);
+
+    }
+
 }

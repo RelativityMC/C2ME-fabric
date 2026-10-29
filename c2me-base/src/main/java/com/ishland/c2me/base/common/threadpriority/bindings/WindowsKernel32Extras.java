@@ -33,9 +33,9 @@ import com.sun.jna.platform.win32.WinDef;
 import com.sun.jna.platform.win32.WinNT;
 import com.sun.jna.win32.W32APIOptions;
 
-public interface WindowsKernel32Extras extends Library {
+import java.util.concurrent.atomic.AtomicInteger;
 
-    public static final WindowsKernel32Extras INSTANCE = Native.load("kernel32", WindowsKernel32Extras.class, W32APIOptions.DEFAULT_OPTIONS);
+public class WindowsKernel32Extras {
 
     public static void setCurrentThreadPriority(int nPriority) {
         WinNT.HANDLE currentThread = Kernel32.INSTANCE.GetCurrentThread();
@@ -60,8 +60,6 @@ public interface WindowsKernel32Extras extends Library {
     public static final int ThreadPowerThrottling = 3;
     public static final int ThreadInformationClassMax = 4;
 
-    boolean SetThreadInformation(WinNT.HANDLE hThread, int ThreadInformationClass, THREAD_POWER_THROTTLING_STATE ThreadInformation, WinDef.DWORD ThreadInformationSize);
-
     public static void enableCurrentThreadPowerThrottling() {
         WinNT.HANDLE currentThread = Kernel32.INSTANCE.GetCurrentThread();
         THREAD_POWER_THROTTLING_STATE threadPowerThrottlingState = new THREAD_POWER_THROTTLING_STATE();
@@ -69,12 +67,20 @@ public interface WindowsKernel32Extras extends Library {
         threadPowerThrottlingState.ControlMask = new WinDef.ULONG(THREAD_POWER_THROTTLING_EXECUTION_SPEED);
         threadPowerThrottlingState.StateMask = new WinDef.ULONG(THREAD_POWER_THROTTLING_EXECUTION_SPEED);
         try {
-            if (!INSTANCE.SetThreadInformation(currentThread, ThreadPowerThrottling, threadPowerThrottlingState, new WinDef.DWORD(12))) {
+            if (!Bindings.INSTANCE.SetThreadInformation(currentThread, ThreadPowerThrottling, threadPowerThrottlingState, new WinDef.DWORD(12))) {
                 ThreadPriorityPresets.LOGGER.warn("SetThreadInformation(currentThread, ThreadPowerThrottling, threadPowerThrottlingState, 12) failed: {}", Native.getLastError());
             }
         } catch (UnsatisfiedLinkError e) {
             ThreadPriorityPresets.LOGGER.error("Unable to link to SetThreadInformation: {}", e.toString());
         }
+    }
+
+    public interface Bindings extends Library {
+
+        public static final Bindings INSTANCE = Native.load("kernel32", Bindings.class, W32APIOptions.DEFAULT_OPTIONS);
+
+        boolean SetThreadInformation(WinNT.HANDLE hThread, int ThreadInformationClass, THREAD_POWER_THROTTLING_STATE ThreadInformation, WinDef.DWORD ThreadInformationSize);
+
     }
 
 }

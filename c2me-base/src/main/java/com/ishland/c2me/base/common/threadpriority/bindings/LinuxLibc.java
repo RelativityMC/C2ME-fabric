@@ -29,9 +29,7 @@ import com.sun.jna.Library;
 import com.sun.jna.Native;
 import com.sun.jna.Structure;
 
-public interface LinuxLibc extends Library {
-
-    public static final LinuxLibc INSTANCE = Native.load("c", LinuxLibc.class);
+public class LinuxLibc {
 
     public static final int SCHED_NORMAL = 0;
     public static final int SCHED_FIFO = 1;
@@ -47,13 +45,11 @@ public interface LinuxLibc extends Library {
         public int sched_priority;
     }
 
-    int sched_setscheduler(int pid, int policy, LinuxSchedParam param);
-
     public static void setCurrentThreadScheduler(int policy) {
         try {
-            if (INSTANCE.sched_setscheduler(0, policy | SCHED_RESET_ON_FORK, new LinuxSchedParam()) != 0) {
+            if (Bindings.INSTANCE.sched_setscheduler(0, policy | SCHED_RESET_ON_FORK, new LinuxSchedParam()) != 0) {
                 ThreadPriorityPresets.LOGGER.warn("sched_setscheduler(0, {} | SCHED_RESET_ON_FORK, ...) failed: {}", policy, Native.getLastError());
-                if (INSTANCE.sched_setscheduler(0, policy, new LinuxSchedParam()) != 0) {
+                if (Bindings.INSTANCE.sched_setscheduler(0, policy, new LinuxSchedParam()) != 0) {
                     ThreadPriorityPresets.LOGGER.warn("sched_setscheduler(0, {}, ...) failed: {}", policy, Native.getLastError());
                 }
             }
@@ -69,11 +65,9 @@ public interface LinuxLibc extends Library {
     public static final int PRIO_PGRP = 1;
     public static final int PRIO_USER = 2;
 
-    int setpriority(int which, int who, int prio);
-
     public static void setCurrentThreadPriority(int priority) {
         try {
-            if (INSTANCE.setpriority(PRIO_PROCESS, 0, priority) != 0) {
+            if (Bindings.INSTANCE.setpriority(PRIO_PROCESS, 0, priority) != 0) {
                 ThreadPriorityPresets.LOGGER.warn("setpriority(PRIO_PROCESS, 0, {}) failed: {}", priority, Native.getLastError());
                 return;
             }
@@ -81,6 +75,16 @@ public interface LinuxLibc extends Library {
             ThreadPriorityPresets.LOGGER.error("Unable to link to setpriority: {}", e.toString());
             return;
         }
+    }
+
+    public interface Bindings extends Library {
+
+        public static final Bindings INSTANCE = Native.load("c", Bindings.class);
+
+        int sched_setscheduler(int pid, int policy, LinuxSchedParam param);
+
+        int setpriority(int which, int who, int prio);
+
     }
 
 }
