@@ -25,9 +25,15 @@
 package com.ishland.c2me.opts.allocs.mixin.object_pooling_caching;
 
 import com.ishland.c2me.opts.allocs.common.ObjectCachingUtils;
+import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import it.unimi.dsi.fastutil.objects.Object2ReferenceOpenHashMap;
+import net.minecraft.world.gen.densityfunction.DensityFunction;
 import net.minecraft.world.gen.sampler.SampleBuffer;
 import net.minecraft.world.gen.surfacebuilder.MaterialRuleContext;
+import net.minecraft.world.gen.surfacebuilder.MaterialRules;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
@@ -41,6 +47,25 @@ public class MixinMaterialRuleContext {
         } else {
             return SampleBuffer.withCount(count);
         }
+    }
+
+    @Unique
+    private Object2ReferenceOpenHashMap<DensityFunction, MaterialRules.DensityProvider> c2me$densityProviderCache;
+
+    @WrapMethod(method = "getDensityProvider")
+    private MaterialRules.DensityProvider dedupDensityProvider(DensityFunction func, boolean eager, Operation<MaterialRules.DensityProvider> original) {
+        var c2me$densityProviderCache = this.c2me$densityProviderCache;
+        if (c2me$densityProviderCache == null) {
+            c2me$densityProviderCache = this.c2me$densityProviderCache = new Object2ReferenceOpenHashMap<>();
+        }
+        MaterialRules.DensityProvider densityProvider = c2me$densityProviderCache.get(func);
+        if (densityProvider == null) {
+            densityProvider = original.call(func, eager);
+            if (eager) {
+                c2me$densityProviderCache.put(func, densityProvider);
+            }
+        }
+        return densityProvider;
     }
 
 }
