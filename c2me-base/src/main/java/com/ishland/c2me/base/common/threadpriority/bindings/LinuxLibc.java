@@ -50,7 +50,9 @@ public class LinuxLibc {
     private static String stringifyLastError() {
         int errno = Native.getLastError();
         try {
-            return Bindings.INSTANCE.strerror(errno);
+            String strerror = Bindings.INSTANCE.strerror(errno);
+            Native.getLastError();
+            return strerror != null ? strerror : String.valueOf(errno);
         } catch (UnsatisfiedLinkError e) {
             return String.valueOf(errno);
         }
