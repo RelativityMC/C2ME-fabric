@@ -44,10 +44,13 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ServerChunkLoadingManager;
 import net.minecraft.util.collection.BoundedRegionArray;
+import net.minecraft.util.crash.CrashReport;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.thread.ThreadExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
 public class TheChunkSystem extends StatusAdvancingScheduler<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> {
@@ -97,8 +100,26 @@ public class TheChunkSystem extends StatusAdvancingScheduler<ChunkPos, ChunkStat
         } else {
             LOGGER.error("Error downgrading chunk {} to \"{}\"", holder.getKey(), nextStatus, throwable);
         }
-        final MinecraftServer server = ((IThreadedAnvilChunkStorage) this.tacs).getWorld().getServer();
-        server.execute(() -> server.onChunkLoadFailure(throwable, ((IVersionedChunkStorage) this.tacs).invokeGetStorageKey(), holder.getKey()));
+        try {
+            Thread.ofVirtual().start(() -> {
+                try {
+                    final MinecraftServer server = ((IThreadedAnvilChunkStorage) this.tacs).getWorld().getServer();
+                    server.onChunkLoadFailure(throwable, ((IVersionedChunkStorage) this.tacs).invokeGetStorageKey(), holder.getKey());
+                } catch (Throwable t) {
+                    LOGGER.error("Error firing server chunk load failure handler", t);
+                }
+                if (Config.crashEagerlyOnError) {
+                    try {
+                        CrashReport report = CrashReport.create(throwable, "Exception in chunk system");
+                        ThreadExecutor.addCrashReport(report);
+                    } catch (Throwable t) {
+                        LOGGER.error("Error propagating error on crashEagerlyOnError", t);
+                    }
+                }
+            });
+        } catch (Throwable t) {
+            LOGGER.error("Error launching error handler task", t);
+        }
         return ExceptionHandlingAction.MARK_BROKEN;
     }
 
