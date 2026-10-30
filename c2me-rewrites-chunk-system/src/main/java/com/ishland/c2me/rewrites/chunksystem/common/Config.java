@@ -136,6 +136,16 @@ public class Config {
                     """)
             .getBoolean(false, false);
 
+    public static final boolean crashEagerlyOnError = new ConfigSystem.ConfigAccessor()
+            .key("chunkSystem.crashEagerlyOnError")
+            .comment("""
+                    Whether to attempt to propagate chunk system errors as crashes
+                    
+                    Not all errors can be detected and not all detected errors can be propagated,
+                    but this should cover most of them.
+                    """)
+            .getBoolean(false, false);
+
     public static void init() {
         // intentionally empty
     }
