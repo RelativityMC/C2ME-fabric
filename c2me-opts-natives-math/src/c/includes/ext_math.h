@@ -819,72 +819,79 @@ math_aquifer_unpackPackedZ(uint32_t packed) {
     return packed & 0b1111;
 }
 
+#define AQ_SORT4(a, b, c, d) do { \
+    uint32_t _t; \
+    _t = min(a, b); b = max(a, b); a = _t; \
+    _t = min(c, d); d = max(c, d); c = _t; \
+    _t = min(a, c); c = max(a, c); a = _t; \
+    _t = min(b, d); d = max(b, d); b = _t; \
+    _t = min(b, c); c = max(b, c); b = _t; \
+} while (0)
+
+#define AQ_BSORT4(a, b, c, d) do { \
+    uint32_t _t; \
+    _t = min(a, c); c = max(a, c); a = _t; \
+    _t = min(b, d); d = max(b, d); b = _t; \
+    _t = min(a, b); b = max(a, b); a = _t; \
+    _t = min(c, d); d = max(c, d); c = _t; \
+} while (0)
+
 static inline void
 math_aquifer_refreshDistPosIdx(const uint16_t *restrict const packedBlockPositions, uint32_t *restrict const res,
                                const aquifer_data_t *restrict const aquiferData,
                                const int32_t x, const int32_t y, const int32_t z) {
     int32_t gx = (x - 5) >> 4;
-    int32_t gy = math_floorDiv(y + 1, 12) - 1;
+    int32_t gy = math_floorDiv(y + 1, 12);
     int32_t gz = (z - 5) >> 4;
-    uint32_t A = UINT32_MAX;
-    uint32_t B = UINT32_MAX;
-    uint32_t C = UINT32_MAX;
-    uint32_t D = UINT32_MAX;
+
+    const uint32_t colStride = (uint32_t)aquiferData->sizeX;
+    const uint32_t rowStride = colStride * (uint32_t)aquiferData->sizeZ;
+    const uint32_t base = math_aquifer_index(aquiferData, gx, gy - 1, gz);
+    const int32_t bxBase = (gx << 4) - x;
+    const int32_t byBase = (gy - 1) * 12 - y;
+    const int32_t bzBase = (gz << 4) - z;
 
     uint32_t ps[12];
 
-    uint32_t index = 12; // 12 max
-    for (int32_t offY = 0; offY <= 2; ++offY) {
-        int32_t gymul = gy * 12 + offY * 12;
-        for (int32_t offZ = 0; offZ <= 1; ++offZ) {
-            int32_t gzmul = (gz + offZ) << 4;
-
-            uint32_t index0 = index - 1;
-            uint32_t posIdx0 = math_aquifer_index(aquiferData, gx, gy + offY, gz + offZ);
-            uint32_t position0 = packedBlockPositions[posIdx0];
-            int32_t dx0 = (gx << 4) + math_aquifer_unpackPackedX(position0) - x;
-            int32_t dy0 = gymul + math_aquifer_unpackPackedY(position0) - y;
-            int32_t dz0 = gzmul + math_aquifer_unpackPackedZ(position0) - z;
-            uint32_t dist_0 = dx0 * dx0 + dy0 * dy0 + dz0 * dz0;
-
-            uint32_t index1 = index - 2;
-            uint32_t posIdx1 = posIdx0 + 1;
-            uint32_t position1 = packedBlockPositions[posIdx1];
-            int32_t dx1 = ((gx + 1) << 4) + math_aquifer_unpackPackedX(position1) - x;
-            int32_t dy1 = gymul + math_aquifer_unpackPackedY(position1) - y;
-            int32_t dz1 = gzmul + math_aquifer_unpackPackedZ(position1) - z;
-            uint32_t dist_1 = dx1 * dx1 + dy1 * dy1 + dz1 * dz1;
-
-            ps[12 - index] = (dist_0 << 20) | (index0 << 16) | posIdx0;
-            ps[13 - index] = (dist_1 << 20) | (index1 << 16) | posIdx1;
-
-            index -= 2;
-        }
+#pragma clang loop vectorize(enable)
+    for (uint32_t n = 0; n < 12; ++n) {
+        const uint32_t ox = n >= 6u ? 1u : 0u;
+        const uint32_t rem = n - ox * 6u;
+        const uint32_t oy = rem >> 1;
+        const uint32_t oz = rem & 1u;
+        const uint32_t pos = base + oy * rowStride + oz * colStride + ox;
+        const uint32_t packed = packedBlockPositions[pos];
+        const int32_t dx = bxBase + (int32_t)(ox << 4) + math_aquifer_unpackPackedX(packed);
+        const int32_t dy = byBase + (int32_t)(oy * 12u) + math_aquifer_unpackPackedY(packed);
+        const int32_t dz = bzBase + (int32_t)(oz << 4) + math_aquifer_unpackPackedZ(packed);
+        const uint32_t dist = dx * dx + dy * dy + dz * dz;
+        ps[n] = (dist << 20) | ((11u - n) << 16) | pos;
     }
 
-    A = ps[0];
+    AQ_SORT4(ps[0], ps[1], ps[2], ps[3]);
+    AQ_SORT4(ps[4], ps[5], ps[6], ps[7]);
+    AQ_SORT4(ps[8], ps[9], ps[10], ps[11]);
 
-    for (uint32_t i = 1; i < 12; i ++) {
-        uint32_t p1 = ps[i];
-        if (p1 <= C) {
-            uint32_t n11 = max(A, p1);
-            A = min(A, p1);
+    uint32_t m0 = min(ps[0], ps[7]);
+    uint32_t m1 = min(ps[1], ps[6]);
+    uint32_t m2 = min(ps[2], ps[5]);
+    uint32_t m3 = min(ps[3], ps[4]);
+    AQ_BSORT4(m0, m1, m2, m3);
 
-            uint32_t n12 = max(B, n11);
-            B = min(B, n11);
+    uint32_t r0 = min(m0, ps[11]);
+    uint32_t r1 = min(m1, ps[10]);
+    uint32_t r2 = min(m2, ps[9]);
+    uint32_t r3 = min(m3, ps[8]);
+    AQ_BSORT4(r0, r1, r2, r3);
 
-            uint32_t n13 = max(C, n12);
-            C = min(C, n12);
-
-            D = min(D, n13);
-        }
-    }
-
-    res[0] = A;
-    res[1] = B;
-    res[2] = C;
-    res[3] = D;
+    res[0] = r0;
+    res[1] = r1;
+    res[2] = r2;
+    res[3] = r3;
 }
+
+#undef AQ_SORT4
+#undef AQ_BSORT4
 
 // branch node: occupies two slots, first with node_minmacs, second with branch_children
 // bit 31 set for both slots, bit 30 set for second slot
