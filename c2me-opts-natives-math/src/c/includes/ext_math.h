@@ -1762,9 +1762,10 @@ math_aquifer_refreshDistPosIdx(const uint16_t *restrict const packedBlockPositio
 
 #pragma clang loop vectorize(enable)
     for (uint32_t n = 0; n < 12; ++n) {
-        const int32_t ox = n & 1u;
-        const int32_t oz = (n >> 1) & 1u;
-        const int32_t oy = n >> 2;
+        const uint32_t ox = n >= 6u ? 1u : 0u;
+        const uint32_t rem = n - ox * 6u;
+        const int32_t oy = (int32_t)(rem >> 1) - 1;
+        const uint32_t oz = rem & 1u;
         const uint32_t pos = math_aquifer_index(aquiferData, gx + ox, gy + oy, gz + oz);
         const uint32_t packed = packedBlockPositions[pos];
         const int32_t dx = (gx + ox) * 16 + math_aquifer_unpackPackedX(packed) - x;
@@ -1778,7 +1779,7 @@ math_aquifer_refreshDistPosIdx(const uint16_t *restrict const packedBlockPositio
 
     for (uint32_t i = 1; i < 12; i++) {
         uint32_t p1 = ps[i];
-        if (p1 <= C) {
+        if (p1 <= D) {
             uint32_t n11 = max(A, p1);
             A = min(A, p1);
 
