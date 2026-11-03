@@ -72,6 +72,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
 import java.util.concurrent.CancellationException;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -166,7 +167,11 @@ public class ReadFromDisk extends NewChunkStatus {
                     }
                 }))
                 .zipWith(
-                        Completable.defer(() -> Completable.fromCompletionStage(((IThreadedAnvilChunkStorage) context.tacs()).getPointOfInterestStorage().load(context.holder().getKey()))).toSingleDefault(ReadFromDisk.class),
+                        Completable.defer(() -> {
+                            ChunkPos pos = context.holder().getKey();
+                            CompletableFuture<?> future = ((IThreadedAnvilChunkStorage) context.tacs()).getPointOfInterestStorage().load(pos.x(), pos.z());
+                            return future != null ? Completable.fromCompletionStage(future) : Completable.complete();
+                        }).toSingleDefault(ReadFromDisk.class),
                         (chunkSerializer, o) -> chunkSerializer
                 );
     }
