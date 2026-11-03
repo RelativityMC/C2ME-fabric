@@ -31,8 +31,9 @@ import com.sun.jna.NativeLong;
 import com.sun.jna.Platform;
 import com.sun.jna.Structure;
 import org.jspecify.annotations.Nullable;
-import oshi.SystemInfo;
 import oshi.hardware.CentralProcessor;
+import oshi.spi.SystemInfoFactory;
+import oshi.spi.SystemInfoProvider;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -160,7 +161,7 @@ public class LinuxLibc {
     static {
         int capacity = 0;
         try {
-            SystemInfo systemInfo = new SystemInfo();
+            SystemInfoProvider systemInfo = SystemInfoFactory.create();
             int[] knownCapacities = systemInfo.getHardware().getProcessor().getPhysicalProcessors().stream().mapToInt(CentralProcessor.PhysicalProcessor::getEfficiency).sorted().distinct().toArray();
             // sorted ascending
             if (knownCapacities.length > 1) {
@@ -185,7 +186,7 @@ public class LinuxLibc {
         LinuxSchedAttr schedAttr = new LinuxSchedAttr();
         schedAttr.size = schedAttr.size();
         NativeLong ret;
-        ret = oshi.jna.platform.linux.LinuxLibc.INSTANCE.syscall(new NativeLong(sys_sched_getattr), 0, schedAttr, schedAttr.size(), 0);
+        ret = Bindings.INSTANCE.syscall(new NativeLong(sys_sched_getattr), 0, schedAttr, schedAttr.size(), 0);
         if (ret.intValue() != 0) {
             ThreadPriorityPresets.LOGGER.warn("syscall sched_getattr(0, schedAttr, sizeof(schedAttr), 0) failed: {}", stringifyLastError());
             SCHED_ATTR_FAILS.set(true);
@@ -207,7 +208,7 @@ public class LinuxLibc {
         schedAttr.sched_flags |= SCHED_FLAG_UTIL_CLAMP_MAX | SCHED_FLAG_UTIL_CLAMP_MIN;
         schedAttr.sched_util_min = 0;
         schedAttr.sched_util_max = efficiencyCoreCapacity;
-        ret = oshi.jna.platform.linux.LinuxLibc.INSTANCE.syscall(new NativeLong(sys_sched_setattr), 0, schedAttr, 0);
+        ret = Bindings.INSTANCE.syscall(new NativeLong(sys_sched_setattr), 0, schedAttr, 0);
         if (ret.intValue() != 0) {
             ThreadPriorityPresets.LOGGER.warn("setCurrentThreadPreferEfficiencyCores: syscall sys_sched_setattr(0, schedAttr, 0) failed: {}", stringifyLastError());
             SCHED_ATTR_FAILS.set(true);
@@ -227,7 +228,7 @@ public class LinuxLibc {
         schedAttr.sched_flags |= SCHED_FLAG_UTIL_CLAMP_MAX | SCHED_FLAG_UTIL_CLAMP_MIN;
         schedAttr.sched_util_min = -1;
         schedAttr.sched_util_max = -1;
-        ret = oshi.jna.platform.linux.LinuxLibc.INSTANCE.syscall(new NativeLong(sys_sched_setattr), 0, schedAttr, 0);
+        ret = Bindings.INSTANCE.syscall(new NativeLong(sys_sched_setattr), 0, schedAttr, 0);
         if (ret.intValue() != 0) {
             ThreadPriorityPresets.LOGGER.warn("unsetCurrentThreadUclamp: syscall sys_sched_setattr(0, schedAttr, 0) failed: {}", stringifyLastError());
             return;
@@ -246,7 +247,7 @@ public class LinuxLibc {
         schedAttr.sched_flags |= SCHED_FLAG_UTIL_CLAMP_MAX | SCHED_FLAG_UTIL_CLAMP_MIN;
         schedAttr.sched_util_min = 1024;
         schedAttr.sched_util_max = 1024;
-        ret = oshi.jna.platform.linux.LinuxLibc.INSTANCE.syscall(new NativeLong(sys_sched_setattr), 0, schedAttr, 0);
+        ret = Bindings.INSTANCE.syscall(new NativeLong(sys_sched_setattr), 0, schedAttr, 0);
         if (ret.intValue() != 0) {
             ThreadPriorityPresets.LOGGER.warn("setCurrentThreadPreferMaximumPerformance: syscall sys_sched_setattr(0, schedAttr, 0) failed: {}", stringifyLastError());
             SCHED_ATTR_FAILS.set(true);
@@ -263,6 +264,17 @@ public class LinuxLibc {
         int setpriority(int which, int who, int prio);
 
         String strerror(int errnum);
+
+        /**
+         * syscall() performs the system call whose assembly language interface has the specified number with the specified
+         * arguments.
+         *
+         * @param number sys call number
+         * @param args   sys call arguments
+         * @return The return value is defined by the system call being invoked. In general, a 0 return value indicates
+         *         success. A -1 return value indicates an error, and an error code is stored in errno.
+         */
+        NativeLong syscall(NativeLong number, Object... args);
 
     }
 

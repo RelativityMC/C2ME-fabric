@@ -31,14 +31,14 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import oshi.SystemInfo;
+import oshi.util.PlatformEnum;
 
 @Mixin(MinecraftClient.class)
 public class MixinMinecraftClient {
 
     @Inject(method = "run()V", at = @At("HEAD"))
     private void onRun(CallbackInfo ci) {
-        switch (SystemInfo.getCurrentPlatform()) {
+        switch (PlatformEnum.getCurrentPlatform()) {
             case LINUX, ANDROID -> {
                 LinuxLibc.setCurrentThreadPreferMaximumPerformance();
             }
