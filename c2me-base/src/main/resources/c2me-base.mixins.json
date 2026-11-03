@@ -78,6 +78,7 @@
     "util.log4j2shutdownhookisnomore.MixinMinecraftDedicatedServer"
   ],
   "client": [
+    "client.priority.MixinMinecraftClient",
     "exp_warning.MixinMinecraftClient"
   ]
 }

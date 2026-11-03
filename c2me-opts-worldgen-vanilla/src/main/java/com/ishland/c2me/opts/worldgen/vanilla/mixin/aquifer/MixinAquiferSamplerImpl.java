@@ -303,56 +303,37 @@ public abstract class MixinAquiferSamplerImpl {
         int D = Integer.MAX_VALUE;
 
         int index = 12; // 12 max
-        for (int offY = -1; offY <= 1; ++offY) {
-            int gymul = (gy + offY) * 12;
-            for (int offZ = 0; offZ <= 1; ++offZ) {
-                int gzmul = (gz + offZ) << 4;
+        for (int offX = 0; offX <= 1; ++offX) {
+            int gxmul = (gx + offX) << 4;
+            for (int offY = -1; offY <= 1; ++offY) {
+                int gymul = (gy + offY) * 12;
+                for (int offZ = 0; offZ <= 1; ++offZ) {
+                    int gzmul = (gz + offZ) << 4;
 
-                int index0 = index - 1;
-                int posIdx0 = this.index(gx, gy + offY, gz + offZ);
-                int position0 = this.c2me$packedBlockPositions[posIdx0];
-                int dx0 = (gx << 4) + c2me$unpackPackedX(position0) - x;
-                int dy0 = gymul + c2me$unpackPackedY(position0) - y;
-                int dz0 = gzmul + c2me$unpackPackedZ(position0) - z;
-                int dist_0 = dx0 * dx0 + dy0 * dy0 + dz0 * dz0;
+                    int index0 = index - 1;
+                    int posIdx0 = this.index(gx + offX, gy + offY, gz + offZ);
+                    int position0 = this.c2me$packedBlockPositions[posIdx0];
+                    int dx0 = gxmul + c2me$unpackPackedX(position0) - x;
+                    int dy0 = gymul + c2me$unpackPackedY(position0) - y;
+                    int dz0 = gzmul + c2me$unpackPackedZ(position0) - z;
+                    int dist_0 = dx0 * dx0 + dy0 * dy0 + dz0 * dz0;
 
-                int index1 = index - 2;
-                int posIdx1 = posIdx0 + 1;
-                int position1 = this.c2me$packedBlockPositions[posIdx1];
-                int dx1 = ((gx + 1) << 4) + c2me$unpackPackedX(position1) - x;
-                int dy1 = gymul + c2me$unpackPackedY(position1) - y;
-                int dz1 = gzmul + c2me$unpackPackedZ(position1) - z;
-                int dist_1 = dx1 * dx1 + dy1 * dy1 + dz1 * dz1;
+                    int p0 = (dist_0 << 20) | (index0 << 16) | posIdx0;
+                    if (p0 <= D) {
+                        int n01 = Math.max(A, p0);
+                        A = Math.min(A, p0);
 
-                int p0 = (dist_0 << 20) | (index0 << 16) | posIdx0;
-                if (p0 <= C) {
-                    int n01 = Math.max(A, p0);
-                    A = Math.min(A, p0);
+                        int n02 = Math.max(B, n01);
+                        B = Math.min(B, n01);
 
-                    int n02 = Math.max(B, n01);
-                    B = Math.min(B, n01);
+                        int n03 = Math.max(C, n02);
+                        C = Math.min(C, n02);
 
-                    int n03 = Math.max(C, n02);
-                    C = Math.min(C, n02);
+                        D = Math.min(D, n03);
+                    }
 
-                    D = Math.min(D, n03);
+                    index--;
                 }
-
-                int p1 = (dist_1 << 20) | (index1 << 16) | posIdx1;
-                if (p1 <= C) {
-                    int n11 = Math.max(A, p1);
-                    A = Math.min(A, p1);
-
-                    int n12 = Math.max(B, n11);
-                    B = Math.min(B, n11);
-
-                    int n13 = Math.max(C, n12);
-                    C = Math.min(C, n12);
-
-                    D = Math.min(D, n13);
-                }
-
-                index -= 2;
             }
         }
 
@@ -388,8 +369,8 @@ public abstract class MixinAquiferSamplerImpl {
             int i = this.adjustEstimatedHighestSurfaceLevel(surfaceHeightEstimate) - blockY;
             double f = bl ? MathHelper.clampedLerp((double) i / 64.0, 1.0, 0.0) : 0.0; // inline
             double g = Math.clamp(this.fluidLevelFloodednessNoise.sample(blockX, blockY, blockZ), -1.0, 1.0);
-            d = g + 0.8 + (f - 1.0) * 1.2; // inline
-            e = g + 0.3 + (f - 1.0) * 1.1; // inline
+            d = g + 0.8 + (f - 1.0) * (0x1.3333333333334p0 /* 0.4 + 0.8 */); // inline
+            e = g + 0.3 + (f - 1.0) * (0x1.199999999999ap0 /* 0.3 + 0.8 */); // inline
         }
 
         int i;

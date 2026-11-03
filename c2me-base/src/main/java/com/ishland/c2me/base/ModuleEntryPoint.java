@@ -81,30 +81,44 @@ public class ModuleEntryPoint {
                       MacOS: priority=30
                       FreeBSD: priority=12
                     - LOW:
-                      Linux: SCHED_BATCH, nice=3
-                      Windows: Below Normal priority, enable power throttling
+                      Linux: SCHED_BATCH, nice=2
+                      Windows: Lowest priority
                       MacOS: priority=28
                       FreeBSD: priority=6
                     - LOWER
-                      Linux: SCHED_BATCH, nice=8
+                      Linux: SCHED_BATCH, nice=5, prefers efficiency cores if available
                       Windows: Lowest priority, enable power throttling
                       MacOS: priority=23
                       FreeBSD: priority=3
                     - LOWEST
-                      Linux: SCHED_BATCH, nice=16
+                      Linux: SCHED_BATCH, nice=12, prefers efficiency cores if available
                       Windows: Idle priority, enable power throttling
                       MacOS: priority=15
                       FreeBSD: priority=0
                     
-                    Defaults to LOW on clients and BELOW_NORMAL for dedicated servers
+                    "prefer efficiency cores" on Linux requires Linux 5.3+ on x86, x86_64, arm, arm64
+                    "enable power throttling" on Windows requires Windows 8 or newer, ideally Windows 11 or newer
+                    
+                    Defaults to LOWER on clients and BELOW_NORMAL for dedicated servers
                     
                     Please preserve quotes so the config don't break
                     """)
             .getEnum(
                     ThreadPriorityPresets.class,
-                    FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT ? ThreadPriorityPresets.LOW : ThreadPriorityPresets.BELOW_NORMAL,
-                    ThreadPriorityPresets.LOW
+                    FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT ? ThreadPriorityPresets.LOWER : ThreadPriorityPresets.BELOW_NORMAL,
+                    ThreadPriorityPresets.LOWER
             );
+
+    public static final boolean applyBoostingForRenderThread = new ConfigSystem.ConfigAccessor()
+            .key("applyBoostingForRenderThread")
+            .comment("""
+                    Whether to attempt to apply boosting for the render thread on the client
+                    
+                    Currently works on:
+                    - Linux 5.3+ on x86, x86_64, arm, arm64
+                    - Windows 8 or newer
+                    """)
+            .getBoolean(true, false);
 
     public static final boolean disableLoggingShutdownHook = new ConfigSystem.ConfigAccessor()
             .key("fixes.disableLoggingShutdownHook")
@@ -145,7 +159,7 @@ public class ModuleEntryPoint {
                 }
             }
             if (logicalProcessorsCount < coreCount) {
-                LOGGER.warn("There's fewer logical processors than enumerated core count. Returning available logical processor count");
+                LOGGER.warn("There's fewer logical processors than enumerated core count, assuming all available logical cpus are physical cpus");
                 coreCount = logicalProcessorsCount;
             }
             return coreCount;

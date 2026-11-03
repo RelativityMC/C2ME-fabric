@@ -28,6 +28,7 @@ import com.ishland.c2me.base.common.scheduler.IVanillaChunkManager;
 import com.ishland.c2me.base.common.scheduler.SchedulingManager;
 import com.ishland.c2me.base.mixin.access.IThreadedAnvilChunkStorage;
 import com.ishland.c2me.base.mixin.access.IVersionedChunkStorage;
+import com.ishland.c2me.rewrites.chunksystem.common.fapi.LifecycleEventInvoker;
 import com.ishland.c2me.rewrites.chunksystem.common.structs.ChunkSystemExecutors;
 import com.ishland.flowsched.scheduler.ExceptionHandlingAction;
 import com.ishland.flowsched.scheduler.ItemHolder;
@@ -43,10 +44,13 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ServerChunkLoadingManager;
 import net.minecraft.util.collection.BoundedRegionArray;
+import net.minecraft.util.crash.CrashReport;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.thread.ThreadExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
 public class TheChunkSystem extends StatusAdvancingScheduler<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> {
@@ -96,8 +100,26 @@ public class TheChunkSystem extends StatusAdvancingScheduler<ChunkPos, ChunkStat
         } else {
             LOGGER.error("Error downgrading chunk {} to \"{}\"", holder.getKey(), nextStatus, throwable);
         }
-        final MinecraftServer server = ((IThreadedAnvilChunkStorage) this.tacs).getWorld().getServer();
-        server.execute(() -> server.onChunkLoadFailure(throwable, ((IVersionedChunkStorage) this.tacs).invokeGetStorageKey(), holder.getKey()));
+        try {
+            Thread.ofVirtual().start(() -> {
+                try {
+                    final MinecraftServer server = ((IThreadedAnvilChunkStorage) this.tacs).getWorld().getServer();
+                    server.onChunkLoadFailure(throwable, ((IVersionedChunkStorage) this.tacs).invokeGetStorageKey(), holder.getKey());
+                } catch (Throwable t) {
+                    LOGGER.error("Error firing server chunk load failure handler", t);
+                }
+                if (Config.crashEagerlyOnError) {
+                    try {
+                        CrashReport report = CrashReport.create(throwable, "Exception in chunk system");
+                        ThreadExecutor.addCrashReport(report);
+                    } catch (Throwable t) {
+                        LOGGER.error("Error propagating error on crashEagerlyOnError", t);
+                    }
+                }
+            });
+        } catch (Throwable t) {
+            LOGGER.error("Error launching error handler task", t);
+        }
         return ExceptionHandlingAction.MARK_BROKEN;
     }
 
@@ -142,8 +164,11 @@ public class TheChunkSystem extends StatusAdvancingScheduler<ChunkPos, ChunkStat
 
     public ChunkHolder vanillaIf$setLevel(long pos, int level) {
         assert !Thread.holdsLock(this.managedTickets);
+        final int oldLevel;
+        final ChunkHolder ret;
+
         synchronized (this.managedTickets) {
-            final int oldLevel = this.managedTickets.put(pos, level);
+            oldLevel = this.managedTickets.put(pos, level);
             NewChunkStatus oldStatus = c2me$getDeferredStatusFromVanillaLevel(oldLevel);
             NewChunkStatus newStatus = c2me$getDeferredStatusFromVanillaLevel(level);
             final ChunkPos key = ChunkPos.fromLong(pos);
@@ -169,7 +194,7 @@ public class TheChunkSystem extends StatusAdvancingScheduler<ChunkPos, ChunkStat
                 if (oldStatus != this.getUnloadedStatus()) {
                     this.removeTicket(key, TicketTypeExtension.VANILLA_LEVEL, key, oldStatus);
                 }
-                return shouldReturnVanillaHolder ? vanillaHolder : null;
+                ret = shouldReturnVanillaHolder ? vanillaHolder : null;
             } else {
                 final ItemHolder<ChunkPos, ChunkState, ChunkLoadingContext, NewChunkHolderVanillaInterface> holder = this.getHolder(key);
                 NewChunkHolderVanillaInterface vanillaHolder;
@@ -183,11 +208,16 @@ public class TheChunkSystem extends StatusAdvancingScheduler<ChunkPos, ChunkStat
                     vanillaHolder.updateDeferredStatus(NewChunkStatus.fromVanillaLevel(level));
                 }
                 if (newStatus != this.getUnloadedStatus() && vanillaHolder != null) {
-                    return vanillaHolder;
+                    ret = vanillaHolder;
+                } else {
+                    ret = null;
                 }
-                return null;
             }
         }
+
+        LifecycleEventInvoker.invokeChunkTicketLevelUpdated(((IThreadedAnvilChunkStorage) this.tacs).getWorld(), pos, oldLevel, level, ret);
+
+        return ret;
     }
 
     private static NewChunkStatus c2me$getDeferredStatusFromVanillaLevel(int level) {
