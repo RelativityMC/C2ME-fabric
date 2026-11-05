@@ -33,7 +33,6 @@ import net.minecraft.util.math.random.Random;
 import net.minecraft.util.math.random.RandomSplitter;
 import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.gen.chunk.AquiferSampler;
-import net.minecraft.world.gen.densityfunction.DensityFunction;
 import net.minecraft.world.gen.sampler.Sampler;
 import org.apache.commons.lang3.mutable.MutableDouble;
 import org.jetbrains.annotations.Nullable;
@@ -293,49 +292,78 @@ public abstract class MixinAquiferSamplerImpl {
     }
 
     @Unique
+    private static int c2me$packCell(int dxBase, int dyBase, int dzBase, int packedPos, int seq, int posIdx) {
+        int dx = dxBase + c2me$unpackPackedX(packedPos);
+        int dy = dyBase + c2me$unpackPackedY(packedPos);
+        int dz = dzBase + c2me$unpackPackedZ(packedPos);
+        return ((dx * dx + dy * dy + dz * dz) << 20) | (seq << 16) | posIdx;
+    }
+
+    @Unique
     private void aquiferExtracted$refreshDistPosIdx(int x, int y, int z) {
         int gx = (x - 5) >> 4;
         int gy = Math.floorDiv(y + 1, 12);
         int gz = (z - 5) >> 4;
-        int A = Integer.MAX_VALUE;
-        int B = Integer.MAX_VALUE;
-        int C = Integer.MAX_VALUE;
-        int D = Integer.MAX_VALUE;
+        int bx0 = (gx << 4) - x;
+        int bx1 = ((gx + 1) << 4) - x;
+        int bz0 = (gz << 4) - z;
+        int bz1 = ((gz + 1) << 4) - z;
+        int t;
 
-        int index = 12; // 12 max
-        for (int offX = 0; offX <= 1; ++offX) {
-            int gxmul = (gx + offX) << 4;
-            for (int offY = -1; offY <= 1; ++offY) {
-                int gymul = (gy + offY) * 12;
-                for (int offZ = 0; offZ <= 1; ++offZ) {
-                    int gzmul = (gz + offZ) << 4;
+        int idx = this.index(gx, gy - 1, gz);
+        int idxStride = this.cellCountZ * this.cellCountX;
+        int dyb = (gy - 1) * 12 - y;
+        int a0 = c2me$packCell(bx0, dyb, bz0, this.c2me$packedBlockPositions[idx], 11, idx);
+        int a1 = c2me$packCell(bx1, dyb, bz0, this.c2me$packedBlockPositions[idx + 1], 5, idx + 1);
+        int a2 = c2me$packCell(bx0, dyb, bz1, this.c2me$packedBlockPositions[idx + cellCountX], 10, idx + cellCountX);
+        int a3 = c2me$packCell(bx1, dyb, bz1, this.c2me$packedBlockPositions[idx + cellCountX + 1], 4, idx + cellCountX + 1);
+        t = Math.min(a0, a1); a1 = Math.max(a0, a1); a0 = t;
+        t = Math.min(a2, a3); a3 = Math.max(a2, a3); a2 = t;
+        t = Math.min(a0, a2); a2 = Math.max(a0, a2); a0 = t;
+        t = Math.min(a1, a3); a3 = Math.max(a1, a3); a1 = t;
+        t = Math.min(a1, a2); a2 = Math.max(a1, a2); a1 = t;
 
-                    int index0 = index - 1;
-                    int posIdx0 = this.index(gx + offX, gy + offY, gz + offZ);
-                    int position0 = this.c2me$packedBlockPositions[posIdx0];
-                    int dx0 = gxmul + c2me$unpackPackedX(position0) - x;
-                    int dy0 = gymul + c2me$unpackPackedY(position0) - y;
-                    int dz0 = gzmul + c2me$unpackPackedZ(position0) - z;
-                    int dist_0 = dx0 * dx0 + dy0 * dy0 + dz0 * dz0;
+        idx += idxStride;
+        dyb += 12;
+        int b0 = c2me$packCell(bx0, dyb, bz0, this.c2me$packedBlockPositions[idx], 9, idx);
+        int b1 = c2me$packCell(bx1, dyb, bz0, this.c2me$packedBlockPositions[idx + 1], 3, idx + 1);
+        int b2 = c2me$packCell(bx0, dyb, bz1, this.c2me$packedBlockPositions[idx + cellCountX], 8, idx + cellCountX);
+        int b3 = c2me$packCell(bx1, dyb, bz1, this.c2me$packedBlockPositions[idx + cellCountX + 1], 2, idx + cellCountX + 1);
+        t = Math.min(b0, b1); b1 = Math.max(b0, b1); b0 = t;
+        t = Math.min(b2, b3); b3 = Math.max(b2, b3); b2 = t;
+        t = Math.min(b0, b2); b2 = Math.max(b0, b2); b0 = t;
+        t = Math.min(b1, b3); b3 = Math.max(b1, b3); b1 = t;
+        t = Math.min(b1, b2); b2 = Math.max(b1, b2); b1 = t;
 
-                    int p0 = (dist_0 << 20) | (index0 << 16) | posIdx0;
-                    if (p0 <= D) {
-                        int n01 = Math.max(A, p0);
-                        A = Math.min(A, p0);
+        idx += idxStride;
+        dyb += 12;
+        int c0 = c2me$packCell(bx0, dyb, bz0, this.c2me$packedBlockPositions[idx], 7, idx);
+        int c1 = c2me$packCell(bx1, dyb, bz0, this.c2me$packedBlockPositions[idx + 1], 1, idx + 1);
+        int c2 = c2me$packCell(bx0, dyb, bz1, this.c2me$packedBlockPositions[idx + cellCountX], 6, idx + cellCountX);
+        int c3 = c2me$packCell(bx1, dyb, bz1, this.c2me$packedBlockPositions[idx + cellCountX + 1], 0, idx + cellCountX + 1);
+        t = Math.min(c0, c1); c1 = Math.max(c0, c1); c0 = t;
+        t = Math.min(c2, c3); c3 = Math.max(c2, c3); c2 = t;
+        t = Math.min(c0, c2); c2 = Math.max(c0, c2); c0 = t;
+        t = Math.min(c1, c3); c3 = Math.max(c1, c3); c1 = t;
+        t = Math.min(c1, c2); c2 = Math.max(c1, c2); c1 = t;
 
-                        int n02 = Math.max(B, n01);
-                        B = Math.min(B, n01);
+        int m0 = Math.min(a0, b3);
+        int m1 = Math.min(a1, b2);
+        int m2 = Math.min(a2, b1);
+        int m3 = Math.min(a3, b0);
+        t = Math.min(m0, m2); m2 = Math.max(m0, m2); m0 = t;
+        t = Math.min(m1, m3); m3 = Math.max(m1, m3); m1 = t;
+        t = Math.min(m0, m1); m1 = Math.max(m0, m1); m0 = t;
+        t = Math.min(m2, m3); m3 = Math.max(m2, m3); m2 = t;
 
-                        int n03 = Math.max(C, n02);
-                        C = Math.min(C, n02);
-
-                        D = Math.min(D, n03);
-                    }
-
-                    index--;
-                }
-            }
-        }
+        int r0 = Math.min(m0, c3);
+        int r1 = Math.min(m1, c2);
+        int r2 = Math.min(m2, c1);
+        int r3 = Math.min(m3, c0);
+        t = Math.min(r0, r2); r2 = Math.max(r0, r2); r0 = t;
+        t = Math.min(r1, r3); r3 = Math.max(r1, r3); r1 = t;
+        t = Math.min(r0, r1); r1 = Math.max(r0, r1); r0 = t;
+        t = Math.min(r2, r3); r3 = Math.max(r2, r3); r2 = t;
 
 //        this.c2me$dist1 = A >> 20;
 //        this.c2me$dist2 = B >> 20;
@@ -343,10 +371,10 @@ public abstract class MixinAquiferSamplerImpl {
 //        this.c2me$pos1 = this.blockPositions[A & 0xffff];
 //        this.c2me$pos2 = this.blockPositions[B & 0xffff];
 //        this.c2me$pos3 = this.blockPositions[C & 0xffff];
-        this.c2me$packed1 = A;
-        this.c2me$packed2 = B;
-        this.c2me$packed3 = C;
-        this.c2me$packed4 = D;
+        this.c2me$packed1 = r0;
+        this.c2me$packed2 = r1;
+        this.c2me$packed3 = r2;
+        this.c2me$packed4 = r3;
     }
 
     @Unique
@@ -369,8 +397,9 @@ public abstract class MixinAquiferSamplerImpl {
             int i = this.adjustEstimatedHighestSurfaceLevel(surfaceHeightEstimate) - blockY;
             double f = bl ? MathHelper.clampedLerp((double) i / 64.0, 1.0, 0.0) : 0.0; // inline
             double g = MathHelper.clamp(this.fluidLevelFloodednessNoise.sample(blockX, blockY, blockZ), -1.0, 1.0);
-            d = g + 0.8 + (f - 1.0) * (0x1.3333333333334p0 /* 0.4 + 0.8 */); // inline
-            e = g + 0.3 + (f - 1.0) * (0x1.199999999999ap0 /* 0.3 + 0.8 */); // inline
+            double delta = (f - 1.0) / (0.0 - 1.0);
+            d = g - (-0.8 + delta * (0.4 - (-0.8))); // inline
+            e = g - (-0.3 + delta * (0.8 - (-0.3))); // inline
         }
 
         int i;
