@@ -694,71 +694,78 @@ math_aquifer_unpackPackedPosIdx(uint64_t packed) {
     return (int32_t) (packed & 0xffffffffUL);
 }
 
+#define AQ_SORT4(a, b, c, d) do { \
+    uint32_t _t; \
+    _t = min(a, b); b = max(a, b); a = _t; \
+    _t = min(c, d); d = max(c, d); c = _t; \
+    _t = min(a, c); c = max(a, c); a = _t; \
+    _t = min(b, d); d = max(b, d); b = _t; \
+    _t = min(b, c); c = max(b, c); b = _t; \
+} while (0)
+
+#define AQ_BSORT4(a, b, c, d) do { \
+    uint32_t _t; \
+    _t = min(a, c); c = max(a, c); a = _t; \
+    _t = min(b, d); d = max(b, d); b = _t; \
+    _t = min(a, b); b = max(a, b); a = _t; \
+    _t = min(c, d); d = max(c, d); c = _t; \
+} while (0)
+
 static void
 math_aquifer_refreshDistPosIdx_global(global const uint16_t *restrict const packedBlockPositions, uint64_t *restrict const res,
                                       global const aquifer_data_t *restrict const aquiferData,
                                       const int32_t x, const int32_t y, const int32_t z) {
     int32_t gx = (x - 5) >> 4;
-    int32_t gy = math_floorDiv(y + 1, 12) - 1;
+    int32_t gy = math_floorDiv(y + 1, 12);
     int32_t gz = (z - 5) >> 4;
-    uint64_t A = UINT64_MAX;
-    uint64_t B = UINT64_MAX;
-    uint64_t C = UINT64_MAX;
-    uint64_t D = UINT64_MAX;
 
-    uint64_t ps[12];
+    const uint32_t colStride = (uint32_t)aquiferData->sizeX;
+    const uint32_t rowStride = colStride * (uint32_t)aquiferData->sizeZ;
+    const uint32_t base = math_aquifer_index_global(aquiferData, gx, gy - 1, gz);
+    const int32_t bxBase = (gx << 4) - x;
+    const int32_t byBase = (gy - 1) * 12 - y;
+    const int32_t bzBase = (gz << 4) - z;
 
-    uint64_t index = 12; // 12 max
-    for (int32_t offY = 0; offY <= 2; ++offY) {
-        int32_t gymul = gy * 12 + offY * 12;
-        for (int32_t offZ = 0; offZ <= 1; ++offZ) {
-            int32_t gzmul = (gz + offZ) << 4;
+    uint32_t ps[12];
 
-            uint64_t index0 = index - 1;
-            uint32_t posIdx0 = math_aquifer_index_global(aquiferData, gx, gy + offY, gz + offZ);
-            uint32_t position0 = packedBlockPositions[posIdx0];
-            int32_t dx0 = (gx << 4) + math_aquifer_unpackPackedX(position0) - x;
-            int32_t dy0 = gymul + math_aquifer_unpackPackedY(position0) - y;
-            int32_t dz0 = gzmul + math_aquifer_unpackPackedZ(position0) - z;
-            uint64_t dist_0 = (uint64_t) (dx0 * dx0 + dy0 * dy0 + dz0 * dz0);
-
-            uint64_t index1 = index - 2;
-            uint32_t posIdx1 = posIdx0 + 1;
-            uint32_t position1 = packedBlockPositions[posIdx1];
-            int32_t dx1 = ((gx + 1) << 4) + math_aquifer_unpackPackedX(position1) - x;
-            int32_t dy1 = gymul + math_aquifer_unpackPackedY(position1) - y;
-            int32_t dz1 = gzmul + math_aquifer_unpackPackedZ(position1) - z;
-            uint64_t dist_1 = (uint64_t) (dx1 * dx1 + dy1 * dy1 + dz1 * dz1);
-
-            ps[12 - index] = (dist_0 << 36UL) | (index0 << 32UL) | ((uint64_t) posIdx0);
-            ps[13 - index] = (dist_1 << 36UL) | (index1 << 32UL) | ((uint64_t) posIdx1);
-
-            index -= 2;
-        }
+    for (uint32_t n = 0; n < 12; ++n) {
+        const uint32_t ox = n >= 6u ? 1u : 0u;
+        const uint32_t rem = n - ox * 6u;
+        const uint32_t oy = rem >> 1;
+        const uint32_t oz = rem & 1u;
+        const uint32_t pos = base + oy * rowStride + oz * colStride + ox;
+        const uint32_t packed = packedBlockPositions[pos];
+        const int32_t dx = bxBase + (int32_t)(ox << 4) + math_aquifer_unpackPackedX(packed);
+        const int32_t dy = byBase + (int32_t)(oy * 12u) + math_aquifer_unpackPackedY(packed);
+        const int32_t dz = bzBase + (int32_t)(oz << 4) + math_aquifer_unpackPackedZ(packed);
+        const uint64_t dist = dx * dx + dy * dy + dz * dz;
+        ps[n] = (dist << 36UL) | ((11ul - n) << 32UL) | ((uint64_t) pos);
     }
 
-    A = ps[0];
-    for (uint32_t i = 1; i < 12; i ++) {
-        uint64_t p1 = ps[i];
-        if (p1 <= C) {
-            uint64_t n11 = max(A, p1);
-            A = min(A, p1);
+    AQ_SORT4(ps[0], ps[1], ps[2], ps[3]);
+    AQ_SORT4(ps[4], ps[5], ps[6], ps[7]);
+    AQ_SORT4(ps[8], ps[9], ps[10], ps[11]);
 
-            uint64_t n12 = max(B, n11);
-            B = min(B, n11);
+    uint32_t m0 = min(ps[0], ps[7]);
+    uint32_t m1 = min(ps[1], ps[6]);
+    uint32_t m2 = min(ps[2], ps[5]);
+    uint32_t m3 = min(ps[3], ps[4]);
+    AQ_BSORT4(m0, m1, m2, m3);
 
-            uint64_t n13 = max(C, n12);
-            C = min(C, n12);
+    uint32_t r0 = min(m0, ps[11]);
+    uint32_t r1 = min(m1, ps[10]);
+    uint32_t r2 = min(m2, ps[9]);
+    uint32_t r3 = min(m3, ps[8]);
+    AQ_BSORT4(r0, r1, r2, r3);
 
-            D = min(D, n13);
-        }
-    }
-
-    res[0] = A;
-    res[1] = B;
-    res[2] = C;
-    res[3] = D;
+    res[0] = r0;
+    res[1] = r1;
+    res[2] = r2;
+    res[3] = r3;
 }
+
+#undef AQ_SORT4
+#undef AQ_BSORT4
 
 constant const uint32_t MASK_enableFlatCache = 1 << 0;
 constant const uint32_t MASK_enableAllCaches = (1 << 1) | MASK_enableFlatCache;
@@ -1582,8 +1589,9 @@ static __attribute__((pure)) int32_t __aquifer_getFluidBlockY(global const void 
         int i = surfaceHeightEstimate + 8 - blockY;
         double f = bl ? math_clampedLerp(1.0, 0.0, ((double) i) / 64.0) : 0.0; // inline
         double g = clamp(df_binding_fluid_level_floodedness(unblendedNoisePos), -1.0, 1.0);
-        d = g + 0.8 + (f - 1.0) * 1.2; // inline
-        e = g + 0.3 + (f - 1.0) * 1.1; // inline
+        double delta = (f - 1.0) / (0.0 - 1.0);
+        d = g - (-0.8 + delta * (0.4 - (-0.8))); // inline
+        e = g - (-0.3 + delta * (0.8 - (-0.3))); // inline
     }
 
     int i;
