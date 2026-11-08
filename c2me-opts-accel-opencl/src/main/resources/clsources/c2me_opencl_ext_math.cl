@@ -1589,8 +1589,9 @@ static __attribute__((pure)) int32_t __aquifer_getFluidBlockY(global const void 
         int i = surfaceHeightEstimate + 8 - blockY;
         double f = bl ? math_clampedLerp(1.0, 0.0, ((double) i) / 64.0) : 0.0; // inline
         double g = clamp(df_binding_fluid_level_floodedness(unblendedNoisePos), -1.0, 1.0);
-        d = g + 0.8 + (f - 1.0) * 1.2; // inline
-        e = g + 0.3 + (f - 1.0) * 1.1; // inline
+        double delta = (f - 1.0) / (0.0 - 1.0);
+        d = g - (-0.8 + delta * (0.4 - (-0.8))); // inline
+        e = g - (-0.3 + delta * (0.8 - (-0.3))); // inline
     }
 
     int i;
