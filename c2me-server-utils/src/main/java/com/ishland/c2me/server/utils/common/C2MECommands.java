@@ -27,8 +27,10 @@ package com.ishland.c2me.server.utils.common;
 import com.ishland.c2me.base.mixin.access.IThreadedAnvilChunkStorage;
 import com.ishland.c2me.notickvd.common.ChunkLevelManagerExtension;
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.class_1_2020;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.world.ChunkLevelManager;
@@ -38,24 +40,27 @@ import net.minecraft.text.Text;
 public class C2MECommands {
 
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
-        dispatcher.register(
-                CommandManager.literal("c2me")
-                        .requires(CommandManager.requirePermissionLevel(CommandManager.GAMEMASTERS_CHECK))
-                        .then(
-                                CommandManager.literal("notick")
-                                        .requires(unused -> com.ishland.c2me.notickvd.ModuleEntryPoint.enabled)
-                                        .executes(C2MECommands::noTickCommand)
-                        )
-                        .then(
-                                CommandManager.literal("debug")
-                                        .requires(unused -> FabricLoader.getInstance().isDevelopmentEnvironment())
+        LiteralArgumentBuilder<ServerCommandSource> builder = CommandManager.literal("c2me")
+                .requires(CommandManager.requirePermissionLevel(class_1_2020.field_1_12753));
+        if (com.ishland.c2me.notickvd.ModuleEntryPoint.enabled) {
+            builder
+                    .then(
+                            CommandManager.literal("notick")
+                                    .executes(C2MECommands::noTickCommand)
+                    );
+        }
+        if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
+            builder
+                    .then(
+                            CommandManager.literal("debug")
 //                                        .then(
 //                                                CommandManager.literal("mobcaps")
 //                                                        .requires(unused -> com.ishland.c2me.notickvd.ModuleEntryPoint.enabled)
 //                                                        .executes(C2MECommands::mobcapsCommand)
 //                                        )
-                        )
-        );
+                    );
+        }
+        dispatcher.register(builder);
     }
 
     private static int noTickCommand(CommandContext<ServerCommandSource> ctx) {
