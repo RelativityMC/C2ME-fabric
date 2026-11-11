@@ -6,7 +6,7 @@
     "ishlandbukkit",
     "ishland"
   ],
-  "license": "MIT",
+  "license": "LGPL-3.0-only",
   "environment": "*",
   "entrypoints": {
     "main": [
