@@ -695,7 +695,7 @@ math_aquifer_unpackPackedPosIdx(uint64_t packed) {
 }
 
 #define AQ_SORT4(a, b, c, d) do { \
-    uint32_t _t; \
+    uint64_t _t; \
     _t = min(a, b); b = max(a, b); a = _t; \
     _t = min(c, d); d = max(c, d); c = _t; \
     _t = min(a, c); c = max(a, c); a = _t; \
@@ -704,7 +704,7 @@ math_aquifer_unpackPackedPosIdx(uint64_t packed) {
 } while (0)
 
 #define AQ_BSORT4(a, b, c, d) do { \
-    uint32_t _t; \
+    uint64_t _t; \
     _t = min(a, c); c = max(a, c); a = _t; \
     _t = min(b, d); d = max(b, d); b = _t; \
     _t = min(a, b); b = max(a, b); a = _t; \
@@ -726,7 +726,7 @@ math_aquifer_refreshDistPosIdx_global(global const uint16_t *restrict const pack
     const int32_t byBase = (gy - 1) * 12 - y;
     const int32_t bzBase = (gz << 4) - z;
 
-    uint32_t ps[12];
+    uint64_t ps[12];
 
     for (uint32_t n = 0; n < 12; ++n) {
         const uint32_t ox = n >= 6u ? 1u : 0u;
@@ -746,16 +746,16 @@ math_aquifer_refreshDistPosIdx_global(global const uint16_t *restrict const pack
     AQ_SORT4(ps[4], ps[5], ps[6], ps[7]);
     AQ_SORT4(ps[8], ps[9], ps[10], ps[11]);
 
-    uint32_t m0 = min(ps[0], ps[7]);
-    uint32_t m1 = min(ps[1], ps[6]);
-    uint32_t m2 = min(ps[2], ps[5]);
-    uint32_t m3 = min(ps[3], ps[4]);
+    uint64_t m0 = min(ps[0], ps[7]);
+    uint64_t m1 = min(ps[1], ps[6]);
+    uint64_t m2 = min(ps[2], ps[5]);
+    uint64_t m3 = min(ps[3], ps[4]);
     AQ_BSORT4(m0, m1, m2, m3);
 
-    uint32_t r0 = min(m0, ps[11]);
-    uint32_t r1 = min(m1, ps[10]);
-    uint32_t r2 = min(m2, ps[9]);
-    uint32_t r3 = min(m3, ps[8]);
+    uint64_t r0 = min(m0, ps[11]);
+    uint64_t r1 = min(m1, ps[10]);
+    uint64_t r2 = min(m2, ps[9]);
+    uint64_t r3 = min(m3, ps[8]);
     AQ_BSORT4(r0, r1, r2, r3);
 
     res[0] = r0;
