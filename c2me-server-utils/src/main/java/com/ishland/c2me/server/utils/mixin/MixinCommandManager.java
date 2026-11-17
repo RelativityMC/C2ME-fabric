@@ -38,7 +38,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinCommandManager {
 
 
-    @Inject(method = "method_1_12535", at = @At("RETURN"))
+    @Inject(method = "register", at = @At("RETURN"))
     private static void registerCommands(CommandDispatcher<ServerCommandSource> dispatcher, CommandManager.RegistrationEnvironment environment, CommandRegistryAccess access, CallbackInfo ci) {
         C2MECommands.register(dispatcher);
     }

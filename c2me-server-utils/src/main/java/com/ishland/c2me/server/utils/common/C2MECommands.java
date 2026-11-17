@@ -30,7 +30,7 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.class_1_2020;
+import net.minecraft.command.permission.DefaultPermissionChecks;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.world.ChunkLevelManager;
@@ -41,7 +41,7 @@ public class C2MECommands {
 
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
         LiteralArgumentBuilder<ServerCommandSource> builder = CommandManager.literal("c2me")
-                .requires(CommandManager.requirePermissionLevel(class_1_2020.field_1_12753));
+                .requires(CommandManager.requirePermissionLevel(DefaultPermissionChecks.GAMEMASTERS));
         if (com.ishland.c2me.notickvd.ModuleEntryPoint.enabled) {
             builder
                     .then(
