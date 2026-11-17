@@ -50,10 +50,11 @@ configure(allprojects) {
         }
     } else {
         license {
-            rule(rootProject.file("licenses/LICENSE-MIT.txt"))
+            rule(rootProject.file("licenses/HEADER-LGPL-3.0-only.txt"))
         }
         jar {
-            from(rootProject.file("licenses/LICENSE-MIT.txt"))
+            from(rootProject.file("licenses/LICENSE-LGPL-3.0-only.txt"))
+            from(rootProject.file("licenses/HEADER-LGPL-3.0-only.txt"))
         }
     }
 
@@ -307,7 +308,7 @@ publishMods {
             javaVersions.add(JavaVersion.VERSION_25)
         }
 
-        curseforge("curseforgeMITPackage") {
+        curseforge("curseforgeBasePackage") {
             from cfOptions
             file = remapJar.archiveFile
             projectId = "533097"
@@ -330,7 +331,7 @@ publishMods {
             minecraftVersions.add(project.minecraft_version)
         }
 
-        modrinth("modrinthMITPackage") {
+        modrinth("modrinthBasePackage") {
             from mrOptions
             file = remapJar.archiveFile
             projectId = "VSNURh3q"
