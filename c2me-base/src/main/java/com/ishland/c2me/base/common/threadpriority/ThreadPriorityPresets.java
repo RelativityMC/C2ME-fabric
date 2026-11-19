@@ -28,6 +28,7 @@ import com.ishland.c2me.base.common.threadpriority.bindings.WindowsKernel32Extra
 import com.sun.jna.platform.win32.Kernel32;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import oshi.PlatformEnum;
 import oshi.SystemInfo;
 
 public enum ThreadPriorityPresets {
@@ -49,7 +50,8 @@ public enum ThreadPriorityPresets {
         @Override
         public void applyToCurrentThread() {
             Thread.currentThread().setPriority(Thread.NORM_PRIORITY - 1);
-            switch (SystemInfo.getCurrentPlatform()) {
+            PlatformEnum currentPlatform = SystemInfo.getCurrentPlatform();
+            switch (currentPlatform) {
                 case LINUX, ANDROID -> {
                     LinuxLibc.setCurrentThreadScheduler(LinuxLibc.SCHED_BATCH);
                 }
@@ -71,7 +73,8 @@ public enum ThreadPriorityPresets {
         @Override
         public void applyToCurrentThread() {
             Thread.currentThread().setPriority(Thread.NORM_PRIORITY - 2);
-            switch (SystemInfo.getCurrentPlatform()) {
+            PlatformEnum currentPlatform = SystemInfo.getCurrentPlatform();
+            switch (currentPlatform) {
                 case LINUX, ANDROID -> {
                     LinuxLibc.setCurrentThreadScheduler(LinuxLibc.SCHED_BATCH);
                     LinuxLibc.setCurrentThreadPriority(2);
@@ -94,11 +97,14 @@ public enum ThreadPriorityPresets {
         @Override
         public void applyToCurrentThread() {
             Thread.currentThread().setPriority(Thread.NORM_PRIORITY - 3);
-            switch (SystemInfo.getCurrentPlatform()) {
+            PlatformEnum currentPlatform = SystemInfo.getCurrentPlatform();
+            switch (currentPlatform) {
                 case LINUX, ANDROID -> {
                     LinuxLibc.setCurrentThreadScheduler(LinuxLibc.SCHED_BATCH);
                     LinuxLibc.setCurrentThreadPriority(5);
-                    LinuxLibc.setCurrentThreadPreferEfficiencyCores();
+                    if (currentPlatform == PlatformEnum.LINUX) {
+                        LinuxLibc.setCurrentThreadPreferEfficiencyCores();
+                    }
                 }
                 case WINDOWS -> {
                     WindowsKernel32Extras.setCurrentThreadPriority(Kernel32.THREAD_PRIORITY_LOWEST);
@@ -119,11 +125,14 @@ public enum ThreadPriorityPresets {
         @Override
         public void applyToCurrentThread() {
             Thread.currentThread().setPriority(Thread.NORM_PRIORITY - 4);
-            switch (SystemInfo.getCurrentPlatform()) {
+            PlatformEnum currentPlatform = SystemInfo.getCurrentPlatform();
+            switch (currentPlatform) {
                 case LINUX, ANDROID -> {
                     LinuxLibc.setCurrentThreadScheduler(LinuxLibc.SCHED_BATCH);
                     LinuxLibc.setCurrentThreadPriority(12);
-                    LinuxLibc.setCurrentThreadPreferEfficiencyCores();
+                    if (currentPlatform == PlatformEnum.LINUX) {
+                        LinuxLibc.setCurrentThreadPreferEfficiencyCores();
+                    }
                 }
                 case WINDOWS -> {
                     WindowsKernel32Extras.setCurrentThreadPriority(Kernel32.THREAD_PRIORITY_IDLE);
