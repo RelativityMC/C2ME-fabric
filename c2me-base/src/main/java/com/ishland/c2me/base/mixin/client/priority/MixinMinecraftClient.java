@@ -36,7 +36,7 @@ public class MixinMinecraftClient {
     @Inject(method = "run()V", at = @At("HEAD"))
     private void onRun(CallbackInfo ci) {
         switch (SystemInfo.getCurrentPlatform()) {
-            case LINUX, ANDROID -> {
+            case LINUX -> {
                 LinuxLibc.setCurrentThreadPreferMaximumPerformance();
             }
             case WINDOWS -> {
