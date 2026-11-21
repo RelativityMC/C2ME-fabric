@@ -66,7 +66,7 @@ public abstract class MixinPerlinNoiseSampler extends LatticedNoiseSampler imple
             );
             return;
         }
-        if (buf.count() < 8) {
+        if (region.sizeY() < 8 && (region.sizeY() < 4 || buf.count() < 32)) {
             this.fill(buf, region, scaleXz, scaleY, outputScale);
             return;
         }

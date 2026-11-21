@@ -69,7 +69,7 @@ public abstract class MixinLegacyPerlinNoiseSampler extends PerlinNoiseSampler i
             );
             return;
         }
-        if (buf.count() < 8) {
+        if (region.sizeY() < 8 && (region.sizeY() < 4 || buf.count() < 32)) {
             this.fill(buf, region, scaleXz, scaleY, outputScale);
             return;
         }
