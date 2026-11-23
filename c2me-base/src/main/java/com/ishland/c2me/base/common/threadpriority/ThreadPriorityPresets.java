@@ -107,8 +107,7 @@ public enum ThreadPriorityPresets {
                     }
                 }
                 case WINDOWS -> {
-                    WindowsKernel32Extras.setCurrentThreadPriority(Kernel32.THREAD_PRIORITY_LOWEST);
-                    WindowsKernel32Extras.enableCurrentThreadPowerThrottling();
+                    WindowsKernel32Extras.setCurrentThreadPriority(Kernel32.THREAD_PRIORITY_IDLE);
                 }
                 case MACOS -> {
                     MacOsPthread.setCurrentThreadPriority(23);
