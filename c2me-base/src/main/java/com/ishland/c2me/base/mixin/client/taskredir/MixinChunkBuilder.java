@@ -22,6 +22,7 @@
 package com.ishland.c2me.base.mixin.client.taskredir;
 
 import com.ishland.c2me.base.common.GlobalExecutors;
+import com.ishland.c2me.base.mixin.access.INameableExecutor;
 import net.minecraft.client.render.chunk.ChunkBuilder;
 import net.minecraft.util.thread.NameableExecutor;
 import org.spongepowered.asm.mixin.Mixin;
@@ -33,7 +34,8 @@ public class MixinChunkBuilder {
 
     @Redirect(method = {"scheduleRunTasks", "send"}, at = @At(value = "INVOKE", target = "Lnet/minecraft/util/thread/NameableExecutor;execute(Ljava/lang/Runnable;)V"), require = 2)
     private void redirectExecutor(NameableExecutor instance, Runnable runnable) {
-        GlobalExecutors.prioritizedScheduler.schedule(runnable, 0);
+        // not time critical but still high priority, test when porting
+        GlobalExecutors.prioritizedScheduler.schedule(INameableExecutor.invokeWrapForTracy(runnable), 1);
     }
 
 }
