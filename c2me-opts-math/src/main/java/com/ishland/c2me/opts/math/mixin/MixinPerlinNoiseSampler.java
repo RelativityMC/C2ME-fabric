@@ -412,8 +412,9 @@ public abstract class MixinPerlinNoiseSampler extends LatticedNoiseSampler imple
                             pz0_prev = Integer.MAX_VALUE;
                         }
 
-                        final int zStride = sizeX * sizeY;
-                        int idx = (yBase + offY) + offX * sizeY + (zBase) * zStride;
+                        final int zStride = sizeY;
+                        final int xStride = sizeZ * sizeY;
+                        int idx = (yBase + offY) + (zBase) * zStride + offX * xStride;
 
                         for (int offZ = 0; offZ < zCount; offZ++) {
 //                            final int blockZ = region.minBlockZ() + offZ * region.stepBlockZ();

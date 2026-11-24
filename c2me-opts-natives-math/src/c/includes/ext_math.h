@@ -567,7 +567,7 @@ typedef struct pos_i32 {
 } pos_i32_t;
 
 static inline __attribute__((const)) pos_i32_t math_sampling_region_index(const sampling_region_t region, const uint32_t index) {
-    // order: z, x, y
+    // order: x, z, y
 
     if (index >= (region.sizeX * region.sizeY * region.sizeZ)) {
         __builtin_trap();
@@ -579,8 +579,8 @@ static inline __attribute__((const)) pos_i32_t math_sampling_region_index(const 
     const uint32_t y = i % region.sizeY;
     i /= region.sizeY;
 
-    const uint32_t x = i % region.sizeX;
-    const uint32_t z = i / region.sizeX;
+    const uint32_t z = i % region.sizeZ;
+    const uint32_t x = i / region.sizeZ;
 
     return (pos_i32_t){
         .x = region.minBlockX + (int32_t) x * (int32_t) region.stepBlockX,
@@ -612,8 +612,8 @@ math_coord_iter_next64(coord_iter_t *restrict it,
     const uint32_t n = remaining < 64u ? remaining : 64u;
     if (n == 0) return 0;
 
-    const uint32_t sizeX = it->sizeX;
     const uint32_t sizeY = it->sizeY;
+    const uint32_t sizeZ = it->sizeZ;
 
     if (it->y + n < sizeY) {
         const int32_t baseX = it->minX + (int32_t) it->x * (int32_t) it->stepX;
@@ -639,9 +639,9 @@ math_coord_iter_next64(coord_iter_t *restrict it,
         }
         if (cy == sizeY) {
             cy = 0;
-            if (++cx == sizeX) {
-                cx = 0;
-                ++cz;
+            if (++cz == sizeZ) {
+                cz = 0;
+                ++cx;
             }
         }
     }
@@ -918,7 +918,7 @@ noise_perlin_area_unshifted_direct(const uint32_t *restrict table,
                     const float fz0 = zf0[iz], fz1 = zf1[iz], dz = zd[iz];
                     float *restrict out =
                             output +
-                            ((size_t) (zBase + iz) * region.sizeX + ix) * region.sizeY + yBase;
+                            ((size_t) ix * region.sizeZ + (zBase + iz)) * region.sizeY + yBase;
 #pragma clang loop vectorize_width(NOISEOPT_FLOAT_LANES) interleave_count(1)
                     for (uint32_t j = 0; j < count; ++j) {
                         const float v = noise_perlin_corners(
@@ -1035,7 +1035,7 @@ noise_perlin_area_paired_core(const uint32_t *restrict table,
                     const float fz0 = zf0[iz], fz1 = zf1[iz], dz = zd[iz];
                     float *restrict out =
                             output +
-                            ((size_t) (zBase + iz) * region.sizeX + ix) * region.sizeY + yBase;
+                            ((size_t) ix * region.sizeZ + (zBase + iz)) * region.sizeY + yBase;
                     if (cached) {
                         __attribute__((aligned(64))) float ca[8], cb[8], cc[8];
                         for (uint32_t r = 0; r < runs; ++r) {
