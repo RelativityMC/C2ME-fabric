@@ -39,6 +39,9 @@ public class MixinPlugin extends ModuleMixinPlugin {
         if (mixinClassName.startsWith("com.ishland.c2me.opts.worldgen.vanilla.mixin.structure_weight_sampler."))
             return Config.optimizeStructureWeightSampler;
 
+        if (mixinClassName.startsWith("com.ishland.c2me.opts.worldgen.vanilla.mixin.biome_search_tree."))
+            return Config.optimizeBiomeSearchTree;
+
         return true;
     }
 }

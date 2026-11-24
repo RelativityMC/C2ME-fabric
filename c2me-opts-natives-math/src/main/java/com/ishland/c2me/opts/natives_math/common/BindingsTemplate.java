@@ -29,7 +29,6 @@ import com.ishland.c2me.base.mixin.access.IMultiNoiseUtilSearchTreeTreeLeafNode;
 import com.ishland.c2me.base.mixin.access.IMultiNoiseUtilSearchTreeTreeNode;
 import com.ishland.c2me.base.mixin.access.IPerlinNoiseSampler;
 import com.ishland.c2me.base.common.util.MemoryUtil;
-import com.ishland.flowsched.util.Assertions;
 import it.unimi.dsi.fastutil.objects.Object2IntLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.ObjectBidirectionalIterator;
@@ -37,6 +36,7 @@ import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.math.noise.PerlinNoiseSampler;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.source.util.MultiNoiseUtil;
+import org.jetbrains.annotations.Nullable;
 
 import java.lang.foreign.*;
 import java.lang.invoke.MethodHandle;
@@ -336,7 +336,16 @@ public class BindingsTemplate {
         return segment.asSlice(biome_search_tree_node.byteOffset(MemoryLayout.PathElement.groupElement("union0"), MemoryLayout.PathElement.groupElement("node_minmaxs"), MemoryLayout.PathElement.groupElement("mins")), 7 * ValueLayout.JAVA_SHORT.byteSize());
     }
 
-    public static NativeBiomeSearchTree biome_search_tree_node$create(Arena arena, MultiNoiseUtil.SearchTree<RegistryEntry<Biome>> searchTree) {
+    public static @Nullable NativeBiomeSearchTree biome_search_tree_node$create(Arena arena, @Nullable MultiNoiseUtil.SearchTree<RegistryEntry<Biome>> searchTree) {
+        if (searchTree == null) {
+            return null;
+        }
+        MultiNoiseUtil.SearchTree.TreeNode<RegistryEntry<Biome>> firstNode =
+                ((IMultiNoiseUtilSearchTree<RegistryEntry<Biome>>) (Object) searchTree).getFirstNode();
+        if (firstNode == null) {
+            return null;
+        }
+
         class TreeFlattener {
             private final List<SerializedTreeNode> nodes = new ArrayList<>();
             private final Object2IntLinkedOpenHashMap<RegistryEntry<Biome>> biomeIdMap = new Object2IntLinkedOpenHashMap<>();
@@ -354,36 +363,56 @@ public class BindingsTemplate {
                 }
                 SerializedTreeNode serializedNode = new SerializedTreeNode();
                 MultiNoiseUtil.ParameterRange[] parameters = ((IMultiNoiseUtilSearchTreeTreeNode) node).getParameters();
-                Assertions.assertTrue(parameters.length == 7);
+                if (parameters == null || parameters.length != 7) {
+                    return -1;
+                }
                 for (int i = 0; i < 7; i++) {
-                    serializedNode.maxs[i] = (short) parameters[i].max();
-                    serializedNode.mins[i] = (short) parameters[i].min();
-                    Assertions.assertTrue((long) serializedNode.maxs[i] == parameters[i].max(), "max value out of range: " + parameters[i].max() + " for parameter " + i);
-                    Assertions.assertTrue((long) serializedNode.mins[i] == parameters[i].min(), "min value out of range: " + parameters[i].min() + " for parameter " + i);
+                    MultiNoiseUtil.ParameterRange range = parameters[i];
+                    if (range == null) {
+                        return -1;
+                    }
+                    long max = range.max();
+                    long min = range.min();
+                    if (max < Short.MIN_VALUE || max > Short.MAX_VALUE || min < Short.MIN_VALUE || min > Short.MAX_VALUE) {
+                        return -1;
+                    }
+                    serializedNode.maxs[i] = (short) max;
+                    serializedNode.mins[i] = (short) min;
                 }
                 int index = this.nodes.size();
                 this.nodes.add(serializedNode);
                 if (node instanceof MultiNoiseUtil.SearchTree.TreeBranchNode<RegistryEntry<Biome>> branchNode) {
+                    MultiNoiseUtil.SearchTree.TreeNode<RegistryEntry<Biome>>[] subTree = ((IMultiNoiseUtilSearchTreeTreeBranchNode<RegistryEntry<Biome>>) (Object) branchNode).getSubTree();
+                    if (subTree == null || subTree.length > 7) {
+                        return -1;
+                    }
                     serializedNode.isBranch = true;
                     SerializedTreeNode childrenOffsetNode = new SerializedTreeNode();
                     childrenOffsetNode.isBranch = true;
                     childrenOffsetNode.isChildrenOffsets = true;
                     Arrays.fill(childrenOffsetNode.childrenOffsets, 0);
                     this.nodes.add(childrenOffsetNode);
-                    MultiNoiseUtil.SearchTree.TreeNode<RegistryEntry<Biome>>[] subTree = ((IMultiNoiseUtilSearchTreeTreeBranchNode<RegistryEntry<Biome>>) (Object) branchNode).getSubTree();
-                    Assertions.assertTrue(subTree.length <= 7);
                     for (int i = 0; i < subTree.length; i++) {
                         MultiNoiseUtil.SearchTree.TreeNode<RegistryEntry<Biome>> child = subTree[i];
                         if (child != null) {
-                            childrenOffsetNode.childrenOffsets[i] = consume(child, depth + 1);
+                            int childOffset = consume(child, depth + 1);
+                            if (childOffset < 0) {
+                                return -1;
+                            }
+                            childrenOffsetNode.childrenOffsets[i] = childOffset;
                         } else {
                             childrenOffsetNode.childrenOffsets[i] = 0; // 0 means no child
                         }
                     }
                 } else if (node instanceof MultiNoiseUtil.SearchTree.TreeLeafNode<RegistryEntry<Biome>> leafNode) {
                     int biomeId = this.biomeIdMap.computeIfAbsent(((IMultiNoiseUtilSearchTreeTreeLeafNode<RegistryEntry<Biome>>) (Object) leafNode).getValue(), _ -> this.biomeIdMap.size());
+                    if ((biomeId & 0xC0000000) != 0) {
+                        return -1;
+                    }
                     serializedNode.isBranch = false;
                     serializedNode.biomeId = biomeId;
+                } else {
+                    return -1;
                 }
                 return index;
             }
@@ -420,7 +449,9 @@ public class BindingsTemplate {
         }
 
         TreeFlattener treeFlattener = new TreeFlattener();
-        treeFlattener.consume(((IMultiNoiseUtilSearchTree<RegistryEntry<Biome>>) (Object) searchTree).getFirstNode(), 1);
+        if (treeFlattener.consume(firstNode, 1) < 0) {
+            return null;
+        }
         treeFlattener.validate();
 
         RegistryEntry<Biome>[] biomes = new RegistryEntry[treeFlattener.biomeIdMap.size()];
