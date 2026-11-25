@@ -32,6 +32,7 @@
     "access.IMultiNoiseUtilSearchTreeTreeBranchNode",
     "access.IMultiNoiseUtilSearchTreeTreeLeafNode",
     "access.IMultiNoiseUtilSearchTreeTreeNode",
+    "access.INameableExecutor",
     "access.INbtCompound",
     "access.INbtList",
     "access.INoiseChunkGenerator",
@@ -80,6 +81,8 @@
   ],
   "client": [
     "client.priority.MixinMinecraftClient",
+    "client.taskredir.MixinChunkBuilder",
+    "client.taskredir.MixinChunkRenderingDataPreparer",
     "exp_warning.MixinMinecraftClient"
   ]
 }

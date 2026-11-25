@@ -44,6 +44,9 @@ public final class TheMixinPlugin extends ModuleMixinPlugin {
         if (mixinClassName.startsWith("com.ishland.c2me.base.mixin.client.priority."))
             return ModuleEntryPoint.applyBoostingForRenderThread;
 
+        if (mixinClassName.startsWith("com.ishland.c2me.base.mixin.client.taskredir."))
+            return ModuleEntryPoint.runSelectClientTasksOnExecutor;
+
         return true;
     }
 }
