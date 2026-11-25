@@ -47,4 +47,11 @@ public class Config {
             .incompatibleMod("porting_lib", "*")
             .getBoolean(true, false);
 
+    public static final boolean optimizeBiomeSearchTree = new ConfigSystem.ConfigAccessor()
+            .key("vanillaWorldGenOptimizations.optimizeBiomeSearchTree")
+            .comment("""
+                    Whether to flatten MultiNoiseUtil.SearchTree into a contiguous 64-bit array to accelerate biome lookups
+                    """)
+            .getBoolean(true, false);
+
 }

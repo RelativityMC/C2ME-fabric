@@ -52,13 +52,15 @@ public class MixinMultiNoiseUtilEntries<T> {
     @Unique
     private long c2me$nativesMathSearchTreePtr;
 
-    @Inject(method = "<init>", at = @At("RETURN"))
-    private void postInit(List<Pair<MultiNoiseUtil.NoiseHypercube, T>> entries, CallbackInfo ci) {
-        if (entries.getFirst().getSecond() instanceof RegistryEntry<?> entry /* && entry.value() instanceof Biome */) {
+    @Inject(method = "<init>(Ljava/util/List;I)V", at = @At("RETURN"))
+    private void postInit(List<Pair<MultiNoiseUtil.NoiseHypercube, T>> entries, int maxChildren, CallbackInfo ci) {
+        if (!entries.isEmpty() && entries.getFirst().getSecond() instanceof RegistryEntry<?> entry /* && entry.value() instanceof Biome */) {
             BindingsTemplate.NativeBiomeSearchTree result =
                     BindingsTemplate.biome_search_tree_node$create(this.c2me$arena, (MultiNoiseUtil.SearchTree<RegistryEntry<Biome>>) this.tree);
-            this.c2me$nativesMathSearchTree = result;
-            this.c2me$nativesMathSearchTreePtr = result.segment().address();
+            if (result != null) {
+                this.c2me$nativesMathSearchTree = result;
+                this.c2me$nativesMathSearchTreePtr = result.segment().address();
+            }
         }
     }
 

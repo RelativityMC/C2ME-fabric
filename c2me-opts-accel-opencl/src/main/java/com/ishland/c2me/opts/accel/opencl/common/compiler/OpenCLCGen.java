@@ -804,18 +804,20 @@ public class OpenCLCGen {
                     int treeDepth;
                     try (Arena arena = Arena.ofConfined()) {
                         BindingsTemplate.NativeBiomeSearchTree nativeBiomeSearchTree = BindingsTemplate.biome_search_tree_node$create(arena, tree);
-                        byte[] bytes = new byte[Math.toIntExact(nativeBiomeSearchTree.segment().byteSize())];
-                        MemorySegment.copy(nativeBiomeSearchTree.segment(), ValueLayout.JAVA_BYTE, 0, bytes, 0, bytes.length);
-                        globalOffset = this.allocGlobalConstData(bytes, 8);
-                        nodeCount = nativeBiomeSearchTree.node_c();
-                        treeDepth = nativeBiomeSearchTree.tree_depth();
-                        this.biomeMappings = nativeBiomeSearchTree.biomes();
+                        if (nativeBiomeSearchTree != null) {
+                            byte[] bytes = new byte[Math.toIntExact(nativeBiomeSearchTree.segment().byteSize())];
+                            MemorySegment.copy(nativeBiomeSearchTree.segment(), ValueLayout.JAVA_BYTE, 0, bytes, 0, bytes.length);
+                            globalOffset = this.allocGlobalConstData(bytes, 8);
+                            nodeCount = nativeBiomeSearchTree.node_c();
+                            treeDepth = nativeBiomeSearchTree.tree_depth();
+                            this.biomeMappings = nativeBiomeSearchTree.biomes();
+                            this.pendingSource
+                                    .append("constant const uint32_t biome_multinoise_tree_offset = ").append(globalOffset).append(";\n")
+                                    .append("constant const uint32_t biome_multinoise_tree_nodes_c = ").append(nodeCount).append(";\n");
+                            this.defines.put("BIOME_SEARCH_TREE_MAX_DEPTH", String.valueOf(treeDepth));
+                            return;
+                        }
                     }
-                    this.pendingSource
-                            .append("constant const uint32_t biome_multinoise_tree_offset = ").append(globalOffset).append(";\n")
-                            .append("constant const uint32_t biome_multinoise_tree_nodes_c = ").append(nodeCount).append(";\n");
-                    this.defines.put("BIOME_SEARCH_TREE_MAX_DEPTH", String.valueOf(treeDepth));
-                    return;
                 }
             }
             this.pendingSource
