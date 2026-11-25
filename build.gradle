@@ -121,6 +121,12 @@ allprojects {
             }
         }
     }
+    // TODO find a better solution
+    configurations.all {
+        resolutionStrategy.dependencySubstitution {
+            substitute module("org.lwjgl:lwjgl-freetype:3.4.1-mojang-2.15.0.3") using module("org.lwjgl:lwjgl-freetype:3.4.1")
+        }
+    }
 }
 
 configure (allprojects - project(":tests")) {
