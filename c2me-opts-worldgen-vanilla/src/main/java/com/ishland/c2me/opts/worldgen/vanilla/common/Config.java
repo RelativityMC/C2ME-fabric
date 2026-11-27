@@ -32,6 +32,13 @@ public class Config {
             .incompatibleMod("cavetweaks", "*")
             .getBoolean(true, false);
 
+    public static final boolean optimizeInterpolation = new ConfigSystem.ConfigAccessor()
+            .key("vanillaWorldGenOptimizations.optimizeInterpolation")
+            .comment("""
+                    Whether to enable interpolated density function optimizations to accelerate world generation
+                    """)
+            .getBoolean(true, false);
+
     public static final boolean optimizeStructureWeightSampler = new ConfigSystem.ConfigAccessor()
             .key("vanillaWorldGenOptimizations.optimizeStructureWeightSampler")
             .comment("""

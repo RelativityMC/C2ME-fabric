@@ -48,7 +48,7 @@ public class ModuleEntryPoint {
                         min(
                             if( is_smt_probably_enabled,
                                 cores,
-                                cores - 1
+                                max((cores * 0.75) - 1, cores - 4)
                             )  - if(is_client, 1, 0),
                             ( ( mem_gb - (if(is_client, 1.0, 0.5)) ) * 3.0 )
                         )
@@ -84,12 +84,12 @@ public class ModuleEntryPoint {
                       FreeBSD: priority=6
                     - LOWER
                       Linux: SCHED_BATCH, nice=5, prefers efficiency cores if available
-                      Windows: Lowest priority, enable power throttling
+                      Windows: Lowest priority
                       MacOS: priority=23
                       FreeBSD: priority=3
                     - LOWEST
                       Linux: SCHED_BATCH, nice=12, prefers efficiency cores if available
-                      Windows: Idle priority, enable power throttling
+                      Windows: Idle priority
                       MacOS: priority=15
                       FreeBSD: priority=0
                     
@@ -114,6 +114,16 @@ public class ModuleEntryPoint {
                     Currently works on:
                     - Linux 5.3+ on x86, x86_64, arm, arm64
                     - Windows 8 or newer
+                    """)
+            .getBoolean(true, false);
+
+    public static final boolean runSelectClientTasksOnExecutor = new ConfigSystem.ConfigAccessor()
+            .key("runSelectClientTasksOnExecutor")
+            .comment("""
+                    Whether to run select client tasks on our executor
+                    This currently includes client chunk build tasks
+                    
+                    This may help reduce overutilization issues on client
                     """)
             .getBoolean(true, false);
 

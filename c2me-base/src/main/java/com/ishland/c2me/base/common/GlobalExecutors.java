@@ -40,8 +40,13 @@ public class GlobalExecutors {
                 thread.setName("c2me-worker-%d".formatted(prioritizedSchedulerCounter.getAndIncrement()));
             },
             () -> ModuleEntryPoint.threadPoolPriorityPreset.applyToCurrentThread(),
-            64
+            64,
+            thread -> {
+                thread.setDaemon(true);
+                thread.setName("c2me-urgent");
+            }
     );
+    public static final Executor p0Executor = prioritizedScheduler.executor(0);
 
     public static final Executor asyncScheduler;
 

@@ -137,7 +137,7 @@ public class LinuxLibc {
         if (Platform.isIntel()) {
             return Platform.is64Bit() ? 314 : 351;
         } else if (Platform.isARM()) {
-            return 380;
+            return Platform.is64Bit() ? 274 : 380;
         }
 
         return -1;
@@ -147,7 +147,7 @@ public class LinuxLibc {
         if (Platform.isIntel()) {
             return Platform.is64Bit() ? 315 : 352;
         } else if (Platform.isARM()) {
-            return 381;
+            return Platform.is64Bit() ? 275 : 381;
         }
 
         return -1;

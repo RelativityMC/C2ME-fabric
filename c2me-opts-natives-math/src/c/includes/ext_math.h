@@ -833,6 +833,51 @@ noise_perlin_cell_corners(const float *restrict ca, const float *restrict cb,
                        f111);
 }
 
+#define CLANG_PRAGMA_(x) _Pragma(#x)
+#define CLANG_PRAGMA(x) CLANG_PRAGMA_(x)
+#define VECTORIZE_WIDTH(n) CLANG_PRAGMA(clang loop vectorize_width(n))
+
+#define NOISE_PERLIN_AREA_Y_STEP(j)                                                          \
+    do {                                                                                     \
+        const float v = noise_perlin_corners(table, q00[(j)], q10[(j)], q01[(j)], q11[(j)],  \
+                                             pz, fx0, fx1, dx, yf0[(j)], yf0[(j)] - 1.0f,    \
+                                             yd[(j)], fz0, fz1, dz, legacy);                 \
+        out[(j)] += v * outputScale;                                                         \
+    } while (0)
+
+#define NOISE_PERLIN_AREA_Y_CASCADE_CORE(count)                                              \
+    do {                                                                                     \
+        uint32_t yj = 0;                                                                     \
+        for (; yj + NOISEOPT_FLOAT_LANES <= (count); yj += NOISEOPT_FLOAT_LANES) {           \
+            VECTORIZE_WIDTH(NOISEOPT_FLOAT_LANES)                                            \
+            for (uint32_t k = 0; k < NOISEOPT_FLOAT_LANES; ++k)                              \
+                NOISE_PERLIN_AREA_Y_STEP(yj + k);                                            \
+        }                                                                                    \
+        if (NOISEOPT_FLOAT_LANES > 8) {                                                      \
+            for (; yj + 8u <= (count); yj += 8u) {                                           \
+                VECTORIZE_WIDTH(8)                                                           \
+                for (uint32_t k = 0; k < 8; ++k) NOISE_PERLIN_AREA_Y_STEP(yj + k);           \
+            }                                                                                \
+        }                                                                                    \
+        if (NOISEOPT_FLOAT_LANES > 4) {                                                      \
+            for (; yj + 4u <= (count); yj += 4u) {                                           \
+                VECTORIZE_WIDTH(4)                                                           \
+                for (uint32_t k = 0; k < 4; ++k) NOISE_PERLIN_AREA_Y_STEP(yj + k);           \
+            }                                                                                \
+        }                                                                                    \
+        for (; yj < (count); ++yj) NOISE_PERLIN_AREA_Y_STEP(yj);                             \
+    } while (0)
+
+#define NOISE_PERLIN_AREA_Y_CASCADE(count)                                                   \
+    do {                                                                                     \
+        const bool c2meWide_ = (count) >= 4u;                                                \
+        if (c2meWide_) {                                                                     \
+            NOISE_PERLIN_AREA_Y_CASCADE_CORE(count);                                         \
+        } else {                                                                             \
+            for (uint32_t j = 0; j < (count); ++j) NOISE_PERLIN_AREA_Y_STEP(j);              \
+        }                                                                                    \
+    } while (0)
+
 static inline __attribute__((flatten, hot, noinline,
     min_vector_width(NOISEOPT_FLOAT_LANES * 32))) void
 noise_perlin_area_unshifted_direct(const uint32_t *restrict table,
@@ -913,18 +958,24 @@ noise_perlin_area_unshifted_direct(const uint32_t *restrict table,
                     q01[j] = w0 >> 8;
                     q11[j] = w1 >> 8;
                 }
-                for (uint32_t iz = 0; iz < zCount; ++iz) {
-                    const uint32_t pz = zp[iz];
-                    const float fz0 = zf0[iz], fz1 = zf1[iz], dz = zd[iz];
-                    float *restrict out =
-                            output +
-                            ((size_t) ix * region.sizeZ + (zBase + iz)) * region.sizeY + yBase;
-#pragma clang loop vectorize_width(NOISEOPT_FLOAT_LANES) interleave_count(1)
-                    for (uint32_t j = 0; j < count; ++j) {
-                        const float v = noise_perlin_corners(
-                            table, q00[j], q10[j], q01[j], q11[j], pz, fx0, fx1, dx, yf0[j],
-                            yf0[j] - 1.0f, yd[j], fz0, fz1, dz, legacy);
-                        out[j] += v * outputScale;
+                if (count >= 4u) {
+                    for (uint32_t iz = 0; iz < zCount; ++iz) {
+                        const uint32_t pz = zp[iz];
+                        const float fz0 = zf0[iz], fz1 = zf1[iz], dz = zd[iz];
+                        float *restrict out =
+                                output +
+                                ((size_t) ix * region.sizeZ + (zBase + iz)) * region.sizeY + yBase;
+                        NOISE_PERLIN_AREA_Y_CASCADE_CORE(count);
+                    }
+                } else {
+                    for (uint32_t iz = 0; iz < zCount; ++iz) {
+                        const uint32_t pz = zp[iz];
+                        const float fz0 = zf0[iz], fz1 = zf1[iz], dz = zd[iz];
+                        float *restrict out =
+                                output +
+                                ((size_t) (zBase + iz) * region.sizeX + ix) * region.sizeY + yBase;
+                        for (uint32_t j = 0; j < count; ++j)
+                            NOISE_PERLIN_AREA_Y_STEP(j);
                     }
                 }
             }
@@ -1050,14 +1101,7 @@ noise_perlin_area_paired_core(const uint32_t *restrict table,
                             }
                         }
                     } else {
-#pragma clang loop vectorize_width(NOISEOPT_FLOAT_LANES) interleave_count(1)
-                        for (uint32_t j = 0; j < count; ++j) {
-                            out[j] +=
-                                    noise_perlin_corners(table, q00[j], q10[j], q01[j], q11[j], pz,
-                                                         fx0, fx1, dx, yf0[j], yf0[j] - 1.0f,
-                                                         yd[j], fz0, fz1, dz, legacy) *
-                                    outputScale;
-                        }
+                        NOISE_PERLIN_AREA_Y_CASCADE(count);
                     }
                 }
             }
