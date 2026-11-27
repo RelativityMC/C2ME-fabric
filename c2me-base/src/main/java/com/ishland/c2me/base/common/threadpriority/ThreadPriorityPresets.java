@@ -28,7 +28,6 @@ import com.ishland.c2me.base.common.threadpriority.bindings.WindowsKernel32Extra
 import com.sun.jna.platform.win32.Kernel32;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import oshi.PlatformEnum;
 import oshi.util.PlatformEnum;
 
 public enum ThreadPriorityPresets {
