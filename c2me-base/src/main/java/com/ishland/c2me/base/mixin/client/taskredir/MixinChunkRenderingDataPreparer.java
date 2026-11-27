@@ -32,7 +32,7 @@ import java.util.concurrent.Executor;
 @Mixin(ChunkRenderingDataPreparer.class)
 public class MixinChunkRenderingDataPreparer {
 
-    @ModifyArg(method = "scheduleTerrainUpdate(Lnet/minecraft/client/render/state/CameraRenderState;)V", at = @At(value = "INVOKE", target = "Ljava/util/concurrent/CompletableFuture;runAsync(Ljava/lang/Runnable;Ljava/util/concurrent/Executor;)Ljava/util/concurrent/CompletableFuture;"))
+    @ModifyArg(method = "updateTerrain", at = @At(value = "INVOKE", target = "Ljava/util/concurrent/CompletableFuture;runAsync(Ljava/lang/Runnable;Ljava/util/concurrent/Executor;)Ljava/util/concurrent/CompletableFuture;"))
     private Executor redirectExecutor(Executor executor) {
         return GlobalExecutors.p0Executor;
     }

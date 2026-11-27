@@ -32,7 +32,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(ChunkBuilder.class)
 public class MixinChunkBuilder {
 
-    @Redirect(method = {"scheduleRunTasks", "send"}, at = @At(value = "INVOKE", target = "Lnet/minecraft/util/thread/NameableExecutor;execute(Ljava/lang/Runnable;)V"), require = 2)
+    @Redirect(method = {"send"}, at = @At(value = "INVOKE", target = "Lnet/minecraft/util/thread/NameableExecutor;execute(Ljava/lang/Runnable;)V"), require = 1)
     private void redirectExecutor(NameableExecutor instance, Runnable runnable) {
         // not time critical but still high priority, test when porting
         GlobalExecutors.prioritizedScheduler.schedule(INameableExecutor.invokeWrapForTracy(runnable), 1);
